@@ -24,6 +24,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.IATypeVisitor;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
@@ -39,10 +40,13 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
 
     public ARecordType buildPath(AnyExpectedSchemaNode anyNode, IAObject constant,
             Map<String, FunctionCallInformation> sourceInformationMap, FunctionCallInformation compareFunctionInfo) {
-        this.type = rename(constant.getType());
-        this.sourceInformationMap = sourceInformationMap;
 
-        sourceInformationMap.put(type.getTypeName(), compareFunctionInfo);
+        this.sourceInformationMap = sourceInformationMap;
+        this.type = BuiltinType.ANY;
+        if (sourceInformationMap != null) {
+            this.type = rename(constant.getType());
+            sourceInformationMap.put(type.getTypeName(), compareFunctionInfo);
+        }
         return (ARecordType) anyNode.accept(this, anyNode);
     }
 
@@ -55,26 +59,32 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
     @Override
     public IAType visit(ObjectExpectedSchemaNode node, IExpectedSchemaNode arg) {
         type = getRecordType(node, type, arg, getTypeName());
-        sourceInformationMap.put(type.getTypeName(), createFunctionCallInformation(arg));
+        putCallInfo(type, arg);
         return node.getParent().accept(this, node);
     }
 
     @Override
     public IAType visit(ArrayExpectedSchemaNode node, IExpectedSchemaNode arg) {
         type = new AOrderedListType(type, getTypeName());
-        sourceInformationMap.put(type.getTypeName(), createFunctionCallInformation(arg));
+        putCallInfo(type, arg);
         return node.getParent().accept(this, node);
     }
 
     @Override
     public IAType visit(UnionExpectedSchemaNode node, IExpectedSchemaNode arg) {
-        sourceInformationMap.put(type.getTypeName(), createFunctionCallInformation(arg));
+        putCallInfo(type, arg);
         return node.getParent().accept(this, arg);
     }
 
     @Override
     public IAType visit(AnyExpectedSchemaNode node, IExpectedSchemaNode arg) {
         return node.getParent().accept(this, node);
+    }
+
+    private void putCallInfo(IAType type, IExpectedSchemaNode node) {
+        if (sourceInformationMap != null) {
+            sourceInformationMap.put(type.getTypeName(), createFunctionCallInformation(node));
+        }
     }
 
     private static ARecordType getRecordType(ObjectExpectedSchemaNode objectNode, IAType childType,
@@ -120,6 +130,14 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
         }
 
         @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof RenamedType) {
+                return originalType.equals(((RenamedType) obj).originalType);
+            }
+            return originalType.equals(obj);
+        }
+
+        @Override
         public int hash() {
             return originalType.hash();
         }
@@ -147,6 +165,11 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
         @Override
         public ObjectNode toJSON() {
             return originalType.toJSON();
+        }
+
+        @Override
+        public String toString() {
+            return originalType.toString();
         }
     }
 }

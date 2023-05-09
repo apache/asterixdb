@@ -70,19 +70,20 @@ public class ExpectedSchemaBuilder {
     }
 
     public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable) {
-        return createProjectionInfo(recordVariable, Collections.emptyMap(), null, null);
+        return createProjectionInfo(recordVariable, Collections.emptyMap(), Collections.emptyMap(), null, null);
     }
 
     public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable,
-            Map<ILogicalExpression, ARecordType> filterPaths, ILogicalExpression filterExpression,
-            Map<String, FunctionCallInformation> sourceInformationMap) {
+            Map<ILogicalExpression, ARecordType> normalizedPaths, Map<ILogicalExpression, ARecordType> actualPaths,
+            ILogicalExpression filterExpression, Map<String, FunctionCallInformation> sourceInformationMap) {
         IExpectedSchemaNode rootNode = varToNode.get(recordVariable);
 
         ExpectedSchemaNodeToIATypeTranslatorVisitor typeBuilder =
                 new ExpectedSchemaNodeToIATypeTranslatorVisitor(sourceInformationMap);
         ARecordType recordType = (ARecordType) rootNode.accept(typeBuilder, null);
 
-        return new DataProjectionFiltrationInfo(recordType, sourceInformationMap, filterPaths, filterExpression);
+        return new DataProjectionFiltrationInfo(recordType, sourceInformationMap, normalizedPaths, actualPaths,
+                filterExpression);
     }
 
     public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar,
@@ -116,13 +117,17 @@ public class ExpectedSchemaBuilder {
             //It is a root node. Request the entire record
             varToNode.put(variable, RootExpectedSchemaNode.ALL_FIELDS_ROOT_NODE);
         } else {
-            //It is a nested node. Replace the node to a LEAF node
-            node.replaceIfNeeded(ExpectedSchemaNodeType.ANY, parent.getSourceLocation(), parent.getFunctionName());
+            // If it is a nested node, replace it to a LEAF node
+            AnyExpectedSchemaNode leafNode = (AnyExpectedSchemaNode) node.replaceIfNeeded(ExpectedSchemaNodeType.ANY,
+                    parent.getSourceLocation(), parent.getFunctionName());
+            // make the leaf node irreplaceable
+            leafNode.preventReplacing();
+            varToNode.put(variable, leafNode);
         }
     }
 
-    public boolean isVariableRegistered(LogicalVariable recordVar) {
-        return varToNode.containsKey(recordVar);
+    public boolean isVariableRegistered(LogicalVariable variable) {
+        return varToNode.containsKey(variable);
     }
 
     public boolean containsRegisteredDatasets() {
@@ -133,8 +138,11 @@ public class ExpectedSchemaBuilder {
         return varToNode.get(variable);
     }
 
-    IExpectedSchemaNode getNode(AbstractFunctionCallExpression expr) {
-        return exprToNode.get(expr);
+    IExpectedSchemaNode getNode(ILogicalExpression expr) {
+        if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+            return getNode(VariableUtilities.getVariable(expr));
+        }
+        return exprToNode.get((AbstractFunctionCallExpression) expr);
     }
 
     private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr, IVariableTypeEnvironment typeEnv)
@@ -185,8 +193,9 @@ public class ExpectedSchemaBuilder {
             AbstractFunctionCallExpression myExpr) {
         //Get the associated node with the sourceVar (if any)
         IExpectedSchemaNode oldNode = varToNode.get(sourceVar);
-        if (oldNode == null) {
-            //Variable is not associated with a node. No pushdown is possible
+        if (oldNode == null || !oldNode.allowsReplacing()) {
+            // Variable is not associated with a node. No pushdown is possible
+            // Or its associated node cannot be replaced
             return null;
         }
         //What is the expected type of the variable

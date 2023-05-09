@@ -26,11 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.lsm.secondary.create.PrimaryScanColumnTupleProjectorFactory;
 import org.apache.asterix.column.operation.lsm.secondary.upsert.UpsertPreviousColumnTupleProjectorFactory;
 import org.apache.asterix.column.operation.query.QueryColumnTupleProjectorFactory;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
-import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -41,6 +42,8 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.utils.filter.ColumnFilterBuilder;
+import org.apache.asterix.metadata.utils.filter.NormalizedColumnFilterBuilder;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
@@ -53,6 +56,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
+import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
@@ -264,9 +268,10 @@ public class IndexUtil {
                 MetadataConstants.SAMPLE_INDEX_2_PREFIX + datasetName);
     }
 
-    public static ITupleProjectorFactory createTupleProjectorFactory(DatasetFormatInfo datasetFormatInfo,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo,
-            ARecordType datasetType, ARecordType metaItemType, int numberOfPrimaryKeys) {
+    public static ITupleProjectorFactory createTupleProjectorFactory(JobGenContext context,
+            DatasetFormatInfo datasetFormatInfo, IProjectionFiltrationInfo<?> projectionInfo,
+            IProjectionFiltrationInfo<?> metaProjectionInfo, ARecordType datasetType, ARecordType metaItemType,
+            int numberOfPrimaryKeys) throws AlgebricksException {
         if (datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
             return DefaultTupleProjectorFactory.INSTANCE;
         }
@@ -276,7 +281,8 @@ public class IndexUtil {
             ARecordType metaType = metaItemType == null ? null : DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
             return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
                     DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(), metaType,
-                    Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE);
+                    Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                    NoOpColumnFilterEvaluatorFactory.INSTANCE);
         }
 
         DataProjectionFiltrationInfo metaDataProjectionInfo = (DataProjectionFiltrationInfo) metaProjectionInfo;
@@ -289,12 +295,17 @@ public class IndexUtil {
         Map<String, FunctionCallInformation> metaFunctionCallInfo =
                 metaProjectionInfo == null ? null : metaDataProjectionInfo.getFunctionCallInfoMap();
 
-        ColumnFilterBuilder columnFilterBuilder = new ColumnFilterBuilder(dataProjectionInfo);
-        IColumnFilterEvaluatorFactory filterEvaluator = columnFilterBuilder.build();
+        NormalizedColumnFilterBuilder normalizedColumnFilterBuilder =
+                new NormalizedColumnFilterBuilder(dataProjectionInfo);
+        IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory =
+                normalizedColumnFilterBuilder.build();
+
+        ColumnFilterBuilder columnFilterBuilder = new ColumnFilterBuilder(dataProjectionInfo, context);
+        IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory = columnFilterBuilder.build();
 
         return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
                 datasetRequestedType, datasetFunctionCallInfo, metaRequestedType, metaFunctionCallInfo,
-                filterEvaluator);
+                normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory);
     }
 
     public static ITupleProjectorFactory createUpsertTupleProjectorFactory(DatasetFormatInfo datasetFormatInfo,

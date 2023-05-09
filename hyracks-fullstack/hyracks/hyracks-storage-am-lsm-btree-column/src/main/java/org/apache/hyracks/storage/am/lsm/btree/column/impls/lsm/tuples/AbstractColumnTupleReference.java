@@ -38,6 +38,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final int componentIndex;
     private final ColumnBTreeReadLeafFrame frame;
     private final IColumnBufferProvider[] primaryKeyBufferProviders;
+    private final IColumnBufferProvider[] filterBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
     private final int numberOfPrimaryKeys;
     private int totalNumberOfMegaLeafNodes;
@@ -59,9 +60,19 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         numberOfPrimaryKeys = info.getNumberOfPrimaryKeys();
 
         primaryKeyBufferProviders = new IColumnBufferProvider[numberOfPrimaryKeys];
-
         for (int i = 0; i < numberOfPrimaryKeys; i++) {
             primaryKeyBufferProviders[i] = new ColumnSingleBufferProvider(i);
+        }
+
+        int numberOfFilteredColumns = info.getNumberOfFilteredColumns();
+        filterBufferProviders = new IColumnBufferProvider[numberOfFilteredColumns];
+        for (int i = 0; i < numberOfFilteredColumns; i++) {
+            int columnIndex = info.getFilteredColumnIndex(i);
+            if (columnIndex >= numberOfPrimaryKeys) {
+                filterBufferProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp);
+            } else {
+                filterBufferProviders[i] = new ColumnSingleBufferProvider(columnIndex);
+            }
         }
 
         int numberOfRequestedColumns = info.getNumberOfProjectedColumns();
@@ -105,6 +116,16 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
         setPrimaryKeysAt(startIndex, startIndex);
         if (readColumnPages) {
+            for (int i = 0; i < filterBufferProviders.length; i++) {
+                IColumnBufferProvider provider = filterBufferProviders[i];
+                //Release previous pinned pages if any
+                provider.releaseAll();
+                provider.reset(frame);
+                startColumnFilter(provider, i, numberOfTuples);
+            }
+        }
+
+        if (readColumnPages && evaluateFilter()) {
             for (int i = 0; i < buffersProviders.length; i++) {
                 IColumnBufferProvider provider = buffersProviders[i];
                 //Release previous pinned pages if any
@@ -131,13 +152,19 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     protected abstract void setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException;
 
-    protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples);
+    protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples)
+            throws HyracksDataException;
 
     protected abstract void startPrimaryKey(IColumnBufferProvider bufferProvider, int ordinal, int numberOfTuples)
             throws HyracksDataException;
 
     protected abstract void startColumn(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
             throws HyracksDataException;
+
+    protected abstract void startColumnFilter(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
+            throws HyracksDataException;
+
+    protected abstract boolean evaluateFilter() throws HyracksDataException;
 
     protected abstract void onNext() throws HyracksDataException;
 

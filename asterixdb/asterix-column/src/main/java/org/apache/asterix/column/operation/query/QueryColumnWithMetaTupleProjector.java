@@ -23,11 +23,13 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
 import org.apache.asterix.column.tuple.QueryColumnWithMetaTupleReference;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -43,8 +45,11 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
     public QueryColumnWithMetaTupleProjector(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             ARecordType requestedType, Map<String, FunctionCallInformation> functionCallInfoMap,
             ARecordType requestedMetaType, Map<String, FunctionCallInformation> metaFunctionCallInfoMap,
-            IColumnFilterEvaluatorFactory filterEvaluator, IWarningCollector warningCollector) {
-        super(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfoMap, filterEvaluator, warningCollector);
+            IColumnNormalizedFilterEvaluatorFactory filterEvaluator,
+            IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
+            IHyracksTaskContext context) {
+        super(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfoMap, filterEvaluator,
+                columnFilterEvaluatorFactory, warningCollector, context);
         this.metaType = metaType;
         this.requestedMetaType = requestedMetaType;
         this.metaFunctionCallInfoMap = metaFunctionCallInfoMap;
@@ -55,7 +60,8 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
         try {
             return QueryColumnWithMetaMetadata.create(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
-                    requestedMetaType, metaFunctionCallInfoMap, filterEvaluator, warningCollector);
+                    requestedMetaType, metaFunctionCallInfoMap, normalizedFilterEvaluatorFactory,
+                    columnFilterEvaluatorFactory, warningCollector, context);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

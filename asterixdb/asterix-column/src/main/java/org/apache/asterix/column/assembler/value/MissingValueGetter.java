@@ -25,7 +25,7 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 
 public class MissingValueGetter implements IValueGetter {
     public static final IValueGetter INSTANCE = new MissingValueGetter();
-    private static final VoidPointable MISSING;
+    public static final VoidPointable MISSING;
 
     static {
         MISSING = new VoidPointable();

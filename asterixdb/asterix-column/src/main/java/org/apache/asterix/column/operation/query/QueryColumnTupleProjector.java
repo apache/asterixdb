@@ -22,13 +22,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.asterix.column.assembler.value.MissingValueGetter;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
 import org.apache.asterix.column.tuple.AssembledTupleReference;
 import org.apache.asterix.column.tuple.QueryColumnTupleReference;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -43,18 +46,24 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final int numberOfPrimaryKeys;
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
     protected final IWarningCollector warningCollector;
-    protected final IColumnFilterEvaluatorFactory filterEvaluator;
+    protected final IHyracksTaskContext context;
+    protected final IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory;
+    protected final IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory;
     private final AssembledTupleReference assembledTupleReference;
 
     public QueryColumnTupleProjector(ARecordType datasetType, int numberOfPrimaryKeys, ARecordType requestedType,
-            Map<String, FunctionCallInformation> functionCallInfoMap, IColumnFilterEvaluatorFactory filterEvaluator,
-            IWarningCollector warningCollector) {
+            Map<String, FunctionCallInformation> functionCallInfoMap,
+            IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory,
+            IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
+            IHyracksTaskContext context) {
         this.datasetType = datasetType;
         this.numberOfPrimaryKeys = numberOfPrimaryKeys;
         this.requestedType = requestedType;
         this.functionCallInfoMap = functionCallInfoMap;
-        this.filterEvaluator = filterEvaluator;
+        this.normalizedFilterEvaluatorFactory = normalizedFilterEvaluatorFactory;
+        this.columnFilterEvaluatorFactory = columnFilterEvaluatorFactory;
         this.warningCollector = warningCollector;
+        this.context = context;
         assembledTupleReference = new AssembledTupleReference(getNumberOfTupleFields());
     }
 
@@ -63,7 +72,7 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
         try {
             return QueryColumnMetadata.create(datasetType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
-                    filterEvaluator, warningCollector);
+                    normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -78,6 +87,9 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
         }
         if (isColumnar(tuple)) {
             IValueReference assembledRecord = getAssembledValue(tuple);
+            if (assembledRecord == MissingValueGetter.MISSING) {
+                return null;
+            }
             dos.write(assembledRecord.getByteArray(), assembledRecord.getStartOffset(), assembledRecord.getLength());
         } else {
             dos.write(tuple.getFieldData(numberOfPrimaryKeys), tuple.getFieldStart(numberOfPrimaryKeys),

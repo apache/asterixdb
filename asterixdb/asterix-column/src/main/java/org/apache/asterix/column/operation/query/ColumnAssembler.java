@@ -92,10 +92,15 @@ public final class ColumnAssembler {
         return assemblers.length;
     }
 
-    public void skip(int count) throws HyracksDataException {
+    public int skip(int count) throws HyracksDataException {
         tupleIndex += count;
         for (int i = 0; i < assemblers.length; i++) {
             assemblers[i].skip(count);
         }
+        return tupleIndex;
+    }
+
+    public void setAt(int index) throws HyracksDataException {
+        skip(index - tupleIndex);
     }
 }

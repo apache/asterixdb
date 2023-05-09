@@ -28,6 +28,11 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
     }
 
     @Override
+    public boolean allowsReplacing() {
+        return true;
+    }
+
+    @Override
     public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType, SourceLocation sourceLocation,
             String functionName) {
         //If no change is required, return the same node
@@ -42,7 +47,7 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
              * In this case, we first saw (t.hashtags[*].text), but the next expression (t.hashtags) requested
              * the entire hashtags. So, the expected type for hashtags should be ANY
              */
-            node = new AnyExpectedSchemaNode(getParent(), getSourceLocation(), getFunctionName());
+            node = new AnyExpectedSchemaNode(getParent(), getSourceLocation(), getFunctionName(), false);
             getParent().replaceChild(this, node);
         } else if (expectedNodeType != getType()) {
             /*

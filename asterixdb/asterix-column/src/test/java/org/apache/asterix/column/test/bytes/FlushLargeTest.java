@@ -26,10 +26,10 @@ import java.util.List;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.common.buffer.DummyPage;
 import org.apache.asterix.column.common.test.TestCase;
+import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
-import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -63,11 +63,12 @@ public class FlushLargeTest extends AbstractBytesTest {
         FlushColumnMetadata columnMetadata = prepareNewFile(fileId);
         List<IValueReference> record = getParsedRecords();
         List<DummyPage> pageZeros = transform(fileId, columnMetadata, record, numberOfTuplesToWrite);
-        QueryColumnMetadata readMetadata = QueryColumnMetadata.create(columnMetadata.getDatasetType(),
-                columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.serializeColumnsMetadata(),
-                new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE,
-                DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(),
-                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE);
+        QueryColumnMetadata readMetadata =
+                QueryColumnMetadata.create(columnMetadata.getDatasetType(), columnMetadata.getNumberOfPrimaryKeys(),
+                        columnMetadata.serializeColumnsMetadata(), new ColumnValueReaderFactory(),
+                        ValueGetterFactory.INSTANCE, DataProjectionFiltrationInfo.ALL_FIELDS_TYPE,
+                        Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                        NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
         writeResult(fileId, readMetadata, pageZeros);
         testCase.compareRepeated(numberOfTuplesToWrite);
     }

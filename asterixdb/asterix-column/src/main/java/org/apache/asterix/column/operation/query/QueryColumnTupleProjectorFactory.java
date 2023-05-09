@@ -20,7 +20,8 @@ package org.apache.asterix.column.operation.query;
 
 import java.util.Map;
 
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -38,12 +39,14 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
     private final ARecordType requestedMetaType;
     private final Map<String, FunctionCallInformation> functionCallInfo;
     private final Map<String, FunctionCallInformation> metaFunctionCallInfo;
-    private final IColumnFilterEvaluatorFactory filterEvaluator;
+    private final IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory;
+    private final IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory;
 
     public QueryColumnTupleProjectorFactory(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             ARecordType requestedType, Map<String, FunctionCallInformation> functionCallInfo,
             ARecordType requestedMetaType, Map<String, FunctionCallInformation> metaFunctionCallInfo,
-            IColumnFilterEvaluatorFactory filterEvaluator) {
+            IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory,
+            IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory) {
         this.datasetType = datasetType;
         this.metaType = metaType;
         this.numberOfPrimaryKeys = numberOfPrimaryKeys;
@@ -51,7 +54,8 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
         this.functionCallInfo = functionCallInfo;
         this.requestedMetaType = requestedMetaType;
         this.metaFunctionCallInfo = metaFunctionCallInfo;
-        this.filterEvaluator = filterEvaluator;
+        this.normalizedFilterEvaluatorFactory = normalizedFilterEvaluatorFactory;
+        this.columnFilterEvaluatorFactory = columnFilterEvaluatorFactory;
     }
 
     @Override
@@ -60,10 +64,11 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
         if (requestedMetaType == null) {
             // The dataset does not contain a meta part
             return new QueryColumnTupleProjector(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfo,
-                    filterEvaluator, warningCollector);
+                    normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context);
         }
         // The dataset has a meta part
         return new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
-                functionCallInfo, requestedMetaType, metaFunctionCallInfo, filterEvaluator, warningCollector);
+                functionCallInfo, requestedMetaType, metaFunctionCallInfo, normalizedFilterEvaluatorFactory,
+                columnFilterEvaluatorFactory, warningCollector, context);
     }
 }

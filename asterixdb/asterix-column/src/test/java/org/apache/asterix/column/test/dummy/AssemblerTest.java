@@ -33,11 +33,11 @@ import org.apache.asterix.column.assembler.value.DummyValueGetterFactory;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.common.buffer.DummyBytesInputStream;
 import org.apache.asterix.column.common.test.TestCase;
+import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.query.ColumnAssembler;
 import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.column.values.reader.DummyColumnValuesReaderFactory;
-import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.values.writer.DummyColumnValuesWriter;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
@@ -98,7 +98,8 @@ public class AssemblerTest extends AbstractDummyTest {
         QueryColumnMetadata queryMetadata = QueryColumnMetadata.create(columnMetadata.getDatasetType(),
                 columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.serializeColumnsMetadata(), readerFactory,
                 DummyValueGetterFactory.INSTANCE, DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(),
-                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE);
+                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                NoOpWarningCollector.INSTANCE, null);
         AbstractBytesInputStream[] streams = new AbstractBytesInputStream[columnMetadata.getNumberOfColumns()];
         Arrays.fill(streams, DummyBytesInputStream.INSTANCE);
 

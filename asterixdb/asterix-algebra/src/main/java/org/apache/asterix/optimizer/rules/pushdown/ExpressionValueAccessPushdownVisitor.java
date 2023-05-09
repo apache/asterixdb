@@ -99,7 +99,7 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
         }
 
         //Check nested arguments if contains any pushable value access
-        pushValueAccessExpressionArg(funcExpr.getArguments());
+        pushValueAccessExpressionArg(funcExpr.getArguments(), producedVar);
     }
 
     /**
@@ -147,13 +147,14 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
                 && funcExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE;
     }
 
-    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList) throws AlgebricksException {
+    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList, LogicalVariable producedVar)
+            throws AlgebricksException {
         for (Mutable<ILogicalExpression> exprRef : exprList) {
             /*
              * We need to set the produced variable as null here as the produced variable will not correspond to the
              * nested expression.
              */
-            pushValueAccessExpression(exprRef, null, typeEnv);
+            pushValueAccessExpression(exprRef, producedVar, typeEnv);
         }
     }
 

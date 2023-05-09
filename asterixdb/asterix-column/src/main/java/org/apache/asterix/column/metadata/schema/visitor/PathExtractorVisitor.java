@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.column.metadata.schema.visitor;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -25,11 +30,53 @@ import org.apache.asterix.column.metadata.schema.UnionSchemaNode;
 import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
+import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.column.values.IColumnValuesReaderFactory;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNode, Void> {
+    private final IColumnValuesReaderFactory readerFactory;
+    private final IntList delimiters;
+    private final Int2ObjectMap<IColumnValuesReader> cachedReaders;
+    private int level;
+
+    public PathExtractorVisitor(IColumnValuesReaderFactory readerFactory) {
+        this.readerFactory = readerFactory;
+        cachedReaders = new Int2ObjectOpenHashMap<>();
+        delimiters = new IntArrayList();
+    }
+
+    public List<IColumnValuesReader> getOrCreateReaders(ObjectSchemaNode path, List<IColumnValuesReader> readers)
+            throws HyracksDataException {
+        level = 0;
+        delimiters.clear();
+        AbstractSchemaNode node = path.accept(this, null);
+        ATypeTag typeTag = node.getTypeTag();
+        if (typeTag == ATypeTag.MISSING) {
+            return Collections.emptyList();
+        } else if (typeTag == ATypeTag.UNION) {
+            UnionSchemaNode unionNode = (UnionSchemaNode) node;
+            Collection<AbstractSchemaNode> children = unionNode.getChildren().values();
+            List<IColumnValuesReader> unionReaders = new ArrayList<>();
+            for (AbstractSchemaNode child : children) {
+                if (child.isNested()) {
+                    // ignore nested nodes as we only compare flat types
+                    continue;
+                }
+                IColumnValuesReader reader = getOrCreate(child, readers);
+                unionReaders.add(reader);
+            }
+            return unionReaders;
+        }
+        return Collections.singletonList(getOrCreate(node, readers));
+    }
+
     @Override
     public AbstractSchemaNode visit(ObjectSchemaNode objectNode, Void arg) throws HyracksDataException {
         IntList fieldNameIndexes = objectNode.getChildrenFieldNameIndexes();
@@ -37,6 +84,7 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
         if (fieldNameIndex < 0) {
             return MissingFieldSchemaNode.INSTANCE;
         }
+        level++;
         return objectNode.getChild(fieldNameIndex).accept(this, null);
     }
 
@@ -46,21 +94,48 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
         if (itemNode == null) {
             return MissingFieldSchemaNode.INSTANCE;
         }
+        delimiters.add(level - 1);
+        level++;
         return collectionNode.getItemNode().accept(this, null);
     }
 
     @Override
     public AbstractSchemaNode visit(UnionSchemaNode unionNode, Void arg) throws HyracksDataException {
-        for (AbstractSchemaNode node : unionNode.getChildren().values()) {
-            // Using 'for-loop' is the only get the child out of a collection
-            return node.accept(this, null);
+        Collection<AbstractSchemaNode> children = unionNode.getChildren().values();
+        if (children.size() == 1) {
+            // A specific type was requested. Get the requested type from union
+            for (AbstractSchemaNode node : children) {
+                return node.accept(this, null);
+            }
         }
-        return MissingFieldSchemaNode.INSTANCE;
+
+        // Multiple types were requested, return the union
+        return unionNode;
     }
 
     @Override
     public AbstractSchemaNode visit(PrimitiveSchemaNode primitiveNode, Void arg) throws HyracksDataException {
         //Missing column index is -1
         return primitiveNode;
+    }
+
+    private IColumnValuesReader getOrCreate(AbstractSchemaNode node, List<IColumnValuesReader> readers) {
+        PrimitiveSchemaNode primitiveNode = (PrimitiveSchemaNode) node;
+        int columnIndex = primitiveNode.getColumnIndex();
+        return cachedReaders.computeIfAbsent(columnIndex, k -> createReader(primitiveNode, readers));
+    }
+
+    private IColumnValuesReader createReader(PrimitiveSchemaNode primitiveNode, List<IColumnValuesReader> readers) {
+        IColumnValuesReader reader;
+        if (delimiters.isEmpty()) {
+            reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(), level,
+                    primitiveNode.isPrimaryKey());
+        } else {
+            // array
+            reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(), level,
+                    delimiters.toIntArray());
+        }
+        readers.add(reader);
+        return reader;
     }
 }

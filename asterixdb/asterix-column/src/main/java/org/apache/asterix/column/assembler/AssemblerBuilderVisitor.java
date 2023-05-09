@@ -155,14 +155,17 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         AssemblerInfo itemInfo = new AssemblerInfo(itemDeclaredType, arrayAssembler, false);
         itemNode.accept(this, itemInfo);
 
-        // Set repeated assembler as a delegate (responsible for writing null values)
-        delegateAssembler.setAsDelegate();
-        IColumnValuesReader reader = delegateAssembler.getReader();
-        int numberOfDelimiters = reader.getNumberOfDelimiters();
-        // End of group assembler is responsible to finalize array/multiset builders
-        EndOfRepeatedGroupAssembler endOfGroupAssembler =
-                new EndOfRepeatedGroupAssembler(reader, arrayAssembler, numberOfDelimiters - delimiters.size());
-        valueAssemblers.add(endOfGroupAssembler);
+        // if delegateAssembler is null, that means no column will be accessed
+        if (delegateAssembler != null) {
+            // Set repeated assembler as a delegate (responsible for writing null values)
+            delegateAssembler.setAsDelegate();
+            IColumnValuesReader reader = delegateAssembler.getReader();
+            int numberOfDelimiters = reader.getNumberOfDelimiters();
+            // End of group assembler is responsible to finalize array/multiset builders
+            EndOfRepeatedGroupAssembler endOfGroupAssembler =
+                    new EndOfRepeatedGroupAssembler(reader, arrayAssembler, numberOfDelimiters - delimiters.size());
+            valueAssemblers.add(endOfGroupAssembler);
+        }
 
         level--;
         delimiters.removeInt(delimiters.size() - 1);

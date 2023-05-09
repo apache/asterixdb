@@ -126,17 +126,18 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
     public void finish() {
         for (Map.Entry<LogicalVariable, AbstractScanOperator> entry : registeredDatasets.entrySet()) {
             AbstractScanOperator scanOp = entry.getValue();
-            Map<ILogicalExpression, ARecordType> filterPaths = filterPushdown.getFilterPaths(scanOp);
+            Map<ILogicalExpression, ARecordType> normalizedPaths = filterPushdown.getNormalizedFilterPaths(scanOp);
+            Map<ILogicalExpression, ARecordType> actualPaths = filterPushdown.getActualFilterPaths(scanOp);
             ILogicalExpression filterExpression = filterPushdown.getFilterExpression(scanOp);
             Map<String, FunctionCallInformation> sourceInformationMap = filterPushdown.getSourceInformationMap(scanOp);
             if (scanOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 DataSourceScanOperator scan = (DataSourceScanOperator) scanOp;
-                scan.setDatasetProjectionInfo(builder.createProjectionInfo(entry.getKey(), filterPaths,
+                scan.setDatasetProjectionInfo(builder.createProjectionInfo(entry.getKey(), normalizedPaths, actualPaths,
                         filterExpression, sourceInformationMap));
             } else {
                 UnnestMapOperator unnest = (UnnestMapOperator) scanOp;
-                unnest.setDatasetProjectionInfo(builder.createProjectionInfo(entry.getKey(), filterPaths,
-                        filterExpression, sourceInformationMap));
+                unnest.setDatasetProjectionInfo(builder.createProjectionInfo(entry.getKey(), normalizedPaths,
+                        actualPaths, filterExpression, sourceInformationMap));
             }
         }
 
@@ -175,7 +176,7 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
 
         if (filterPushdown.allowsPushdown(lastSeenScan) && op.getOperatorTag() == LogicalOperatorTag.SELECT) {
             //Push filters down
-            filterPushdown.addFilterExpression((SelectOperator) op, lastSeenScan);
+            filterPushdown.addFilterExpression(context, (SelectOperator) op, lastSeenScan);
         }
 
         pushdownVisitor.end();
@@ -229,6 +230,20 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
              * input operator is DataSourceScanOperator
              */
             setEmptyRecord(op.getInputs().get(0).getValue(), EMPTY_VARIABLES);
+        }
+        return null;
+    }
+
+    @Override
+    public Void visitAssignOperator(AssignOperator op, Void arg) throws AlgebricksException {
+        visitInputs(op, op.getVariables());
+        if (filterPushdown.allowsPushdown(lastSeenScan)) {
+            List<LogicalVariable> variables = op.getVariables();
+            List<Mutable<ILogicalExpression>> exprs = op.getExpressions();
+            for (int i = 0; i < variables.size(); i++) {
+                // Register any potential expression that can be used by the pushed down to filter
+                filterPushdown.registerExpression(variables.get(i), exprs.get(i).getValue());
+            }
         }
         return null;
     }
@@ -295,7 +310,10 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
                  * Initially, we will request the entire record.
                  */
                 builder.registerRoot(recordVar, RootExpectedSchemaNode.ALL_FIELDS_ROOT_NODE);
-                filterPushdown.registerDataset(op, datasetDataSource);
+                if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+                    // Not needed for secondary indexes
+                    filterPushdown.registerDataset(op, datasetDataSource);
+                }
                 registeredDatasets.put(recordVar, op);
 
                 if (datasetDataSource.hasMeta()) {
@@ -408,12 +426,6 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
      * Pushdown when possible for each operator
      * ******************************************************************************
      */
-
-    @Override
-    public Void visitAssignOperator(AssignOperator op, Void arg) throws AlgebricksException {
-        visitInputs(op, op.getVariables());
-        return null;
-    }
 
     @Override
     public Void visitSelectOperator(SelectOperator op, Void arg) throws AlgebricksException {

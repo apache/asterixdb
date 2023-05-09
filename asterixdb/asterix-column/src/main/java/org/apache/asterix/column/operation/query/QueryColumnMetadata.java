@@ -22,31 +22,39 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.IValueGetterFactory;
+import org.apache.asterix.column.filter.FalseColumnFilterEvaluator;
+import org.apache.asterix.column.filter.FilterAccessorProvider;
+import org.apache.asterix.column.filter.IColumnFilterEvaluator;
+import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
+import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
+import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
 import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
 import org.apache.asterix.column.util.SchemaStringBuilderVisitor;
+import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
-import org.apache.asterix.column.values.reader.filter.FilterAccessorProvider;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluator;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterEvaluatorFactory;
-import org.apache.asterix.column.values.reader.filter.IColumnFilterValueAccessor;
-import org.apache.asterix.column.values.reader.filter.evaluator.FalseColumnFilterEvaluator;
-import org.apache.asterix.column.values.reader.filter.evaluator.TrueColumnFilterEvaluator;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
+import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
@@ -59,22 +67,28 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
     private final FieldNamesDictionary fieldNamesDictionary;
     private final PrimitiveColumnValuesReader[] primaryKeyReaders;
-    private final IColumnFilterEvaluator filterEvaluator;
-    private final List<IColumnFilterValueAccessor> filterValueAccessors;
+    private final IColumnFilterEvaluator normalizedFilterEvaluator;
+    private final List<IColumnFilterNormalizedValueAccessor> filterValueAccessors;
+    private final IColumnIterableFilterEvaluator columnFilterEvaluator;
+    private final List<IColumnValuesReader> filterColumnReaders;
 
     protected final ColumnAssembler assembler;
 
     protected QueryColumnMetadata(ARecordType datasetType, ARecordType metaType,
             PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
-            IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator filterEvaluator,
-            List<IColumnFilterValueAccessor> filterValueAccessors) throws HyracksDataException {
+            IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator normalizedFilterEvaluator,
+            List<IColumnFilterNormalizedValueAccessor> filterValueAccessors,
+            IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders)
+            throws HyracksDataException {
         super(datasetType, metaType, primaryKeyReaders.length, serializedMetadata, -1);
         this.fieldNamesDictionary = fieldNamesDictionary;
         this.assembler = new ColumnAssembler(root, datasetType, this, readerFactory, valueGetterFactory);
         this.primaryKeyReaders = primaryKeyReaders;
-        this.filterEvaluator = filterEvaluator;
+        this.normalizedFilterEvaluator = normalizedFilterEvaluator;
         this.filterValueAccessors = filterValueAccessors;
+        this.columnFilterEvaluator = columnFilterEvaluator;
+        this.filterColumnReaders = filterColumnReaders;
     }
 
     public final ColumnAssembler getAssembler() {
@@ -89,12 +103,20 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         return primaryKeyReaders;
     }
 
-    public IColumnFilterEvaluator getFilterEvaluator() {
-        return filterEvaluator;
+    public final IColumnFilterEvaluator getNormalizedFilterEvaluator() {
+        return normalizedFilterEvaluator;
     }
 
-    public List<IColumnFilterValueAccessor> getFilterValueAccessors() {
+    public final List<IColumnFilterNormalizedValueAccessor> getFilterValueAccessors() {
         return filterValueAccessors;
+    }
+
+    public final IColumnIterableFilterEvaluator getColumnFilterEvaluator() {
+        return columnFilterEvaluator;
+    }
+
+    public final List<IColumnValuesReader> getFilterColumnReaders() {
+        return filterColumnReaders;
     }
 
     /* *****************************************************
@@ -112,8 +134,18 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     }
 
     @Override
+    public int getFilteredColumnIndex(int ordinal) {
+        return filterColumnReaders.get(ordinal).getColumnIndex();
+    }
+
+    @Override
     public int getNumberOfProjectedColumns() {
         return assembler.getNumberOfColumns();
+    }
+
+    @Override
+    public int getNumberOfFilteredColumns() {
+        return filterColumnReaders.size();
     }
 
     @Override
@@ -141,8 +173,9 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             IValueReference serializedMetadata, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfoMap,
-            IColumnFilterEvaluatorFactory filterEvaluatorFactory, IWarningCollector warningCollector)
-            throws IOException {
+            IColumnNormalizedFilterEvaluatorFactory normalizedEvaluatorFactory,
+            IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
+            IHyracksTaskContext context) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
         int offset = serializedMetadata.getStartOffset();
         int length = serializedMetadata.getLength();
@@ -166,16 +199,34 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
                 new SchemaClipperVisitor(fieldNamesDictionary, functionCallInfoMap, warningCollector);
         ObjectSchemaNode clippedRoot = clip(requestedType, root, clipperVisitor);
 
-        FilterAccessorProvider filterAccessorProvider = new FilterAccessorProvider(root, clipperVisitor);
-        IColumnFilterEvaluator filterEvaluator = filterEvaluatorFactory.create(filterAccessorProvider);
-        List<IColumnFilterValueAccessor> filterValueAccessors = filterAccessorProvider.getFilterAccessors();
+        IColumnFilterEvaluator normalizedFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
+        IColumnIterableFilterEvaluator columnFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
+        List<IColumnValuesReader> filterColumnReaders = Collections.emptyList();
+        List<IColumnFilterNormalizedValueAccessor> filterValueAccessors = Collections.emptyList();
+        if (context != null) {
+            FilterAccessorProvider filterAccessorProvider =
+                    new FilterAccessorProvider(root, clipperVisitor, readerFactory, valueGetterFactory);
+            TaskUtil.put(FilterAccessorProvider.FILTER_ACCESSOR_PROVIDER_KEY, filterAccessorProvider, context);
+            // Min/Max filters in page0
+            normalizedFilterEvaluator = normalizedEvaluatorFactory.create(filterAccessorProvider);
+            filterValueAccessors = filterAccessorProvider.getFilterAccessors();
 
+            // Filter columns (columns appeared in WHERE clause)
+            IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
+            // ignore atomic (or flat) types information
+            clipperVisitor.setIgnoreFlatType(true);
+            filterAccessorProvider.reset();
+            columnFilterEvaluator = columnFilterEvaluatorFactory.create(filterAccessorProvider, evaluatorContext);
+            filterColumnReaders = filterAccessorProvider.getFilterColumnReaders();
+        }
+
+        // Primary key readers
         PrimitiveColumnValuesReader[] primaryKeyReaders =
                 createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
 
-        if (LOGGER.isInfoEnabled() && filterEvaluator != TrueColumnFilterEvaluator.INSTANCE) {
-            String filterString = filterEvaluator == FalseColumnFilterEvaluator.INSTANCE ? "SKIP_ALL"
-                    : LogRedactionUtil.userData(filterEvaluatorFactory.toString());
+        if (LOGGER.isInfoEnabled() && normalizedFilterEvaluator != TrueColumnFilterEvaluator.INSTANCE) {
+            String filterString = normalizedFilterEvaluator == FalseColumnFilterEvaluator.INSTANCE ? "SKIP_ALL"
+                    : LogRedactionUtil.userData(normalizedEvaluatorFactory.toString());
             LOGGER.info("Filter: {}", filterString);
         }
 
@@ -183,7 +234,8 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         logSchema(clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
 
         return new QueryColumnMetadata(datasetType, null, primaryKeyReaders, serializedMetadata, fieldNamesDictionary,
-                clippedRoot, readerFactory, valueGetterFactory, filterEvaluator, filterValueAccessors);
+                clippedRoot, readerFactory, valueGetterFactory, normalizedFilterEvaluator, filterValueAccessors,
+                columnFilterEvaluator, filterColumnReaders);
     }
 
     protected static ObjectSchemaNode clip(ARecordType requestedType, ObjectSchemaNode root,
@@ -211,10 +263,10 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
 
     protected static void logSchema(ObjectSchemaNode root, String schemaSource,
             FieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
-        if (LOGGER.isDebugEnabled()) {
+        if (LOGGER.isInfoEnabled()) {
             SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
             String schema = LogRedactionUtil.userData(schemaBuilder.build(root));
-            LOGGER.debug("Queried {} schema: \n {}", schemaSource, schema);
+            LOGGER.info("Queried {} schema: \n {}", schemaSource, schema);
         }
     }
 }

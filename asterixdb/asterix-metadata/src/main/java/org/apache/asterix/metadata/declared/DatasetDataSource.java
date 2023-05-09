@@ -158,7 +158,7 @@ public class DatasetDataSource extends DataSource {
                 }
                 int numberOfPrimaryKeys = dataset.getPrimaryKeys().size();
                 ITupleProjectorFactory tupleProjectorFactory =
-                        IndexUtil.createTupleProjectorFactory(dataset.getDatasetFormatInfo(), projectionInfo,
+                        IndexUtil.createTupleProjectorFactory(context, dataset.getDatasetFormatInfo(), projectionInfo,
                                 metaProjectionInfo, datasetType, metaItemType, numberOfPrimaryKeys);
 
                 int[] minFilterFieldIndexes = createFilterIndexes(minFilterVars, opSchema);

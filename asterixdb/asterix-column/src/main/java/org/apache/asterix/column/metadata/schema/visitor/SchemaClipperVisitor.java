@@ -43,12 +43,18 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
     private final FieldNamesDictionary fieldNamesDictionary;
     private final IWarningCollector warningCollector;
     private final Map<String, FunctionCallInformation> functionCallInfoMap;
+    private boolean ignoreFlatType;
 
     public SchemaClipperVisitor(FieldNamesDictionary fieldNamesDictionary,
             Map<String, FunctionCallInformation> functionCallInfoMap, IWarningCollector warningCollector) {
         this.fieldNamesDictionary = fieldNamesDictionary;
         this.functionCallInfoMap = functionCallInfoMap;
         this.warningCollector = warningCollector;
+        ignoreFlatType = false;
+    }
+
+    public void setIgnoreFlatType(boolean ignoreFlatType) {
+        this.ignoreFlatType = ignoreFlatType;
     }
 
     @Override
@@ -100,7 +106,7 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
 
     @Override
     public AbstractSchemaNode visitFlat(IAType flatType, AbstractSchemaNode arg) {
-        if (flatType.getTypeTag() == ATypeTag.ANY) {
+        if (ignoreFlatType || flatType.getTypeTag() == ATypeTag.ANY) {
             return arg;
         } else if (isNotCompatible(flatType, arg)) {
             return getNonCompatibleNumericNodeIfAny(flatType, arg);

@@ -1,0 +1,1 @@
+\Q{"keys":"checkin_id","type":{"type":"org.apache.asterix.om.types.ARecordType","name":"CheckinType","open":true,"fields":[{"checkin_id":{"type":"AInt64"}}]},"splits":[\E.*\Q]}\E

@@ -57,6 +57,11 @@ public interface IExpectedSchemaNode {
     <R, T> R accept(IExpectedSchemaNodeVisitor<R, T> visitor, T arg);
 
     /**
+     * @return checks whether a node can be replaced
+     */
+    boolean allowsReplacing();
+
+    /**
      * Replace a node from one type to another
      * Example:
      * - {@link ExpectedSchemaNodeType#ANY} to {@link ExpectedSchemaNodeType#OBJECT}

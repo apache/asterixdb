@@ -269,6 +269,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             // tuple must be written first before the filter is applied to
             // assemble columnar tuples
             tuple = writeTupleToOutput(tuple);
+            if (tuple == null) {
+                continue;
+            }
             if (tupleFilter != null) {
                 referenceFilterTuple.reset(tuple);
                 if (!tupleFilter.accept(referenceFilterTuple)) {

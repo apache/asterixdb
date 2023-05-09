@@ -79,6 +79,17 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
+    protected void startColumnFilter(IColumnBufferProvider buffersProvider, int ordinal, int numberOfTuples)
+            throws HyracksDataException {
+        // NoOp
+    }
+
+    @Override
+    protected boolean evaluateFilter() throws HyracksDataException {
+        return true;
+    }
+
+    @Override
     public void skip(int count) throws HyracksDataException {
         skipCount += count;
     }

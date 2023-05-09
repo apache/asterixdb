@@ -89,6 +89,16 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
     }
 
     @Override
+    public int getFilteredColumnIndex(int ordinal) {
+        return -1;
+    }
+
+    @Override
+    public int getNumberOfFilteredColumns() {
+        return 0;
+    }
+
+    @Override
     public AbstractColumnTupleReader createTupleReader() {
         return new MergeColumnTupleReader(this);
     }

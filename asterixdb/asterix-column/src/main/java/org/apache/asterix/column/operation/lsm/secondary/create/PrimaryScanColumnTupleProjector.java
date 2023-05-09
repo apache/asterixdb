@@ -22,8 +22,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
 
+import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.query.QueryColumnTupleProjector;
-import org.apache.asterix.column.values.reader.filter.evaluator.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -39,7 +39,8 @@ final class PrimaryScanColumnTupleProjector implements IColumnTupleProjector {
     public PrimaryScanColumnTupleProjector(ARecordType datasetType, int numberOfPrimaryKeys,
             ARecordType requestedType) {
         projector = new QueryColumnTupleProjector(datasetType, numberOfPrimaryKeys, requestedType,
-                Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE);
+                Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
     }
 
     @Override
