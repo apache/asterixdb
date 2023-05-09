@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb</artifactId>
-  <version>0.9.8.1</version>
+  <version>0.9.8.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>${implementation.url}</url>
 
@@ -82,8 +82,8 @@
     <skip-npm-touch.stage>none</skip-npm-touch.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.3.8.1</algebricks.version>
-    <hyracks.version>0.3.8.1</hyracks.version>
+    <algebricks.version>0.3.8.2-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.3.8.2-SNAPSHOT</hyracks.version>
     <hadoop.version>3.3.4</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
