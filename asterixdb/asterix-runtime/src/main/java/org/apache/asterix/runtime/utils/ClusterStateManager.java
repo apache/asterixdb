@@ -503,6 +503,11 @@ public class ClusterStateManager implements IClusterStateManager {
         return nodeIds.stream().anyMatch(failedNodes::contains);
     }
 
+    @Override
+    public int getStoragePartitionsCount() {
+        return appCtx.getStorageProperties().getStoragePartitionsCount();
+    }
+
     public synchronized StorageComputePartitionsMap getStorageComputeMap() {
         return storageComputePartitionsMap;
     }

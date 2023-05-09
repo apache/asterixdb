@@ -30,7 +30,6 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.utils.PartitioningScheme;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.util.FeedUtils;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -49,10 +48,12 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
 
     protected final ICcApplicationContext appCtx;
     protected final ClusterStateManager clusterStateManager;
+    protected final int storagePartitionsCounts;
 
     DataPartitioningProvider(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
         this.clusterStateManager = (ClusterStateManager) appCtx.getClusterStateManager();
+        this.storagePartitionsCounts = clusterStateManager.getStoragePartitionsCount();
     }
 
     public static DataPartitioningProvider create(ICcApplicationContext appCtx) {
@@ -86,10 +87,9 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
         return PartitioningProperties.of(spC.first, spC.second, partitionsMap);
     }
 
-    protected static int getNumberOfPartitions(Dataset ds) {
+    protected int getNumberOfPartitions(Dataset ds) {
         return MetadataIndexImmutableProperties.isMetadataDataset(ds.getDatasetId())
-                ? MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS
-                : StorageConstants.NUM_STORAGE_PARTITIONS;
+                ? MetadataIndexImmutableProperties.METADATA_DATASETS_PARTITIONS : storagePartitionsCounts;
     }
 
     protected static int getLocationsCount(AlgebricksPartitionConstraint constraint) {

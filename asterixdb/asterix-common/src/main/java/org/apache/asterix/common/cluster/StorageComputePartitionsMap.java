@@ -24,11 +24,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.utils.StorageConstants;
-
 public class StorageComputePartitionsMap {
 
     private final Map<Integer, ComputePartition> stoToComputeLocation = new HashMap<>();
+    private final int storagePartitionsCount;
+
+    public StorageComputePartitionsMap(int storagePartitionsCount) {
+        this.storagePartitionsCount = storagePartitionsCount;
+    }
 
     public void addStoragePartition(int stoPart, ComputePartition compute) {
         stoToComputeLocation.put(stoPart, compute);
@@ -41,7 +44,7 @@ public class StorageComputePartitionsMap {
             computeToStoragePartitions.put(computePartitionIdForMetadata,
                     Collections.singletonList(computePartitionIdForMetadata));
         } else {
-            for (int i = 0; i < StorageConstants.NUM_STORAGE_PARTITIONS; i++) {
+            for (int i = 0; i < storagePartitionsCount; i++) {
                 ComputePartition computePartition = getComputePartition(i);
                 int computeId = computePartition.getId();
                 List<Integer> storagePartitions =
@@ -64,13 +67,14 @@ public class StorageComputePartitionsMap {
     public static StorageComputePartitionsMap computePartitionsMap(IClusterStateManager clusterStateManager) {
         ClusterPartition metadataPartition = clusterStateManager.getMetadataPartition();
         Map<Integer, ClusterPartition> clusterPartitions = clusterStateManager.getClusterPartitions();
-        StorageComputePartitionsMap newMap = new StorageComputePartitionsMap();
+        final int storagePartitionsCount = clusterStateManager.getStoragePartitionsCount();
+        StorageComputePartitionsMap newMap = new StorageComputePartitionsMap(storagePartitionsCount);
         newMap.addStoragePartition(metadataPartition.getPartitionId(),
                 new ComputePartition(metadataPartition.getPartitionId(), metadataPartition.getActiveNodeId()));
-        int storagePartitionsPerComputePartition = StorageConstants.NUM_STORAGE_PARTITIONS / clusterPartitions.size();
+        int storagePartitionsPerComputePartition = storagePartitionsCount / clusterPartitions.size();
         int storagePartitionId = 0;
         int lastComputePartition = 1;
-        int remainingStoragePartition = StorageConstants.NUM_STORAGE_PARTITIONS % clusterPartitions.size();
+        int remainingStoragePartition = storagePartitionsCount % clusterPartitions.size();
         for (Map.Entry<Integer, ClusterPartition> cp : clusterPartitions.entrySet()) {
             ClusterPartition clusterPartition = cp.getValue();
             for (int i = 0; i < storagePartitionsPerComputePartition; i++) {

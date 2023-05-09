@@ -20,6 +20,7 @@ package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
+import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
@@ -66,7 +67,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
         STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15),
         STORAGE_FORMAT(STRING, "row"),
-        STORAGE_PARTITIONING(STRING, "dynamic");
+        STORAGE_PARTITIONING(STRING, "dynamic"),
+        STORAGE_PARTITIONS_COUNT(INTEGER, 8);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -84,6 +86,7 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_GLOBAL_CLEANUP:
                 case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
                 case STORAGE_PARTITIONING:
+                case STORAGE_PARTITIONS_COUNT:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -143,8 +146,11 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_FORMAT:
                     return "The default storage format (either row or column)";
                 case STORAGE_PARTITIONING:
-                    return "The storage partitioning scheme (either dynamic or static). This value should not be changed"
-                            + " after any dataset have been created";
+                    return "The storage partitioning scheme (either dynamic or static). This value should not be"
+                            + " changed after any dataset has been created";
+                case STORAGE_PARTITIONS_COUNT:
+                    return "The number of storage partitions to use for static partitioning. This value should not be"
+                            + " changed after any dataset has been created";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -296,5 +302,9 @@ public class StorageProperties extends AbstractProperties {
 
     public PartitioningScheme getPartitioningScheme() {
         return PartitioningScheme.fromName(accessor.getString(Option.STORAGE_PARTITIONING));
+    }
+
+    public int getStoragePartitionsCount() {
+        return accessor.getInt(Option.STORAGE_PARTITIONS_COUNT);
     }
 }

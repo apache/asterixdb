@@ -280,4 +280,10 @@ public interface IClusterStateManager {
      * @return true if any of the nodes is currently inactive, otherwise false
      */
     boolean nodesFailed(Set<String> nodeIds);
+
+    /**
+     * Gets the count of storage partitions
+     * @return the count of storage partitions
+     */
+    int getStoragePartitionsCount();
 }

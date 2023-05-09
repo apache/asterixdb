@@ -73,7 +73,7 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
         List<String> locations = new ArrayList<>();
         Set<Integer> uniqueLocations = new HashSet<>();
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
-        for (int i = 0; i < StorageConstants.NUM_STORAGE_PARTITIONS; i++) {
+        for (int i = 0; i < storagePartitionsCounts; i++) {
             File f = new File(StoragePathUtil.prepareStoragePartitionPath(i),
                     StoragePathUtil.prepareDataverseName(dataverseName));
             ComputePartition computePartition = partitionMap.getComputePartition(i);
