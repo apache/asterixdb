@@ -34,13 +34,17 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
     private final IBinaryHashFunctionFactory[] hashFunctionFactories;
     private final int[][] partitionsMap;
 
-    public FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories) {
-        this.hashFields = hashFields;
-        this.hashFunctionFactories = hashFunctionFactories;
-        this.partitionsMap = null;
+    public static FieldHashPartitionComputerFactory of(int[] hashFields,
+            IBinaryHashFunctionFactory[] hashFunctionFactories) {
+        return new FieldHashPartitionComputerFactory(hashFields, hashFunctionFactories, null);
     }
 
-    public FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories,
+    public static FieldHashPartitionComputerFactory withMap(int[] hashFields,
+            IBinaryHashFunctionFactory[] hashFunctionFactories, int[][] partitionsMap) {
+        return new FieldHashPartitionComputerFactory(hashFields, hashFunctionFactories, partitionsMap);
+    }
+
+    private FieldHashPartitionComputerFactory(int[] hashFields, IBinaryHashFunctionFactory[] hashFunctionFactories,
             int[][] partitionsMap) {
         this.hashFields = hashFields;
         this.hashFunctionFactories = hashFunctionFactories;

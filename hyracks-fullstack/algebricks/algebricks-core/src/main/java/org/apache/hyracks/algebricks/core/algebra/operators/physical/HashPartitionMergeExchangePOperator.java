@@ -107,8 +107,8 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        List<ILocalStructuralProperty> orderProps = new LinkedList<ILocalStructuralProperty>();
-        List<OrderColumn> columns = new ArrayList<OrderColumn>();
+        List<ILocalStructuralProperty> orderProps = new LinkedList<>();
+        List<OrderColumn> columns = new ArrayList<>();
         for (OrderColumn oc : orderColumns) {
             LogicalVariable var = oc.getColumn();
             columns.add(new OrderColumn(var, oc.getOrder()));
@@ -139,8 +139,12 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
                 ++i;
             }
         }
-        ITuplePartitionComputerFactory tpcf =
-                new FieldHashPartitionComputerFactory(keys, hashFunctionFactories, partitionsMap);
+        ITuplePartitionComputerFactory tpcf;
+        if (partitionsMap == null) {
+            tpcf = FieldHashPartitionComputerFactory.of(keys, hashFunctionFactories);
+        } else {
+            tpcf = FieldHashPartitionComputerFactory.withMap(keys, hashFunctionFactories, partitionsMap);
+        }
 
         int n = orderColumns.size();
         int[] sortFields = new int[n];
@@ -164,7 +168,7 @@ public class HashPartitionMergeExchangePOperator extends AbstractExchangePOperat
 
         IConnectorDescriptor conn =
                 new MToNPartitioningMergingConnectorDescriptor(spec, tpcf, sortFields, comparatorFactories, nkcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, null);
+        return new Pair<>(conn, null);
     }
 
     public List<LogicalVariable> getPartitionFields() {

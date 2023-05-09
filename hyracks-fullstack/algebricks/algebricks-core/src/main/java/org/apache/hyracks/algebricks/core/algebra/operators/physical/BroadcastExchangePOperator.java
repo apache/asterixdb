@@ -28,7 +28,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.BroadcastPartitioningProperty;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
@@ -41,7 +40,7 @@ import org.apache.hyracks.dataflow.std.connectors.MToNBroadcastConnectorDescript
 
 public class BroadcastExchangePOperator extends AbstractExchangePOperator {
 
-    private INodeDomain domain;
+    private final INodeDomain domain;
 
     public BroadcastExchangePOperator(INodeDomain domain) {
         this.domain = domain;
@@ -56,7 +55,7 @@ public class BroadcastExchangePOperator extends AbstractExchangePOperator {
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
         IPartitioningProperty pp = new BroadcastPartitioningProperty(domain);
         // Broadcasts will destroy input local properties.
-        this.deliveredProperties = new StructuralPropertiesVector(pp, new ArrayList<ILocalStructuralProperty>());
+        this.deliveredProperties = new StructuralPropertiesVector(pp, new ArrayList<>());
     }
 
     @Override

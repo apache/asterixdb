@@ -148,7 +148,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         nodemap.set(7);
 
         IConnectorDescriptor conn1 = new LocalityAwareMToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }),
                 new HashtableLocalityMap(nodemap));
@@ -206,7 +206,7 @@ public class LocalityAwareConnectorTest extends AbstractMultiNCIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, "asterix-005", "asterix-006");
 
         IConnectorDescriptor conn1 = new LocalityAwareMToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }),
                 new GlobalHashingLocalityMap());

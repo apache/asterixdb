@@ -165,9 +165,9 @@ public class InMemoryHashJoinOperatorDescriptor extends AbstractOperatorDescript
                 @Override
                 public void open() throws HyracksDataException {
                     ITuplePartitionComputer hpc0 =
-                            new FieldHashPartitionComputerFactory(keys0, hashFunctionFactories0).createPartitioner(ctx);
+                            FieldHashPartitionComputerFactory.of(keys0, hashFunctionFactories0).createPartitioner(ctx);
                     ITuplePartitionComputer hpc1 =
-                            new FieldHashPartitionComputerFactory(keys1, hashFunctionFactories1).createPartitioner(ctx);
+                            FieldHashPartitionComputerFactory.of(keys1, hashFunctionFactories1).createPartitioner(ctx);
                     state = new HashBuildTaskState(jobletCtx.getJobId(), new TaskId(getActivityId(), partition));
                     ISerializableTable table = new SerializableHashTable(tableSize, jobletCtx, bufferManager);
                     state.joiner = new InMemoryHashJoin(jobletCtx, new FrameTupleAccessor(rd0), hpc0,

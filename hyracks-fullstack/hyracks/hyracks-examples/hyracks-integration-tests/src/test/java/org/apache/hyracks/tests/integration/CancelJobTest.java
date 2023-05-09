@@ -257,7 +257,7 @@ public class CancelJobTest extends AbstractMultiNCIntegrationTest {
 
         // Hash-repartitioning connector.
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 0 }, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(new int[] { 0 }, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, scanOp, 0, sleepOp, 0);
 

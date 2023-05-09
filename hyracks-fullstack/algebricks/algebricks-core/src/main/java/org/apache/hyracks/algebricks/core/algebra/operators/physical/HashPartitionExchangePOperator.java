@@ -105,8 +105,12 @@ public class HashPartitionExchangePOperator extends AbstractExchangePOperator {
             hashFunctionFactories[i] = hashFunProvider.getBinaryHashFunctionFactory(env.getVarType(v));
             ++i;
         }
-        ITuplePartitionComputerFactory tpcf =
-                new FieldHashPartitionComputerFactory(keys, hashFunctionFactories, partitionsMap);
+        ITuplePartitionComputerFactory tpcf;
+        if (partitionsMap == null) {
+            tpcf = FieldHashPartitionComputerFactory.of(keys, hashFunctionFactories);
+        } else {
+            tpcf = FieldHashPartitionComputerFactory.withMap(keys, hashFunctionFactories, partitionsMap);
+        }
         IConnectorDescriptor conn = new MToNPartitioningConnectorDescriptor(spec, tpcf);
         return new Pair<>(conn, null);
     }

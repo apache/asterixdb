@@ -26,7 +26,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
-import org.apache.hyracks.algebricks.core.algebra.properties.ILocalStructuralProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPartitioningProperty;
 import org.apache.hyracks.algebricks.core.algebra.properties.IPhysicalPropertiesVector;
 import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirements;
@@ -45,8 +44,8 @@ public class RandomMergeExchangePOperator extends AbstractExchangePOperator {
 
     @Override
     public void computeDeliveredProperties(ILogicalOperator op, IOptimizationContext context) {
-        this.deliveredProperties = new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED,
-                new ArrayList<ILocalStructuralProperty>(0));
+        this.deliveredProperties =
+                new StructuralPropertiesVector(IPartitioningProperty.UNPARTITIONED, new ArrayList<>(0));
     }
 
     @Override
@@ -59,6 +58,6 @@ public class RandomMergeExchangePOperator extends AbstractExchangePOperator {
     public Pair<IConnectorDescriptor, TargetConstraint> createConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ILogicalOperator op, IOperatorSchema opSchema, JobGenContext context) {
         IConnectorDescriptor conn = new MToNBroadcastConnectorDescriptor(spec);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, TargetConstraint.ONE);
+        return new Pair<>(conn, TargetConstraint.ONE);
     }
 }

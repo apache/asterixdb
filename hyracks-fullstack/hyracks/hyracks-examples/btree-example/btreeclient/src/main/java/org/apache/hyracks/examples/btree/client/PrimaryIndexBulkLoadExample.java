@@ -166,7 +166,7 @@ public class PrimaryIndexBulkLoadExample {
         IBinaryHashFunctionFactory[] hashFactories = new IBinaryHashFunctionFactory[1];
         hashFactories[0] = PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY);
         IConnectorDescriptor hashConn = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(new int[] { 0 }, hashFactories));
+                FieldHashPartitionComputerFactory.withMap(new int[] { 0 }, hashFactories, partitionsMap));
         NullSinkOperatorDescriptor nsOpDesc = new NullSinkOperatorDescriptor(spec);
         JobHelper.createPartitionConstraint(spec, nsOpDesc, splitNCs);
 

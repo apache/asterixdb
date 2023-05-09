@@ -78,7 +78,7 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
         sb.append(" [");
         sb.append(sortColumns[0]);
         for (int i = 1; i < sortColumns.length; i++) {
-            sb.append(", " + sortColumns[i]);
+            sb.append(", ").append(sortColumns[i]);
         }
         sb.append(" ]");
         return sb.toString();
@@ -94,8 +94,8 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
             pv1 = inp1.getDeliveredPhysicalProperties();
         }
 
-        List<OrderColumn> orderColumns = new ArrayList<OrderColumn>();
-        List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(sortColumns.length);
+        List<OrderColumn> orderColumns = new ArrayList<>();
+        List<ILocalStructuralProperty> localProps = new ArrayList<>(sortColumns.length);
         for (ILocalStructuralProperty prop : pv1.getLocalProperties()) {
             if (prop.getPropertyType() == PropertyType.LOCAL_ORDER_PROPERTY) {
                 LocalOrderProperty lop = (LocalOrderProperty) prop;
@@ -109,8 +109,6 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
                         break;
                     }
                 }
-            } else {
-                continue;
             }
         }
         if (orderColumns.size() > 0) {
@@ -122,7 +120,7 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
     @Override
     public PhysicalRequirements getRequiredPropertiesForChildren(ILogicalOperator op,
             IPhysicalPropertiesVector reqdByParent, IOptimizationContext context) {
-        List<ILocalStructuralProperty> localProps = new ArrayList<ILocalStructuralProperty>(sortColumns.length);
+        List<ILocalStructuralProperty> localProps = new ArrayList<>(sortColumns.length);
         localProps.add(new LocalOrderProperty(Arrays.asList(sortColumns)));
         StructuralPropertiesVector[] r =
                 new StructuralPropertiesVector[] { new StructuralPropertiesVector(null, localProps) };
@@ -152,9 +150,9 @@ public class SortMergeExchangePOperator extends AbstractExchangePOperator {
                 nkcf = nkcfProvider.getNormalizedKeyComputerFactory(type, sortColumns[i].getOrder() == OrderKind.ASC);
             }
         }
-        ITuplePartitionComputerFactory tpcf = new FieldHashPartitionComputerFactory(sortFields, hashFuns);
+        ITuplePartitionComputerFactory tpcf = FieldHashPartitionComputerFactory.of(sortFields, hashFuns);
         IConnectorDescriptor conn = new MToNPartitioningMergingConnectorDescriptor(spec, tpcf, sortFields, comps, nkcf);
-        return new Pair<IConnectorDescriptor, TargetConstraint>(conn, TargetConstraint.ONE);
+        return new Pair<>(conn, TargetConstraint.ONE);
     }
 
 }

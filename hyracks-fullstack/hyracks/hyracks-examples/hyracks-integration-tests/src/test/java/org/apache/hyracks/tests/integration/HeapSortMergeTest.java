@@ -99,7 +99,7 @@ public class HeapSortMergeTest extends AbstractIntegrationTest {
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
 
-        spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, new FieldHashPartitionComputerFactory(
+        spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, FieldHashPartitionComputerFactory.of(
                 new int[] { 1, 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }),
@@ -162,7 +162,7 @@ public class HeapSortMergeTest extends AbstractIntegrationTest {
 
         spec.connect(new OneToOneConnectorDescriptor(spec), ordScanner, 0, sorter, 0);
 
-        spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, new FieldHashPartitionComputerFactory(
+        spec.connect(new MToNPartitioningMergingConnectorDescriptor(spec, FieldHashPartitionComputerFactory.of(
                 new int[] { 1, 0 },
                 new IBinaryHashFunctionFactory[] { PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }),

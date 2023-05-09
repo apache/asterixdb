@@ -60,7 +60,10 @@ class HashPartitioner {
             int storagePartition = h % storagePartition2Compute.size();
             int computePartition = storagePartition2Compute.getOrDefault(storagePartition, Integer.MIN_VALUE);
             if (computePartition < 0 || computePartition >= nParts) {
-                throw new IllegalStateException("couldn't resolve storage partition to compute partition");
+                throw new IllegalStateException(
+                        "couldn't resolve storage partition " + storagePartition + " to compute partition "
+                                + computePartition + ". num_storage=" + storagePartition2Compute.size() + ", nParts="
+                                + nParts + ",storagePartition2Compute=" + storagePartition2Compute);
             }
             return computePartition;
         }

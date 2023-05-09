@@ -337,8 +337,8 @@ public class DatasetUtil {
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         FileSplit[] fs = partitioningProperties.getSpiltsProvider().getFileSplits();
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < fs.length; i++) {
-            sb.append(fs[i] + " ");
+        for (FileSplit f : fs) {
+            sb.append(f).append(" ");
         }
         LOGGER.info("CREATING File Splits: {}", sb);
         Pair<ILSMMergePolicyFactory, Map<String, String>> compactionInfo =
@@ -372,8 +372,6 @@ public class DatasetUtil {
                         partitioningProperties.getSpiltsProvider());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
                 indexHelperFactory, partitioningProperties.getComputeStorageMap());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
-                partitioningProperties.getConstraints());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
                 partitioningProperties.getConstraints());
         spec.addRoot(compactOp);

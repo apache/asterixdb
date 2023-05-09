@@ -158,7 +158,7 @@ public class Sort {
 
         spec.connect(
                 new MToNPartitioningMergingConnectorDescriptor(spec,
-                        new FieldHashPartitionComputerFactory(SortFields, orderBinaryHashFunctionFactories), SortFields,
+                        FieldHashPartitionComputerFactory.of(SortFields, orderBinaryHashFunctionFactories), SortFields,
                         SortFieldsComparatorFactories, new UTF8StringNormalizedKeyComputerFactory()),
                 sorter, 0, printer, 0);
 

@@ -176,7 +176,7 @@ public class Groupby {
         }
         // Connect scanner with the grouper
         IConnectorDescriptor scanGroupConnDef2 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keys,
+                FieldHashPartitionComputerFactory.of(keys,
                         new IBinaryHashFunctionFactory[] {
                                 // PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(IntegerPointable.FACTORY) }));

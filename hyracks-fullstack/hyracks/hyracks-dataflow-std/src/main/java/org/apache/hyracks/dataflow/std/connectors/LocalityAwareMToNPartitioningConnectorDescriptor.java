@@ -37,9 +37,9 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
 
     private static final long serialVersionUID = 1L;
 
-    private ILocalityMap localityMap;
+    private final ILocalityMap localityMap;
 
-    private ITuplePartitionComputerFactory tpcf;
+    private final ITuplePartitionComputerFactory tpcf;
 
     public LocalityAwareMToNPartitioningConnectorDescriptor(IConnectorDescriptorRegistry spec,
             ITuplePartitionComputerFactory tpcf, ILocalityMap localityMap) {
@@ -48,15 +48,6 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
         this.tpcf = tpcf;
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see
-     * org.apache.hyracks.api.dataflow.IConnectorDescriptor#createPartitioner
-     * (org.apache.hyracks.api.context.IHyracksTaskContext,
-     * org.apache.hyracks.api.dataflow.value.RecordDescriptor,
-     * org.apache.hyracks.api.comm.IPartitionWriterFactory, int, int, int)
-     */
     @Override
     public IFrameWriter createPartitioner(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             IPartitionWriterFactory edwFactory, int index, int nProducerPartitions, int nConsumerPartitions)
@@ -65,14 +56,6 @@ public class LocalityAwareMToNPartitioningConnectorDescriptor extends AbstractMT
                 nConsumerPartitions, localityMap, index);
     }
 
-    /*
-     * (non-Javadoc)
-     *
-     * @see org.apache.hyracks.api.dataflow.IConnectorDescriptor#
-     * createPartitionCollector
-     * (org.apache.hyracks.api.context.IHyracksTaskContext,
-     * org.apache.hyracks.api.dataflow.value.RecordDescriptor, int, int, int)
-     */
     @Override
     public IPartitionCollector createPartitionCollector(IHyracksTaskContext ctx, RecordDescriptor recordDesc,
             int receiverIndex, int nProducerPartitions, int nConsumerPartitions) throws HyracksDataException {

@@ -318,8 +318,10 @@ public class RebalanceUtil {
         // Connects scan and upsert.
         int numKeys = target.getPrimaryKeys().size();
         int[] keys = IntStream.range(0, numKeys).toArray();
-        IConnectorDescriptor connectorDescriptor = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keys, target.getPrimaryHashFunctionFactories(metadataProvider)));
+        int[][] partitionsMap = metadataProvider.getPartitioningProperties(target).getComputeStorageMap();
+        IConnectorDescriptor connectorDescriptor =
+                new MToNPartitioningConnectorDescriptor(spec, FieldHashPartitionComputerFactory.withMap(keys,
+                        target.getPrimaryHashFunctionFactories(metadataProvider), partitionsMap));
         spec.connect(connectorDescriptor, primaryScanOp, 0, upsertOp, 0);
 
         // Connects upsert and sink.

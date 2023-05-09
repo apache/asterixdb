@@ -130,7 +130,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -179,7 +179,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -220,7 +220,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -269,7 +269,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -309,7 +309,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -358,7 +358,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields, new IBinaryHashFunctionFactory[] {
+                FieldHashPartitionComputerFactory.of(keyFields, new IBinaryHashFunctionFactory[] {
                         PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
         spec.connect(conn1, csvScanner, 0, grouper, 0);
 
@@ -398,7 +398,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
@@ -448,7 +448,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
@@ -492,7 +492,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
@@ -547,7 +547,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
@@ -590,7 +590,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
@@ -642,7 +642,7 @@ public class AggregationTest extends AbstractIntegrationTest {
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, grouper, NC2_ID, NC1_ID);
 
         IConnectorDescriptor conn1 = new MToNPartitioningConnectorDescriptor(spec,
-                new FieldHashPartitionComputerFactory(keyFields,
+                FieldHashPartitionComputerFactory.of(keyFields,
                         new IBinaryHashFunctionFactory[] {
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY),
                                 PointableBinaryHashFunctionFactory.of(UTF8StringPointable.FACTORY) }));
