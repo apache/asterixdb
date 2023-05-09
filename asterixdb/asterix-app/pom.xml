@@ -388,7 +388,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/AqlExecutionTest.java,**/*Compression*Test.java,**/*Ssl*Test.java,**/Podman*.java</test.excludes>
+        <test.excludes>**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,**/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java</test.excludes>
         <itest.excludes>**/*.java</itest.excludes>
       </properties>
       <build>
@@ -437,7 +437,7 @@
     <profile>
       <id>asterix-gerrit-ssl-compression</id>
       <properties>
-        <test.includes>**/*Compression*Test.java,**/*Ssl*Test.java</test.includes>
+        <test.includes>**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/*AnalyzedExecutionTest.java</test.includes>
         <itest.excludes>**/*.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
@@ -445,7 +445,7 @@
     <profile>
       <id>asterix-gerrit-verify-asterix-app</id>
       <properties>
-        <test.includes>**/AqlExecutionTest.java</test.includes>
+        <test.includes>**/SqlppProfiledExecutionTest.java</test.includes>
         <itest.excludes>**/External*IT.java,**/SqlppExecution*IT.java,**/SqlppRQG*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
