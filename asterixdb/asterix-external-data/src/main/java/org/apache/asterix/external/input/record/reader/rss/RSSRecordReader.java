@@ -29,7 +29,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -135,7 +135,7 @@ public class RSSRecordReader implements IRecordReader<SyndEntry> {
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public void setFeedLogManager(IFeedLogManager feedLogManager) {
     }
 
     @Override

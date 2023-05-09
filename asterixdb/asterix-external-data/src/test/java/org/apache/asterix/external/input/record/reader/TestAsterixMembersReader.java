@@ -26,7 +26,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.input.record.RecordWithPK;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
@@ -83,7 +83,7 @@ public class TestAsterixMembersReader implements IRecordReader<RecordWithPK<char
     }
 
     @Override
-    public void setFeedLogManager(final FeedLogManager feedLogManager) {
+    public void setFeedLogManager(final IFeedLogManager feedLogManager) {
     }
 
     @Override

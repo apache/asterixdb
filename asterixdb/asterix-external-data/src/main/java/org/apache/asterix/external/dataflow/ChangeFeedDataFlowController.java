@@ -21,7 +21,7 @@ package org.apache.asterix.external.dataflow;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithPKDataParser;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -30,7 +30,7 @@ public class ChangeFeedDataFlowController<T> extends FeedRecordDataFlowControlle
 
     private final IRecordWithPKDataParser<T> dataParser;
 
-    public ChangeFeedDataFlowController(final IHyracksTaskContext ctx, final FeedLogManager feedLogManager,
+    public ChangeFeedDataFlowController(final IHyracksTaskContext ctx, final IFeedLogManager feedLogManager,
             final int numOfOutputFields, final IRecordWithPKDataParser<T> dataParser,
             final IRecordReader<T> recordReader) throws HyracksDataException {
         super(ctx, feedLogManager, numOfOutputFields, dataParser, recordReader);

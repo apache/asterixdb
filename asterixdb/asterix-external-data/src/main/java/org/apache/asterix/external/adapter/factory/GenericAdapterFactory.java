@@ -41,6 +41,8 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FeedUtils;
+import org.apache.asterix.external.util.IFeedLogManager;
+import org.apache.asterix.external.util.NoOpFeedLogManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -57,16 +59,17 @@ import org.apache.logging.log4j.Logger;
 
 public class GenericAdapterFactory implements ITypedAdapterFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private static final Logger LOGGER = LogManager.getLogger();
     private IExternalDataSourceFactory dataSourceFactory;
     private IDataParserFactory dataParserFactory;
     private ARecordType recordType;
     private Map<String, String> configuration;
     private boolean isFeed;
+    private boolean logIngestionEvents;
     private FileSplit[] feedLogFileSplits;
     private ARecordType metaType;
-    private transient FeedLogManager feedLogManager;
+    private transient IFeedLogManager feedLogManager;
 
     @Override
     public String getAlias() {
@@ -92,12 +95,14 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
             LOGGER.log(Level.INFO, "Failure restoring external objects", e);
             throw HyracksDataException.create(e);
         }
-        if (isFeed) {
-            if (feedLogManager == null) {
+        if (isFeed && feedLogManager == null) {
+            if (logIngestionEvents) {
                 feedLogManager =
                         new FeedLogManager(feedLogFileSplits[partition].getFileReference(ctx.getIoManager()).getFile());
+                feedLogManager.touch();
+            } else {
+                feedLogManager = NoOpFeedLogManager.INSTANCE;
             }
-            feedLogManager.touch();
         }
         IDataFlowController controller = DataflowControllerProvider.getDataflowController(recordType, ctx, partition,
                 dataSourceFactory, dataParserFactory, configuration, isFeed, feedLogManager);
@@ -145,7 +150,8 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
     private void configureFeedLogManager(ICcApplicationContext appCtx)
             throws HyracksDataException, AlgebricksException {
         this.isFeed = ExternalDataUtils.isFeed(configuration);
-        if (isFeed) {
+        this.logIngestionEvents = ExternalDataUtils.isLogIngestionEvents(configuration);
+        if (logIngestionEvents) {
             //TODO(partitioning) make this code reuse DataPartitioningProvider
             feedLogFileSplits = FeedUtils.splitsForAdapter(ExternalDataUtils.getDatasetDataverse(configuration),
                     ExternalDataUtils.getFeedName(configuration), dataSourceFactory.getPartitionConstraint());

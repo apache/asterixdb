@@ -16,40 +16,46 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.app.function;
+package org.apache.asterix.external.util;
 
 import java.io.IOException;
 
-import org.apache.asterix.external.api.IRecordReader;
-import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.IFeedLogManager;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+public class NoOpFeedLogManager implements IFeedLogManager {
 
-public abstract class FunctionReader implements IRecordReader<char[]> {
+    public static final NoOpFeedLogManager INSTANCE = new NoOpFeedLogManager();
 
     @Override
-    public void close() throws IOException {
-        // No Op for function reader
+    public void touch() {
+        //no op
     }
 
     @Override
-    public boolean stop() {
-        return true;
+    public void endPartition(String partition) throws IOException {
+        //no op
     }
 
     @Override
-    public void setController(AbstractFeedDataFlowController controller) {
-        // No Op for function reader
+    public void logProgress(String log) throws IOException {
+        //no op
     }
 
     @Override
-    public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
-        throw new UnsupportedOperationException();
+    public void logError(String error, Throwable th) throws IOException {
+        //no op
     }
 
     @Override
-    public boolean handleException(Throwable th) {
+    public void logRecord(String record, String errorMessage) throws IOException {
+        //no op
+    }
+
+    @Override
+    public boolean isSplitRead(String split) {
         return false;
     }
 
+    @Override
+    public void close() throws IOException {
+        //no op
+    }
 }

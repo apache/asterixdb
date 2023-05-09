@@ -34,7 +34,7 @@ import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -45,7 +45,7 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     protected int bufferLength = 0;
     protected int bufferPosn = 0;
     protected boolean done = false;
-    protected FeedLogManager feedLogManager;
+    protected IFeedLogManager feedLogManager;
     private Supplier<String> dataSourceName = EMPTY_STRING;
     private Supplier<String> previousDataSourceName = EMPTY_STRING;
 
@@ -91,7 +91,7 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     public abstract boolean hasNext() throws IOException;
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
+    public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
         this.feedLogManager = feedLogManager;
         reader.setFeedLogManager(feedLogManager);
     }

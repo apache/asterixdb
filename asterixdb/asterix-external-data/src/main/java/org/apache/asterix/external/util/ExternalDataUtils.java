@@ -323,10 +323,22 @@ public class ExternalDataUtils {
         }
     }
 
+    public static boolean isLogIngestionEvents(Map<String, String> configuration) {
+        if (!isFeed(configuration)) {
+            return false;
+        }
+        if (!configuration.containsKey(ExternalDataConstants.KEY_LOG_INGESTION_EVENTS)) {
+            return true;
+        } else {
+            return Boolean.parseBoolean(configuration.get(ExternalDataConstants.KEY_LOG_INGESTION_EVENTS));
+        }
+    }
+
     public static void prepareFeed(Map<String, String> configuration, DataverseName dataverseName, String feedName) {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
+        configuration.computeIfAbsent(ExternalDataConstants.KEY_LOG_INGESTION_EVENTS, k -> ExternalDataConstants.TRUE);
         configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataverseName.getCanonicalForm());
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }

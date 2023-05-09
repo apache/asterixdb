@@ -25,7 +25,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.external.util.TwitterUtil;
 
 import twitter4j.FilterQuery;
@@ -101,7 +101,7 @@ public class TwitterPushRecordReader implements IRecordReader<char[]> {
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager feedLogManager) {
+    public void setFeedLogManager(IFeedLogManager feedLogManager) {
         // do nothing
     }
 

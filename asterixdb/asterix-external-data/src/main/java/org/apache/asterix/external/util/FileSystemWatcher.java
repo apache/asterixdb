@@ -49,7 +49,7 @@ public class FileSystemWatcher {
     private final LinkedList<File> files = new LinkedList<File>();
     private Iterator<File> it;
     private final String expression;
-    private FeedLogManager logManager;
+    private IFeedLogManager logManager;
     private final List<Path> paths;
     private final boolean isFeed;
     private boolean done;
@@ -66,7 +66,7 @@ public class FileSystemWatcher {
         }
     }
 
-    public synchronized void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
+    public synchronized void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
         if (logManager == null) {
             this.logManager = feedLogManager;
             init();

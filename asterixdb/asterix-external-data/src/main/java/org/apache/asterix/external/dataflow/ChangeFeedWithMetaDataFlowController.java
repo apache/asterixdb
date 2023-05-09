@@ -21,14 +21,14 @@ package org.apache.asterix.external.dataflow;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithMetadataParser;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class ChangeFeedWithMetaDataFlowController<T> extends FeedWithMetaDataFlowController<T> {
 
-    public ChangeFeedWithMetaDataFlowController(final IHyracksTaskContext ctx, final FeedLogManager feedLogManager,
+    public ChangeFeedWithMetaDataFlowController(final IHyracksTaskContext ctx, final IFeedLogManager feedLogManager,
             final int numOfOutputFields, final IRecordWithMetadataParser<T> dataParser,
             final IRecordReader<T> recordReader) throws HyracksDataException {
         super(ctx, feedLogManager, numOfOutputFields, dataParser, recordReader);

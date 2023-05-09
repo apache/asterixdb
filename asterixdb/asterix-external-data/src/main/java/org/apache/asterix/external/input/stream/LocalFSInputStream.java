@@ -27,8 +27,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.FeedLogManager;
 import org.apache.asterix.external.util.FileSystemWatcher;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -51,7 +51,7 @@ public class LocalFSInputStream extends AbstractMultipleInputStream {
     }
 
     @Override
-    public void setFeedLogManager(FeedLogManager logManager) throws HyracksDataException {
+    public void setFeedLogManager(IFeedLogManager logManager) throws HyracksDataException {
         super.setFeedLogManager(logManager);
         watcher.setFeedLogManager(logManager);
     }

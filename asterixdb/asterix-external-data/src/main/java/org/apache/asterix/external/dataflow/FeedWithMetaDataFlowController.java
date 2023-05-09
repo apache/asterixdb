@@ -21,7 +21,7 @@ package org.apache.asterix.external.dataflow;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordWithMetadataParser;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
@@ -30,8 +30,9 @@ public class FeedWithMetaDataFlowController<T> extends FeedRecordDataFlowControl
 
     protected final IRecordWithMetadataParser<T> dataParser;
 
-    public FeedWithMetaDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfOutputFields,
-            IRecordWithMetadataParser<T> dataParser, IRecordReader<T> recordReader) throws HyracksDataException {
+    public FeedWithMetaDataFlowController(IHyracksTaskContext ctx, IFeedLogManager feedLogManager,
+            int numOfOutputFields, IRecordWithMetadataParser<T> dataParser, IRecordReader<T> recordReader)
+            throws HyracksDataException {
         super(ctx, feedLogManager, numOfOutputFields, dataParser, recordReader);
         this.dataParser = dataParser;
     }

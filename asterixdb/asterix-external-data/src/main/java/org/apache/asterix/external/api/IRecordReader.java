@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 import org.apache.asterix.active.message.ActiveManagerMessage;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -71,7 +71,7 @@ public interface IRecordReader<T> extends Closeable {
      *
      * @throws HyracksDataException
      */
-    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException;
+    public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException;
 
     /**
      * gives the record reader a chance to recover from IO errors during feed intake

@@ -27,7 +27,7 @@ import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.GenericRecord;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -187,7 +187,7 @@ public class KVTestReader implements IRecordReader<DCPRequest> {
     }
 
     @Override
-    public void setFeedLogManager(final FeedLogManager feedLogManager) {
+    public void setFeedLogManager(final IFeedLogManager feedLogManager) {
     }
 
     @Override

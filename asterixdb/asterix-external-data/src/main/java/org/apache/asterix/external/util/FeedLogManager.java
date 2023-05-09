@@ -20,7 +20,6 @@ package org.apache.asterix.external.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.LogRedactionUtil;
 
-public class FeedLogManager implements Closeable {
+public class FeedLogManager implements IFeedLogManager {
 
     public enum LogEntryType {
         START, // partition start
@@ -76,6 +75,7 @@ public class FeedLogManager implements Closeable {
         }
     }
 
+    @Override
     public synchronized void touch() {
         count++;
     }
@@ -85,6 +85,7 @@ public class FeedLogManager implements Closeable {
         completed.add(currentPartition);
     }
 
+    @Override
     public synchronized void endPartition(String partition) throws IOException {
         currentPartition = partition;
         logProgress(END_PREFIX + currentPartition);
@@ -96,11 +97,11 @@ public class FeedLogManager implements Closeable {
         logProgress(START_PREFIX + currentPartition);
     }
 
-    public boolean exists() {
+    private boolean exists() {
         return Files.exists(dir);
     }
 
-    public synchronized void open() throws IOException {
+    private synchronized void open() throws IOException {
         // read content of logs.
         try (BufferedReader reader = Files.newBufferedReader(
                 Paths.get(dir.toAbsolutePath().toString() + File.separator + PROGRESS_LOG_FILE_NAME))) {
@@ -135,7 +136,7 @@ public class FeedLogManager implements Closeable {
         recordLogger.close();
     }
 
-    public synchronized boolean create() throws IOException {
+    private synchronized boolean create() throws IOException {
         File f = dir.toFile();
         f.mkdirs();
         new File(f, PROGRESS_LOG_FILE_NAME).createNewFile();
@@ -150,7 +151,8 @@ public class FeedLogManager implements Closeable {
         return true;
     }
 
-    private synchronized void logProgress(String log) throws IOException {
+    @Override
+    public synchronized void logProgress(String log) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(df.format((new Date())));
         stringBuilder.append(' ');
@@ -160,6 +162,7 @@ public class FeedLogManager implements Closeable {
         progressLogger.flush();
     }
 
+    @Override
     public synchronized void logError(String error, Throwable th) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(df.format((new Date())));
@@ -172,6 +175,7 @@ public class FeedLogManager implements Closeable {
         errorLogger.flush();
     }
 
+    @Override
     public synchronized void logRecord(String record, String errorMessage) throws IOException {
         stringBuilder.setLength(0);
         stringBuilder.append(LogRedactionUtil.userData(record));
@@ -188,6 +192,7 @@ public class FeedLogManager implements Closeable {
         return log.substring(PREFIX_SIZE);
     }
 
+    @Override
     public synchronized boolean isSplitRead(String split) {
         return completed.contains(split);
     }

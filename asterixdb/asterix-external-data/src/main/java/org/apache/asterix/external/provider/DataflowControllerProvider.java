@@ -45,7 +45,7 @@ import org.apache.asterix.external.dataflow.FeedWithMetaDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -59,7 +59,7 @@ public class DataflowControllerProvider {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public static IDataFlowController getDataflowController(ARecordType recordType, IHyracksTaskContext ctx,
             int partition, IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory,
-            Map<String, String> configuration, boolean isFeed, FeedLogManager feedLogManager)
+            Map<String, String> configuration, boolean isFeed, IFeedLogManager feedLogManager)
             throws HyracksDataException {
         try {
             switch (dataSourceFactory.getDataSourceType()) {

@@ -22,7 +22,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,7 +33,7 @@ public class FeedStreamDataFlowController extends AbstractFeedDataFlowController
     private final IStreamDataParser dataParser;
     private final AsterixInputStream stream;
 
-    public FeedStreamDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager,
+    public FeedStreamDataFlowController(IHyracksTaskContext ctx, IFeedLogManager feedLogManager,
             IStreamDataParser streamParser, AsterixInputStream inputStream) {
         super(ctx, feedLogManager, 1);
         this.dataParser = streamParser;

@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AsterixInputStreamReader extends Reader {
@@ -60,7 +60,7 @@ public class AsterixInputStreamReader extends Reader {
         in.setController(controller);
     }
 
-    public void setFeedLogManager(FeedLogManager feedLogManager) throws HyracksDataException {
+    public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
         in.setFeedLogManager(feedLogManager);
     }
 

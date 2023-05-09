@@ -90,6 +90,7 @@ public class ExternalDataConstants {
     public static final String KEY_RSS_URL = "url";
     public static final String KEY_INTERVAL = "interval";
     public static final String KEY_IS_FEED = "is-feed";
+    public static final String KEY_LOG_INGESTION_EVENTS = "log-ingestion-events";
     public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
     public static final String KEY_FEED_NAME = "feed";
     // a string representing external bucket name

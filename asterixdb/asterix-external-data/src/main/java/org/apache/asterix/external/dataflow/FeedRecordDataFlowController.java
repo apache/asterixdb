@@ -28,7 +28,7 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -59,7 +59,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     protected State state = State.CREATED;
     protected long failedRecordsCount = 0;
 
-    public FeedRecordDataFlowController(IHyracksTaskContext ctx, FeedLogManager feedLogManager, int numOfOutputFields,
+    public FeedRecordDataFlowController(IHyracksTaskContext ctx, IFeedLogManager feedLogManager, int numOfOutputFields,
             IRecordDataParser<T> dataParser, IRecordReader<T> recordReader) throws HyracksDataException {
         super(ctx, feedLogManager, numOfOutputFields);
         this.dataParser = dataParser;

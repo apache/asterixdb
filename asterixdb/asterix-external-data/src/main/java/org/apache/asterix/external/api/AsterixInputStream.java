@@ -21,13 +21,13 @@ package org.apache.asterix.external.api;
 import java.io.InputStream;
 
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.util.FeedLogManager;
+import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public abstract class AsterixInputStream extends InputStream {
 
     protected AbstractFeedDataFlowController controller;
-    protected FeedLogManager logManager;
+    protected IFeedLogManager logManager;
     protected IStreamNotificationHandler notificationHandler;
 
     public abstract boolean stop() throws Exception;
@@ -40,7 +40,7 @@ public abstract class AsterixInputStream extends InputStream {
     }
 
     // TODO: Find a better way to send notifications
-    public void setFeedLogManager(FeedLogManager logManager) throws HyracksDataException {
+    public void setFeedLogManager(IFeedLogManager logManager) throws HyracksDataException {
         this.logManager = logManager;
     }
 
