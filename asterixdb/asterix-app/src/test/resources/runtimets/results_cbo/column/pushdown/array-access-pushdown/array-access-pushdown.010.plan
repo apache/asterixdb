@@ -1,0 +1,41 @@
+distribute result [$$50] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$50] <- [agg-sql-sum($$54)] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$54] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        -- AGGREGATE  |PARTITIONED|
+          select ($$42) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          -- STREAM_SELECT  |PARTITIONED|
+            project ([$$42]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+            -- STREAM_PROJECT  |PARTITIONED|
+              subplan {
+                        aggregate [$$42] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          select (not(if-missing-or-null(eq($$52, "string"), false))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STREAM_SELECT  |LOCAL|
+                            assign [$$52] <- [$$ht.getField("display_url")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ASSIGN  |LOCAL|
+                              unnest $$ht <- scan-collection($$51) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- UNNEST  |LOCAL|
+                                nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     } [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+              -- SUBPLAN  |PARTITIONED|
+                project ([$$51]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$51] <- [$$p.getField("entities").getField("urls")] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$p]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$49, $$p] <- test.ColumnDataset project ({entities:{urls:[{display_url:any}]}}) [cardinality: 2.0, op-cost: 2.1, total-cost: 2.1]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

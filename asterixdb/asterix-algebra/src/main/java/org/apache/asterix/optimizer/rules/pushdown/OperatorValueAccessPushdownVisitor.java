@@ -260,7 +260,7 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
      * 2- return the actual DatasetDataSource
      */
     private DatasetDataSource getDatasetDataSourceIfApplicable(DataSource dataSource) throws AlgebricksException {
-        if (dataSource == null) {
+        if (dataSource == null || dataSource.getDatasourceType() == DataSource.Type.SAMPLE) {
             return null;
         }
 

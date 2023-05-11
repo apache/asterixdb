@@ -16295,6 +16295,11 @@
         <output-dir compare="Text">secondary-index/create-index/after-upsert-with-meta</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="analyze-dataset">
+        <output-dir compare="Text">analyze-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="copy">
     <test-case FilePath="copy">

@@ -40,6 +40,7 @@ import org.apache.asterix.runtime.aggregates.collections.FirstElementEvalFactory
 import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanDescriptor;
 import org.apache.asterix.runtime.operators.DatasetStreamStatsOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
+import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.runningaggregates.std.SampleSlotRunningAggregateFunctionFactory;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -88,6 +89,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 /**
  * Utility class for sampling operations.
@@ -188,9 +190,15 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         // job spec:
         IndexUtil.bindJobEventListener(spec, metadataProvider);
 
+        // if format == column. Bring the entire record as we are sampling
+        ITupleProjectorFactory projectorFactory = IndexUtil.createPrimaryIndexScanTupleProjectorFactory(
+                dataset.getDatasetFormatInfo(), DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, itemType, metaType,
+                dataset.getPrimaryKeys().size());
+
         // dummy key provider ----> primary index scan
         IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);
-        IOperatorDescriptor targetOp = DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset);
+        IOperatorDescriptor targetOp =
+                DatasetUtil.createPrimaryIndexScanOp(spec, metadataProvider, dataset, projectorFactory);
         spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
         sourceOp = targetOp;
 
@@ -327,9 +335,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
             int[] fieldPermutation, IIndexDataflowHelperFactory dataflowHelperFactory, float fillFactor,
             long numElementHint) throws AlgebricksException {
         int[] pkFields = new int[dataset.getPrimaryKeys().size()];
-        for (int i = 0; i < pkFields.length; i++) {
-            pkFields[i] = fieldPermutation[i];
-        }
+        System.arraycopy(fieldPermutation, 0, pkFields, 0, pkFields.length);
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(metadataProvider);
         ITuplePartitionerFactory partitionerFactory =
                 new FieldHashPartitionerFactory(pkFields, pkHashFunFactories, numPartitions);

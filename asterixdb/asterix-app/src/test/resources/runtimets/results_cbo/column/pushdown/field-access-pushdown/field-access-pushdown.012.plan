@@ -1,0 +1,18 @@
+distribute result [$$34] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$34] <- [agg-sql-sum($$35)] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$35] <- [agg-sql-count(1)] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+        -- AGGREGATE  |PARTITIONED|
+          exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            data-scan []<-[$$33, $$p] <- test.ColumnDataset4 project ({}) [cardinality: 2.0, op-cost: 2.1, total-cost: 2.1]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

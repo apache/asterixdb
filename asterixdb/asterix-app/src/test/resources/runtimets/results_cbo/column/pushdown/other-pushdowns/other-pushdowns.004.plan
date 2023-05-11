@@ -1,0 +1,36 @@
+distribute result [$$61] [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$61]) [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$61] <- [{"$1": $$66, "$2": $$67}] [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+      -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$66, $$67] <- [agg-global-sql-sum($$70), agg-global-sql-sum($$71)] [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$70, $$71] <- [agg-local-sql-sum($$54), agg-local-sql-sum($$59)] [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+            -- AGGREGATE  |PARTITIONED|
+              project ([$$54, $$59]) [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+              -- STREAM_PROJECT  |PARTITIONED|
+                assign [$$59, $$54] <- [object-length($$p2), object-length($$p1)] [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+                -- ASSIGN  |PARTITIONED|
+                  project ([$$p1, $$p2]) [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 2.21, op-cost: 0.0, total-cost: 12.6]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      unnest-map [$$63, $$p2] <- index-search("RowDataset", 0, "test", "RowDataset", true, true, 1, $$62, 1, $$62, true, true, true) [cardinality: 2.21, op-cost: 2.1, total-cost: 12.6]
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$62) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STABLE_SORT [$$62(ASC)]  |PARTITIONED|
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
+                              data-scan []<-[$$62, $$p1] <- test.ColumnDataset [cardinality: 2.0, op-cost: 2.1, total-cost: 2.1]
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,30 @@
+distribute result [$$item] [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$item]) [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+      -- SORT_MERGE_EXCHANGE [$$27(ASC), $$item(ASC) ]  |PARTITIONED|
+        order (ASC, $$27) (ASC, $$item) [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+        -- STABLE_SORT [$$27(ASC), $$item(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (gt($$item, 10000)) [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
+            -- STREAM_SELECT  |PARTITIONED|
+              project ([$$27, $$item]) [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
+              -- STREAM_PROJECT  |PARTITIONED|
+                unnest $$item <- scan-collection($$28) [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
+                -- UNNEST  |PARTITIONED|
+                  project ([$$27, $$28]) [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$28] <- [$$d.getField("array")] [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$27, $$d] <- test.ColumnDataset project ({array:[any]}) filter on (gt($$item, 10000)) [cardinality: 6.0, op-cost: 0.11, total-cost: 0.11]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,30 @@
+distribute result [$$p1] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$p1]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      -- SORT_MERGE_EXCHANGE [$$16(ASC) ]  |PARTITIONED|
+        order (ASC, $$16) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        -- STABLE_SORT [$$16(ASC)]  |PARTITIONED|
+          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            distinct ([$$p1]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+              exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$p1) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                -- STABLE_SORT [$$p1(ASC)]  |PARTITIONED|
+                  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                  -- HASH_PARTITION_EXCHANGE [$$p1]  |PARTITIONED|
+                    select (neq($$16, "0")) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                    -- STREAM_SELECT  |PARTITIONED|
+                      exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$16, $$p1] <- test.ColumnDataset [cardinality: 2.0, op-cost: 2.1, total-cost: 2.1]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
