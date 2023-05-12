@@ -1,0 +1,45 @@
+distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$51]) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$51] <- [{"$1": $$53}] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+      -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+            -- AGGREGATE  |PARTITIONED|
+              select ($$44) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+              -- STREAM_SELECT  |PARTITIONED|
+                project ([$$44]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  subplan {
+                            aggregate [$$44] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (eq($$55, array: [ 5.1 ])) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                assign [$$55] <- [$$point.getField("lon")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ASSIGN  |LOCAL|
+                                  unnest $$point <- scan-collection($$54) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- UNNEST  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         } [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                  -- SUBPLAN  |PARTITIONED|
+                    project ([$$54]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$54] <- [$$c.getField("geo").getField("coordinates")] [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$c]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$52, $$c] <- test.ColumnDataset project ({geo:{coordinates:[{lon:any}]}}) [cardinality: 8.0, op-cost: 1.0, total-cost: 1.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

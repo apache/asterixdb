@@ -1,0 +1,34 @@
+distribute result [$$48] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$48]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$48] <- [{"$1": $$50}] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+      -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$50] <- [agg-sql-sum($$52)] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$52] <- [agg-sql-count(1)] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+            -- AGGREGATE  |PARTITIONED|
+              select (gt(numeric-add($$D, 1), 2018)) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+              -- STREAM_SELECT  |PARTITIONED|
+                project ([$$D]) [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  unnest $$D <- scan-collection($$51) [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                  -- UNNEST  |PARTITIONED|
+                    project ([$$51]) [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$51] <- [$$C.getField("dates")] [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 2.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$49, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on (gt(numeric-add($$D, 1), 2018)) [cardinality: 30.0, op-cost: 2.0, total-cost: 2.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
