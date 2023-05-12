@@ -19,7 +19,6 @@
 
 package org.apache.hyracks.storage.am.lsm.common.api;
 
-import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 
@@ -51,33 +50,6 @@ public interface ILSMIndexFileManager {
     List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException;
 
     Comparator<String> getFileNameComparator();
-
-    /**
-     * @return delete existing transaction disk component file reference
-     * @throws HyracksDataException
-     */
-    void deleteTransactionFiles() throws HyracksDataException;
-
-    /**
-     * Rename files of a transaction removing the transaction prefix and return the component file reference in order to be committed
-     *
-     * @return the renamed component file references
-     * @throws HyracksDataException
-     */
-    LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException;
-
-    /**
-     * Recover transaction files without returning them
-     *
-     * @throws HyracksDataException
-     */
-    void recoverTransaction() throws HyracksDataException;
-
-    /**
-     * @return a reference to the transaction disk component file reference
-     * @throws IOException
-     */
-    LSMComponentFileReferences getNewTransactionFileReference() throws IOException;
 
     /**
      * Initializes the last used sequence

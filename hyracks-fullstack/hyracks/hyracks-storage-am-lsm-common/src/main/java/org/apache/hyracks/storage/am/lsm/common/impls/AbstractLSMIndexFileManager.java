@@ -20,7 +20,6 @@
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,17 +78,12 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
      * Indicates Look Aside File (LAF) for compressed indexes
      */
     public static final String LAF_SUFFIX = ".dic";
-    /**
-     * Hides transaction components until they are either committed by removing this file or deleted along with the file
-     */
-    public static final String TXN_PREFIX = ".T";
     public static final long UNINITIALIZED_COMPONENT_SEQ = -1;
     public static final FilenameFilter COMPONENT_FILES_FILTER = (dir, name) -> !name.startsWith(".");
-    protected static final FilenameFilter txnFileNameFilter = (dir, name) -> name.startsWith(TXN_PREFIX);
-    protected static FilenameFilter bloomFilterFilter =
+    protected static FilenameFilter BLOOM_FILTER_FILTER =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
     protected static final Comparator<String> cmp = new FileNameComparator();
-    private static final FilenameFilter dummyFilter = (dir, name) -> true;
+
     protected final IIOManager ioManager;
     // baseDir should reflect dataset name and partition name and be absolute
     protected final FileReference baseDir;
@@ -293,19 +287,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         return baseDir;
     }
 
-    @Override
-    public void recoverTransaction() throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, txnFileNameFilter);
-        if (files.length == 0) {
-            // Do nothing
-        } else if (files.length > 1) {
-            throw HyracksDataException.create(ErrorCode.FOUND_MULTIPLE_TRANSACTIONS, baseDir);
-        } else {
-            IoUtil.delete(baseDir.getChild(files[0]));
-        }
-    }
-
-    private class RecencyComparator implements Comparator<IndexComponentFileReference> {
+    private static class RecencyComparator implements Comparator<IndexComponentFileReference> {
         @Override
         public int compare(IndexComponentFileReference a, IndexComponentFileReference b) {
             int startCmp = -Long.compare(a.getSequenceStart(), b.getSequenceStart());
@@ -316,63 +298,13 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    // This function is used to delete transaction files for aborted transactions
-    @Override
-    public void deleteTransactionFiles() throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, txnFileNameFilter);
-        if (files.length == 0) {
-            // Do nothing
-        } else if (files.length > 1) {
-            throw HyracksDataException.create(ErrorCode.FOUND_MULTIPLE_TRANSACTIONS, baseDir);
-        } else {
-            //create transaction filter
-            FilenameFilter transactionFilter = createTransactionFilter(files[0], true);
-            String[] componentsFiles = listDirFiles(baseDir, transactionFilter);
-            for (String fileName : componentsFiles) {
-                FileReference file = baseDir.getChild(fileName);
-                IoUtil.delete(file);
-            }
-            // delete the txn lock file
-            IoUtil.delete(baseDir.getChild(files[0]));
-        }
-    }
-
-    @Override
-    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
-        return null;
-    }
-
-    @Override
-    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
-        return null;
-    }
-
     @Override
     public void initLastUsedSeq(long lastUsedSeq) {
         lastUsedComponentSeq = lastUsedSeq;
     }
 
-    private static FilenameFilter createTransactionFilter(String transactionFileName, final boolean inclusive) {
-        final String timeStamp =
-                transactionFileName.substring(transactionFileName.indexOf(TXN_PREFIX) + TXN_PREFIX.length());
-        return (dir, name) -> inclusive == name.startsWith(timeStamp);
-    }
-
-    protected FilenameFilter getTransactionFileFilter(boolean inclusive) throws HyracksDataException {
-        String[] files = listDirFiles(baseDir, txnFileNameFilter);
-        if (files.length == 0) {
-            return dummyFilter;
-        } else {
-            return createTransactionFilter(files[0], inclusive);
-        }
-    }
-
     protected void delete(IBufferCache bufferCache, FileReference fileRef) throws HyracksDataException {
         bufferCache.deleteFile(fileRef);
-    }
-
-    protected FilenameFilter getCompoundFilter(final FilenameFilter filter1, final FilenameFilter filter2) {
-        return (dir, name) -> filter1.accept(dir, name) && filter2.accept(dir, name);
     }
 
     protected String getNextComponentSequence(FilenameFilter filenameFilter) throws HyracksDataException {

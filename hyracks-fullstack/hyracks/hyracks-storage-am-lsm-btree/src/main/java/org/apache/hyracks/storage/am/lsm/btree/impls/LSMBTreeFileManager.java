@@ -20,7 +20,6 @@
 package org.apache.hyracks.storage.am.lsm.btree.impls;
 
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,7 +31,6 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
@@ -42,7 +40,7 @@ import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorF
 
 public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
-    private static final FilenameFilter btreeFilter =
+    private static final FilenameFilter BTREE_FILTER =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BTREE_SUFFIX);
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
     private final boolean hasBloomFilter;
@@ -62,7 +60,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
-        String baseName = getNextComponentSequence(btreeFilter);
+        String baseName = getNextComponentSequence(BTREE_FILTER);
         return new LSMComponentFileReferences(getFileReference(baseName + DELIMITER + BTREE_SUFFIX), null,
                 hasBloomFilter ? getFileReference(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
     }
@@ -79,11 +77,8 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
         ArrayList<IndexComponentFileReference> allBTreeFiles = new ArrayList<>();
         ArrayList<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
-        // create transaction filter <to hide transaction files>
-        FilenameFilter transactionFilter = getTransactionFileFilter(false);
         // List of valid BTree files.
-        cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles,
-                btreeFactory.getBufferCache());
+        cleanupAndGetValidFilesInternal(BTREE_FILTER, btreeFactory, allBTreeFiles, btreeFactory.getBufferCache());
         HashSet<String> btreeFilesSet = new HashSet<>();
         for (IndexComponentFileReference cmpFileName : allBTreeFiles) {
             int index = cmpFileName.getFileName().lastIndexOf(DELIMITER);
@@ -91,8 +86,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         if (hasBloomFilter) {
-            validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter),
-                    null, btreeFactory.getBufferCache());
+            validateFiles(btreeFilesSet, allBloomFilterFiles, BLOOM_FILTER_FILTER, null, btreeFactory.getBufferCache());
             // Sanity check.
             if (allBTreeFiles.size() != allBloomFilterFiles.size()) {
                 throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
@@ -100,12 +94,12 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         // Trivial cases.
-        if (allBTreeFiles.isEmpty() || hasBloomFilter && allBloomFilterFiles.isEmpty()) {
+        if (allBTreeFiles.isEmpty()) {
             return validFiles;
         }
 
         // Special case: sorting is not required
-        if (allBTreeFiles.size() == 1 && (!hasBloomFilter || allBloomFilterFiles.size() == 1)) {
+        if (allBTreeFiles.size() == 1) {
             validFiles.add(new LSMComponentFileReferences(allBTreeFiles.get(0).getFileRef(), null,
                     hasBloomFilter ? allBloomFilterFiles.get(0).getFileRef() : null));
             return validFiles;
@@ -169,7 +163,7 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
         IndexComponentFileReference cmpBTreeFileName = null;
         IndexComponentFileReference cmpBloomFilterFileName = null;
-        while (btreeFileIter.hasNext() && (hasBloomFilter ? bloomFilterFileIter.hasNext() : true)) {
+        while (btreeFileIter.hasNext() && (!hasBloomFilter || bloomFilterFileIter.hasNext())) {
             cmpBTreeFileName = btreeFileIter.next();
             if (hasBloomFilter) {
                 cmpBloomFilterFileName = bloomFilterFileIter.next();
@@ -179,45 +173,5 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         return validFiles;
-    }
-
-    @Override
-    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
-        String sequence = getNextComponentSequence(btreeFilter);
-        // Create transaction lock file
-        IoUtil.create(baseDir.getChild(TXN_PREFIX + sequence));
-        String baseName = getNextComponentSequence(btreeFilter);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX), null,
-                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
-    }
-
-    @Override
-    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
-        FilenameFilter transactionFilter;
-        String[] files = baseDir.getFile().list(txnFileNameFilter);
-        if (files.length == 0) {
-            return null;
-        }
-        if (files.length != 1) {
-            throw HyracksDataException.create(ErrorCode.FOUND_MULTIPLE_TRANSACTIONS, baseDir);
-        } else {
-            transactionFilter = getTransactionFileFilter(true);
-            FileReference txnFile = baseDir.getChild(files[0]);
-            // get the actual transaction files
-            files = baseDir.getFile().list(transactionFilter);
-            IoUtil.delete(txnFile);
-        }
-        FileReference bTreeFileRef = null;
-        FileReference bloomFilterFileRef = null;
-        for (String fileName : files) {
-            if (fileName.endsWith(BTREE_SUFFIX)) {
-                bTreeFileRef = baseDir.getChild(fileName);
-            } else if (fileName.endsWith(BLOOM_FILTER_SUFFIX)) {
-                bloomFilterFileRef = baseDir.getChild(fileName);
-            } else {
-                throw HyracksDataException.create(ErrorCode.UNRECOGNIZED_INDEX_COMPONENT_FILE, fileName);
-            }
-        }
-        return new LSMComponentFileReferences(bTreeFileRef, null, bloomFilterFileRef);
     }
 }

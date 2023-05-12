@@ -92,7 +92,7 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
         validateFiles(deletedKeysBTreeFilesSet, allInvListsFiles, invListFilter, null, btreeFactory.getBufferCache());
         validateFiles(deletedKeysBTreeFilesSet, allDictBTreeFiles, dictBTreeFilter, btreeFactory,
                 btreeFactory.getBufferCache());
-        validateFiles(deletedKeysBTreeFilesSet, allBloomFilterFiles, bloomFilterFilter, null,
+        validateFiles(deletedKeysBTreeFilesSet, allBloomFilterFiles, BLOOM_FILTER_FILTER, null,
                 btreeFactory.getBufferCache());
 
         // Sanity check.

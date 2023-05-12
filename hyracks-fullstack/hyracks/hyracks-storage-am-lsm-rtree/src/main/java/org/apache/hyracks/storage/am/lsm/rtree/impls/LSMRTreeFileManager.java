@@ -20,9 +20,6 @@
 package org.apache.hyracks.storage.am.lsm.rtree.impls;
 
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,7 +30,6 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.ITreeIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
@@ -80,20 +76,14 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         ArrayList<IndexComponentFileReference> allBTreeFiles = new ArrayList<>();
         ArrayList<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
 
-        // Create a transaction filter <- to hide transaction components->
-        FilenameFilter transactionFilter = getTransactionFileFilter(false);
-
         // Gather files.
-        cleanupAndGetValidFilesInternal(getCompoundFilter(transactionFilter, btreeFilter), btreeFactory, allBTreeFiles,
-                btreeFactory.getBufferCache());
+        cleanupAndGetValidFilesInternal(btreeFilter, btreeFactory, allBTreeFiles, btreeFactory.getBufferCache());
         HashSet<String> btreeFilesSet = new HashSet<>();
         for (IndexComponentFileReference cmpFileName : allBTreeFiles) {
             btreeFilesSet.add(cmpFileName.getSequence());
         }
-        validateFiles(btreeFilesSet, allRTreeFiles, getCompoundFilter(transactionFilter, rtreeFilter), rtreeFactory,
-                btreeFactory.getBufferCache());
-        validateFiles(btreeFilesSet, allBloomFilterFiles, getCompoundFilter(transactionFilter, bloomFilterFilter), null,
-                btreeFactory.getBufferCache());
+        validateFiles(btreeFilesSet, allRTreeFiles, rtreeFilter, rtreeFactory, btreeFactory.getBufferCache());
+        validateFiles(btreeFilesSet, allBloomFilterFiles, BLOOM_FILTER_FILTER, null, btreeFactory.getBufferCache());
 
         // Sanity check.
         if (allRTreeFiles.size() != allBTreeFiles.size() || allBTreeFiles.size() != allBloomFilterFiles.size()) {
@@ -101,11 +91,11 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         // Trivial cases.
-        if (allRTreeFiles.isEmpty() || allBTreeFiles.isEmpty() || allBloomFilterFiles.isEmpty()) {
+        if (allRTreeFiles.isEmpty()) {
             return validFiles;
         }
 
-        if (allRTreeFiles.size() == 1 && allBTreeFiles.size() == 1 && allBloomFilterFiles.size() == 1) {
+        if (allRTreeFiles.size() == 1) {
             validFiles.add(new LSMComponentFileReferences(allRTreeFiles.get(0).getFileRef(),
                     allBTreeFiles.get(0).getFileRef(), allBloomFilterFiles.get(0).getFileRef()));
             return validFiles;
@@ -170,50 +160,5 @@ public class LSMRTreeFileManager extends AbstractLSMIndexFileManager {
                     cmpBloomFilterFileName.getFileRef()));
         }
         return validFiles;
-    }
-
-    @Override
-    public LSMComponentFileReferences getNewTransactionFileReference() throws IOException {
-        String baseName = getNextComponentSequence(btreeFilter);
-        // Create transaction lock file
-        Files.createFile(Paths.get(baseDir + TXN_PREFIX + baseName));
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + RTREE_SUFFIX),
-                baseDir.getChild(baseName + DELIMITER + BTREE_SUFFIX),
-                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
-    }
-
-    @Override
-    public LSMComponentFileReferences getTransactionFileReferenceForCommit() throws HyracksDataException {
-        FilenameFilter transactionFilter;
-        String[] files = baseDir.getFile().list(txnFileNameFilter);
-        if (files.length == 0) {
-            return null;
-        }
-        if (files.length != 1) {
-            throw HyracksDataException.create(ErrorCode.FOUND_MULTIPLE_TRANSACTIONS, baseDir);
-        } else {
-            transactionFilter = getTransactionFileFilter(true);
-            // get the actual transaction files
-            files = baseDir.getFile().list(transactionFilter);
-            if (files.length < 3) {
-                throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
-            }
-            IoUtil.delete(baseDir.getChild(files[0]));
-        }
-        FileReference rTreeFileRef = null;
-        FileReference bTreeFileRef = null;
-        FileReference bloomFilterFileRef = null;
-        for (String fileName : files) {
-            if (fileName.endsWith(BTREE_SUFFIX)) {
-                bTreeFileRef = baseDir.getChild(fileName);
-            } else if (fileName.endsWith(RTREE_SUFFIX)) {
-                rTreeFileRef = baseDir.getChild(fileName);
-            } else if (fileName.endsWith(BLOOM_FILTER_SUFFIX)) {
-                bloomFilterFileRef = baseDir.getChild(fileName);
-            } else {
-                throw HyracksDataException.create(ErrorCode.UNRECOGNIZED_INDEX_COMPONENT_FILE, fileName);
-            }
-        }
-        return new LSMComponentFileReferences(rTreeFileRef, bTreeFileRef, bloomFilterFileRef);
     }
 }
