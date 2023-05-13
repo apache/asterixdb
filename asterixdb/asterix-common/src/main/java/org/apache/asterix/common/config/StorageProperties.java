@@ -87,6 +87,9 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_GLOBAL_CLEANUP_TIMEOUT:
                 case STORAGE_PARTITIONING:
                 case STORAGE_PARTITIONS_COUNT:
+                case STORAGE_FORMAT:
+                case STORAGE_COLUMN_MAX_TUPLE_COUNT:
+                case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                     return Section.COMMON;
                 default:
                     return Section.NC;
