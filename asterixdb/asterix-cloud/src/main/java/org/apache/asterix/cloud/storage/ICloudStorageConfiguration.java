@@ -29,9 +29,4 @@ public interface ICloudStorageConfiguration {
      * @return returns the container name used for the storage
      */
     String getContainer();
-
-    /**
-     * @return returns the number of storage partitions
-     */
-    int getPartitionsCount();
 }

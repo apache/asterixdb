@@ -28,7 +28,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class FileCloudStorageConfiguration implements ICloudStorageConfiguration {
 
     private final String containerName;
-    private final int storagePartitionsCount;
 
     public FileCloudStorageConfiguration(File file) throws HyracksDataException {
         if (!file.exists()) {
@@ -38,7 +37,6 @@ public class FileCloudStorageConfiguration implements ICloudStorageConfiguration
         try {
             List<String> lines = FileUtils.readLines(file, "UTF-8");
             this.containerName = lines.get(0);
-            this.storagePartitionsCount = Integer.parseInt(lines.get(1));
         } catch (IOException ex) {
             throw HyracksDataException.create(ex);
         }
@@ -47,10 +45,5 @@ public class FileCloudStorageConfiguration implements ICloudStorageConfiguration
     @Override
     public String getContainer() {
         return containerName;
-    }
-
-    @Override
-    public int getPartitionsCount() {
-        return storagePartitionsCount;
     }
 }

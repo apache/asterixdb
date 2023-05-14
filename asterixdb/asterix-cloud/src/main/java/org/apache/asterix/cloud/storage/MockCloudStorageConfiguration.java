@@ -21,7 +21,6 @@ package org.apache.asterix.cloud.storage;
 public class MockCloudStorageConfiguration implements ICloudStorageConfiguration {
 
     private static final String CONTAINER_NAME = "cloud-storage-container";
-    private static final int NUMBER_OF_STORAGE_PARTITIONS = 8;
 
     public static MockCloudStorageConfiguration INSTANCE = new MockCloudStorageConfiguration();
 
@@ -32,10 +31,5 @@ public class MockCloudStorageConfiguration implements ICloudStorageConfiguration
     @Override
     public String getContainer() {
         return CONTAINER_NAME;
-    }
-
-    @Override
-    public int getPartitionsCount() {
-        return NUMBER_OF_STORAGE_PARTITIONS;
     }
 }
