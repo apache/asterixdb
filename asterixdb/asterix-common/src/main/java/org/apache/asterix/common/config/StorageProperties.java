@@ -74,6 +74,7 @@ public class StorageProperties extends AbstractProperties {
         @Override
         public Section section() {
             switch (this) {
+                case STORAGE_BUFFERCACHE_PAGESIZE:
                 case STORAGE_COMPRESSION_BLOCK:
                 case STORAGE_LSM_BLOOMFILTER_FALSEPOSITIVERATE:
                 case STORAGE_GLOBAL_CLEANUP:
