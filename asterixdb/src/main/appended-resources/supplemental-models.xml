@@ -555,8 +555,8 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>third-party-jackson-core</artifactId>
       <properties>
-        <license.alternateNoticeFile>2.17.218:META-INF/NOTICE.txt</license.alternateNoticeFile>
-        <license.alternateLicenseFile>2.17.218:META-INF/LICENSE.txt</license.alternateLicenseFile>
+        <license.alternateNoticeFile>2.17.218:META-INF/NOTICE.txt,2.20.37:META-INF/NOTICE.txt</license.alternateNoticeFile>
+        <license.alternateLicenseFile>2.17.218:META-INF/LICENSE.txt,2.20.37:META-INF/LICENSE.txt</license.alternateLicenseFile>
       </properties>
     </project>
   </supplement>
@@ -586,7 +586,6 @@
       <properties>
         <license.ignoreMissingEmbeddedLicense>0.21.10</license.ignoreMissingEmbeddedLicense>
         <license.ignoreMissingEmbeddedNotice>0.21.10</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>0.21.10</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
