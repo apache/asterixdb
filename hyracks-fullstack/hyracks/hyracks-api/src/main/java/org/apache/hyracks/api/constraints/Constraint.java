@@ -45,6 +45,6 @@ public class Constraint implements Serializable {
 
     @Override
     public String toString() {
-        return lValue + " in " + rValue;
+        return lValue + "=" + rValue;
     }
 }

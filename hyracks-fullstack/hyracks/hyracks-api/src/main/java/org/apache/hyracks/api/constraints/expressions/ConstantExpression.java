@@ -44,6 +44,6 @@ public class ConstantExpression extends ConstraintExpression {
 
     @Override
     protected void toString(StringBuilder buffer) {
-        buffer.append(getTag()).append('[').append(value).append(':').append(value.getClass().getName()).append(']');
+        buffer.append(value);
     }
 }

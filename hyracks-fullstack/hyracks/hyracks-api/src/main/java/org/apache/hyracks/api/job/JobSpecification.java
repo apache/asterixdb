@@ -354,16 +354,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
             if (inputs != null && !inputs.isEmpty()) {
                 buffer.append("   Inputs:\n");
                 for (IConnectorDescriptor c : inputs) {
-                    buffer.append("      ").append(c.getConnectorId().getId()).append(" : ").append(c.toString())
-                            .append("\n");
+                    buffer.append("      ").append(c.getConnectorId().getId()).append(" : ").append(c).append("\n");
                 }
             }
             List<IConnectorDescriptor> outputs = opOutputMap.get(key);
             if (outputs != null && !outputs.isEmpty()) {
                 buffer.append("   Outputs:\n");
                 for (IConnectorDescriptor c : outputs) {
-                    buffer.append("      ").append(c.getConnectorId().getId()).append(" : ").append(c.toString())
-                            .append("\n");
+                    buffer.append("      ").append(c.getConnectorId().getId()).append(" : ").append(c).append("\n");
                 }
             }
         });
