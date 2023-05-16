@@ -153,7 +153,7 @@ public class FeedOperations {
         JobSpecification spec = RuntimeUtils.createJobSpecification(appCtx);
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(feed);
         FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(spec,
-                partitioningProperties.getSpiltsProvider(), true, partitioningProperties.getComputeStorageMap());
+                partitioningProperties.getSplitsProvider(), true, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, frod,
                 partitioningProperties.getConstraints());
         spec.addRoot(frod);

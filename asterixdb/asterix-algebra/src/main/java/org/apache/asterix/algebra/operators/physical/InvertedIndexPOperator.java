@@ -184,7 +184,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
                         ((Index.TextIndexDetails) secondaryIndex.getIndexDetails()).getFullTextConfigName());
         IIndexDataflowHelperFactory dataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         LSMInvertedIndexSearchOperatorDescriptor invIndexSearchOp =
                 new LSMInvertedIndexSearchOperatorDescriptor(jobSpec, outputRecDesc, queryField, dataflowHelperFactory,
                         queryTokenizerFactory, fullTextConfigEvaluatorFactory, searchModifierFactory, retainInput,

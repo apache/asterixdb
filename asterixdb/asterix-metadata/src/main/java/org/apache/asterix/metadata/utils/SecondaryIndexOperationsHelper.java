@@ -216,7 +216,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         PartitioningProperties partitioningProperties;
         partitioningProperties =
                 getSecondaryIndexBulkloadPartitioningProperties(metadataProvider, dataset, index.getIndexName());
-        secondaryFileSplitProvider = partitioningProperties.getSpiltsProvider();
+        secondaryFileSplitProvider = partitioningProperties.getSplitsProvider();
         secondaryPartitionConstraint = partitioningProperties.getConstraints();
         numPrimaryKeys = dataset.getPrimaryKeys().size();
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
@@ -228,7 +228,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             }
             PartitioningProperties datasetPartitioningProperties = getSecondaryIndexBulkloadPartitioningProperties(
                     metadataProvider, dataset, dataset.getDatasetName());
-            primaryFileSplitProvider = datasetPartitioningProperties.getSpiltsProvider();
+            primaryFileSplitProvider = datasetPartitioningProperties.getSplitsProvider();
             primaryPartitionConstraint = datasetPartitioningProperties.getConstraints();
             setPrimaryRecDescAndComparators();
         }
@@ -538,7 +538,7 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         // to ensure correctness, we will run in as many locations as storage partitions
         // this will not be needed once ASTERIXDB-3176 is implemented
         if (this instanceof SecondaryCorrelatedTreeIndexOperationsHelper) {
-            FileSplit[] fileSplits = partitioningProperties.getSpiltsProvider().getFileSplits();
+            FileSplit[] fileSplits = partitioningProperties.getSplitsProvider().getFileSplits();
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> sp =
                     StoragePathUtil.splitProviderAndPartitionConstraints(fileSplits);
             return PartitioningProperties.of(sp.getFirst(), sp.getSecond(),

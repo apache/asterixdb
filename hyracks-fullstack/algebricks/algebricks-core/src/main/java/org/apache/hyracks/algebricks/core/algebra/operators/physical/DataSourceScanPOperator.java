@@ -124,9 +124,7 @@ public class DataSourceScanPOperator extends AbstractScanPOperator {
         IOperatorDescriptor opDesc = p.first;
         opDesc.setSourceLocation(scan.getSourceLocation());
         builder.contributeHyracksOperator(scan, opDesc);
-        if (p.second != null) {
-            builder.contributeAlgebricksPartitionConstraint(opDesc, p.second);
-        }
+        builder.contributeAlgebricksPartitionConstraint(opDesc, p.second);
 
         ILogicalOperator srcExchange = scan.getInputs().get(0).getValue();
         builder.contributeGraphEdge(srcExchange, 0, scan, 0);

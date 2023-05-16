@@ -144,7 +144,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
         // the index object information is fetched from the old source dataset
         PartitioningProperties samplePartitioningProperties =
                 metadataProvider.getPartitioningProperties(dataset, sampleIdx.getIndexName());
-        fileSplitProvider = samplePartitioningProperties.getSpiltsProvider();
+        fileSplitProvider = samplePartitioningProperties.getSplitsProvider();
         partitionConstraint = samplePartitioningProperties.getConstraints();
         computeStorageMap = samplePartitioningProperties.getComputeStorageMap();
         numPartitions = samplePartitioningProperties.getNumberOfPartitions();
@@ -210,7 +210,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
             Index idx = dsIndexes.get(i);
             PartitioningProperties idxPartitioningProps =
                     metadataProvider.getPartitioningProperties(dataset, idx.getIndexName());
-            indexes[i] = new IndexDataflowHelperFactory(storageMgr, idxPartitioningProps.getSpiltsProvider());
+            indexes[i] = new IndexDataflowHelperFactory(storageMgr, idxPartitioningProps.getSplitsProvider());
             names[i] = idx.getIndexName();
         }
         targetOp = new DatasetStreamStatsOperatorDescriptor(spec, recordDesc, DATASET_STATS_OPERATOR_NAME, indexes,

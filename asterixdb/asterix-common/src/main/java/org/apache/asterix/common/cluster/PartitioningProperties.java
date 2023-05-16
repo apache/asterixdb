@@ -38,7 +38,7 @@ public class PartitioningProperties {
         return new PartitioningProperties(splitsProvider, constraints, computeStorageMap);
     }
 
-    public IFileSplitProvider getSpiltsProvider() {
+    public IFileSplitProvider getSplitsProvider() {
         return splitsProvider;
     }
 

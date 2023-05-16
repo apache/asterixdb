@@ -71,7 +71,7 @@ public class DumpIndexRewriter extends FunctionRewriter {
                 metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
         IndexDataflowHelperFactory indexDataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         AlgebricksAbsolutePartitionConstraint secondaryPartitionConstraint =
                 (AlgebricksAbsolutePartitionConstraint) partitioningProperties.getConstraints();
         return new DumpIndexDatasource(context.getComputationNodeDomain(), indexDataflowHelperFactory,

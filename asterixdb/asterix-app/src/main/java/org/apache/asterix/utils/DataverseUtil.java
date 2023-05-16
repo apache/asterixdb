@@ -35,7 +35,7 @@ public class DataverseUtil {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(metadata.getApplicationContext());
         PartitioningProperties partitioningProperties = metadata.splitAndConstraints(dataverse.getDataverseName());
         FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(jobSpec,
-                partitioningProperties.getSpiltsProvider(), false, partitioningProperties.getComputeStorageMap());
+                partitioningProperties.getSplitsProvider(), false, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod,
                 partitioningProperties.getConstraints());
         jobSpec.addRoot(frod);

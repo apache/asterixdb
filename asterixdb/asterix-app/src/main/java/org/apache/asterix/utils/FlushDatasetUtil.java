@@ -69,6 +69,7 @@ public class FlushDatasetUtil {
                 metadataProvider.getPartitioningProperties(dataset, dataset.getDatasetName());
         AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
 
+        //TODO(partitioning) can make it run only at NC level since any flush call will flush all partitions in the NC
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, emptySource,
                 primaryPartitionConstraint);
 

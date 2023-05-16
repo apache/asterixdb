@@ -81,7 +81,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
         IIndexDataflowHelperFactory dataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         // The index drop operation should be persistent regardless of temp datasets or permanent dataset.
         IndexDropOperatorDescriptor btreeDrop = new IndexDropOperatorDescriptor(spec, dataflowHelperFactory,
                 dropOptions, partitioningProperties.getComputeStorageMap());
@@ -99,7 +99,7 @@ public abstract class SecondaryTreeIndexOperationsHelper extends SecondaryIndexO
                 metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
         IIndexDataflowHelperFactory dataflowHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
                 dataflowHelperFactory, partitioningProperties.getComputeStorageMap());
         compactOp.setSourceLocation(sourceLoc);

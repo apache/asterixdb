@@ -313,7 +313,7 @@ public class DatasetUtil {
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         IIndexDataflowHelperFactory indexHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         IndexDropOperatorDescriptor primaryBtreeDrop = new IndexDropOperatorDescriptor(specPrimary, indexHelperFactory,
                 options, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(specPrimary, primaryBtreeDrop,
@@ -335,7 +335,7 @@ public class DatasetUtil {
 
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
-        FileSplit[] fs = partitioningProperties.getSpiltsProvider().getFileSplits();
+        FileSplit[] fs = partitioningProperties.getSplitsProvider().getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (FileSplit f : fs) {
             sb.append(f).append(" ");
@@ -349,7 +349,7 @@ public class DatasetUtil {
                 compactionInfo.first, compactionInfo.second);
         IndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider(), resourceFactory, true);
+                        partitioningProperties.getSplitsProvider(), resourceFactory, true);
         IndexCreateOperatorDescriptor indexCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory,
                 partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
@@ -369,7 +369,7 @@ public class DatasetUtil {
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
         IIndexDataflowHelperFactory indexHelperFactory =
                 new IndexDataflowHelperFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSpiltsProvider());
+                        partitioningProperties.getSplitsProvider());
         LSMTreeIndexCompactOperatorDescriptor compactOp = new LSMTreeIndexCompactOperatorDescriptor(spec,
                 indexHelperFactory, partitioningProperties.getComputeStorageMap());
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, compactOp,
@@ -395,7 +395,7 @@ public class DatasetUtil {
     public static IOperatorDescriptor createPrimaryIndexScanOp(JobSpecification spec, MetadataProvider metadataProvider,
             Dataset dataset, ITupleProjectorFactory projectorFactory) throws AlgebricksException {
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
-        IFileSplitProvider primaryFileSplitProvider = partitioningProperties.getSpiltsProvider();
+        IFileSplitProvider primaryFileSplitProvider = partitioningProperties.getSplitsProvider();
         AlgebricksPartitionConstraint primaryPartitionConstraint = partitioningProperties.getConstraints();
         // -Infinity
         int[] lowKeyFields = null;
@@ -456,7 +456,7 @@ public class DatasetUtil {
         ISearchOperationCallbackFactory searchCallbackFactory = dataset.getSearchCallbackFactory(
                 storageComponentProvider, primaryIndex, IndexOperation.UPSERT, primaryKeyFields);
         IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
-                partitioningProperties.getSpiltsProvider());
+                partitioningProperties.getSplitsProvider());
         LSMPrimaryUpsertOperatorDescriptor op;
         ITypeTraits[] outputTypeTraits = new ITypeTraits[inputRecordDesc.getFieldCount() + 1
                 + (dataset.hasMetaPart() ? 2 : 1) + numFilterFields];

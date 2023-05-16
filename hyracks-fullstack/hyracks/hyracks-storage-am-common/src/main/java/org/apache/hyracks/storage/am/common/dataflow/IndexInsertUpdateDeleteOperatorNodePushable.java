@@ -76,7 +76,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             ITupleFilterFactory tupleFilterFactory, ITuplePartitionerFactory tuplePartitionerFactory,
             int[][] partitionsMap) throws HyracksDataException {
         this.ctx = ctx;
-        this.partitions = partitionsMap != null ? partitionsMap[partition] : new int[] { partition };
+        this.partitions = partitionsMap[partition];
         this.indexes = new IIndex[partitions.length];
         this.indexAccessors = new IIndexAccessor[partitions.length];
         this.modCallbacks = new IModificationOperationCallback[partitions.length];

@@ -600,7 +600,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         primaryKeyFields, primaryKeyFieldsInSecondaryIndex, proceedIndexOnlyPlan);
         IStorageManager storageManager = getStorageComponentProvider().getStorageManager();
         IIndexDataflowHelperFactory indexHelperFactory =
-                new IndexDataflowHelperFactory(storageManager, datasetPartitioningProp.getSpiltsProvider());
+                new IndexDataflowHelperFactory(storageManager, datasetPartitioningProp.getSplitsProvider());
         BTreeSearchOperatorDescriptor btreeSearchOp;
 
         int[][] partitionsMap = datasetPartitioningProp.getComputeStorageMap();
@@ -678,7 +678,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                         primaryKeyFields, primaryKeyFieldsInSecondaryIndex, isIndexOnlyPlan);
         RTreeSearchOperatorDescriptor rtreeSearchOp;
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
-                storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
+                storageComponentProvider.getStorageManager(), partitioningProperties.getSplitsProvider());
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             int[][] partitionsMap = partitioningProperties.getComputeStorageMap();
             rtreeSearchOp = new RTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, keyFields, true, true,
@@ -930,7 +930,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
             throws AlgebricksException {
-        return dataPartitioningProvider.getPartitioningProperties(mdTxnCtx, dataset, indexName).getSpiltsProvider()
+        return dataPartitioningProvider.getPartitioningProperties(mdTxnCtx, dataset, indexName).getSplitsProvider()
                 .getFileSplits();
     }
 
@@ -980,6 +980,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         ExternalScanOperatorDescriptor dataScanner = new ExternalScanOperatorDescriptor(jobSpec, scannerDesc,
                 adapterFactory, tupleFilterFactory, outputLimit);
 
+        //TODO(partitioning) check
         AlgebricksPartitionConstraint constraint;
         try {
             constraint = adapterFactory.getPartitionConstraint();
@@ -1042,8 +1043,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset
                 .getModificationCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
         IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
-                partitioningProperties.getSpiltsProvider());
+                partitioningProperties.getSplitsProvider());
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
+        //TODO(partitioning) rename to static
         ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
                 partitioningProperties.getNumberOfPartitions());
 
@@ -1067,7 +1069,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     PartitioningProperties idxPartitioningProperties =
                             getPartitioningProperties(dataset, primaryKeyIndex.get().getIndexName());
                     pkidfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
-                            idxPartitioningProperties.getSpiltsProvider());
+                            idxPartitioningProperties.getSplitsProvider());
                 }
                 op = createLSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
                         modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields, partitionerFactory,
@@ -1243,7 +1245,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
+                    storageComponentProvider.getStorageManager(), partitioningProperties.getSplitsProvider());
             IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
             ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
                     partitioningProperties.getNumberOfPartitions());
@@ -1313,7 +1315,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory idfh = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
+                    storageComponentProvider.getStorageManager(), partitioningProperties.getSplitsProvider());
             IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
             ITuplePartitionerFactory tuplePartitionerFactory = new FieldHashPartitionerFactory(pkFields,
                     pkHashFunFactories, partitioningProperties.getNumberOfPartitions());
@@ -1419,7 +1421,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                 storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
         IIndexDataflowHelperFactory indexDataflowHelperFactory = new IndexDataflowHelperFactory(
-                storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
+                storageComponentProvider.getStorageManager(), partitioningProperties.getSplitsProvider());
         IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
         ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
                 partitioningProperties.getNumberOfPartitions());
@@ -1538,7 +1540,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                     storageComponentProvider, secondaryIndex, indexOp, modificationCallbackPrimaryKeyFields);
             IIndexDataflowHelperFactory indexDataFlowFactory = new IndexDataflowHelperFactory(
-                    storageComponentProvider.getStorageManager(), partitioningProperties.getSpiltsProvider());
+                    storageComponentProvider.getStorageManager(), partitioningProperties.getSplitsProvider());
             IBinaryHashFunctionFactory[] pkHashFunFactories = dataset.getPrimaryHashFunctionFactories(this);
             ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(pkFields, pkHashFunFactories,
                     partitioningProperties.getNumberOfPartitions());
@@ -1743,6 +1745,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 keyFields[k] = k;
             }
 
+            //TODO(partitioning) check
             tokenizerOp = new BinaryTokenizerOperatorDescriptor(spec, tokenKeyPairRecDesc, tokenizerFactory,
                     fullTextConfigEvaluatorFactory, docField, keyFields, isPartitioned, true, false,
                     MissingWriterFactory.INSTANCE);
