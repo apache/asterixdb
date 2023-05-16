@@ -92,6 +92,7 @@
     <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
+    <azureidentity.version>1.9.0</azureidentity.version>
     <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
     <gcsjavasdk.version>2.17.2</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
@@ -1651,7 +1652,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-identity</artifactId>
-        <version>1.4.1</version>
+        <version>${azureidentity.version}</version>
         <exclusions>
           <exclusion>
             <groupId>net.minidev</groupId>

@@ -847,9 +847,9 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.4.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.4.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.4.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.9.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.9.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.9.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -860,9 +860,9 @@
       <groupId>com.microsoft.azure</groupId>
       <artifactId>msal4j</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.11.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.11.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.11.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.13.8</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.13.8</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.13.8</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -873,9 +873,9 @@
       <groupId>com.microsoft.azure</groupId>
       <artifactId>msal4j-persistence-extension</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.1.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.1.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.1.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.2.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.2.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.2.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -957,18 +957,6 @@
     </project>
   </supplement>
 
-  <!-- io.projectreactor.netty:reactor-netty uses ALv2 license and has no notice -->
-  <supplement>
-    <project>
-      <groupId>io.projectreactor.netty</groupId>
-      <artifactId>reactor-netty</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.28</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.28</license.ignoreMissingEmbeddedNotice>
-      </properties>
-    </project>
-  </supplement>
-
   <!-- io.projectreactor.netty:reactor-netty-core uses ALv2 license and has no notice -->
   <supplement>
     <project>
@@ -993,28 +981,14 @@
     </project>
   </supplement>
 
-  <!-- io.projectreactor.netty:reactor-netty-http-brave uses ALv2 license and has no notice -->
-  <supplement>
-    <project>
-      <groupId>io.projectreactor.netty</groupId>
-      <artifactId>reactor-netty-http-brave</artifactId>
-      <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.7</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.7</license.ignoreMissingEmbeddedNotice>
-      </properties>
-    </project>
-  </supplement>
-
   <!-- com.nimbusds:oauth2-oidc-sdk has ALv2 embedded in pom.xml -->
   <supplement>
     <project>
       <groupId>com.nimbusds</groupId>
       <artifactId>oauth2-oidc-sdk</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>9.7</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>9.7</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>9.7</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>9.7</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>10.7.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>10.7.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1025,8 +999,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>nimbus-jose-jwt</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>9.9.3</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>9.9.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>9.30.2</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>9.30.2</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1037,8 +1011,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>lang-tag</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.5</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.5</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.7</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.7</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1049,8 +1023,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>content-type</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.2</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.2</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1960,7 +1934,7 @@
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>5.5.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedNotice>5.13.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
