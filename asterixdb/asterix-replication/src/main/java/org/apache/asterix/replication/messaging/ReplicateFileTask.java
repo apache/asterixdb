@@ -24,11 +24,7 @@ import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -40,10 +36,10 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.io.FileHandle;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,31 +69,34 @@ public class ReplicateFileTask implements IReplicaTask {
             final IIOManager ioManager = appCtx.getIoManager();
             // resolve path
             final FileReference localPath = ioManager.resolve(file);
-            final Path resourceDir = Files.createDirectories(localPath.getFile().getParentFile().toPath());
+            FileReference resourceDir = localPath.getParent();
+            ioManager.makeDirectories(resourceDir);
             if (indexMetadata) {
                 // ensure clean index directory
-                FileUtils.cleanDirectory(resourceDir.toFile());
+                ioManager.cleanDirectory(resourceDir);
                 ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
                         .invalidateResource(ResourceReference.of(file).getRelativePath().toString());
             }
             // create mask
-            final Path maskPath = Paths.get(resourceDir.toString(),
-                    StorageConstants.MASK_FILE_PREFIX + localPath.getFile().getName());
-            Files.createFile(maskPath);
+            final FileReference maskPath =
+                    resourceDir.getChild(StorageConstants.MASK_FILE_PREFIX + localPath.getName());
+            ioManager.create(maskPath);
             // receive actual file
-            final Path filePath = Paths.get(resourceDir.toString(), localPath.getFile().getName());
-            Files.createFile(filePath);
-            try (RandomAccessFile fileOutputStream = new RandomAccessFile(filePath.toFile(), "rw");
-                    FileChannel fileChannel = fileOutputStream.getChannel()) {
-                fileOutputStream.setLength(size);
+            ioManager.create(localPath);
+            FileHandle fileHandle = (FileHandle) ioManager.open(localPath, IIOManager.FileReadWriteMode.READ_WRITE,
+                    IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+            try (FileChannel fileChannel = fileHandle.getFileChannel()) {
+                fileHandle.setLength(size);
                 NetworkingUtil.downloadFile(fileChannel, worker.getChannel());
-                fileChannel.force(true);
+                ioManager.sync(fileHandle, true);
+            } finally {
+                ioManager.close(fileHandle);
             }
             if (indexMetadata) {
                 initIndexCheckpoint(appCtx);
             }
             //delete mask
-            Files.delete(maskPath);
+            ioManager.delete(maskPath);
             LOGGER.debug("received file {} from master", localPath);
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {

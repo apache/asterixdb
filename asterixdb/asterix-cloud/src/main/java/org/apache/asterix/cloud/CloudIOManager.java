@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.common.utils.StorageConstants.*;
+import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
+import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -151,6 +152,7 @@ public class CloudIOManager extends IOManager {
         super.close(fHandle);
     }
 
+    // TODO This method should not do any syncing. It simply should list the files
     @Override
     public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
         Set<String> cloudFiles = cloudClient.listObjects(bucket, dir.getRelativePath(), filter);
@@ -220,6 +222,14 @@ public class CloudIOManager extends IOManager {
             return cloudClient.getObjectSize(bucket, fileHandle.getFileReference().getRelativePath());
         }
         return super.getSize(fileHandle);
+    }
+
+    @Override
+    public long getSize(FileReference fileReference) {
+        if (!fileReference.getFile().exists()) {
+            return cloudClient.getObjectSize(bucket, fileReference.getRelativePath());
+        }
+        return super.getSize(fileReference);
     }
 
     @Override

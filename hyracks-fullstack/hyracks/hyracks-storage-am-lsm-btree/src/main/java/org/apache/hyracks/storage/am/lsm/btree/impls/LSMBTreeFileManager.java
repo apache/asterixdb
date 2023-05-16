@@ -61,15 +61,17 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String baseName = getNextComponentSequence(BTREE_FILTER);
-        return new LSMComponentFileReferences(getFileReference(baseName + DELIMITER + BTREE_SUFFIX), null,
-                hasBloomFilter ? getFileReference(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
+        return new LSMComponentFileReferences(getCompressedFileReferenceIfAny(baseName + DELIMITER + BTREE_SUFFIX),
+                null,
+                hasBloomFilter ? getCompressedFileReferenceIfAny(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
         final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
-        return new LSMComponentFileReferences(getFileReference(baseName + DELIMITER + BTREE_SUFFIX), null,
-                hasBloomFilter ? getFileReference(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
+        return new LSMComponentFileReferences(getCompressedFileReferenceIfAny(baseName + DELIMITER + BTREE_SUFFIX),
+                null,
+                hasBloomFilter ? getCompressedFileReferenceIfAny(baseName + DELIMITER + BLOOM_FILTER_SUFFIX) : null);
     }
 
     @Override

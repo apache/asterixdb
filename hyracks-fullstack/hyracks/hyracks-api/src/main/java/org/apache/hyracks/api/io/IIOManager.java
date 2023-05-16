@@ -67,6 +67,8 @@ public interface IIOManager extends Closeable {
 
     long getSize(IFileHandle fileHandle);
 
+    long getSize(FileReference fileReference);
+
     WritableByteChannel newWritableChannel(IFileHandle fileHandle);
 
     void deleteWorkspaceFiles() throws HyracksDataException;
@@ -134,11 +136,16 @@ public interface IIOManager extends Closeable {
 
     void deleteDirectory(FileReference root) throws HyracksDataException;
 
+    // TODO: Remove and use list
     Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter) throws HyracksDataException;
 
     boolean exists(FileReference fileRef);
 
     void create(FileReference fileRef) throws HyracksDataException;
+
+    boolean makeDirectories(FileReference resourceDir);
+
+    void cleanDirectory(FileReference resourceDir) throws HyracksDataException;
 
     void syncFiles(Set<Integer> activePartitions) throws HyracksDataException;
 }

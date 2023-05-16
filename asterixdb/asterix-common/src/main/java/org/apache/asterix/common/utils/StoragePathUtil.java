@@ -19,7 +19,6 @@
 package org.apache.asterix.common.utils;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
@@ -31,6 +30,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConst
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.DefaultIoDeviceFileSplit;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.FileSplit;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.MappedFileSplit;
@@ -180,7 +180,7 @@ public class StoragePathUtil {
      * @return
      * @throws HyracksDataException
      */
-    public static Path getIndexPath(IIOManager ioManager, ResourceReference ref) throws HyracksDataException {
-        return ioManager.resolve(ref.getRelativePath().toString()).getFile().toPath();
+    public static FileReference getIndexPath(IIOManager ioManager, ResourceReference ref) throws HyracksDataException {
+        return ioManager.resolve(ref.getRelativePath().toString());
     }
 }

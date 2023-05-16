@@ -22,9 +22,6 @@ import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -50,21 +47,22 @@ public class ComponentMaskTask implements IReplicaTask {
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
+            IIOManager ioManager = appCtx.getIoManager();
             // create mask
-            final Path maskPath = getComponentMaskPath(appCtx, file);
-            Files.createFile(maskPath);
+            final FileReference maskPath = getComponentMaskPath(ioManager, file);
+            ioManager.create(maskPath);
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException e) {
             throw new ReplicationException(e);
         }
     }
 
-    public static Path getComponentMaskPath(INcApplicationContext appCtx, String componentFile) throws IOException {
-        final IIOManager ioManager = appCtx.getIoManager();
+    public static FileReference getComponentMaskPath(IIOManager ioManager, String componentFile) throws IOException {
         final FileReference localPath = ioManager.resolve(componentFile);
-        final Path resourceDir = Files.createDirectories(localPath.getFile().getParentFile().toPath());
+        final FileReference resourceDir = localPath.getParent();
+        ioManager.makeDirectories(resourceDir);
         final String componentSequence = ResourceReference.getComponentSequence(componentFile);
-        return Paths.get(resourceDir.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
+        return resourceDir.getChild(StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
     }
 
     @Override

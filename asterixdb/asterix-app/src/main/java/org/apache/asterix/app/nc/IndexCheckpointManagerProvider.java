@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.app.nc;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +26,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 
 public class IndexCheckpointManagerProvider implements IIndexCheckpointManagerProvider {
@@ -54,8 +54,8 @@ public class IndexCheckpointManagerProvider implements IIndexCheckpointManagerPr
 
     private IndexCheckpointManager create(ResourceReference ref) {
         try {
-            final Path indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
-            return new IndexCheckpointManager(indexPath);
+            final FileReference indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
+            return new IndexCheckpointManager(indexPath, ioManager);
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
         }

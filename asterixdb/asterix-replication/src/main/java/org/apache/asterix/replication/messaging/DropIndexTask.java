@@ -20,7 +20,6 @@ package org.apache.asterix.replication.messaging;
 
 import java.io.DataInput;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -31,8 +30,8 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,10 +51,10 @@ public class DropIndexTask implements IReplicaTask {
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
             final IIOManager ioManager = appCtx.getIoManager();
-            final File indexFile = ioManager.resolve(file).getFile();
-            if (indexFile.exists()) {
-                File indexDir = indexFile.getParentFile();
-                IoUtil.delete(indexDir);
+            final FileReference indexFile = ioManager.resolve(file);
+            if (ioManager.exists(indexFile)) {
+                FileReference indexDir = indexFile.getParent();
+                ioManager.deleteDirectory(indexDir);
                 ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
                         .invalidateResource(ResourceReference.of(file).getRelativePath().toString());
                 LOGGER.info(() -> "Deleted index: " + indexFile.getAbsolutePath());

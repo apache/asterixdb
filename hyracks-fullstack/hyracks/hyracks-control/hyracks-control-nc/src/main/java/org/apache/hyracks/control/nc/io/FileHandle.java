@@ -92,6 +92,14 @@ public class FileHandle implements IFileHandle {
         return raf.getChannel();
     }
 
+    public void setLength(long newLength) throws HyracksDataException {
+        try {
+            raf.setLength(newLength);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
     public synchronized void ensureOpen() throws HyracksDataException {
         if (raf == null || !raf.getChannel().isOpen()) {
             try {

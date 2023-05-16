@@ -22,8 +22,6 @@ import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -36,6 +34,8 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.util.ThreadDumpUtil;
 import org.apache.logging.log4j.LogManager;
@@ -67,9 +67,10 @@ public class MarkComponentValidTask implements IReplicaTask {
             } else if (masterLsn != IndexSynchronizer.MERGE_LSN) {
                 ensureComponentLsnFlushed(appCtx);
             }
+            IIOManager ioManager = appCtx.getIoManager();
             // delete mask
-            final Path maskPath = ComponentMaskTask.getComponentMaskPath(appCtx, file);
-            Files.delete(maskPath);
+            final FileReference maskPath = ComponentMaskTask.getComponentMaskPath(ioManager, file);
+            ioManager.delete(maskPath);
             ReplicationProtocol.sendAck(worker.getChannel(), worker.getReusableBuffer());
         } catch (IOException | InterruptedException e) {
             throw new ReplicationException(e);

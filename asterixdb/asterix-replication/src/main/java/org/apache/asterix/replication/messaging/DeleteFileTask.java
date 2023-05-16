@@ -20,10 +20,8 @@ package org.apache.asterix.replication.messaging;
 
 import java.io.DataInput;
 import java.io.DataOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
@@ -32,6 +30,7 @@ import org.apache.asterix.replication.api.IReplicaTask;
 import org.apache.asterix.replication.api.IReplicationWorker;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,9 +51,9 @@ public class DeleteFileTask implements IReplicaTask {
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) {
         try {
             final IIOManager ioManager = appCtx.getIoManager();
-            final File localFile = ioManager.resolve(file).getFile();
-            if (localFile.exists()) {
-                Files.delete(localFile.toPath());
+            final FileReference localFile = ioManager.resolve(file);
+            if (ioManager.exists(localFile)) {
+                ioManager.delete(localFile);
                 ResourceReference replicaRes = ResourceReference.of(localFile.getAbsolutePath());
                 if (replicaRes.isMetadataResource()) {
                     ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())

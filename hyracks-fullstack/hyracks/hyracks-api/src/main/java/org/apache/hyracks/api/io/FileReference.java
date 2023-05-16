@@ -97,6 +97,10 @@ public class FileReference implements Serializable {
         return path + File.separator + name;
     }
 
+    public String getName() {
+        return file.getName();
+    }
+
     public void register() {
         if (registrationTime != 0) {
             throw new IllegalStateException(
@@ -125,7 +129,7 @@ public class FileReference implements Serializable {
         if (parentIndex < 0) {
             return new FileReference(dev, "");
         }
-        String parentPath = path.substring(parentIndex);
+        String parentPath = path.substring(0, parentIndex);
         return new FileReference(dev, parentPath);
     }
 }

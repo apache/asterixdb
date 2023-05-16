@@ -21,8 +21,6 @@ package org.apache.asterix.common.ioopcallbacks;
 
 import static org.apache.asterix.common.storage.ResourceReference.getComponentSequence;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Deque;
@@ -77,7 +75,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
     private long firstLsnForCurrentMemoryComponent = 0L;
     private long persistenceLsn = 0L;
     private int pendingFlushes = 0;
-    private Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
+    private final Deque<ILSMComponentId> componentIds = new ArrayDeque<>();
 
     public LSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId componentId,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
@@ -307,10 +305,8 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
 
     private static FileReference getOperationMaskFilePath(ILSMIOOperation operation) {
         FileReference target = operation.getTarget();
-        final String componentSequence = getComponentSequence(target.getFile().getAbsolutePath());
-        Path idxRelPath = Paths.get(target.getRelativePath()).getParent();
-        Path maskFileRelPath =
-                Paths.get(idxRelPath.toString(), StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
-        return new FileReference(target.getDeviceHandle(), maskFileRelPath.toString());
+        String componentSequence = getComponentSequence(target.getFile().getAbsolutePath());
+        FileReference idxRelPath = target.getParent();
+        return idxRelPath.getChild(StorageConstants.COMPONENT_MASK_FILE_PREFIX + componentSequence);
     }
 }

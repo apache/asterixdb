@@ -18,15 +18,11 @@
  */
 package org.apache.asterix.app.nc;
 
-import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -34,9 +30,11 @@ import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
-import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,10 +47,12 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     private static final FilenameFilter CHECKPOINT_FILE_FILTER =
             (file, name) -> name.startsWith(StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX);
     private static final long BULKLOAD_LSN = 0;
-    private final Path indexPath;
+    private final FileReference indexPath;
+    private final IIOManager ioManager;
 
-    public IndexCheckpointManager(Path indexPath) {
+    public IndexCheckpointManager(FileReference indexPath, IIOManager ioManager) {
         this.indexPath = indexPath;
+        this.ioManager = ioManager;
     }
 
     @Override
@@ -154,7 +154,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         }
         if (checkpoints.isEmpty()) {
             LOGGER.warn("Couldn't find any checkpoint file for index {}. Content of dir are {}.", indexPath,
-                    Arrays.toString(indexPath.toFile().listFiles()));
+                    ioManager.getMatchingFiles(indexPath, IoUtil.NO_OP_FILTER).toString());
             throw new IllegalStateException("Couldn't find any checkpoints for resource: " + indexPath);
         }
         checkpoints.sort(Comparator.comparingLong(IndexCheckpoint::getId).reversed());
@@ -180,13 +180,13 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         }
     }
 
-    private List<IndexCheckpoint> getCheckpoints() throws ClosedByInterruptException {
+    private List<IndexCheckpoint> getCheckpoints() throws ClosedByInterruptException, HyracksDataException {
         List<IndexCheckpoint> checkpoints = new ArrayList<>();
-        final File[] checkpointFiles = indexPath.toFile().listFiles(CHECKPOINT_FILE_FILTER);
-        if (checkpointFiles != null) {
-            for (File checkpointFile : checkpointFiles) {
+        final Collection<FileReference> checkpointFiles = ioManager.getMatchingFiles(indexPath, CHECKPOINT_FILE_FILTER);
+        if (!checkpointFiles.isEmpty()) {
+            for (FileReference checkpointFile : checkpointFiles) {
                 try {
-                    checkpoints.add(read(checkpointFile.toPath()));
+                    checkpoints.add(read(checkpointFile));
                 } catch (ClosedByInterruptException e) {
                     throw e;
                 } catch (IOException e) {
@@ -198,14 +198,14 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     private void persist(IndexCheckpoint checkpoint) throws HyracksDataException {
-        final Path checkpointPath = getCheckpointPath(checkpoint);
+        final FileReference checkpointPath = getCheckpointPath(checkpoint);
         for (int i = 1; i <= MAX_CHECKPOINT_WRITE_ATTEMPTS; i++) {
             try {
                 // clean up from previous write failure
-                if (checkpointPath.toFile().exists()) {
-                    Files.delete(checkpointPath);
+                if (ioManager.exists(checkpointPath)) {
+                    ioManager.delete(checkpointPath);
                 }
-                FileUtil.writeAndForce(checkpointPath, checkpoint.asJson().getBytes());
+                ioManager.overwrite(checkpointPath, checkpoint.asJson().getBytes());
                 // ensure it was written correctly by reading it
                 read(checkpointPath);
                 return;
@@ -223,17 +223,18 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         }
     }
 
-    private IndexCheckpoint read(Path checkpointPath) throws IOException {
-        return IndexCheckpoint.fromJson(new String(Files.readAllBytes(checkpointPath)));
+    private IndexCheckpoint read(FileReference checkpointPath) throws IOException {
+        return IndexCheckpoint.fromJson(new String(ioManager.readAllBytes(checkpointPath)));
     }
 
     private void deleteHistory(long latestId, int historyToKeep) {
         try {
-            final File[] checkpointFiles = indexPath.toFile().listFiles(CHECKPOINT_FILE_FILTER);
-            if (checkpointFiles != null) {
-                for (File checkpointFile : checkpointFiles) {
-                    if (getCheckpointIdFromFileName(checkpointFile.toPath()) < (latestId - historyToKeep)) {
-                        Files.delete(checkpointFile.toPath());
+            final Collection<FileReference> checkpointFiles =
+                    ioManager.getMatchingFiles(indexPath, CHECKPOINT_FILE_FILTER);
+            if (!checkpointFiles.isEmpty()) {
+                for (FileReference checkpointFile : checkpointFiles) {
+                    if (getCheckpointIdFromFileName(checkpointFile) < (latestId - historyToKeep)) {
+                        ioManager.delete(checkpointFile);
                     }
                 }
             }
@@ -242,13 +243,12 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         }
     }
 
-    private Path getCheckpointPath(IndexCheckpoint checkpoint) {
-        return Paths.get(indexPath.toString(),
-                StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX + String.valueOf(checkpoint.getId()));
+    private FileReference getCheckpointPath(IndexCheckpoint checkpoint) {
+        return indexPath.getChild(StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX + checkpoint.getId());
     }
 
-    private long getCheckpointIdFromFileName(Path checkpointPath) {
-        return Long.valueOf(checkpointPath.getFileName().toString()
-                .substring(StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX.length()));
+    private long getCheckpointIdFromFileName(FileReference checkpointPath) {
+        return Long
+                .parseLong(checkpointPath.getName().substring(StorageConstants.INDEX_CHECKPOINT_FILE_PREFIX.length()));
     }
 }

@@ -400,7 +400,12 @@ public class IOManager implements IIOManager {
 
     @Override
     public long getSize(IFileHandle fileHandle) {
-        return fileHandle.getFileReference().getFile().length();
+        return getSize(fileHandle.getFileReference());
+    }
+
+    @Override
+    public long getSize(FileReference fileReference) {
+        return fileReference.getFile().length();
     }
 
     @Override
@@ -577,7 +582,7 @@ public class IOManager implements IIOManager {
     public Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter)
             throws HyracksDataException {
         File rootFile = root.getFile();
-        if (!rootFile.exists()) {
+        if (!rootFile.exists() || !rootFile.isDirectory()) {
             return Collections.emptyList();
         }
 
@@ -598,6 +603,20 @@ public class IOManager implements IIOManager {
     @Override
     public void create(FileReference fileRef) throws HyracksDataException {
         IoUtil.create(fileRef);
+    }
+
+    @Override
+    public boolean makeDirectories(FileReference resourceDir) {
+        return resourceDir.getFile().mkdirs();
+    }
+
+    @Override
+    public void cleanDirectory(FileReference resourceDir) throws HyracksDataException {
+        try {
+            FileUtils.cleanDirectory(resourceDir.getFile());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
