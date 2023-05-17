@@ -1139,7 +1139,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     private ICachedPage confiscatePage(long dpid, int multiplier) throws HyracksDataException {
-        return getPageLoop(dpid, multiplier, true);
+        ICachedPage page = getPageLoop(dpid, multiplier, true);
+        page.getBuffer().clear();
+        return page;
     }
 
     private ICachedPage confiscateInner(long dpid, int multiplier) {
