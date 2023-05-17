@@ -22,6 +22,7 @@ import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
@@ -45,6 +46,11 @@ public class RuntimeComponentsProvider implements IStorageManager, ILSMIOOperati
     @Override
     public ILSMIOOperationScheduler getIoScheduler(INCServiceContext ctx) {
         return ((INcApplicationContext) ctx.getApplicationContext()).getLSMIOScheduler();
+    }
+
+    @Override
+    public IIOManager getIoManager(INCServiceContext ctx) {
+        return ((INcApplicationContext) ctx.getApplicationContext()).getPersistenceIoManager();
     }
 
     @Override

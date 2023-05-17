@@ -82,7 +82,7 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
 
     @Override
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
-        IIOManager ioManager = serviceCtx.getIoManager();
+        IIOManager ioManager = storageManager.getIoManager(serviceCtx);
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> vbcs = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
         ioOpCallbackFactory.initialize(serviceCtx, this);

@@ -49,7 +49,7 @@ public interface INcApplicationContext extends IApplicationContext {
 
     IIOManager getIoManager();
 
-    IIOManager getCloudIoManager();
+    IIOManager getPersistenceIoManager();
 
     Executor getThreadExecutor();
 

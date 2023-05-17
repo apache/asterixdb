@@ -147,7 +147,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ILSMIOOperationScheduler lsmIOScheduler;
     private PersistentLocalResourceRepository localResourceRepository;
     private IIOManager ioManager;
-    private IIOManager cloudIoManager;
+    private IIOManager persistenceIOManager;
     private boolean isShuttingdown;
     private ActiveManager activeManager;
     private IReplicationChannel replicationChannel;
@@ -161,7 +161,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private IReplicaManager replicaManager;
     private IReceptionist receptionist;
-    private ICacheManager cacheManager;
+    private final ICacheManager cacheManager;
     private IConfigValidator configValidator;
     private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
 
@@ -191,7 +191,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         if (isCloudDeployment()) {
-            cloudIoManager = new CloudIOManager((IOManager) ioManager);
+            persistenceIOManager = new CloudIOManager((IOManager) ioManager);
+        } else {
+            persistenceIOManager = ioManager;
         }
         int ioQueueLen = getServiceContext().getAppConfig().getInt(NCConfig.Option.IO_QUEUE_SIZE);
         threadExecutor =
@@ -202,9 +204,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
         lsmIOScheduler = createIoScheduler(storageProperties);
         metadataMergePolicyFactory = new ConcurrentMergePolicyFactory();
+        // TODO do we want to write checkpoints for cloud?
         indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
-                new PersistentLocalResourceRepositoryFactory(ioManager, indexCheckpointManagerProvider,
+                new PersistentLocalResourceRepositoryFactory(persistenceIOManager, indexCheckpointManagerProvider,
                         persistedResourceRegistry);
         localResourceRepository =
                 (PersistentLocalResourceRepository) persistentLocalResourceRepositoryFactory.createRepository();
@@ -261,11 +264,11 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             //initialize replication channel
             replicationChannel = new ReplicationChannel(this);
 
-            bufferCache = new BufferCache(getLocalOrCloudIoManager(), prs, pcp, new FileMapManager(),
+            bufferCache = new BufferCache(persistenceIOManager, prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory(),
                     replicationManager);
         } else {
-            bufferCache = new BufferCache(getLocalOrCloudIoManager(), prs, pcp, new FileMapManager(),
+            bufferCache = new BufferCache(persistenceIOManager, prs, pcp, new FileMapManager(),
                     storageProperties.getBufferCacheMaxOpenFiles(), ioQueueLen, getServiceContext().getThreadFactory());
         }
 
@@ -370,12 +373,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     }
 
     @Override
-    public IIOManager getCloudIoManager() {
-        return cloudIoManager;
-    }
-
-    private IIOManager getLocalOrCloudIoManager() {
-        return isCloudDeployment() ? cloudIoManager : ioManager;
+    public IIOManager getPersistenceIoManager() {
+        return persistenceIOManager;
     }
 
     @Override

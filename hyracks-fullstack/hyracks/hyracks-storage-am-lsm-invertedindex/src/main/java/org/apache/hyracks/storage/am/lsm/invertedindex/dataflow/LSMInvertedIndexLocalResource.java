@@ -129,7 +129,7 @@ public class LSMInvertedIndexLocalResource extends LsmResource {
 
     @Override
     public ILSMIndex createInstance(INCServiceContext serviceCtx) throws HyracksDataException {
-        IIOManager ioManager = serviceCtx.getIoManager();
+        IIOManager ioManager = storageManager.getIoManager(serviceCtx);
         FileReference file = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(serviceCtx, file);
         IBufferCache bufferCache = storageManager.getBufferCache(serviceCtx);

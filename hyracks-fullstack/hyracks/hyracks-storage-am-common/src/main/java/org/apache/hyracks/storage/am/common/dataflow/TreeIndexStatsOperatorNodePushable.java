@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.common.dataflow;
 
 import java.io.DataOutput;
 
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -67,9 +68,10 @@ public class TreeIndexStatsOperatorNodePushable extends AbstractUnaryOutputSourc
         ITreeIndex treeIndex = (ITreeIndex) treeIndexHelper.getIndexInstance();
         try {
             writer.open();
-            IBufferCache bufferCache = storageManager.getBufferCache(ctx.getJobletContext().getServiceContext());
+            INCServiceContext ncServiceCtx = ctx.getJobletContext().getServiceContext();
+            IBufferCache bufferCache = storageManager.getBufferCache(ncServiceCtx);
             LocalResource resource = treeIndexHelper.getResource();
-            IIOManager ioManager = ctx.getIoManager();
+            IIOManager ioManager = storageManager.getIoManager(ncServiceCtx);
             FileReference fileRef = ioManager.resolve(resource.getPath());
             TreeIndexStatsGatherer statsGatherer = new TreeIndexStatsGatherer(bufferCache, treeIndex.getPageManager(),
                     fileRef, treeIndex.getRootPageId());

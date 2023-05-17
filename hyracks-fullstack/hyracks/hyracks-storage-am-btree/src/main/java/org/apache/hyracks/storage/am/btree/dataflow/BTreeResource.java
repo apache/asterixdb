@@ -59,7 +59,7 @@ public class BTreeResource implements IResource {
     @Override
     public IIndex createInstance(INCServiceContext ctx) throws HyracksDataException {
         IBufferCache bufferCache = storageManager.getBufferCache(ctx);
-        IIOManager ioManager = ctx.getIoManager();
+        IIOManager ioManager = storageManager.getIoManager(ctx);
         FileReference resourceRef = ioManager.resolve(path);
         return BTreeUtils.createBTree(bufferCache, typeTraits, comparatorFactories, BTreeLeafFrameType.REGULAR_NSM,
                 resourceRef, pageManagerFactory.createPageManager(bufferCache), false, nullTypeTraits,

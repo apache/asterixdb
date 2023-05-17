@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.common;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
@@ -30,29 +31,31 @@ import org.apache.hyracks.storage.common.file.IResourceIdFactory;
  */
 public interface IStorageManager extends Serializable, IJsonSerializable {
     /**
-     * @param ctx
-     *            the nc service context
-     * @return the disk buffer cache {@link org.apache.hyracks.storage.common.buffercache.IBufferCache}
+     * @param ctx the nc service context
+     * @return {@link IIOManager} for persisted files
+     */
+    IIOManager getIoManager(INCServiceContext ctx);
+
+    /**
+     * @param ctx the nc service context
+     * @return the disk buffer cache {@link IBufferCache}
      */
     IBufferCache getBufferCache(INCServiceContext ctx);
 
     /**
-     * @param ctx
-     *            the nc service context
-     * @return the local resource repository {@link org.apache.hyracks.storage.am.common.build.ILocalResourceRepository}
+     * @param ctx the nc service context
+     * @return the local resource repository {@link ILocalResourceRepository}
      */
     ILocalResourceRepository getLocalResourceRepository(INCServiceContext ctx);
 
     /**
-     * @param ctx
-     *            the nc service context
-     * @return the resource id factory {@link org.apache.hyracks.storage.common.file.IResourceIdFactory}
+     * @param ctx the nc service context
+     * @return the resource id factory {@link IResourceIdFactory}
      */
     IResourceIdFactory getResourceIdFactory(INCServiceContext ctx);
 
     /**
-     * @param ctx
-     *            the nc service context
+     * @param ctx the nc service context
      * @return the resource lifecycle manager
      */
     IResourceLifecycleManager<IIndex> getLifecycleManager(INCServiceContext ctx);

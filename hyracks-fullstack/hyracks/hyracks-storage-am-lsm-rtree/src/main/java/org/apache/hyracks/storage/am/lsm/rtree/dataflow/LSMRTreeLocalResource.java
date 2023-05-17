@@ -108,7 +108,7 @@ public class LSMRTreeLocalResource extends LsmResource {
 
     @Override
     public IIndex createInstance(INCServiceContext ncServiceCtx) throws HyracksDataException {
-        IIOManager ioManager = ncServiceCtx.getIoManager();
+        IIOManager ioManager = storageManager.getIoManager(ncServiceCtx);
         FileReference fileRef = ioManager.resolve(path);
         List<IVirtualBufferCache> virtualBufferCaches = vbcProvider.getVirtualBufferCaches(ncServiceCtx, fileRef);
         ioOpCallbackFactory.initialize(ncServiceCtx, this);

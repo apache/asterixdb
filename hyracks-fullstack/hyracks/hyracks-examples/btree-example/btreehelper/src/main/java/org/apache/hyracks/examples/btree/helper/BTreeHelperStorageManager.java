@@ -20,6 +20,7 @@
 package org.apache.hyracks.examples.btree.helper;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
@@ -33,6 +34,11 @@ public class BTreeHelperStorageManager implements IStorageManager {
     public static final BTreeHelperStorageManager INSTANCE = new BTreeHelperStorageManager();
 
     private BTreeHelperStorageManager() {
+    }
+
+    @Override
+    public IIOManager getIoManager(INCServiceContext ctx) {
+        return RuntimeContext.get(ctx).getIoManager();
     }
 
     @Override

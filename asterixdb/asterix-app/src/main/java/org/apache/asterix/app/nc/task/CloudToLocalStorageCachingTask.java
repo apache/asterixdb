@@ -48,7 +48,7 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
         String nodeId = applicationContext.getServiceContext().getNodeId();
         LOGGER.info("Syncing cloud to local storage for node {}. for partitions: {}", nodeId, partitions);
 
-        CloudIOManager cloudIOManager = (CloudIOManager) applicationContext.getCloudIoManager();
+        CloudIOManager cloudIOManager = (CloudIOManager) applicationContext.getPersistenceIoManager();
 
         // TODO(htowaileb): eager caching is disabled for now as it depends on static partitioning work
         cloudIOManager.syncFiles(partitions);

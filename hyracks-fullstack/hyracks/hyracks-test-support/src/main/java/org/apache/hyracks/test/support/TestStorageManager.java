@@ -19,6 +19,8 @@
 package org.apache.hyracks.test.support;
 
 import org.apache.hyracks.api.application.INCServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
@@ -28,6 +30,15 @@ import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public class TestStorageManager implements IStorageManager {
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public IIOManager getIoManager(INCServiceContext ctx) {
+        try {
+            return TestStorageManagerComponentHolder.getIOManager();
+        } catch (HyracksDataException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Override
     public IBufferCache getBufferCache(INCServiceContext ctx) {

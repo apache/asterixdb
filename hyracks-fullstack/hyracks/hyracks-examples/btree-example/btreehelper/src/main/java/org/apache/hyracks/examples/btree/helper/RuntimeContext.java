@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.dataflow.IndexLifecycleManager;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
@@ -43,19 +44,21 @@ import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
 
 public class RuntimeContext {
-    private IBufferCache bufferCache;
-    private IFileMapManager fileMapManager;
-    private ILocalResourceRepository localResourceRepository;
-    private IResourceLifecycleManager<IIndex> lcManager;
-    private ResourceIdFactory resourceIdFactory;
-    private ThreadFactory threadFactory = Thread::new;
+    private final IIOManager ioManager;
+    private final IBufferCache bufferCache;
+    private final IFileMapManager fileMapManager;
+    private final ILocalResourceRepository localResourceRepository;
+    private final IResourceLifecycleManager<IIndex> lcManager;
+    private final ResourceIdFactory resourceIdFactory;
 
     public RuntimeContext(INCServiceContext appCtx) throws HyracksDataException {
         fileMapManager = new FileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
-        bufferCache = new BufferCache(appCtx.getIoManager(), prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100,
-                10, threadFactory);
+        ThreadFactory threadFactory = Thread::new;
+        this.ioManager = appCtx.getIoManager();
+        bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100, 10,
+                threadFactory);
         ILocalResourceRepositoryFactory localResourceRepositoryFactory = new TransientLocalResourceRepositoryFactory();
         localResourceRepository = localResourceRepositoryFactory.createRepository();
         resourceIdFactory = (new ResourceIdFactoryProvider(localResourceRepository)).createResourceIdFactory();
@@ -64,6 +67,10 @@ public class RuntimeContext {
 
     public void close() throws HyracksDataException {
         bufferCache.close();
+    }
+
+    public IIOManager getIoManager() {
+        return ioManager;
     }
 
     public IBufferCache getBufferCache() {
