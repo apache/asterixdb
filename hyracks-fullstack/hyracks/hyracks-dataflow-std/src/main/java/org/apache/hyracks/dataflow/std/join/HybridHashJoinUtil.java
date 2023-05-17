@@ -19,13 +19,31 @@
 package org.apache.hyracks.dataflow.std.join;
 
 import java.util.BitSet;
+import java.util.List;
 
 import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedTupleBufferManager;
 
 public class HybridHashJoinUtil {
 
-    private HybridHashJoinUtil() {
+    BitSet spilledStatus;
+    int numberOfPartitions;
+    int[] sizeInTups;
+    int memoryContention;
+    int memoryExpansion;
+    int averageMemoryBudget;
+    RunFileWriter[] rfWriters;
+    IPartitionedTupleBufferManager bufferManager;
+    public HybridHashJoinUtil(BitSet spilledStatus,RunFileWriter[] rfWriters,IPartitionedTupleBufferManager bufferManager) {
+        this.spilledStatus = spilledStatus;
+        this.rfWriters = rfWriters;
+        this.bufferManager = bufferManager;
+    }
+
+    public void setDynamicMemoryStats(int memoryContention,int memoryExpansion){
+
+        this.memoryExpansion = memoryExpansion;
+        this.memoryContention = memoryContention;
     }
 
     public enum SIDE {
@@ -101,4 +119,9 @@ public class HybridHashJoinUtil {
         }
         return buf.toString();
     }
+
+    public String printPartitionInfo(){
+        return " Teste ";
+    }
 }
+

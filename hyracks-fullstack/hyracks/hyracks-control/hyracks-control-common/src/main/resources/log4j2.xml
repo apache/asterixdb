@@ -32,7 +32,7 @@
       <PatternLayout pattern="%m%n"/>
     </Console>
     <File name="FileLog" fileName="logs/trace.log" target="SYSTEM_OUT">
-      <PatternLayout pattern="%d{yyyy-mm-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+      <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} | %t | %class.%method | %msg%n"/>
     </File>
   </Appenders>
   <Loggers>

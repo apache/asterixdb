@@ -19,7 +19,7 @@
 package org.apache.hyracks.dataflow.std.join;
 
 import java.nio.ByteBuffer;
-import java.util.BitSet;
+import java.util.*;
 
 import org.apache.hyracks.api.comm.IFrame;
 import org.apache.hyracks.api.comm.IFrameWriter;
@@ -57,6 +57,7 @@ import org.apache.logging.log4j.Logger;
  * This class mainly applies one level of HHJ on a pair of
  * relations. It is always called by the descriptor.
  */
+
 public class OptimizedHybridHashJoin {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -96,9 +97,39 @@ public class OptimizedHybridHashJoin {
     private final TuplePointer tempPtr = new TuplePointer();
     private int[] probePSizeInTups;
     private IOperatorStats stats = null;
+    private int memoryBidInterval;
+    private MemoryChangeStats memoryStatsBuild = new MemoryChangeStats();
+    private MemoryChangeStats memoryStatsProbe = new MemoryChangeStats();
+    private Timer timer = new Timer();
+    private int framesProcessed = 0;
 
-    private boolean isDynamic = true;
+    public enum MemoryAdaptiveEnum {
+        STATIC,
+        TIME,
+        FRAME
+    }
+    private MemoryAdaptiveEnum isDynamic = MemoryAdaptiveEnum.STATIC;
+    private TimerTask task = new TimerTask(){
+        @Override
+        public void run() {
+            try {
+                updateMemoryBudget(randomlyUpdateMemory(6,16));
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
 
+    private TimerTask updateMemoryBudgetProbeTasl = new TimerTask(){
+        @Override
+        public void run() {
+            try {
+                updateMemoryBudgetProbe(randomlyUpdateMemory(6,16));
+            } catch (HyracksDataException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    };
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
             String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
             ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
@@ -132,19 +163,15 @@ public class OptimizedHybridHashJoin {
         }
     }
 
-    public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
-            String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
-            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
-            IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1,
-            boolean isDynamic) {
-        this(jobletCtx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, probeRd, buildRd, probeHpc,
-                buildHpc, probePredEval, buildPredEval, isLeftOuter, nullWriterFactories1);
-        this.isDynamic = isDynamic;
+    public void setMemoryBidInterval(int period,MemoryAdaptiveEnum type){
+        this.isDynamic = type;
+        this.memoryBidInterval = period;
     }
+
 
     public void initBuild() throws HyracksDataException {
         IDeallocatableFramePool framePool =
-                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize(), isDynamic);
+                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize(), isDynamic != MemoryAdaptiveEnum.STATIC);
         bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(framePool);
         bufferManager = new VPartitionTupleBufferManager(
                 PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledStatus),
@@ -152,9 +179,14 @@ public class OptimizedHybridHashJoin {
         spillPolicy = new PreferToSpillFullyOccupiedFramePolicy(bufferManager, spilledStatus);
         spilledStatus.clear();
         buildPSizeInTups = new int[numOfPartitions];
+        memoryStatsBuild.AddContentionEvent(0,memSizeInFrames);
+        if(isDynamic == MemoryAdaptiveEnum.TIME && memoryBidInterval > 0)
+            timer.schedule(task,0,memoryBidInterval);
     }
 
     public void build(ByteBuffer buffer) throws HyracksDataException {
+        if(this.isDynamic == MemoryAdaptiveEnum.FRAME && framesProcessed % this.memoryBidInterval == 0)
+            updateMemoryBudget(randomlyUpdateMemory(10,16));
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
         for (int i = 0; i < tupleCount; ++i) {
@@ -164,6 +196,8 @@ public class OptimizedHybridHashJoin {
                 buildPSizeInTups[pid]++;
             }
         }
+        framesProcessed++;
+        memoryStatsBuild.UpdateProcessedFrames(framesProcessed);
     }
 
     private void processTupleBuildPhase(int tid, int pid) throws HyracksDataException {
@@ -209,7 +243,7 @@ public class OptimizedHybridHashJoin {
             stats.getBytesWritten().update(spilt);
         bufferManager.clearPartition(pid);
         spilledStatus.set(pid);
-        LOGGER.debug(String.format("Spill:{partition:%d,bytes:%d}", pid, spilt));
+        this.memoryStatsBuild.UpdateSpilled(spilt/jobletCtx.getInitialFrameSize());
     }
 
     private void closeBuildPartition(int pid) throws HyracksDataException {
@@ -244,10 +278,11 @@ public class OptimizedHybridHashJoin {
         this.inMemJoiner = new InMemoryHashJoin(jobletCtx, new FrameTupleAccessor(probeRd), probeHpc,
                 new FrameTupleAccessor(buildRd), buildRd, buildHpc, isLeftOuter, nonMatchWriters, table, isReversed,
                 bufferManagerForHashTable);
-
         buildHashTable();
-    }
+        LOGGER.debug(memoryStatsBuild.PrintableMemBudgetStat());
+        timer.cancel();
 
+    }
     public void clearBuildTempFiles() throws HyracksDataException {
         clearTempFiles(buildRFWriters);
     }
@@ -480,7 +515,8 @@ public class OptimizedHybridHashJoin {
 
                     @Override
                     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                        inMemJoiner.build(buffer);
+                        inMemJoiner.build(buffer);  //Hash every tuple in every resident partition.
+                                                    //Don't need to recreate the Hash table for a partition that was already been hashed.
                     }
 
                     @Override
@@ -501,9 +537,17 @@ public class OptimizedHybridHashJoin {
         probePSizeInTups = new int[numOfPartitions];
         inMemJoiner.setComparator(comparator);
         bufferManager.setConstrain(VPartitionTupleBufferManager.NO_CONSTRAIN);
+        if(isDynamic == MemoryAdaptiveEnum.TIME && memoryBidInterval > 0) {
+            framesProcessed = 0;
+            memoryStatsBuild = new MemoryChangeStats();
+            timer = new Timer();
+            timer.schedule(updateMemoryBudgetProbeTasl, 0, memoryBidInterval);
+        }
     }
 
     public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
+        if(this.isDynamic == MemoryAdaptiveEnum.FRAME && framesProcessed % this.memoryBidInterval == 0)
+            updateMemoryBudget(randomlyUpdateMemory(10,16));
         accessorProbe.reset(buffer);
         int tupleCount = accessorProbe.getTupleCount();
         inMemJoiner.resetAccessorProbe(accessorProbe);
@@ -530,6 +574,8 @@ public class OptimizedHybridHashJoin {
                 }
             }
         }
+        framesProcessed++;
+        memoryStatsBuild.UpdateProcessedFrames(framesProcessed);
     }
 
     private void processTupleProbePhase(int tupleId, int pid) throws HyracksDataException {
@@ -592,6 +638,8 @@ public class OptimizedHybridHashJoin {
         //We do NOT join the spilled partitions here, that decision is made at the descriptor level
         //(which join technique to use)
         inMemJoiner.completeJoin(writer);
+        LOGGER.debug(memoryStatsBuild.PrintableMemBudgetStat());
+        timer.cancel();
     }
 
     public void releaseResource() throws HyracksDataException {
@@ -675,21 +723,57 @@ public class OptimizedHybridHashJoin {
      */
     public int updateMemoryBudget(int newDesiredMemory) throws HyracksDataException {
         boolean update = true;
-        if (this.isDynamic) {
+        if (this.isDynamic != MemoryAdaptiveEnum.STATIC) {
             while (!bufferManager.updateMemoryBudget(newDesiredMemory)) {
                 int partitionToBeSpilled = spillPolicy.findInMemPartitionWithMaxMemoryUsage();
                 if (partitionToBeSpilled != -1) {
-                    LOGGER.info(String.format("Spilling Partition %d due to Memory Contention.", partitionToBeSpilled));
                     int sizeOfPartitionBeenDeallocated =
                             bufferManager.getPhysicalSize(partitionToBeSpilled) / jobletCtx.getInitialFrameSize();
                     memSizeInFrames -= sizeOfPartitionBeenDeallocated;
                     spillPartition(partitionToBeSpilled);;
                 } else {
                     update = false;
-                    LOGGER.info("All Partitions are spilled already.");
                     break;
                 }
             }
+            memoryStatsBuild.AddContentionEvent(memSizeInFrames,newDesiredMemory);
+            memSizeInFrames = update ? newDesiredMemory : memSizeInFrames;
+        }
+        return memSizeInFrames;
+    }
+
+
+    /**
+     * Update memory budget for this HHJ operation.
+     * This method only takes place if this HHJ {@link #isDynamic}
+     * This method tries to update the {@link #memSizeInFrames},
+     * @param newDesiredMemory
+     * @throws HyracksDataException
+     */
+    public int updateMemoryBudgetProbe(int newDesiredMemory) throws HyracksDataException {
+        boolean update = true;
+        if (this.isDynamic != MemoryAdaptiveEnum.STATIC) {
+            while (!bufferManager.updateMemoryBudget(newDesiredMemory)) {
+                int partitionToBeSpilled = spillPolicy.findInMemPartitionWithMaxMemoryUsage();
+                if (partitionToBeSpilled != -1) {
+                    int sizeOfPartitionBeenDeallocated =
+                            bufferManager.getPhysicalSize(partitionToBeSpilled) / jobletCtx.getInitialFrameSize();
+                    memSizeInFrames -= sizeOfPartitionBeenDeallocated;
+                    spillPartition(partitionToBeSpilled);
+                } else {
+                    update = false;
+                    break;
+                }
+            }
+            //Check if there was an increase
+            makeSpaceForHashTableAndBringBackSpilledPartitions(); // Variation iterating only over the spilled partitions, and making space for their hash table
+            //Add its entries into the Hash Table.
+            //For the memory resident partition is there a file related to it on the disk?
+            // If so then it means that at some point this partition was spilled then we need to probe it again.
+            // First BitSet (Memory resident)                                   11000 (Partitions tuples are in memory at this time)
+            // Second BitSet (Does this partition was spilled at some point?)   10100 (The hash table for this partition is in memory) -> Optimize by checking if there is any file related to that partition.
+            //                                                                  00
+            memoryStatsBuild.AddContentionEvent(memSizeInFrames,newDesiredMemory);
             memSizeInFrames = update ? newDesiredMemory : memSizeInFrames;
         }
         return memSizeInFrames;
