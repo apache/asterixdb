@@ -62,6 +62,7 @@ import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -201,23 +202,27 @@ public class S3CloudClient implements ICloudClient {
         s3Client.deleteObjects(deleteReq);
     }
 
-    // TODO(htowaileb): Use the following cheaper request to check if an object exists
-    // https://stackoverflow.com/questions/3910071/check-file-size-on-s3-without-downloading
     @Override
-    public long getObjectSize(String bucket, String path) {
-        List<S3Object> objects = listS3Objects(s3Client, bucket, path);
-        if (objects.isEmpty()) {
+    public long getObjectSize(String bucket, String path) throws HyracksDataException {
+        try {
+            return s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(path).build()).contentLength();
+        } catch (NoSuchKeyException ex) {
             return 0;
+        } catch (Exception ex) {
+            throw HyracksDataException.create(ex);
         }
-        return objects.get(0).size();
     }
 
-    // TODO(htowaileb): Use the following cheaper request to check if an object exists
-    // https://docs.aws.amazon.com/AmazonS3/latest/userguide/example_s3_HeadObject_section.html
     @Override
-    public boolean exists(String bucket, String path) {
-        List<S3Object> objects = listS3Objects(s3Client, bucket, path);
-        return !objects.isEmpty();
+    public boolean exists(String bucket, String path) throws HyracksDataException {
+        try {
+            s3Client.headObject(HeadObjectRequest.builder().bucket(bucket).key(path).build());
+            return true;
+        } catch (NoSuchKeyException ex) {
+            return false;
+        } catch (Exception ex) {
+            throw HyracksDataException.create(ex);
+        }
     }
 
     private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {

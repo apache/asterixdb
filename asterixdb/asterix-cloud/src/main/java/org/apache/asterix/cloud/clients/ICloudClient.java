@@ -115,7 +115,7 @@ public interface ICloudClient {
      * @param path path
      * @return size
      */
-    long getObjectSize(String bucket, String path);
+    long getObjectSize(String bucket, String path) throws HyracksDataException;
 
     /**
      * Checks if an object exists at the specified path
@@ -124,7 +124,7 @@ public interface ICloudClient {
      * @param path path
      * @return {@code true} if the object exists, {@code false} otherwise
      */
-    boolean exists(String bucket, String path);
+    boolean exists(String bucket, String path) throws HyracksDataException;
 
     /**
      * Syncs files by downloading them from cloud storage to local storage

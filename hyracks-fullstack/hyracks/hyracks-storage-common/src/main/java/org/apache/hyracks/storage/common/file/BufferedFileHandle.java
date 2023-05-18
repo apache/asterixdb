@@ -121,7 +121,7 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     }
 
     @Override
-    public int getNumberOfPages() {
+    public int getNumberOfPages() throws HyracksDataException {
         if (DEBUG) {
             assert getFileSize() % bufferCache.getPageSizeWithHeader() == 0;
         }

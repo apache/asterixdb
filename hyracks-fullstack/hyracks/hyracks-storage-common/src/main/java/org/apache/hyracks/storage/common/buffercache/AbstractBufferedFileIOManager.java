@@ -284,7 +284,7 @@ public abstract class AbstractBufferedFileIOManager {
         return ioManager.doSyncWrite(fileHandle, offset, buf);
     }
 
-    protected final long getFileSize() {
+    protected final long getFileSize() throws HyracksDataException {
         return ioManager.getSize(fileHandle);
     }
 

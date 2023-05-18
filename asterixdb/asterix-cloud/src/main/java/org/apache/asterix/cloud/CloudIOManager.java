@@ -217,7 +217,7 @@ public class CloudIOManager extends IOManager {
     }
 
     @Override
-    public long getSize(IFileHandle fileHandle) {
+    public long getSize(IFileHandle fileHandle) throws HyracksDataException {
         if (!fileHandle.getFileReference().getFile().exists()) {
             return cloudClient.getObjectSize(bucket, fileHandle.getFileReference().getRelativePath());
         }
@@ -225,7 +225,7 @@ public class CloudIOManager extends IOManager {
     }
 
     @Override
-    public long getSize(FileReference fileReference) {
+    public long getSize(FileReference fileReference) throws HyracksDataException {
         if (!fileReference.getFile().exists()) {
             return cloudClient.getObjectSize(bucket, fileReference.getRelativePath());
         }
@@ -265,7 +265,7 @@ public class CloudIOManager extends IOManager {
     }
 
     @Override
-    public boolean exists(FileReference fileRef) {
+    public boolean exists(FileReference fileRef) throws HyracksDataException {
         // Check if the file exists locally first as newly created files (i.e., they are empty) are not stored in cloud storage
         return fileRef.getFile().exists() || cloudClient.exists(bucket, fileRef.getRelativePath());
     }

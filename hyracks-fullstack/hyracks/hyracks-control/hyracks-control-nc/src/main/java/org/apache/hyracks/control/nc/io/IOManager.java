@@ -399,12 +399,12 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public long getSize(IFileHandle fileHandle) {
+    public long getSize(IFileHandle fileHandle) throws HyracksDataException {
         return getSize(fileHandle.getFileReference());
     }
 
     @Override
-    public long getSize(FileReference fileReference) {
+    public long getSize(FileReference fileReference) throws HyracksDataException {
         return fileReference.getFile().length();
     }
 
@@ -596,7 +596,7 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public boolean exists(FileReference fileRef) {
+    public boolean exists(FileReference fileRef) throws HyracksDataException {
         return fileRef.getFile().exists();
     }
 
