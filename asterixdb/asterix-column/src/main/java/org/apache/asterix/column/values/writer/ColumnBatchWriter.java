@@ -39,7 +39,7 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
     private final ByteBufferOutputStream primaryKeys;
     private final MultiPersistentBufferBytesOutputStream columns;
     private final int pageSize;
-    private final float tolerance;
+    private final double tolerance;
     private final IReservedPointer columnLengthPointer;
 
     private ByteBuffer pageZero;
@@ -48,7 +48,7 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
     private int primaryKeysOffset;
     private int nonKeyColumnStartOffset;
 
-    public ColumnBatchWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int pageSize, float tolerance) {
+    public ColumnBatchWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int pageSize, double tolerance) {
         this.pageSize = pageSize;
         this.tolerance = tolerance;
         primaryKeys = new ByteBufferOutputStream();

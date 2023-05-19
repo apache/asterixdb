@@ -147,7 +147,7 @@ public class DatasetDecl extends AbstractStatement {
     }
 
     public DatasetFormatInfo getDatasetFormatInfo(String defaultFormat, int defaultMaxTupleCount,
-            float defaultFreeSpaceTolerance) {
+            double defaultFreeSpaceTolerance) {
         if (datasetType != DatasetType.INTERNAL) {
             return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
@@ -163,7 +163,7 @@ public class DatasetDecl extends AbstractStatement {
 
         int maxTupleCount = datasetFormatNode.getOptionalInt(
                 DatasetDeclParametersUtil.DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME, defaultMaxTupleCount);
-        float freeSpaceTolerance = datasetFormatNode.getOptionalFloat(
+        double freeSpaceTolerance = datasetFormatNode.getOptionalDouble(
                 DatasetDeclParametersUtil.DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME,
                 defaultFreeSpaceTolerance);
 

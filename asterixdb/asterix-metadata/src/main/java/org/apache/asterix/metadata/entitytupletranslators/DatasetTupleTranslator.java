@@ -448,28 +448,34 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
 
+        // Record that holds format information
         ARecordType datasetFormatType = (ARecordType) datasetType.getFieldTypes()[datasetFormatIndex];
-        int formatIndex =
-                datasetFormatType.getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_FORMAT_FORMAT_FIELD_NAME);
-        int maxTupleCountIndex =
-                datasetFormatType.getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME);
-        int freeSpaceToleranceIndex = datasetFormatType
-                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME);
-
         ARecord datasetFormatRecord = (ARecord) datasetRecord.getValueByPos(datasetFormatIndex);
 
-        //Format
+        // Format
+        int formatIndex =
+                datasetFormatType.getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_FORMAT_FORMAT_FIELD_NAME);
         AString formatString = (AString) datasetFormatRecord.getValueByPos(formatIndex);
         DatasetConfig.DatasetFormat format = DatasetConfig.DatasetFormat.valueOf(formatString.getStringValue());
 
-        //MaxTupleCount
+        if (format == DatasetConfig.DatasetFormat.ROW) {
+            // Return system default (row) instance
+            return DatasetFormatInfo.SYSTEM_DEFAULT;
+        }
+
+        // MaxTupleCount
+        int maxTupleCountIndex =
+                datasetFormatType.getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME);
         AInt64 maxTupleCountInt = (AInt64) datasetFormatRecord.getValueByPos(maxTupleCountIndex);
         int maxTupleCount = (int) maxTupleCountInt.getLongValue();
 
-        //FreeSpaceTolerance
+        // FreeSpaceTolerance
+        int freeSpaceToleranceIndex = datasetFormatType
+                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME);
         ADouble freeSpaceToleranceDouble = (ADouble) datasetFormatRecord.getValueByPos(freeSpaceToleranceIndex);
-        float freeSpaceTolerance = (float) freeSpaceToleranceDouble.getDoubleValue();
+        double freeSpaceTolerance = freeSpaceToleranceDouble.getDoubleValue();
 
+        // Columnar
         return new DatasetFormatInfo(format, maxTupleCount, freeSpaceTolerance);
     }
 
@@ -688,9 +694,6 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
     private void writeDatasetFormatInfo(Dataset dataset) throws HyracksDataException {
         DatasetFormatInfo info = dataset.getDatasetFormatInfo();
-        if (DatasetFormatInfo.SYSTEM_DEFAULT == info) {
-            return;
-        }
 
         RecordBuilder datasetFormatObject = new RecordBuilder();
         datasetFormatObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
@@ -703,21 +706,24 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         datasetFormatObject.addField(fieldName, fieldValue);
 
-        fieldName.reset();
-        aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME);
-        stringSerde.serialize(aString, fieldName.getDataOutput());
-        fieldValue.reset();
-        aInt64.setValue(info.getMaxTupleCount());
-        int64Serde.serialize(aInt64, fieldValue.getDataOutput());
-        datasetFormatObject.addField(fieldName, fieldValue);
+        // Columnar settings
+        if (info.getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aInt64.setValue(info.getMaxTupleCount());
+            int64Serde.serialize(aInt64, fieldValue.getDataOutput());
+            datasetFormatObject.addField(fieldName, fieldValue);
 
-        fieldName.reset();
-        aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME);
-        stringSerde.serialize(aString, fieldName.getDataOutput());
-        fieldValue.reset();
-        aDouble.setValue(info.getFreeSpaceTolerance());
-        doubleSerde.serialize(aDouble, fieldValue.getDataOutput());
-        datasetFormatObject.addField(fieldName, fieldValue);
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aDouble.setValue(info.getFreeSpaceTolerance());
+            doubleSerde.serialize(aDouble, fieldValue.getDataOutput());
+            datasetFormatObject.addField(fieldName, fieldValue);
+        }
 
         fieldName.reset();
         aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_FORMAT_FIELD_NAME);

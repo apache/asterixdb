@@ -30,7 +30,7 @@ public abstract class AbstractColumnTupleReaderWriterFactory implements ITreeInd
     private static final long serialVersionUID = -2377235465942457248L;
     protected final int pageSize;
     protected final int maxNumberOfTuples;
-    protected final float tolerance;
+    protected final double tolerance;
 
     /**
      * Tuple reader/writer factory
@@ -39,7 +39,7 @@ public abstract class AbstractColumnTupleReaderWriterFactory implements ITreeInd
      * @param maxNumberOfTuples maximum number of tuples stored per a mega leaf page
      * @param tolerance         percentage of tolerated empty space
      */
-    protected AbstractColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, float tolerance) {
+    protected AbstractColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance) {
         this.pageSize = pageSize;
         this.maxNumberOfTuples = maxNumberOfTuples;
         this.tolerance = tolerance;

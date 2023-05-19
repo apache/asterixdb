@@ -31,13 +31,13 @@ public class DatasetFormatInfo implements Serializable {
     public static final DatasetFormatInfo SYSTEM_DEFAULT = new DatasetFormatInfo();
     private final DatasetFormat format;
     private final int maxTupleCount;
-    private final float freeSpaceTolerance;
+    private final double freeSpaceTolerance;
 
     private DatasetFormatInfo() {
-        this(DatasetFormat.ROW, -1, 0.0f);
+        this(DatasetFormat.ROW, -1, 0.0d);
     }
 
-    public DatasetFormatInfo(DatasetFormat format, int maxTupleCount, float freeSpaceTolerance) {
+    public DatasetFormatInfo(DatasetFormat format, int maxTupleCount, double freeSpaceTolerance) {
         this.format = format;
         this.maxTupleCount = maxTupleCount;
         this.freeSpaceTolerance = freeSpaceTolerance;
@@ -51,7 +51,7 @@ public class DatasetFormatInfo implements Serializable {
         return maxTupleCount;
     }
 
-    public float getFreeSpaceTolerance() {
+    public double getFreeSpaceTolerance() {
         return freeSpaceTolerance;
     }
 

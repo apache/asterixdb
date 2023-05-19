@@ -295,7 +295,7 @@ public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisit
             return null;
         }
 
-        DataSourceId dsid = new DataSourceId(DataverseName.createBuiltinDataverseName(dataverse), dataset);
+        DataSourceId dsid = new DataSourceId(DataverseName.createFromCanonicalForm(dataverse), dataset);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         return metadataProvider.findDataSource(dsid);
     }

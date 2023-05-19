@@ -47,7 +47,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private int primaryKeysEstimatedSize;
 
     public MergeColumnTupleWriter(MergeColumnWriteMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            float tolerance) {
+            double tolerance) {
         this.columnMetadata = columnMetadata;
         List<IColumnTupleIterator> componentsTuplesList = columnMetadata.getComponentsTuples();
         this.componentsTuples = new MergeColumnTupleReference[componentsTuplesList.size()];

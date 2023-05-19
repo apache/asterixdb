@@ -128,8 +128,13 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         pageId = ((BTreeCursorInitialState) initialState).getPageId();
         frame.setPage(page0);
         frame.setMultiComparator(originalKeyCmp);
-        frameTuple.newPage();
-        initCursorPosition(searchPred);
+        if (frame.getTupleCount() > 0) {
+            frameTuple.newPage();
+            initCursorPosition(searchPred);
+        } else {
+            yieldFirstCall = false;
+            frameTuple.consume();
+        }
     }
 
     protected void initCursorPosition(ISearchPredicate searchPred) throws HyracksDataException {

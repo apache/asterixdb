@@ -45,10 +45,10 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
     private final List<Integer> keySourceIndicator;
     private final int pageSize;
     private final int maxTupleCount;
-    private final float tolerance;
+    private final double tolerance;
 
     public ColumnManagerFactory(ARecordType datasetType, ARecordType metaType, List<List<String>> primaryKeys,
-            List<Integer> keySourceIndicator, int pageSize, int maxTupleCount, float tolerance) {
+            List<Integer> keySourceIndicator, int pageSize, int maxTupleCount, double tolerance) {
         this.pageSize = pageSize;
         this.maxTupleCount = maxTupleCount;
         this.tolerance = tolerance;

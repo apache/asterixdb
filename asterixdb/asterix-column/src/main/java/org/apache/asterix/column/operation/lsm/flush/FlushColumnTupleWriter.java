@@ -42,7 +42,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     protected int primaryKeysEstimatedSize;
 
     public FlushColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            float tolerance) {
+            double tolerance) {
         this.columnMetadata = columnMetadata;
         transformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot());
         finalizer = new BatchFinalizerVisitor(columnMetadata);

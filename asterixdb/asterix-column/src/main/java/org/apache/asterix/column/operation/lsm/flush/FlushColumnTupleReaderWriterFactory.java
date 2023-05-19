@@ -28,7 +28,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProj
 public class FlushColumnTupleReaderWriterFactory extends AbstractColumnTupleReaderWriterFactory {
     private static final long serialVersionUID = -9197679192729634493L;
 
-    public FlushColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, float tolerance) {
+    public FlushColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance) {
         super(pageSize, maxNumberOfTuples, tolerance);
     }
 
