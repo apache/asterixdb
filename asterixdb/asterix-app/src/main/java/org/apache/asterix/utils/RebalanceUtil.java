@@ -243,8 +243,10 @@ public class RebalanceUtil {
         ActiveNotificationHandler activeNotificationHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
+        LOGGER.debug("attempting to acquire dataset {} upgrade lock", source.getDatasetName());
         lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), source.getDataverseName(),
                 source.getDatasetName());
+        LOGGER.debug("acquired dataset {} upgrade lock", source.getDatasetName());
         LOGGER.info("Updating dataset {} node group from {} to {}", source.getDatasetName(), source.getNodeGroupName(),
                 target.getNodeGroupName());
         try {
