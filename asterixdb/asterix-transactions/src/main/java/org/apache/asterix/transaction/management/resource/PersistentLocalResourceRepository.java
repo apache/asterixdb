@@ -253,7 +253,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 for (File file : files) {
                     final LocalResource localResource = readLocalResource(file);
                     if (filter.test(localResource)) {
-                        resourcesMap.put(localResource.getId(), localResource);
+                        LocalResource duplicate = resourcesMap.putIfAbsent(localResource.getId(), localResource);
+                        if (duplicate != null) {
+                            LOGGER.warn("found duplicate resource ids {} and {}", localResource, duplicate);
+                        }
                     }
                 }
             } catch (IOException e) {
