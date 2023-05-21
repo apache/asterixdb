@@ -25,6 +25,7 @@ import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 public class NcLocalCounters implements Serializable {
     private static final long serialVersionUID = 3798954558299915995L;
@@ -41,6 +42,7 @@ public class NcLocalCounters implements Serializable {
 
     public static NcLocalCounters collect(CcId ccId, NodeControllerService ncs) throws HyracksDataException {
         final INcApplicationContext appContext = (INcApplicationContext) ncs.getApplicationContext();
+        resetGlobalCounters(ncs, appContext);
         long maxResourceId = Math.max(appContext.getLocalResourceRepository().maxId(),
                 MetadataIndexImmutableProperties.FIRST_AVAILABLE_USER_DATASET_ID);
         long maxTxnId = appContext.getMaxTxnId();
@@ -64,5 +66,11 @@ public class NcLocalCounters implements Serializable {
     public String toString() {
         return "NcLocalCounters{" + "maxResourceId=" + maxResourceId + ", maxTxnId=" + maxTxnId + ", maxJobId="
                 + maxJobId + '}';
+    }
+
+    private static void resetGlobalCounters(NodeControllerService ncs, INcApplicationContext appContext) {
+        IResourceIdFactory resourceIdFactory =
+                appContext.getStorageComponentProvider().getStorageManager().getResourceIdFactory(ncs.getContext());
+        resourceIdFactory.reset();
     }
 }

@@ -79,8 +79,8 @@ public class DatasetLock implements IMetadataLock {
         lock.writeLock().unlock();
     }
 
-    private void upgradeReadLock() {
-        upgradeLock.readLock().lock();
+    private void upgradeReadLock() throws InterruptedException {
+        upgradeLock.readLock().lockInterruptibly();
     }
 
     private void modifyReadLock() {
@@ -185,7 +185,7 @@ public class DatasetLock implements IMetadataLock {
     }
 
     @Override
-    public void lock(IMetadataLock.Mode mode) {
+    public void lock(IMetadataLock.Mode mode) throws InterruptedException {
         switch (mode) {
             case INDEX_BUILD:
                 readLock();
@@ -203,8 +203,7 @@ public class DatasetLock implements IMetadataLock {
                 writeLock();
                 break;
             case READ:
-                readLock();
-                upgradeReadLock();
+                atomicReadLock();
                 break;
             default:
                 throw new IllegalStateException("locking mode " + mode + " is not supported");
@@ -262,6 +261,17 @@ public class DatasetLock implements IMetadataLock {
             return true;
         }
         return Objects.equals(key, ((DatasetLock) o).key);
+    }
+
+    private void atomicReadLock() throws InterruptedException {
+        readLock();
+        try {
+            upgradeReadLock();
+        } catch (InterruptedException e) {
+            readUnlock();
+            Thread.currentThread().interrupt();
+            throw e;
+        }
     }
 
     @Override
