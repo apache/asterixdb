@@ -4495,9 +4495,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private interface IMetadataLocker {
-        void lock() throws AlgebricksException;
+        void lock() throws HyracksDataException, AlgebricksException, InterruptedException;
 
-        void unlock() throws AlgebricksException;
+        void unlock() throws HyracksDataException, AlgebricksException;
     }
 
     private interface IResultPrinter {
@@ -4512,10 +4512,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IResultSet resultSet, ResultDelivery resultDelivery, ResultMetadata outMetadata, Stats stats,
             IRequestParameters requestParameters, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
             throws Exception {
+        final IRequestTracker requestTracker = appCtx.getRequestTracker();
+        final ClientRequest clientRequest =
+                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
-            public void lock() {
-                compilationLock.readLock().lock();
+            public void lock() throws RuntimeDataException, InterruptedException {
+                try {
+                    compilationLock.readLock().lockInterruptibly();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    ensureNotCancelled(clientRequest);
+                    throw e;
+                }
             }
 
             @Override
@@ -4668,18 +4677,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
         final ClientRequest clientRequest =
                 (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        if (cancellable) {
+            clientRequest.markCancellable();
+        }
         locker.lock();
         try {
             final JobSpecification jobSpec = compiler.compile();
             if (jobSpec == null) {
                 return;
             }
-            if (cancellable) {
-                clientRequest.markCancellable();
-            }
             final SchedulableClientRequest schedulableRequest =
                     SchedulableClientRequest.of(clientRequest, requestParameters, metadataProvider, jobSpec);
             appCtx.getReceptionist().ensureSchedulable(schedulableRequest);
+            // ensure request not cancelled before running job
+            ensureNotCancelled(clientRequest);
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
             clientRequest.setJobId(jobId);
             if (jId != null) {

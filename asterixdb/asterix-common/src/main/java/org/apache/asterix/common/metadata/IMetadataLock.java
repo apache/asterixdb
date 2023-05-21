@@ -63,7 +63,7 @@ public interface IMetadataLock {
      * @param mode
      *            lock mode
      */
-    void lock(IMetadataLock.Mode mode);
+    void lock(IMetadataLock.Mode mode) throws InterruptedException;
 
     /**
      * Release a lock

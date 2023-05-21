@@ -20,12 +20,18 @@ package org.apache.hyracks.storage.common.file;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-@FunctionalInterface
 public interface IResourceIdFactory {
 
     /**
      * @return A unique id
-     * @throws Exception
+     * @throws HyracksDataException
      */
     long createId() throws HyracksDataException;
+
+    /**
+     * Resets this factory to the last value used
+     */
+    default void reset() {
+        // no op
+    }
 }

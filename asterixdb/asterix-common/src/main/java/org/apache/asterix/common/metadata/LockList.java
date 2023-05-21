@@ -49,7 +49,12 @@ public class LockList {
         if (isContained(mode, lock)) {
             return;
         }
-        lock.lock(mode);
+        try {
+            lock.lock(mode);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new AsterixException(e);
+        }
         indexes.put(lock.getKey(), locks.size());
         locks.add(MutablePair.of(lock, mode));
     }

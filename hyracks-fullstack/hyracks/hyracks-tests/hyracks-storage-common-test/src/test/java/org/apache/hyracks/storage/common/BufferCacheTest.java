@@ -63,7 +63,7 @@ public class BufferCacheTest {
     private static final int NUM_PAGES = 10;
     private static final int MAX_OPEN_FILES = 20;
     private static final int HYRACKS_FRAME_SIZE = PAGE_SIZE;
-    private IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
+    private final IHyracksTaskContext ctx = TestUtils.create(HYRACKS_FRAME_SIZE);
 
     private static final Random rnd = new Random(50);
 
@@ -441,6 +441,28 @@ public class BufferCacheTest {
         Assert.assertEquals(actualPinCount.get(), expectedPinCount);
         // close file
         bufferCache.closeFile(fileId);
+    }
+
+    @Test
+    public void testClearingConfiscatedPages() throws HyracksDataException {
+        TestStorageManagerComponentHolder.init(PAGE_SIZE, 1, MAX_OPEN_FILES);
+        IBufferCache bufferCache =
+                TestStorageManagerComponentHolder.getBufferCache(ctx.getJobletContext().getServiceContext());
+        String fileName = getFileName();
+        IIOManager ioManager = TestStorageManagerComponentHolder.getIOManager();
+        FileReference file = ioManager.resolve(fileName);
+        int fileId = bufferCache.createFile(file);
+        int testPageId = 0;
+        bufferCache.openFile(fileId);
+        ICachedPage aPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, testPageId));
+        Assert.assertEquals(PAGE_SIZE, aPage.getBuffer().limit());
+        Assert.assertEquals(0, aPage.getBuffer().position());
+        aPage.getBuffer().limit(5);
+        aPage.getBuffer().position(1);
+        bufferCache.returnPage(aPage);
+        aPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, testPageId));
+        Assert.assertEquals(PAGE_SIZE, aPage.getBuffer().limit());
+        Assert.assertEquals(0, aPage.getBuffer().position());
     }
 
     @AfterClass
