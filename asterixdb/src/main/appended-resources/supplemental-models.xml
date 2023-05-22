@@ -1090,8 +1090,8 @@
       <groupId>net.minidev</groupId>
       <artifactId>json-smart</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.4.7</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.4.7</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.4.11</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.4.11</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1102,8 +1102,8 @@
       <groupId>net.minidev</groupId>
       <artifactId>accessors-smart</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.4.7</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.4.7</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.4.11</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.4.11</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -1113,9 +1113,9 @@
       <groupId>org.ow2.asm</groupId>
       <artifactId>asm</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>9.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>9.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>9.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>9.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>9.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>9.3</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>

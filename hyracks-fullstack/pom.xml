@@ -156,6 +156,10 @@
         <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
           </exclusion>
@@ -471,6 +475,12 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-util-ajax</artifactId>
         <version>9.4.48.v20220622</version>
+      </dependency>
+      <!-- Manually included to avoid CVE-2023-1370 -->
+      <dependency>
+        <groupId>net.minidev</groupId>
+        <artifactId>json-smart</artifactId>
+        <version>2.4.11</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

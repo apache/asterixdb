@@ -309,7 +309,7 @@
               <url>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</url>
             </override>
             <override>
-              <gav>org.ow2.asm:asm:9.1</gav>
+              <gav>org.ow2.asm:asm:9.3</gav>
               <url>https://raw.githubusercontent.com/llbit/ow2-asm/master/LICENSE.txt</url>
             </override>
             <override>

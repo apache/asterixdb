@@ -1020,6 +1020,10 @@
         <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
           </exclusion>
@@ -1111,6 +1115,10 @@
         <version>${hadoop.version}</version>
         <classifier>tests</classifier>
         <exclusions>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
@@ -1644,6 +1652,10 @@
         <artifactId>azure-identity</artifactId>
         <version>1.4.1</version>
         <exclusions>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
