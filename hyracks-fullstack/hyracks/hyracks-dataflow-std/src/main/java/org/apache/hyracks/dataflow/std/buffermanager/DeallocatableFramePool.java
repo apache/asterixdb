@@ -112,7 +112,7 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
     @Override
     public void deAllocateBuffer(ByteBuffer buffer) {
         if (shouldDeallocate(buffer)) {
-            // simply deallocate the Big Object frame
+            //Deallocate if Object is Large or it is a dynamic memory situation
             ctx.deallocateFrames(buffer.capacity());
             allocated -= buffer.capacity();
         } else {
@@ -134,7 +134,9 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
     }
 
     private boolean shouldDeallocate(ByteBuffer buffer) {
+        //Big Sized Object frame should always be deallocated.
         boolean shouldDeallocate = buffer.capacity() != ctx.getInitialFrameSize();
+        // Memory is Dinamic and the number of allocated buffers is greater than the desiredMemoryBudget.
         shouldDeallocate = shouldDeallocate || (isDynamic && allocated > desiredMemBudget);
         return shouldDeallocate;
     }

@@ -298,7 +298,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             state.numOfPartitions, PROBE_REL, BUILD_REL, probeRd, buildRd, probeHpc, buildHpc,
                             probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories);
                     state.hybridHJ.setOperatorStats(stats);
-                    state.hybridHJ.setMemoryBidInterval(500, OptimizedHybridHashJoin.MemoryAdaptiveEnum.TIME);
+                    state.hybridHJ.setMemoryBidInterval(100, OptimizedHybridHashJoin.MemoryAdaptiveEnum.FRAME);
                     state.hybridHJ.initBuild();
                 }
 
@@ -392,7 +392,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     state = (BuildAndPartitionTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), BUILD_AND_PARTITION_ACTIVITY_ID), partition));
                     writer.open();
-                    state.hybridHJ.setMemoryBidInterval(500, OptimizedHybridHashJoin.MemoryAdaptiveEnum.TIME);
+                    state.hybridHJ.setMemoryBidInterval(100, OptimizedHybridHashJoin.MemoryAdaptiveEnum.FRAME);
                     state.hybridHJ.initProbe(probComp);
                     state.hybridHJ.setOperatorStats(stats);
                 }
@@ -429,8 +429,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         } finally {
                             state.hybridHJ.releaseResource();
                         }
-                        BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
+                        //If Partition was spilled during last round, or it was inconsistent.
+                        BitSet partitionStatus = state.hybridHJ.getSpilledOrInconsistentPartitions();
                         rPartbuff.reset();
+                        //ForEach Partition Spilled
                         for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid =
                                 partitionStatus.nextSetBit(pid + 1)) {
                             RunFileReader bReader = state.hybridHJ.getBuildRFReader(pid);

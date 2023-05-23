@@ -30,5 +30,4 @@ public interface IDeallocatableFramePool extends IFramePool {
      * @param desiredSize Desired Size measured in frames
      */
     boolean updateMemoryBudget(int desiredSize);
-
 }

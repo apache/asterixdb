@@ -105,6 +105,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return numTuples[partition];
     }
 
+    /**
+     * Get size of partition in Frames
+     * @param partitionId
+     * @return Size of Partition in Frames
+     */
     @Override
     public int getPhysicalSize(int partitionId) {
         int size = 0;
@@ -311,12 +316,6 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
         return constrain;
     }
 
-    /**
-     * Update memory budge
-     *
-     * @param desiredSize Desired budget measured in Frames
-     * @return
-     */
     @Override
     public boolean updateMemoryBudget(int desiredSize) {
         return framePool.updateMemoryBudget(desiredSize);
