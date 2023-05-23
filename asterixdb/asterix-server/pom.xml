@@ -218,15 +218,22 @@
             </override>
             <override>
               <gavs>
-                <gav>com.azure:azure-core:1.24.1</gav>
-                <gav>com.azure:azure-core-http-netty:1.11.6</gav>
-                <gav>com.azure:azure-storage-blob:12.14.3</gav>
-                <gav>com.azure:azure-storage-common:12.14.2</gav>
-                <gav>com.azure:azure-storage-internal-avro:12.1.3</gav>
+                <gav>com.azure:azure-core:1.38.0</gav>
+                <gav>com.azure:azure-core-http-netty:1.13.2</gav>
+                <gav>com.azure:azure-json:1.0.0</gav>
+                <gav>com.azure:azure-storage-blob:12.22.0</gav>
+                <gav>com.azure:azure-storage-common:12.21.0</gav>
+                <gav>com.azure:azure-storage-internal-avro:12.7.0</gav>
               </gavs>
-              <!-- azure-storage-blob-batch_12.11.3 release is at 89a32290750a18d1b99c27c16b1b11d42f16c622 -->
-              <noticeUrl>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/89a32290750a18d1b99c27c16b1b11d42f16c622/NOTICE.txt</noticeUrl>
-              <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/89a32290750a18d1b99c27c16b1b11d42f16c622/LICENSE.txt</url>
+              <noticeUrl>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/azure-storage-blob_12.22.0/NOTICE.txt</noticeUrl>
+              <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/azure-storage-blob_12.22.0/LICENSE.txt</url>
+            </override>
+            <override>
+              <gavs>
+                <gav>io.projectreactor.netty:reactor-netty-core:1.0.28</gav>
+                <gav>io.projectreactor.netty:reactor-netty-http:1.0.28</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.28/LICENSE</url>
             </override>
             <override>
               <gav>org.mindrot:jbcrypt:0.4</gav>
@@ -271,6 +278,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.28/LICENSE</aliasUrl>
               </aliasUrls>
               <metric>1</metric>
             </license>

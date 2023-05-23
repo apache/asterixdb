@@ -88,7 +88,8 @@
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
-    <azurejavasdk.version>12.12.0</azurejavasdk.version>
+    <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
     <parquet.version>1.8.2</parquet.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
@@ -1523,7 +1524,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-blob</artifactId>
-        <version>12.14.3</version>
+        <version>${azureblobjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1594,7 +1595,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-common</artifactId>
-        <version>12.14.2</version>
+        <version>${azurecommonjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>

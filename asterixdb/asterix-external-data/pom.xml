@@ -210,6 +210,7 @@
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
+              <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -501,6 +502,10 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-unix-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
     </dependency>
   </dependencies>
 </project>
