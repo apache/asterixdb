@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class StorageComputePartitionsMap {
 
@@ -53,9 +55,10 @@ public class StorageComputePartitionsMap {
             }
         }
         int[][] computerToStoArray = new int[computeToStoragePartitions.size()][];
+        int partitionIdx = 0;
         for (Map.Entry<Integer, List<Integer>> integerListEntry : computeToStoragePartitions.entrySet()) {
-            computerToStoArray[integerListEntry.getKey()] =
-                    integerListEntry.getValue().stream().mapToInt(i -> i).toArray();
+            computerToStoArray[partitionIdx] = integerListEntry.getValue().stream().mapToInt(i -> i).toArray();
+            partitionIdx++;
         }
         return computerToStoArray;
     }
@@ -93,5 +96,9 @@ public class StorageComputePartitionsMap {
             lastComputePartition++;
         }
         return newMap;
+    }
+
+    public Set<String> getComputeNodes() {
+        return stoToComputeLocation.values().stream().map(ComputePartition::getNodeId).collect(Collectors.toSet());
     }
 }

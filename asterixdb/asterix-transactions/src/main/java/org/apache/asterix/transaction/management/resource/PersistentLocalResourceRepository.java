@@ -646,8 +646,8 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public synchronized List<FileReference> getOnDiskPartitions() throws HyracksDataException {
         List<FileReference> onDiskPartitions = new ArrayList<>();
         for (FileReference root : storageRoots) {
-            Collection<FileReference> partitions = ioManager.list(root,
-                    (dir, name) -> dir.isDirectory() && name.startsWith(StorageConstants.PARTITION_DIR_PREFIX));
+            Collection<FileReference> partitions = ioManager.list(root, (dir, name) -> dir != null && dir.isDirectory()
+                    && name.startsWith(StorageConstants.PARTITION_DIR_PREFIX));
             if (partitions != null) {
                 onDiskPartitions.addAll(partitions);
             }

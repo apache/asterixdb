@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -891,13 +890,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         } else {
             numElementsHint = Long.parseLong(numElementsHintString);
         }
-        int numPartitions = 0;
-        List<String> nodeGroup =
-                MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName()).getNodeNames();
-        IClusterStateManager csm = appCtx.getClusterStateManager();
-        for (String nd : nodeGroup) {
-            numPartitions += csm.getNodePartitionsCount(nd);
-        }
+        int numPartitions = getPartitioningProperties(dataset).getNumberOfPartitions();
         return numElementsHint / numPartitions;
     }
 

@@ -286,4 +286,10 @@ public interface IClusterStateManager {
      * @return the count of storage partitions
      */
     int getStoragePartitionsCount();
+
+    /**
+     * Sets the compute-storage partitions map
+     * @param map
+     */
+    void setComputeStoragePartitionsMap(StorageComputePartitionsMap map);
 }

@@ -204,8 +204,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 storageProperties.getBufferCachePageSize(), storageProperties.getBufferCacheNumPages());
         lsmIOScheduler = createIoScheduler(storageProperties);
         metadataMergePolicyFactory = new ConcurrentMergePolicyFactory();
-        // TODO do we want to write checkpoints for cloud?
-        indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(ioManager);
+        indexCheckpointManagerProvider = new IndexCheckpointManagerProvider(persistenceIOManager);
         ILocalResourceRepositoryFactory persistentLocalResourceRepositoryFactory =
                 new PersistentLocalResourceRepositoryFactory(persistenceIOManager, indexCheckpointManagerProvider,
                         persistedResourceRegistry);
