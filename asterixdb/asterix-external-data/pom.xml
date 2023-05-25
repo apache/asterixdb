@@ -210,6 +210,7 @@
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
+              <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -550,6 +551,10 @@
     <dependency>
       <groupId>net.minidev</groupId>
       <artifactId>json-smart</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
     </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->

@@ -90,7 +90,8 @@
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
-    <azureblobjavasdk.version>12.14.2</azureblobjavasdk.version>
+    <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
     <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
     <gcsjavasdk.version>2.17.2</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
@@ -1725,7 +1726,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-blob</artifactId>
-        <version>12.14.3</version>
+        <version>${azureblobjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1796,7 +1797,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-common</artifactId>
-        <version>12.14.2</version>
+        <version>${azurecommonjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
