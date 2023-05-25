@@ -66,4 +66,9 @@ public class NonDeterministicFrameReader implements IFrameReader {
     public synchronized void close() throws HyracksDataException {
         channelReader.close();
     }
+
+    @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
 }

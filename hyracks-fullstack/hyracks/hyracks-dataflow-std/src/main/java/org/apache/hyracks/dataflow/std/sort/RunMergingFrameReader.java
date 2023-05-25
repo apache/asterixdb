@@ -132,6 +132,11 @@ public class RunMergingFrameReader implements IFrameReader {
         }
     }
 
+    @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
+
     private static void setNextTopTuple(int runIndex, int[] tupleIndexes, List<? extends IFrameReader> runCursors,
             List<? extends IFrame> inFrames, IFrameTupleAccessor[] tupleAccessors, ReferencedPriorityQueue topTuples)
             throws HyracksDataException {

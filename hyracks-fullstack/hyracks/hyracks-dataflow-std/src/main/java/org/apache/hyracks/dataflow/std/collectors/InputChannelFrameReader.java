@@ -124,6 +124,11 @@ public class InputChannelFrameReader implements IFrameReader, IInputChannelMonit
     }
 
     @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
+
+    @Override
     public synchronized void notifyFailure(IInputChannel channel, int errorCode) {
         // Note: if a remote failure overwrites the value of localFailure, then we rely on
         // the fact that the remote task will notify the cc of the failure.

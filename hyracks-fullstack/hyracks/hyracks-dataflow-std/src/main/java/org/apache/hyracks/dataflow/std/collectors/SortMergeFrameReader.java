@@ -83,4 +83,9 @@ public class SortMergeFrameReader implements IFrameReader {
     public void close() throws HyracksDataException {
         merger.close();
     }
+
+    @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
 }

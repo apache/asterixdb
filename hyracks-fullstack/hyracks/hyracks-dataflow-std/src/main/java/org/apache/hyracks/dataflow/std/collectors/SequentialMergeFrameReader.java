@@ -75,4 +75,9 @@ public class SequentialMergeFrameReader implements IFrameReader {
             sender.close();
         }
     }
+
+    @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
 }
