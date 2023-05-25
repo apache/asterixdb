@@ -44,7 +44,7 @@ class PartitionManagerTest{
         tupleAccessor.reset(generateIntFrame().getBuffer());
         IFrameTupleAppender tupleAppender = new FrameTupleAppender(new VSizeFrame(context));
         ITuplePartitionComputer partitionComputer =new simplePartitionComputer();
-        partitionManager = new PartitionManager(numberOfPartitions,context,bufferManager,partitionComputer,tupleAccessor,tupleAppender);
+        partitionManager = new PartitionManager(numberOfPartitions,context,bufferManager,partitionComputer,tupleAccessor,tupleAppender,status);
     }
     @Test
     public void InvalidBufferSizeAndPartitionNumber() throws HyracksDataException{
@@ -59,7 +59,7 @@ class PartitionManagerTest{
         IFrameTupleAppender tupleAppender = new FrameTupleAppender(new VSizeFrame(context));
         ITuplePartitionComputer partitionComputer =new simplePartitionComputer();
         try {
-            partitionManager = new PartitionManager(largeNumberOfPartitions, context, bufferManager, partitionComputer, tupleAccessor, tupleAppender);
+            partitionManager = new PartitionManager(largeNumberOfPartitions, context, bufferManager, partitionComputer, tupleAccessor, tupleAppender,status);
             fail();
         }
         catch (Exception ex){
@@ -106,7 +106,16 @@ class PartitionManagerTest{
         tupleAccessor.reset(frame.getBuffer());
         insertFrameToPartition(0,numberOfPartitions);
         insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,5);
-        assertEquals(partitionManager.getResidentWithLargerBuffer(),1);
+        assertEquals(partitionManager.getResidentWithLargerBuffer(0),1);
+    }
+    @Test
+    public void getResidentWithLargestBufferStartingFrom() throws HyracksDataException{
+        IFrame frame = generateIntFrame();
+        tupleAccessor.reset(frame.getBuffer());
+        insertFrameToPartition(0,numberOfPartitions);
+        insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,5);
+        assertEquals(partitionManager.getResidentWithLargerBuffer(1),1);
+        assertEquals(partitionManager.getResidentWithLargerBuffer(2),2);
     }
     @Test
     public void getResidentWithSmallerBuffer() throws HyracksDataException{

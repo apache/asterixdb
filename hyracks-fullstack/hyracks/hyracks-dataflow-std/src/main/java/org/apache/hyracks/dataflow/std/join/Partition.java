@@ -43,7 +43,7 @@ public class Partition {
      * @return Number of Tuples in Memory
      */
     public int getTuplesInMemory() {
-        return tuplesInMemory;
+        return spilled ? 0 : tuplesInMemory;
     }
 
     /**
@@ -183,7 +183,7 @@ public class Partition {
      * @param tupleId Large Tuple that should be flushed to disk
      * @throws HyracksDataException Exception
      */
-    private void insertLargeTuple(int tupleId) throws HyracksDataException {
+    public void insertLargeTuple(int tupleId) throws HyracksDataException {
         createFileWriterIfNotExist();
         rfWriter.open();
         if (!tupleAppender.append(frameTupleAccessor, tupleId)) {
@@ -221,6 +221,7 @@ public class Partition {
      */
     public void close() throws HyracksDataException {
         spill();
+        bufferManager.clearPartition(id);
         rfWriter.close();
     }
 

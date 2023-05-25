@@ -8,6 +8,7 @@ import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedTupleBufferManager;
+import org.apache.hyracks.dataflow.std.buffermanager.PreferToSpillFullyOccupiedFramePolicy;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 public class PartitionManager {
     private final List<Partition> partitions = new ArrayList<>();
     IFrame reloadBuffer;
+    public BitSet spilledStatus;
 
     /**
      * Buffer manager, responsable for allocating frames from a memory pool to partition buffers.<br>
@@ -36,11 +38,13 @@ public class PartitionManager {
                             IPartitionedTupleBufferManager bufferManager,
                             ITuplePartitionComputer partitionComputer,
                             IFrameTupleAccessor frameTupleAccessor,
-                            IFrameTupleAppender frameTupleAppender) throws HyracksDataException {
+                            IFrameTupleAppender frameTupleAppender,
+                            BitSet spilledStatus) throws HyracksDataException {
         this.bufferManager = bufferManager;
         this.tupleAccessor = frameTupleAccessor;
         this.partitionComputer = partitionComputer;
         reloadBuffer = new VSizeFrame(context);
+        this.spilledStatus = spilledStatus;
         for (int i = 0; i < numberOfPartitions; i++) {
             partitions.add(new Partition(i, bufferManager, context, frameTupleAccessor, frameTupleAppender, reloadBuffer));
         }
@@ -83,7 +87,7 @@ public class PartitionManager {
     }
 
     /**
-     * Get total memory used in frames by all partitions
+     * Get total memory used in bytes by all partitions
      *
      * @return
      */
@@ -103,6 +107,13 @@ public class PartitionManager {
         return partitions.get(partitionId).insertTuple(tupleId);
     }
 
+    public void insertTupleWithSpillPolicy(int tupleId, PreferToSpillFullyOccupiedFramePolicy spillPolicy) throws HyracksDataException {
+        int partitionId = partitionComputer.partition(tupleAccessor, tupleId, getNumberOfPartitions());
+        while (!partitions.get(partitionId).insertTuple(tupleId)) {
+            spillPartition(spillPolicy.selectVictimPartition(partitionId));
+        }
+    }
+
     /**
      * Get number of partitions in the partition manager.
      *
@@ -117,7 +128,7 @@ public class PartitionManager {
      *
      * @return List of Partitions
      */
-    private List<Partition> getSpilledPartitions() {
+    public List<Partition> getSpilledPartitions() {
         return partitions.stream().filter(Partition::getSpilledStatus).collect(Collectors.toList());
     }
 
@@ -126,7 +137,7 @@ public class PartitionManager {
      *
      * @return List of Partitions
      */
-    private List<Partition> getMemoryResidentPartitions() {
+    public List<Partition> getMemoryResidentPartitions() {
         return partitions.stream().filter(p -> !p.getSpilledStatus()).collect(Collectors.toList());
     }
 
@@ -138,6 +149,7 @@ public class PartitionManager {
      */
     public void spillPartition(int id) throws HyracksDataException {
         partitions.get(id).spill();
+        spilledStatus.set(id);
     }
 
     //region [FIND PARTITION]
@@ -197,8 +209,9 @@ public class PartitionManager {
      *
      * @return Partition id
      */
-    public int getResidentWithLargerBuffer() {
+    public int getResidentWithLargerBuffer(int startingFrom) {
         List<Partition> resident = getMemoryResidentPartitions();
+        resident = resident.stream().filter(p -> p.getId() >= startingFrom).collect(Collectors.toList());
         return bufferFilter(resident, true);
     }
 
@@ -275,7 +288,11 @@ public class PartitionManager {
      * @throws HyracksDataException Exception
      */
     public boolean reloadPartition(int id) throws HyracksDataException {
-        return partitions.get(id).reload();
+        if (partitions.get(id).reload()) {
+            spilledStatus.clear(id);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -295,11 +312,7 @@ public class PartitionManager {
      * @return
      */
     public BitSet getSpilledStatus() {
-        BitSet bitSet = new BitSet(getNumberOfPartitions());
-        for (Partition p : getSpilledPartitions()) {
-            bitSet.set(p.getId());
-        }
-        return bitSet;
+        return spilledStatus;
     }
 
     /**

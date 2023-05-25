@@ -75,6 +75,7 @@ class PartitionTest{
         assertEquals(partition.getTuplesInMemory(),0);
         assertEquals(partition.getTuplesProcessed(),1);
         assertEquals(partition.getFileSize(),frameSize);
+        assertEquals(partition.getMemoryUsed(),frameSize);
     }
     /**
      * Reload the spilled Partition and check the numbers
@@ -132,11 +133,16 @@ class PartitionTest{
      */
     void Insert20Frames() throws  HyracksDataException{
         int numberOfTuplesProcessed = 0;
+        //It will only insert 10 frames due to the Frame Pool Size.
         for(int i=0;i<20;i++){
             tupleAccessor.reset(generateIntFrame().getBuffer());
             numberOfTuplesProcessed += InsertFrame();
         }
         assertEquals(numberOfTuplesProcessed,partition.getTuplesProcessed());
+        assertEquals(partition.getMemoryUsed(),10 * frameSize);
+        partition.spill();
+        assertEquals(partition.getFileSize(),10*frameSize);
+        assertEquals(partition.getMemoryUsed(),frameSize); //Memory Used is at least one frame large.
     }
 
     /**
