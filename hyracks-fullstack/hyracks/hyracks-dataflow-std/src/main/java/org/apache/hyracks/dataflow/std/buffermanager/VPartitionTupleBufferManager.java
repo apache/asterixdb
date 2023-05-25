@@ -96,6 +96,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     }
 
     @Override
+    public int getBufferPoolSize() {
+        return framePool.getMemoryBudget();
+    }
+
+    @Override
     public int getNumPartitions() {
         return partitionArray.length;
     }
@@ -319,6 +324,11 @@ public class VPartitionTupleBufferManager implements IPartitionedTupleBufferMana
     @Override
     public boolean updateMemoryBudget(int desiredSize) {
         return framePool.updateMemoryBudget(desiredSize);
+    }
+
+    @Override
+    public void allocateEmptyFrame(int partitionId) throws HyracksDataException{
+        getLastBufferOrCreateNewIfNotExist(partitionId,0,0);
     }
 
 }

@@ -60,4 +60,9 @@ public class ConnectorReceiverProfilingFrameReader implements IFrameReader {
         reader.close();
         closeCounter.update(1);
     }
+
+    @Override
+    public void setDeleteAfterClose(boolean set) {
+
+    }
 }

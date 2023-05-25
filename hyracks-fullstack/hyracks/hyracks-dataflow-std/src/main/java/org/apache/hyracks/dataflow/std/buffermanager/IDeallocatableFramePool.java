@@ -25,6 +25,7 @@ public interface IDeallocatableFramePool extends IFramePool {
 
     void deAllocateBuffer(ByteBuffer buffer);
 
+    public int getMemoryBudget();
     /**
      * Update Memory Budget;
      * @param desiredSize Desired Size measured in frames

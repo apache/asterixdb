@@ -298,7 +298,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             state.numOfPartitions, PROBE_REL, BUILD_REL, probeRd, buildRd, probeHpc, buildHpc,
                             probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories);
                     state.hybridHJ.setOperatorStats(stats);
-                    state.hybridHJ.setMemoryBidInterval(100, OptimizedHybridHashJoin.MemoryAdaptiveEnum.FRAME);
                     state.hybridHJ.initBuild();
                 }
 
@@ -392,7 +391,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     state = (BuildAndPartitionTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), BUILD_AND_PARTITION_ACTIVITY_ID), partition));
                     writer.open();
-                    state.hybridHJ.setMemoryBidInterval(100, OptimizedHybridHashJoin.MemoryAdaptiveEnum.FRAME);
                     state.hybridHJ.initProbe(probComp);
                     state.hybridHJ.setOperatorStats(stats);
                 }
@@ -430,7 +428,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             state.hybridHJ.releaseResource();
                         }
                         //If Partition was spilled during last round, or it was inconsistent.
-                        BitSet partitionStatus = state.hybridHJ.getSpilledOrInconsistentPartitions();
+                        BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
                         rPartbuff.reset();
                         //ForEach Partition Spilled
                         for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid =
@@ -660,7 +658,8 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                                 }
                             }
 
-                        } else { //Case 2.1.2 - Switch to NLJ
+                        }
+                        else { //Case 2.1.2 - Switch to NLJ
                             if (LOGGER.isDebugEnabled()) {
                                 LOGGER.debug("\t\t>>>Case 2.1.2 - SWITCHED to NLJ RecursiveHHJ WITH "
                                         + "(isLeftOuter || build<probe) - [Level " + level + "]");

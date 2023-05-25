@@ -119,6 +119,11 @@ public class RunMergingFrameReaderTest {
         @Override
         public void close() throws HyracksDataException {
         }
+
+        @Override
+        public void setDeleteAfterClose(boolean set) {
+
+        }
     }
 
     static int prepareSortedData(int minDataSize, int minRecordSize, int maxRecordSize,

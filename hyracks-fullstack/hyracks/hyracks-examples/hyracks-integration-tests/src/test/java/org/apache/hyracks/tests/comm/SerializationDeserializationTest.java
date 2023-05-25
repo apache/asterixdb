@@ -116,6 +116,11 @@ public class SerializationDeserializationTest {
                 public void close() throws HyracksDataException {
 
                 }
+
+                @Override
+                public void setDeleteAfterClose(boolean set) {
+
+                }
             }, rDes);
         }
     }

@@ -1,30 +1,36 @@
 package org.apache.hyracks.dataflow.std.join;
 
 import org.apache.hyracks.api.comm.*;
-import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.context.IHyracksJobletContext;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.CleanupUtils;
+import org.apache.hyracks.dataflow.common.io.RunFileReader;
+import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.buffermanager.*;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
-import org.junit.jupiter.api.Test;
-import java.nio.ByteBuffer;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * This Class describes a Partition of a Hybrid Hash Join Operator.
+ * This Class describes a Partition of a Hybrid Hash Join Operator.<br>
+ * It works as a unique source of truth for its status.
  */
-public class Partition{
+public class Partition {
+
     //region [PROPERTIES]
     /**
-     * Partition Id
+     * Partition id
      */
-    private int id;
+    private final int id;
+
     /**
      * Return Partition's ID
-     * @return Partition Id
+     *
+     * @return Partition id
      */
-    public int getId(){return tuplesInMemory;}
+    public int getId() {
+        return id;
+    }
 
     /**
      * Number of Tuples resident in memory.
@@ -33,19 +39,26 @@ public class Partition{
 
     /**
      * Return number of Tuples resident in memory
+     *
      * @return Number of Tuples in Memory
      */
-    public  int getTuplesInMemory(){return tuplesInMemory;}
+    public int getTuplesInMemory() {
+        return tuplesInMemory;
+    }
 
     /**
      * Number of Tuples Spilled to Disk
      */
     private int tuplesSpilled = 0;
+
     /**
      * Return number of Tuples spilled to disk
+     *
      * @return Number of Tuples spilled to disk
      */
-    public  int getTuplesSpilled(){return tuplesSpilled;}
+    public int getTuplesSpilled() {
+        return tuplesSpilled;
+    }
 
     /**
      * Spilled Status<br>
@@ -56,60 +69,108 @@ public class Partition{
 
     /**
      * Return the spilled status of Partition.
-     * @return  <b>TRUE</b> if Partition is spilled.<br>
-     *          <b>FALSE</b> if Partition is memory resident.
+     *
+     * @return <b>TRUE</b> if Partition is spilled.<br>
+     * <b>FALSE</b> if Partition is memory resident.
      */
-    public boolean getSpilledStatus(){
+    public boolean getSpilledStatus() {
         return spilled;
-    }
-    /**
-     * Number of Bytes written to disk, used for statistics.
-     */
-    private int bytesSpilled = 0;
-    /**
-     * Get total number of Tuples processed in this Partition, considering both memory resident and spilled tuples.
-     * @return Total number of processed tuples
-     */
-    public int getTuplesProcessed(){
-        return tuplesInMemory+tuplesSpilled;
     }
 
     /**
-     * Name of relation attatched to this Partition.
+     * Get total number of Tuples processed in this Partition, considering both memory resident and spilled tuples.
+     *
+     * @return Total number of processed tuples
      */
-    private String relationName;
-    private IFrameTupleAccessor frameTupleAccessor;
-    private TuplePointer tuplePointer = new TuplePointer();
-    private IPartitionedTupleBufferManager bufferManager;
-    private IFrameWriter rfWriter;
-    private IFrameReader rfReader;
-    private IFrame reloadBuffer;
+    public int getTuplesProcessed() {
+        return tuplesInMemory + tuplesSpilled;
+    }
+
+    /**
+     * Get number of Frames used by Partition.
+     *
+     * @return Number of Frames
+     */
+    public int getMemoryUsed() {
+        return Math.max(bufferManager.getPhysicalSize(id), context.getInitialFrameSize());
+    }
+
+    /**
+     * Get the File Reader for the temporary file that store spilled tuples.
+     *
+     * @return File Reader
+     */
+    public RunFileReader getRfReader() {
+        return rfReader;
+    }
+
+    /**
+     * Frame accessor, provides access to tuples in a byte buffer. It must be created with a record descriptor.
+     */
+    private final IFrameTupleAccessor frameTupleAccessor;
+    private final TuplePointer tuplePointer = new TuplePointer();
+    /**
+     * Buffer manager, responsable for allocating frames from a memory pool to partition buffers.<br>
+     * It is shared among Build Partitions, Probe Partitions and Hash Table.
+     */
+    private final IPartitionedTupleBufferManager bufferManager;
+    /**
+     * File reader, gives writer access to a temporary file to store tuples spilled.
+     */
+    private RunFileWriter rfWriter;
+    /**
+     * File reader, gives reader access to a temporary file to store tuples spilled.
+     */
+    private RunFileReader rfReader;
+    /**
+     * Buffer used during reload fo partition from Disk, it is not managed by the buffer pool.
+     */
+    private final IFrame reloadBuffer;
+    /**
+     * Tuple appender used to store larger tuples.
+     */
+    private final IFrameTupleAppender tupleAppender;
+    /**
+     * Joblet context
+     */
+    private final IHyracksJobletContext context;
 
     //endregion
 
     //region [CONSTRUCTORS]
-    public Partition(int id,IPartitionedTupleBufferManager bufferManager,
-                     IFrameWriter rfWriter,
-                     String relationName,
-                     IFrameTupleAccessor frameTupleAccessor){
+    public Partition(int id, IPartitionedTupleBufferManager bufferManager,
+                     IHyracksJobletContext context,
+                     IFrameTupleAccessor frameTupleAccessor,
+                     IFrameTupleAppender tupleAppender,
+                     IFrame reloadBuffer) {
         this.id = id;
-        this.relationName = relationName;
-        this.rfWriter = rfWriter;
         this.bufferManager = bufferManager;
         this.frameTupleAccessor = frameTupleAccessor;
+        this.tupleAppender = tupleAppender;
+        this.reloadBuffer = reloadBuffer;
+        this.context = context;
     }
+
     //endregion
 
     //region [METHODS]
+
     /**
      * Insert Tuple into Partition's Buffer.
      * If insertion fails return <b>FALSE</b>, a failure happens means that the Buffer is Full.
-     * @param tupleId
+     *
+     * @param tupleId id of tuple in Buffer being inserted into Partition
      * @return <b>TRUE</b> if tuple was inserted successfully<br> <b>FALSE</b> If buffer is full.
-     * @throws HyracksDataException
+     * @throws HyracksDataException Exception
      */
     public boolean insertTuple(int tupleId) throws HyracksDataException {
-        if(bufferManager.insertTuple(id, frameTupleAccessor, tupleId, tuplePointer)){
+        int framesNeededForTuple = bufferManager.framesNeeded(frameTupleAccessor.getTupleLength(tupleId), 0);
+        if (framesNeededForTuple * context.getInitialFrameSize() > bufferManager.getBufferPoolSize()) {
+            throw HyracksDataException.create(ErrorCode.INSUFFICIENT_MEMORY);
+        } else if (framesNeededForTuple > bufferManager.getConstrain().frameLimit(id)) {
+            insertLargeTuple(tupleId);
+            return true;
+        } else if (bufferManager.insertTuple(id, frameTupleAccessor, tupleId, tuplePointer)) {
             tuplesInMemory++;
             return true;
         }
@@ -117,27 +178,62 @@ public class Partition{
     }
 
     /**
-     * Spill Partition to Disk, writing all its tuples into a file on disk.
-     * @throws HyracksDataException
+     * If Tuple is larger than the buffer can fit, automatically spill it to disk and mark the partition as spilled.
+     *
+     * @param tupleId Large Tuple that should be flushed to disk
+     * @throws HyracksDataException Exception
      */
-    public void spill() throws HyracksDataException{
-        bytesSpilled += bufferManager.flushPartition(id, rfWriter);
-        bufferManager.clearPartition(id);
-        tuplesSpilled = tuplesInMemory;
-        tuplesInMemory =0;
-        this.spilled = true;
+    private void insertLargeTuple(int tupleId) throws HyracksDataException {
+        createFileWriterIfNotExist();
+        rfWriter.open();
+        if (!tupleAppender.append(frameTupleAccessor, tupleId)) {
+            throw new HyracksDataException("The given tuple is too big");
+        }
+        tupleAppender.write(rfWriter, true);
+        spilled = true;
+        tuplesSpilled++;
+    }
+
+    /**
+     * Spill Partition to Disk, writing all its tuples into a file on disk.
+     *
+     * @throws HyracksDataException Exception
+     */
+    public void spill() throws HyracksDataException {
+        try {
+            createFileWriterIfNotExist();
+            rfWriter.open();
+            bufferManager.flushPartition(id, rfWriter);
+            bufferManager.clearPartition(id);
+            tuplesSpilled += tuplesInMemory;
+            tuplesInMemory = 0;
+            this.spilled = true;
+        } catch (Exception ex) {
+            throw new HyracksDataException("Error spilling Partition");
+        }
+
+    }
+
+    /**
+     * Spill Partition and Close Temporary File.
+     *
+     * @throws HyracksDataException Exception
+     */
+    public void close() throws HyracksDataException {
+        spill();
+        rfWriter.close();
     }
 
     /**
      * Reload partition from Disk.
-     * @param rfReader Frame Reader
-     * @param frame Auxiliary Frame Buffer
+     *
      * @return <b>TRUE</b> if Partition was reloaded successfully.<br> <b>FALSE</b> if something goes wrong.
-     * @throws HyracksDataException
+     * @throws HyracksDataException Exception
      */
-    public boolean reload(IFrameReader rfReader,IFrame frame) throws HyracksDataException{
-        this.rfReader = rfReader;
-        reloadBuffer = frame;
+    public boolean reload() throws HyracksDataException {
+        if (!spilled)
+            return true;
+        createFileReaderIfNotExist();
         try {
             rfReader.open();
             while (rfReader.nextFrame(reloadBuffer)) {
@@ -152,331 +248,63 @@ public class Partition{
             }
             // Closes and deletes the run file if it is already loaded into memory.
             rfReader.setDeleteAfterClose(true);
+        } catch (Exception ex) {
+            throw new HyracksDataException(ex.getMessage());
         } finally {
             rfReader.close();
         }
         spilled = false;
+        this.tuplesInMemory += this.tuplesSpilled;
         this.tuplesSpilled = 0;
-        this.tuplesInMemory += frameTupleAccessor.getTupleCount();
-        rfWriter= null;
+        rfWriter = null;
         return true;
+    }
+
+    /**
+     * Get Temporary File Size in <b>BYTES</b>
+     *
+     * @return Number containing the temporary File Size in <b>BYTES</b>
+     */
+    public long getFileSize() {
+        if (rfWriter == null)
+            return 0;
+        return rfWriter.getFileSize();
+    }
+
+    /**
+     * Reset all Properties, close temporary Files and Delete them.
+     *
+     * @throws HyracksDataException Exception
+     */
+    public void cleanUp() throws HyracksDataException {
+        tuplesSpilled = 0;
+        tuplesInMemory = 0;
+        bufferManager.clearPartition(id);
+        if (rfWriter != null) {
+            CleanupUtils.fail(rfWriter, null);
+        }
+        rfReader.close();
+        rfReader = null;
+    }
+
+    /**
+     * Internal method to create a File Writer if it was not created yet.
+     * @throws HyracksDataException
+     */
+    private void createFileWriterIfNotExist() throws HyracksDataException {
+        if (rfWriter == null) {
+            FileReference file = context.createManagedWorkspaceFile("RelS");
+            rfWriter = new RunFileWriter(file, context.getIoManager());
+        }
+    }
+
+    /**
+     * Internal method to create a File Reader if it was not created yet.
+     * @throws HyracksDataException
+     */
+    private void createFileReaderIfNotExist() throws HyracksDataException {
+        rfReader = rfReader != null ? rfReader : rfWriter.createDeleteOnCloseReader();
     }
     //endregion
 }
 
-//region [TEMPORARY FILES MANAGEMENT]
-class TestPartition{
-
-    @Test
-    void TestInsertTupleSuccess(){
-        Partition partition = new Partition(0,new bufferManagerFake(),new frameWriterFake(),"Build",new frameTupleAcessorFake());
-        assertEquals(partition.getId(),0);
-        try {
-            partition.insertTuple(1);
-            assertEquals(partition.getTuplesProcessed(),1);
-            assertEquals(partition.getTuplesInMemory(),1);
-        }
-        catch (Exception ex){
-            fail();
-        }
-
-    }
-    @Test
-    void TestInsertTupleFail(){
-        Partition partition = new Partition(0,new bufferManagerFake2(),new frameWriterFake(),"Build",new frameTupleAcessorFake());
-        try {
-            partition.insertTuple(1);
-            assertEquals(partition.getTuplesInMemory(),0);
-        }
-        catch (Exception ex){
-            fail();
-        }
-
-    }
-
-    @Test
-    void TestSpill(){
-        Partition partition = new Partition(0,new bufferManagerFake(),new frameWriterFake(),"Build",new frameTupleAcessorFake());
-        try {
-            partition.insertTuple(1);
-            partition.insertTuple(2);
-            assertEquals(partition.getTuplesInMemory(),2);
-            partition.spill();
-            assertEquals(partition.getSpilledStatus(),true);
-            assertEquals(partition.getTuplesSpilled(),2);
-            assertEquals(partition.getTuplesInMemory(),0);
-            partition.insertTuple(3);
-            assertEquals(partition.getTuplesInMemory(),1);
-        }
-        catch (Exception ex){
-            fail();
-        }
-    }
-    @Test
-    void TestReload(){
-        Partition partition = new Partition(0,new bufferManagerFake(),new frameWriterFake(),"Build",new frameTupleAcessorFake());
-        try {
-            partition.insertTuple(1);
-            partition.insertTuple(2);
-            partition.spill();
-            partition.insertTuple(3);
-            assertEquals(partition.getSpilledStatus(),true);
-            partition.reload(new frameReaderFake(),new frameFake());
-            assertEquals(partition.getSpilledStatus(),false);
-            assertEquals(partition.getTuplesInMemory(),3);
-            assertEquals(partition.getTuplesSpilled(),0);
-        }
-        catch (Exception ex){
-            fail();
-        }
-    }
-    @Test
-    void TestReloadFail(){
-        Partition partition = new Partition(0,new bufferManagerFake2(),new frameWriterFake(),"Build",new frameTupleAcessorFake());
-        try {
-            partition.insertTuple(1);
-            partition.insertTuple(2);
-            partition.spill();
-            assertEquals(partition.getSpilledStatus(),true);
-            partition.reload(new frameReaderFake(),new frameFake());
-            assertEquals(partition.getSpilledStatus(),true);
-            assertEquals(partition.getTuplesInMemory(),0);
-            assertEquals(partition.getTuplesSpilled(),0);
-        }
-        catch (Exception ex){
-            fail();
-        }
-    }
-}
-class frameWriterFake implements IFrameWriter{
-    @Override
-    public void open() throws HyracksDataException {
-
-    }
-
-    @Override
-    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-
-    }
-
-    @Override
-    public void fail() throws HyracksDataException {
-
-    }
-
-    @Override
-    public void close() throws HyracksDataException {
-
-    }
-}
-class frameReaderFake implements IFrameReader{
-
-    private int numberOfFrames =2;
-    private int iterated = 0;
-    @Override
-    public void open() throws HyracksDataException {
-        iterated =0;
-    }
-
-    @Override
-    public boolean nextFrame(IFrame frame) throws HyracksDataException {
-        iterated++;
-        return iterated <= numberOfFrames;
-    }
-
-    @Override
-    public void close() throws HyracksDataException {
-        iterated =0;
-    }
-
-    @Override
-    public void setDeleteAfterClose(boolean set) {
-
-    }
-}
-class bufferManagerFake implements IPartitionedTupleBufferManager {
-
-    public bufferManagerFake(){
-
-    }
-    @Override
-    public int getNumPartitions() {
-        return 0;
-    }
-
-    @Override
-    public int getNumTuples(int partition) {
-        return 0;
-    }
-
-    @Override
-    public int getPhysicalSize(int partition) {
-        return 0;
-    }
-
-    @Override
-    public boolean insertTuple(int partition, byte[] byteArray, int[] fieldEndOffsets, int start, int size, TuplePointer pointer) throws HyracksDataException {
-        return true;
-    }
-
-    @Override
-    public boolean insertTuple(int partition, IFrameTupleAccessor tupleAccessor, int tupleId, TuplePointer pointer) throws HyracksDataException {
-        return true;
-    }
-
-    @Override
-    public int framesNeeded(int tupleSize, int fieldCount) {
-        return 0;
-    }
-
-    @Override
-    public void cancelInsertTuple(int partition) throws HyracksDataException {
-
-    }
-
-    @Override
-    public void setConstrain(IPartitionedMemoryConstrain constrain) {
-
-    }
-
-    @Override
-    public void reset() throws HyracksDataException {
-
-    }
-
-    @Override
-    public void close() {
-
-    }
-
-    @Override
-    public ITuplePointerAccessor getTuplePointerAccessor(RecordDescriptor recordDescriptor) {
-        return null;
-    }
-
-    @Override
-    public int flushPartition(int pid, IFrameWriter writer) throws HyracksDataException {
-        return 0;
-    }
-
-    @Override
-    public void clearPartition(int partition) throws HyracksDataException {
-
-    }
-
-    @Override
-    public IPartitionedMemoryConstrain getConstrain() {
-        return null;
-    }
-
-    @Override
-    public boolean updateMemoryBudget(int desiredSize) {
-        return false;
-    }
-}
-class bufferManagerFake2 extends bufferManagerFake{
-    @Override
-    public boolean insertTuple(int partition, byte[] byteArray, int[] fieldEndOffsets, int start, int size, TuplePointer pointer) throws HyracksDataException {
-        return false;
-    }
-
-    @Override
-    public boolean insertTuple(int partition, IFrameTupleAccessor tupleAccessor, int tupleId, TuplePointer pointer) throws HyracksDataException {
-        return false;
-    }
-}
-class frameTupleAcessorFake implements IFrameTupleAccessor{
-
-    @Override
-    public int getFieldCount() {
-        return 0;
-    }
-
-    @Override
-    public int getFieldSlotsLength() {
-        return 0;
-    }
-
-    @Override
-    public int getFieldEndOffset(int tupleIndex, int fIdx) {
-        return 0;
-    }
-
-    @Override
-    public int getFieldStartOffset(int tupleIndex, int fIdx) {
-        return 0;
-    }
-
-    @Override
-    public int getFieldLength(int tupleIndex, int fIdx) {
-        return 0;
-    }
-
-    @Override
-    public int getTupleLength(int tupleIndex) {
-        return 0;
-    }
-
-    @Override
-    public int getTupleEndOffset(int tupleIndex) {
-        return 0;
-    }
-
-    @Override
-    public int getTupleStartOffset(int tupleIndex) {
-        return 0;
-    }
-
-    @Override
-    public int getAbsoluteFieldStartOffset(int tupleIndex, int fIdx) {
-        return 0;
-    }
-
-    @Override
-    public int getTupleCount() {
-        return 2;
-    }
-
-    @Override
-    public ByteBuffer getBuffer() {
-        return null;
-    }
-
-    @Override
-    public void reset(ByteBuffer buffer) {
-
-    }
-}
-class frameFake implements IFrame{
-
-    @Override
-    public ByteBuffer getBuffer() {
-        return null;
-    }
-
-    @Override
-    public void ensureFrameSize(int frameSize) throws HyracksDataException {
-
-    }
-
-    @Override
-    public void resize(int frameSize) throws HyracksDataException {
-
-    }
-
-    @Override
-    public int getFrameSize() {
-        return 0;
-    }
-
-    @Override
-    public int getMinSize() {
-        return 0;
-    }
-
-    @Override
-    public void reset() throws HyracksDataException {
-
-    }
-}
-//endregion

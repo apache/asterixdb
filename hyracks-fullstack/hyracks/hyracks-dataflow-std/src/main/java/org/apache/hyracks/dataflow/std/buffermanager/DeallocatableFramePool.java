@@ -120,6 +120,11 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
         }
     }
 
+    @Override
+    public int getMemoryBudget() {
+        return memBudget;
+    }
+
     /**
      * Update Memory Budget;
      *
