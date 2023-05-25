@@ -71,19 +71,17 @@ public class ApplicationConfigurator {
         final String javaVersion = System.getProperty("java.version");
         LOGGER.info("Found JRE version " + javaVersion);
         String[] splits = javaVersion.split("\\.");
-        if ("1".equals(splits[0])) {
-            switch (splits[1]) {
-                case "9":
-                    LOGGER.warn("JRE version \"" + javaVersion + "\" is untested");
-                    //fall-through
-                case "8":
-                    return;
-                default:
-                    throw RuntimeDataException.create(ErrorCode.UNSUPPORTED_JRE,
-                            "a minimum version of JRE of 1.8 is required, but is currently: \"" + javaVersion + "\"");
-            }
-        } else {
-            LOGGER.warn("JRE version \"" + javaVersion + "\" is untested");
+        switch (splits[0]) {
+            //versions before 9 start with a 1, e.g. 1.8
+            case "1":
+                throw RuntimeDataException.create(ErrorCode.UNSUPPORTED_JRE,
+                        "a minimum version of JRE of 11 is required, but is currently: \"" + javaVersion + "\"");
+            case "11":
+            case "17":
+                break;
+            default:
+                LOGGER.warn("JRE version \"" + javaVersion + "\" is untested");
+                break;
         }
     }
 
