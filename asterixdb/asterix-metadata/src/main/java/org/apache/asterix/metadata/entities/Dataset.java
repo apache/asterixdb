@@ -37,6 +37,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.NoOpFrameOperationCallbackFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.ioopcallbacks.AtomicLSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
@@ -81,6 +82,7 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexSearc
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallbackFactory;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntimeFactory;
+import org.apache.asterix.transaction.management.runtime.NoOpCommitRuntimeFactory;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -473,7 +475,12 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      */
     @SuppressWarnings("squid:S1172")
     public ILSMIOOperationCallbackFactory getIoOperationCallbackFactory(Index index) throws AlgebricksException {
-        return new LSMIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory(), getDatasetInfoProvider());
+        if (isAtomic()) {
+            return new AtomicLSMIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory(),
+                    getDatasetInfoProvider());
+        } else {
+            return new LSMIndexIOOperationCallbackFactory(getComponentIdGeneratorFactory(), getDatasetInfoProvider());
+        }
     }
 
     public ILSMPageWriteCallbackFactory getPageWriteCallbackFactory() throws AlgebricksException {
@@ -499,6 +506,11 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         return new DatasetInfoProvider(getDatasetId());
     }
 
+    public boolean isAtomic() {
+        return datasetType == DatasetType.INTERNAL
+                && ((InternalDatasetDetails) getDatasetDetails()).isDatasetWithoutTypeSpecification();
+    }
+
     /**
      * Get search callback factory for this dataset with the passed index and operation
      *
@@ -514,6 +526,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public ISearchOperationCallbackFactory getSearchCallbackFactory(IStorageComponentProvider storageComponentProvider,
             Index index, IndexOperation op, int[] primaryKeyFields, int[] primaryKeyFieldsInSecondaryIndex,
             boolean proceedIndexOnlyPlan) throws AlgebricksException {
+        if (isAtomic()) {
+            return NoOpOperationCallbackFactory.INSTANCE;
+        }
+
         if (index.isPrimaryIndex()) {
             /**
              * Due to the read-committed isolation level,
@@ -566,6 +582,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public IModificationOperationCallbackFactory getModificationCallbackFactory(
             IStorageComponentProvider componentProvider, Index index, IndexOperation op, int[] primaryKeyFields)
             throws AlgebricksException {
+        if (isAtomic()) {
+            return NoOpOperationCallbackFactory.INSTANCE;
+        }
+
         if (index.isPrimaryIndex()) {
             return op == IndexOperation.UPSERT || op == IndexOperation.INSERT
                     ? new UpsertOperationCallbackFactory(getDatasetId(),
@@ -636,6 +656,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         IBinaryHashFunctionFactory[] pkHashFunFactories = getPrimaryHashFunctionFactories(metadataProvider);
         ITuplePartitionerFactory partitionerFactory = new FieldHashPartitionerFactory(primaryKeyFieldPermutation,
                 pkHashFunFactories, datasetPartitions.length);
+        if (isAtomic()) {
+            return new NoOpCommitRuntimeFactory(datasetId, primaryKeyFieldPermutation,
+                    metadataProvider.isWriteTransaction(), datasetPartitions, isSink, partitionerFactory);
+        }
         return new CommitRuntimeFactory(datasetId, primaryKeyFieldPermutation, metadataProvider.isWriteTransaction(),
                 datasetPartitions, isSink, partitionerFactory);
     }

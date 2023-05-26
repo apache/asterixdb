@@ -30,6 +30,8 @@ public class HyracksConstants {
 
     public static final String TUPLE_PROJECTOR = "TUPLE_PROJECTOR";
 
+    public static final String ATOMIC_OP_CONTEXT = "ATOMIC_OP_CONTEXT";
+
     private HyracksConstants() {
     }
 }

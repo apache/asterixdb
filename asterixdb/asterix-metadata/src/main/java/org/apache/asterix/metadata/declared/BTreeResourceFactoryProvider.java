@@ -113,7 +113,7 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                             mergePolicyFactory, mergePolicyProperties, true, bloomFilterFields,
                             bloomFilterFalsePositiveRate, index.isPrimaryIndex(), btreeFields, compDecompFactory,
                             hasBloomFilter, typeTraitProvider.getTypeTrait(BuiltinType.ANULL),
-                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance);
+                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance, dataset.isAtomic());
                 } else {
                     //Column
                     List<Integer> keySourceIndicator =
@@ -127,7 +127,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                             pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                             mergePolicyFactory, mergePolicyProperties, bloomFilterFields, bloomFilterFalsePositiveRate,
                             btreeFields, compDecompFactory, typeTraitProvider.getTypeTrait(BuiltinType.ANULL),
-                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance, columnManagerFactory);
+                            NullIntrospector.INSTANCE, isSecondaryNoIncrementalMaintenance, columnManagerFactory,
+                            dataset.isAtomic());
                 }
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,

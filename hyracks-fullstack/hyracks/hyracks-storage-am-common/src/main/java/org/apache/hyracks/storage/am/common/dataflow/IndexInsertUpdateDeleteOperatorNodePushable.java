@@ -69,6 +69,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected final int[] partitions;
     protected final Int2IntMap storagePartitionId2Index;
     protected boolean writerOpen;
+    protected boolean failed;
 
     public IndexInsertUpdateDeleteOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
@@ -92,6 +93,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         this.op = op;
         this.tuple.setFieldPermutation(fieldPermutation);
         this.tuplePartitioner = tuplePartitionerFactory.createPartitioner(ctx);
+        this.failed = false;
     }
 
     @Override
@@ -203,6 +205,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
 
     @Override
     public void fail() throws HyracksDataException {
+        failed = true;
         if (writerOpen) {
             writer.fail();
         }

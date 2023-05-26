@@ -19,11 +19,14 @@
 package org.apache.hyracks.storage.am.lsm.common.dataflow;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
@@ -31,8 +34,11 @@ import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexFrameWriter;
+import org.apache.hyracks.storage.common.IIndex;
+import org.apache.hyracks.storage.common.IIndexAccessor;
 
 public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertUpdateDeleteOperatorNodePushable
         implements ILSMIndexFrameWriter {
@@ -133,5 +139,13 @@ public class LSMIndexInsertUpdateDeleteOperatorNodePushable extends IndexInsertU
             FrameUtils.appendToWriter(writer, appender, accessor, i);
         }
         appender.write(writer, true);
+    }
+
+    protected void setAtomicOpContextIfAtomic(IIndex index, IIndexAccessor accessor) {
+        if (((ILSMIndex) index).isAtomic()) {
+            Map<String, Object> indexAccessorOpContextParameters = new HashMap<>();
+            indexAccessorOpContextParameters.put(HyracksConstants.ATOMIC_OP_CONTEXT, true);
+            ((ILSMIndexAccessor) accessor).getOpContext().setParameters(indexAccessorOpContextParameters);
+        }
     }
 }

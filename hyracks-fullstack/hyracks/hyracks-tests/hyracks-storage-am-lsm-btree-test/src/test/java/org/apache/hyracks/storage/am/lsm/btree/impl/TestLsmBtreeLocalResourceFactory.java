@@ -53,7 +53,7 @@ public class TestLsmBtreeLocalResourceFactory extends LSMBTreeLocalResourceFacto
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable,
                 bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary, btreeFields,
                 NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter, null, null,
-                isSecondaryNoIncrementalMaintenance);
+                isSecondaryNoIncrementalMaintenance, false);
     }
 
     @Override

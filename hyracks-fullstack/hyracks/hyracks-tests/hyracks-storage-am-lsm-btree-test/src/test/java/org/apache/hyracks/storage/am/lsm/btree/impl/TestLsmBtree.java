@@ -95,7 +95,7 @@ public class TestLsmBtree extends LSMBTree {
                 diskBufferCache, fileManager, componentFactory, bulkLoadComponentFactory, filterHelper,
                 filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy,
                 opTracker, ioScheduler, ioOperationCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck,
-                hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer);
+                hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer, false);
         addModifyCallback(AllowTestOpCallback.INSTANCE);
         addSearchCallback(AllowTestOpCallback.INSTANCE);
         addFlushCallback(AllowTestOpCallback.INSTANCE);

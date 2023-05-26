@@ -51,12 +51,12 @@ public class LSMColumnBTreeLocalResourceFactory extends LSMBTreeLocalResourceFac
             Map<String, String> mergePolicyProperties, int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate,
             int[] btreeFields, ICompressorDecompressorFactory compressorDecompressorFactory, ITypeTraits nullTypeTraits,
             INullIntrospector nullIntrospector, boolean isSecondaryNoIncrementalMaintenance,
-            IColumnManagerFactory columnManagerFactory) {
+            IColumnManagerFactory columnManagerFactory, boolean atomic) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, true, bloomFilterKeyFields,
                 bloomFilterFalsePositiveRate, true, btreeFields, compressorDecompressorFactory, true, nullTypeTraits,
-                nullIntrospector, isSecondaryNoIncrementalMaintenance);
+                nullIntrospector, isSecondaryNoIncrementalMaintenance, atomic);
         this.columnManagerFactory = columnManagerFactory;
     }
 
@@ -66,6 +66,6 @@ public class LSMColumnBTreeLocalResourceFactory extends LSMBTreeLocalResourceFac
                 bloomFilterFalsePositiveRate, fileRef.getRelativePath(), storageManager, mergePolicyFactory,
                 mergePolicyProperties, btreeFields, opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, compressorDecompressorFactory,
-                nullTypeTraits, nullIntrospector, isSecondaryNoIncrementalMaintenance, columnManagerFactory);
+                nullTypeTraits, nullIntrospector, isSecondaryNoIncrementalMaintenance, columnManagerFactory, atomic);
     }
 }

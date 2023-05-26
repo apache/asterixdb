@@ -248,7 +248,7 @@ public class MetadataLockUtil implements IMetadataLockUtil {
     public void insertDeleteUpsertBegin(IMetadataLockManager lockMgr, LockList locks, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
         lockMgr.acquireDataverseReadLock(locks, dataverseName);
-        lockMgr.acquireDatasetModifyLock(locks, dataverseName, datasetName);
+        lockMgr.acquireDatasetExclusiveModificationLock(locks, dataverseName, datasetName);
     }
 
     @Override

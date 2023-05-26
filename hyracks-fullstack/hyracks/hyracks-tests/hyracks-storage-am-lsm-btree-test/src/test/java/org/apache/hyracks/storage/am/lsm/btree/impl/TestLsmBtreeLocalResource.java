@@ -63,14 +63,14 @@ public class TestLsmBtreeLocalResource extends LSMBTreeLocalResource {
                 btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory, pageWriteCallbackFactory,
                 metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable,
                 NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter, null, null,
-                isSecondaryNoIncrementalMaintenance);
+                isSecondaryNoIncrementalMaintenance, false);
     }
 
     protected TestLsmBtreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields, boolean hasBloomFilter,
             boolean isSecondaryNoIncrementalMaintenance) throws HyracksDataException {
         super(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary, btreeFields,
-                NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter, isSecondaryNoIncrementalMaintenance);
+                NoOpCompressorDecompressorFactory.INSTANCE, hasBloomFilter, isSecondaryNoIncrementalMaintenance, false);
     }
 
     @Override

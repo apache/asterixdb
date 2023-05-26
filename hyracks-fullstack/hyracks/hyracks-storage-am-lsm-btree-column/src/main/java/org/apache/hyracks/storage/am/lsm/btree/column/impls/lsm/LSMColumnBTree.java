@@ -70,11 +70,13 @@ public class LSMColumnBTree extends LSMBTree {
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
-            int[] btreeFields, ITracer tracer, IColumnManager columnManager) throws HyracksDataException {
+            int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic)
+            throws HyracksDataException {
         super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null, null, null,
                 bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
-                ioOpCallbackFactory, pageWriteCallbackFactory, true, true, btreeFields, null, true, false, tracer);
+                ioOpCallbackFactory, pageWriteCallbackFactory, true, true, btreeFields, null, true, false, tracer,
+                atomic);
         this.columnManager = columnManager;
         this.mergeComponentFactory = mergeComponentFactory;
     }

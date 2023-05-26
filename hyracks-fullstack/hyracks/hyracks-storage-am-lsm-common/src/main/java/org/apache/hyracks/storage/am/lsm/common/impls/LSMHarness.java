@@ -190,7 +190,9 @@ public class LSMHarness implements ILSMHarness {
                     if (opType == LSMOperationType.FLUSH) {
                         opTracker.notifyAll();
                         if (!failedOperation) {
-                            waitForLaggingMerge();
+                            if (!lsmIndex.isAtomic()) {
+                                waitForLaggingMerge();
+                            }
                         }
                     } else if (opType == LSMOperationType.MERGE) {
                         opTracker.notifyAll();
@@ -299,7 +301,9 @@ public class LSMHarness implements ILSMHarness {
                         componentsToBeReplicated.add(newComponent);
                         triggerReplication(componentsToBeReplicated, opType);
                     }
-                    mergePolicy.diskComponentAdded(lsmIndex, false);
+                    if (!lsmIndex.isAtomic()) {
+                        mergePolicy.diskComponentAdded(lsmIndex, false);
+                    }
                 }
                 break;
             case MERGE:
@@ -639,7 +643,7 @@ public class LSMHarness implements ILSMHarness {
             throw HyracksDataException.create(ioOperation.getFailure());
         }
         synchronized (opTracker) {
-            lsmIndex.addDiskComponent(c);
+            lsmIndex.addBulkLoadedDiskComponent(c);
             if (replicationEnabled) {
                 componentsToBeReplicated.clear();
                 componentsToBeReplicated.add(c);

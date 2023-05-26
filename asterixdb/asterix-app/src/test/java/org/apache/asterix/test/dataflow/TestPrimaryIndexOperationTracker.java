@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -34,8 +35,8 @@ public class TestPrimaryIndexOperationTracker extends PrimaryIndexOperationTrack
     private final List<ITestOpCallback<Void>> callbacks = new ArrayList<>();
 
     public TestPrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
-            ILSMComponentIdGenerator idGenerator) {
-        super(datasetID, partition, logManager, dsInfo, idGenerator);
+            ILSMComponentIdGenerator idGenerator, IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
+        super(datasetID, partition, logManager, dsInfo, idGenerator, indexCheckpointManagerProvider);
     }
 
     public void addCallback(ITestOpCallback<Void> callback) {

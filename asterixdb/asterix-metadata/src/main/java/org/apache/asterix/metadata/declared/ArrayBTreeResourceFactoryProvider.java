@@ -100,7 +100,8 @@ public class ArrayBTreeResourceFactoryProvider implements IResourceFactoryProvid
                         pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,
                         mergePolicyFactory, mergePolicyProperties, true, null, bloomFilterFalsePositiveRate,
                         index.isPrimaryIndex(), btreeFields, compDecompFactory, false,
-                        typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, false);
+                        typeTraitProvider.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, false,
+                        dataset.isAtomic());
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_UNKNOWN_DATASET_TYPE,
                         dataset.getDatasetType().toString());

@@ -28,14 +28,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
+import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.transactions.AbstractOperationCallback;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -50,6 +54,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.IoOperationCompleteListener;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
@@ -70,14 +75,17 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     private boolean flushLogCreated = false;
     private final Map<String, FlushOperation> scheduledFlushes = new HashMap<>();
     private long lastFlushTime = System.nanoTime();
+    private final Map<String, FlushOperation> lastFlushOperation = new HashMap<>();
+    private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
 
     public PrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
-            ILSMComponentIdGenerator idGenerator) {
+            ILSMComponentIdGenerator idGenerator, IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
         super(datasetID, dsInfo);
         this.partition = partition;
         this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
         this.idGenerator = idGenerator;
+        this.indexCheckpointManagerProvider = indexCheckpointManagerProvider;
     }
 
     @Override
@@ -101,7 +109,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     }
 
     public synchronized void flushIfNeeded() throws HyracksDataException {
-        if (canSafelyFlush()) {
+        if (canSafelyFlush() && !isFlushLogCreated()) {
             flushIfRequested();
         }
     }
@@ -163,9 +171,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 synchronized (opTracker) {
                     ILSMMemoryComponent memComponent = lsmIndex.getCurrentMemoryComponent();
                     if (memComponent.getWriterCount() > 0) {
-                        throw new IllegalStateException(
-                                "Can't request a flush on a component with writers inside: Index:" + lsmIndex
-                                        + " Component:" + memComponent);
+                        if (lsmIndex.isAtomic()) {
+                            LOGGER.debug(
+                                    "Can't request a flush on a component with writers inside: Index: {} Component: {}",
+                                    lsmIndex, memComponent);
+                            return;
+                        } else {
+                            throw new IllegalStateException(
+                                    "Can't request a flush on a component with writers inside: Index:" + lsmIndex
+                                            + " Component:" + memComponent);
+                        }
                     }
                     if (memComponent.getState() == ComponentState.READABLE_WRITABLE && memComponent.isModified()) {
                         memComponent.setUnwritable();
@@ -180,7 +195,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                         + " and partition " + partition + " and is modified but its component id is null");
             }
             LogRecord logRecord = new LogRecord();
-            if (dsInfo.isDurable()) {
+            if (dsInfo.isDurable() && !primaryLsmIndex.isAtomic()) {
                 /*
                  * Generate a FLUSH log.
                  * Flush will be triggered when the log is written to disk by LogFlusher.
@@ -194,7 +209,9 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 }
                 flushLogCreated = true;
             } else {
-                //trigger flush for temporary indexes without generating a FLUSH log.
+                // trigger flush for temporary indexes and indexes on datasets with atomic statements enabled without
+                // generating a FLUSH log.
+                flushLogCreated = true;
                 triggerScheduleFlush(logRecord);
             }
         }
@@ -221,6 +238,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             Map<String, Object> flushMap = new HashMap<>();
             flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
             flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
+            for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
+                if (lsmIndex.isPrimaryIndex()) {
+                    if (lsmIndex.isCurrentMutableComponentEmpty()) {
+                        LOGGER.debug("Primary index on dataset {} and partition {} is empty... skipping flush",
+                                dsInfo.getDatasetID(), partition);
+                        return;
+                    }
+                    break;
+                }
+            }
             synchronized (scheduledFlushes) {
                 for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
                     ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
@@ -228,12 +255,48 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                     ILSMIOOperation flush = accessor.scheduleFlush();
                     lastFlushTime = System.nanoTime();
                     scheduledFlushes.put(flush.getTarget().getRelativePath(), (FlushOperation) flush);
+                    if (lsmIndex.isAtomic()) {
+                        lastFlushOperation.put(lsmIndex.getIndexIdentifier(), (FlushOperation) flush);
+                    }
                     flush.addCompleteListener(this);
                 }
             }
         } finally {
             flushLogCreated = false;
         }
+    }
+
+    public void commit() throws HyracksDataException {
+        LogRecord logRecord = new LogRecord();
+        triggerScheduleFlush(logRecord);
+        List<FlushOperation> flushes = new ArrayList<>(getScheduledFlushes());
+        LSMIndexUtil.waitFor(flushes);
+
+        Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
+        for (ILSMIndex lsmIndex : indexes) {
+            lsmIndex.commit();
+        }
+        for (FlushOperation flush : lastFlushOperation.values()) {
+            FileReference target = flush.getTarget();
+            Map<String, Object> map = flush.getParameters();
+            final LSMComponentId id = (LSMComponentId) map.get(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID);
+            final ResourceReference ref = ResourceReference.of(target.getAbsolutePath());
+            final long componentSequence = IndexComponentFileReference.of(ref.getName()).getSequenceEnd();
+            indexCheckpointManagerProvider.get(ref).flushed(componentSequence, 0L, id.getMaxId());
+        }
+        lastFlushOperation.clear();
+
+        for (ILSMIndex lsmIndex : indexes) {
+            lsmIndex.getMergePolicy().diskComponentAdded(lsmIndex, false);
+        }
+    }
+
+    public void abort() throws HyracksDataException {
+        Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
+        for (ILSMIndex lsmIndex : indexes) {
+            lsmIndex.abort();
+        }
+        lastFlushOperation.clear();
     }
 
     @Override

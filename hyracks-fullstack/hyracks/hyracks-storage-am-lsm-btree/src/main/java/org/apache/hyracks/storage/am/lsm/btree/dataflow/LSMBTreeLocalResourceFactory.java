@@ -49,6 +49,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
     protected final int[] btreeFields;
     protected final ICompressorDecompressorFactory compressorDecompressorFactory;
     protected final boolean isSecondaryNoIncrementalMaintenance;
+    protected final boolean atomic;
 
     public LSMBTreeLocalResourceFactory(IStorageManager storageManager, ITypeTraits[] typeTraits,
             IBinaryComparatorFactory[] cmpFactories, ITypeTraits[] filterTypeTraits,
@@ -60,8 +61,8 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
             Map<String, String> mergePolicyProperties, boolean durable, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
             ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter,
-            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector,
-            boolean isSecondaryNoIncrementalMaintenance) {
+            ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean isSecondaryNoIncrementalMaintenance,
+            boolean atomic) {
         super(storageManager, typeTraits, cmpFactories, filterTypeTraits, filterCmpFactories, filterFields,
                 opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory,
                 vbcProvider, ioSchedulerProvider, mergePolicyFactory, mergePolicyProperties, durable, nullTypeTraits,
@@ -73,6 +74,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
         this.btreeFields = btreeFields;
         this.compressorDecompressorFactory = compressorDecompressorFactory;
         this.isSecondaryNoIncrementalMaintenance = isSecondaryNoIncrementalMaintenance;
+        this.atomic = atomic;
     }
 
     @Override
@@ -82,7 +84,7 @@ public class LSMBTreeLocalResourceFactory extends LsmResourceFactory {
                 filterTypeTraits, filterCmpFactories, btreeFields, filterFields, opTrackerProvider, ioOpCallbackFactory,
                 pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider, durable,
                 compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector,
-                isSecondaryNoIncrementalMaintenance);
+                isSecondaryNoIncrementalMaintenance, atomic);
     }
 
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {

@@ -423,16 +423,17 @@ public class MetadataBootstrap {
         if (createMetadataDataset) {
             final double bloomFilterFalsePositiveRate =
                     appContext.getStorageProperties().getBloomFilterFalsePositiveRate();
-            LSMBTreeLocalResourceFactory lsmBtreeFactory = new LSMBTreeLocalResourceFactory(
-                    storageComponentProvider.getStorageManager(), typeTraits, cmpFactories, null, null, null,
-                    opTrackerFactory, ioOpCallbackFactory, pageWriteCallbackFactory,
-                    storageComponentProvider.getMetadataPageManagerFactory(),
-                    new AsterixVirtualBufferCacheProvider(datasetId),
-                    storageComponentProvider.getIoOperationSchedulerProvider(),
-                    appContext.getMetadataMergePolicyFactory(), StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES,
-                    true, bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, null,
-                    NoOpCompressorDecompressorFactory.INSTANCE, true,
-                    TypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE, false);
+            LSMBTreeLocalResourceFactory lsmBtreeFactory =
+                    new LSMBTreeLocalResourceFactory(storageComponentProvider.getStorageManager(), typeTraits,
+                            cmpFactories, null, null, null, opTrackerFactory, ioOpCallbackFactory,
+                            pageWriteCallbackFactory, storageComponentProvider.getMetadataPageManagerFactory(),
+                            new AsterixVirtualBufferCacheProvider(datasetId),
+                            storageComponentProvider.getIoOperationSchedulerProvider(),
+                            appContext.getMetadataMergePolicyFactory(),
+                            StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, true, bloomFilterKeyFields,
+                            bloomFilterFalsePositiveRate, true, null, NoOpCompressorDecompressorFactory.INSTANCE, true,
+                            TypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE,
+                            false, false);
             DatasetLocalResourceFactory dsLocalResourceFactory =
                     new DatasetLocalResourceFactory(datasetId, lsmBtreeFactory);
             // TODO(amoudi) Creating the index should be done through the same code path as

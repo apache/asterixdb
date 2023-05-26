@@ -339,7 +339,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         ILSMComponentIdGenerator idGenerator =
                 new LSMComponentIdGenerator(storageProperties.getMemoryComponentsNum(), lastValidId);
         PrimaryIndexOperationTracker opTracker = new PrimaryIndexOperationTracker(dataset.getDatasetID(), partition,
-                logManager, dataset.getDatasetInfo(), idGenerator);
+                logManager, dataset.getDatasetInfo(), idGenerator, indexCheckpointManagerProvider);
         dataset.setPrimaryIndexOperationTracker(partition, opTracker);
         dataset.setIdGenerator(partition, idGenerator);
     }
@@ -424,7 +424,12 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             return;
         }
         // ensure all in-flight flushes gets scheduled
-        logManager.log(waitLog);
+        final boolean requiresWaitLog =
+                dsInfo.getIndexes().values().stream().noneMatch(indexInfo -> indexInfo.getIndex().isAtomic());
+        if (requiresWaitLog) {
+            logManager.log(waitLog);
+        }
+
         for (PrimaryIndexOperationTracker primaryOpTracker : dsr.getOpTrackers()) {
             if (!partitions.test(primaryOpTracker.getPartition())) {
                 continue;
@@ -439,7 +444,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
             primaryOpTracker.flushIfNeeded();
         }
         // ensure requested flushes were scheduled
-        logManager.log(waitLog);
+        if (requiresWaitLog) {
+            logManager.log(waitLog);
+        }
         if (!asyncFlush) {
             List<FlushOperation> flushes = new ArrayList<>();
             for (PrimaryIndexOperationTracker primaryOpTracker : dsr.getOpTrackers()) {

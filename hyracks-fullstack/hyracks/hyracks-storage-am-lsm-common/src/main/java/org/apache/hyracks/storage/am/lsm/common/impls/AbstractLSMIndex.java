@@ -39,6 +39,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationExecutionType;
 import org.apache.hyracks.api.replication.IReplicationJob.ReplicationOperation;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.AbstractSearchPredicate;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
@@ -112,6 +113,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     protected final ILSMDiskComponentFactory bulkLoadComponentFactory;
     protected final ILSMPageWriteCallbackFactory pageWriteCallbackFactory;
     private int numScheduledFlushes = 0;
+    private final boolean atomic;
+    private final List<ILSMDiskComponent> temporaryDiskComponents;
+    private final ILSMMergePolicy mergePolicy;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
@@ -119,8 +123,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
             ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
-            int[] filterFields, boolean durable, IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer)
-            throws HyracksDataException {
+            int[] filterFields, boolean durable, IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer,
+            boolean atomic) throws HyracksDataException {
         this.ioManager = ioManager;
         this.virtualBufferCaches = virtualBufferCaches;
         this.diskBufferCache = diskBufferCache;
@@ -139,6 +143,10 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.inactiveMemoryComponents = new ArrayList<>();
         this.durable = durable;
         this.tracer = tracer;
+        this.atomic = atomic;
+        this.temporaryDiskComponents = new ArrayList<>();
+        this.mergePolicy = mergePolicy;
+
         fileManager.initLastUsedSeq(ioOpCallback.getLastValidSequence());
         lsmHarness = new LSMHarness(this, ioScheduler, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled(),
                 tracer);
@@ -150,6 +158,25 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         for (int i = 0; i < virtualBufferCaches.size(); i++) {
             flushRequests[i] = new AtomicBoolean();
         }
+    }
+
+    public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+            ILSMDiskComponentFactory componentFactory, ILSMDiskComponentFactory bulkLoadComponentFactory,
+            ILSMComponentFilterFrameFactory filterFrameFactory, LSMComponentFilterManager filterManager,
+            int[] filterFields, boolean durable, IComponentFilterHelper filterHelper, int[] treeFields, ITracer tracer)
+            throws HyracksDataException {
+        this(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
+                opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
+                bulkLoadComponentFactory, filterFrameFactory, filterManager, filterFields, durable, filterHelper,
+                treeFields, tracer, false);
+    }
+
+    @Override
+    public boolean isAtomic() {
+        return atomic;
     }
 
     @Override
@@ -223,6 +250,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         for (ILSMDiskComponent c : diskComponents) {
             c.deactivateAndPurge();
         }
+        for (ILSMDiskComponent c : temporaryDiskComponents) {
+            c.deactivateAndPurge();
+        }
     }
 
     private void deallocateMemoryComponents() throws HyracksDataException {
@@ -247,6 +277,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         for (ILSMDiskComponent c : diskComponents) {
             c.destroy();
         }
+        for (ILSMDiskComponent c : temporaryDiskComponents) {
+            c.destroy();
+        }
     }
 
     @Override
@@ -263,6 +296,15 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             c.deactivateAndDestroy();
         }
         diskComponents.clear();
+    }
+
+    @Override
+    public void abort() throws HyracksDataException {
+        resetMemoryComponents();
+        for (ILSMDiskComponent c : temporaryDiskComponents) {
+            c.deactivateAndDestroy();
+        }
+        temporaryDiskComponents.clear();
     }
 
     private void resetMemoryComponents() throws HyracksDataException {
@@ -299,7 +341,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 operationalComponents.addAll(diskComponents);
                 break;
             case SEARCH:
-                if (memoryComponentsAllocated) {
+                // search should include memory components for datasets with atomic statements not enabled or search to
+                // check duplicate key while inserts/upserts on datasets with atomic statements enabled
+                if (memoryComponentsAllocated && (!atomic || isAtomicOpContext(ctx))) {
                     addOperationalMemoryComponents(operationalComponents, false);
                 }
                 if (filterManager != null) {
@@ -315,6 +359,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
                 } else {
                     operationalComponents.addAll(diskComponents);
                 }
+                if (isAtomicOpContext(ctx)) {
+                    operationalComponents.addAll(temporaryDiskComponents);
+                }
 
                 break;
             case REPLICATE:
@@ -326,6 +373,11 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             default:
                 throw new UnsupportedOperationException("Operation " + ctx.getOperation() + " not supported.");
         }
+    }
+
+    private boolean isAtomicOpContext(ILSMIndexOperationContext ctx) {
+        Map<String, Object> ctxParameters = ctx.getParameters();
+        return ctxParameters != null && (boolean) ctxParameters.getOrDefault(HyracksConstants.ATOMIC_OP_CONTEXT, false);
     }
 
     @Override
@@ -554,8 +606,31 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public void addDiskComponent(ILSMDiskComponent c) throws HyracksDataException {
         if (c != EmptyComponent.INSTANCE) {
+            if (atomic) {
+                temporaryDiskComponents.add(c);
+                LOGGER.debug("Adding new temporary disk component to index {}; current count: {}", c,
+                        temporaryDiskComponents.size());
+            } else {
+                diskComponents.add(0, c);
+            }
+        }
+        validateComponentIds();
+    }
+
+    @Override
+    public void addBulkLoadedDiskComponent(ILSMDiskComponent c) throws HyracksDataException {
+        if (c != EmptyComponent.INSTANCE) {
             diskComponents.add(0, c);
         }
+        validateComponentIds();
+    }
+
+    @Override
+    public void commit() throws HyracksDataException {
+        for (ILSMDiskComponent c : temporaryDiskComponents) {
+            diskComponents.add(0, c);
+        }
+        temporaryDiskComponents.clear();
         validateComponentIds();
     }
 
@@ -877,6 +952,11 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     public ILSMPageWriteCallbackFactory getPageWriteCallbackFactory() {
         return pageWriteCallbackFactory;
+    }
+
+    @Override
+    public ILSMMergePolicy getMergePolicy() {
+        return mergePolicy;
     }
 
 }

@@ -61,22 +61,22 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
             ILSMIOOperationSchedulerProvider ioSchedulerProvider,
             ICompressorDecompressorFactory compressorDecompressorFactory, ITypeTraits nullTypeTraits,
             INullIntrospector nullIntrospector, boolean isSecondaryNoIncrementalMaintenance,
-            IColumnManagerFactory columnManagerFactory) {
+            IColumnManagerFactory columnManagerFactory, boolean atomic) {
         super(typeTraits, cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, path, storageManager,
                 mergePolicyFactory, mergePolicyProperties, null, null, btreeFields, null, opTrackerProvider,
                 ioOpCallbackFactory, pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider,
                 ioSchedulerProvider, true, compressorDecompressorFactory, true, nullTypeTraits, nullIntrospector,
-                isSecondaryNoIncrementalMaintenance);
+                isSecondaryNoIncrementalMaintenance, atomic);
         this.columnManagerFactory = columnManagerFactory;
     }
 
     private LSMColumnBTreeLocalResource(IPersistedResourceRegistry registry, JsonNode json, int[] bloomFilterKeyFields,
             double bloomFilterFalsePositiveRate, boolean isPrimary, int[] btreeFields,
             ICompressorDecompressorFactory compressorDecompressorFactory, boolean hasBloomFilter,
-            boolean isSecondaryNoIncrementalMaintenance, IColumnManagerFactory columnManagerFactory)
+            boolean isSecondaryNoIncrementalMaintenance, IColumnManagerFactory columnManagerFactory, boolean atomic)
             throws HyracksDataException {
         super(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate, isPrimary, btreeFields,
-                compressorDecompressorFactory, hasBloomFilter, isSecondaryNoIncrementalMaintenance);
+                compressorDecompressorFactory, hasBloomFilter, isSecondaryNoIncrementalMaintenance, atomic);
         this.columnManagerFactory = columnManagerFactory;
     }
 
@@ -93,7 +93,7 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
                 opTrackerProvider.getOperationTracker(serviceCtx, this), ioSchedulerProvider.getIoScheduler(serviceCtx),
                 ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, metadataPageManagerFactory, false,
                 serviceCtx.getTracer(), compressorDecompressorFactory, nullTypeTraits, nullIntrospector,
-                columnManagerFactory);
+                columnManagerFactory, atomic);
     }
 
     public static IJsonSerializable fromJson(IPersistedResourceRegistry registry, JsonNode json)
@@ -109,11 +109,12 @@ public class LSMColumnBTreeLocalResource extends LSMBTreeLocalResource {
         JsonNode columnManagerFactoryNode = json.get("columnManagerFactory");
         boolean isSecondaryNoIncrementalMaintenance =
                 getOrDefaultBoolean(json, "isSecondaryNoIncrementalMaintenance", false);
+        boolean atomic = getOrDefaultBoolean(json, "atomic", false);
         IColumnManagerFactory columnManagerFactory =
                 (IColumnManagerFactory) registry.deserialize(columnManagerFactoryNode);
         return new LSMColumnBTreeLocalResource(registry, json, bloomFilterKeyFields, bloomFilterFalsePositiveRate,
                 isPrimary, btreeFields, compDecompFactory, hasBloomFilter, isSecondaryNoIncrementalMaintenance,
-                columnManagerFactory);
+                columnManagerFactory, atomic);
     }
 
     @Override

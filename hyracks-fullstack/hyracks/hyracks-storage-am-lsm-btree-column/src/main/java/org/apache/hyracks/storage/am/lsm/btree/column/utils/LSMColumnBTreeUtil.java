@@ -63,7 +63,7 @@ public class LSMColumnBTreeUtil {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int[] btreeFields, IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer,
             ICompressorDecompressorFactory compressorDecompressorFactory, ITypeTraits nullTypeTraits,
-            INullIntrospector nullIntrospector, IColumnManagerFactory columnManagerFactory)
+            INullIntrospector nullIntrospector, IColumnManagerFactory columnManagerFactory, boolean atomic)
             throws HyracksDataException {
 
         //Tuple writers
@@ -111,6 +111,6 @@ public class LSMColumnBTreeUtil {
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, flushComponentFactory, mergeComponentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, typeTraits.length, cmpFactories, mergePolicy,
                 opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, tracer,
-                columnManagerFactory.createColumnManager());
+                columnManagerFactory.createColumnManager(), atomic);
     }
 }

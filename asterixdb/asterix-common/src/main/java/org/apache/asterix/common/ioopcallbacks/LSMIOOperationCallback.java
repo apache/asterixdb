@@ -138,7 +138,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         }
     }
 
-    private void addComponentToCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
+    protected void addComponentToCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
         // will always update the checkpoint file even if no new component was created
         FileReference target = operation.getTarget();
         Map<String, Object> map = operation.getParameters();
@@ -150,7 +150,7 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         indexCheckpointManagerProvider.get(ref).flushed(componentSequence, lsn, id.getMaxId());
     }
 
-    private void deleteComponentsFromCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
+    protected void deleteComponentsFromCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
         // component was deleted... if a flush, do nothing.. if a merge, must update the checkpoint file
         if (operation.getIOOpertionType() == LSMIOOperationType.MERGE) {
             // Get component id of the last disk component
@@ -298,12 +298,12 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         return indexCheckpointManagerProvider.get(resourceReference).getValidComponentSequence();
     }
 
-    private boolean isMerge(ILSMIOOperation operation) {
+    protected boolean isMerge(ILSMIOOperation operation) {
         return operation.getIOOpertionType() == LSMIOOperationType.MERGE
                 && operation.getAccessor().getOpContext().getOperation() != IndexOperation.DELETE_COMPONENTS;
     }
 
-    private static FileReference getOperationMaskFilePath(ILSMIOOperation operation) {
+    protected static FileReference getOperationMaskFilePath(ILSMIOOperation operation) {
         FileReference target = operation.getTarget();
         String componentSequence = getComponentSequence(target.getFile().getAbsolutePath());
         FileReference idxRelPath = target.getParent();

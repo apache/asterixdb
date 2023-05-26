@@ -60,7 +60,8 @@ public class TestPrimaryIndexOperationTrackerFactory extends PrimaryIndexOperati
                 Field opTrackersField = DatasetResource.class.getDeclaredField("datasetPrimaryOpTrackers");
                 opTracker = new TestPrimaryIndexOperationTracker(datasetId, partition,
                         appCtx.getTransactionSubsystem().getLogManager(), dsr.getDatasetInfo(),
-                        dslcManager.getComponentIdGenerator(datasetId, partition, resource.getPath()));
+                        dslcManager.getComponentIdGenerator(datasetId, partition, resource.getPath()),
+                        appCtx.getIndexCheckpointManagerProvider());
                 replaceMapEntry(opTrackersField, dsr, partition, opTracker);
             }
             return opTracker;

@@ -100,11 +100,11 @@ public class LSMBTree extends AbstractLSMIndex implements ITreeIndex {
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             boolean needKeyDupCheck, boolean hasBloomFilter, int[] btreeFields, int[] filterFields, boolean durable,
-            boolean updateAware, ITracer tracer) throws HyracksDataException {
+            boolean updateAware, ITracer tracer, boolean atomic) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, diskBufferCache, fileManager, bloomFilterFalsePositiveRate, mergePolicy,
                 opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, componentFactory,
                 bulkLoadComponentFactory, filterFrameFactory, filterManager, filterFields, durable, filterHelper,
-                btreeFields, tracer);
+                btreeFields, tracer, atomic);
         this.insertLeafFrameFactory = insertLeafFrameFactory;
         this.deleteLeafFrameFactory = deleteLeafFrameFactory;
         this.cmpFactories = cmpFactories;

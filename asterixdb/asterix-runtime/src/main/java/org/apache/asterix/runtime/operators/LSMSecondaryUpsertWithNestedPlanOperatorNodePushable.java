@@ -41,6 +41,7 @@ import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFa
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.tuples.ConcatenatingTupleReference;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
 public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSecondaryUpsertOperatorNodePushable {
     private final NestedTupleSourceRuntime[] startOfNewKeyPipelines;
@@ -190,11 +191,13 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
                 int storagePartition = tuplePartitioner.partition(tuple.getFrameTupleAccessor(), tuple.getTupleIndex());
                 int storageIdx = storagePartitionId2Index.get(storagePartition);
                 ILSMIndexAccessor workingLSMAccessor = (ILSMIndexAccessor) indexAccessors[storageIdx];
-                AbstractIndexModificationOperationCallback abstractModCallback =
-                        (AbstractIndexModificationOperationCallback) modCallbacks[storageIdx];
+                IModificationOperationCallback abstractModCallback = modCallbacks[storageIdx];
                 // Finally, pass the tuple to our accessor. There are only two operations: insert or delete.
                 if (this.isInsert) {
-                    abstractModCallback.setOp(AbstractIndexModificationOperationCallback.Operation.INSERT);
+                    if (abstractModCallback instanceof AbstractIndexModificationOperationCallback) {
+                        ((AbstractIndexModificationOperationCallback) abstractModCallback)
+                                .setOp(AbstractIndexModificationOperationCallback.Operation.INSERT);
+                    }
                     try {
                         workingLSMAccessor.forceInsert(endTupleReference);
                     } catch (HyracksDataException e) {
@@ -203,7 +206,10 @@ public class LSMSecondaryUpsertWithNestedPlanOperatorNodePushable extends LSMSec
                         }
                     }
                 } else {
-                    abstractModCallback.setOp(AbstractIndexModificationOperationCallback.Operation.DELETE);
+                    if (abstractModCallback instanceof AbstractIndexModificationOperationCallback) {
+                        ((AbstractIndexModificationOperationCallback) abstractModCallback)
+                                .setOp(AbstractIndexModificationOperationCallback.Operation.DELETE);
+                    }
                     workingLSMAccessor.forceDelete(endTupleReference);
                 }
             }

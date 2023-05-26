@@ -21,6 +21,7 @@ package org.apache.asterix.common.dataflow;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.common.api.INcApplicationContext;
+import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -48,6 +49,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.LocalResource;
 
@@ -212,6 +214,11 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                 failure = ExceptionUtils.suppress(failure, th);
             }
         }
+        if (failure == null && !failed) {
+            commitAtomicInsertDelete();
+        } else {
+            abortAtomicInsertDelete();
+        }
         if (failure != null) {
             throw HyracksDataException.create(failure);
         }
@@ -219,6 +226,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     @Override
     public void fail() throws HyracksDataException {
+        this.failed = true;
         if (writerOpen) {
             writer.fail();
         }
@@ -226,5 +234,29 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     public boolean isPrimary() {
         return isPrimary;
+    }
+
+    private void commitAtomicInsertDelete() throws HyracksDataException {
+        if (isPrimary) {
+            for (IIndex index : indexes) {
+                if (((ILSMIndex) index).isAtomic()) {
+                    PrimaryIndexOperationTracker opTracker =
+                            ((PrimaryIndexOperationTracker) ((ILSMIndex) index).getOperationTracker());
+                    opTracker.commit();
+                }
+            }
+        }
+    }
+
+    private void abortAtomicInsertDelete() throws HyracksDataException {
+        if (isPrimary) {
+            for (IIndex index : indexes) {
+                if (((ILSMIndex) index).isAtomic()) {
+                    PrimaryIndexOperationTracker opTracker =
+                            ((PrimaryIndexOperationTracker) ((ILSMIndex) index).getOperationTracker());
+                    opTracker.abort();
+                }
+            }
+        }
     }
 }

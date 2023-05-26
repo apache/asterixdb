@@ -145,6 +145,10 @@ public class InternalDatasetDetails implements IDatasetDetails {
         return filterSourceIndicator;
     }
 
+    public boolean isDatasetWithoutTypeSpecification() {
+        return isDatasetWithoutTypeSpecification;
+    }
+
     @Override
     public DatasetType getDatasetType() {
         return DatasetType.INTERNAL;

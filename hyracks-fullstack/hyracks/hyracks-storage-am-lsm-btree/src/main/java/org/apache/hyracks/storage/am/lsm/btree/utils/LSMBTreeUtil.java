@@ -72,6 +72,23 @@ public class LSMBTreeUtil {
             boolean updateAware, ITracer tracer, ICompressorDecompressorFactory compressorDecompressorFactory,
             boolean hasBloomFilter, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector)
             throws HyracksDataException {
+        return createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits, cmpFactories,
+                bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker, ioScheduler,
+                ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, filterTypeTraits, filterCmpFactories,
+                btreeFields, filterFields, durable, freePageManagerFactory, updateAware, tracer,
+                compressorDecompressorFactory, hasBloomFilter, nullTypeTraits, nullIntrospector, false);
+    }
+
+    public static LSMBTree createLSMTree(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
+            FileReference file, IBufferCache diskBufferCache, ITypeTraits[] typeTraits,
+            IBinaryComparatorFactory[] cmpFactories, int[] bloomFilterKeyFields, double bloomFilterFalsePositiveRate,
+            ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
+            ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
+            boolean needKeyDupCheck, ITypeTraits[] filterTypeTraits, IBinaryComparatorFactory[] filterCmpFactories,
+            int[] btreeFields, int[] filterFields, boolean durable, IMetadataPageManagerFactory freePageManagerFactory,
+            boolean updateAware, ITracer tracer, ICompressorDecompressorFactory compressorDecompressorFactory,
+            boolean hasBloomFilter, ITypeTraits nullTypeTraits, INullIntrospector nullIntrospector, boolean atomic)
+            throws HyracksDataException {
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false, updateAware, nullTypeTraits, nullIntrospector);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -124,6 +141,6 @@ public class LSMBTreeUtil {
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, componentFactory, bulkLoadComponentFactory,
                 filterHelper, filterFrameFactory, filterManager, bloomFilterFalsePositiveRate, typeTraits.length,
                 cmpFactories, mergePolicy, opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory,
-                needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer);
+                needKeyDupCheck, hasBloomFilter, btreeFields, filterFields, durable, updateAware, tracer, atomic);
     }
 }

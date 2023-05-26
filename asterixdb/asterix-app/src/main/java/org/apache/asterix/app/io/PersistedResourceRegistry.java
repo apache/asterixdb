@@ -31,6 +31,7 @@ import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.context.DatasetInfoProvider;
 import org.apache.asterix.common.context.DatasetLSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
+import org.apache.asterix.common.ioopcallbacks.AtomicLSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.library.LibraryDescriptor;
@@ -190,6 +191,8 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         // ILSMOperationTrackerFactory
         registeredClasses.put("NoOpIOOperationCallbackFactory", NoOpIOOperationCallbackFactory.class);
         registeredClasses.put("LSMBTreeIOOperationCallbackFactory", LSMIndexIOOperationCallbackFactory.class);
+        registeredClasses.put("AtomicLSMBTreeIOOperationCallbackFactory",
+                AtomicLSMIndexIOOperationCallbackFactory.class);
         registeredClasses.put("LSMIndexPageWriteCallbackFactory", LSMIndexPageWriteCallbackFactory.class);
         registeredClasses.put("NoOpPageWriteCallbackFactory", NoOpPageWriteCallbackFactory.class);
 
