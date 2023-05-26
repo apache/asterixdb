@@ -18,12 +18,15 @@
  */
 package org.apache.asterix.column.values.reader;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.asterix.column.util.RunLengthIntArray;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class DummyRepeatedPrimitiveColumnValueReader extends AbstractDummyColumnValuesReader {
     private final int[] delimiters;
@@ -103,5 +106,14 @@ public class DummyRepeatedPrimitiveColumnValueReader extends AbstractDummyColumn
             return;
         }
         delimiterIndex = levelToDelimiterMap[level];
+    }
+
+    @Override
+    public void appendReaderInformation(ObjectNode node) {
+        appendCommon(node);
+        node.put("delimiters", Arrays.toString(delimiters));
+        node.put("levelToDelimiterMap", Arrays.toString(levelToDelimiterMap));
+        node.put("delimiterIndex", delimiterIndex);
+        node.put("isDelimiter", isDelimiter());
     }
 }

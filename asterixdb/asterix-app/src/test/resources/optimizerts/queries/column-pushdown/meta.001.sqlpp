@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+ DROP DATAVERSE test IF EXISTS;
+ CREATE DATAVERSE test;
+ USE test;
+
+ CREATE TYPE CH2Type AS {
+ };
+
+ CREATE TYPE CH2MetaType AS {
+     uid:int
+ };
+
+ CREATE DATASET `customer`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `district`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `history`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `item`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `neworder`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `orders`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `stock`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `warehouse`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `supplier`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `nation`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+ CREATE DATASET `region`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
+
+SELECT s.s_i_id, SUM(s.s_order_cnt) as ordercount
+FROM   nation n, supplier su, stock s
+WHERE  s.s_w_id * s.s_i_id MOD 10000 = su.su_suppkey
+  AND  su.su_nationkey = n.n_nationkey
+  AND  n.n_name = 'Germany'
+GROUP BY s.s_i_id
+HAVING SUM(s.s_order_cnt) > (
+     SELECT VALUE SUM(s1.s_order_cnt) * 0.00005
+     FROM nation n1, supplier su1, stock s1
+     WHERE s1.s_w_id * s1.s_i_id MOD 10000 = su1.su_suppkey
+       AND su1.su_nationkey = n1.n_nationkey
+       AND n1.n_name = 'Germany')[0]
+ORDER BY ordercount DESC;

@@ -21,6 +21,9 @@ package org.apache.asterix.column.assembler;
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     private boolean arrayDelegate;
@@ -63,7 +66,7 @@ class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
 
     private void next() throws HyracksDataException {
         if (!reader.next()) {
-            throw new IllegalStateException("no more values, column index: " + getColumnIndex());
+            throw createException();
         } else if (reader.isNull() && (arrayDelegate || reader.getLevel() + 1 == level)) {
             /*
              * There are two cases here for where the null belongs to:
@@ -80,5 +83,17 @@ class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
         } else if (reader.isValue()) {
             addValueToParent();
         }
+    }
+
+    private ColumnarValueException createException() {
+        ColumnarValueException e = new ColumnarValueException();
+        ObjectNode assemblerNode = e.createNode(getClass().getSimpleName());
+        assemblerNode.put("isDelegate", isDelegate());
+        assemblerNode.put("isArrayDelegate", arrayDelegate);
+
+        ObjectNode readerNode = assemblerNode.putObject("assemblerReader");
+        reader.appendReaderInformation(readerNode);
+
+        return e;
     }
 }

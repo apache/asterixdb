@@ -19,11 +19,15 @@
 package org.apache.asterix.column.values.reader;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * For primitive values that belong to an {@link ATypeTag#ARRAY} and {@link ATypeTag#MULTISET}
@@ -93,7 +97,9 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
     public void write(IColumnValuesWriter writer, boolean callNext) throws HyracksDataException {
         //We always call next as repeated values cannot be primary keys
         if (!next()) {
-            throw new IllegalStateException("No more values");
+            ColumnarValueException e = new ColumnarValueException();
+            appendReaderInformation(e.createNode(getClass().getSimpleName()));
+            throw e;
         }
 
         if (isRepeatedValue()) {
@@ -123,6 +129,18 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         return isDelimiter() && delimiterIndex == delimiters.length - 1;
     }
 
+    @Override
+    public void skip(int count) throws HyracksDataException {
+        for (int i = 0; i < count; i++) {
+            next();
+            if (isRepeatedValue()) {
+                while (!isLastDelimiter()) {
+                    next();
+                }
+            }
+        }
+    }
+
     private void consumeDelimiterIfAny() {
         if (isDelimiter()) {
             delimiterIndex++;
@@ -137,14 +155,11 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
     }
 
     @Override
-    public void skip(int count) throws HyracksDataException {
-        for (int i = 0; i < count; i++) {
-            next();
-            if (isRepeatedValue()) {
-                while (!isLastDelimiter()) {
-                    next();
-                }
-            }
-        }
+    public void appendReaderInformation(ObjectNode node) {
+        appendCommon(node);
+        node.put("delimiters", Arrays.toString(delimiters));
+        node.put("levelToDelimiterMap", Arrays.toString(levelToDelimiterMap));
+        node.put("delimiterIndex", delimiterIndex);
+        node.put("isDelimiter", isDelimiter());
     }
 }

@@ -25,6 +25,9 @@ import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Reader for a non-repeated primitive value
@@ -52,13 +55,9 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
             return false;
         }
 
-        try {
-            nextLevel();
-            if (primaryKey || level == maxLevel) {
-                valueReader.nextValue();
-            }
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
+        nextLevel();
+        if (primaryKey || level == maxLevel) {
+            valueReader.nextValue();
         }
         return true;
     }
@@ -96,7 +95,9 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
     @Override
     public void write(IColumnValuesWriter writer, boolean callNext) throws HyracksDataException {
         if (callNext && !next()) {
-            throw new IllegalStateException("No more values");
+            ColumnarValueException e = new ColumnarValueException();
+            appendReaderInformation(e.createNode(getClass().getSimpleName()));
+            throw e;
         }
 
         writer.writeLevel(level);
@@ -122,4 +123,11 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
             nextLevel();
         }
     }
+
+    @Override
+    public void appendReaderInformation(ObjectNode node) {
+        appendCommon(node);
+        node.put("isPrimaryKeyColumn", primaryKey);
+    }
+
 }

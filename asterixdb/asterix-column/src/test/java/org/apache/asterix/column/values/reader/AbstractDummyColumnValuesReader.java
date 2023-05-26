@@ -29,6 +29,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public abstract class AbstractDummyColumnValuesReader implements IColumnValuesReader {
     private final ATypeTag typeTag;
     protected final int columnIndex;
@@ -153,5 +155,13 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
         for (int i = 0; i < count; i++) {
             next();
         }
+    }
+
+    protected void appendCommon(ObjectNode node) {
+        node.put("columnIndex", columnIndex);
+        node.put("valueIndex", valueIndex);
+        node.put("valueCount", valueCount);
+        node.put("level", level);
+        node.put("maxLevel", maxLevel);
     }
 }

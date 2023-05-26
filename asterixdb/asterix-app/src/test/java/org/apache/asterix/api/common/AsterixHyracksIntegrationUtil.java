@@ -101,15 +101,14 @@ public class AsterixHyracksIntegrationUtil {
      * main method to run a simple 2 node cluster in-process
      * suggested VM arguments: <code>-enableassertions -Xmx2048m -Dfile.encoding=UTF-8</code>
      *
-     * @param args
-     *            unused
+     * @param args unused
      */
     public static void main(String[] args) throws Exception {
         TestUtils.redirectLoggingToConsole();
         AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         try {
             integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),
-                    System.getProperty("conf.path", DEFAULT_CONF_FILE));
+                    getConfPath());
         } catch (Exception e) {
             LOGGER.fatal("Unexpected exception", e);
             System.exit(1);
@@ -443,5 +442,13 @@ public class AsterixHyracksIntegrationUtil {
             registeredClasses.put("TestPrimaryIndexOperationTrackerFactory",
                     TestPrimaryIndexOperationTrackerFactory.class);
         }
+    }
+
+    private static String getConfPath() {
+        String providedPath = System.getProperty("conf.path");
+        if (providedPath == null) {
+            return DEFAULT_CONF_FILE;
+        }
+        return joinPath(RESOURCES_PATH, providedPath);
     }
 }

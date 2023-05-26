@@ -33,6 +33,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.bytes.BytesUtils;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     protected final AbstractValueReader valueReader;
     protected final int columnIndex;
@@ -46,6 +48,10 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     private int nullBitMask;
     private boolean nullLevel;
     private boolean allMissing;
+
+    // Logging members
+    private int numberOfEncounteredMissing;
+    private int numberOfEncounteredNull;
 
     AbstractColumnValuesReader(AbstractValueReader valueReader, int columnIndex, int maxLevel, boolean primaryKey) {
         this.valueReader = valueReader;
@@ -61,15 +67,13 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         }
 
         valueIndex++;
-        try {
-            int actualLevel = definitionLevels.readInt();
-            //Check whether the level is for a null value
-            nullLevel = ColumnValuesUtil.isNull(nullBitMask, actualLevel);
-            //Clear the null bit to allow repeated value readers determine the correct delimiter for null values
-            level = ColumnValuesUtil.clearNullBit(nullBitMask, actualLevel);
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
+        int actualLevel = definitionLevels.readInt();
+        //Check whether the level is for a null value
+        nullLevel = ColumnValuesUtil.isNull(nullBitMask, actualLevel);
+        //Clear the null bit to allow repeated value readers determine the correct delimiter for null values
+        level = ColumnValuesUtil.clearNullBit(nullBitMask, actualLevel);
+        numberOfEncounteredMissing += isMissing() ? 1 : 0;
+        numberOfEncounteredNull += isNull() ? 1 : 0;
     }
 
     abstract void resetValues();
@@ -77,6 +81,8 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     @Override
     public final void reset(AbstractBytesInputStream in, int tupleCount) throws HyracksDataException {
         valueIndex = 0;
+        numberOfEncounteredMissing = 0;
+        numberOfEncounteredNull = 0;
         if (in.available() == 0) {
             allMissing = true;
             level = 0;
@@ -167,5 +173,18 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         for (int i = 0; i < count; i++) {
             next();
         }
+    }
+
+    protected void appendCommon(ObjectNode node) {
+        node.put("typeTag", getTypeTag().toString());
+        node.put("columnIndex", columnIndex);
+        node.put("valueIndex", valueIndex);
+        node.put("valueCount", valueCount);
+        node.put("allMissing", allMissing);
+        node.put("level", level);
+        node.put("maxLevel", maxLevel);
+        node.put("nullBitMask", nullBitMask);
+        node.put("numberOfEncounteredMissing", numberOfEncounteredMissing);
+        node.put("numberOfEncounteredNull", numberOfEncounteredNull);
     }
 }

@@ -33,6 +33,8 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProj
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 
 public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleReference {
+    // NoOP callback is for empty pages only
+    private static final IEndOfPageCallBack EMPTY_PAGE_CALLBACK = createNoOpCallBack();
     private final IColumnValuesReader[] columnReaders;
     private int skipCount;
     private IEndOfPageCallBack endOfPageCallBack;
@@ -41,6 +43,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
             MergeColumnReadMetadata columnMetadata, IColumnReadMultiPageOp multiPageOp) {
         super(componentIndex, frame, columnMetadata, multiPageOp);
         this.columnReaders = columnMetadata.getColumnReaders();
+        endOfPageCallBack = EMPTY_PAGE_CALLBACK;
     }
 
     @Override
@@ -112,4 +115,14 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     public void registerEndOfPageCallBack(IEndOfPageCallBack endOfPageCallBack) {
         this.endOfPageCallBack = endOfPageCallBack;
     }
+
+    private static IEndOfPageCallBack createNoOpCallBack() {
+        return columnTuple -> {
+            if (!columnTuple.isEmpty()) {
+                // safeguard against unset proper call back for non-empty pages
+                throw new NullPointerException("endOfPageCallBack is null");
+            }
+        };
+    }
+
 }

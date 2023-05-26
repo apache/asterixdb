@@ -25,6 +25,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class DummyPrimitiveColumnValueReader extends AbstractDummyColumnValuesReader {
     DummyPrimitiveColumnValueReader(ATypeTag typeTag, RunLengthIntArray defLevels, List<IValueReference> values,
             int columnIndex, int maxLevel) {
@@ -72,5 +74,11 @@ public class DummyPrimitiveColumnValueReader extends AbstractDummyColumnValuesRe
     @Override
     public int getNumberOfDelimiters() {
         return 0;
+    }
+
+    @Override
+    public void appendReaderInformation(ObjectNode node) {
+        appendCommon(node);
+        node.put("isPrimaryKeyColumn", false);
     }
 }

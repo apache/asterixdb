@@ -34,6 +34,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private final MergeColumnWriteMetadata columnMetadata;
@@ -45,6 +48,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private final ColumnBatchWriter writer;
     private final int maxNumberOfTuples;
     private int primaryKeysEstimatedSize;
+    private int numberOfAntiMatter;
 
     public MergeColumnTupleWriter(MergeColumnWriteMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
             double tolerance) {
@@ -66,6 +70,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             primaryKeyWriters[i] = columnMetadata.getWriter(i);
         }
         orderedColumns = new PriorityQueue<>(Comparator.comparingInt(x -> -x.getEstimatedSize()));
+        numberOfAntiMatter = 0;
     }
 
     @Override
@@ -103,17 +108,46 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
         MergeColumnTupleReference columnTuple = (MergeColumnTupleReference) tuple;
+        // +1 to avoid having -0, where the '-' is an antimatter indicator
         int componentIndex = columnTuple.getComponentIndex();
         int skipCount = columnTuple.getAndResetSkipCount();
         if (skipCount > 0) {
-            writtenComponents.add(-componentIndex, skipCount);
+            writtenComponents.add(setAntimatterIndicator(componentIndex), skipCount);
         }
-        if (columnTuple.isAntimatter()) {
-            writtenComponents.add(-componentIndex);
-        } else {
+
+        if (!columnTuple.isAntimatter()) {
+            // anti matters contain only the primary keys, and none of the other columns
             writtenComponents.add(componentIndex);
+        } else {
+            // counter for logging purposes
+            numberOfAntiMatter++;
         }
+
         writePrimaryKeys(columnTuple);
+    }
+
+    @Override
+    public int flush(ByteBuffer pageZero) throws HyracksDataException {
+        int numberOfColumns = columnMetadata.getNumberOfColumns();
+        int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
+        if (writtenComponents.getSize() > 0) {
+            writeNonKeyColumns();
+            writtenComponents.reset();
+        }
+        for (int i = numberOfPrimaryKeys; i < numberOfColumns; i++) {
+            orderedColumns.add(columnMetadata.getWriter(i));
+        }
+        writer.setPageZeroBuffer(pageZero, numberOfColumns, numberOfPrimaryKeys);
+        int allocatedSpace = writer.writePrimaryKeyColumns(primaryKeyWriters);
+        allocatedSpace += writer.writeColumns(orderedColumns);
+
+        numberOfAntiMatter = 0;
+        return allocatedSpace;
+    }
+
+    @Override
+    public void close() {
+        columnMetadata.close();
     }
 
     private void writePrimaryKeys(MergeColumnTupleReference columnTuple) throws HyracksDataException {
@@ -132,7 +166,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             int componentIndex = writtenComponents.getBlockValue(i);
             if (componentIndex < 0) {
                 //Skip writing values of deleted tuples
-                componentIndex = -componentIndex;
+                componentIndex = clearAntimatterIndicator(componentIndex);
                 skipReaders(componentIndex, writtenComponents.getBlockSize(i));
                 continue;
             }
@@ -141,8 +175,24 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             for (int j = columnMetadata.getNumberOfPrimaryKeys(); j < columnMetadata.getNumberOfColumns(); j++) {
                 IColumnValuesReader columnReader = componentTuple.getReader(j);
                 IColumnValuesWriter columnWriter = columnMetadata.getWriter(j);
-                columnReader.write(columnWriter, count);
+                writeColumn(i, componentIndex, columnReader, columnWriter, count);
             }
+        }
+    }
+
+    private void writeColumn(int blockIndex, int componentIndex, IColumnValuesReader columnReader,
+            IColumnValuesWriter columnWriter, int count) throws HyracksDataException {
+        try {
+            columnReader.write(columnWriter, count);
+        } catch (ColumnarValueException e) {
+            ObjectNode node = e.createNode(getClass().getSimpleName());
+            node.put("numberOfWrittenPrimaryKeys", primaryKeyWriters[0].getCount());
+            node.put("writtenComponents", writtenComponents.toString());
+            node.put("blockIndex", blockIndex);
+            node.put("componentIndex", componentIndex);
+            node.put("count", count);
+            node.put("numberOFAntiMatters", numberOfAntiMatter);
+            throw e;
         }
     }
 
@@ -154,28 +204,6 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
         }
     }
 
-    @Override
-    public int flush(ByteBuffer pageZero) throws HyracksDataException {
-        int numberOfColumns = columnMetadata.getNumberOfColumns();
-        int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
-        if (writtenComponents.getSize() > 0) {
-            writeNonKeyColumns();
-            writtenComponents.reset();
-        }
-        for (int i = numberOfPrimaryKeys; i < numberOfColumns; i++) {
-            orderedColumns.add(columnMetadata.getWriter(i));
-        }
-        writer.setPageZeroBuffer(pageZero, numberOfColumns, numberOfPrimaryKeys);
-        int allocatedSpace = writer.writePrimaryKeyColumns(primaryKeyWriters);
-        allocatedSpace += writer.writeColumns(orderedColumns);
-        return allocatedSpace;
-    }
-
-    @Override
-    public void close() {
-        columnMetadata.close();
-    }
-
     private void writeAllColumns(MergeColumnTupleReference columnTuple) throws HyracksDataException {
         /*
          * The last tuple from one of the components was reached. Since we are going to the next leaf, we will not be
@@ -184,9 +212,18 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
          */
         int skipCount = columnTuple.getAndResetSkipCount();
         if (skipCount > 0) {
-            writtenComponents.add(-columnTuple.getComponentIndex(), skipCount);
+            writtenComponents.add(setAntimatterIndicator(columnTuple.getComponentIndex()), skipCount);
         }
         writeNonKeyColumns();
         writtenComponents.reset();
+    }
+
+    private static int setAntimatterIndicator(int componentIndex) {
+        // This is to avoid -0, where the '-' is the antimatter indicator
+        return -(componentIndex + 1);
+    }
+
+    private static int clearAntimatterIndicator(int componentIndex) {
+        return -componentIndex - 1;
     }
 }

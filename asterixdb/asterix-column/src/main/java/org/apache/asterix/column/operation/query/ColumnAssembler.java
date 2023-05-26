@@ -29,6 +29,9 @@ import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public final class ColumnAssembler {
     private final AbstractPrimitiveValueAssembler[] assemblers;
@@ -36,6 +39,7 @@ public final class ColumnAssembler {
     private final AssemblerState state;
     private int numberOfTuples;
     private int tupleIndex;
+    private int numberOfSkips;
 
     public ColumnAssembler(AbstractSchemaNode node, ARecordType declaredType, QueryColumnMetadata columnMetadata,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory)
@@ -50,6 +54,7 @@ public final class ColumnAssembler {
     public void reset(int numberOfTuples) {
         this.numberOfTuples = numberOfTuples;
         tupleIndex = 0;
+        numberOfSkips = 0;
     }
 
     public void resetColumn(AbstractBytesInputStream stream, int ordinal) throws HyracksDataException {
@@ -75,7 +80,15 @@ public final class ColumnAssembler {
         int index = 0;
         while (index < assemblers.length) {
             AbstractPrimitiveValueAssembler assembler = assemblers[index];
-            int groupIndex = assembler.next(state);
+            int groupIndex;
+
+            try {
+                groupIndex = assembler.next(state);
+            } catch (ColumnarValueException e) {
+                appendInformation(e);
+                throw e;
+            }
+
             if (groupIndex != AbstractPrimitiveValueAssembler.NEXT_ASSEMBLER) {
                 index = groupIndex;
             } else {
@@ -93,6 +106,7 @@ public final class ColumnAssembler {
     }
 
     public int skip(int count) throws HyracksDataException {
+        numberOfSkips += count;
         tupleIndex += count;
         for (int i = 0; i < assemblers.length; i++) {
             assemblers[i].skip(count);
@@ -102,5 +116,13 @@ public final class ColumnAssembler {
 
     public void setAt(int index) throws HyracksDataException {
         skip(index - tupleIndex);
+    }
+
+    private void appendInformation(ColumnarValueException e) {
+        ObjectNode assemblerNode = e.createNode(getClass().getSimpleName());
+        assemblerNode.put("tupleIndex", tupleIndex);
+        assemblerNode.put("numberOfTuples", numberOfTuples);
+        assemblerNode.put("numberOfSkips", numberOfSkips);
+        state.appendStateInfo(e);
     }
 }

@@ -170,14 +170,16 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             filterColumnReaders = filterAccessorProvider.getFilterColumnReaders();
         }
 
-        // Primary key readers
-        PrimitiveColumnValuesReader[] primaryKeyReaders =
-                createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
-
+        // log normalized filter
+        logFilter(normalizedFilterEvaluator, normalizedEvaluatorFactory.toString());
         // log requested schema for record
         logSchema(clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
         // log requested schema for meta-record
         logSchema(metaClippedRoot, SchemaStringBuilderVisitor.META_RECORD_SCHEMA, fieldNamesDictionary);
+
+        // Primary key readers
+        PrimitiveColumnValuesReader[] primaryKeyReaders =
+                createPrimaryKeyReaders(input, readerFactory, numberOfPrimaryKeys);
 
         return new QueryColumnWithMetaMetadata(datasetType, metaType, primaryKeyReaders, serializedMetadata,
                 fieldNamesDictionary, clippedRoot, metaClippedRoot, readerFactory, valueGetterFactory,

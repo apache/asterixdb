@@ -172,6 +172,10 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         return frame.getTupleCount();
     }
 
+    protected final boolean isEmpty() {
+        return frame.getTupleCount() == 0;
+    }
+
     @Override
     public final void next() throws HyracksDataException {
         onNext();

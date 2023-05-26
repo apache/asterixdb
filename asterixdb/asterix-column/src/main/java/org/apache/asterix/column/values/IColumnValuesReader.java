@@ -23,6 +23,8 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
     /**
      * Reset the reader
@@ -139,4 +141,11 @@ public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
      * @param count the number of values should be skipped
      */
     void skip(int count) throws HyracksDataException;
+
+    /**
+     * Appends readers information for debugging
+     *
+     * @param node container for the reader's information
+     */
+    void appendReaderInformation(ObjectNode node);
 }

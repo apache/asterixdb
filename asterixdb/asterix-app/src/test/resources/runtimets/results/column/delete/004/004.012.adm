@@ -1,0 +1,4 @@
+{ "id": 1, "geo": { "coordinates": [ 1, 2 ] } }
+{ "id": 2, "geo": { "coordinates": [ 3, 4 ] } }
+{ "id": 3, "geo": { "coordinates": [ 5, 6 ] } }
+{ "id": 4, "geo": { "coordinates": [ 7, 8 ] } }

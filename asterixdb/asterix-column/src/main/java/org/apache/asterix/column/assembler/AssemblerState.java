@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.column.assembler;
 
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class AssemblerState {
     private EndOfRepeatedGroupAssembler currentGroup;
 
@@ -42,5 +46,15 @@ public class AssemblerState {
 
     public boolean isInGroup() {
         return currentGroup != null;
+    }
+
+    public void appendStateInfo(ColumnarValueException e) {
+        ObjectNode stateNode = e.createNode(getClass().getSimpleName());
+        if (isInGroup()) {
+            stateNode.put("inGroup", true);
+            currentGroup.reader.appendReaderInformation(stateNode.putObject("endOfGroupReader"));
+        } else {
+            stateNode.put("inGroup", false);
+        }
     }
 }

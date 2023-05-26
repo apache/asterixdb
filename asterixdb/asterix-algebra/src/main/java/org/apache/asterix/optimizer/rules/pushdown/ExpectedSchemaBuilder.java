@@ -70,7 +70,8 @@ public class ExpectedSchemaBuilder {
     }
 
     public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable) {
-        return createProjectionInfo(recordVariable, Collections.emptyMap(), Collections.emptyMap(), null, null);
+        return createProjectionInfo(recordVariable, Collections.emptyMap(), Collections.emptyMap(), null,
+                Collections.emptyMap());
     }
 
     public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable,
