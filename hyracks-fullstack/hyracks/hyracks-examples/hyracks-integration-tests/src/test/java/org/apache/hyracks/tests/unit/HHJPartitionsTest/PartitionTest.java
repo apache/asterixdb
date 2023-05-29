@@ -48,7 +48,7 @@ class PartitionTest{
         tupleAccessor = new FrameTupleAccessor(recordDescriptor);
         IFrameTupleAppender tupleAppender = new FrameTupleAppender(new VSizeFrame(context));
         tupleAccessor.reset(generateIntFrame().getBuffer());
-        partition = new Partition(0,bufferManager,context,tupleAccessor,tupleAppender,reloadBuffer);
+        partition = new Partition(0,bufferManager,context,tupleAccessor,tupleAppender,reloadBuffer,"RelS");
     }
 
     /**
@@ -76,7 +76,10 @@ class PartitionTest{
         assertEquals(partition.getTuplesProcessed(),1);
         assertEquals(partition.getFileSize(),frameSize);
         assertEquals(partition.getMemoryUsed(),frameSize);
+        assertEquals(partition.getBytesSpilled(),frameSize);
+        assertEquals(partition.getBytesReloaded(),0);
     }
+
     /**
      * Reload the spilled Partition and check the numbers
      * @throws HyracksDataException
@@ -89,7 +92,10 @@ class PartitionTest{
         assertEquals(partition.getTuplesInMemory(),1);
         assertEquals(partition.getTuplesProcessed(),1);
         assertEquals(partition.getFileSize(),0);
+        assertEquals(partition.getBytesSpilled(),frameSize);
+        assertEquals(partition.getBytesReloaded(),frameSize);
     }
+
     /**
      * Spill the Partition again the spilled Partition and check the numbers
      * @throws HyracksDataException
@@ -102,6 +108,8 @@ class PartitionTest{
         assertEquals(partition.getTuplesInMemory(),0);
         assertEquals(partition.getTuplesProcessed(),1);
         assertEquals(partition.getFileSize(),frameSize);
+        assertEquals(partition.getBytesSpilled(),2*frameSize);
+        assertEquals(partition.getBytesReloaded(),frameSize);
     }
     @Test
     void ClosePartition() throws HyracksDataException{
@@ -110,7 +118,6 @@ class PartitionTest{
         assertEquals(partition.getTuplesInMemory(),0);
         assertNotEquals(partition.getRfReader(),null);
     }
-
     @Test
     void CleanUpPartition() throws HyracksDataException{
         SpillAndReload();
@@ -140,9 +147,12 @@ class PartitionTest{
         }
         assertEquals(numberOfTuplesProcessed,partition.getTuplesProcessed());
         assertEquals(partition.getMemoryUsed(),10 * frameSize);
-        partition.spill();
+        assertEquals(partition.getFramesUsed(),10 );
         assertEquals(partition.getFileSize(),10*frameSize);
-        assertEquals(partition.getMemoryUsed(),frameSize); //Memory Used is at least one frame large.
+        partition.spill();
+        assertEquals(partition.getMemoryUsed(),frameSize);
+        assertEquals(partition.getFramesUsed(),1);
+        assertEquals(partition.getFileSize(),20 * frameSize);
     }
 
     /**
@@ -177,7 +187,6 @@ class PartitionTest{
             return;
         }
     }
-
 
     /**
      * Insert tuples from Tuple Accessor into Partition,

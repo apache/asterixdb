@@ -15,11 +15,14 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.utils.TupleUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.*;
+import org.apache.hyracks.dataflow.std.join.PartitionComparatorBuilder;
+import org.apache.hyracks.dataflow.std.join.Partition;
 import org.apache.hyracks.dataflow.std.join.PartitionManager;
 import org.apache.hyracks.test.support.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import java.util.BitSet;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +47,7 @@ class PartitionManagerTest{
         tupleAccessor.reset(generateIntFrame().getBuffer());
         IFrameTupleAppender tupleAppender = new FrameTupleAppender(new VSizeFrame(context));
         ITuplePartitionComputer partitionComputer =new simplePartitionComputer();
-        partitionManager = new PartitionManager(numberOfPartitions,context,bufferManager,partitionComputer,tupleAccessor,tupleAppender,status);
+        partitionManager = new PartitionManager(numberOfPartitions,context,bufferManager,partitionComputer,tupleAccessor,tupleAppender,status,"RelS");
     }
     @Test
     public void InvalidBufferSizeAndPartitionNumber() throws HyracksDataException{
@@ -59,7 +62,7 @@ class PartitionManagerTest{
         IFrameTupleAppender tupleAppender = new FrameTupleAppender(new VSizeFrame(context));
         ITuplePartitionComputer partitionComputer =new simplePartitionComputer();
         try {
-            partitionManager = new PartitionManager(largeNumberOfPartitions, context, bufferManager, partitionComputer, tupleAccessor, tupleAppender,status);
+            partitionManager = new PartitionManager(largeNumberOfPartitions, context, bufferManager, partitionComputer, tupleAccessor, tupleAppender,status,"RelS");
             fail();
         }
         catch (Exception ex){
@@ -73,11 +76,44 @@ class PartitionManagerTest{
         assertEquals(partitionManager.getTotalMemory(),numberOfPartitions * frameSize);
     }
     @Test
-    public void InsertPartitionTest() throws HyracksDataException{
+    public void InsertTuplesIntoPartitionTest() throws HyracksDataException{
         partitionManager.insertTuple(0);
         assertEquals(partitionManager.getTuplesInMemory(),1);
         partitionManager.insertTuple(1);
+        assertEquals(partitionManager.getTuplesProcessed(),2);
         assertEquals(partitionManager.getTuplesInMemory(),2);
+        assertEquals(partitionManager.getSpilledStatus().cardinality(),0);
+        assertEquals(partitionManager.getBytesReloaded(),0);
+        assertEquals(partitionManager.getBytesSpilled(),0);
+    }
+
+    @Test void SpillPartition() throws HyracksDataException{
+        InsertTuplesIntoPartitionTest();
+        assertEquals(partitionManager.spillPartition(0),0);
+        assertEquals(partitionManager.getTuplesProcessed(),2);
+        assertEquals(partitionManager.getTuplesSpilled(),1);
+        assertEquals(partitionManager.getTuplesInMemory(),1);
+        assertEquals(partitionManager.getSpilledStatus().cardinality(),1);
+        assertEquals(partitionManager.getBytesReloaded(),0);
+        assertEquals(partitionManager.getBytesSpilled(),frameSize);
+
+    }
+    @Test void SpillLargePartition() throws HyracksDataException{
+        insertFrameToPartitionUntilFillBuffers(0,numberOfPartitions,10);
+        assertEquals(partitionManager.spillPartition(0),9); //Spill all but one
+
+    }
+
+    @Test void SpillAndReloadPartition() throws HyracksDataException{
+        SpillPartition();
+        partitionManager.reloadPartition(0);
+        assertEquals(partitionManager.getTuplesProcessed(),2);
+        assertEquals(partitionManager.getTuplesSpilled(),0);
+        assertEquals(partitionManager.getTuplesInMemory(),2);
+        assertEquals(partitionManager.getSpilledStatus().cardinality(),0);
+        assertEquals(partitionManager.getBytesReloaded(),frameSize);
+        assertEquals(partitionManager.getBytesSpilled(),frameSize);
+
     }
     @Test
     public void GetSpilledPartitionWithLargestBuffer() throws HyracksDataException{
@@ -101,29 +137,59 @@ class PartitionManagerTest{
         assertEquals(partitionManager.getTotalMemory(),numberOfPartitions * frameSize);
     }
     @Test
-    public void getResidentWithLargestBuffer() throws HyracksDataException{
+    public void testTupleCounterComparator() throws HyracksDataException{
         IFrame frame = generateIntFrame();
         tupleAccessor.reset(frame.getBuffer());
         insertFrameToPartition(0,numberOfPartitions);
         insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,5);
-        assertEquals(partitionManager.getResidentWithLargerBuffer(0),1);
+        List<Partition> resident = partitionManager.getMemoryResidentPartitions();
+        PartitionComparatorBuilder builder = new PartitionComparatorBuilder();
+        builder.addInMemoryTupleComparator(true);
+        resident.sort(builder.build());
+        assertEquals(resident.get(0).getId(),1);
+        builder = new PartitionComparatorBuilder();
+        builder.addInMemoryTupleComparator(false);
+        resident.sort(builder.build());
+        assertEquals(resident.get(0).getId(),2);
     }
     @Test
-    public void getResidentWithLargestBufferStartingFrom() throws HyracksDataException{
+    public void testStatusComparator() throws HyracksDataException{
+        IFrame frame = generateIntFrame();
+        tupleAccessor.reset(frame.getBuffer());
+        insertFrameToPartition(3,numberOfPartitions);
+        partitionManager.spillPartition(3);
+        PartitionComparatorBuilder c = new PartitionComparatorBuilder();
+        c.addStatusComparator(true);
+        partitionManager.partitions.sort(c.build());
+        assertEquals(partitionManager.partitions.get(0).getId(),3);
+    }
+    @Test
+    public void testBufferSizeComparator() throws HyracksDataException{
         IFrame frame = generateIntFrame();
         tupleAccessor.reset(frame.getBuffer());
         insertFrameToPartition(0,numberOfPartitions);
         insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,5);
-        assertEquals(partitionManager.getResidentWithLargerBuffer(1),1);
-        assertEquals(partitionManager.getResidentWithLargerBuffer(2),2);
+        List<Partition> resident = partitionManager.getMemoryResidentPartitions();
+        PartitionComparatorBuilder builder = new PartitionComparatorBuilder();
+        builder.addBufferSizeComparator(true);
+        resident.sort(builder.build());
+        assertEquals(resident.get(0).getId(),1);
     }
     @Test
-    public void getResidentWithSmallerBuffer() throws HyracksDataException{
+    public void testComposedComparator() throws HyracksDataException{
         IFrame frame = generateIntFrame();
         tupleAccessor.reset(frame.getBuffer());
         insertFrameToPartition(0,numberOfPartitions);
-        insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,2);
-        assertEquals(partitionManager.getResidentWithSmallerBuffer(),2);
+        insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,5);
+        partitionManager.spillPartition(1);
+        List<Partition> resident = partitionManager.partitions;
+        PartitionComparatorBuilder builder = new PartitionComparatorBuilder();
+        builder.addStatusComparator(true);
+        builder.addBufferSizeComparator(true);
+        builder.addInMemoryTupleComparator(true);
+        resident.sort(builder.build());
+        assertEquals(resident.get(0).getId(),1);
+        assertEquals(resident.get(1).getId(),0);
     }
     @Test
     public void getRSpilledWithLargestBuffer() throws HyracksDataException{
@@ -131,8 +197,8 @@ class PartitionManagerTest{
         tupleAccessor.reset(frame.getBuffer());
         insertFrameToPartition(0,numberOfPartitions);
         insertFrameToPartitionUntilFillBuffers(1,numberOfPartitions,2);
-        partitionManager.spillPartition(0);
-        partitionManager.spillPartition(1);
+        assertEquals(partitionManager.spillPartition(0),0);
+        assertEquals(partitionManager.spillPartition(1),1);
         assertEquals(partitionManager.getSpilledWithLargerBuffer(),0);
     }
     @Test

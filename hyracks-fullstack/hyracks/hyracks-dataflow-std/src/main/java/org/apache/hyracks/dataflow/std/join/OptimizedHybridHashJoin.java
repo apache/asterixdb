@@ -57,14 +57,12 @@ import org.apache.logging.log4j.Logger;
  * This class mainly applies one level of HHJ on a pair of
  * relations. It is always called by the descriptor.
  */
-public class OptimizedHybridHashJoin {
+public class OptimizedHybridHashJoin implements IHybridHashJoin {
 
     private static final Logger LOGGER = LogManager.getLogger();
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigFrameAppender;
-
     private final IHyracksJobletContext jobletCtx;
-
     private final String buildRelName;
     private final String probeRelName;
     private final ITuplePartitionComputer buildHpc;
@@ -98,9 +96,9 @@ public class OptimizedHybridHashJoin {
     private IOperatorStats stats = null;
 
     public OptimizedHybridHashJoin(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
-            String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
-            ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
-            IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
+                                   String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
+                                   ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
+                                   IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
         this.jobletCtx = jobletCtx;
         this.memSizeInFrames = memSizeInFrames;
         this.buildRd = buildRd;
@@ -208,7 +206,7 @@ public class OptimizedHybridHashJoin {
     }
 
     private RunFileWriter getSpillWriterOrCreateNewOneIfNotExist(RunFileWriter[] runFileWriters, String refName,
-            int pid) throws HyracksDataException {
+                                                                 int pid) throws HyracksDataException {
         RunFileWriter writer = runFileWriters[pid];
         if (writer == null) {
             FileReference file = jobletCtx.createManagedWorkspaceFile(refName);
@@ -344,7 +342,7 @@ public class OptimizedHybridHashJoin {
     /**
      * Brings back some partitions if there is free memory and partitions that fit in that space.
      *
-     * @param freeSpace current amount of free space in memory
+     * @param freeSpace     current amount of free space in memory
      * @param inMemTupCount number of in memory tuples
      * @return number of in memory tuples after bringing some (or none) partitions in memory.
      * @throws HyracksDataException
@@ -359,7 +357,7 @@ public class OptimizedHybridHashJoin {
             // Reserve space for loaded data & increase in hash table (give back one frame taken by spilled partition.)
             currentFreeSpace = currentFreeSpace
                     - bufferManager.getPhysicalSize(pid) - SerializableHashTable
-                            .calculateByteSizeDeltaForTableSizeChange(inMemTupCount, buildPSizeInTups[pid], frameSize)
+                    .calculateByteSizeDeltaForTableSizeChange(inMemTupCount, buildPSizeInTups[pid], frameSize)
                     + frameSize;
         }
         return currentMemoryTupleCount;
@@ -402,7 +400,8 @@ public class OptimizedHybridHashJoin {
 
     /**
      * Finds a partition that can fit in the left over memory.
-     * @param freeSpace current free space
+     *
+     * @param freeSpace     current free space
      * @param inMemTupCount number of tuples currently in memory
      * @return partition id of selected partition to reload
      */
@@ -556,7 +555,7 @@ public class OptimizedHybridHashJoin {
     }
 
     private void flushBigObjectToDisk(int pid, FrameTupleAccessor accessor, int i, RunFileWriter[] runFileWriters,
-            String refName) throws HyracksDataException {
+                                      String refName) throws HyracksDataException {
         if (bigFrameAppender == null) {
             bigFrameAppender = new FrameTupleAppender(new VSizeFrame(jobletCtx));
         }
@@ -652,5 +651,17 @@ public class OptimizedHybridHashJoin {
 
     public void setOperatorStats(IOperatorStats stats) {
         this.stats = stats;
+    }
+
+    @Override
+    public int updateMemoryBudget(int newBudget) throws HyracksDataException {
+        return 0;
+        //Nothing to do here
+    }
+
+    @Override
+    public int updateMemoryBudgetProbe(int newBudget) throws HyracksDataException {
+        return 0;
+        //Do Nothing
     }
 }

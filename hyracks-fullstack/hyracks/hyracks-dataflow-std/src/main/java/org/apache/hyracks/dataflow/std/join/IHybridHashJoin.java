@@ -9,7 +9,7 @@ import org.apache.hyracks.dataflow.common.io.RunFileReader;
 import java.nio.ByteBuffer;
 import java.util.BitSet;
 
-public interface IOptimizedHybridHashJoin {
+public interface IHybridHashJoin {
     void initBuild() throws HyracksDataException;
 
     void build(ByteBuffer buffer) throws HyracksDataException;
@@ -22,7 +22,7 @@ public interface IOptimizedHybridHashJoin {
 
     void fail() throws HyracksDataException;
 
-    void initProbe(ITuplePairComparator comparator);
+    void initProbe(ITuplePairComparator comparator) throws HyracksDataException;
 
     void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException;
 
@@ -49,4 +49,6 @@ public interface IOptimizedHybridHashJoin {
     void setIsReversed(boolean reversed);
 
     void setOperatorStats(IOperatorStats stats);
+    int updateMemoryBudget(int newBudget) throws HyracksDataException;
+    int updateMemoryBudgetProbe(int newBudget) throws HyracksDataException;
 }

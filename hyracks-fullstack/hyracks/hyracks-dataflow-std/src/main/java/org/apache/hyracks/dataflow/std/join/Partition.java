@@ -43,7 +43,7 @@ public class Partition {
      * @return Number of Tuples in Memory
      */
     public int getTuplesInMemory() {
-        return spilled ? 0 : tuplesInMemory;
+        return tuplesInMemory;
     }
 
     /**
@@ -59,6 +59,21 @@ public class Partition {
     public int getTuplesSpilled() {
         return tuplesSpilled;
     }
+
+    /**
+     * Number of Bytes Spilled to Disk
+     */
+    private int bytesSpilled = 0;
+    /**Return number of Bytes Spilled to Disk**/
+    public int getBytesSpilled(){return bytesSpilled;}
+
+    /**
+     * Number of Bytes Reloaded from Disk
+     */
+    private int bytesReloaded = 0;
+    /** Return number of Bytes Reloaded from Disk**/
+    public int getBytesReloaded(){return bytesReloaded;}
+    private String relationName;
 
     /**
      * Spilled Status<br>
@@ -87,12 +102,22 @@ public class Partition {
     }
 
     /**
-     * Get number of Frames used by Partition.
+     * Get number of <b>BYTES</b> used by Partition.
      *
-     * @return Number of Frames
+     * @return Number of <b>BYTES</b>
      */
     public int getMemoryUsed() {
         return Math.max(bufferManager.getPhysicalSize(id), context.getInitialFrameSize());
+    }
+
+
+    /**
+     * Get number of <b>BYTES</b> used by Partition.
+     *
+     * @return Number of <b>BYTES</b>
+     */
+    public int getFramesUsed() {
+        return Math.max(bufferManager.getPhysicalSize(id), context.getInitialFrameSize()) / context.getInitialFrameSize();
     }
 
     /**
@@ -100,7 +125,8 @@ public class Partition {
      *
      * @return File Reader
      */
-    public RunFileReader getRfReader() {
+    public RunFileReader getRfReader() throws HyracksDataException {
+        createFileReaderIfNotExist();
         return rfReader;
     }
 
@@ -134,7 +160,7 @@ public class Partition {
      * Joblet context
      */
     private final IHyracksJobletContext context;
-
+    boolean closed = false;
     //endregion
 
     //region [CONSTRUCTORS]
@@ -142,13 +168,15 @@ public class Partition {
                      IHyracksJobletContext context,
                      IFrameTupleAccessor frameTupleAccessor,
                      IFrameTupleAppender tupleAppender,
-                     IFrame reloadBuffer) {
+                     IFrame reloadBuffer,
+                     String relationName) {
         this.id = id;
         this.bufferManager = bufferManager;
         this.frameTupleAccessor = frameTupleAccessor;
         this.tupleAppender = tupleAppender;
         this.reloadBuffer = reloadBuffer;
         this.context = context;
+        this.relationName = relationName;
     }
 
     //endregion
@@ -185,7 +213,6 @@ public class Partition {
      */
     public void insertLargeTuple(int tupleId) throws HyracksDataException {
         createFileWriterIfNotExist();
-        rfWriter.open();
         if (!tupleAppender.append(frameTupleAccessor, tupleId)) {
             throw new HyracksDataException("The given tuple is too big");
         }
@@ -200,9 +227,12 @@ public class Partition {
      * @throws HyracksDataException Exception
      */
     public void spill() throws HyracksDataException {
+        if(tuplesInMemory == 0){
+            return;
+        }
         try {
             createFileWriterIfNotExist();
-            rfWriter.open();
+            bytesSpilled += bufferManager.getPhysicalSize(id);
             bufferManager.flushPartition(id, rfWriter);
             bufferManager.clearPartition(id);
             tuplesSpilled += tuplesInMemory;
@@ -220,9 +250,8 @@ public class Partition {
      * @throws HyracksDataException Exception
      */
     public void close() throws HyracksDataException {
-        spill();
-        bufferManager.clearPartition(id);
-        rfWriter.close();
+        if(tuplesInMemory > 0)
+            spill();
     }
 
     /**
@@ -236,7 +265,6 @@ public class Partition {
             return true;
         createFileReaderIfNotExist();
         try {
-            rfReader.open();
             while (rfReader.nextFrame(reloadBuffer)) {
                 frameTupleAccessor.reset(reloadBuffer.getBuffer());
                 for (int tid = 0; tid < frameTupleAccessor.getTupleCount(); tid++) {
@@ -247,6 +275,7 @@ public class Partition {
                     }
                 }
             }
+            bytesReloaded += rfReader.getFileSize();
             // Closes and deletes the run file if it is already loaded into memory.
             rfReader.setDeleteAfterClose(true);
         } catch (Exception ex) {
@@ -284,27 +313,33 @@ public class Partition {
         if (rfWriter != null) {
             CleanupUtils.fail(rfWriter, null);
         }
-        rfReader.close();
         rfReader = null;
     }
 
     /**
      * Internal method to create a File Writer if it was not created yet.
+     *
      * @throws HyracksDataException
      */
     private void createFileWriterIfNotExist() throws HyracksDataException {
         if (rfWriter == null) {
-            FileReference file = context.createManagedWorkspaceFile("RelS");
+            String fileName = String.format("$%s-Partition_%d-",relationName,id);
+            FileReference file = context.createManagedWorkspaceFile(fileName);
             rfWriter = new RunFileWriter(file, context.getIoManager());
+            rfWriter.open();
         }
     }
 
     /**
      * Internal method to create a File Reader if it was not created yet.
+     *
      * @throws HyracksDataException
      */
     private void createFileReaderIfNotExist() throws HyracksDataException {
-        rfReader = rfReader != null ? rfReader : rfWriter.createDeleteOnCloseReader();
+        if(rfWriter != null && rfReader == null){
+            rfReader = rfReader != null ? rfReader : rfWriter.createDeleteOnCloseReader();
+            rfReader.open();
+        }
     }
     //endregion
 }

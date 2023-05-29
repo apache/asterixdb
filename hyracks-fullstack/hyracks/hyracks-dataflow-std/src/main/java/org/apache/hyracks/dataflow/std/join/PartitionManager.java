@@ -7,6 +7,7 @@ import org.apache.hyracks.api.comm.VSizeFrame;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
 import org.apache.hyracks.api.dataflow.value.ITuplePartitionComputer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.control.nc.Joblet;
 import org.apache.hyracks.dataflow.std.buffermanager.IPartitionedTupleBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.PreferToSpillFullyOccupiedFramePolicy;
 
@@ -14,9 +15,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class PartitionManager {
-    private final List<Partition> partitions = new ArrayList<>();
+    public final List<Partition> partitions = new ArrayList<>();
     IFrame reloadBuffer;
     public BitSet spilledStatus;
+    private IHyracksJobletContext context;
 
     /**
      * Buffer manager, responsable for allocating frames from a memory pool to partition buffers.<br>
@@ -39,14 +41,16 @@ public class PartitionManager {
                             ITuplePartitionComputer partitionComputer,
                             IFrameTupleAccessor frameTupleAccessor,
                             IFrameTupleAppender frameTupleAppender,
-                            BitSet spilledStatus) throws HyracksDataException {
+                            BitSet spilledStatus,
+                            String relationName) throws HyracksDataException {
+        this.context = context;
         this.bufferManager = bufferManager;
         this.tupleAccessor = frameTupleAccessor;
         this.partitionComputer = partitionComputer;
         reloadBuffer = new VSizeFrame(context);
         this.spilledStatus = spilledStatus;
         for (int i = 0; i < numberOfPartitions; i++) {
-            partitions.add(new Partition(i, bufferManager, context, frameTupleAccessor, frameTupleAppender, reloadBuffer));
+            partitions.add(new Partition(i, bufferManager, context, frameTupleAccessor, frameTupleAppender, reloadBuffer, relationName));
         }
         if (getTotalMemory() > bufferManager.getBufferPoolSize()) {
             throw new HyracksDataException("Number of Partitions can't be used. The memory budget in frames is smaller than the number of partitions");
@@ -63,6 +67,22 @@ public class PartitionManager {
         return partitions.stream().mapToInt(Partition::getTuplesInMemory).sum();
     }
 
+    public int getTuplesProcessed() {
+        return partitions.stream().mapToInt(Partition::getTuplesProcessed).sum();
+    }
+
+    public int getTuplesSpilled() {
+        return partitions.stream().mapToInt(Partition::getTuplesSpilled).sum();
+    }
+
+    public int getBytesSpilled() {
+        return partitions.stream().mapToInt(Partition::getBytesSpilled).sum();
+    }
+
+    public int getBytesReloaded() {
+        return partitions.stream().mapToInt(Partition::getBytesReloaded).sum();
+    }
+
     public int getTuplesInMemoryFromResidentPartitions() {
         List<Partition> residents = getMemoryResidentPartitions();
         if (residents != null) {
@@ -73,7 +93,13 @@ public class PartitionManager {
 
     //todo: Remove this method, its unsafe Or create a Interface for Partition to hide methods that should only be accessed by PartitionManager
     public Partition getPartition(int id) {
-        return partitions.get(id);
+        for(int i =0;i<partitions.size();i++){
+            Partition p = partitions.get(i);
+            if(p.getId() == id){
+                return p;
+            }
+        }
+        return null;
     }
 
     /**
@@ -87,7 +113,7 @@ public class PartitionManager {
     }
 
     /**
-     * Get total memory used in bytes by all partitions
+     * Get total memory used in <b>BYTES</b> by all partitions.
      *
      * @return
      */
@@ -96,7 +122,7 @@ public class PartitionManager {
     }
 
     /**
-     * Insert tuple into a Partition hashed using {@code partitionComputer}.
+     * Insert tuple into a Partition, the partition that will hold this tuple is obtained using {@code partitionComputer}.
      *
      * @param tupleId Tuple id
      * @return <b>TRUE</b>True if was successfully inserted or <b>FALSE</b> if there is no more frames available in the Memory Pool.
@@ -107,6 +133,15 @@ public class PartitionManager {
         return partitions.get(partitionId).insertTuple(tupleId);
     }
 
+    /**
+     * <p>This method insert a tuple into a partition managed by this class, selecting the partition based on the {@code partitionComputer}.</p>
+     * <p>If this partition's buffer is full, and there are no buffers available in the {@code bufferManager}'s Pool than a partition will be selected to be spilled to disk.</p>
+     * <p>This partition will be seleceted based on the {@code spillPolicy}</p>
+     *
+     * @param tupleId     tuple id to be inserted.
+     * @param spillPolicy spill policy that will determine witch partition will be spilled in the case that are no buffers available.
+     * @throws HyracksDataException Exception
+     */
     public void insertTupleWithSpillPolicy(int tupleId, PreferToSpillFullyOccupiedFramePolicy spillPolicy) throws HyracksDataException {
         int partitionId = partitionComputer.partition(tupleAccessor, tupleId, getNumberOfPartitions());
         while (!partitions.get(partitionId).insertTuple(tupleId)) {
@@ -145,11 +180,15 @@ public class PartitionManager {
      * Spill a partition to Disk
      *
      * @param id id of partition to be spilled
+     * @return Number of Frames Released
      * @throws HyracksDataException Exception
      */
-    public void spillPartition(int id) throws HyracksDataException {
+    public int spillPartition(int id) throws HyracksDataException {
+        Partition p = getPartition(id);
+        int oldMemoryUsage = p.getMemoryUsed();
         partitions.get(id).spill();
         spilledStatus.set(id);
+        return (oldMemoryUsage - p.getMemoryUsed()) / context.getInitialFrameSize();
     }
 
     //region [FIND PARTITION]
@@ -161,7 +200,7 @@ public class PartitionManager {
      * @param reversed   <b>TRUE</b> to use desc or <b>FALSE</b> to use asc
      * @return
      */
-    private int bufferFilter(List<Partition> partitions, boolean reversed) {
+    private Partition bufferFilter(List<Partition> partitions, boolean reversed) {
         Comparator<Partition> bufferComparator = Comparator.comparing(Partition::getMemoryUsed);
         Comparator<Partition> tuplesInMemoryComparator = Comparator.comparing(Partition::getTuplesInMemory);
         bufferComparator = bufferComparator.thenComparing((tuplesInMemoryComparator));
@@ -169,7 +208,7 @@ public class PartitionManager {
             bufferComparator = bufferComparator.reversed();
         bufferComparator = bufferComparator.thenComparing(Partition::getId);
         partitions.sort(bufferComparator);
-        return partitions.size() > 0 ? partitions.get(0).getId() : -1;
+        return partitions.size() > 0 ? partitions.get(0) : null;
     }
 
     /**
@@ -183,7 +222,10 @@ public class PartitionManager {
      */
     public int getSpilledWithLargerBuffer() {
         List<Partition> spilled = getSpilledPartitions();
-        return bufferFilter(spilled, true);
+        Partition p = bufferFilter(spilled, true);
+        if (p == null)
+            return -1;
+        return bufferFilter(spilled, true).getId();
     }
 
     /**
@@ -197,36 +239,36 @@ public class PartitionManager {
      */
     public int getSpilledWithSmallerBuffer() {
         List<Partition> spilled = getSpilledPartitions();
-        return bufferFilter(spilled, false);
+        return bufferFilter(spilled, false).getId();
+    }
+
+    public List<Partition> getSpillCandidatePartitions(){
+        List<Partition> candidates =  partitions.stream().filter(p -> p.getFramesUsed() > 1).collect(Collectors.toList());
+        PartitionComparatorBuilder comparator = new PartitionComparatorBuilder();
+        comparator.addStatusComparator(true);
+        comparator.addBufferSizeComparator(true);
+        comparator.addInMemoryTupleComparator(true);
+        candidates.sort(comparator.build());
+        return candidates;
     }
 
     /**
-     * Get id of Resident Partition with Larger Buffer:
-     * <ul>
-     *     <li>If two or mor partitions have the same buffer size (frames) than return the one with more tuples in memory</li>
-     *     <li>If there is a tie return the lowest id</li>
-     * </ul>
-     *
-     * @return Partition id
+     * Spill Partitions until release {@code numberOfFrames}
+     * <p>This method stops spilling partitions if the number of frames is reached. Otherwise keeps spilling candidates.</p>
+     * @param numberOfFrames Frames to release
+     * @return Number of frames Released
+     * @throws HyracksDataException
      */
-    public int getResidentWithLargerBuffer(int startingFrom) {
-        List<Partition> resident = getMemoryResidentPartitions();
-        resident = resident.stream().filter(p -> p.getId() >= startingFrom).collect(Collectors.toList());
-        return bufferFilter(resident, true);
-    }
-
-    /**
-     * Get id of Spilled Partition with Smaller Buffer:
-     * <ul>
-     *     <li>If two or mor partitions have the same buffer size (frames) than return the one with less tuples in memory</li>
-     *     <li>If there is a tie return the lowest id</li>
-     * </ul>
-     *
-     * @return Partition id
-     */
-    public int getResidentWithSmallerBuffer() {
-        List<Partition> resident = getMemoryResidentPartitions();
-        return bufferFilter(resident, false);
+    public int spillToReleaseFrames(int numberOfFrames) throws HyracksDataException{
+        int framesReleased = 0;
+        List<Partition> candidates = getSpillCandidatePartitions();
+        for(Partition p:candidates){
+            framesReleased += spillPartition(p.getId());
+            if(framesReleased >= numberOfFrames){
+                break;
+            }
+        }
+        return framesReleased;
     }
 
     /**
@@ -243,29 +285,6 @@ public class PartitionManager {
         return Collections.max(partitions, comparator).getTuplesProcessed();
     }
 
-    /**
-     * Get id of the spilled with most bytes spilled that can fit its spilled tuples in {@code numberOfFrames}.
-     *
-     * @param numberOfFrames Number of Frames
-     * @return Partition's id
-     */
-    public int getBestSpilledPartitionThatFit(int numberOfFrames) {
-        // TODO: 5/24/23
-        return 0;
-    }
-
-    /**
-     * Get id of the largest partition that if spilled can free {@code numberOfFrames} .
-     *
-     * @param numberOfFrames Number of Frames
-     * @return Partition's id
-     */
-    public int getBestPartitionThatUse(int numberOfFrames) {
-        // TODO: 5/24/23
-        return 0;
-    }
-
-
     //endregion
 
     /**
@@ -276,7 +295,8 @@ public class PartitionManager {
     public void closeSpilledPartitions() throws HyracksDataException {
         List<Partition> spilledPartitions = getSpilledPartitions();
         for (Partition p : spilledPartitions) {
-            p.close();
+            if (p.getTuplesProcessed() > 0)
+                p.close();
         }
     }
 
@@ -325,4 +345,6 @@ public class PartitionManager {
             partition.cleanUp();
         }
     }
+
 }
+
