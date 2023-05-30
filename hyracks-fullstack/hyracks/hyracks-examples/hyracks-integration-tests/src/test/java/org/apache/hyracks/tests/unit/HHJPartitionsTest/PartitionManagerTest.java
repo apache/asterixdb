@@ -118,7 +118,8 @@ class PartitionManagerTest{
     @Test
     public void GetSpilledPartitionWithLargestBuffer() throws HyracksDataException{
         partitionManager.insertTuple(0);
-        assertEquals(partitionManager.getTuplesInMemory(),1);
+        partitionManager.insertTuple(1);
+        assertEquals(partitionManager.getTuplesInMemory(),2);
         partitionManager.spillPartition(1);
         assertEquals(partitionManager.getTuplesInMemory(),1);
         partitionManager.insertTuple(numberOfPartitions+1);

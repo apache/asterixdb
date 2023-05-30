@@ -221,7 +221,7 @@ public class HybridHashJoinTests {
 
     }
 
-    private class simpleTupleComparator implements ITuplePairComparator {
+    protected class simpleTupleComparator implements ITuplePairComparator {
         @Override
         public int compare(IFrameTupleAccessor outerRef, int outerIndex, IFrameTupleAccessor innerRef, int innerIndex) throws HyracksDataException {
             int tuple1 = tupleToInt(outerRef, outerIndex);

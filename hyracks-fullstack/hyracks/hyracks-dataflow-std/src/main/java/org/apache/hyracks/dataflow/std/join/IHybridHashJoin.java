@@ -43,6 +43,7 @@ public interface IHybridHashJoin {
     int getMaxProbePartitionSize();
 
     BitSet getPartitionStatus();
+    BitSet getInconsistentStatus();
 
     int getPartitionSize(int pid);
 

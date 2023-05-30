@@ -40,6 +40,7 @@ import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
 import org.apache.hyracks.dataflow.std.buffermanager.ISimpleFrameBufferManager;
 import org.apache.hyracks.dataflow.std.buffermanager.TupleInFrameListAccessor;
 import org.apache.hyracks.dataflow.std.structures.ISerializableTable;
+import org.apache.hyracks.dataflow.std.structures.SerializableHashTable;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,7 +56,7 @@ public class InMemoryHashJoin {
     private ITuplePairComparator tpComparator;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuild;
-    private final ISerializableTable table;
+    private ISerializableTable table;
     private final TuplePointer storedTuplePointer;
     private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
     private final TupleInFrameListAccessor tupleAccessor;
@@ -73,6 +74,9 @@ public class InMemoryHashJoin {
                 false, bufferManager);
     }
 
+    public void setTable(ISerializableTable table){
+        this.table = table;
+    }
     public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,
             ITuplePartitionComputer tpcBuild, boolean isLeftOuter, IMissingWriter[] missingWritersBuild,

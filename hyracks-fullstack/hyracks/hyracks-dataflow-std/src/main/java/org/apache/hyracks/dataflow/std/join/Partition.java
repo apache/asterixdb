@@ -91,6 +91,15 @@ public class Partition {
     public boolean getSpilledStatus() {
         return spilled;
     }
+    /**
+     * Reloaded Status<br>
+     * <b>TRUE</b> if Partition was reloaded at some point.<br>
+     * <b>FALSE</b> if Partition was never reloaded.
+     */
+    private boolean reloaded = false;
+    public boolean getReloadedStatus() {
+        return reloaded;
+    }
 
     /**
      * Get total number of Tuples processed in this Partition, considering both memory resident and spilled tuples.
@@ -287,6 +296,7 @@ public class Partition {
         this.tuplesInMemory += this.tuplesSpilled;
         this.tuplesSpilled = 0;
         rfWriter = null;
+        reloaded = true;
         return true;
     }
 

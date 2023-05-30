@@ -628,6 +628,10 @@ public class OptimizedHybridHashJoin implements IHybridHashJoin {
         return spilledStatus;
     }
 
+    public BitSet getInconsistentStatus() {
+        return spilledStatus;
+    }
+
     public int getPartitionSize(int pid) {
         return bufferManager.getPhysicalSize(pid);
     }
