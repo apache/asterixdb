@@ -154,7 +154,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         }
         if (checkpoints.isEmpty()) {
             LOGGER.warn("Couldn't find any checkpoint file for index {}. Content of dir are {}.", indexPath,
-                    ioManager.getMatchingFiles(indexPath, IoUtil.NO_OP_FILTER).toString());
+                    ioManager.list(indexPath, IoUtil.NO_OP_FILTER).toString());
             throw new IllegalStateException("Couldn't find any checkpoints for resource: " + indexPath);
         }
         checkpoints.sort(Comparator.comparingLong(IndexCheckpoint::getId).reversed());
@@ -182,7 +182,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
 
     private List<IndexCheckpoint> getCheckpoints() throws ClosedByInterruptException, HyracksDataException {
         List<IndexCheckpoint> checkpoints = new ArrayList<>();
-        final Collection<FileReference> checkpointFiles = ioManager.getMatchingFiles(indexPath, CHECKPOINT_FILE_FILTER);
+        final Collection<FileReference> checkpointFiles = ioManager.list(indexPath, CHECKPOINT_FILE_FILTER);
         if (!checkpointFiles.isEmpty()) {
             for (FileReference checkpointFile : checkpointFiles) {
                 try {
@@ -229,8 +229,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
 
     private void deleteHistory(long latestId, int historyToKeep) {
         try {
-            final Collection<FileReference> checkpointFiles =
-                    ioManager.getMatchingFiles(indexPath, CHECKPOINT_FILE_FILTER);
+            final Collection<FileReference> checkpointFiles = ioManager.list(indexPath, CHECKPOINT_FILE_FILTER);
             if (!checkpointFiles.isEmpty()) {
                 for (FileReference checkpointFile : checkpointFiles) {
                     if (getCheckpointIdFromFileName(checkpointFile) < (latestId - historyToKeep)) {

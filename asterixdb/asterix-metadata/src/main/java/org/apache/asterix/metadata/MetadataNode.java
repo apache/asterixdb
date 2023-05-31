@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
@@ -116,6 +117,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback.Operation;
+import org.apache.asterix.transaction.management.opcallbacks.NoOpModificationOpCallback;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
@@ -161,6 +163,8 @@ public class MetadataNode implements IMetadataNode {
     private transient MetadataTupleTranslatorProvider tupleTranslatorProvider;
     // extension only
     private Map<ExtensionMetadataDatasetId, ExtensionMetadataDataset<?>> extensionDatasets;
+    private final ReentrantLock metadataModificationLock = new ReentrantLock(true);
+    private boolean atomicNoWAL;
 
     public static final MetadataNode INSTANCE = new MetadataNode();
 
@@ -184,6 +188,7 @@ public class MetadataNode implements IMetadataNode {
             }
         }
         this.txnIdFactory = new CachingTxnIdFactory(runtimeContext);
+        atomicNoWAL = runtimeContext.isCloudDeployment();
     }
 
     public int getMetadataStoragePartition() {
@@ -192,7 +197,8 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void beginTransaction(TxnId transactionId) {
-        TransactionOptions options = new TransactionOptions(AtomicityLevel.ATOMIC);
+        AtomicityLevel lvl = atomicNoWAL ? AtomicityLevel.ATOMIC_NO_WAL : AtomicityLevel.ATOMIC;
+        TransactionOptions options = new TransactionOptions(lvl);
         transactionSubsystem.getTransactionManager().beginTransaction(transactionId, options);
     }
 
@@ -501,11 +507,7 @@ public class MetadataNode implements IMetadataNode {
         if (!force) {
             confirmFullTextFilterCanBeDeleted(txnId, dataverseName, filterName);
         }
-
         try {
-            FullTextFilterMetadataEntityTupleTranslator translator =
-                    tupleTranslatorProvider.getFullTextFilterTupleTranslator(true);
-
             ITupleReference key = createTuple(dataverseName.getCanonicalForm(), filterName);
             deleteTupleFromIndex(txnId, MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET, key);
         } catch (HyracksDataException e) {
@@ -612,7 +614,7 @@ public class MetadataNode implements IMetadataNode {
             IModificationOperationCallback modCallback = createIndexModificationCallback(op, txnCtx, metadataIndex);
             IIndexAccessParameters iap = new IndexAccessParameters(modCallback, NoOpOperationCallback.INSTANCE);
             ILSMIndexAccessor indexAccessor = lsmIndex.createAccessor(iap);
-            txnCtx.setWriteTxn(true);
+            txnCtx.acquireExclusiveWriteLock(metadataModificationLock);
             txnCtx.register(metadataIndex.getResourceId(),
                     StoragePathUtil.getPartitionNumFromRelativePath(resourceName), lsmIndex, modCallback,
                     metadataIndex.isPrimaryIndex());
@@ -640,6 +642,12 @@ public class MetadataNode implements IMetadataNode {
         switch (indexOp) {
             case INSERT:
             case DELETE:
+                if (!txnCtx.hasWAL()) {
+                    return new NoOpModificationOpCallback(metadataIndex.getDatasetId(),
+                            metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
+                            transactionSubsystem, metadataIndex.getResourceId(), metadataStoragePartition,
+                            ResourceType.LSM_BTREE, indexOp);
+                }
                 /*
                  * Regardless of the index type (primary or secondary index), secondary index modification
                  * callback is given. This is still correct since metadata index operation doesn't require
@@ -650,6 +658,12 @@ public class MetadataNode implements IMetadataNode {
                         transactionSubsystem, metadataIndex.getResourceId(), metadataStoragePartition,
                         ResourceType.LSM_BTREE, indexOp);
             case UPSERT:
+                if (!txnCtx.hasWAL()) {
+                    return new NoOpModificationOpCallback(metadataIndex.getDatasetId(),
+                            metadataIndex.getPrimaryKeyIndexes(), txnCtx, transactionSubsystem.getLockManager(),
+                            transactionSubsystem, metadataIndex.getResourceId(), metadataStoragePartition,
+                            ResourceType.LSM_BTREE, indexOp);
+                }
                 return new UpsertOperationCallback(metadataIndex.getDatasetId(), metadataIndex.getPrimaryKeyIndexes(),
                         txnCtx, transactionSubsystem.getLockManager(), transactionSubsystem,
                         metadataIndex.getResourceId(), metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);

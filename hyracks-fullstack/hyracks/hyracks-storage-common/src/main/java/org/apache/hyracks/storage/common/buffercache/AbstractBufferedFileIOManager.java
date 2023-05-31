@@ -42,8 +42,8 @@ public abstract class AbstractBufferedFileIOManager {
 
     protected final BufferCache bufferCache;
     protected final IPageReplacementStrategy pageReplacementStrategy;
+    protected final IOManager ioManager;
     private final BlockingQueue<BufferCacheHeaderHelper> headerPageCache;
-    private final IOManager ioManager;
 
     private IFileHandle fileHandle;
     private volatile boolean hasOpen;
@@ -193,7 +193,7 @@ public abstract class AbstractBufferedFileIOManager {
         }
     }
 
-    public static void deleteFile(FileReference fileRef) throws HyracksDataException {
+    public static void deleteFile(FileReference fileRef, IIOManager ioManager) throws HyracksDataException {
         HyracksDataException savedEx = null;
 
         /*
@@ -206,7 +206,7 @@ public abstract class AbstractBufferedFileIOManager {
                 final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
                 final FileReference lafFileRef = cFileRef.getLAFFileReference();
                 if (lafFileRef.getFile().exists()) {
-                    IoUtil.delete(lafFileRef);
+                    ioManager.delete(lafFileRef);
                 }
             }
         } catch (HyracksDataException e) {
@@ -214,7 +214,7 @@ public abstract class AbstractBufferedFileIOManager {
         }
 
         try {
-            IoUtil.delete(fileRef);
+            ioManager.delete(fileRef);
         } catch (HyracksDataException e) {
             if (savedEx != null) {
                 savedEx.addSuppressed(e);

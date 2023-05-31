@@ -517,27 +517,13 @@ public class IOManager implements IIOManager {
 
     @Override
     public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
-        /*
-         * Throws an error if this abstract pathname does not denote a directory, or if an I/O error occurs.
-         * Returns an empty set if the file does not exist, otherwise, returns the files in the specified directory
-         */
         Set<FileReference> listedFiles = new HashSet<>();
         if (!dir.getFile().exists()) {
             return listedFiles;
         }
-
-        String[] files = dir.getFile().list(filter);
-        if (files == null) {
-            if (!dir.getFile().canRead()) {
-                throw HyracksDataException.create(ErrorCode.CANNOT_READ_FILE, dir);
-            } else if (!dir.getFile().isDirectory()) {
-                throw HyracksDataException.create(ErrorCode.FILE_IS_NOT_DIRECTORY, dir);
-            }
-            throw HyracksDataException.create(ErrorCode.UNIDENTIFIED_IO_ERROR_READING_FILE, dir);
-        }
-
-        for (String file : files) {
-            listedFiles.add(dir.getChild(file));
+        Collection<File> files = IoUtil.getMatchingFiles(dir.getFile().toPath(), filter);
+        for (File file : files) {
+            listedFiles.add(resolveAbsolutePath(file.getAbsolutePath()));
         }
         return listedFiles;
     }
@@ -576,23 +562,6 @@ public class IOManager implements IIOManager {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-    }
-
-    @Override
-    public Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter)
-            throws HyracksDataException {
-        File rootFile = root.getFile();
-        if (!rootFile.exists() || !rootFile.isDirectory()) {
-            return Collections.emptyList();
-        }
-
-        Collection<File> files = IoUtil.getMatchingFiles(rootFile.toPath(), filter);
-        Set<FileReference> fileReferences = new HashSet<>();
-        for (File file : files) {
-            fileReferences.add(resolveAbsolutePath(file.getAbsolutePath()));
-        }
-
-        return fileReferences;
     }
 
     @Override

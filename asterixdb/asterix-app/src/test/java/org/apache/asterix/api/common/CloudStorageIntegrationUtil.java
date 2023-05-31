@@ -27,7 +27,7 @@ public class CloudStorageIntegrationUtil extends AsterixHyracksIntegrationUtil {
     public static final String CONFIG_FILE = joinPath(RESOURCES_PATH, "cc-cloud-storage.conf");
 
     public static void main(String[] args) throws Exception {
-        //        CloudUtils.startS3CloudEnvironment();
+        CloudUtils.startS3CloudEnvironment();
         final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         try {
             integrationUtil.run(Boolean.getBoolean("cleanup.start"), Boolean.getBoolean("cleanup.shutdown"),

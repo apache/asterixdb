@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.transactions;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 
@@ -145,4 +147,16 @@ public interface ITransactionContext {
      * so that any resources held by the transaction may be released
      */
     void complete();
+
+    /**
+     * Acquires {@code lock} write lock and sets the transactions as a write transaction
+     * @param lock
+     */
+    void acquireExclusiveWriteLock(ReentrantLock lock);
+
+    /**
+     * Determines if this tx uses WAL
+     * @return true if this tx uses WAL. Otherwise, false.
+     */
+    boolean hasWAL();
 }

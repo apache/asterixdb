@@ -23,8 +23,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.asterix.common.context.ITransactionOperationTracker;
+import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
@@ -42,6 +44,7 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     private final AtomicInteger txnState;
     private final AtomicBoolean isWriteTxn;
     private volatile boolean isTimeout;
+    private ReentrantLock exclusiveLock;
 
     protected AbstractTransactionContext(TxnId txnId) {
         this.txnId = txnId;
@@ -90,6 +93,21 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
     }
 
     @Override
+    public void acquireExclusiveWriteLock(ReentrantLock exclusiveLock) {
+        if (isWriteTxn.get()) {
+            return;
+        }
+        try {
+            exclusiveLock.lockInterruptibly();
+            this.exclusiveLock = exclusiveLock;
+            setWriteTxn(true);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ACIDException(e);
+        }
+    }
+
+    @Override
     public void setWriteTxn(boolean isWriteTxn) {
         this.isWriteTxn.set(isWriteTxn);
     }
@@ -113,6 +131,9 @@ public abstract class AbstractTransactionContext implements ITransactionContext 
         } finally {
             synchronized (txnOpTrackers) {
                 txnOpTrackers.forEach((resource, opTracker) -> opTracker.afterTransaction(resource));
+            }
+            if (exclusiveLock != null) {
+                exclusiveLock.unlock();
             }
         }
     }

@@ -23,7 +23,6 @@ import java.io.FilenameFilter;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.WritableByteChannel;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -125,6 +124,13 @@ public interface IIOManager extends Closeable {
 
     Set<FileReference> list(FileReference dir) throws HyracksDataException;
 
+    /**
+     * Lists the files matching {@code filter} recursively starting from {@code dir}
+     * @param dir
+     * @param filter
+     * @return the matching files
+     * @throws HyracksDataException
+     */
     Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException;
 
     void overwrite(FileReference fileRef, byte[] bytes) throws ClosedByInterruptException, HyracksDataException;
@@ -135,9 +141,6 @@ public interface IIOManager extends Closeable {
             throws HyracksDataException;
 
     void deleteDirectory(FileReference root) throws HyracksDataException;
-
-    // TODO: Remove and use list
-    Collection<FileReference> getMatchingFiles(FileReference root, FilenameFilter filter) throws HyracksDataException;
 
     boolean exists(FileReference fileRef) throws HyracksDataException;
 

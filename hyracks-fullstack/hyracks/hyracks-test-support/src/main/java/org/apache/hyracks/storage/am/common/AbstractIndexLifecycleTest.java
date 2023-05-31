@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.am.common;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.util.Log4j2Monitor;
 import org.apache.logging.log4j.Level;
@@ -97,7 +96,6 @@ public abstract class AbstractIndexLifecycleTest {
         index.destroy();
         Assert.assertFalse(persistentStateExists());
         index.destroy();
-        Assert.assertTrue(Log4j2Monitor.count(IoUtil.FILE_NOT_FOUND_MSG) > 0);
         Assert.assertFalse(persistentStateExists());
     }
 

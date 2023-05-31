@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.common.api.IIndexBuilder;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.common.IIndex;
@@ -101,7 +100,7 @@ public class IndexBuilder implements IIndexBuilder {
                     LOGGER.warn(
                             "Deleting {} on index create. The index is not registered but the file exists in the filesystem",
                             resolvedResourceRef);
-                    IoUtil.delete(resolvedResourceRef);
+                    ctx.getIoManager().delete(resolvedResourceRef);
                 }
                 index = resource.createInstance(ctx);
             }

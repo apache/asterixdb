@@ -157,7 +157,7 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     @Override
     public void open(FileReference fileRef) throws HyracksDataException {
         final CompressedFileReference cFileRef = (CompressedFileReference) fileRef;
-        compressedFileManager = new CompressedFileManager(bufferCache, cFileRef);
+        compressedFileManager = new CompressedFileManager(bufferCache, cFileRef, ioManager);
         compressedFileManager.open();
         super.open(fileRef);
     }

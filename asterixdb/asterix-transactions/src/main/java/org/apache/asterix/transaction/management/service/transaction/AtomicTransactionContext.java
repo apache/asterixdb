@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,6 +41,7 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     private final Map<Long, ILSMOperationTracker> opTrackers = new ConcurrentHashMap<>();
     private final Map<Long, AtomicInteger> indexPendingOps = new ConcurrentHashMap<>();
     private final Map<Long, IModificationOperationCallback> callbacks = new ConcurrentHashMap<>();
+    protected final Set<ILSMOperationTracker> modifiedIndexes = Collections.synchronizedSet(new HashSet<>());
 
     public AtomicTransactionContext(TxnId txnId) {
         super(txnId);
@@ -64,6 +68,7 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
     @Override
     public void beforeOperation(long resourceId) {
         indexPendingOps.get(resourceId).incrementAndGet();
+        modifiedIndexes.add(opTrackers.get(resourceId));
     }
 
     @Override
@@ -109,5 +114,10 @@ public class AtomicTransactionContext extends AbstractTransactionContext {
         }
         AtomicTransactionContext that = (AtomicTransactionContext) o;
         return this.txnId.equals(that.txnId);
+    }
+
+    @Override
+    public boolean hasWAL() {
+        return true;
     }
 }

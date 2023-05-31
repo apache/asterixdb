@@ -81,9 +81,11 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         final ITransactionContext txnCtx = getTransactionContext(txnId);
         try {
             if (txnCtx.isWriteTxn()) {
-                LogRecord logRecord = new LogRecord();
-                TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, true);
-                txnSubsystem.getLogManager().log(logRecord);
+                if (txnCtx.hasWAL()) {
+                    LogRecord logRecord = new LogRecord();
+                    TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, true);
+                    txnSubsystem.getLogManager().log(logRecord);
+                }
                 txnCtx.setTxnState(ITransactionManager.COMMITTED);
             }
         } catch (Exception e) {
@@ -103,13 +105,15 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         final ITransactionContext txnCtx = getTransactionContext(txnId);
         try {
             if (txnCtx.isWriteTxn()) {
-                if (txnCtx.getFirstLSN() != TERMINAL_LSN) {
-                    LogRecord logRecord = new LogRecord();
-                    TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
-                    txnSubsystem.getLogManager().log(logRecord);
-                    txnSubsystem.getCheckpointManager().secure(txnId);
+                if (txnCtx.hasWAL()) {
+                    if (txnCtx.getFirstLSN() != TERMINAL_LSN) {
+                        LogRecord logRecord = new LogRecord();
+                        TransactionUtil.formJobTerminateLogRecord(txnCtx, logRecord, false);
+                        txnSubsystem.getLogManager().log(logRecord);
+                        txnSubsystem.getCheckpointManager().secure(txnId);
+                    }
+                    txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
                 }
-                txnSubsystem.getRecoveryManager().rollbackTransaction(txnCtx);
                 txnCtx.setTxnState(ITransactionManager.ABORTED);
             }
         } catch (HyracksDataException e) {

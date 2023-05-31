@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -37,6 +38,7 @@ import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.ComponentState;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -295,6 +297,31 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     @Override
     public String toString() {
         return "Dataset (" + datasetID + "), Partition (" + partition + ")";
+    }
+
+    public void deleteMemoryComponent() throws HyracksDataException {
+        Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
+        ILSMIndex primaryLsmIndex = null;
+        for (ILSMIndex lsmIndex : indexes) {
+            if (lsmIndex.isPrimaryIndex()) {
+                if (lsmIndex.isCurrentMutableComponentEmpty()) {
+                    LOGGER.info("Primary index on dataset {} and partition {} is empty... skipping delete",
+                            dsInfo.getDatasetID(), partition);
+                    return;
+                }
+                primaryLsmIndex = lsmIndex;
+                break;
+            }
+        }
+        Objects.requireNonNull(primaryLsmIndex, "no primary index found in " + indexes);
+        idGenerator.refresh();
+        ILSMComponentId nextComponentId = idGenerator.getId();
+        Map<String, Object> flushMap = new HashMap<>();
+        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, 0L);
+        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
+        ILSMIndexAccessor accessor = primaryLsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        accessor.getOpContext().setParameters(flushMap);
+        accessor.deleteComponents(c -> c.getType() == ILSMComponent.LSMComponentType.MEMORY);
     }
 
     private boolean canSafelyFlush() {

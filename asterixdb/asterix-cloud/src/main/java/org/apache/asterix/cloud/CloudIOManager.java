@@ -185,7 +185,8 @@ public class CloudIOManager extends IOManager {
 
         // Add the remaining files that are not stored locally (if any)
         for (String cloudFile : cloudFiles) {
-            localFiles.add(dir.getChild(IoUtil.getFileNameFromPath(cloudFile)));
+            localFiles.add(new FileReference(dir.getDeviceHandle(),
+                    cloudFile.substring(cloudFile.indexOf(dir.getRelativePath()))));
         }
         return new HashSet<>(localFiles);
     }
@@ -244,12 +245,11 @@ public class CloudIOManager extends IOManager {
         return super.doSyncRead(fHandle, offset, data);
     }
 
-    // TODO: We need to download this too
     @Override
     public byte[] readAllBytes(FileReference fileRef) throws HyracksDataException {
         if (!fileRef.getFile().exists()) {
-            // TODO(htowaileb): if it does not exist, download (lazy)
-            // TODO(htowaileb): make sure downloading the file is synchronous since many can request it at the same time
+            IFileHandle open = open(fileRef, FileReadWriteMode.READ_WRITE, FileSyncMode.METADATA_SYNC_DATA_SYNC);
+            fileRef = open.getFileReference();
         }
         return super.readAllBytes(fileRef);
     }

@@ -43,6 +43,10 @@ public interface ITransactionManager {
          */
         ATOMIC,
         /**
+         * all records are committed and persisted to disk or nothing
+         */
+        ATOMIC_NO_WAL,
+        /**
          * any record with entity commit log
          */
         ENTITY_LEVEL

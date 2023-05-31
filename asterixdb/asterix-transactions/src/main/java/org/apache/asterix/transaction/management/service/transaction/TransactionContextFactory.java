@@ -34,6 +34,8 @@ public class TransactionContextFactory {
         switch (atomicityLevel) {
             case ATOMIC:
                 return new AtomicTransactionContext(txnId);
+            case ATOMIC_NO_WAL:
+                return new AtomicNoWALTransactionContext(txnId);
             case ENTITY_LEVEL:
                 return new EntityLevelTransactionContext(txnId);
             default:

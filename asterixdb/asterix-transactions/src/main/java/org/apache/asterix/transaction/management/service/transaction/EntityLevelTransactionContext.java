@@ -113,4 +113,9 @@ public class EntityLevelTransactionContext extends AbstractTransactionContext {
         EntityLevelTransactionContext that = (EntityLevelTransactionContext) o;
         return this.txnId.equals(that.txnId);
     }
+
+    @Override
+    public boolean hasWAL() {
+        return true;
+    }
 }

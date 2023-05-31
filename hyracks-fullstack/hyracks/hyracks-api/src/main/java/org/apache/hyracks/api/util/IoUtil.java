@@ -29,8 +29,11 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -193,5 +196,19 @@ public class IoUtil {
 
     public static String getFileNameFromPath(String path) {
         return path.substring(path.lastIndexOf('/') + 1);
+    }
+
+    public static Collection<FileReference> getMatchingChildren(FileReference root, FilenameFilter filter) {
+        if (!root.getFile().isDirectory()) {
+            throw new IllegalArgumentException("Parameter 'root' is not a directory: " + root);
+        }
+        Objects.requireNonNull(filter);
+        List<FileReference> files = new ArrayList<>();
+        String[] matchingFiles = root.getFile().list(filter);
+        if (matchingFiles != null) {
+            files.addAll(Arrays.stream(matchingFiles).map(pDir -> new FileReference(root.getDeviceHandle(), pDir))
+                    .collect(Collectors.toList()));
+        }
+        return files;
     }
 }

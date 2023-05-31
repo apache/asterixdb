@@ -23,6 +23,7 @@ import java.util.EnumSet;
 
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPageInternal;
@@ -64,6 +65,7 @@ public class CompressedFileManager {
     private final IBufferCache bufferCache;
     private final ICompressorDecompressor compressorDecompressor;
     private final CompressedFileReference fileRef;
+    private final IIOManager ioManager;
 
     private int fileId;
     private State state;
@@ -71,12 +73,13 @@ public class CompressedFileManager {
 
     private LAFWriter lafWriter;
 
-    public CompressedFileManager(IBufferCache bufferCache, CompressedFileReference fileRef) {
+    public CompressedFileManager(IBufferCache bufferCache, CompressedFileReference fileRef, IIOManager ioManager) {
         state = State.CLOSED;
         totalNumOfPages = 0;
         this.bufferCache = bufferCache;
         this.fileRef = fileRef;
         this.compressorDecompressor = fileRef.getCompressorDecompressor();
+        this.ioManager = ioManager;
     }
 
     /* ************************
@@ -99,7 +102,7 @@ public class CompressedFileManager {
         ensureState(CLOSED);
 
         boolean open = false;
-        if (fileRef.getLAFFileReference().getFile().exists()) {
+        if (ioManager.exists(fileRef.getLAFFileReference())) {
             fileId = bufferCache.openFile(fileRef.getLAFFileReference());
             open = true;
         } else {

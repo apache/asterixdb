@@ -71,7 +71,7 @@ public class CheckpointPartitionIndexesTask implements IReplicaTask {
             // Get most recent sequence of existing files to avoid deletion
             FileReference indexPath = StoragePathUtil.getIndexPath(ioManager, ref);
             Collection<FileReference> files =
-                    ioManager.getMatchingFiles(indexPath, AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
+                    ioManager.list(indexPath, AbstractLSMIndexFileManager.COMPONENT_FILES_FILTER);
             if (files == null) {
                 throw HyracksDataException
                         .create(new IOException(indexPath + " is not a directory or an IO Error occurred"));
