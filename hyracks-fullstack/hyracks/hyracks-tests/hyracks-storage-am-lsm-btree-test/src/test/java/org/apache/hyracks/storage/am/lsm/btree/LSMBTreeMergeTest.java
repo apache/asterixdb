@@ -56,7 +56,8 @@ public class LSMBTreeMergeTest extends LSMBTreeMergeTestDriver {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), filtered, true, false);
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), filtered, true, false,
+                harness.getCompressorDecompressorFactory());
     }
 
     @Override

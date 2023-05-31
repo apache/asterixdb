@@ -82,7 +82,8 @@ public class LSMBTreeComponentLifecycleTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 scheduler, ioCallbackFactory, harness.getPageWriteCallbackFactory(),
-                harness.getMetadataPageManagerFactory(), false, true, false);
+                harness.getMetadataPageManagerFactory(), false, true, false,
+                harness.getCompressorDecompressorFactory());
     }
 
     private OrderedIndexTestContext createTestContext(ISerializerDeserializer[] fieldSerdes, int numKeys)
@@ -425,7 +426,7 @@ public class LSMBTreeComponentLifecycleTest {
 
     private class User extends SingleThreadEventProcessor<Request> {
 
-        private Semaphore step = new Semaphore(0);
+        private final Semaphore step = new Semaphore(0);
 
         public User(String username) {
             super(username);

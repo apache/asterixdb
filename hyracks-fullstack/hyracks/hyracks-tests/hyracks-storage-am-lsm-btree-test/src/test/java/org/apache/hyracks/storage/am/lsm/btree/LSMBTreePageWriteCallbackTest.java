@@ -44,6 +44,7 @@ import org.apache.hyracks.storage.common.IResource;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IRateLimiter;
 import org.apache.hyracks.storage.common.buffercache.SleepRateLimiter;
+import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -53,14 +54,15 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
 
     private final OrderedIndexTestUtils orderedIndexTestUtils;
 
-    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness();
+    // Uses NoOp compressor/decompressor to mitigate assertions against number of pages
+    private final LSMBTreeTestHarness harness = new LSMBTreeTestHarness(NoOpCompressorDecompressorFactory.INSTANCE);
 
     private final int PAGES_PER_FORCE = 16;
 
     private int pageCounter = 0;
     private LSMIndexPageWriteCallback lastCallback = null;
     private final IRateLimiter testLimiter = new IRateLimiter() {
-        IRateLimiter limiter = SleepRateLimiter.create(100 * 1000);
+        final IRateLimiter limiter = SleepRateLimiter.create(100 * 1000);
 
         @Override
         public void setRate(double ratePerSecond) {
@@ -112,7 +114,8 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, numKeys,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(), pageWriteCallbackFactory,
-                harness.getMetadataPageManagerFactory(), false, true, false);
+                harness.getMetadataPageManagerFactory(), false, true, false,
+                harness.getCompressorDecompressorFactory());
     }
 
     @Override

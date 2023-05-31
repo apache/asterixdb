@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -77,15 +78,18 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
     @Override
     public List<LSMComponentFileReferences> cleanupAndGetValidFiles() throws HyracksDataException {
         List<LSMComponentFileReferences> validFiles = new ArrayList<>();
-        ArrayList<IndexComponentFileReference> allBTreeFiles = new ArrayList<>();
-        ArrayList<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
+        List<IndexComponentFileReference> allBTreeFiles = new ArrayList<>();
+        List<IndexComponentFileReference> allBloomFilterFiles = new ArrayList<>();
         // List of valid BTree files.
         cleanupAndGetValidFilesInternal(BTREE_FILTER, btreeFactory, allBTreeFiles, btreeFactory.getBufferCache());
-        HashSet<String> btreeFilesSet = new HashSet<>();
+        Set<String> btreeFilesSet = new HashSet<>();
         for (IndexComponentFileReference cmpFileName : allBTreeFiles) {
             int index = cmpFileName.getFileName().lastIndexOf(DELIMITER);
             btreeFilesSet.add(cmpFileName.getFileName().substring(0, index));
         }
+
+        // Clean up LAFs if any
+        cleanLookAsideFiles(btreeFilesSet, btreeFactory.getBufferCache());
 
         if (hasBloomFilter) {
             validateFiles(btreeFilesSet, allBloomFilterFiles, BLOOM_FILTER_FILTER, null, btreeFactory.getBufferCache());
@@ -156,11 +160,11 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
 
         // Sort valid files in reverse lexicographical order, such that newer
         // files come first.
-        Collections.sort(validComparableBTreeFiles, recencyCmp);
+        validComparableBTreeFiles.sort(recencyCmp);
         Iterator<IndexComponentFileReference> btreeFileIter = validComparableBTreeFiles.iterator();
         Iterator<IndexComponentFileReference> bloomFilterFileIter = null;
         if (hasBloomFilter) {
-            Collections.sort(validComparableBloomFilterFiles, recencyCmp);
+            validComparableBloomFilterFiles.sort(recencyCmp);
             bloomFilterFileIter = validComparableBloomFilterFiles.iterator();
         }
         IndexComponentFileReference cmpBTreeFileName = null;

@@ -43,10 +43,7 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
     @Override
     protected boolean persistentStateExists() throws Exception {
         // make sure all of the directories exist
-        if (!harness.getFileReference().getFile().exists()) {
-            return false;
-        }
-        return true;
+        return harness.getFileReference().getFile().exists();
     }
 
     @Override
@@ -61,7 +58,8 @@ public class LSMBTreeLifecycleTest extends AbstractIndexLifecycleTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, fieldSerdes.length,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false);
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false,
+                harness.getCompressorDecompressorFactory());
         index = testCtx.getIndex();
     }
 

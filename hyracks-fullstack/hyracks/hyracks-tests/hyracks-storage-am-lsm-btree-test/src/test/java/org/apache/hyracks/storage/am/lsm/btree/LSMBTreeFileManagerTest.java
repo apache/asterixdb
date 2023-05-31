@@ -22,6 +22,7 @@ import java.io.File;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.IntegerSerializerDeserializer;
@@ -30,6 +31,7 @@ import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeWithBloomFilterDisk
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestContext;
 import org.apache.hyracks.storage.am.lsm.btree.util.LSMBTreeTestHarness;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +58,8 @@ public class LSMBTreeFileManagerTest {
                 harness.getFileReference(), harness.getDiskBufferCache(), fieldSerdes, 1,
                 harness.getBoomFilterFalsePositiveRate(), harness.getMergePolicy(), harness.getOperationTracker(),
                 harness.getIOScheduler(), harness.getIOOperationCallbackFactory(),
-                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false);
+                harness.getPageWriteCallbackFactory(), harness.getMetadataPageManagerFactory(), false, true, false,
+                harness.getCompressorDecompressorFactory());
         ctx.getIndex().create();
         ctx.getIndex().activate();
 
@@ -80,16 +83,22 @@ public class LSMBTreeFileManagerTest {
         ctx.getIndex().deactivate();
 
         // Delete the btree file and keep the bloom filter file from the disk component
-        LSMBTreeWithBloomFilterDiskComponent ilsmDiskComponent =
+        LSMBTreeWithBloomFilterDiskComponent diskComponent =
                 (LSMBTreeWithBloomFilterDiskComponent) btree.getDiskComponents().get(0);
-        ilsmDiskComponent.getIndex().getFileReference().delete();
+        CompressedFileReference fileReference = (CompressedFileReference) diskComponent.getIndex().getFileReference();
 
-        File bloomFilterFile = ilsmDiskComponent.getBloomFilter().getFileReference().getFile().getAbsoluteFile();
-        Assert.assertEquals("Check bloom filter file exists", true, bloomFilterFile.exists());
+        // Only delete the index file
+        IoUtil.delete(fileReference.getFile());
+        Assert.assertTrue("Check LAF exists", fileReference.getLAFFileReference().getFile().exists());
+
+        File bloomFilterFile = diskComponent.getBloomFilter().getFileReference().getFile().getAbsoluteFile();
+        Assert.assertTrue("Check bloom filter file exists", bloomFilterFile.exists());
 
         // Activating the index again should delete the orphaned bloom filter file as well as the disk component
         ctx.getIndex().activate();
-        Assert.assertEquals("Check bloom filter file deleted", false, bloomFilterFile.exists());
+        Assert.assertFalse("Check bloom filter file deleted", bloomFilterFile.exists());
         Assert.assertEquals("Check disk components", 0, btree.getDiskComponents().size());
+        // After index activation, the dangling LAF should be removed
+        Assert.assertFalse("Check LAF deleted", fileReference.getLAFFileReference().getFile().exists());
     }
 }

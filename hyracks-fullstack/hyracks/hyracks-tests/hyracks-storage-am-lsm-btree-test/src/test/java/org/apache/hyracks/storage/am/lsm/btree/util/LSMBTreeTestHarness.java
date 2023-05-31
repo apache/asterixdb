@@ -27,6 +27,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -50,6 +51,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ThreadCountingTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.VirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressorFactory;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
 import org.apache.logging.log4j.LogManager;
@@ -71,6 +73,7 @@ public class LSMBTreeTestHarness {
     protected final int hyracksFrameSize;
     protected final double bloomFilterFalsePositiveRate;
     protected final int numMutableComponents;
+    private final ICompressorDecompressorFactory compressorDecompressorFactory;
 
     protected IOManager ioManager;
     protected int ioDeviceId;
@@ -91,6 +94,10 @@ public class LSMBTreeTestHarness {
     protected FileReference file;
 
     public LSMBTreeTestHarness() {
+        this(new SnappyCompressorDecompressorFactory());
+    }
+
+    public LSMBTreeTestHarness(ICompressorDecompressorFactory compressorDecompressorFactory) {
         this.diskPageSize = AccessMethodTestsConfig.LSM_BTREE_DISK_PAGE_SIZE;
         this.diskNumPages = AccessMethodTestsConfig.LSM_BTREE_DISK_NUM_PAGES;
         this.diskMaxOpenFiles = AccessMethodTestsConfig.LSM_BTREE_DISK_MAX_OPEN_FILES;
@@ -105,6 +112,7 @@ public class LSMBTreeTestHarness {
         this.metadataPageManagerFactory = AppendOnlyLinkedMetadataPageManagerFactory.INSTANCE;
         this.ioOpCallbackFactory = new CountingIoOperationCallbackFactory();
         this.pageWriteCallbackFactory = NoOpPageWriteCallbackFactory.INSTANCE;
+        this.compressorDecompressorFactory = compressorDecompressorFactory;
     }
 
     public void setUp() throws HyracksDataException {
@@ -223,5 +231,9 @@ public class LSMBTreeTestHarness {
 
     public IMetadataPageManagerFactory getMetadataPageManagerFactory() {
         return metadataPageManagerFactory;
+    }
+
+    public ICompressorDecompressorFactory getCompressorDecompressorFactory() {
+        return compressorDecompressorFactory;
     }
 }

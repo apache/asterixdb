@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.btree.util;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.hyracks.api.compression.ICompressorDecompressorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
@@ -42,7 +43,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
-import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
 import org.apache.hyracks.util.trace.ITraceCategoryRegistry;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.TraceCategoryRegistry;
@@ -82,7 +82,8 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
             ILSMIOOperationScheduler ioScheduler, ILSMIOOperationCallbackFactory ioOpCallbackFactory,
             ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             IMetadataPageManagerFactory metadataPageManagerFactory, boolean filtered, boolean needKeyDupCheck,
-            boolean updateAware) throws HyracksDataException {
+            boolean updateAware, ICompressorDecompressorFactory compressorDecompressorFactory)
+            throws HyracksDataException {
         ITypeTraits[] typeTraits = SerdeUtils.serdesToTypeTraits(fieldSerdes);
         IBinaryComparatorFactory[] cmpFactories = SerdeUtils.serdesToComparatorFactories(fieldSerdes, numKeyFields);
         int[] bloomFilterKeyFields = new int[numKeyFields];
@@ -103,7 +104,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
                     ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, needKeyDupCheck, filterTypeTraits,
                     filterCmp, btreefields, filterfields, true, metadataPageManagerFactory, updateAware, ITracer.NONE,
-                    NoOpCompressorDecompressorFactory.INSTANCE, true, null, null);
+                    compressorDecompressorFactory, true, null, null);
         } else {
             lsmTree = LSMBTreeUtil.createLSMTree(ioManager, virtualBufferCaches, file, diskBufferCache, typeTraits,
                     cmpFactories, bloomFilterKeyFields, bloomFilterFalsePositiveRate, mergePolicy, opTracker,
@@ -111,7 +112,7 @@ public final class LSMBTreeTestContext extends OrderedIndexTestContext {
                     true, metadataPageManagerFactory,
                     updateAware, new Tracer(LSMBTreeTestContext.class.getSimpleName(),
                             ITraceCategoryRegistry.CATEGORIES_ALL, new TraceCategoryRegistry()),
-                    NoOpCompressorDecompressorFactory.INSTANCE, true, null, null);
+                    compressorDecompressorFactory, true, null, null);
         }
         LSMBTreeTestContext testCtx = new LSMBTreeTestContext(fieldSerdes, lsmTree, filtered);
         return testCtx;

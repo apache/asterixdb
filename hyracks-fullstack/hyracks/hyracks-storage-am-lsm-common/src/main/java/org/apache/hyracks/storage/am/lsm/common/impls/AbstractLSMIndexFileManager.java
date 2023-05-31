@@ -23,7 +23,6 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -82,6 +81,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     public static final FilenameFilter COMPONENT_FILES_FILTER = (dir, name) -> !name.startsWith(".");
     protected static FilenameFilter BLOOM_FILTER_FILTER =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BLOOM_FILTER_SUFFIX);
+    protected static FilenameFilter LAF_FILTER = (dir, name) -> !name.startsWith(".") && name.endsWith(LAF_SUFFIX);
     protected static final Comparator<String> cmp = new FileNameComparator();
 
     protected final IIOManager ioManager;
@@ -137,7 +137,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
     }
 
     protected void cleanupAndGetValidFilesInternal(FilenameFilter filter,
-            TreeIndexFactory<? extends ITreeIndex> treeFactory, ArrayList<IndexComponentFileReference> allFiles,
+            TreeIndexFactory<? extends ITreeIndex> treeFactory, List<IndexComponentFileReference> allFiles,
             IBufferCache bufferCache) throws HyracksDataException {
         Set<FileReference> files = ioManager.list(baseDir, filter);
         for (FileReference filePath : files) {
@@ -155,7 +155,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
     }
 
-    protected void validateFiles(HashSet<String> groundTruth, ArrayList<IndexComponentFileReference> validFiles,
+    protected void validateFiles(Set<String> groundTruth, List<IndexComponentFileReference> validFiles,
             FilenameFilter filter, TreeIndexFactory<? extends ITreeIndex> treeFactory, IBufferCache bufferCache)
             throws HyracksDataException {
         ArrayList<IndexComponentFileReference> tmpAllInvListsFiles = new ArrayList<>();
@@ -305,6 +305,21 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
         }
 
         return baseDir.getChild(name);
+    }
+
+    protected void cleanLookAsideFiles(Set<String> groundTruth, IBufferCache bufferCache) throws HyracksDataException {
+        ICompressorDecompressor compDecomp = compressorDecompressorFactory.createInstance();
+        if (compDecomp == NoOpCompressorDecompressor.INSTANCE) {
+            return;
+        }
+
+        List<IndexComponentFileReference> allLookAsideFiles = new ArrayList<>();
+        cleanupAndGetValidFilesInternal(LAF_FILTER, null, allLookAsideFiles, null);
+        for (IndexComponentFileReference laf : allLookAsideFiles) {
+            if (!groundTruth.contains(laf.getSequence())) {
+                delete(bufferCache, laf.getFileRef());
+            }
+        }
     }
 
     private boolean isCompressible(String fileName) {
