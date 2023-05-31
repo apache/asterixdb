@@ -62,7 +62,7 @@ public class InMemoryHashJoin {
     private final TupleInFrameListAccessor tupleAccessor;
     // To release frames
     private final ISimpleFrameBufferManager bufferManager;
-    private final boolean isTableCapacityNotZero;
+    private boolean isTableCapacityNotZero;
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -76,6 +76,7 @@ public class InMemoryHashJoin {
 
     public void setTable(ISerializableTable table){
         this.table = table;
+        this.isTableCapacityNotZero = table.getTableSize() != 0;
     }
     public InMemoryHashJoin(IHyracksFrameMgrContext ctx, FrameTupleAccessor accessorProbe,
             ITuplePartitionComputer tpcProbe, FrameTupleAccessor accessorBuild, RecordDescriptor rDBuild,

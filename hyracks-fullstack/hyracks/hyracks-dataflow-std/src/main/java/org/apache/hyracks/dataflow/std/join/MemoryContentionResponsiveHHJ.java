@@ -11,12 +11,14 @@ import org.apache.logging.log4j.Logger;
 
 public class MemoryContentionResponsiveHHJ extends HybridHashJoin implements IHybridHashJoin{
     private static final Logger LOGGER = LogManager.getLogger();
+
     public MemoryContentionResponsiveHHJ(IHyracksJobletContext jobletCtx, int memSizeInFrames, int numOfPartitions,
                                          String probeRelName, String buildRelName, RecordDescriptor probeRd, RecordDescriptor buildRd,
                                          ITuplePartitionComputer probeHpc, ITuplePartitionComputer buildHpc, IPredicateEvaluator probePredEval,
                                          IPredicateEvaluator buildPredEval, boolean isLeftOuter, IMissingWriterFactory[] nullWriterFactories1) {
         super(jobletCtx, memSizeInFrames, numOfPartitions, probeRelName, buildRelName, probeRd, buildRd, probeHpc, buildHpc, probePredEval, buildPredEval, isLeftOuter, nullWriterFactories1);
         dynamicMemory = true;
+        this.deleteAfterReload = false;
     }
 
 

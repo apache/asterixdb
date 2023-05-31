@@ -145,7 +145,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private boolean skipInMemoryHJ = false;
     private boolean forceNLJ = false;
     private boolean forceRoleReversal = false;
-    Random r = new Random(5);
+    Random r = new Random();
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -318,7 +318,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    if(framesProcessed % 10 == 0){
+                    if(framesProcessed % 5 == 0){
                         int result = r.nextInt(30) + memSizeInFrames;
                         state.hybridHJ.updateMemoryBudget(result);
                     }
@@ -429,8 +429,10 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
 
                 @Override
                 public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
-                    int result = r.nextInt(200) + memSizeInFrames;
-                    state.hybridHJ.updateMemoryBudgetProbe(result);
+                    if(framesProcessed % 10 == 0){
+                        int result = r.nextInt(30) + memSizeInFrames;
+                        state.hybridHJ.updateMemoryBudgetProbe(result);
+                    }
                     state.hybridHJ.probe(buffer, writer);
                     framesProcessed++;
                 }
@@ -454,7 +456,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         } finally {
                             writer.close(); // writer should always be closed.
                         }
-                        logProbeComplete();
                         return;
                     }
                     try {
@@ -463,7 +464,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         } finally {
                             state.hybridHJ.releaseResource();
                         }
-                        BitSet partitionStatus = state.hybridHJ.getInconsistentStatus();
+                        BitSet partitionStatus = state.hybridHJ.getPartitionStatus();
                         rPartbuff.reset();
                         for (int pid = partitionStatus.nextSetBit(0); pid >= 0; pid =
                                 partitionStatus.nextSetBit(pid + 1)) {
@@ -500,7 +501,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         throw e;
                     } finally {
                         try {
-                            logProbeComplete();
                         } finally {
                             writer.close();
                         }
@@ -510,12 +510,6 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                 @Override
                 public void setOperatorStats(IOperatorStats stats) {
                     this.stats = stats;
-                }
-
-                private void logProbeComplete() {
-                    if (LOGGER.isDebugEnabled()) {
-                        LOGGER.debug("OptimizedHybridHashJoin closed its probe phase");
-                    }
                 }
 
                 //The buildSideReader should be always the original buildSideReader, so should the probeSideReader

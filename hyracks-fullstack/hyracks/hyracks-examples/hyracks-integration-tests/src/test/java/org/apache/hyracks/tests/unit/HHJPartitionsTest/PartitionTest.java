@@ -87,7 +87,7 @@ class PartitionTest{
     @Test
     void SpillAndReload() throws HyracksDataException{
         Spill();
-        partition.reload();
+        partition.reload(false);
         assertEquals(partition.getTuplesSpilled(),0);
         assertEquals(partition.getTuplesInMemory(),1);
         assertEquals(partition.getTuplesProcessed(),1);

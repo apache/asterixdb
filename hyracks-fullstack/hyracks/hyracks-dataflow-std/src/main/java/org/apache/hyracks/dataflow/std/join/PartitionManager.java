@@ -325,8 +325,8 @@ public class PartitionManager {
      * @return <b>TRUE</b> if reload was successfull.
      * @throws HyracksDataException Exception
      */
-    public boolean reloadPartition(int id) throws HyracksDataException {
-        if (partitions.get(id).reload()) {
+    public boolean reloadPartition(int id,boolean deleteAfterReload) throws HyracksDataException {
+        if (partitions.get(id).reload(deleteAfterReload)) {
             spilledStatus.clear(id);
             return true;
         }

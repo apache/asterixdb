@@ -269,7 +269,7 @@ public class Partition {
      * @return <b>TRUE</b> if Partition was reloaded successfully.<br> <b>FALSE</b> if something goes wrong.
      * @throws HyracksDataException Exception
      */
-    public boolean reload() throws HyracksDataException {
+    public boolean reload(boolean deleteAfterReload) throws HyracksDataException {
         if (!spilled)
             return true;
         createFileReaderIfNotExist();
@@ -290,12 +290,16 @@ public class Partition {
         } catch (Exception ex) {
             throw new HyracksDataException(ex.getMessage());
         } finally {
-            rfReader.close();
+            if(deleteAfterReload){
+                rfReader.close();
+            }
         }
         spilled = false;
         this.tuplesInMemory += this.tuplesSpilled;
         this.tuplesSpilled = 0;
-        rfWriter = null;
+        if(deleteAfterReload){
+            rfWriter = null;
+        }
         reloaded = true;
         return true;
     }
