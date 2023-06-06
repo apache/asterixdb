@@ -626,6 +626,8 @@ public class QueryServiceRequestParameters {
             return Pair.of(OutputFormat.CLEAN_JSON, Boolean.FALSE);
         } else if (value.equals(HttpUtil.ContentType.ADM)) {
             return Pair.of(OutputFormat.ADM, Boolean.FALSE);
+        } else if (value.equals(Attribute.LOSSLESS_ADM.str())) {
+            return Pair.of(OutputFormat.LOSSLESS_ADM_JSON, Boolean.FALSE);
         } else {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, parameterName, value);
         }
