@@ -145,8 +145,8 @@ public class S3CloudClient implements ICloudClient {
     @Override
     public byte[] readAllBytes(String bucket, String path) throws HyracksDataException {
         GetObjectRequest getReq = GetObjectRequest.builder().bucket(bucket).key(path).build();
-        try {
-            ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(getReq);
+
+        try (ResponseInputStream<GetObjectResponse> stream = s3Client.getObject(getReq)) {
             return stream.readAllBytes();
         } catch (NoSuchKeyException e) {
             return null;
