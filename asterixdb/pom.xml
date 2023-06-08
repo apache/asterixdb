@@ -80,6 +80,9 @@
     <shim.stage>none</shim.stage>
     <pytestlib.stage>none</pytestlib.stage>
     <skip-npm-touch.stage>none</skip-npm-touch.stage>
+    <azurite.npm.install.stage>none</azurite.npm.install.stage>
+    <azurite.install.stage>none</azurite.install.stage>
+    <azurite.stage>none</azurite.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.9-SNAPSHOT</algebricks.version>
@@ -723,6 +726,22 @@
         <shim.stage>none</shim.stage>
         <pytestlib.stage>generate-test-resources</pytestlib.stage>
         <global.itest.excludes/>
+      </properties>
+    </profile>
+    <profile>
+      <id>azurite-tests</id>
+      <activation>
+        <os>
+          <family>unix</family>
+        </os>
+        <property>
+          <name>!skipTests</name>
+        </property>
+      </activation>
+      <properties>
+        <azurite.npm.install.stage>process-classes</azurite.npm.install.stage>
+        <azurite.install.stage>generate-test-resources</azurite.install.stage>
+        <azurite.stage>process-test-resources</azurite.stage>
       </properties>
     </profile>
     <profile>

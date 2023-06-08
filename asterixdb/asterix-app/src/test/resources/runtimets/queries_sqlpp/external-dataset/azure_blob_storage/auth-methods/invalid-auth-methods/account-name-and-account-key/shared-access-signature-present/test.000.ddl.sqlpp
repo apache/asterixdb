@@ -17,5 +17,21 @@
  * under the License.
  */
 
+drop dataverse test if exists;
+create dataverse test;
 use test;
-select count(*) `count` from test;
+
+drop type test if exists;
+create type test as open {
+};
+
+drop dataset test if exists;
+CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
+("accountName"="%azure-accountname%"),
+("accountKey"="%azure-accountkey%"),
+("sharedAccessSignature"="%azure-sas%"),
+("endpoint"="%azure-endpoint%"),
+("container"="playground"),
+("definition"="json-data/reviews/single-line/json"),
+("format"="json")
+);

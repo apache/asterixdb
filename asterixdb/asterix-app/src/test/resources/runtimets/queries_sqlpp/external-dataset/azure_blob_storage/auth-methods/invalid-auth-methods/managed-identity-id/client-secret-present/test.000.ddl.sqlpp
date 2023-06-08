@@ -25,12 +25,10 @@ drop type test if exists;
 create type test as open {
 };
 
-// bad case: more than one authentication method is provided at once
 drop dataset test if exists;
 CREATE EXTERNAL DATASET test(test) USING AZUREBLOB (
-("accountName"="%azure-accountname%"),
-("%azure-credentialsname-1%"="%azure-credentialsvalue-1%"),
-("%azure-credentialsname-2%"="%azure-credentialsvalue-2%"),
+("managedIdentityId"="%azure-managedidentityid%"),
+("clientSecret"="%azure-clientsecret%"),
 ("endpoint"="%azure-endpoint%"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),

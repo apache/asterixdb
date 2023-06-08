@@ -49,17 +49,17 @@
         <output-dir compare="Text">common/csv-warnings</output-dir>
         <expected-warn>Parsing error at data_dir/no_h_missing_fields.csv line 2 field 3: some fields are missing</expected-warn>
         <expected-warn>Parsing error at data_dir/no_h_no_closing_q.csv line 2 field 0: malformed input record ended abruptly</expected-warn>
-        <expected-warn>Parsing error at  line 2 field 0: malformed input record ended abruptly</expected-warn>
+        <expected-warn>Parsing error at line 2 field 0: malformed input record ended abruptly</expected-warn>
 
-        <expected-warn>Parsing error at  line 5 field 3: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 2 field 1: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 11 field 1: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 3 field 1: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 4 field 1: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 7 field 7: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 13 field 7: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 12 field 3: invalid value</expected-warn>
-        <expected-warn>Parsing error at  line 9 field 6: a quote should be in the beginning</expected-warn>
+        <expected-warn>Parsing error at line 5 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 2 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 11 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 3 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 4 field 1: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 7 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 13 field 7: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 12 field 3: invalid value</expected-warn>
+        <expected-warn>Parsing error at line 9 field 6: a quote should be in the beginning</expected-warn>
 
         <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 5 field 3: invalid value</expected-warn>
         <expected-warn>Parsing error at data_dir/h_invalid_values.csv line 2 field 1: invalid value</expected-warn>

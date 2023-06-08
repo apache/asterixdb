@@ -23,12 +23,10 @@ import java.util.Collection;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 
-@Ignore
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AzureBlobStorageExternalDatasetOnePartitionTest extends AzureBlobStorageExternalDatasetTest {
@@ -44,7 +42,8 @@ public class AzureBlobStorageExternalDatasetOnePartitionTest extends AzureBlobSt
         TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
         PREPARE_PLAYGROUND_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::preparePlaygroundContainer;
         PREPARE_FIXED_DATA_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::prepareFixedDataContainer;
-        PREPARE_MIXED_DATA_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::prepareMixedDataContainer;
+        PREPARE_INCLUDE_EXCLUDE_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::prepareMixedDataContainer;
+        PREPARE_BOM_FILE_BUCKET = AzureBlobStorageExternalDatasetOnePartitionTest::prepareBomDataContainer;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -55,5 +54,8 @@ public class AzureBlobStorageExternalDatasetOnePartitionTest extends AzureBlobSt
     }
 
     private static void prepareMixedDataContainer() {
+    }
+
+    private static void prepareBomDataContainer() {
     }
 }

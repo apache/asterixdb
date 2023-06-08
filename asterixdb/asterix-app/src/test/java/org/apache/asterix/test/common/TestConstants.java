@@ -40,6 +40,10 @@ public class TestConstants {
         // account name
         public static final String ACCOUNT_NAME_PLACEHOLDER = "%azure-accountname%";
         public static final String AZURITE_ACCOUNT_NAME_DEFAULT = "devstoreaccount1";
+        public static final int AZURITE_PORT = 15055;
+        public static final String AZURITE_HOSTNAME = "127.0.0.1:" + AZURITE_PORT;
+        public static final String AZURITE_ENDPOINT =
+                "http://127.0.0.1:" + AZURITE_PORT + "/" + AZURITE_ACCOUNT_NAME_DEFAULT;
 
         // account key
         public static final String ACCOUNT_KEY_PLACEHOLDER = "%azure-accountkey%";
@@ -52,7 +56,7 @@ public class TestConstants {
 
         // blob endpoint
         public static final String BLOB_ENDPOINT_PLACEHOLDER = "%azure-endpoint%";
-        public static final String BLOB_ENDPOINT_DEFAULT = "http://localhost:10000/" + AZURITE_ACCOUNT_NAME_DEFAULT;
+        public static final String BLOB_ENDPOINT_DEFAULT = AZURITE_ENDPOINT;
 
         public static final String MANAGED_IDENTITY_ID_PLACEHOLDER = "%azure-managedidentityid%";
         public static final String MANAGED_IDENTITY_ID_DEFAULT = "myManagedIdentityId";

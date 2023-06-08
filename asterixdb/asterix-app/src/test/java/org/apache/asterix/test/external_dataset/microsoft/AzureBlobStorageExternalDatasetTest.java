@@ -18,18 +18,14 @@
  */
 package org.apache.asterix.test.external_dataset.microsoft;
 
-import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_KEY_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.AZURITE_ACCOUNT_NAME_DEFAULT;
-import static org.apache.asterix.test.common.TestConstants.Azure.BLOB_ENDPOINT_PLACEHOLDER;
-import static org.apache.asterix.test.common.TestConstants.Azure.sasToken;
-import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.PARQUET_DEFINITION;
-import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
+import static org.apache.asterix.test.common.TestConstants.Azure.*;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.*;
 import static org.apache.hyracks.util.file.FileUtil.joinPath;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.InputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -59,10 +55,8 @@ import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -80,7 +74,6 @@ import com.azure.storage.common.sas.AccountSasService;
 import com.azure.storage.common.sas.AccountSasSignatureValues;
 
 // TODO(Hussain): Need to run the test manually to ensure new tests (anonymous access) are working fine
-@Ignore
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class AzureBlobStorageExternalDatasetTest {
@@ -93,31 +86,21 @@ public class AzureBlobStorageExternalDatasetTest {
     static String TEST_CONFIG_FILE_NAME;
     static Runnable PREPARE_PLAYGROUND_CONTAINER;
     static Runnable PREPARE_FIXED_DATA_CONTAINER;
-    static Runnable PREPARE_MIXED_DATA_CONTAINER;
+    static Runnable PREPARE_INCLUDE_EXCLUDE_CONTAINER;
+    static Runnable PREPARE_BOM_FILE_BUCKET;
 
     // Base directory paths for data files
     private static final String JSON_DATA_PATH = joinPath("data", "json");
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
-    private static final String MIXED_DATA_PATH = joinPath("data", "mixed");
     private static final String PARQUET_RAW_DATA_PATH = joinPath("data", "hdfs", "parquet");
-
-    // Service endpoint
-    private static final int BLOB_SERVICE_PORT = 10000;
-    private static final String BLOB_SERVICE_ENDPOINT = "http://192.168.0.100:" + BLOB_SERVICE_PORT;
 
     // Region, container and definitions
     private static final String PLAYGROUND_CONTAINER = "playground";
     private static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     private static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
+    private static final String BOM_FILE_CONTAINER = "bom-file-container";
     private static final String PUBLIC_ACCESS_CONTAINER = "public-access-container"; // requires no authentication
-    private static final String JSON_DEFINITION = "json-data/reviews/";
-    private static final String CSV_DEFINITION = "csv-data/reviews/";
-    private static final String TSV_DEFINITION = "tsv-data/reviews/";
-
-    // This is used for a test to generate over 1000 number of files
-    private static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
-    private static final int OVER_1000_OBJECTS_COUNT = 2999;
 
     private static final Set<String> fileNames = new HashSet<>();
 
@@ -125,6 +108,9 @@ public class AzureBlobStorageExternalDatasetTest {
     private static BlobServiceClient blobServiceClient;
     private static BlobContainerClient playgroundContainer;
     private static BlobContainerClient publicAccessContainer;
+    private static BlobContainerClient fixedDataContainer;
+    private static BlobContainerClient mixedDataContainer;
+    private static BlobContainerClient bomContainer;
 
     protected TestCaseContext tcCtx;
 
@@ -151,9 +137,10 @@ public class AzureBlobStorageExternalDatasetTest {
         SUITE_TESTS = "testsuite_external_dataset_azure_blob_storage.xml";
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
-        PREPARE_PLAYGROUND_CONTAINER = AzureBlobStorageExternalDatasetTest::preparePlaygroundContainer;
-        PREPARE_FIXED_DATA_CONTAINER = AzureBlobStorageExternalDatasetTest::prepareFixedDataContainer;
-        PREPARE_MIXED_DATA_CONTAINER = AzureBlobStorageExternalDatasetTest::prepareMixedDataContainer;
+        PREPARE_PLAYGROUND_CONTAINER = ExternalDatasetTestUtils::preparePlaygroundContainer;
+        PREPARE_FIXED_DATA_CONTAINER = ExternalDatasetTestUtils::prepareFixedDataContainer;
+        PREPARE_INCLUDE_EXCLUDE_CONTAINER = ExternalDatasetTestUtils::prepareMixedDataContainer;
+        PREPARE_BOM_FILE_BUCKET = ExternalDatasetTestUtils::prepareBomFileContainer;
         return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
@@ -179,17 +166,39 @@ public class AzureBlobStorageExternalDatasetTest {
         LOGGER.info("Creating Azurite Blob Service client");
         BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
         builder.credential(new StorageSharedKeyCredential(AZURITE_ACCOUNT_NAME_DEFAULT, AZURITE_ACCOUNT_KEY_DEFAULT));
-        builder.endpoint(BLOB_ENDPOINT_PLACEHOLDER);
+        builder.endpoint(AZURITE_ENDPOINT);
         blobServiceClient = builder.buildClient();
         LOGGER.info("Azurite Blob Service client created successfully");
+
+        // delete all existing containers
+        deleteContainersSilently();
+
+        LOGGER.info("Creating containers");
+        playgroundContainer = blobServiceClient.createBlobContainer(PLAYGROUND_CONTAINER);
+        fixedDataContainer = blobServiceClient.createBlobContainer(FIXED_DATA_CONTAINER);
+        mixedDataContainer = blobServiceClient.createBlobContainer(INCLUDE_EXCLUDE_CONTAINER);
+        bomContainer = blobServiceClient.createBlobContainer(BOM_FILE_CONTAINER);
+        publicAccessContainer = blobServiceClient.createBlobContainer(PUBLIC_ACCESS_CONTAINER);
+        publicAccessContainer.setAccessPolicy(PublicAccessType.CONTAINER, null);
+        LOGGER.info("Created containers successfully");
+
+        // Load 20 files in the public access container
+        Path filePath = Paths.get(JSON_DATA_PATH, "single-line", "20-records.json");
+        publicAccessContainer.getBlobClient("20-records.json").uploadFromFile(filePath.toAbsolutePath().toString());
 
         // Generate the SAS token for the SAS test cases
         sasToken = generateSasToken();
 
         // Create the container and upload some json files
+        // Create the bucket and upload some json files
+        setDataPaths(JSON_DATA_PATH, CSV_DATA_PATH, TSV_DATA_PATH);
+        setUploaders(AzureBlobStorageExternalDatasetTest::loadPlaygroundData,
+                AzureBlobStorageExternalDatasetTest::loadFixedData, AzureBlobStorageExternalDatasetTest::loadMixedData,
+                AzureBlobStorageExternalDatasetTest::loadBomData);
         PREPARE_PLAYGROUND_CONTAINER.run();
         PREPARE_FIXED_DATA_CONTAINER.run();
-        PREPARE_MIXED_DATA_CONTAINER.run();
+        PREPARE_INCLUDE_EXCLUDE_CONTAINER.run();
+        PREPARE_BOM_FILE_BUCKET.run();
     }
 
     private static String generateSasToken() {
@@ -200,344 +209,120 @@ public class AzureBlobStorageExternalDatasetTest {
         return blobServiceClient.generateAccountSas(new AccountSasSignatureValues(expiry, permission, service, type));
     }
 
-    /**
-     * Creates a container and fills it with some files for testing purpose.
-     */
-    private static void preparePlaygroundContainer() {
-        deleteContainerSilently(PLAYGROUND_CONTAINER);
-
-        LOGGER.info("creating container " + PLAYGROUND_CONTAINER);
-        playgroundContainer = blobServiceClient.createBlobContainer(PLAYGROUND_CONTAINER);
-        publicAccessContainer = blobServiceClient.createBlobContainer(PUBLIC_ACCESS_CONTAINER);
-        publicAccessContainer.setAccessPolicy(PublicAccessType.CONTAINER, null);
-        LOGGER.info("container " + PLAYGROUND_CONTAINER + " created successfully");
-
-        LOGGER.info("Adding JSON files");
-        loadJsonFiles();
-        LOGGER.info("JSON Files added successfully");
-
-        LOGGER.info("Adding CSV files");
-        loadCsvFiles();
-        LOGGER.info("CSV Files added successfully");
-
-        LOGGER.info("Adding TSV files");
-        loadTsvFiles();
-        LOGGER.info("TSV Files added successfully");
-
-        LOGGER.info("Loading " + OVER_1000_OBJECTS_COUNT + " into " + OVER_1000_OBJECTS_PATH);
-        loadLargeNumberOfFiles();
-        LOGGER.info("Added " + OVER_1000_OBJECTS_COUNT + " files into " + OVER_1000_OBJECTS_PATH + " successfully");
-
-        LOGGER.info("Adding Parquet files to the bucket");
-        loadParquetFiles();
-        LOGGER.info("Parquet files added successfully");
-    }
-
-    /**
-     * This container is being filled by fixed data, a test is counting all records. If this container is
-     * changed, the test case will fail and its result will need to be updated each time
-     */
-    private static void prepareFixedDataContainer() {
-        deleteContainerSilently(FIXED_DATA_CONTAINER);
-        LOGGER.info("creating container " + FIXED_DATA_CONTAINER);
-        BlobContainerClient fixedDataContainer = blobServiceClient.createBlobContainer(FIXED_DATA_CONTAINER);
-        LOGGER.info("container " + FIXED_DATA_CONTAINER + " created successfully");
-
-        LOGGER.info("Loading fixed data to " + FIXED_DATA_CONTAINER);
-
-        // Files data
-        Path filePath = Paths.get(JSON_DATA_PATH, "single-line", "20-records.json");
-        fixedDataContainer.getBlobClient("1.json").uploadFromFile(filePath.toString());
-        fixedDataContainer.getBlobClient("2.json").uploadFromFile(filePath.toString());
-        fixedDataContainer.getBlobClient("lvl1/3.json").uploadFromFile(filePath.toString());
-        fixedDataContainer.getBlobClient("lvl1/4.json").uploadFromFile(filePath.toString());
-        fixedDataContainer.getBlobClient("lvl1/lvl2/5.json").uploadFromFile(filePath.toString());
-    }
-
-    private static void loadJsonFiles() {
-        String dataBasePath = JSON_DATA_PATH;
-        String definition = JSON_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "json";
-        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-
-        definitionSegment = "json-array-of-objects";
-        loadData(dataBasePath, "single-line", "array_of_objects.json", "json-data/", definitionSegment, false, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-        loadGzData(dataBasePath, "single-line", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines", "20-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
-                false);
-    }
-
-    private static void loadCsvFiles() {
-        String dataBasePath = CSV_DATA_PATH;
-        String definition = CSV_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "csv";
-        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
-    }
-
-    private static void loadTsvFiles() {
-        String dataBasePath = TSV_DATA_PATH;
-        String definition = TSV_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "tsv";
-        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-
-        // gz compressed format
-        definitionSegment = "gz";
-        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-
-        // Mixed normal and gz compressed format
-        definitionSegment = "mixed";
-        loadData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "01.tsv", definition, definitionSegment, false);
-        loadGzData(dataBasePath, "", "02.tsv", definition, definitionSegment, false);
-    }
-
-    private static void loadParquetFiles() {
-        String dataBasePath = BINARY_GEN_BASEDIR;
-        String definition = PARQUET_DEFINITION;
-
-        // Normal format
-        String definitionSegment = "";
-        loadData(dataBasePath, "", "dummy_tweet.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_age.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_age-string.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_name.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "id_name_comment.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
-        loadData(dataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
-    }
-
-    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension) {
-        loadData(fileBasePath, filePathSegment, filename, definition, definitionSegment, removeExtension, true);
-    }
-
-    private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension, boolean copyToSubLevels) {
-        // Files data
-        Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
-
-        // Keep or remove the file extension
-        Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
-        String finalFileName;
-        if (removeExtension) {
-            finalFileName = FilenameUtils.removeExtension(filename);
-        } else {
-            finalFileName = filename;
-        }
-
-        // Files base definition
-        filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
-        definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
-        String basePath = definition + filePathSegment + definitionSegment;
-
-        // Load the data
-        playgroundContainer.getBlobClient(basePath + finalFileName).uploadFromFile(filePath.toString());
-        publicAccessContainer.getBlobClient(basePath + finalFileName).uploadFromFile(filePath.toString());
-        if (copyToSubLevels) {
-            playgroundContainer.getBlobClient(basePath + "level1a/" + finalFileName)
-                    .uploadFromFile(filePath.toString());
-            playgroundContainer.getBlobClient(basePath + "level1b/" + finalFileName)
-                    .uploadFromFile(filePath.toString());
-            playgroundContainer.getBlobClient(basePath + "level1a/level2a/" + finalFileName)
-                    .uploadFromFile(filePath.toString());
-            playgroundContainer.getBlobClient(basePath + "level1a/level2b/" + finalFileName)
-                    .uploadFromFile(filePath.toString());
-        }
-    }
-
-    private static void loadGzData(String fileBasePath, String filePathSegment, String filename, String definition,
-            String definitionSegment, boolean removeExtension) {
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
-
-            // Files data
-            Path filePath = Paths.get(fileBasePath, filePathSegment, filename);
-
-            // Get the compressed data
-            gzipOutputStream.write(Files.readAllBytes(filePath));
-            gzipOutputStream.close(); // Need to close or data will be invalid
-            byte[] gzipBytes = byteArrayOutputStream.toByteArray();
-
-            // Keep or remove the file extension
-            Assert.assertFalse("Files with no extension are not supported yet for external datasets", removeExtension);
-            String finalFileName;
-            if (removeExtension) {
-                finalFileName = FilenameUtils.removeExtension(filename);
-            } else {
-                finalFileName = filename;
+    private static void loadPlaygroundData(String key, String content, boolean fromFile, boolean gzipped) {
+        if (!fromFile) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+                playgroundContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+            } catch (IOException ex) {
+                throw new IllegalArgumentException(ex.toString());
             }
-            finalFileName += ".gz";
+        } else {
+            if (!gzipped) {
+                playgroundContainer.getBlobClient(key).uploadFromFile(content);
+            } else {
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
 
-            // Files base definition
-            filePathSegment = filePathSegment.isEmpty() ? "" : filePathSegment + "/";
-            definitionSegment = definitionSegment.isEmpty() ? "" : definitionSegment + "/";
-            String basePath = definition + filePathSegment + definitionSegment;
-
-            // Load the data
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes);
-            playgroundContainer.getBlobClient(basePath + finalFileName).upload(inputStream, inputStream.available());
-            inputStream.reset();
-            playgroundContainer.getBlobClient(basePath + "level1a/" + finalFileName).upload(inputStream,
-                    inputStream.available());
-            inputStream.reset();
-            playgroundContainer.getBlobClient(basePath + "level1b/" + finalFileName).upload(inputStream,
-                    inputStream.available());
-            inputStream.reset();
-            playgroundContainer.getBlobClient(basePath + "level1a/level2a/" + finalFileName).upload(inputStream,
-                    inputStream.available());
-            inputStream.reset();
-            playgroundContainer.getBlobClient(basePath + "level1a/level2b/" + finalFileName).upload(inputStream,
-                    inputStream.available());
-            closeInputStreamSilently(inputStream);
-        } catch (Exception ex) {
-            LOGGER.error(ex.getMessage());
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
+                        playgroundContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+                    } catch (IOException ex) {
+                        throw new IllegalArgumentException(ex.toString());
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
+            }
         }
     }
 
-    private static void loadLargeNumberOfFiles() {
-        ByteArrayInputStream inputStream = null;
-        for (int i = 0; i < OVER_1000_OBJECTS_COUNT; i++) {
-            inputStream = new ByteArrayInputStream(("{\"id\":" + i + "}").getBytes());
-            playgroundContainer.getBlobClient(OVER_1000_OBJECTS_PATH + "/" + i + ".json").upload(inputStream,
-                    inputStream.available());
+    private static void loadFixedData(String key, String content, boolean fromFile, boolean gzipped) {
+        if (!fromFile) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+                fixedDataContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+            } catch (IOException ex) {
+                throw new IllegalArgumentException(ex.toString());
+            }
+        } else {
+            if (!gzipped) {
+                fixedDataContainer.getBlobClient(key).uploadFromFile(content);
+            } else {
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
+                        fixedDataContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+                    } catch (IOException ex) {
+                        throw new IllegalArgumentException(ex.toString());
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
+            }
         }
-        closeInputStreamSilently(inputStream);
     }
 
-    /**
-     * Loads a combination of different file formats in the same path
-     */
-    private static void prepareMixedDataContainer() {
-        deleteContainerSilently(INCLUDE_EXCLUDE_CONTAINER);
-        LOGGER.info("creating container " + INCLUDE_EXCLUDE_CONTAINER);
-        BlobContainerClient includeExcludeContainer = blobServiceClient.createBlobContainer(INCLUDE_EXCLUDE_CONTAINER);
-        LOGGER.info("container " + INCLUDE_EXCLUDE_CONTAINER + " created successfully");
+    private static void loadMixedData(String key, String content, boolean fromFile, boolean gzipped) {
+        if (!fromFile) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+                mixedDataContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+            } catch (IOException ex) {
+                throw new IllegalArgumentException(ex.toString());
+            }
+        } else {
+            if (!gzipped) {
+                mixedDataContainer.getBlobClient(key).uploadFromFile(content);
+            } else {
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
 
-        // JSON
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(("{\"id\":" + 1 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2018.json")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 2 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2019.json")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 3 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/extension/" + "hello-world-2020.json")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 4 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2018.json")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 5 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2019.json")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 6 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/EXTENSION/" + "goodbye-world-2020.json")
-                .upload(inputStream, inputStream.available());
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
+                        mixedDataContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+                    } catch (IOException ex) {
+                        throw new IllegalArgumentException(ex.toString());
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
+            }
+        }
+    }
 
-        // CSV
-        inputStream = new ByteArrayInputStream(("7,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2018.csv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("8,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2019.csv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("9,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/extension/" + "hello-world-2020.csv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("10,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2018.csv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("11,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2019.csv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("12,\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/csv/EXTENSION/" + "goodbye-world-2020.csv")
-                .upload(inputStream, inputStream.available());
+    private static void loadBomData(String key, String content, boolean fromFile, boolean gzipped) {
+        if (!fromFile) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+                bomContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+            } catch (IOException ex) {
+                throw new IllegalArgumentException(ex.toString());
+            }
+        } else {
+            if (!gzipped) {
+                bomContainer.getBlobClient(key).uploadFromFile(content);
+            } else {
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
 
-        // TSV
-        inputStream = new ByteArrayInputStream(("13\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2018.tsv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("14\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2019.tsv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("15\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/extension/" + "hello-world-2020.tsv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("16\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2018.tsv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("17\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2019.tsv")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("18\t\"good\"").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/tsv/EXTENSION/" + "goodbye-world-2020.tsv")
-                .upload(inputStream, inputStream.available());
-
-        // JSON no extension
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 1 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2018")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 2 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2019")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 3 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/no-extension/" + "hello-world-2020")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 4 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2018")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 5 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2019")
-                .upload(inputStream, inputStream.available());
-        inputStream = new ByteArrayInputStream(("{\"id\":" + 6 + "}").getBytes());
-        includeExcludeContainer.getBlobClient(MIXED_DATA_PATH + "/json/NO-EXTENSION/" + "goodbye-world-2020")
-                .upload(inputStream, inputStream.available());
-
-        closeInputStreamSilently(inputStream);
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
+                        bomContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+                    } catch (IOException ex) {
+                        throw new IllegalArgumentException(ex.toString());
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
+            }
+        }
     }
 
     static class AzureTestExecutor extends TestExecutor {
@@ -565,6 +350,7 @@ public class AzureBlobStorageExternalDatasetTest {
                             queryCount, expectedResultFileCtxs, testFile, actualPath);
             }
         }
+
     }
 
     private static void dropRecreateContainer(String containerName, String definition, String files) {
@@ -627,21 +413,22 @@ public class AzureBlobStorageExternalDatasetTest {
         LOGGER.info("Done creating container with data");
     }
 
+    private static void deleteContainersSilently() {
+        deleteContainerSilently(PLAYGROUND_CONTAINER);
+        deleteContainerSilently(FIXED_DATA_CONTAINER);
+        deleteContainerSilently(PUBLIC_ACCESS_CONTAINER);
+        deleteContainerSilently(INCLUDE_EXCLUDE_CONTAINER);
+        deleteContainerSilently(BOM_FILE_CONTAINER);
+    }
+
     private static void deleteContainerSilently(String containerName) {
         LOGGER.info("Deleting container " + containerName);
         try {
             blobServiceClient.deleteBlobContainer(containerName);
         } catch (Exception ex) {
             // Do nothing
+            LOGGER.warn("Ignoring encountered error while deleting container {}", ex.getMessage());
         }
         LOGGER.info("Container " + containerName + " deleted successfully");
-    }
-
-    private static void closeInputStreamSilently(InputStream inputStream) {
-        try {
-            inputStream.close();
-        } catch (Exception ex) {
-            LOGGER.error(ex.getMessage());
-        }
     }
 }

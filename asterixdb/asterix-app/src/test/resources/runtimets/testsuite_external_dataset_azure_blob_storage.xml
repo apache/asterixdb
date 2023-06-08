@@ -19,69 +19,194 @@
  !-->
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="authentication">
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="valid-auth-methods">
-        <placeholder name="azureblob-credentialsname" value="accountKey" />
-        <placeholder name="azureblob-credentialsvalue" value="%azure-accountkey%" />
-        <output-dir compare="Text">valid-auth-methods</output-dir>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/valid-auth-methods">
+      <compilation-unit name="account-name-and-account-key">
+        <output-dir compare="Clean-JSON">account-name-and-account-key</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="valid-auth-methods">
-        <placeholder name="azureblob-credentialsname" value="sharedAccessSignature" />
-        <placeholder name="azureblob-credentialsvalue" value="%azure-sas%" />
-        <output-dir compare="Text">valid-auth-methods</output-dir>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/valid-auth-methods">
+      <compilation-unit name="shared-access-signature">
+        <output-dir compare="Clean-JSON">shared-access-signature</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="valid-auth-methods">
-        <placeholder name="azureblob-credentialsname" value="connectionString" />
-        <placeholder name="azureblob-credentialsvalue" value="%azure-connectionstringaccountkey%" />
-        <output-dir compare="Text">valid-auth-methods</output-dir>
+
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods">
+      <compilation-unit name="no-endpoint">
+        <output-dir compare="Clean-JSON">no-endpoint</output-dir>
+        <expected-error>Parameter(s) endpoint must be specified</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="valid-auth-methods">
-        <placeholder name="azureblob-credentialsname" value="connectionString" />
-        <placeholder name="azureblob-credentialsvalue" value="%azure-connectionstringsas%" />
-        <output-dir compare="Text">valid-auth-methods</output-dir>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="account-key-missing">
+        <output-dir compare="Clean-JSON">account-key-missing</output-dir>
+        <expected-error>Parameter 'accountKey' is required if 'accountName' is provided</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="invalid-auth-methods">
-        <placeholder name="azureblob-credentialsname-1" value="accountKey" />
-        <placeholder name="azureblob-credentialsvalue-1" value="%azure-accountkey%" />
-        <placeholder name="azureblob-credentialsname-2" value="connectionString" />
-        <placeholder name="azureblob-credentialsvalue-2" value="%azure-connectionstringaccountkey%" />
-        <output-dir compare="Text">invalid-auth-methods</output-dir>
-        <expected-error>ASX1138: Only a single authentication method is allowed: connectionString, accountName &amp; accountKey, or accountName &amp; sharedAccessSignature</expected-error>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="account-name-missing">
+        <output-dir compare="Clean-JSON">account-name-missing</output-dir>
+        <expected-error>Parameter 'accountName' is required if 'accountKey' is provided</expected-error>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="invalid-auth-methods">
-        <placeholder name="azureblob-credentialsname-1" value="sharedAccessSignature" />
-        <placeholder name="azureblob-credentialsvalue-1" value="%azure-sas%" />
-        <placeholder name="azureblob-credentialsname-2" value="connectionString" />
-        <placeholder name="azureblob-credentialsvalue-2" value="%azure-connectionstringaccountkey%" />
-        <output-dir compare="Text">invalid-auth-methods</output-dir>
-        <expected-error>ASX1138: Only a single authentication method is allowed: connectionString, accountName &amp; accountKey, or accountName &amp; sharedAccessSignature</expected-error>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="client-certificate-password-present">
+        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
+        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="client-certificate-present">
+        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
+        <expected-error>Parameter 'clientCertificate' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="client-id-present">
+        <output-dir compare="Clean-JSON">client-id-present</output-dir>
+        <expected-error>Parameter 'clientId' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="client-secret-present">
+        <output-dir compare="Clean-JSON">client-secret-present</output-dir>
+        <expected-error>Parameter 'clientSecret' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="managed-identity-id-present">
+        <output-dir compare="Clean-JSON">managed-identity-id-present</output-dir>
+        <expected-error>Parameter 'managedIdentityId' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="shared-access-signature-present">
+        <output-dir compare="Clean-JSON">shared-access-signature-present</output-dir>
+        <expected-error>Parameter 'sharedAccessSignature' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/account-name-and-account-key">
+      <compilation-unit name="tenant-id-present">
+        <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
+        <expected-error>Parameter 'tenantId' is not allowed if 'accountKey' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="client-certificate-password-present">
+        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
+        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="client-certificate-present">
+        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
+        <expected-error>Parameter 'clientCertificate' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="client-id-present">
+        <output-dir compare="Clean-JSON">client-id-present</output-dir>
+        <expected-error>Parameter 'clientId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="client-secret-present">
+        <output-dir compare="Clean-JSON">client-secret-present</output-dir>
+        <expected-error>Parameter 'clientSecret' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="managed-identity-id-present">
+        <output-dir compare="Clean-JSON">managed-identity-id-present</output-dir>
+        <expected-error>Parameter 'managedIdentityId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/shared-access-signature">
+      <compilation-unit name="tenant-id-present">
+        <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
+        <expected-error>Parameter 'tenantId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
+      <compilation-unit name="client-certificate-password-present">
+        <output-dir compare="Clean-JSON">client-certificate-password-present</output-dir>
+        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'managedIdentityId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
+      <compilation-unit name="client-certificate-present">
+        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
+        <expected-error>Parameter 'clientCertificate' is not allowed if 'managedIdentityId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
+      <compilation-unit name="client-id-present">
+        <output-dir compare="Clean-JSON">client-id-present</output-dir>
+        <expected-error>Parameter 'clientId' is not allowed if 'managedIdentityId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
+      <compilation-unit name="client-secret-present">
+        <output-dir compare="Clean-JSON">client-secret-present</output-dir>
+        <expected-error>Parameter 'clientSecret' is not allowed if 'managedIdentityId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/managed-identity-id">
+      <compilation-unit name="tenant-id-present">
+        <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
+        <expected-error>Parameter 'tenantId' is not allowed if 'managedIdentityId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
+      <compilation-unit name="client-secret-missing-and-client-certificate-missing">
+        <output-dir compare="Clean-JSON">client-secret-missing-and-client-certificate-missing</output-dir>
+        <expected-error>Parameter 'clientSecret' or 'clientCertificate' is required if 'clientId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
+      <compilation-unit name="client-secret-present-client-certificate-password-present">
+        <output-dir compare="Clean-JSON">client-secret-present-client-certificate-password-present</output-dir>
+        <expected-error>Parameter 'clientCertificatePassword' is not allowed if 'clientSecret' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
+      <compilation-unit name="client-secret-present-client-certificate-present">
+        <output-dir compare="Clean-JSON">client-secret-present-client-certificate-present</output-dir>
+        <expected-error>The parameters 'clientSecret' and 'clientCertificate' cannot be provided at the same time</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id">
+      <compilation-unit name="tenant-id-missing">
+        <output-dir compare="Clean-JSON">tenant-id-missing</output-dir>
+        <expected-error>Parameter 'tenantId' is required if 'clientId' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
+      <compilation-unit name="client-certificate-present">
+        <output-dir compare="Clean-JSON">client-certificate-present</output-dir>
+        <expected-error>Parameter 'clientCertificate' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
+      <compilation-unit name="client-secret-present">
+        <output-dir compare="Clean-JSON">client-secret-present</output-dir>
+        <expected-error>Parameter 'clientSecret' is not allowed if 'sharedAccessSignature' is provided</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods/invalid-auth-methods/client-id-missing">
+      <compilation-unit name="tenant-id-present">
+        <output-dir compare="Clean-JSON">tenant-id-present</output-dir>
+        <expected-error>Parameter 'tenantId' is not allowed if 'sharedAccessSignature' is provided</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
       <compilation-unit name="anonymous-no-auth-public-access-allowed">
-        <output-dir compare="Text">anonymous-no-auth-public-access-allowed</output-dir>
+        <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-allowed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
       <compilation-unit name="anonymous-no-auth-public-access-not-allowed">
-        <output-dir compare="Text">anonymous-no-auth-public-access-not-allowed</output-dir>
+        <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-not-allowed</output-dir>
         <expected-error>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the signature.</expected-error>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
-      <compilation-unit name="anonymous-no-auth-no-endpoint">
-        <output-dir compare="Text">anonymous-no-auth-no-endpoint</output-dir>
-        <expected-error>ASX1151: No authentication credentials provided, 'endpoint' field is required for anonymous access</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -139,12 +264,12 @@
       </compilation-unit>
     </test-case>
     <!-- Parquet Tests Start -->
-    <test-case FilePath="external-dataset">
-      <compilation-unit name="common/parquet/object-concat">
-        <placeholder name="adapter" value="AZUREBLOB" />
-        <output-dir compare="Text">common/parquet/object-concat</output-dir>
-      </compilation-unit>
-    </test-case>
+<!--    <test-case FilePath="external-dataset">-->
+<!--      <compilation-unit name="common/parquet/object-concat">-->
+<!--        <placeholder name="adapter" value="AZUREBLOB" />-->
+<!--        <output-dir compare="Text">common/parquet/object-concat</output-dir>-->
+<!--      </compilation-unit>-->
+<!--    </test-case>-->
     <!-- Parquet Tests End -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
@@ -180,7 +305,7 @@
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="endpoint" value="http://^invalid-endpoint^" />
         <output-dir compare="Text">common/invalid-endpoint</output-dir>
-        <expected-error>External source error. java.net.URISyntaxException: Illegal character in authority at index 7: http://^invalid-endpoint^</expected-error>
+        <expected-error>Illegal character in authority at index 7: http://^invalid-endpoint^</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">

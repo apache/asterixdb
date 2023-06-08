@@ -247,6 +247,31 @@
               </environmentVariables>
             </configuration>
           </execution>
+          <execution>
+            <id>azurite</id>
+            <phase>${azurite.stage}</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <!--suppress UnresolvedMavenProperty -->
+              <executable>${project.build.directory}/npm/node_modules/.bin/azurite-blob</executable>
+              <workingDirectory>${project.build.directory}</workingDirectory>
+              <environmentVariables>
+                <PATH>${project.build.directory}/npm/node</PATH>
+              </environmentVariables>
+              <arguments>
+                <argument>--blobPort</argument>
+                <argument>15055</argument>
+                <argument>--location</argument>
+                <argument>${project.build.directory}/azurite</argument>
+                <argument>--debug</argument>
+                <argument>${project.build.directory}/azurite/logs/azurite-debug.log</argument>
+              </arguments>
+              <async>true</async>
+              <outputFile>${project.build.directory}/azurite/logs/azurite.log</outputFile>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -325,6 +350,36 @@
                 <include>src/main/resources/webui/**</include>
               </includes>
               <excludes>src/main/resources/queryui/fonts/glyphicons-halflings-regular.svg</excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.13.4</version>
+        <configuration>
+          <nodeVersion>v14.15.4</nodeVersion>
+          <npmVersion>6.14.11</npmVersion>
+          <workingDirectory>target/npm</workingDirectory>
+          <installDirectory>target/npm</installDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>install node and yarn</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>${azurite.npm.install.stage}</phase>
+          </execution>
+          <execution>
+            <id>azurite blob</id>
+            <phase>${azurite.install.stage}</phase>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>install azurite</arguments>
             </configuration>
           </execution>
         </executions>

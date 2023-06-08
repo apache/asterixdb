@@ -861,9 +861,7 @@ public class TestExecutor {
             params = upsertParam(params, param.getName(), param.getType(), param.getValue());
         }
 
-        if (!placeholders.isEmpty()) {
-            str = applyExternalDatasetSubstitution(str, placeholders);
-        }
+        str = applyExternalDatasetSubstitution(str, placeholders);
 
         HttpUriRequest method = jsonEncoded ? constructPostMethodJson(str, uri, "statement", params)
                 : constructPostMethodUrl(str, uri, "statement", params);
