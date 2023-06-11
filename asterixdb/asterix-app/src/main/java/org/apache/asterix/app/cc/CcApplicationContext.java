@@ -37,6 +37,7 @@ import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
@@ -99,6 +100,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private ExtensionProperties extensionProperties;
     private MessagingProperties messagingProperties;
     private NodeProperties nodeProperties;
+    private final CloudProperties cloudProperties;
     private Supplier<IMetadataBootstrap> metadataBootstrapSupplier;
     private volatile HyracksConnection hcc;
     private volatile ResultSet resultSet;
@@ -140,6 +142,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         activeProperties = new ActiveProperties(propertiesAccessor);
         extensionProperties = new ExtensionProperties(propertiesAccessor);
         replicationProperties = new ReplicationProperties(propertiesAccessor);
+        cloudProperties = new CloudProperties(propertiesAccessor);
         this.ftStrategy = ftStrategy;
         this.buildProperties = new BuildProperties(propertiesAccessor);
         this.messagingProperties = new MessagingProperties(propertiesAccessor);
@@ -372,5 +375,10 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public boolean isCloudDeployment() {
         return ccServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
+    }
+
+    @Override
+    public CloudProperties getCloudProperties() {
+        return cloudProperties;
     }
 }

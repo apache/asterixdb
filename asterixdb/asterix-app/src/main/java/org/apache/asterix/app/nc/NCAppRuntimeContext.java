@@ -42,6 +42,7 @@ import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MessagingProperties;
@@ -164,6 +165,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final ICacheManager cacheManager;
     private IConfigValidator configValidator;
     private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
+    private final CloudProperties cloudProperties;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
             IPropertiesFactory propertiesFactory) {
@@ -178,6 +180,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         replicationProperties = propertiesFactory.newReplicationProperties();
         messagingProperties = propertiesFactory.newMessagingProperties();
         nodeProperties = propertiesFactory.newNodeProperties();
+        cloudProperties = propertiesFactory.newCloudProperties();
         ncExtensionManager = extensionManager;
         componentProvider = new StorageComponentProvider();
         resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
@@ -191,7 +194,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         if (isCloudDeployment()) {
-            persistenceIOManager = new CloudIOManager((IOManager) ioManager);
+            persistenceIOManager = new CloudIOManager((IOManager) ioManager, cloudProperties);
         } else {
             persistenceIOManager = ioManager;
         }
@@ -660,5 +663,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public boolean isCloudDeployment() {
         return ncServiceContext.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
+    }
+
+    @Override
+    public CloudProperties getCloudProperties() {
+        return cloudProperties;
     }
 }

@@ -26,6 +26,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -39,7 +40,6 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
-import org.apache.asterix.cloud.clients.aws.s3.credentials.IS3Credentials;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -47,9 +47,6 @@ import org.apache.hyracks.api.util.IoUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -76,32 +73,30 @@ public class S3CloudClient implements ICloudClient {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final IS3Credentials credentials;
+    private final S3ClientConfig config;
     private final S3Client s3Client;
     private S3TransferManager s3TransferManager;
 
     // TODO(htowaileb): Temporary variables, can we get this from the used instance?
     private static final double MAX_HOST_BANDWIDTH = 10.0; // in Gbps
 
-    public S3CloudClient(IS3Credentials credentials) throws HyracksDataException {
-        this.credentials = credentials;
+    public S3CloudClient(S3ClientConfig config) {
+        this.config = config;
         s3Client = buildClient();
     }
 
-    private S3Client buildClient() throws HyracksDataException {
-        AwsCredentialsProvider credentialsProvider = StaticCredentialsProvider
-                .create(AwsBasicCredentials.create(credentials.getAccessKeyId(), credentials.getSecretAccessKey()));
+    private S3Client buildClient() {
         S3ClientBuilder builder = S3Client.builder();
-        builder.credentialsProvider(credentialsProvider);
-        builder.region(Region.of(credentials.getRegion()));
-
-        if (credentials.getEndpoint() != null && !credentials.getEndpoint().isEmpty()) {
+        builder.credentialsProvider(config.createCredentialsProvider());
+        builder.region(Region.of(config.getRegion()));
+        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
+            URI uri;
             try {
-                URI uri = new URI(credentials.getEndpoint());
-                builder.endpointOverride(uri);
-            } catch (Exception ex) {
-                throw HyracksDataException.create(ex);
+                uri = new URI(config.getEndpoint());
+            } catch (URISyntaxException ex) {
+                throw new IllegalArgumentException(ex);
             }
+            builder.endpointOverride(uri);
         }
         return builder.build();
     }
@@ -321,14 +316,13 @@ public class S3CloudClient implements ICloudClient {
         }
 
         S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder();
-        builder.credentialsProvider(StaticCredentialsProvider
-                .create(AwsBasicCredentials.create(credentials.getAccessKeyId(), credentials.getSecretAccessKey())));
-        builder.region(Region.of(credentials.getRegion()));
+        builder.credentialsProvider(config.createCredentialsProvider());
+        builder.region(Region.of(config.getRegion()));
         builder.targetThroughputInGbps(MAX_HOST_BANDWIDTH);
         builder.minimumPartSizeInBytes((long) 8 * 1024 * 1024);
 
-        if (credentials.getEndpoint() != null && !credentials.getEndpoint().isEmpty()) {
-            builder.endpointOverride(URI.create(credentials.getEndpoint()));
+        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
+            builder.endpointOverride(URI.create(config.getEndpoint()));
         }
 
         S3AsyncClient client = builder.build();

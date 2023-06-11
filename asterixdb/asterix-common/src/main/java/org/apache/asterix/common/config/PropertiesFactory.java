@@ -77,4 +77,9 @@ public class PropertiesFactory implements IPropertiesFactory {
     public NodeProperties newNodeProperties() {
         return new NodeProperties(propertiesAccessor);
     }
+
+    @Override
+    public CloudProperties newCloudProperties() {
+        return new CloudProperties(propertiesAccessor);
+    }
 }

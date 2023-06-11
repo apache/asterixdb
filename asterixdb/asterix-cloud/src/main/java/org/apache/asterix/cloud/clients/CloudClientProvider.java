@@ -18,33 +18,22 @@
  */
 package org.apache.asterix.cloud.clients;
 
-import org.apache.asterix.cloud.clients.ICloudClientCredentialsProvider.CredentialsType;
+import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
-import org.apache.asterix.cloud.clients.aws.s3.credentials.IS3Credentials;
-import org.apache.asterix.cloud.clients.aws.s3.credentials.S3CredentialsProvider;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.common.config.CloudProperties;
 
 public class CloudClientProvider {
-
-    public enum ClientType {
-        NO_OP,
-        S3,
-        AZURE_BLOB,
-        GOOGLE_CLOUD_STORAGE
-    }
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(ClientType clientType, CredentialsType credentialsType)
-            throws HyracksDataException {
-        switch (clientType) {
-            case S3:
-                IS3Credentials credentials = S3CredentialsProvider.INSTANCE.getCredentials(credentialsType);
-                return new S3CloudClient(credentials);
-            default:
-                throw HyracksDataException.create(new IllegalArgumentException("Unknown cloud client type"));
+    public static ICloudClient getClient(CloudProperties cloudProperties) {
+        String storageScheme = cloudProperties.getStorageScheme();
+        if ("s3".equalsIgnoreCase(storageScheme)) {
+            S3ClientConfig config = S3ClientConfig.of(cloudProperties);
+            return new S3CloudClient(config);
         }
+        throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
     }
 }

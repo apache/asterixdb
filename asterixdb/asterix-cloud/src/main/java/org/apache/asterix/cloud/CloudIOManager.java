@@ -36,12 +36,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.cloud.clients.CloudClientProvider;
-import org.apache.asterix.cloud.clients.CloudClientProvider.ClientType;
 import org.apache.asterix.cloud.clients.ICloudClient;
-import org.apache.asterix.cloud.clients.ICloudClientCredentialsProvider.CredentialsType;
-import org.apache.asterix.cloud.storage.CloudStorageConfigurationProvider;
-import org.apache.asterix.cloud.storage.ICloudStorageConfiguration;
-import org.apache.asterix.cloud.storage.ICloudStorageConfiguration.ConfigurationType;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -62,19 +58,17 @@ public class CloudIOManager extends IOManager {
     private IOManager localIoManager;
 
     private CloudIOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer, int ioParallelism,
-            int queueSize) throws HyracksDataException {
+            int queueSize, CloudProperties cloudProperties) throws HyracksDataException {
         super(devices, deviceComputer, ioParallelism, queueSize);
-        ICloudStorageConfiguration cloudStorageConfiguration =
-                CloudStorageConfigurationProvider.INSTANCE.getConfiguration(ConfigurationType.FILE);
-        this.bucket = cloudStorageConfiguration.getContainer();
-        cloudClient = CloudClientProvider.getClient(ClientType.S3, CredentialsType.FILE);
+        this.bucket = cloudProperties.getStorageBucket();
+        cloudClient = CloudClientProvider.getClient(cloudProperties);
         int numOfThreads = getIODevices().size() * getIoParallelism();
         writeBufferProvider = new WriteBufferProvider(numOfThreads);
     }
 
-    public CloudIOManager(IOManager ioManager) throws HyracksDataException {
+    public CloudIOManager(IOManager ioManager, CloudProperties cloudProperties) throws HyracksDataException {
         this(ioManager.getIoDevices(), ioManager.getDeviceComputer(), ioManager.getIoParallelism(),
-                ioManager.getQueueSize());
+                ioManager.getQueueSize(), cloudProperties);
         this.localIoManager = ioManager;
     }
 

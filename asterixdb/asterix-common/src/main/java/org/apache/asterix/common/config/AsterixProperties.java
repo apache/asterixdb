@@ -37,7 +37,7 @@ public class AsterixProperties {
         configManager.register(NodeProperties.Option.class, CompilerProperties.Option.class,
                 MetadataProperties.Option.class, ExternalProperties.Option.class, ActiveProperties.Option.class,
                 MessagingProperties.Option.class, ReplicationProperties.Option.class, StorageProperties.Option.class,
-                TransactionProperties.Option.class);
+                TransactionProperties.Option.class, CloudProperties.Option.class);
 
         // we need to process the old-style asterix config before we apply defaults!
         configManager.addConfigurator(IConfigManager.ConfiguratorMetric.APPLY_DEFAULTS.metric() - 1, () -> {

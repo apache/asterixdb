@@ -45,7 +45,7 @@ public class CloudStorageTest {
     private static final TestExecutor testExecutor = new TestExecutor();
     private static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
     private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
-    private static final String CONFIG_FILE_NAME = "src/main/resources/cc-cloud-storage.conf";
+    private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
 
     public CloudStorageTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;

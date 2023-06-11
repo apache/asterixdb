@@ -21,8 +21,8 @@ package org.apach.asterix.cloud.s3;
 import java.net.URI;
 
 import org.apach.asterix.cloud.LSMTest;
+import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
-import org.apache.asterix.cloud.clients.aws.s3.credentials.S3MockCredentials;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -64,8 +64,8 @@ public class LSMS3Test extends LSMTest {
         cleanup();
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         LOGGER.info("Client created successfully");
-
-        CLOUD_CLIENT = new S3CloudClient(S3MockCredentials.INSTANCE);
+        S3ClientConfig config = new S3ClientConfig(MOCK_SERVER_REGION, MOCK_SERVER_HOSTNAME, "", true);
+        CLOUD_CLIENT = new S3CloudClient(config);
     }
 
     private static void cleanup() {

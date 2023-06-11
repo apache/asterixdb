@@ -20,7 +20,6 @@ package org.apache.asterix.api.common;
 
 import java.net.URI;
 
-import org.apache.asterix.cloud.storage.MockCloudStorageConfiguration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,13 +35,17 @@ public class CloudUtils {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MOCK_SERVER_PORT = 8001;
-    private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
-    private static final String CLOUD_STORAGE_BUCKET = MockCloudStorageConfiguration.INSTANCE.getContainer();
-    private static final String MOCK_SERVER_REGION = "us-west-2";
+    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
+    public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
+    public static final String MOCK_SERVER_REGION = "us-west-2";
     private static S3Mock s3MockServer;
 
     private CloudUtils() {
         throw new AssertionError("Do not instantiate");
+    }
+
+    public static void main(String[] args) {
+        startS3CloudEnvironment();
     }
 
     public static void startS3CloudEnvironment() {

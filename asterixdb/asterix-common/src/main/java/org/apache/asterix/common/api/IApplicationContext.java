@@ -20,6 +20,7 @@ package org.apache.asterix.common.api;
 
 import org.apache.asterix.common.config.ActiveProperties;
 import org.apache.asterix.common.config.BuildProperties;
+import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.MessagingProperties;
@@ -95,4 +96,10 @@ public interface IApplicationContext {
      * @return true if running in cloud deployment, false otherwise.
      */
     boolean isCloudDeployment();
+
+    /**
+     * Gets the cloud properties
+     * @return the cloud properties
+     */
+    CloudProperties getCloudProperties();
 }
