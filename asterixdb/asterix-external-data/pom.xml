@@ -210,6 +210,7 @@
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
+              <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -540,6 +541,10 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-unix-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
+    </dependency>
     <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
      be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
     <dependency>
@@ -549,6 +554,11 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util-ajax</artifactId>
+    </dependency>
+    <!-- Manually included to avoid CVE-2023-1370 -->
+    <dependency>
+      <groupId>net.minidev</groupId>
+      <artifactId>json-smart</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.iceberg</groupId>

@@ -242,69 +242,54 @@
             </override>
             <override>
               <gavs>
-                <gav>com.azure:azure-core:1.24.1</gav>
-                <gav>com.azure:azure-core-http-netty:1.11.6</gav>
-                <gav>com.azure:azure-storage-blob:12.14.3</gav>
-                <gav>com.azure:azure-storage-common:12.14.2</gav>
-                <gav>com.azure:azure-storage-internal-avro:12.1.3</gav>
+                <gav>com.azure:azure-core:1.38.0</gav>
+                <gav>com.azure:azure-core-http-netty:1.13.2</gav>
+                <gav>com.azure:azure-json:1.0.0</gav>
+                <gav>com.azure:azure-storage-blob:12.22.0</gav>
+                <gav>com.azure:azure-storage-common:12.21.0</gav>
+                <gav>com.azure:azure-storage-internal-avro:12.7.0</gav>
               </gavs>
-              <!-- azure-storage-blob-batch_12.11.3 release is at 89a32290750a18d1b99c27c16b1b11d42f16c622 -->
-              <noticeUrl>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/89a32290750a18d1b99c27c16b1b11d42f16c622/NOTICE.txt</noticeUrl>
-              <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/89a32290750a18d1b99c27c16b1b11d42f16c622/LICENSE.txt</url>
+              <noticeUrl>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/azure-storage-blob_12.22.0/NOTICE.txt</noticeUrl>
+              <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/azure-storage-blob_12.22.0/LICENSE.txt</url>
             </override>
             <override>
-              <gav>com.microsoft.azure:msal4j:1.11.0</gav>
-              <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-library-for-java/v1.11.0/LICENSE</url>
+              <gavs>
+                <gav>io.projectreactor.netty:reactor-netty-core:1.0.28</gav>
+                <gav>io.projectreactor.netty:reactor-netty-http:1.0.28</gav>
+              </gavs>
+              <url>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.28/LICENSE</url>
             </override>
             <override>
-              <gav>com.microsoft.azure:msal4j-persistence-extension:1.1.0</gav>
-              <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/1.1.0/LICENSE</url>
+              <gav>com.microsoft.azure:msal4j:1.13.8</gav>
+              <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-library-for-java/v1.13.8/LICENSE</url>
+            </override>
+            <override>
+              <gav>com.microsoft.azure:msal4j-persistence-extension:1.2.0</gav>
+              <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/master/LICENSE</url>
             </override>
             <override>
               <gav>com.microsoft.azure:azure-keyvault-core:1.2.4</gav>
               <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/main/sdk/keyvault/LICENSE</url>
             </override>
             <override>
-              <gav>com.nimbusds:nimbus-jose-jwt:9.9.3</gav>
-              <noticeUrl>https://bitbucket.org/connect2id/nimbus-jose-jwt/raw/50ae2a39a4a6d0dcbf05572af8a581377174ac96/COPYRIGHT.txt</noticeUrl>
-            </override>
-            <!-- com.nimbusds:oauth2-oidc-sdk:9.7 points to https://www.apache.org/licenses/LICENSE-2.0.html in the pom.xml but has bad characters in the URI, overriding to fix -->
-            <override>
-              <gav>com.nimbusds:oauth2-oidc-sdk:9.7</gav>
-              <url>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/5d13925b57ace092ea5e1131c338f464d85545f4/LICENSE.txt</url>
-              <noticeUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/5d13925b57ace092ea5e1131c338f464d85545f4/COPYRIGHT.txt</noticeUrl>
+              <gav>com.nimbusds:nimbus-jose-jwt:9.30.2</gav>
+              <noticeUrl>https://bitbucket.org/connect2id/nimbus-jose-jwt/raw/e9eaef24bc7348d6be23d2a9daaacd6b8424b8c1/COPYRIGHT.txt</noticeUrl>
             </override>
             <override>
-              <gav>com.nimbusds:lang-tag:1.5</gav>
-              <noticeUrl>https://bitbucket.org/connect2id/nimbus-language-tags/raw/ead5120f62b5849309069808509b4cc6e57a0841/COPYRIGHT.txt</noticeUrl>
+              <gav>com.nimbusds:oauth2-oidc-sdk:10.7.1</gav>
+              <noticeUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/c8f09b035b7e93858a39ad4a46ba4d0e17a0aefe/COPYRIGHT.txt</noticeUrl>
             </override>
             <override>
-              <gav>com.nimbusds:content-type:2.1</gav>
-              <noticeUrl>https://bitbucket.org/connect2id/nimbus-content-type/raw/c6d2701ed5cd57e0f88728c6f3e6303db97c5bcf/COPYRIGHT.txt</noticeUrl>
+              <gav>com.nimbusds:lang-tag:1.7</gav>
+              <noticeUrl>https://bitbucket.org/connect2id/nimbus-language-tags/raw/372b274e7db1c3a9d42f1ae39fb35cfbb54a8742/COPYRIGHT.txt</noticeUrl>
             </override>
             <override>
-              <gavs>
-                <gav>io.projectreactor.netty:reactor-netty:1.0.7</gav>
-                <gav>io.projectreactor.netty:reactor-netty-core:1.0.7</gav>
-                <gav>io.projectreactor.netty:reactor-netty-http:1.0.7</gav>
-                <gav>io.projectreactor.netty:reactor-netty-http-brave:1.0.7</gav>
-              </gavs>
-              <url>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.7/LICENSE</url>
+              <gav>com.nimbusds:content-type:2.2</gav>
+              <noticeUrl>https://bitbucket.org/connect2id/nimbus-content-type/raw/18f43920bc8e88873f0c1e42723640536866d3df/COPYRIGHT.txt</noticeUrl>
             </override>
             <override>
-              <gavs>
-                <gav>io.projectreactor.netty:reactor-netty-core:1.0.11</gav>
-                <gav>io.projectreactor.netty:reactor-netty-http:1.0.11</gav>
-              </gavs>
-              <url>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.11/LICENSE</url>
-            </override>
-            <override>
-              <gav>io.projectreactor:reactor-core:3.4.6</gav>
-              <url>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.6/LICENSE</url>
-            </override>
-            <override>
-              <gav>io.projectreactor:reactor-core:3.4.10</gav>
-              <url>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.10/LICENSE</url>
+              <gav>io.projectreactor:reactor-core:3.4.27</gav>
+              <url>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</url>
             </override>
             <override>
               <gavs>
@@ -313,7 +298,7 @@
               <url>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</url>
             </override>
             <override>
-              <gav>org.ow2.asm:asm:9.1</gav>
+              <gav>org.ow2.asm:asm:9.3</gav>
               <url>https://raw.githubusercontent.com/llbit/ow2-asm/master/LICENSE.txt</url>
             </override>
             <override>
@@ -641,12 +626,9 @@
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.7/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.11/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.6/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.10/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</aliasUrl>
-                <aliasUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/5d13925b57ace092ea5e1131c338f464d85545f4/LICENSE.txt</aliasUrl>
+                <aliasUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/c8f09b035b7e93858a39ad4a46ba4d0e17a0aefe/LICENSE.txt</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/auto/auto-value-1.10.1/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/j2objc/1.3/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-storage/v2.17.2/LICENSE</aliasUrl>
@@ -676,6 +658,7 @@
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/gapic-generator-java/v2.13.0/java-common-protos/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/google-api-java-client/v2.1.2/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/grpc/grpc-java/v1.52.1/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-netty/v1.0.28/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/googleapis/java-core/v2.8.0/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/gson/gson-parent-2.9.0/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/allegro/json-avro-converter/json-avro-converter-0.2.15/LICENSE.md</aliasUrl>
@@ -732,8 +715,8 @@
               <aliasUrls>
                 <aliasUrl>http://www.opensource.org/licenses/mit-license.php</aliasUrl>
                 <aliasUrl>http://opensource.org/licenses/MIT</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-library-for-java/v1.11.0/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/1.1.0/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-library-for-java/v1.13.8/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/master/LICENSE</aliasUrl>
               </aliasUrls>
             </license>
             <license>
