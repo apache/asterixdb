@@ -72,6 +72,11 @@ public class StringColumnValuesWriter extends AbstractColumnValuesWriter {
     }
 
     @Override
+    protected int calculateEstimatedSize(int length) {
+        return stringWriter.calculateEstimatedSize(length);
+    }
+
+    @Override
     protected final int getValuesAllocatedSize() {
         return stringWriter.getAllocatedSize();
     }

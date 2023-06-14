@@ -31,7 +31,7 @@ import java.util.List;
 
 import org.apache.asterix.column.assembler.value.DummyValueGetterFactory;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
-import org.apache.asterix.column.common.buffer.DummyBytesInputStream;
+import org.apache.asterix.column.bytes.stream.in.DummyBytesInputStream;
 import org.apache.asterix.column.common.test.TestCase;
 import org.apache.asterix.column.filter.NoOpColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.operation.query.ColumnAssembler;

@@ -82,7 +82,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
             if (columnIndex >= numberOfPrimaryKeys) {
                 buffersProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp);
             } else {
-                buffersProviders[i] = new ColumnSingleBufferProvider(columnIndex);
+                buffersProviders[i] = DummyColumnBufferProvider.INSTANCE;
             }
         }
         totalNumberOfMegaLeafNodes = 0;
@@ -114,7 +114,12 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         int numberOfTuples = frame.getTupleCount();
         //Start new page and check whether we should skip reading non-key columns or not
         boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
-        setPrimaryKeysAt(startIndex, startIndex);
+        /*
+         * When startIndex = 0, a call to next() is performed to get the information of the PK
+         * and 0 skips will be performed. If startIndex (for example) is 5, a call to next() will be performed
+         * then 4 skips will be performed.
+         */
+        int skipCount = setPrimaryKeysAt(startIndex, startIndex);
         if (readColumnPages) {
             for (int i = 0; i < filterBufferProviders.length; i++) {
                 IColumnBufferProvider provider = filterBufferProviders[i];
@@ -133,8 +138,13 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
                 provider.reset(frame);
                 startColumn(provider, i, numberOfTuples);
             }
-            // Skip until before startIndex (i.e. stop at startIndex - 1)
-            skip(startIndex);
+            /*
+             * skipCount can be < 0 for cases when the tuples in the range [0, startIndex] are all anti-matters.
+             * Consequently, tuples in the range [0, startIndex] do not have any non-key columns. Thus, the returned
+             * skipCount from calling setPrimaryKeysAt(startIndex, startIndex) is a negative value. For that reason,
+             * non-key column should not skip any value.
+             */
+            skip(Math.max(skipCount, 0));
         } else {
             numOfSkippedMegaLeafNodes++;
         }
@@ -143,14 +153,25 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final void setAt(int startIndex) throws HyracksDataException {
-        int skipCount = startIndex - tupleIndex;
+        /*
+         * Let say that tupleIndex = 5 and startIndex = 12
+         * Then, skipCount = 12 - 5 - 1 = 6.
+         */
+        int skipCount = startIndex - tupleIndex - 1;
         tupleIndex = startIndex;
-        setPrimaryKeysAt(startIndex, skipCount);
-        // -1 because next would be called for all columns
-        skip(skipCount - 1);
+        /*
+         * As in reset(int startIndex, int endIndex) above, a call to next() will be performed followed by 6 skips.
+         * So, the reader will be moved forward 7 positions (5 + 7 = 12). Hence, the PK will be exactly at index 12.
+         */
+        skipCount = setPrimaryKeysAt(startIndex, skipCount);
+        /*
+         * For values, we need to do 6 skips, as next will be called later by the assembler
+         * -- setting the position at 12 as well.
+         */
+        skip(skipCount);
     }
 
-    protected abstract void setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException;
+    protected abstract int setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException;
 
     protected abstract boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples)
             throws HyracksDataException;

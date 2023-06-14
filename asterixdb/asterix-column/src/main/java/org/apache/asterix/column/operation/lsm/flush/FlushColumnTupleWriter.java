@@ -20,6 +20,7 @@ package org.apache.asterix.column.operation.lsm.flush;
 
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.writer.ColumnBatchWriter;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
@@ -38,6 +39,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     private final ColumnTransformer transformer;
     private final RecordLazyVisitablePointable pointable;
     private final int maxNumberOfTuples;
+    private final IColumnValuesWriter[] primaryKeyWriters;
 
     protected int primaryKeysEstimatedSize;
 
@@ -49,6 +51,12 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance);
         this.maxNumberOfTuples = maxNumberOfTuples;
         pointable = new TypedRecordLazyVisitablePointable(columnMetadata.getDatasetType());
+
+        int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
+        primaryKeyWriters = new IColumnValuesWriter[numberOfPrimaryKeys];
+        for (int i = 0; i < numberOfPrimaryKeys; i++) {
+            primaryKeyWriters[i] = columnMetadata.getWriter(i);
+        }
     }
 
     @Override
@@ -65,7 +73,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     public final int bytesRequired(ITupleReference tuple) {
         int primaryKeysSize = 0;
         for (int i = 0; i < columnMetadata.getNumberOfPrimaryKeys(); i++) {
-            primaryKeysSize += tuple.getFieldLength(i);
+            primaryKeysSize += primaryKeyWriters[i].getEstimatedSize(tuple.getFieldLength(i));
         }
 
         //Mostly it is an overestimated size

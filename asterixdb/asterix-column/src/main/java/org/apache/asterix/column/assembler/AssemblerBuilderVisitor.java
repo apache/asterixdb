@@ -21,7 +21,9 @@ package org.apache.asterix.column.assembler;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.assembler.value.IValueGetterFactory;
@@ -52,6 +54,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
     private final IColumnValuesReaderFactory readerFactory;
     private final List<AbstractPrimitiveValueAssembler> valueAssemblers;
     private final IValueGetterFactory valueGetterFactory;
+    private final Map<Integer, IColumnValuesReader> primaryKeyReaders;
     private AbstractValueAssembler rootAssembler;
 
     //Recursion info
@@ -66,6 +69,10 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         this.valueGetterFactory = valueGetterFactory;
         valueAssemblers = new ArrayList<>();
         delimiters = new IntArrayList();
+        primaryKeyReaders = new HashMap<>();
+        for (IColumnValuesReader reader : columnMetadata.getPrimaryKeyReaders()) {
+            primaryKeyReaders.put(reader.getColumnIndex(), reader);
+        }
     }
 
     public AbstractPrimitiveValueAssembler[] createValueAssemblers(AbstractSchemaNode requestedSchema,
@@ -206,9 +213,15 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             setDelegate(reader, (RepeatedPrimitiveValueAssembler) assembler);
 
         } else {
-            IColumnValuesReader reader = readerFactory.createValueReader(primitiveNode.getTypeTag(),
-                    primitiveNode.getColumnIndex(), level, primitiveNode.isPrimaryKey());
-            assembler = new PrimitiveValueAssembler(level, info, reader, valueGetter);
+            IColumnValuesReader reader;
+            boolean primaryKey = primitiveNode.isPrimaryKey();
+            if (primaryKey) {
+                reader = primaryKeyReaders.get(primitiveNode.getColumnIndex());
+            } else {
+                reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(),
+                        level, false);
+            }
+            assembler = new PrimitiveValueAssembler(level, info, reader, valueGetter, primaryKey);
         }
         valueAssemblers.add(assembler);
         return assembler;

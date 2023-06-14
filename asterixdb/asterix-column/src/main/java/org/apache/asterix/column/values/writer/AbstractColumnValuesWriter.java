@@ -38,6 +38,8 @@ import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.bytes.BytesUtils;
 
 public abstract class AbstractColumnValuesWriter implements IColumnValuesWriter {
+    // For 3 integers (count, defSize, and valueSize)
+    private static final int COUNT_DEF_SIZE_VALUE_SIZE = Integer.BYTES * 3;
     protected final AbstractColumnFilterWriter filterWriter;
     protected final ParquetRunLengthBitPackingHybridEncoder definitionLevels;
     protected final int level;
@@ -65,7 +67,13 @@ public abstract class AbstractColumnValuesWriter implements IColumnValuesWriter 
 
     @Override
     public final int getEstimatedSize() {
-        return definitionLevels.getEstimatedSize() + getValuesEstimatedSize();
+        return definitionLevels.getEstimatedSize() + getValuesEstimatedSize() + COUNT_DEF_SIZE_VALUE_SIZE;
+    }
+
+    @Override
+    public int getEstimatedSize(int length) {
+        // + 1 byte for the definition level
+        return Byte.BYTES + calculateEstimatedSize(length);
     }
 
     @Override
@@ -233,6 +241,8 @@ public abstract class AbstractColumnValuesWriter implements IColumnValuesWriter 
     protected abstract BytesInput getBytes() throws IOException;
 
     protected abstract int getValuesEstimatedSize();
+
+    protected abstract int calculateEstimatedSize(int length);
 
     protected abstract int getValuesAllocatedSize();
 

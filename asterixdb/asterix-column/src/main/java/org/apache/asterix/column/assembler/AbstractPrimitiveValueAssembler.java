@@ -39,10 +39,6 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
         this.reader = reader;
     }
 
-    public final void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException {
-        reader.reset(in, numberOfTuples);
-    }
-
     @Override
     public final IValueReference getValue() throws HyracksDataException {
         return primitiveValueGetter.getValue(reader);
@@ -85,9 +81,13 @@ public abstract class AbstractPrimitiveValueAssembler extends AbstractValueAssem
         reader.skip(count);
     }
 
-    public boolean isEndOfGroupAssembler() {
-        return false;
-    }
+    /**
+     * Reset the assembler
+     *
+     * @param in             stream for value reader
+     * @param numberOfTuples in the current mega leaf node
+     */
+    public abstract void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException;
 
     /**
      * Move to the next primitive value assembler

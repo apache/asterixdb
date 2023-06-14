@@ -59,6 +59,11 @@ public final class BooleanColumnValuesWriter extends AbstractColumnValuesWriter 
     }
 
     @Override
+    protected int calculateEstimatedSize(int length) {
+        return 1;
+    }
+
+    @Override
     protected int getValuesAllocatedSize() {
         return booleanWriter.getAllocatedSize();
     }

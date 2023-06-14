@@ -16137,6 +16137,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="delete/005">
+        <output-dir compare="Text">delete/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="meta/meta_after_gby">
         <output-dir compare="Text">meta/meta_after_gby</output-dir>
       </compilation-unit>

@@ -19,6 +19,7 @@
 package org.apache.asterix.column.assembler;
 
 import org.apache.asterix.column.assembler.value.MissingValueGetter;
+import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -33,6 +34,11 @@ public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler
         this.arrayAssembler = arrayAssembler;
         this.delimiterIndex = delimiterIndex;
         previousGroup = null;
+    }
+
+    @Override
+    public void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException {
+        // NoOp
     }
 
     @Override
@@ -70,11 +76,6 @@ public class EndOfRepeatedGroupAssembler extends AbstractPrimitiveValueAssembler
             }
         }
         return nextIndex;
-    }
-
-    @Override
-    public boolean isEndOfGroupAssembler() {
-        return true;
     }
 
     @Override

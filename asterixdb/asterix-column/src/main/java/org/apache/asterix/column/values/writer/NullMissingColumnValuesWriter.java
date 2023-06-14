@@ -76,6 +76,11 @@ public class NullMissingColumnValuesWriter extends AbstractColumnValuesWriter {
     }
 
     @Override
+    protected int calculateEstimatedSize(int length) {
+        return 0;
+    }
+
+    @Override
     protected int getValuesAllocatedSize() {
         return 0;
     }

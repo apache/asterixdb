@@ -34,8 +34,11 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.NoOpIndexCursorStats;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final List<IColumnTupleIterator> componentTupleList;
 
     public LSMColumnBTreeRangeSearchCursor(ILSMIndexOperationContext opCtx) {
@@ -75,7 +78,10 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
             return;
         }
         IColumnTupleIterator columnTuple = (IColumnTupleIterator) e.getTuple();
-        columnTuple.skip(1);
+        if (!columnTuple.isAntimatter()) {
+            // Skip non-key columns
+            columnTuple.skip(1);
+        }
     }
 
     @Override

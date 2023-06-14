@@ -81,6 +81,12 @@ public class ParquetPlainVariableLengthValuesWriter extends AbstractParquetValue
     }
 
     @Override
+    public int calculateEstimatedSize(int length) {
+        // length of the string + 4 bytes for its offset
+        return length + Integer.BYTES;
+    }
+
+    @Override
     public int getAllocatedSize() {
         return offsetStream.capacity() + valueStream.size();
     }

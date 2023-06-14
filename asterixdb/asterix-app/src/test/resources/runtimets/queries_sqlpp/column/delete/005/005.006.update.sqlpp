@@ -16,29 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IValueReference;
+USE test;
 
-/**
- * Accessor for key columns
- */
-public interface IColumnKeyValueReader {
-    /**
-     * Reset the reader at the given index
-     *
-     * @param startIndex start index
-     * @param skipCount  number of values should be skipped
-     * @return return the number of encountered anti-matters
-     */
-    int reset(int startIndex, int skipCount) throws HyracksDataException;
-
-    /**
-     * Returns the value of the key at the given index
-     *
-     * @param index tuple index
-     * @return the key value
-     */
-    IValueReference getValue(int index);
-}
+-- Delete all records
+DELETE FROM ColumnDataset c;

@@ -41,6 +41,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 
 public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleReference {
@@ -123,7 +124,13 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     public IValueReference getAssembledValue() throws HyracksDataException {
-        return filterApplier.getTuple();
+        try {
+            return filterApplier.getTuple();
+        } catch (ColumnarValueException e) {
+            appendExceptionInformation(e);
+            throw e;
+        }
+
     }
 
     private IFilterApplier createFilterApplier() {

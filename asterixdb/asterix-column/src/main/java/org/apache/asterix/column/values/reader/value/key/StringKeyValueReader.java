@@ -51,8 +51,9 @@ public final class StringKeyValueReader extends AbstractValueReader implements I
     }
 
     @Override
-    public void reset(int startIndex, int skipCount) {
+    public int reset(int startIndex, int skipCount) {
         getValue(startIndex);
+        return 0;
     }
 
     @Override

@@ -84,6 +84,11 @@ final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
     }
 
     @Override
+    protected int calculateEstimatedSize(int length) {
+        return longWriter.calculateEstimatedSize(length);
+    }
+
+    @Override
     protected int getValuesAllocatedSize() {
         return longWriter.getAllocatedSize();
     }

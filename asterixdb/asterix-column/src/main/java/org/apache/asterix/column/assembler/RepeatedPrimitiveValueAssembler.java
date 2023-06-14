@@ -19,19 +19,25 @@
 package org.apache.asterix.column.assembler;
 
 import org.apache.asterix.column.assembler.value.IValueGetter;
+import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
+final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     private boolean arrayDelegate;
 
     RepeatedPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValue) {
         super(level, info, reader, primitiveValue);
         this.arrayDelegate = false;
+    }
+
+    @Override
+    public void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException {
+        reader.reset(in, numberOfTuples);
     }
 
     @Override

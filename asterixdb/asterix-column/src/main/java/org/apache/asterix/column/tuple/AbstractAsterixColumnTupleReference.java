@@ -25,6 +25,7 @@ import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.bytes.stream.in.ByteBufferInputStream;
+import org.apache.asterix.column.bytes.stream.in.DummyBytesInputStream;
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
@@ -37,9 +38,13 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples.AbstractColumnTupleReference;
 import org.apache.hyracks.storage.common.MultiComparator;
+
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class AbstractAsterixColumnTupleReference extends AbstractColumnTupleReference {
     private final IValueGetter[] primaryKeysValueGetters;
@@ -59,6 +64,7 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
         primaryKeys = new VoidPointable[numberOfPrimaryKeys];
 
         for (int i = 0; i < numberOfPrimaryKeys; i++) {
+            // Shared with the assembler PK readers (if assembler requires PK readers)
             primaryKeyStreams[i] = new ByteBufferInputStream();
             primaryKeysValueGetters[i] =
                     ValueGetterFactory.INSTANCE.createValueGetter(primaryKeyReaders[i].getTypeTag());
@@ -70,7 +76,8 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
             if (info.getColumnIndex(i) >= numberOfPrimaryKeys) {
                 columnStreams[i] = new MultiByteBufferInputStream();
             } else {
-                columnStreams[i] = new ByteBufferInputStream();
+                // Assembler's PK readers are shared with the cursor's PK readers
+                columnStreams[i] = DummyBytesInputStream.INSTANCE;
             }
         }
     }
@@ -78,12 +85,12 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
     protected abstract PrimitiveColumnValuesReader[] getPrimaryKeyReaders(IColumnProjectionInfo info);
 
     @Override
-    protected void setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException {
-        for (int i = 0; i < primaryKeyReaders.length; i++) {
-            PrimitiveColumnValuesReader reader = primaryKeyReaders[i];
-            reader.reset(index, skipCount);
-            primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
+    protected int setPrimaryKeysAt(int index, int skipCount) throws HyracksDataException {
+        int numberOfSkippedAntiMatters = resetPrimaryKeyReader(0, index, skipCount);
+        for (int i = 1; i < primaryKeyReaders.length; i++) {
+            resetPrimaryKeyReader(i, index, skipCount);
         }
+        return skipCount - numberOfSkippedAntiMatters;
     }
 
     @Override
@@ -227,5 +234,23 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
             reader.getValue(index);
             primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
         }
+    }
+
+    protected void appendExceptionInformation(ColumnarValueException e) {
+        ObjectNode node = e.createNode(getClass().getSimpleName());
+        node.put("isAntiMatter", isAntimatter());
+        ArrayNode pkNodes = node.putArray("primaryKeyReaders");
+        for (IColumnValuesReader reader : primaryKeyReaders) {
+            reader.appendReaderInformation(pkNodes.addObject());
+        }
+    }
+
+    private int resetPrimaryKeyReader(int i, int index, int skipCount) throws HyracksDataException {
+        PrimitiveColumnValuesReader reader = primaryKeyReaders[i];
+        // Returns the number of encountered anti-matters
+        int numberOfSkippedAntiMatters = reader.reset(index, skipCount);
+        primaryKeys[i].set(primaryKeysValueGetters[i].getValue(reader));
+        // include the current key if the current key is an anti-matter
+        return numberOfSkippedAntiMatters + (isAntimatter() ? 1 : 0);
     }
 }

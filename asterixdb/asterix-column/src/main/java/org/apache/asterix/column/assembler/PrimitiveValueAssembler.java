@@ -19,22 +19,34 @@
 package org.apache.asterix.column.assembler;
 
 import org.apache.asterix.column.assembler.value.IValueGetter;
+import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
-    int counter = 0;
+final class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
+    private final boolean primaryKey;
 
-    PrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader, IValueGetter primitiveValue) {
+    PrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader, IValueGetter primitiveValue,
+            boolean primaryKey) {
         super(level, info, reader, primitiveValue);
+        this.primaryKey = primaryKey;
+    }
+
+    @Override
+    public void reset(AbstractBytesInputStream in, int numberOfTuples) throws HyracksDataException {
+        // Do not skip PK readers as they are maintained by the cursor
+        if (!primaryKey) {
+            reader.reset(in, numberOfTuples);
+        }
     }
 
     @Override
     public int next(AssemblerState state) throws HyracksDataException {
-        if (!reader.next()) {
+        // Do not call next on PK readers as they are maintained by the cursor
+        if (!primaryKey && !reader.next()) {
             throw createException();
         } else if (reader.isNull() && (isDelegate() || reader.getLevel() + 1 == level)) {
             addNullToAncestor(reader.getLevel());

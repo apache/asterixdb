@@ -98,6 +98,12 @@ public interface IColumnValuesWriter {
     int getEstimatedSize();
 
     /**
+     * @param length the length of value to be return
+     * @return (probably) an overestimated size needed to write a value with the given length
+     */
+    int getEstimatedSize(int length);
+
+    /**
      * @return the allocated space in bytes
      */
     int getAllocatedSpace();

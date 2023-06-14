@@ -109,6 +109,11 @@ public class DummyColumnValuesWriter implements IColumnValuesWriter {
     }
 
     @Override
+    public int getEstimatedSize(int length) {
+        return length;
+    }
+
+    @Override
     public int getAllocatedSpace() {
         return 0;
     }

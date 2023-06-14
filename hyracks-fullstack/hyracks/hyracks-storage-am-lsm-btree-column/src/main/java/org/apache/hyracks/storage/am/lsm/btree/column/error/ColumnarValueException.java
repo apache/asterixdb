@@ -23,7 +23,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * This exception is thrown when an error is encountered in columnar collections
- * It contains a string builder to collect information about the encountered error
+ * It contains an OBJECT_MAPPER to collect information about the encountered error in JSON format
  */
 public class ColumnarValueException extends IllegalStateException {
     private static final long serialVersionUID = 1513428477557736034L;

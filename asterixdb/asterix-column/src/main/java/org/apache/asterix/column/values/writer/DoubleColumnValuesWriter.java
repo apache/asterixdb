@@ -87,6 +87,11 @@ public final class DoubleColumnValuesWriter extends AbstractColumnValuesWriter {
     }
 
     @Override
+    protected int calculateEstimatedSize(int length) {
+        return doubleWriter.calculateEstimatedSize(length);
+    }
+
+    @Override
     protected int getValuesAllocatedSize() {
         return doubleWriter.getAllocatedSize();
     }

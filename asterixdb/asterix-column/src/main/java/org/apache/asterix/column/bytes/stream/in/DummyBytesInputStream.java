@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.common.buffer;
+package org.apache.asterix.column.bytes.stream.in;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;

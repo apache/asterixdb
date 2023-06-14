@@ -42,7 +42,18 @@ public abstract class AbstractParquetValuesWriter {
      */
     public abstract void close();
 
+    /**
+     * @return the current (mostly) overestimated size needed to flush this writer
+     */
     public abstract int getEstimatedSize();
+
+    /**
+     * @param length the length of value to be return
+     * @return (probably) an overestimated size needed to write a value with the given length
+     */
+    public int calculateEstimatedSize(int length) {
+        return length;
+    }
 
     /**
      * @return the allocated size of the buffer

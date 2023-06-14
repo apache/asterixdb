@@ -77,7 +77,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     public int bytesRequired(ITupleReference tuple) {
         int primaryKeysSize = 0;
         for (int i = 0; i < columnMetadata.getNumberOfPrimaryKeys(); i++) {
-            primaryKeysSize += tuple.getFieldLength(i);
+            primaryKeysSize += primaryKeyWriters[i].getEstimatedSize(tuple.getFieldLength(i));
         }
 
         return primaryKeysSize;

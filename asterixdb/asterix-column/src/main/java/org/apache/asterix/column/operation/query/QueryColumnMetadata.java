@@ -83,12 +83,13 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             throws HyracksDataException {
         super(datasetType, metaType, primaryKeyReaders.length, serializedMetadata, -1);
         this.fieldNamesDictionary = fieldNamesDictionary;
-        this.assembler = new ColumnAssembler(root, datasetType, this, readerFactory, valueGetterFactory);
         this.primaryKeyReaders = primaryKeyReaders;
         this.normalizedFilterEvaluator = normalizedFilterEvaluator;
         this.filterValueAccessors = filterValueAccessors;
         this.columnFilterEvaluator = columnFilterEvaluator;
         this.filterColumnReaders = filterColumnReaders;
+        // Must be the last value to set as it depends on 'QueryColumnMetadata.this'
+        this.assembler = new ColumnAssembler(root, datasetType, this, readerFactory, valueGetterFactory);
     }
 
     public final ColumnAssembler getAssembler() {
