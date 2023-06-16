@@ -88,6 +88,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         boolean cboMode = this.getCBOMode(context);
         boolean cboTestMode = this.getCBOTestMode(context);
+
         if (!(cboMode || cboTestMode)) {
             return false;
         }

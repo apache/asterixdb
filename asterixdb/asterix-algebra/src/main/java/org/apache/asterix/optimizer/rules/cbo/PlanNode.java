@@ -42,6 +42,7 @@ public class PlanNode {
     protected ICost leftExchangeCost;
     protected ICost rightExchangeCost;
     protected JoinMethod joinOp;
+    protected boolean indexHint;
     protected IExpressionAnnotation joinHint;
     // Used to indicate which side to build for HJ and which side to broadcast for BHJ.
     protected HashJoinExpressionAnnotation.BuildSide side;
