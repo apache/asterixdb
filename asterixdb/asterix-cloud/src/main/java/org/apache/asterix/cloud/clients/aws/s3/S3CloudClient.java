@@ -223,7 +223,7 @@ public class S3CloudClient implements ICloudClient {
     private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
         Set<String> files = new HashSet<>();
         for (S3Object s3Object : contents) {
-            String path = s3Object.key();
+            String path = S3Utils.decodeURI(s3Object.key());
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
                 files.add(path);
             }

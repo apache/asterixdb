@@ -24,5 +24,10 @@
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="cloud_storage">
+      <compilation-unit name="special-chars">
+        <output-dir compare="Text">special-chars</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
