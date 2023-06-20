@@ -58,6 +58,7 @@ import org.apache.hyracks.api.exceptions.Warning;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.BaseServiceException;
+import com.google.cloud.NoCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
@@ -101,15 +102,14 @@ public class GCSUtils {
             } catch (IOException ex) {
                 throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
-        }
-
-        // json credentials
-        if (jsonCredentials != null) {
+        } else if (jsonCredentials != null) {
             try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
                 builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
             } catch (IOException ex) {
                 throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
             }
+        } else {
+            builder.setCredentials(NoCredentials.getInstance());
         }
 
         if (endpoint != null) {
