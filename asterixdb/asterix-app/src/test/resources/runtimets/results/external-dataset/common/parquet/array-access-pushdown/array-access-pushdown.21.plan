@@ -1,26 +1,26 @@
-distribute result [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$18]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$18]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$18] <- [get-item(get-item(get-item($$21, 0), 0), 0)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$18] <- [get-item(get-item(get-item($$21, 0), 0), 0)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$21]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
-            order (ASC, $$20) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            order (ASC, $$20) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
-              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$21, $$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                project ([$$21, $$20]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  assign [$$21, $$20] <- [$$p.getField("place").getField("bounding_box").getField("coordinates"), $$p.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$21, $$20] <- [$$p.getField("place").getField("bounding_box").getField("coordinates"), $$p.getField("id")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$p] <- test.ParquetDataset project ({place:{bounding_box:{coordinates:[[[any]]]}},id:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      data-scan []<-[$$p] <- test.ParquetDataset project ({place:{bounding_box:{coordinates:[[[any]]]}},id:any}) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                       -- DATASOURCE_SCAN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -431,4 +431,8 @@ public class OptionTypes {
             node.put(fieldName, (long) value);
         }
     }
+
+    public static final IOptionType<Long> getRangedLongByteUnit(long min, long max) {
+        return new LongByteUnit(min, max);
+    }
 }

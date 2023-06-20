@@ -1,0 +1,48 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+/*
+* Description  : Test warnings for multiple hints
+* Expected Res : Warning, ignore hint
+* Date         : 11/20/2022
+*/
+
+DROP dataverse tpch IF EXISTS;
+CREATE  dataverse tpch;
+
+USE tpch;
+
+
+CREATE TYPE OrderType AS {
+  o_orderkey : integer
+};
+
+CREATE TYPE CustomerType AS {
+  c_custkey : integer
+};
+
+CREATE TYPE NationType AS {
+  n_nationkey : integer,
+  n_name : string
+};
+
+CREATE DATASET orders(OrderType) PRIMARY KEY o_orderkey;
+
+CREATE DATASET customer(CustomerType) PRIMARY KEY c_custkey;
+
+CREATE DATASET nation(NationType) PRIMARY KEY n_nationkey;

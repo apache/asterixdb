@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.apache.asterix</groupId>
   <artifactId>apache-asterixdb</artifactId>
-  <version>0.9.8-SNAPSHOT</version>
+  <version>0.9.8.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <url>${implementation.url}</url>
 
@@ -82,15 +82,17 @@
     <skip-npm-touch.stage>none</skip-npm-touch.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <algebricks.version>0.3.8-SNAPSHOT</algebricks.version>
-    <hyracks.version>0.3.8-SNAPSHOT</hyracks.version>
+    <algebricks.version>0.3.8.2-SNAPSHOT</algebricks.version>
+    <hyracks.version>0.3.8.2-SNAPSHOT</hyracks.version>
     <hadoop.version>3.3.4</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
-    <azureblobjavasdk.version>12.14.2</azureblobjavasdk.version>
+    <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
+    <azureidentity.version>1.9.0</azureidentity.version>
     <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
     <gcsjavasdk.version>2.17.2</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
@@ -1013,6 +1015,10 @@
         <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
+          <exclusion>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
           </exclusion>
@@ -1096,6 +1102,10 @@
         <version>${hadoop.version}</version>
         <classifier>tests</classifier>
         <exclusions>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
@@ -1607,8 +1617,12 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-identity</artifactId>
-        <version>1.4.1</version>
+        <version>${azureidentity.version}</version>
         <exclusions>
+          <exclusion>
+            <groupId>net.minidev</groupId>
+            <artifactId>json-smart</artifactId>
+          </exclusion>
           <exclusion>
             <groupId>io.netty</groupId>
             <artifactId>netty-handler</artifactId>
@@ -1678,7 +1692,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-blob</artifactId>
-        <version>12.14.3</version>
+        <version>${azureblobjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1749,7 +1763,7 @@
       <dependency>
         <groupId>com.azure</groupId>
         <artifactId>azure-storage-common</artifactId>
-        <version>12.14.2</version>
+        <version>${azurecommonjavasdk.version}</version>
         <exclusions>
           <exclusion>
             <groupId>io.netty</groupId>
@@ -1823,18 +1837,6 @@
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-storage</artifactId>
         <version>${gcsjavasdk.version}</version>
-        <exclusions>
-          <!-- substitute org.apache.tomcat:tomcat-annotations-api, as it has a nicer license -->
-          <exclusion>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.tomcat</groupId>
-        <artifactId>tomcat-annotations-api</artifactId>
-        <version>10.1.5</version>
       </dependency>
       <!-- Google Cloud Storage end -->
       <!-- Azure Data Lake start -->

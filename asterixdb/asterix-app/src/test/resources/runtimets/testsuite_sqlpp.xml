@@ -1617,6 +1617,11 @@
         <output-dir compare="Text">min_max_arrays</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="non-pure-function">
+        <output-dir compare="Text">non-pure-function</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate-sql">
     <test-case FilePath="aggregate-sql">
@@ -4143,6 +4148,11 @@
     <test-case FilePath="ddl">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-with-indexes">
+        <output-dir compare="Text">analyze-dataset-with-indexes</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl/create-index">
@@ -15495,6 +15505,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="cardinality-hint-warning">
+        <output-dir compare="Text">cardinality-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Expected selectivity value (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply selectivity hint: Selectivity specified: 0.0, has to be a decimal value greater than 0 and less than 1 (in line 31, at column 73)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Expected productivity collection name and value (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply productivity hint: Productivity specified: 0.0, has to be a decimal value greater than 0 (in line 31, at column 47)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
       <compilation-unit name="inapplicable-hint-warning">
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
@@ -15510,6 +15535,15 @@
         <output-dir compare="Text">min-max-incompatible-types</output-dir>
         <expected-warn>ASX0003: Type incompatibility: function min/max gets incompatible input values: bigint and string</expected-warn>
         <expected-warn>ASX0004: Unsupported type: min/max cannot process input type object</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="multiple-hints-warning">
+        <output-dir compare="Text">multiple-hints-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 30, at column 20)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 30, at column 46)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 30, at column 45)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 30, at column 20)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">

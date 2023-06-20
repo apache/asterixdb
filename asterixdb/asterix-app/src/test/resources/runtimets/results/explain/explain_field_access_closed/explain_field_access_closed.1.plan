@@ -1,40 +1,40 @@
-distribute result [$$46] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$46] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$46]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$46]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$46] <- [{"deptId": $#1, "star_cost": $$49}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$46] <- [{"deptId": $#1, "star_cost": $$49}] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           group by ([$#1 := $$53]) decor ([]) {
                     aggregate [$$49] <- [agg-global-sql-sum($$52)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- AGGREGATE  |LOCAL|
                       nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- SORT_GROUP_BY[$$53]  |PARTITIONED|
-            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
               group by ([$$53 := $$47]) decor ([]) {
                         aggregate [$$52] <- [agg-local-sql-sum($$44)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                     } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- SORT_GROUP_BY[$$47]  |PARTITIONED|
-                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  project ([$$44, $$47]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  project ([$$44, $$47]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    assign [$$47, $$44] <- [substring($$e.getField(1), 0), $$e.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$47, $$44] <- [substring($$e.getField(1), 0), $$e.getField(2)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ASSIGN  |PARTITIONED|
-                      project ([$$e]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      project ([$$e]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$48, $$e] <- gby.Employee [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          data-scan []<-[$$48, $$e] <- gby.Employee [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

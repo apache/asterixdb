@@ -55,7 +55,6 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
     private final String operatorName;
     private final IIndexDataflowHelperFactory[] indexes;
     private final String[] indexesNames;
-    private Map<String, IndexStats> indexStats;
 
     public DatasetStreamStatsOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor rDesc,
             String operatorName, IIndexDataflowHelperFactory[] indexes, String[] indexesNames) {
@@ -75,6 +74,7 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
             private FrameTupleAccessor fta;
             private long totalTupleCount;
             private long totalTupleLength;
+            private Map<String, IndexStats> indexStats;
 
             @Override
             public void open() throws HyracksDataException {

@@ -307,7 +307,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
                 break;
         }
 
-        return combinedCondition;
+        return combinedCondition.cloneExpression();
     }
 
     private SelectOperator getSelectFromPlan(AggregateOperator subplanRoot) {

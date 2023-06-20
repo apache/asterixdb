@@ -21,7 +21,7 @@
   <parent>
     <artifactId>apache-asterixdb</artifactId>
     <groupId>org.apache.asterix</groupId>
-    <version>0.9.8-SNAPSHOT</version>
+    <version>0.9.8.2-SNAPSHOT</version>
   </parent>
   <licenses>
     <license>
@@ -210,7 +210,7 @@
               <usedDependency>io.netty:netty-resolver-dns</usedDependency>
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
-              <usedDependency>org.apache.tomcat:tomcat-annotations-api</usedDependency>
+              <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
@@ -471,10 +471,6 @@
       <artifactId>google-cloud-storage</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.tomcat</groupId>
-      <artifactId>tomcat-annotations-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.msgpack</groupId>
       <artifactId>msgpack-core</artifactId>
     </dependency>
@@ -545,6 +541,10 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-unix-common</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-handler-proxy</artifactId>
+    </dependency>
     <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
      be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
     <dependency>
@@ -554,6 +554,11 @@
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-util-ajax</artifactId>
+    </dependency>
+    <!-- Manually included to avoid CVE-2023-1370 -->
+    <dependency>
+      <groupId>net.minidev</groupId>
+      <artifactId>json-smart</artifactId>
     </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->

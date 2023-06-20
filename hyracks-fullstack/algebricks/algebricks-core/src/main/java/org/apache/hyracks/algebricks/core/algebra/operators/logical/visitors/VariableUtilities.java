@@ -33,6 +33,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
@@ -99,6 +100,17 @@ public class VariableUtilities {
         VariableUtilities.getUsedVariables(op, vars);
         for (Mutable<ILogicalOperator> c : op.getInputs()) {
             getUsedVariablesInDescendantsAndSelf(c.getValue(), vars);
+        }
+    }
+
+    public static void getLiveVariablesInDescendantDataScans(ILogicalOperator op, Collection<LogicalVariable> vars)
+            throws AlgebricksException {
+        // DFS traversal
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+            VariableUtilities.getLiveVariables(op, vars);
+        }
+        for (Mutable<ILogicalOperator> c : op.getInputs()) {
+            getLiveVariablesInDescendantDataScans(c.getValue(), vars);
         }
     }
 

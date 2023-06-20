@@ -17,10 +17,6 @@
  * under the License.
  */
 
-/*
- * Description: test that the sample index is dropped when its source dataset is dropped
- */
-
 use test;
 
-drop dataset ds1;
+analyze dataset ds1;

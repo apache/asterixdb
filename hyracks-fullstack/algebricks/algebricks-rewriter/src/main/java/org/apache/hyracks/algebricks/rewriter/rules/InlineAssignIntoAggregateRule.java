@@ -84,11 +84,7 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
         }
         AssignOperator assignOp = (AssignOperator) op2;
         VarExprSubstitution ves = new VarExprSubstitution(assignOp.getVariables(), assignOp.getExpressions());
-        inlineVariables(aggOp, ves);
-        List<Mutable<ILogicalOperator>> op1InpList = aggOp.getInputs();
-        op1InpList.clear();
-        op1InpList.add(op2.getInputs().get(0));
-        return true;
+        return inlineVariables(aggOp, ves);
     }
 
     private boolean inlineOuterInputAssignIntoAgg(AggregateOperator aggOp,
@@ -107,18 +103,20 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
         for (Mutable<ILogicalExpression> exprRef : aggOp.getExpressions()) {
             ILogicalExpression expr = exprRef.getValue();
             Pair<Boolean, ILogicalExpression> p = expr.accept(ves, null);
-            if (p.first) {
-                exprRef.setValue(p.second);
+            ILogicalExpression originalExpr = p.second;
+            if (p.first & originalExpr.isFunctional()) {
+                exprRef.setValue(originalExpr);
                 inlined = true;
             }
         }
         return inlined;
     }
 
-    private class VarExprSubstitution extends AbstractConstVarFunVisitor<Pair<Boolean, ILogicalExpression>, Void> {
+    private static class VarExprSubstitution
+            extends AbstractConstVarFunVisitor<Pair<Boolean, ILogicalExpression>, Void> {
 
-        private List<LogicalVariable> variables;
-        private List<Mutable<ILogicalExpression>> expressions;
+        private final List<LogicalVariable> variables;
+        private final List<Mutable<ILogicalExpression>> expressions;
 
         public VarExprSubstitution(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
             this.variables = variables;
@@ -127,7 +125,7 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
 
         @Override
         public Pair<Boolean, ILogicalExpression> visitConstantExpression(ConstantExpression expr, Void arg) {
-            return new Pair<Boolean, ILogicalExpression>(false, expr);
+            return new Pair<>(false, expr);
         }
 
         @Override
@@ -137,12 +135,13 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
             for (Mutable<ILogicalExpression> eRef : expr.getArguments()) {
                 ILogicalExpression e = eRef.getValue();
                 Pair<Boolean, ILogicalExpression> p = e.accept(this, arg);
-                if (p.first) {
-                    eRef.setValue(p.second.cloneExpression());
+                ILogicalExpression originalExpr = p.second;
+                if (p.first & originalExpr.isFunctional()) {
+                    eRef.setValue(originalExpr.cloneExpression());
                     changed = true;
                 }
             }
-            return new Pair<Boolean, ILogicalExpression>(changed, expr);
+            return new Pair<>(changed, expr);
         }
 
         @Override
@@ -151,9 +150,9 @@ public class InlineAssignIntoAggregateRule implements IAlgebraicRewriteRule {
             LogicalVariable v = expr.getVariableReference();
             int idx = variables.indexOf(v);
             if (idx < 0) {
-                return new Pair<Boolean, ILogicalExpression>(false, expr);
+                return new Pair<>(false, expr);
             } else {
-                return new Pair<Boolean, ILogicalExpression>(true, expressions.get(idx).getValue());
+                return new Pair<>(true, expressions.get(idx).getValue());
             }
 
         }

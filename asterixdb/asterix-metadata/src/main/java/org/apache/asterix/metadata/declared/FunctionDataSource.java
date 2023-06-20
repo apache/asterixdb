@@ -27,6 +27,8 @@ import java.util.Set;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
+import org.apache.asterix.external.api.IDataParserFactory;
+import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.RecordUtil;
@@ -98,7 +100,10 @@ public abstract class FunctionDataSource extends DataSource {
         IClusterStateManager csm = metadataProvider.getApplicationContext().getClusterStateManager();
         FunctionDataSourceFactory factory =
                 new FunctionDataSourceFactory(createFunction(metadataProvider, getLocations(csm)));
-        adapterFactory.configure(factory);
+        IDataParserFactory dataParserFactory = createDataParserFactory();
+        dataParserFactory.setRecordType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+        dataParserFactory.configure(Collections.emptyMap());
+        adapterFactory.configure(factory, dataParserFactory);
         return metadataProvider.buildExternalDatasetDataScannerRuntime(jobSpec, itemType, adapterFactory,
                 tupleFilterFactory, outputLimit);
     }
@@ -110,6 +115,10 @@ public abstract class FunctionDataSource extends DataSource {
         String[] allPartitions = csm.getClusterLocations().getLocations();
         Set<String> ncs = new HashSet<>(Arrays.asList(allPartitions));
         return new AlgebricksAbsolutePartitionConstraint(ncs.toArray(new String[ncs.size()]));
+    }
+
+    protected IDataParserFactory createDataParserFactory() {
+        return new ADMDataParserFactory();
     }
 
     protected static DataSourceId createDataSourceId(FunctionIdentifier fid, String... parameters) {

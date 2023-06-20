@@ -19,6 +19,8 @@
 package org.apache.asterix.app.function;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.external.api.IDataParserFactory;
+import org.apache.asterix.external.parser.factory.JSONDataParserFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
@@ -58,5 +60,10 @@ public class DumpIndexDatasource extends FunctionDataSource {
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
         return new DumpIndexFunction(locations, indexDataflowHelperFactory, recDesc, comparatorFactories);
+    }
+
+    @Override
+    protected IDataParserFactory createDataParserFactory() {
+        return new JSONDataParserFactory();
     }
 }

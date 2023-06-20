@@ -41,6 +41,9 @@ import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFun
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public class Stats {
 
@@ -94,12 +97,27 @@ public class Stats {
             int leftIndex = joinEnum.findJoinNodeIndexByName(anno.getLeftSideDataSet());
             if (leftIndex != idx1 && leftIndex != idx2) {
                 // should not happen
+                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.of(joinExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                            "productivity", "Invalid collection name/alias: " + anno.getLeftSideDataSet()));
+                }
+                return 1.0;
+            }
+            double productivity = anno.getJoinProductivity();
+            if (productivity <= 0) {
+                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.of(joinExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                            "productivity",
+                            "Productivity specified: " + productivity + ", has to be a decimal value greater than 0"));
+                }
                 return 1.0;
             }
             if (leftIndex == idx1) {
-                return anno.getJoinProductivity() / card2;
+                return productivity / card2;
             } else {
-                return anno.getJoinProductivity() / card1;
+                return productivity / card1;
             }
         } else {
             if (card1 < card2) {
@@ -152,7 +170,16 @@ public class Stats {
         PredicateCardinalityAnnotation pca = afcExpr.getAnnotation(PredicateCardinalityAnnotation.class);
         if (pca != null) {
             s = pca.getSelectivity();
-            sel *= s;
+            if (s <= 0 || s >= 1) {
+                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(Warning.of(afcExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                            "selectivity", "Selectivity specified: " + s
+                                    + ", has to be a decimal value greater than 0 and less than 1"));
+                }
+            } else {
+                sel *= s;
+            }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
             s = findJoinSelectivity(jpa, afcExpr);

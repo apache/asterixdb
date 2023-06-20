@@ -18,7 +18,7 @@
  */
 
 /*
- * Description: check that the sample was dropped
+ * Description: check that the sample was re-created again
  */
 
 use test;

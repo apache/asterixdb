@@ -25,7 +25,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.3.8-SNAPSHOT</version>
+    <version>0.3.8.2-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -179,8 +179,12 @@
       <scope>test</scope>
       <exclusions>
         <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-reload4j</artifactId>
+          <groupId>net.minidev</groupId>
+          <artifactId>json-smart</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
         </exclusion>
         <exclusion>
           <groupId>ch.qos.reload4j</groupId>

@@ -309,13 +309,13 @@ public class JoinNode {
         return PlanNode.NO_PLAN;
     }
 
-    protected void buildIndexPlan() {
+    protected void buildIndexPlan(boolean forceIndexPlan) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         ICost opCost, totalCost;
 
         opCost = joinEnum.getCostMethodsHandle().costIndexScan(this);
         totalCost = opCost;
-        if (this.cheapestPlanIndex == PlanNode.NO_PLAN || opCost.costLT(this.cheapestPlanCost)) {
+        if (this.cheapestPlanIndex == PlanNode.NO_PLAN || opCost.costLT(this.cheapestPlanCost) || forceIndexPlan) {
             // for now just add one plan
             PlanNode pn = new PlanNode(allPlans.size(), joinEnum);
             pn.jn = this;
@@ -354,13 +354,15 @@ public class JoinNode {
                 AbstractFunctionCallExpression afce = expr.getFuncExpr();
                 PredicateCardinalityAnnotation selectivityAnnotation =
                         afce.getAnnotation(PredicateCardinalityAnnotation.class);
-                if (selectivityAnnotation != null) {
+                if (joinEnum.findUseIndexHint(afce)) {
+                    buildIndexPlan(true);
+                } else if (selectivityAnnotation != null) {
                     sel = selectivityAnnotation.getSelectivity();
                     if (sel >= joinEnum.stats.SELECTIVITY_FOR_SECONDARY_INDEX_SELECTION) {
                         afce.putAnnotation(SkipSecondaryIndexSearchExpressionAnnotation
                                 .newInstance(Collections.singleton(chosenIndex.getIndexName())));
                     } else {
-                        buildIndexPlan();
+                        buildIndexPlan(false);
                     }
                 }
             }

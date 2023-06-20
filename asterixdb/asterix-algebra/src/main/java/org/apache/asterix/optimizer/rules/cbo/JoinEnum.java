@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
+import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.entities.Index;
@@ -296,6 +297,25 @@ public class JoinEnum {
             }
         }
         return null;
+    }
+
+    public boolean findUseIndexHint(AbstractFunctionCallExpression condition) {
+        if (condition.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
+            for (int i = 0; i < condition.getArguments().size(); i++) {
+                ILogicalExpression expr = condition.getArguments().get(i).getValue();
+                if (expr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                    AbstractFunctionCallExpression AFCexpr = (AbstractFunctionCallExpression) expr;
+                    if (AFCexpr.hasAnnotation(SecondaryIndexSearchPreferenceAnnotation.class)) {
+                        return true;
+                    }
+                }
+            }
+        } else if (condition.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+            if (condition.hasAnnotation(SecondaryIndexSearchPreferenceAnnotation.class)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int findJoinNodeIndexByName(String name) {
@@ -588,6 +608,9 @@ public class JoinEnum {
                     Collections.sort(jn.aliases);
                     jn.size = jnI.size + jnJ.size;
                     jn.cardinality = jn.computeJoinCardinality();
+                    if (jn.cardinality < 2.1) {
+                        jn.cardinality = 2.1; // for keeping CP and HJ cost formulas happy.
+                    }
                 } else {
                     addPlansToThisJn = jnNewBits.jnIndex;
                 }
@@ -695,6 +718,9 @@ public class JoinEnum {
                 }
                 // multiply by the respective predicate selectivities
                 jn.cardinality = jn.origCardinality * stats.getSelectivity(leafInput, false);
+                if (jn.cardinality < 2.1) {
+                    jn.cardinality = 2.1; // for keeping CP and HJ cost formulas happy.
+                }
             } else {
                 // could be unnest or assign
                 jn.datasetNames = new ArrayList<>(Collections.singleton("unnestOrAssign"));
