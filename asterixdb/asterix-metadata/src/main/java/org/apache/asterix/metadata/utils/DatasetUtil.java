@@ -21,7 +21,6 @@ package org.apache.asterix.metadata.utils;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.io.DataOutput;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -613,10 +612,10 @@ public class DatasetUtil {
         appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
         NodeGroup ng = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup);
         if (ng != null) {
-            nodeGroup = nodeGroup + "_" + UUID.randomUUID().toString();
+            nodeGroup = nodeGroup + "_" + UUID.randomUUID();
             appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
         }
-        MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, NodeGroup.createOrdered(nodeGroup, new ArrayList<>(ncNames)));
+        MetadataManager.INSTANCE.addNodegroup(mdTxnCtx, NodeGroup.createOrdered(nodeGroup, ncNames));
         return nodeGroup;
     }
 

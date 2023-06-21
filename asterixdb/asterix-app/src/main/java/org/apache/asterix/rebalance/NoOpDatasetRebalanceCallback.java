@@ -33,9 +33,10 @@ public class NoOpDatasetRebalanceCallback implements IDatasetRebalanceCallback {
     }
 
     @Override
-    public void beforeRebalance(MetadataProvider metadataProvider, Dataset source, Dataset target,
+    public boolean canRebalance(MetadataProvider metadataProvider, Dataset source, Dataset target,
             IHyracksClientConnection hcc) {
         // Does nothing.
+        return true;
     }
 
     @Override

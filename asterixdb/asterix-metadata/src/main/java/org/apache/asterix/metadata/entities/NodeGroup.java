@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.entities;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class NodeGroup implements IMetadataEntity<NodeGroup> {
         this.nodeNames = nodeNames;
     }
 
-    public static NodeGroup createOrdered(String groupName, List<String> nodeNames) {
+    public static NodeGroup createOrdered(String groupName, Collection<String> nodeNames) {
         List<String> sortedNodeNames = new ArrayList<>(nodeNames);
         Collections.sort(sortedNodeNames);
         return new NodeGroup(groupName, sortedNodeNames);
