@@ -244,7 +244,9 @@ public class ARecordPointable extends AbstractPointable {
     // -----------------------
 
     public final void getOpenFieldValue(ARecordType recordType, int fieldId, DataOutput dOut) throws IOException {
-        dOut.write(bytes, getOpenFieldValueOffset(recordType, fieldId), getOpenFieldValueSize(recordType, fieldId));
+        // + 1 to include the tag
+        int len = getOpenFieldValueSize(recordType, fieldId) + 1;
+        dOut.write(bytes, getOpenFieldValueOffset(recordType, fieldId), len);
     }
 
     public final int getOpenFieldValueOffset(ARecordType recordType, int fieldId) {
