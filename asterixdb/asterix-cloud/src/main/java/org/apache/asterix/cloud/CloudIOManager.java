@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.aws.s3.S3Utils;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -165,8 +166,7 @@ public class CloudIOManager extends IOManager {
             if (file.getFile().isDirectory()) {
                 continue;
             }
-
-            String path = file.getRelativePath();
+            String path = S3Utils.toCloudPrefix(file.getRelativePath());
             if (!cloudFiles.contains(path)) {
                 // Delete local files that do not exist in cloud storage (the ground truth for valid files)
                 localFilesIter.remove();
