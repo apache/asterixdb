@@ -40,7 +40,7 @@ public class S3Utils {
         String newMarker = null;
         ListObjectsV2Response listObjectsResponse;
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(bucket);
-        listObjectsBuilder.prefix(encodeURI(toCloudPrefix(path)));
+        listObjectsBuilder.prefix(toCloudPrefix(path));
         while (true) {
             // List the objects from the start, or from the last marker in case of truncated result
             if (newMarker == null) {

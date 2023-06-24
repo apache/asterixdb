@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
+import static org.apache.asterix.cloud.clients.aws.s3.S3Utils.encodeURI;
 import static org.apache.asterix.cloud.clients.aws.s3.S3Utils.listS3Objects;
 
 import java.io.File;
@@ -108,6 +109,7 @@ public class S3CloudClient implements ICloudClient {
 
     @Override
     public Set<String> listObjects(String bucket, String path, FilenameFilter filter) {
+        path = config.isEncodeKeys() ? encodeURI(path) : path;
         return filterAndGet(listS3Objects(s3Client, bucket, path), filter);
     }
 
@@ -171,6 +173,7 @@ public class S3CloudClient implements ICloudClient {
 
     @Override
     public void copy(String bucket, String srcPath, FileReference destPath) {
+        srcPath = config.isEncodeKeys() ? encodeURI(srcPath) : srcPath;
         List<S3Object> objects = listS3Objects(s3Client, bucket, srcPath);
         for (S3Object object : objects) {
             String srcKey = object.key();
@@ -223,7 +226,7 @@ public class S3CloudClient implements ICloudClient {
     private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
         Set<String> files = new HashSet<>();
         for (S3Object s3Object : contents) {
-            String path = S3Utils.decodeURI(s3Object.key());
+            String path = config.isEncodeKeys() ? S3Utils.decodeURI(s3Object.key()) : s3Object.key();
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
                 files.add(path);
             }

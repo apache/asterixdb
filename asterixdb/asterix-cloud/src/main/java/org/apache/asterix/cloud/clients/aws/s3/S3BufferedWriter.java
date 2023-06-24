@@ -69,6 +69,9 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     @Override
     public void finish() throws HyracksDataException {
+        if (uploadId == null) {
+            return;
+        }
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder().parts(partQueue).build();
         CompleteMultipartUploadRequest completeMultipartUploadRequest = CompleteMultipartUploadRequest.builder()
                 .bucket(bucket).key(path).uploadId(uploadId).multipartUpload(completedMultipartUpload).build();
@@ -97,6 +100,9 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     @Override
     public void abort() throws HyracksDataException {
+        if (uploadId == null) {
+            return;
+        }
         s3Client.abortMultipartUpload(
                 AbortMultipartUploadRequest.builder().bucket(bucket).key(path).uploadId(uploadId).build());
     }
