@@ -31,6 +31,7 @@ import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
 import org.apache.hyracks.api.dataflow.value.IResultSerializer;
 import org.apache.hyracks.api.dataflow.value.IResultSerializerFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
@@ -43,14 +44,12 @@ import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescri
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryInputSinkOperatorNodePushable;
 
 public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
+
     private static final long serialVersionUID = 1L;
 
     private final ResultSetId rsId;
-
     private final IResultMetadata metadata;
-
     private final boolean asyncMode;
-
     private final IResultSerializerFactory resultSerializerFactory;
     private final long maxReads;
 
@@ -105,10 +104,12 @@ public class ResultWriterOperatorDescriptor extends AbstractSingleActivityOperat
                     resultSerializer.appendTuple(frameTupleAccessor, tIndex);
                     if (!frameOutputStream.appendTuple()) {
                         frameOutputStream.flush(resultPartitionWriter);
-
-                        resultSerializer.appendTuple(frameTupleAccessor, tIndex);
-                        frameOutputStream.appendTuple();
+                        if (!frameOutputStream.appendTuple()) {
+                            throw HyracksDataException.create(ErrorCode.TUPLE_CANNOT_FIT_INTO_EMPTY_FRAME,
+                                    frameOutputStream.getLength());
+                        }
                     }
+                    frameOutputStream.reset();
                 }
             }
 
