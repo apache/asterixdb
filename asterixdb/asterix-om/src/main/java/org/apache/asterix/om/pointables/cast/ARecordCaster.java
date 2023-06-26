@@ -194,10 +194,12 @@ class ARecordCaster {
 
     private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags)
             throws HyracksDataException {
-        // sort-merge based match
-        quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
         int fnStart = 0;
         int reqFnStart = 0;
+        if (fnStart < numInputFields && reqFnStart < reqFieldNames.size()) {
+            // sort-merge based match
+            quickSort(fieldNamesSortedIndex, fieldNames, 0, numInputFields - 1);
+        }
         while (fnStart < numInputFields && reqFnStart < reqFieldNames.size()) {
             int fnPos = fieldNamesSortedIndex[fnStart];
             int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];

@@ -20,16 +20,19 @@
 package org.apache.asterix.runtime.evaluators.functions.records;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
+import org.apache.asterix.om.pointables.nonvisitor.ARecordPointable;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.evaluators.functions.CastTypeEvaluator;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -45,6 +48,9 @@ class RecordValuesEvaluator implements IScalarEvaluator {
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput resultOutput = resultStorage.getDataOutput();
     private final IScalarEvaluator eval0;
+    private final boolean inputRecordOpen;
+    private final ARecordPointable recordPointable;
+    private final ArrayBackedValueStorage fieldValueStorage;
     private OrderedListBuilder listBuilder;
     private ARecordVisitablePointable openRecordPointable;
     private CastTypeEvaluator inputRecordCaster;
@@ -52,9 +58,19 @@ class RecordValuesEvaluator implements IScalarEvaluator {
     RecordValuesEvaluator(IScalarEvaluator eval0, ARecordType recordType) {
         this.eval0 = eval0;
         if (recordType != null) {
+            inputRecordOpen = recordType.isOpen() && recordType.getFieldTypes().length == 0;
             openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
             inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, recordType, eval0);
             listBuilder = new OrderedListBuilder();
+        } else {
+            inputRecordOpen = true;
+        }
+        if (inputRecordOpen) {
+            recordPointable = new ARecordPointable();
+            fieldValueStorage = new ArrayBackedValueStorage();
+        } else {
+            recordPointable = null;
+            fieldValueStorage = null;
         }
     }
 
@@ -72,18 +88,39 @@ class RecordValuesEvaluator implements IScalarEvaluator {
             PointableHelper.setNull(result);
             return;
         }
-        inputRecordCaster.evaluate(tuple, inputRecordPointable);
         resultStorage.reset();
-        buildOutputList();
+        if (inputRecordOpen) {
+            buildOutputList();
+        } else {
+            buildOutputList(tuple);
+        }
         result.set(resultStorage);
     }
 
-    private void buildOutputList() throws HyracksDataException {
+    private void buildOutputList(IFrameTupleReference tuple) throws HyracksDataException {
         listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+        inputRecordCaster.evaluate(tuple, inputRecordPointable);
         openRecordPointable.set(inputRecordPointable);
         final List<IVisitablePointable> fieldValues = openRecordPointable.getFieldValues();
         for (int i = 0, valuesCount = fieldValues.size(); i < valuesCount; i++) {
             listBuilder.addItem(fieldValues.get(i));
+        }
+        listBuilder.write(resultOutput, true);
+    }
+
+    private void buildOutputList() throws HyracksDataException {
+        listBuilder.reset(AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE);
+        recordPointable.set(inputRecordPointable);
+        int openFieldCount = recordPointable.getOpenFieldCount(RecordUtil.FULLY_OPEN_RECORD_TYPE);
+        for (int i = 0; i < openFieldCount; i++) {
+            fieldValueStorage.reset();
+            try {
+                recordPointable.getOpenFieldValue(RecordUtil.FULLY_OPEN_RECORD_TYPE, i,
+                        fieldValueStorage.getDataOutput());
+                listBuilder.addItem(fieldValueStorage);
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
         }
         listBuilder.write(resultOutput, true);
     }
