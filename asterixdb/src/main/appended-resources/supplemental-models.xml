@@ -463,9 +463,10 @@
       <properties>
         <!-- snappy-java is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <!-- license override not needed, ALv2 is specified in its pom.xml -->
-        <!-- see https://raw.githubusercontent.com/xerial/snappy-java/1.1.8.4/LICENSE -->
-        <license.ignoreMissingEmbeddedLicense>1.1.8.4</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.1.8.4</license.ignoreMissingEmbeddedNotice>
+        <!-- see https://raw.githubusercontent.com/xerial/snappy-java/v1.1.10.1/LICENSE -->
+        <license.ignoreMissingEmbeddedLicense>1.1.10.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.1.10.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>1.1.10.1</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
