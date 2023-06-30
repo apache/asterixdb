@@ -471,7 +471,8 @@ public class JoinNode {
                         selOp = new SelectOperator(new MutableObject<>(afce));
                         selOp.getInputs().add(new MutableObject<>(leafInput));
                     }
-                    sel = joinEnum.getStatsHandle().findSelectivityForThisPredicate(selOp, afce, this.origCardinality);
+                    sel = joinEnum.getStatsHandle().findSelectivityForThisPredicate(selOp, afce,
+                            chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY), this.origCardinality);
                 }
                 IndexCostInfo.add(new Triple<>(chosenIndex, sel, afce));
             }

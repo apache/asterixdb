@@ -372,7 +372,7 @@ public class Stats {
     }
 
     protected double findSelectivityForThisPredicate(SelectOperator selOp, AbstractFunctionCallExpression exp,
-            double datasetCard) throws AlgebricksException {
+            boolean arrayIndex, double datasetCard) throws AlgebricksException {
         // replace the SelOp.condition with the new exp and replace it at the end
         // The Selop here is the start of the leafInput.
 
@@ -442,13 +442,35 @@ public class Stats {
                 }
             }
         }
-        // switch  the scanOp back
-        parent.getInputs().get(0).setValue(scanOp);
 
         double predicateCardinality = (double) ((AInt64) result.get(0).get(0)).getLongValue();
         if (predicateCardinality == 0.0) {
             predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
         }
+
+        if (arrayIndex) {
+            // In case of array predicates, the sample cardinality should be computed as
+            // the number of unnested array elements. Run a second sampling query to compute this.
+            // The query should already have the unnest operation, so simply replace the select clause with TRUE
+            // to get the unnested cardinality from the sample.
+            // Example query: SELECT count(*) as revenue
+            //                FROM   orders o, o.o_orderline ol
+            //                WHERE  ol.ol_delivery_d  >= '2016-01-01 00:00:00.000000'
+            //                  AND  ol.ol_delivery_d < '2017-01-01 00:00:00.000000';
+            // ol_delivery_d is part of the array o_orderline
+            // To get the unnested cardinality,we run the following query on the sample:
+            // SELECT count(*) as revenue
+            // FROM   orders o, o.o_orderline ol
+            // WHERE  TRUE;
+            ILogicalExpression saveExprs = selOp.getCondition().getValue();
+            selOp.getCondition().setValue(ConstantExpression.TRUE);
+            result = runSamplingQuery(optCtx, selOp);
+            selOp.getCondition().setValue(saveExprs);
+            sampleCard = (double) ((AInt64) result.get(0).get(0)).getLongValue();
+        }
+        // switch  the scanOp back
+        parent.getInputs().get(0).setValue(scanOp);
+
         double sel = (double) predicateCardinality / sampleCard;
         return sel;
     }
