@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.util.Objects;
 
 import org.apache.hyracks.api.io.IWritable;
 
@@ -82,6 +83,10 @@ public final class NetworkAddress implements IWritable, Serializable {
         return inetSocketAddress;
     }
 
+    public InetSocketAddress toInetSocketAddress() {
+        return new InetSocketAddress(address, port);
+    }
+
     public int getPort() {
         return port;
     }
@@ -102,7 +107,7 @@ public final class NetworkAddress implements IWritable, Serializable {
             return false;
         }
         NetworkAddress on = (NetworkAddress) o;
-        return on.port == port && on.address == address;
+        return on.port == port && Objects.equals(on.address, address);
     }
 
     @Override

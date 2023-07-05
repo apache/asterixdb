@@ -195,12 +195,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
         if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "the job {} finished", jobId);
+            LOGGER.log(level, "Active job {} finished", jobId);
         }
         JobId lastJobId = jobId;
         if (numRegistered != numDeRegistered) {
             LOGGER.log(Level.WARN,
-                    "the job {} finished with reported runtime registrations = {} and deregistrations = {}", jobId,
+                    "Active job {} finished with reported runtime registrations = {} and deregistrations = {}", jobId,
                     numRegistered, numDeRegistered);
         }
         jobId = null;
@@ -208,7 +208,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         JobStatus jobStatus = status.getLeft();
         List<Exception> exceptions = status.getRight();
         if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "The job finished with status: {}", jobStatus);
+            LOGGER.log(level, "Active job {} finished with status {}", lastJobId, jobStatus);
         }
         if (!jobSuccessfullyTerminated(jobStatus)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
@@ -372,7 +372,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public synchronized void recover() {
         if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "Recover is called on " + entityId);
+            LOGGER.log(level, "Recover is called on {}", entityId);
         }
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
             LOGGER.log(level, "But it has no recovery policy, so it is set to permanent failure");
@@ -456,7 +456,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         try {
             metadataProvider.getApplicationContext().getHcc().cancelJob(jobId);
         } catch (Throwable th) {
-            LOGGER.warn("Failed to cancel active job", th);
+            LOGGER.warn("Failed to cancel active job {}", jobId, th);
             e.addSuppressed(th);
         }
     }
