@@ -84,4 +84,9 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
             });
         }
     }
+
+    @Override
+    public String toString() {
+        return getName() + " jobId:" + jobId;
+    }
 }

@@ -47,4 +47,9 @@ public class CancelJobWork extends SynchronizableWork {
             callback.setException(e);
         }
     }
+
+    @Override
+    public String toString() {
+        return getName() + " jobId:" + jobId;
+    }
 }

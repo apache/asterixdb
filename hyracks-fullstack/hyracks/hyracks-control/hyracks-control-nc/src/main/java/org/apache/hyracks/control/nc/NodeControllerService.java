@@ -426,7 +426,7 @@ public class NodeControllerService implements IControllerService {
         NodeParameters nodeParameters = ccc.getNodeParameters();
         // Start heartbeat generator.
         heartbeatManagers.computeIfAbsent(ccId, newCcId -> HeartbeatManager.init(this, ccc, hbTask.getHeartbeatData(),
-                nodeRegistration.getNodeControllerAddress().resolveInetSocketAddress()));
+                nodeRegistration.getNodeControllerAddress().toInetSocketAddress()));
         if (!ccTimers.containsKey(ccId) && nodeParameters.getProfileDumpPeriod() > 0) {
             Timer ccTimer = new Timer("Timer-" + ccId, true);
             // Schedule profile dump generator.

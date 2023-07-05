@@ -70,4 +70,9 @@ public class AbortTasksWork extends AbstractWork {
                     "Joblet couldn't be found. Tasks of job " + jobId + " have all either completed or failed");
         }
     }
+
+    @Override
+    public String toString() {
+        return getName() + " jobId:" + jobId;
+    }
 }

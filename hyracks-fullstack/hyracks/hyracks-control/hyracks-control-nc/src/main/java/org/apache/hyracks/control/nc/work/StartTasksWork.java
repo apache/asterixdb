@@ -314,4 +314,9 @@ public class StartTasksWork extends AbstractWork {
         }
         return channelsForInputConnectors;
     }
+
+    @Override
+    public String toString() {
+        return getName() + " jobId:" + jobId;
+    }
 }
