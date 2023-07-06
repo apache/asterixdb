@@ -115,12 +115,8 @@ public class IOManager implements IIOManager {
         return queueSize;
     }
 
-    public int getIoParallelism() {
+    public int getIOParallelism() {
         return ioParallelism;
-    }
-
-    public List<IODeviceHandle> getIoDevices() {
-        return ioDevices;
     }
 
     public IFileDeviceResolver getDeviceComputer() {
@@ -529,7 +525,7 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public void overwrite(FileReference fileRef, byte[] bytes) throws ClosedByInterruptException, HyracksDataException {
+    public void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
         File file = fileRef.getFile();
         try {
             if (file.exists()) {
@@ -595,10 +591,5 @@ public class IOManager implements IIOManager {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-    }
-
-    @Override
-    public void syncFiles(Set<Integer> activePartitions) throws HyracksDataException {
-        // do nothing
     }
 }

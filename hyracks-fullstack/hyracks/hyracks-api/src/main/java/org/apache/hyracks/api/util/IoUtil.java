@@ -206,8 +206,7 @@ public class IoUtil {
         List<FileReference> files = new ArrayList<>();
         String[] matchingFiles = root.getFile().list(filter);
         if (matchingFiles != null) {
-            files.addAll(Arrays.stream(matchingFiles).map(pDir -> new FileReference(root.getDeviceHandle(), pDir))
-                    .collect(Collectors.toList()));
+            files.addAll(Arrays.stream(matchingFiles).map(root::getChild).collect(Collectors.toList()));
         }
         return files;
     }

@@ -35,6 +35,7 @@ import java.util.Set;
 
 import org.apache.asterix.app.nc.task.BindMetadataNodeTask;
 import org.apache.asterix.app.nc.task.CheckpointTask;
+import org.apache.asterix.app.nc.task.CloudToLocalStorageCachingTask;
 import org.apache.asterix.app.nc.task.ExportMetadataNodeTask;
 import org.apache.asterix.app.nc.task.LocalRecoveryTask;
 import org.apache.asterix.app.nc.task.LocalStorageCleanupTask;
@@ -48,9 +49,11 @@ import org.apache.asterix.app.replication.message.MetadataNodeResponseMessage;
 import org.apache.asterix.app.replication.message.NCLifecycleTaskReportMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.app.replication.message.RegistrationTasksResponseMessage;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClusterManagementWork.ClusterState;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.cluster.IClusterStateManager;
+import org.apache.asterix.common.cluster.StorageComputePartitionsMap;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
@@ -83,7 +86,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     private final boolean replicationEnabled;
     private final IGatekeeper gatekeeper;
     Map<String, Map<String, Object>> nodeSecretsMap;
-    private ICCServiceContext serviceContext;
+    private final ICCServiceContext serviceContext;
 
     public NcLifecycleCoordinator(ICCServiceContext serviceCtx, boolean replicationEnabled) {
         this.serviceContext = serviceCtx;
@@ -219,6 +222,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         Set<Integer> nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode);
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
+        // Add any cloud-related tasks
+        addCloudTasks(tasks, nodeActivePartitions, metadataNode, metadataPartitionId);
         tasks.add(new LocalStorageCleanupTask(metadataPartitionId));
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node active partitions
@@ -249,6 +254,19 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         }
         tasks.add(new UpdateNodeStatusTask(NodeStatus.ACTIVE, nodeActivePartitions));
         return tasks;
+    }
+
+    protected void addCloudTasks(List<INCLifecycleTask> tasks, Set<Integer> computePartitions, boolean metadataNode,
+            int metadataPartitionId) {
+        IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
+        if (!appCtx.isCloudDeployment()) {
+            return;
+        }
+
+        StorageComputePartitionsMap map = clusterManager.getStorageComputeMap();
+        map = map == null ? StorageComputePartitionsMap.computePartitionsMap(clusterManager) : map;
+        Set<Integer> storagePartitions = map.getStoragePartitions(computePartitions);
+        tasks.add(new CloudToLocalStorageCachingTask(storagePartitions, metadataNode, metadataPartitionId, false));
     }
 
     private synchronized void process(MetadataNodeResponseMessage response) throws HyracksDataException {

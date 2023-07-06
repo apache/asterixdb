@@ -21,6 +21,7 @@ package org.apache.asterix.common.config;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 
+import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
@@ -37,7 +38,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_PREFIX(STRING, ""),
         CLOUD_STORAGE_REGION(STRING, ""),
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
-        CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false);
+        CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
+        CLOUD_STORAGE_CACHE_POLICY(STRING, "lazy");
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -56,6 +58,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_REGION:
                 case CLOUD_STORAGE_ENDPOINT:
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
+                case CLOUD_STORAGE_CACHE_POLICY:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -77,6 +80,10 @@ public class CloudProperties extends AbstractProperties {
                     return "The cloud storage endpoint";
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                     return "Indicates whether or not anonymous auth should be used for the cloud storage";
+                case CLOUD_STORAGE_CACHE_POLICY:
+                    return "The caching policy (either eager or lazy). 'Eager' caching will download all partitions"
+                            + " upon booting, whereas lazy caching will download a file upon request to open it."
+                            + " (default: 'lazy')";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -116,5 +123,9 @@ public class CloudProperties extends AbstractProperties {
 
     public boolean isStorageAnonymousAuth() {
         return accessor.getBoolean(Option.CLOUD_STORAGE_ANONYMOUS_AUTH);
+    }
+
+    public CloudCachePolicy getCloudCachePolicy() {
+        return CloudCachePolicy.fromName(accessor.getString(Option.CLOUD_STORAGE_CACHE_POLICY));
     }
 }

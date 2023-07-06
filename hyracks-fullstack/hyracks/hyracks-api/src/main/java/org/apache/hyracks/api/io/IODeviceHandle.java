@@ -41,10 +41,8 @@ public class IODeviceHandle implements Serializable {
     private final String workspace;
 
     /**
-     * @param mount
-     *            The device root
-     * @param workspace
-     *            The relative workspace inside the device
+     * @param mount     The device root
+     * @param workspace The relative workspace inside the device
      */
     public IODeviceHandle(File mount, String workspace) {
         this.mount = mount;
@@ -63,8 +61,7 @@ public class IODeviceHandle implements Serializable {
     /**
      * Create a file reference
      *
-     * @param relPath
-     *            the relative path
+     * @param relPath the relative path
      * @return
      */
     public FileReference createFileRef(String relPath) {
@@ -74,8 +71,7 @@ public class IODeviceHandle implements Serializable {
     /**
      * Get handles for IO devices
      *
-     * @param ioDevices
-     *            comma separated list of devices
+     * @param ioDevices comma separated list of devices
      * @return
      */
     public static List<IODeviceHandle> getDevices(String[] ioDevices) {
@@ -97,11 +93,13 @@ public class IODeviceHandle implements Serializable {
             throw new HyracksDataException(
                     "Passed path: " + absolutePath + " is not inside the device " + mount.getAbsolutePath());
         }
-        return absolutePath.substring(mount.getAbsolutePath().length());
+        // +1 to remove the leading '/'
+        return absolutePath.substring(mount.getAbsolutePath().length() + 1);
     }
 
     /**
      * determinea if the device contains a file with the passed relative path
+     *
      * @param relPath
      * @return true if it contains, false, otherwise
      */

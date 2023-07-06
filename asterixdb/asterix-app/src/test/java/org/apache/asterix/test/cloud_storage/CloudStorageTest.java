@@ -20,7 +20,7 @@ package org.apache.asterix.test.cloud_storage;
 
 import java.util.Collection;
 
-import org.apache.asterix.api.common.CloudUtils;
+import org.apache.asterix.api.common.LocalCloudUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -53,7 +53,7 @@ public class CloudStorageTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        CloudUtils.startS3CloudEnvironment();
+        LocalCloudUtil.startS3CloudEnvironment(true);
         LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
     }

@@ -126,6 +126,7 @@ public interface IIOManager extends Closeable {
 
     /**
      * Lists the files matching {@code filter} recursively starting from {@code dir}
+     *
      * @param dir
      * @param filter
      * @return the matching files
@@ -149,6 +150,4 @@ public interface IIOManager extends Closeable {
     boolean makeDirectories(FileReference resourceDir);
 
     void cleanDirectory(FileReference resourceDir) throws HyracksDataException;
-
-    void syncFiles(Set<Integer> activePartitions) throws HyracksDataException;
 }

@@ -18,8 +18,12 @@
  */
 package org.apache.asterix.api.common;
 
+import static org.apache.hyracks.util.file.FileUtil.joinPath;
+
+import java.io.File;
 import java.net.URI;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -30,7 +34,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
-public class CloudUtils {
+public class LocalCloudUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -38,20 +42,26 @@ public class CloudUtils {
     public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
     public static final String MOCK_SERVER_REGION = "us-west-2";
+    private static final String MOCK_FILE_BACKEND = joinPath("target", "s3mock");
     private static S3Mock s3MockServer;
 
-    private CloudUtils() {
+    private LocalCloudUtil() {
         throw new AssertionError("Do not instantiate");
     }
 
     public static void main(String[] args) {
-        startS3CloudEnvironment();
+        // Change to 'true' if you want to delete "s3mock" folder on start
+        startS3CloudEnvironment(true);
     }
 
-    public static void startS3CloudEnvironment() {
+    public static void startS3CloudEnvironment(boolean cleanStart) {
+        if (cleanStart) {
+            FileUtils.deleteQuietly(new File(MOCK_FILE_BACKEND));
+        }
         // Starting S3 mock server to be used instead of real S3 server
         LOGGER.info("Starting S3 mock server");
-        s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withInMemoryBackend().build();
+        // Use file backend for debugging/inspection
+        s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withFileBackend(MOCK_FILE_BACKEND).build();
         shutdownSilently();
         try {
             s3MockServer.start();

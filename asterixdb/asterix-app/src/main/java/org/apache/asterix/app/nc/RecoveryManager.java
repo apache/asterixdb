@@ -135,10 +135,7 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         //read checkpoint file
         Checkpoint checkpointObject = checkpointManager.getLatest();
         if (checkpointObject == null) {
-            //The checkpoint file doesn't exist => Failure happened during NC initialization.
-            //Retry to initialize the NC by setting the state to PERMANENT_DATA_LOSS
-            state = SystemState.PERMANENT_DATA_LOSS;
-            LOGGER.info("The checkpoint file doesn't exist: systemState = PERMANENT_DATA_LOSS");
+            state = appCtx.getPartitionBootstrapper().getSystemStateOnMissingCheckpoint();
             return state;
         }
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();

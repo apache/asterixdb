@@ -43,6 +43,12 @@ public class CloudFileHandle extends FileHandle {
         }
     }
 
+    @Override
+    public synchronized void close() throws IOException {
+        inputStream.close();
+        super.close();
+    }
+
     public CloudResettableInputStream getInputStream() {
         return inputStream;
     }

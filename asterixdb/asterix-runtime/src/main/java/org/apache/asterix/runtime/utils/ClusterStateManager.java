@@ -507,6 +507,7 @@ public class ClusterStateManager implements IClusterStateManager {
         return appCtx.getStorageProperties().getStoragePartitionsCount();
     }
 
+    @Override
     public synchronized StorageComputePartitionsMap getStorageComputeMap() {
         return storageComputePartitionsMap;
     }

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.concurrent.Executor;
 
+import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
@@ -50,6 +51,8 @@ public interface INcApplicationContext extends IApplicationContext {
     IIOManager getIoManager();
 
     IIOManager getPersistenceIoManager();
+
+    IPartitionBootstrapper getPartitionBootstrapper();
 
     Executor getThreadExecutor();
 
