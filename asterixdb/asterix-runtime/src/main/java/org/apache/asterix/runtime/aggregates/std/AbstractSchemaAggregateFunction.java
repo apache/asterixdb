@@ -143,7 +143,7 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
 
         //
         Mutable<IRowWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
-        IRowValuesWriterFactory factory = new RowValuesWriterFactory(multiPageOpRef);
+//        IRowValuesWriterFactory factory = new RowValuesWriterFactory(multiPageOpRef);
         //
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
         ATypeTag aggTypeTag = aggType;
