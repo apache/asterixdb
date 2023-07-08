@@ -779,7 +779,9 @@ public class BuiltinFunctions {
 
     // sql aggregate functions
     public static final FunctionIdentifier SQL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avg", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avgl", 1);
+    public static final FunctionIdentifier SQL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-agg-sql-avg", 1);
     public static final FunctionIdentifier SQL_COUNT =
@@ -812,6 +814,10 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-avg", 1);
     public static final FunctionIdentifier LOCAL_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-avg", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-sql-schema", 1);
+    public static final FunctionIdentifier LOCAL_SQL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-sql-schema", 1);
     public static final FunctionIdentifier SQL_STDDEV_SAMP =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-stddev_samp", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_STDDEV_SAMP =
@@ -871,6 +877,10 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier SCALAR_SQL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-avg", 1);
+
+    public static final FunctionIdentifier SCALAR_SQL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-schema", 1);
+
     public static final FunctionIdentifier SCALAR_SQL_COUNT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "sql-count", 1);
     public static final FunctionIdentifier SCALAR_SQL_SUM =
@@ -2106,6 +2116,9 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
+        addFunction(SQL_SCHEMA, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_SCHEMA, LocalAvgTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_SCHEMA, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
@@ -2116,6 +2129,7 @@ public class BuiltinFunctions {
         addPrivateFunction(INTERMEDIATE_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_SCHEMA, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_MAX, scalarMinMaxTypeComputer, true);
         addFunction(SCALAR_SQL_MIN, scalarMinMaxTypeComputer, true);
@@ -2922,6 +2936,13 @@ public class BuiltinFunctions {
         addIntermediateAgg(SERIAL_GLOBAL_SQL_AVG, SERIAL_INTERMEDIATE_SQL_AVG);
         addGlobalAgg(SERIAL_SQL_AVG, SERIAL_GLOBAL_SQL_AVG);
 
+        // SQL SCHEMA_INF
+        //TODO CALVIN_DANI: ADD SCHEMA CHECK ALL
+        addAgg(SQL_SCHEMA);
+        addAgg(LOCAL_SQL_SCHEMA);
+        addAgg(GLOBAL_SQL_SCHEMA);
+        addScalarAgg(SQL_AVG, SCALAR_SQL_SCHEMA);
+
         // SQL STDDEV_SAMP
 
         addAgg(SQL_STDDEV_SAMP);
@@ -3279,6 +3300,9 @@ public class BuiltinFunctions {
     }
 
     public static BuiltinFunctionInfo getBuiltinFunctionInfo(FunctionIdentifier fi) {
+        //        for (FunctionIdentifier f : registeredFunctions.keySet()){
+        //            System.out.println(f);
+        //        }
         return registeredFunctions.get(fi);
     }
 
@@ -3379,6 +3403,9 @@ public class BuiltinFunctions {
     }
 
     private static void addFunction(BuiltinFunctionInfo functionInfo) {
+        if (functionInfo.getFunctionIdentifier().getName().contains("array_avg")) {
+            System.out.println("REACHED HERE");
+        }
         registeredFunctions.put(functionInfo.getFunctionIdentifier(), functionInfo);
     }
 

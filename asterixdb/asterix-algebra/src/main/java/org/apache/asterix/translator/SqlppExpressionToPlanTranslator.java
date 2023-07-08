@@ -804,6 +804,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
             distinctOperator.getInputs().add(new MutableObject<>(returnOperator));
             distinctOperator.setSourceLocation(returnOperator.getSourceLocation());
             return new Pair<>(distinctOperator, returnVar);
+        } else if (selectClause.unified_schema()) {
+            //TODO: Create the unified_schema operator here
+            return new Pair<>(returnOperator, returnVar);//TODO: Replace it with unified_schema operator
         } else {
             return new Pair<>(returnOperator, returnVar);
         }
@@ -885,6 +888,18 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
                                 projection.getSourceLocation(), "");
                     }
                     fieldBindings.add(getFieldBinding(projection, fieldNames));
+                    break;
+                case UNIFIED_SCHEMA:
+                    fieldBindingsForStar = fieldBindings;
+                    fieldNamesForStar = fieldNames;
+                    if (selectBlock.hasFromClause()) {
+                        getFromBindings(selectBlock.getFromClause(), fieldBindingsForStar, fieldNamesForStar,
+                                SqlppExpressionToPlanTranslator::includeInSelectStar);
+                        if (selectBlock.hasLetWhereClauses()) {
+                            throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                    projection.getSourceLocation(), "");
+                        }
+                    }
                     break;
                 default:
                     throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, projection.getSourceLocation(),

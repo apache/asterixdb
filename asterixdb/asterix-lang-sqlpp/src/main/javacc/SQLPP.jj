@@ -4445,7 +4445,7 @@ Expression FunctionCallExpr() throws ParseException:
 {
   funcName = FunctionName()
   <LEFTPAREN> (
-    ( <DISTINCT> { distinct = true; } )?
+    ( <DISTINCT> { distinct = true; })?
     ( argExpr = Expression() | <MUL> { star = true; } )
     {
       if (star) {
@@ -4941,10 +4941,11 @@ SelectClause SelectClause() throws ParseException:
   List<List<String>> fieldExclusions = new ArrayList<List<String>>();
   List<String> nestedField = new ArrayList<String>();
   String identifier;
+  boolean unified_schema = false;
   boolean distinct = false;
 }
 {
-  <SELECT> { startToken = token; } (<ALL>|<DISTINCT> { distinct = true; } )?
+  <SELECT> { startToken = token; } (<ALL>|<DISTINCT> { distinct = true; } | <US> { unified_schema = true; })?
   (
     (
       selectRegular = SelectRegular()
@@ -4971,14 +4972,19 @@ SelectClause SelectClause() throws ParseException:
   {
     SourceLocation sourceLoc = getSourceLocation(startToken);
     if (selectRegular == null && selectElement == null){
-        Projection projection = new Projection(Projection.Kind.STAR, null, null);
+        Projection projection;
+        if (unified_schema == true){
+          projection = new Projection(Projection.Kind.UNIFIED_SCHEMA, null, null);
+        } else {
+          projection = new Projection(Projection.Kind.STAR, null, null);
+        }
         projection.setSourceLocation(sourceLoc);
         List<Projection> projections = new ArrayList<Projection>();
         projections.add(projection);
         selectRegular = new SelectRegular(projections);
         selectRegular.setSourceLocation(sourceLoc);
     }
-    SelectClause selectClause = new SelectClause(selectElement, selectRegular, fieldExclusions, distinct);
+    SelectClause selectClause = new SelectClause(selectElement, selectRegular, fieldExclusions, distinct, unified_schema);
     selectClause.setSourceLocation(sourceLoc);
     return selectClause;
   }
@@ -5761,6 +5767,7 @@ TOKEN :
   | <MINUS : "-">
   | <MUL : "*">
   | <PLUS : "+">
+  | <US : "unified_schema">
 
   | <LEFTPAREN : "(">
   | <RIGHTPAREN : ")">

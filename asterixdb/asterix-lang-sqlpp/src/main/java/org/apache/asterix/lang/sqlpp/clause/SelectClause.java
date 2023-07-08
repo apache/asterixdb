@@ -36,9 +36,10 @@ public class SelectClause extends AbstractClause {
     private SelectElement selectElement;
     private SelectRegular selectRegular;
     private boolean distinct;
+    private boolean unified_schema;
 
     public SelectClause(SelectElement selectElement, SelectRegular selectRegular, List<List<String>> fieldExclusions,
-            boolean distinct) {
+            boolean distinct, boolean unified_schema) {
         if (selectElement != null && selectRegular != null) {
             throw new IllegalArgumentException("SELECT-ELEMENT and SELECT-REGULAR cannot both be specified.");
         }
@@ -52,10 +53,16 @@ public class SelectClause extends AbstractClause {
         if (fieldExclusions != null) {
             this.fieldExclusions.addAll(fieldExclusions);
         }
+        this.unified_schema = unified_schema;
+    }
+
+    public SelectClause(SelectElement selectElement, SelectRegular selectRegular, List<List<String>> fieldExclusions,
+            boolean distinct) {
+        this(selectElement, selectRegular, fieldExclusions, distinct, false);
     }
 
     public SelectClause(SelectElement selectElement, SelectRegular selectRegular, boolean distinct) {
-        this(selectElement, selectRegular, null, distinct);
+        this(selectElement, selectRegular, null, distinct, false);
     }
 
     @Override
@@ -103,8 +110,20 @@ public class SelectClause extends AbstractClause {
         return distinct;
     }
 
+    public boolean unified_schema() {
+        return unified_schema;
+    }
+
     public void setDistinct(boolean distinct) {
         this.distinct = distinct;
+    }
+
+    public boolean isUnified_schema() {
+        return unified_schema;
+    }
+
+    public void setUnified_schema(boolean unified_schema) {
+        this.unified_schema = unified_schema;
     }
 
     public List<List<String>> getFieldExclusions() {

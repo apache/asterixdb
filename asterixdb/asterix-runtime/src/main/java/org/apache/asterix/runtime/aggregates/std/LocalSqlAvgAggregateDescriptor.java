@@ -36,6 +36,7 @@ public class LocalSqlAvgAggregateDescriptor extends AbstractAggregateFunctionDyn
 
     @Override
     public FunctionIdentifier getIdentifier() {
+
         return BuiltinFunctions.LOCAL_SQL_AVG;
     }
 
