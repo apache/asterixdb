@@ -779,7 +779,7 @@ public class BuiltinFunctions {
 
     // sql aggregate functions
     public static final FunctionIdentifier SQL_AVG =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avgl", 1);
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-avg", 1);
     public static final FunctionIdentifier SQL_SCHEMA =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
@@ -2941,7 +2941,7 @@ public class BuiltinFunctions {
         addAgg(SQL_SCHEMA);
         addAgg(LOCAL_SQL_SCHEMA);
         addAgg(GLOBAL_SQL_SCHEMA);
-        addScalarAgg(SQL_AVG, SCALAR_SQL_SCHEMA);
+        addScalarAgg(SQL_SCHEMA, SCALAR_SQL_SCHEMA);
 
         // SQL STDDEV_SAMP
 

@@ -20,19 +20,19 @@ package org.apache.asterix.runtime.aggregates.scalar;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
-import org.apache.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlSchemaAggregateDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ScalarSqlSchemaAggregateDescriptor extends AbstractScalarAggregateDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_AVG;
+    public static final FunctionIdentifier FID = BuiltinFunctions.SCALAR_SQL_SCHEMA;
 
     public static final IFunctionDescriptorFactory FACTORY = ScalarSqlSchemaAggregateDescriptor::new;
 
     private ScalarSqlSchemaAggregateDescriptor() {
-        super(SqlAvgAggregateDescriptor.FACTORY);
+        super(SqlSchemaAggregateDescriptor.FACTORY);
     }
 
     @Override

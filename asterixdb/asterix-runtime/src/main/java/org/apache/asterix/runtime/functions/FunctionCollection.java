@@ -47,6 +47,7 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarMinDistinctAggregateDe
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSkewnessDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlSchemaAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountDistinctAggregateDescriptor;
@@ -898,6 +899,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlCountDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlSchemaAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlAvgDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlSumAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlSumDistinctAggregateDescriptor.FACTORY);

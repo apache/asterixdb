@@ -26,7 +26,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public class SqlSchemaAggregateFunction extends AbstractAvgAggregateFunction {
+public class SqlSchemaAggregateFunction extends AbstractSchemaAggregateFunction {
 
     public SqlSchemaAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context,
             SourceLocation sourceLoc) throws HyracksDataException {
