@@ -59,7 +59,6 @@ import org.apache.logging.log4j.Logger;
 @NotThreadSafe
 public class PrimaryIndexOperationTracker extends BaseOperationTracker implements IoOperationCompleteListener {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final int partition;
     // Number of active operations on an ILSMIndex instance.
     private final AtomicInteger numActiveOperations;
     private final ILogManager logManager;
@@ -71,8 +70,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
 
     public PrimaryIndexOperationTracker(int datasetID, int partition, ILogManager logManager, DatasetInfo dsInfo,
             ILSMComponentIdGenerator idGenerator) {
-        super(datasetID, dsInfo);
-        this.partition = partition;
+        super(datasetID, dsInfo, partition);
         this.logManager = logManager;
         this.numActiveOperations = new AtomicInteger();
         this.idGenerator = idGenerator;

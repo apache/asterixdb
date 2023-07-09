@@ -33,12 +33,16 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+
 public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     private static final Logger LOGGER = LogManager.getLogger();
     // partition -> index
     private final Map<Integer, Set<IndexInfo>> partitionIndexes;
     // resourceID -> index
     private final Map<Long, IndexInfo> indexes;
+    private final Int2IntMap partitionPendingIO;
     private final int datasetID;
     private final ILogManager logManager;
     private final LogRecord waitLog = new LogRecord();
@@ -54,6 +58,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
     public DatasetInfo(int datasetID, ILogManager logManager) {
         this.partitionIndexes = new HashMap<>();
         this.indexes = new HashMap<>();
+        this.partitionPendingIO = new Int2IntOpenHashMap();
         this.setLastAccess(-1);
         this.datasetID = datasetID;
         this.setRegistered(false);
@@ -74,7 +79,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         setLastAccess(System.currentTimeMillis());
     }
 
-    public synchronized void declareActiveIOOperation(ILSMIOOperation.LSMIOOperationType opType) {
+    public synchronized void declareActiveIOOperation(ILSMIOOperation.LSMIOOperationType opType, int partition) {
+        partitionPendingIO.put(partition, partitionPendingIO.getOrDefault(partition, 0) + 1);
         numActiveIOOps++;
         switch (opType) {
             case FLUSH:
@@ -91,7 +97,8 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         }
     }
 
-    public synchronized void undeclareActiveIOOperation(ILSMIOOperation.LSMIOOperationType opType) {
+    public synchronized void undeclareActiveIOOperation(ILSMIOOperation.LSMIOOperationType opType, int partition) {
+        partitionPendingIO.put(partition, partitionPendingIO.getOrDefault(partition, 0) - 1);
         numActiveIOOps--;
         switch (opType) {
             case FLUSH:
@@ -249,6 +256,26 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
                     LOGGER.error("Number of IO operations cannot be negative for dataset: " + this);
                 }
                 throw new IllegalStateException("Number of IO operations cannot be negative");
+            }
+        }
+    }
+
+    public void waitForIO(int partition) throws HyracksDataException {
+        logManager.log(waitLog);
+        synchronized (this) {
+            while (partitionPendingIO.getOrDefault(partition, 0) > 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
+            }
+            if (partitionPendingIO.getOrDefault(partition, 0) < 0) {
+                LOGGER.error("number of IO operations cannot be negative for dataset {}, partition {}", this,
+                        partition);
+                throw new IllegalStateException(
+                        "Number of IO operations cannot be negative: " + this + ", partition " + partition);
             }
         }
     }
