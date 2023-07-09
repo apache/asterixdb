@@ -60,11 +60,11 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
     @Override
     public PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,
             String indexName) throws AlgebricksException {
-        SplitComputeLocations dataverseSplits = getDatasetSplits(ds, indexName);
+        SplitComputeLocations datasetSplits = getDatasetSplits(ds, indexName);
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
         int[][] partitionsMap = partitionMap
                 .getComputeToStorageMap(MetadataIndexImmutableProperties.isMetadataDataset(ds.getDatasetId()));
-        return PartitioningProperties.of(dataverseSplits.getSplitsProvider(), dataverseSplits.getConstraints(),
+        return PartitioningProperties.of(datasetSplits.getSplitsProvider(), datasetSplits.getConstraints(),
                 partitionsMap);
     }
 
@@ -94,19 +94,20 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
         List<String> locations = new ArrayList<>();
         Set<Integer> uniqueLocations = new HashSet<>();
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
-        final int datasetPartitons = getNumberOfPartitions(dataset);
+        final int datasetPartitions = getNumberOfPartitions(dataset);
         boolean metadataDataset = MetadataIndexImmutableProperties.isMetadataDataset(dataset.getDatasetId());
-        for (int i = 0; i < datasetPartitons; i++) {
+        for (int i = 0; i < datasetPartitions; i++) {
             int storagePartition = metadataDataset ? StorageConstants.METADATA_PARTITION : i;
             final String relPath = StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
                     dataset.getDatasetName(), indexName, dataset.getRebalanceCount());
             File f = new File(StoragePathUtil.prepareStoragePartitionPath(storagePartition), relPath);
             ComputePartition computePartition = partitionMap.getComputePartition(storagePartition);
             splits.add(new MappedFileSplit(computePartition.getNodeId(), f.getPath(), 0));
-            if (!uniqueLocations.contains(computePartition.getId())) {
+            int computePartitionId = computePartition.getId();
+            if (!uniqueLocations.contains(computePartitionId)) {
                 locations.add(computePartition.getNodeId());
             }
-            uniqueLocations.add(computePartition.getId());
+            uniqueLocations.add(computePartitionId);
         }
         IFileSplitProvider splitProvider = StoragePathUtil.splitProvider(splits.toArray(new FileSplit[0]));
         AlgebricksPartitionConstraint constraints =

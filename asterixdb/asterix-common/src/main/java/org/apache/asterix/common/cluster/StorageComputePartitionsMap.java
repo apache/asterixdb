@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class StorageComputePartitionsMap {
     }
 
     public int[][] getComputeToStorageMap(boolean metadataDataset) {
-        Map<Integer, List<Integer>> computeToStoragePartitions = new HashMap<>();
+        Map<Integer, List<Integer>> computeToStoragePartitions = new LinkedHashMap<>();
         if (metadataDataset) {
             final int computePartitionIdForMetadata = 0;
             computeToStoragePartitions.put(computePartitionIdForMetadata,
@@ -55,13 +56,13 @@ public class StorageComputePartitionsMap {
                 storagePartitions.add(i);
             }
         }
-        int[][] computerToStoArray = new int[computeToStoragePartitions.size()][];
+        int[][] computeToStoArray = new int[computeToStoragePartitions.size()][];
         int partitionIdx = 0;
-        for (Map.Entry<Integer, List<Integer>> integerListEntry : computeToStoragePartitions.entrySet()) {
-            computerToStoArray[partitionIdx] = integerListEntry.getValue().stream().mapToInt(i -> i).toArray();
+        for (Map.Entry<Integer, List<Integer>> computeToStoPartitions : computeToStoragePartitions.entrySet()) {
+            computeToStoArray[partitionIdx] = computeToStoPartitions.getValue().stream().mapToInt(i -> i).toArray();
             partitionIdx++;
         }
-        return computerToStoArray;
+        return computeToStoArray;
     }
 
     public int getStoragePartitionsCount() {
