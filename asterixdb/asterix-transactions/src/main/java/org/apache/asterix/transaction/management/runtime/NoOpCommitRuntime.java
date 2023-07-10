@@ -77,4 +77,9 @@ public class NoOpCommitRuntime extends CommitRuntime {
             message.getBuffer().flip();
         }
     }
+
+    @Override
+    public void fail() {
+        failed = true;
+    }
 }

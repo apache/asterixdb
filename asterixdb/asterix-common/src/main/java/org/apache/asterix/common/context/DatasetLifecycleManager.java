@@ -654,4 +654,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return !(lsmIndex.isCurrentMutableComponentEmpty() || ioCallback.hasPendingFlush()
                 || opTracker.isFlushLogCreated() || opTracker.isFlushOnExit());
     }
+
+    @Override
+    public IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
+        return indexCheckpointManagerProvider;
+    }
 }

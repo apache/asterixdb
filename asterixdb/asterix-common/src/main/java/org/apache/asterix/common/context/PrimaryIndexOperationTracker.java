@@ -266,12 +266,14 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
         }
     }
 
-    public void commit() throws HyracksDataException {
+    public void finishAllFlush() throws HyracksDataException {
         LogRecord logRecord = new LogRecord();
         triggerScheduleFlush(logRecord);
         List<FlushOperation> flushes = new ArrayList<>(getScheduledFlushes());
         LSMIndexUtil.waitFor(flushes);
+    }
 
+    public synchronized void commit() throws HyracksDataException {
         Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
         for (ILSMIndex lsmIndex : indexes) {
             lsmIndex.commit();
@@ -285,13 +287,14 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             indexCheckpointManagerProvider.get(ref).flushed(componentSequence, 0L, id.getMaxId());
         }
         lastFlushOperation.clear();
-
-        for (ILSMIndex lsmIndex : indexes) {
-            lsmIndex.getMergePolicy().diskComponentAdded(lsmIndex, false);
-        }
     }
 
     public void abort() throws HyracksDataException {
+        clear();
+    }
+
+    public void clear() throws HyracksDataException {
+        deleteMemoryComponent(false);
         Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
         for (ILSMIndex lsmIndex : indexes) {
             lsmIndex.abort();
@@ -362,7 +365,16 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
         return "Dataset (" + datasetID + "), Partition (" + partition + ")";
     }
 
-    public void deleteMemoryComponent() throws HyracksDataException {
+    public void deleteMemoryComponent(ILSMIndex lsmIndex, ILSMComponentId nextComponentId) throws HyracksDataException {
+        Map<String, Object> flushMap = new HashMap<>();
+        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, 0L);
+        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
+        ILSMIndexAccessor accessor = lsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        accessor.getOpContext().setParameters(flushMap);
+        accessor.deleteComponents(c -> c.getType() == ILSMComponent.LSMComponentType.MEMORY);
+    }
+
+    public void deleteMemoryComponent(boolean onlyPrimaryIndex) throws HyracksDataException {
         Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
         ILSMIndex primaryLsmIndex = null;
         for (ILSMIndex lsmIndex : indexes) {
@@ -379,15 +391,21 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
         Objects.requireNonNull(primaryLsmIndex, "no primary index found in " + indexes);
         idGenerator.refresh();
         ILSMComponentId nextComponentId = idGenerator.getId();
-        Map<String, Object> flushMap = new HashMap<>();
-        flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, 0L);
-        flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
-        ILSMIndexAccessor accessor = primaryLsmIndex.createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        accessor.getOpContext().setParameters(flushMap);
-        accessor.deleteComponents(c -> c.getType() == ILSMComponent.LSMComponentType.MEMORY);
+        if (onlyPrimaryIndex) {
+            deleteMemoryComponent(primaryLsmIndex, nextComponentId);
+        } else {
+            for (ILSMIndex lsmIndex : indexes) {
+                deleteMemoryComponent(lsmIndex, nextComponentId);
+            }
+        }
     }
 
     private boolean canSafelyFlush() {
         return numActiveOperations.get() == 0;
     }
+
+    public Map<String, FlushOperation> getLastFlushOperation() {
+        return lastFlushOperation;
+    }
+
 }

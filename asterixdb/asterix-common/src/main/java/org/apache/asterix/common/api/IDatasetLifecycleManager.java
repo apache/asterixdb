@@ -27,6 +27,7 @@ import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
 import org.apache.asterix.common.replication.IReplicationStrategy;
+import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.StorageIOStats;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -185,4 +186,6 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
      * @param partitionId
      */
     void closePartition(int partitionId);
+
+    IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider();
 }

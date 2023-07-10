@@ -102,6 +102,8 @@ public interface IIndexCheckpointManager {
      */
     void delete();
 
+    void deleteLatest(long latestId, int historyToDelete);
+
     /**
      * Gets the index last valid component sequence.
      *

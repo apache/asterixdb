@@ -59,7 +59,7 @@ public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
         for (ILSMOperationTracker opTrackerRef : modifiedIndexes) {
             PrimaryIndexOperationTracker primaryIndexOpTracker = (PrimaryIndexOperationTracker) opTrackerRef;
             try {
-                primaryIndexOpTracker.deleteMemoryComponent();
+                primaryIndexOpTracker.deleteMemoryComponent(true);
             } catch (HyracksDataException e) {
                 throw new ACIDException(e);
             }

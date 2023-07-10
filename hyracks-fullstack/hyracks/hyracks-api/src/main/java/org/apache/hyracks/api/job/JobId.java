@@ -31,6 +31,11 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IWritable;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public final class JobId implements IWritable, Serializable, Comparable {
 
     private static final Pattern jobIdPattern = Pattern.compile("^JID:(\\d+)\\.(\\d+)$");
@@ -50,6 +55,7 @@ public final class JobId implements IWritable, Serializable, Comparable {
     private JobId() {
     }
 
+    @JsonCreator
     public JobId(long id) {
         this.id = id;
     }
@@ -58,6 +64,7 @@ public final class JobId implements IWritable, Serializable, Comparable {
         return id;
     }
 
+    @JsonIgnore
     public CcId getCcId() {
         if (ccId == null) {
             ccId = CcId.valueOf((int) (id >>> CcIdPartitionedLongFactory.ID_BITS));
@@ -65,6 +72,7 @@ public final class JobId implements IWritable, Serializable, Comparable {
         return ccId;
     }
 
+    @JsonIgnore
     public long getIdOnly() {
         return id & CcIdPartitionedLongFactory.MAX_ID;
     }

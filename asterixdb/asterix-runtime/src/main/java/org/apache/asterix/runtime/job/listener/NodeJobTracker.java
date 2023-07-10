@@ -33,6 +33,7 @@ import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
+import org.apache.hyracks.api.constraints.expressions.PartitionCountExpression;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
@@ -80,5 +81,12 @@ public class NodeJobTracker implements INodeJobTracker {
                 .filter(ce -> ce.getTag() == ExpressionTag.CONSTANT).map(ConstantExpression.class::cast)
                 .map(ConstantExpression::getValue).map(Object::toString).filter(nodeJobs::containsKey)
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public int getNumParticipatingPartitions(JobSpecification spec) {
+        return spec.getUserConstraints().stream().filter(ce -> ce.getLValue() instanceof PartitionCountExpression)
+                .map(Constraint::getRValue).map(ConstantExpression.class::cast).map(ConstantExpression::getValue)
+                .map(Object::toString).map(Integer::parseInt).max(Integer::compare).get();
     }
 }

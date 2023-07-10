@@ -19,9 +19,12 @@
 package org.apache.asterix.common.dataflow;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.context.PrimaryIndexOperationTracker;
+import org.apache.asterix.common.messaging.AtomicJobPreparedMessage;
 import org.apache.asterix.common.transactions.ILogMarkerCallback;
 import org.apache.asterix.common.transactions.PrimaryIndexLogMarkerCallback;
 import org.apache.hyracks.api.comm.VSizeFrame;
@@ -32,6 +35,8 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.api.util.JavaSerializationUtils;
+import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
 import org.apache.hyracks.dataflow.common.comm.util.FrameUtils;
@@ -45,10 +50,12 @@ import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
+import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.LocalResource;
@@ -101,6 +108,9 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
                 indexHelper.open();
                 indexes[i] = indexHelper.getIndexInstance();
+                if (((ILSMIndex) indexes[i]).isAtomic() && isPrimary()) {
+                    ((PrimaryIndexOperationTracker) ((ILSMIndex) indexes[i]).getOperationTracker()).clear();
+                }
                 LocalResource resource = indexHelper.getResource();
                 modCallbacks[i] = modOpCallbackFactory.createModificationOperationCallback(resource, ctx, this);
                 IIndexAccessParameters iap = new IndexAccessParameters(modCallbacks[i], NoOpOperationCallback.INSTANCE);
@@ -238,11 +248,31 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     private void commitAtomicInsertDelete() throws HyracksDataException {
         if (isPrimary) {
+            final Map<String, ILSMComponentId> componentIdMap = new HashMap<>();
+            int datasetID = -1;
+            boolean atomic = false;
             for (IIndex index : indexes) {
                 if (((ILSMIndex) index).isAtomic()) {
                     PrimaryIndexOperationTracker opTracker =
                             ((PrimaryIndexOperationTracker) ((ILSMIndex) index).getOperationTracker());
-                    opTracker.commit();
+                    opTracker.finishAllFlush();
+                    for (Map.Entry<String, FlushOperation> entry : opTracker.getLastFlushOperation().entrySet()) {
+                        componentIdMap.put(entry.getKey(), entry.getValue().getFlushingComponent().getId());
+                    }
+                    datasetID = opTracker.getDatasetInfo().getDatasetID();
+                    atomic = true;
+                }
+            }
+
+            if (atomic) {
+                AtomicJobPreparedMessage message = new AtomicJobPreparedMessage(ctx.getJobletContext().getJobId(),
+                        ctx.getJobletContext().getServiceContext().getNodeId(), datasetID, componentIdMap);
+                try {
+                    ((NodeControllerService) ctx.getJobletContext().getServiceContext().getControllerService())
+                            .sendRealTimeApplicationMessageToCC(ctx.getJobletContext().getJobId().getCcId(),
+                                    JavaSerializationUtils.serialize(message), null);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
                 }
             }
         }

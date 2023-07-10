@@ -300,7 +300,6 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public void abort() throws HyracksDataException {
-        resetMemoryComponents();
         for (ILSMDiskComponent c : temporaryDiskComponents) {
             c.deactivateAndDestroy();
         }

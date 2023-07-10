@@ -45,4 +45,7 @@ public interface INodeJobTracker extends IJobLifecycleListener, IClusterLifecycl
      * @return The participating nodes in the job execution
      */
     Set<String> getJobParticipatingNodes(JobSpecification spec);
+
+    int getNumParticipatingPartitions(JobSpecification spec);
+
 }

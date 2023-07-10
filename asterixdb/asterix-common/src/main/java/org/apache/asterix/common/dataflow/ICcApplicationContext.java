@@ -27,6 +27,7 @@ import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
+import org.apache.asterix.common.cluster.IGlobalTxManager;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
@@ -38,6 +39,7 @@ import org.apache.asterix.common.transactions.IResourceIdManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 
 /**
@@ -165,4 +167,8 @@ public interface ICcApplicationContext extends IApplicationContext {
      * @return the data partitioing provider
      */
     IDataPartitioningProvider getDataPartitioningProvider();
+
+    IGlobalTxManager getGlobalTxManager();
+
+    IOManager getIoManager();
 }

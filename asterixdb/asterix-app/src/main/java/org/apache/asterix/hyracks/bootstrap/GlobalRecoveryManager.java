@@ -117,6 +117,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
             performGlobalStorageCleanup(mdTxnCtx, storageGlobalCleanupTimeout);
         }
         mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
+        rollbackIncompleteAtomicTransactions(appCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         recoveryCompleted = true;
         recovering = false;
@@ -125,6 +126,10 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         }
         LOGGER.info("Global Recovery Completed. Refreshing cluster state...");
         appCtx.getClusterStateManager().refreshState();
+    }
+
+    protected void rollbackIncompleteAtomicTransactions(ICcApplicationContext appCtx) throws Exception {
+        appCtx.getGlobalTxManager().rollback();
     }
 
     protected void performGlobalStorageCleanup(MetadataTransactionContext mdTxnCtx, int storageGlobalCleanupTimeoutSecs)
