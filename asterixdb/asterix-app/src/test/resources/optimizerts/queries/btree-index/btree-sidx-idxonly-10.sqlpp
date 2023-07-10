@@ -87,7 +87,7 @@ create type typeTweet if not exists as open {
 
 create dataset ds_tweet(typeTweet) if not exists primary key id;
 
-create index create_at_status_count_idx on ds_tweet(user.create_at, user.status_count) exclude unknown key;
+create index create_at_status_count_idx on ds_tweet(user.create_at, user.status_count) include unknown key;
 
 select value count(first.create_at) from (
 select t.user.create_at, t.user.status_count, t.id from ds_tweet t

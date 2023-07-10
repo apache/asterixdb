@@ -48,4 +48,4 @@ create type test.CustomerType as
 };
 
 create dataset Customers(CustomerType) primary key cid;
-create index customer_name_idx on Customers(name) exclude unknown key;
+create index customer_name_idx on Customers(name) include unknown key;

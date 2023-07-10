@@ -51,8 +51,8 @@ create type MyRecord as closed {
 
 create dataset MyData(MyRecord) primary key id;
 
-create index btree_index_docid on MyData(docid) type btree exclude unknown key;
-create index btree_index_val1 on MyData(val1) type btree exclude unknown key;
+create index btree_index_docid on MyData(docid) type btree include unknown key;
+create index btree_index_val1 on MyData(val1) type btree include unknown key;
 create index rtree_index_point on MyData(point) type rtree;
 create index rtree_index_rec on MyData(rec) type rtree;
 create index ngram_index_title on MyData(title) type ngram(3);

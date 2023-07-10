@@ -19,5 +19,4 @@
 
 USE test;
 // index idx1 should be used
-set `compiler.indexonly` "false"; // there is an issue with using index only plan where nulls/missings are included
 SELECT id, s_f2 FROM ds7 WHERE s_f2 < "4" ORDER BY id;

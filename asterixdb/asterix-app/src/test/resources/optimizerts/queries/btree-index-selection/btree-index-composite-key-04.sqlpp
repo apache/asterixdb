@@ -38,7 +38,7 @@ create type test.Emp as
 
 create dataset employee(Emp) primary key id;
 
-create index idx_employee_f_l_name on employee (fname,lname) type btree exclude unknown key;
+create index idx_employee_f_l_name on employee (fname,lname) type btree include unknown key;
 
 select id, fname, lname
 from employee

@@ -55,9 +55,9 @@ create  dataset TweetMessages(TweetMessageType) primary key tweetid;
 
 create  index twmSndLocIx  on TweetMessages (`sender-location`) type rtree;
 
-create  index msgCountAIx  on TweetMessages (countA) type btree exclude unknown key;
+create  index msgCountAIx  on TweetMessages (countA) type btree include unknown key;
 
-create  index msgCountBIx  on TweetMessages (countB) type btree exclude unknown key;
+create  index msgCountBIx  on TweetMessages (countB) type btree include unknown key;
 
 create  index msgTextIx  on TweetMessages (`message-text`) type keyword;
 

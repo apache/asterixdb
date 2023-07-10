@@ -2,15 +2,15 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
-        -- SORT_MERGE_EXCHANGE [$$65(ASC), $$40(ASC) ]  |PARTITIONED|
-          -- STABLE_SORT [$$65(ASC), $$40(ASC)]  |PARTITIONED|
+        -- SORT_MERGE_EXCHANGE [$$67(ASC), $$42(ASC) ]  |PARTITIONED|
+          -- STABLE_SORT [$$67(ASC), $$42(ASC)]  |PARTITIONED|
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               -- STREAM_PROJECT  |PARTITIONED|
                 -- STREAM_SELECT  |PARTITIONED|
                   -- WINDOW_STREAM  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$65(ASC), $$40(DESC)]  |PARTITIONED|
-                        -- HASH_PARTITION_EXCHANGE [$$65]  |PARTITIONED|
+                      -- STABLE_SORT [$$67(ASC), $$42(DESC)]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$67]  |PARTITIONED|
                           -- UNION_ALL  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
@@ -35,15 +35,17 @@
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- SPLIT  |PARTITIONED|
+                                -- STREAM_SELECT  |PARTITIONED|
+                                  -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.TweetMessages.msgCountBIx)  |PARTITIONED|
-                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            -- ASSIGN  |PARTITIONED|
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
+                                      -- SPLIT  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          -- BTREE_SEARCH (test.TweetMessages.msgCountBIx)  |PARTITIONED|
+                                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                -- ASSIGN  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- ASSIGN  |PARTITIONED|
-                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                    -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
