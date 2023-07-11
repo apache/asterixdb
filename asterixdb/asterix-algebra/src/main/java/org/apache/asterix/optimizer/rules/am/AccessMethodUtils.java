@@ -871,7 +871,7 @@ public class AccessMethodUtils {
             IOptimizationContext context, boolean isLeftOuterJoin, boolean isLeftOuterJoinWithSpecialGroupBy,
             IAlgebricksConstantValue leftOuterMissingValue, ILogicalOperator indexSearchOp,
             LogicalVariable newMissingNullPlaceHolderVar, Mutable<ILogicalExpression> conditionRef, Dataset dataset,
-            Index chosenIndex) throws AlgebricksException {
+            Index chosenIndex, AbstractFunctionCallExpression funcExpr) throws AlgebricksException {
         boolean isIndexOnlyPlan = analysisCtx.getIndexOnlyPlanInfo().getFirst();
         List<LogicalVariable> probePKVars = null;
         ILogicalOperator finalIndexSearchOp = indexSearchOp;
@@ -922,6 +922,9 @@ public class AccessMethodUtils {
                     }
                 }
                 if (probePKVars == null || probePKVars.isEmpty()) {
+                    if (funcExpr != null) {
+                        conditionRef.setValue(funcExpr);
+                    }
                     return false;
                 }
                 if (isIndexOnlyPlan) {

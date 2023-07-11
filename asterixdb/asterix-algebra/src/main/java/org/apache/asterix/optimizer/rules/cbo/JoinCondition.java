@@ -26,6 +26,7 @@ public class JoinCondition {
     protected static final int NO_JC = -1;
 
     protected ILogicalExpression joinCondition;
+    protected boolean outerJoin;
     private boolean derived = false;
     protected boolean partOfComposite = false;
     protected int numberOfVars = 0; // how many variables

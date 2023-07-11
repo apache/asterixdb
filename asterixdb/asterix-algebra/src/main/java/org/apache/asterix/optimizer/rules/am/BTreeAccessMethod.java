@@ -307,7 +307,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
         return AccessMethodUtils.finalizeJoinPlanTransformation(afterJoinRefs, joinRef, indexSubTree, probeSubTree,
                 analysisCtx, context, isLeftOuterJoin, isLeftOuterJoinWithSpecialGroupBy, leftOuterMissingValue,
-                indexSearchOp, newMissingNullPlaceHolderVar, conditionRef, dataset, chosenIndex);
+                indexSearchOp, newMissingNullPlaceHolderVar, conditionRef, dataset, chosenIndex, funcExpr);
     }
 
     /**
@@ -788,6 +788,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             unnestMapOp.setExecutionMode(ExecutionMode.PARTITIONED);
             unnestMapOp.setSourceLocation(dataSourceOp.getSourceLocation());
             unnestMapOp.getInputs().add(new MutableObject<>(inputOp));
+            context.computeAndSetTypeEnvironmentForOperator(unnestMapOp);
             indexSearchOp = unnestMapOp;
 
             // Adds equivalence classes --- one equivalent class between a primary key

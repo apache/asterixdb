@@ -53,6 +53,8 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -105,10 +107,15 @@ public class JoinEnum {
     private List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
     protected Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap;
     protected List<ILogicalExpression> singleDatasetPreds;
-    private List<AssignOperator> assignOps;
-    private List<ILogicalOperator> joinOps;
+    protected List<AssignOperator> assignOps;
+    List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
+    protected List<JoinOperator> allJoinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
+    protected boolean outerJoin;
+    protected List<Triple<Integer, Integer, Boolean>> buildSets;
+    protected int allTabsJnNum; // keeps track of the join Node where all the tables have been joined
+    protected int maxBits; // the joinNode where the dataset bits are the highest is where all the tables have been joined
 
     protected Stats stats;
     private boolean cboMode;
@@ -128,8 +135,10 @@ public class JoinEnum {
 
     protected void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
-            Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<ILogicalOperator> joinOps,
-            List<AssignOperator> assignOps, IOptimizationContext context) throws AsterixException {
+            Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<JoinOperator> allJoinOps,
+            List<AssignOperator> assignOps,
+            List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
+            List<Triple<Integer, Integer, Boolean>> buildSets, IOptimizationContext context) throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -144,11 +153,16 @@ public class JoinEnum {
         this.emptyTupleAndDataSourceOps = emptyTupleAndDataSourceOps;
         this.joinLeafInputsHashMap = joinLeafInputsHashMap;
         this.assignOps = assignOps;
-        this.joinOps = joinOps;
+        this.outerJoin = false; // assume no outerjoins anywhere in the query at first.
+        this.outerJoinsDependencyList = outerJoinsDependencyList;
+        this.allJoinOps = allJoinOps;
+        this.buildSets = buildSets;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
         initCostHandleAndJoinNodes(context);
+        this.allTabsJnNum = 1; // keeps track of where the final join Node will be. In case of bushy plans, this may not always be the last join nod     e.
+        this.maxBits = 1;
     }
 
     protected void initCostHandleAndJoinNodes(IOptimizationContext context) {
@@ -217,7 +231,7 @@ public class JoinEnum {
                 return op;
             }
         }
-        // this will never happen, but keep compiler happy
+
         return null;
     }
 
@@ -277,6 +291,16 @@ public class JoinEnum {
         }
         // return null if no equality predicates were found
         return eqPredFound ? andExpr : null;
+    }
+
+    protected boolean lookForOuterJoins(List<Integer> newJoinConditions) {
+        for (int joinNum : newJoinConditions) {
+            JoinCondition jc = joinConditions.get(joinNum);
+            if (jc.outerJoin) {
+                return true;
+            }
+        }
+        return false;
     }
 
     protected HashJoinExpressionAnnotation findHashJoinHint(List<Integer> newJoinConditions) {
@@ -358,7 +382,6 @@ public class JoinEnum {
                 return i;
             }
         }
-        // should never happen; keep compiler happy.
         return JoinNode.NO_JN;
     }
 
@@ -400,7 +423,7 @@ public class JoinEnum {
             }
             return bits;
         }
-        // should never reach this because every variable must exist in some leaf input.
+
         return JoinNode.NO_JN;
     }
 
@@ -408,21 +431,29 @@ public class JoinEnum {
     // It also fills in the dataset Bits for each join predicate.
     private void findJoinConditionsAndAssignSels() throws AlgebricksException {
         List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
-        for (ILogicalOperator jOp : joinOps) {
-            AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) jOp;
+        for (JoinOperator jOp : allJoinOps) {
+            AbstractBinaryJoinOperator joinOp = jOp.getAbstractJoinOp();
             ILogicalExpression expr = joinOp.getCondition().getValue();
             conjs.clear();
             if (expr.splitIntoConjuncts(conjs)) {
                 conjs.remove(new MutableObject<ILogicalExpression>(ConstantExpression.TRUE));
                 for (Mutable<ILogicalExpression> conj : conjs) {
                     JoinCondition jc = new JoinCondition();
+                    jc.outerJoin = jOp.getOuterJoin();
+                    if (jc.outerJoin) {
+                        outerJoin = true;
+                    }
                     jc.joinCondition = conj.getValue().cloneExpression();
                     joinConditions.add(jc);
                     jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true);
                 }
             } else {
-                if ((expr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL))) {
+                if ((expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL)) {
                     JoinCondition jc = new JoinCondition();
+                    jc.outerJoin = jOp.getOuterJoin();
+                    if (jc.outerJoin) {
+                        outerJoin = true;
+                    }
                     // change to not a true condition
                     jc.joinCondition = expr.cloneExpression();
                     joinConditions.add(jc);
@@ -568,12 +599,51 @@ public class JoinEnum {
         return dataRecVarInScan.toString().substring(2);
     }
 
+    private boolean isThisCombinationPossible(JoinNode leftJn, JoinNode rightJn) {
+        for (Quadruple<Integer, Integer, JoinOperator, Integer> tr : outerJoinsDependencyList) {
+            if (tr.getThird().getOuterJoin()) {
+                if (rightJn.datasetBits == tr.getSecond()) { // A dependent table(s) is being joined. Find if other table(s) is present
+                    if (!((leftJn.datasetBits & tr.getFirst()) > 0)) {
+                        return false; // required table not found
+                    }
+                }
+            }
+        }
+
+        if (leftJn.level == 1) { // if we are at a higher level, there is nothing to check as these tables have been joined already in leftJn
+            for (Quadruple<Integer, Integer, JoinOperator, Integer> tr : outerJoinsDependencyList) {
+                if (tr.getThird().getOuterJoin()) {
+                    if (leftJn.datasetBits == tr.getSecond()) { // A dependent table(s) is being joined. Find if other table(s) is present
+                        if (!((rightJn.datasetBits & tr.getFirst()) > 0)) {
+                            return false; // required table not found
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    private int findBuildSet(int jbits, int numbTabs) {
+        int i;
+        if (buildSets.isEmpty()) {
+            return -1;
+        }
+        for (i = 0; i < buildSets.size(); i++) {
+            //System.out.println("first " + buildSets.get(i).first + " second " + buildSets.get(i).second + " numtabs " + numbTabs + " bits " + jbits);
+            if ((buildSets.get(i).third) && (buildSets.get(i).first & jbits) > 0) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private int addNonBushyJoinNodes(int level, int jnNumber, int[] startJnAtLevel) throws AlgebricksException {
         // adding joinNodes of level (2, 3, ..., numberOfTerms)
         int startJnSecondLevel = startJnAtLevel[2];
         int startJnPrevLevel = startJnAtLevel[level - 1];
         int startJnNextLevel = startJnAtLevel[level];
-        int i, j, addPlansToThisJn;
+        int i, j, k, addPlansToThisJn;
 
         // walking thru the previous level
         for (i = startJnPrevLevel; i < startJnNextLevel; i++) {
@@ -584,8 +654,14 @@ public class JoinEnum {
                 continue;
             }
 
-            // walk thru the first level here
-            for (j = 1; j < startJnSecondLevel; j++) {
+            int endLevel;
+            if (outerJoin && buildSets.size() > 0) { // we do not need outerJoin here but ok for now. BuildSets are built only when we have outerjoins
+                endLevel = startJnNextLevel; // bushy trees possible
+            } else {
+                endLevel = startJnSecondLevel; // no bushy trees
+            }
+
+            for (j = 1; j < endLevel; j++) { // this enables bushy plans; dangerous :-) should be done only if outer joins are present.
                 if (level == 2 && i > j) {
                     // don't want to generate x y and y x. we will do this in plan generation.
                     continue;
@@ -596,7 +672,28 @@ public class JoinEnum {
                     // these already have some common table
                     continue;
                 }
+                //System.out.println("Before1 i = " + i + " j = " + j); // will put these in trace statements soon
+                //System.out.println("Before1 Jni Dataset bits = " + jnI.datasetBits + " Jni Dataset bits = " + jnJ.datasetBits);
+                // first check if the new table is part of a buildSet.
+                k = findBuildSet(jnJ.datasetBits, jnI.level + jnJ.level);
+                //System.out.println("Buildset " + k);
+                if (k > -1) {
+                    if ((jnI.datasetBits & buildSets.get(k).first) == 0) { // i should also be part of the buildSet
+                        continue;
+                    }
+                }
+                //System.out.println("Before2 i = " + i + " j = " + j); // put these in trace statements
+                //System.out.println("Before2 Jni Dataset bits = " + jnI.datasetBits + " Jni Dataset bits = " + jnJ.datasetBits);
+                //System.out.println("Before i = " + i + " j = " + j);
+                if (!isThisCombinationPossible(jnI, jnJ)) {
+                    continue;
+                }
+                //System.out.println("After i = " + i + " j = " + j); //put these in trace statements
+                //System.out.println("After Jni Dataset bits = " + jnI.datasetBits + " Jni Dataset bits = " + jnJ.datasetBits);
                 int newBits = jnI.datasetBits | jnJ.datasetBits;
+                if ((k > 0) && (newBits == buildSets.get(k).first)) { // This buildSet is no longer needed.
+                    buildSets.get(k).third = false;
+                }
                 JoinNode jnNewBits = jnArray[newBits];
                 jnNewBits.jnArrayIndex = newBits;
                 // visiting this join node for the first time
@@ -609,6 +706,10 @@ public class JoinEnum {
                     // Then jn[33].highestKeyspaceId will equal 5
                     // if this joinNode ever gets removed, then set jn[19].highestKeyspaceId = 0
                     jn.datasetBits = newBits;
+                    if (newBits > maxBits) {
+                        maxBits = newBits;
+                        allTabsJnNum = jnNumber;
+                    }
                     jnNewBits.jnIndex = addPlansToThisJn = jnNumber;
                     jn.level = level;
                     jn.highestDatasetId = Math.max(jnI.highestDatasetId, j);
@@ -637,6 +738,7 @@ public class JoinEnum {
 
                 JoinNode jnIJ = jnArray[addPlansToThisJn];
                 jnIJ.jnArrayIndex = addPlansToThisJn;
+
                 jnIJ.addMultiDatasetPlans(jnI, jnJ);
                 if (forceJoinOrderMode && level > cboFullEnumLevel) {
                     break;
@@ -762,6 +864,10 @@ public class JoinEnum {
             ILogicalOperator leafInput = this.joinLeafInputsHashMap.get(ets);
             if (!cboTestMode) {
                 if (idxDetails == null) {
+                    dataScanPlan = jn.addSingleDatasetPlans();
+                    if (dataScanPlan == PlanNode.NO_PLAN) {
+                        return PlanNode.NO_PLAN;
+                    }
                     continue;
                 }
                 double origDatasetCard, finalDatasetCard, sampleCard;
@@ -861,13 +967,11 @@ public class JoinEnum {
     }
 
     private ILogicalOperator findASelectOp(ILogicalOperator op) {
-
         while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
 
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 return op;
             }
-
             op = op.getInputs().get(0).getValue();
         }
         return null;
@@ -973,7 +1077,7 @@ public class JoinEnum {
 
         markCompositeJoinPredicates();
         int lastJnNum = enumerateHigherLevelJoinNodes();
-        JoinNode lastJn = jnArray[lastJnNum];
+        JoinNode lastJn = jnArray[allTabsJnNum];
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN END");
             LOGGER.trace(dumpJoinNodes(lastJnNum));

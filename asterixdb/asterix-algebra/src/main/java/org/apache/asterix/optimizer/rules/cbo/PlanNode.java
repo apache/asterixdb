@@ -32,6 +32,7 @@ public class PlanNode {
     protected static int NO_PLAN = -1;
 
     private final JoinEnum joinEnum;
+    boolean outerJoin = false;
     protected int allPlansIndex;
     protected int[] planIndexes;
     protected int[] jnIndexes;
