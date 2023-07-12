@@ -63,7 +63,7 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigFrameAppender;
 
-    private final IHyracksJobletContext jobletCtx;
+    protected final IHyracksJobletContext jobletCtx;
 
     private final String buildRelName;
     private final String probeRelName;
@@ -79,12 +79,12 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
     private final IMissingWriter[] nonMatchWriters;
     private final BitSet spilledStatus; //0=resident, 1=spilled
     private final int numOfPartitions;
-    protected final int memSizeInFrames;
+    protected int memSizeInFrames;
     private InMemoryHashJoin inMemJoiner; //Used for joining resident partitions
-    private IPartitionedTupleBufferManager bufferManager;
-    private PreferToSpillFullyOccupiedFramePolicy spillPolicy;
-    private final FrameTupleAccessor accessorBuild;
-    private final FrameTupleAccessor accessorProbe;
+    protected IPartitionedTupleBufferManager bufferManager;
+    protected PreferToSpillFullyOccupiedFramePolicy spillPolicy;
+    protected final FrameTupleAccessor accessorBuild;
+    protected final FrameTupleAccessor accessorProbe;
     private ISimpleFrameBufferManager bufferManagerForHashTable;
     // Added for handling correct calling for predicate-evaluator upon recursive calls that cause role-reversal.
     private boolean isReversed;
@@ -93,7 +93,7 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
     private IFrame reloadBuffer;
     // this is a reusable object to store the pointer,which is not used anywhere. we mainly use it to match the
     // corresponding function signature.
-    private final TuplePointer tempPtr = new TuplePointer();
+    protected final TuplePointer tempPtr = new TuplePointer();
     private int[] probePSizeInTups;
     private IOperatorStats stats = null;
 
@@ -133,7 +133,11 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
     @Override
     public void initBuild() throws HyracksDataException {
         IDeallocatableFramePool framePool =
-                new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize());
+            new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize());
+        initBuildInternal(framePool);
+    }
+
+    protected void initBuildInternal(IDeallocatableFramePool framePool) throws HyracksDataException {
         bufferManagerForHashTable = new FramePoolBackedFrameBufferManager(framePool);
         bufferManager = new VPartitionTupleBufferManager(
                 PreferToSpillFullyOccupiedFramePolicy.createAtMostOneFrameForSpilledPartitionConstrain(spilledStatus),
@@ -141,6 +145,7 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
         spillPolicy = new PreferToSpillFullyOccupiedFramePolicy(bufferManager, spilledStatus);
         spilledStatus.clear();
         buildPSizeInTups = new int[numOfPartitions];
+
     }
 
     @Override
@@ -156,7 +161,11 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
         }
     }
 
-    private void processTupleBuildPhase(int tid, int pid) throws HyracksDataException {
+    protected void processTupleBuildPhase(int tid, int pid) throws HyracksDataException{
+        processTupleBuildPhaseInternal(tid,pid);
+    }
+
+    protected void processTupleBuildPhaseInternal(int tid, int pid) throws HyracksDataException {
         // insertTuple prevents the tuple to acquire a number of frames that is > the frame limit
         while (!bufferManager.insertTuple(pid, accessorBuild, tid, tempPtr)) {
             int numFrames = bufferManager.framesNeeded(accessorBuild.getTupleLength(tid), 0);
@@ -236,7 +245,12 @@ public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
                 new FrameTupleAccessor(buildRd), buildRd, buildHpc, isLeftOuter, nonMatchWriters, table, isReversed,
                 bufferManagerForHashTable);
 
-        buildHashTable();
+        try {
+            buildHashTable();
+        }
+        catch (Exception ex){
+            int i = 0;
+        }
     }
 
     @Override

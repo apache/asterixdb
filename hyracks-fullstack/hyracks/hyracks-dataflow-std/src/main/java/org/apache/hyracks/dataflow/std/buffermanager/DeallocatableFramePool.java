@@ -28,10 +28,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class DeallocatableFramePool implements IDeallocatableFramePool {
 
-    private final IHyracksFrameMgrContext ctx;
-    private final int memBudget;
-    private int allocated;
-    private LinkedList<ByteBuffer> buffers;
+    protected final IHyracksFrameMgrContext ctx;
+    protected int memBudget;
+    protected int allocated;
+    protected LinkedList<ByteBuffer> buffers;
 
     public DeallocatableFramePool(IHyracksFrameMgrContext ctx, int memBudgetInBytes) {
         this.ctx = ctx;
@@ -107,6 +107,11 @@ public class DeallocatableFramePool implements IDeallocatableFramePool {
         } else {
             buffers.add(buffer);
         }
+    }
+
+    @Override
+    public boolean updateMemoryBudget(int newBudget) {
+        return false;
     }
 
     @Override

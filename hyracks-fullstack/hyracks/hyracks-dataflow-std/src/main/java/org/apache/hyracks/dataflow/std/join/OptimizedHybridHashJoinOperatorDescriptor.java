@@ -145,8 +145,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private boolean forceRoleReversal = false;
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private int timeInterval = 100;
-    private int frameInterval = 10;
+    private int frameInterval = 0;
     private  boolean eventBased = false;
 
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
