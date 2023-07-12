@@ -33,6 +33,7 @@ public class LSMComponentId implements ILSMComponentId, Serializable {
 
     // Used to represent an empty index with no components
     public static final LSMComponentId EMPTY_INDEX_LAST_COMPONENT_ID = new LSMComponentId(NOT_FOUND, NOT_FOUND);
+    private static final long serialVersionUID = 7421441042232168639L;
 
     // A default component id used for bulk loaded component
     public static final LSMComponentId DEFAULT_COMPONENT_ID =

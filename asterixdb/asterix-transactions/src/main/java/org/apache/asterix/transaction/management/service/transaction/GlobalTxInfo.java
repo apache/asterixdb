@@ -26,6 +26,7 @@ public class GlobalTxInfo implements Serializable {
     private final int numNodes;
     private final List<Integer> datasetIds;
     private final int numPartitions;
+    private static final long serialVersionUID = 5235019091652601411L;
 
     public GlobalTxInfo(List<Integer> datasetIds, int numNodes, int numPartitions) {
         this.datasetIds = datasetIds;
