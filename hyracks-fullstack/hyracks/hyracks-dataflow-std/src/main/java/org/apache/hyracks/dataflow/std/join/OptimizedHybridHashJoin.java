@@ -57,9 +57,9 @@ import org.apache.logging.log4j.Logger;
  * This class mainly applies one level of HHJ on a pair of
  * relations. It is always called by the descriptor.
  */
-public class OptimizedHybridHashJoin {
+public class OptimizedHybridHashJoin implements IOptimizedHybridHashJoin {
 
-    private static final Logger LOGGER = LogManager.getLogger();
+    protected static final Logger LOGGER = LogManager.getLogger();
     // Used for special probe BigObject which can not be held into the Join memory
     private FrameTupleAppender bigFrameAppender;
 
@@ -79,7 +79,7 @@ public class OptimizedHybridHashJoin {
     private final IMissingWriter[] nonMatchWriters;
     private final BitSet spilledStatus; //0=resident, 1=spilled
     private final int numOfPartitions;
-    private final int memSizeInFrames;
+    protected final int memSizeInFrames;
     private InMemoryHashJoin inMemJoiner; //Used for joining resident partitions
     private IPartitionedTupleBufferManager bufferManager;
     private PreferToSpillFullyOccupiedFramePolicy spillPolicy;
@@ -130,6 +130,7 @@ public class OptimizedHybridHashJoin {
         }
     }
 
+    @Override
     public void initBuild() throws HyracksDataException {
         IDeallocatableFramePool framePool =
                 new DeallocatableFramePool(jobletCtx, memSizeInFrames * jobletCtx.getInitialFrameSize());
@@ -142,6 +143,7 @@ public class OptimizedHybridHashJoin {
         buildPSizeInTups = new int[numOfPartitions];
     }
 
+    @Override
     public void build(ByteBuffer buffer) throws HyracksDataException {
         accessorBuild.reset(buffer);
         int tupleCount = accessorBuild.getTupleCount();
@@ -190,7 +192,7 @@ public class OptimizedHybridHashJoin {
         }
     }
 
-    private void spillPartition(int pid) throws HyracksDataException {
+    protected void spillPartition(int pid) throws HyracksDataException {
         RunFileWriter writer = getSpillWriterOrCreateNewOneIfNotExist(buildRFWriters, buildRelName, pid);
         int spilt = bufferManager.flushPartition(pid, writer);
         if (stats != null) {
@@ -219,6 +221,7 @@ public class OptimizedHybridHashJoin {
         return writer;
     }
 
+    @Override
     public void closeBuild() throws HyracksDataException {
         // Flushes the remaining chunks of the all spilled partitions to the disk.
         closeAllSpilledPartitions(buildRFWriters, buildRelName);
@@ -236,10 +239,12 @@ public class OptimizedHybridHashJoin {
         buildHashTable();
     }
 
+    @Override
     public void clearBuildTempFiles() throws HyracksDataException {
         clearTempFiles(buildRFWriters);
     }
 
+    @Override
     public void clearProbeTempFiles() throws HyracksDataException {
         clearTempFiles(probeRFWriters);
     }
@@ -255,6 +260,7 @@ public class OptimizedHybridHashJoin {
         }
     }
 
+    @Override
     public void fail() throws HyracksDataException {
         for (RunFileWriter writer : buildRFWriters) {
             if (writer != null) {
@@ -485,12 +491,14 @@ public class OptimizedHybridHashJoin {
         }
     }
 
+    @Override
     public void initProbe(ITuplePairComparator comparator) {
         probePSizeInTups = new int[numOfPartitions];
         inMemJoiner.setComparator(comparator);
         bufferManager.setConstrain(VPartitionTupleBufferManager.NO_CONSTRAIN);
     }
 
+    @Override
     public void probe(ByteBuffer buffer, IFrameWriter writer) throws HyracksDataException {
         accessorProbe.reset(buffer);
         int tupleCount = accessorProbe.getTupleCount();
@@ -576,12 +584,14 @@ public class OptimizedHybridHashJoin {
         return spilledStatus.nextSetBit(0) < 0;
     }
 
+    @Override
     public void completeProbe(IFrameWriter writer) throws HyracksDataException {
         //We do NOT join the spilled partitions here, that decision is made at the descriptor level
         //(which join technique to use)
         inMemJoiner.completeJoin(writer);
     }
 
+    @Override
     public void releaseResource() throws HyracksDataException {
         inMemJoiner.closeTable();
         closeAllSpilledPartitions(probeRFWriters, probeRelName);
@@ -591,26 +601,32 @@ public class OptimizedHybridHashJoin {
         bufferManagerForHashTable = null;
     }
 
+    @Override
     public RunFileReader getBuildRFReader(int pid) throws HyracksDataException {
         return buildRFWriters[pid] == null ? null : buildRFWriters[pid].createDeleteOnCloseReader();
     }
 
+    @Override
     public int getBuildPartitionSizeInTup(int pid) {
         return buildPSizeInTups[pid];
     }
 
+    @Override
     public RunFileReader getProbeRFReader(int pid) throws HyracksDataException {
         return probeRFWriters[pid] == null ? null : probeRFWriters[pid].createDeleteOnCloseReader();
     }
 
+    @Override
     public int getProbePartitionSizeInTup(int pid) {
         return probePSizeInTups[pid];
     }
 
+    @Override
     public int getMaxBuildPartitionSize() {
         return getMaxPartitionSize(buildPSizeInTups);
     }
 
+    @Override
     public int getMaxProbePartitionSize() {
         return getMaxPartitionSize(probePSizeInTups);
     }
@@ -625,14 +641,17 @@ public class OptimizedHybridHashJoin {
         return max;
     }
 
+    @Override
     public BitSet getPartitionStatus() {
         return spilledStatus;
     }
 
+    @Override
     public int getPartitionSize(int pid) {
         return bufferManager.getPhysicalSize(pid);
     }
 
+    @Override
     public void setIsReversed(boolean reversed) {
         if (reversed && (buildPredEval != null || probePredEval != null)) {
             throw new IllegalStateException();
@@ -649,7 +668,7 @@ public class OptimizedHybridHashJoin {
         LOGGER.debug("can't insert tuple in join memory. {}", details);
         LOGGER.debug("partitions status:\n{}", spillPolicy.partitionsStatus());
     }
-
+    @Override
     public void setOperatorStats(IOperatorStats stats) {
         this.stats = stats;
     }
