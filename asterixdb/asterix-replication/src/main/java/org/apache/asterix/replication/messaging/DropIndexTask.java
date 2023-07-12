@@ -54,7 +54,7 @@ public class DropIndexTask implements IReplicaTask {
             final FileReference indexFile = ioManager.resolve(file);
             if (ioManager.exists(indexFile)) {
                 FileReference indexDir = indexFile.getParent();
-                ioManager.deleteDirectory(indexDir);
+                ioManager.delete(indexDir);
                 ((PersistentLocalResourceRepository) appCtx.getLocalResourceRepository())
                         .invalidateResource(ResourceReference.of(file).getRelativePath().toString());
                 LOGGER.info(() -> "Deleted index: " + indexFile.getAbsolutePath());

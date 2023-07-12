@@ -26,10 +26,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.util.CloudFileUtil;
@@ -40,6 +43,7 @@ import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.file.FileUtil;
@@ -117,7 +121,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             if (!partitions.contains(partitionNum)) {
                 LOGGER.warn("Deleting storage partition {} as it does not belong to the current storage partitions {}",
                         partitionNum, partitions);
-                localIoManager.deleteDirectory(partitionDir);
+                localIoManager.delete(partitionDir);
             }
         }
     }
@@ -201,11 +205,21 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public final void delete(FileReference fileRef) throws HyracksDataException {
+        // Never delete the storage dir in cloud storage
         if (!STORAGE_ROOT_DIR_NAME.equals(IoUtil.getFileNameFromPath(fileRef.getAbsolutePath()))) {
-            // Never delete the storage dir in cloud storage
-            cloudClient.deleteObject(bucket, fileRef.getRelativePath());
+            File localFile = fileRef.getFile();
+            // if file reference exists,and it is a file, then list is not required
+            Set<String> paths =
+                    localFile.exists() && localFile.isFile() ? Collections.singleton(fileRef.getRelativePath())
+                            : list(fileRef).stream().map(FileReference::getRelativePath).collect(Collectors.toSet());
+            cloudClient.deleteObjects(bucket, paths);
         }
         localIoManager.delete(fileRef);
+    }
+
+    @Override
+    public IIOBulkOperation createDeleteBulkOperation() {
+        return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient);
     }
 
     @Override
@@ -249,15 +263,6 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         // Write here will overwrite the older object if exists
         cloudClient.write(bucket, fileRef.getRelativePath(), bytes);
         localIoManager.overwrite(fileRef, bytes);
-    }
-
-    @Override
-    public final void deleteDirectory(FileReference fileRef) throws HyracksDataException {
-        if (!STORAGE_ROOT_DIR_NAME.equals(IoUtil.getFileNameFromPath(fileRef.getAbsolutePath()))) {
-            // Never delete the storage dir in cloud storage
-            cloudClient.deleteObject(bucket, fileRef.getRelativePath());
-        }
-        localIoManager.deleteDirectory(fileRef);
     }
 
     @Override

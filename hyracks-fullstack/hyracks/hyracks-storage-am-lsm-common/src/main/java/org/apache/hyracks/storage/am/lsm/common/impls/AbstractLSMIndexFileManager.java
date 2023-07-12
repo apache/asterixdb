@@ -179,7 +179,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     @Override
     public void deleteDirs() throws HyracksDataException {
-        ioManager.deleteDirectory(baseDir);
+        ioManager.delete(baseDir);
     }
 
     @Override

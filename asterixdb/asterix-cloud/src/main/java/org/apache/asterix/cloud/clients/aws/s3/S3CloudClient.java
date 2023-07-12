@@ -31,8 +31,10 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +80,8 @@ public class S3CloudClient implements ICloudClient {
     private static final Logger LOGGER = LogManager.getLogger();
     // TODO(htowaileb): Temporary variables, can we get this from the used instance?
     private static final double MAX_HOST_BANDWIDTH = 10.0; // in Gbps
+    // The maximum number of file that can be deleted (AWS restriction)
+    private static final int DELETE_BATCH_SIZE = 1000;
 
     private final S3ClientConfig config;
     private final S3Client s3Client;
@@ -203,20 +207,25 @@ public class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public void deleteObject(String bucket, String path) {
-        Set<String> fileList = listObjects(bucket, path, IoUtil.NO_OP_FILTER);
-        if (fileList.isEmpty()) {
+    public void deleteObjects(String bucket, Collection<String> paths) {
+        if (paths.isEmpty()) {
             return;
         }
 
-        profiler.objectDelete();
         List<ObjectIdentifier> objectIdentifiers = new ArrayList<>();
-        for (String file : fileList) {
-            objectIdentifiers.add(ObjectIdentifier.builder().key(file).build());
+        Iterator<String> pathIter = paths.iterator();
+        ObjectIdentifier.Builder builder = ObjectIdentifier.builder();
+        while (pathIter.hasNext()) {
+            objectIdentifiers.clear();
+            for (int i = 0; pathIter.hasNext() && i < DELETE_BATCH_SIZE; i++) {
+                objectIdentifiers.add(builder.key(pathIter.next()).build());
+            }
+
+            Delete delete = Delete.builder().objects(objectIdentifiers).build();
+            DeleteObjectsRequest deleteReq = DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build();
+            s3Client.deleteObjects(deleteReq);
+            profiler.objectDelete();
         }
-        Delete delete = Delete.builder().objects(objectIdentifiers).build();
-        DeleteObjectsRequest deleteReq = DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build();
-        s3Client.deleteObjects(deleteReq);
     }
 
     @Override

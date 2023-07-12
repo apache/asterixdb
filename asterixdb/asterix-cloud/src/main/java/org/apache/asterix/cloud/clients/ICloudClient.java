@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.clients;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,7 +37,7 @@ public interface ICloudClient {
      * Creates a cloud buffered writer
      *
      * @param bucket bucket to write to
-     * @param path path to write to
+     * @param path   path to write to
      * @return buffered writer
      */
     ICloudBufferedWriter createBufferedWriter(String bucket, String path);
@@ -45,7 +46,7 @@ public interface ICloudClient {
      * Lists objects at the specified bucket and path, and applies the file name filter on the returned objects
      *
      * @param bucket bucket to list from
-     * @param path path to list from
+     * @param path   path to list from
      * @param filter filter to apply
      * @return file names returned after applying the file name filter
      */
@@ -56,7 +57,7 @@ public interface ICloudClient {
      * buffer.remaining()
      *
      * @param bucket bucket
-     * @param path path
+     * @param path   path
      * @param offset offset
      * @param buffer buffer
      * @return returns the buffer position
@@ -67,7 +68,7 @@ public interface ICloudClient {
      * Reads all bytes of an object at the specified bucket and path
      *
      * @param bucket bucket
-     * @param path path
+     * @param path   path
      * @return bytes
      * @throws HyracksDataException HyracksDataException
      */
@@ -77,7 +78,7 @@ public interface ICloudClient {
      * Returns the {@code InputStream} of an object at the specified bucket and path
      *
      * @param bucket bucket
-     * @param path path
+     * @param path   path
      * @return inputstream
      */
     InputStream getObjectStream(String bucket, String path);
@@ -86,33 +87,33 @@ public interface ICloudClient {
      * Writes the content of the byte array into the bucket at the specified path
      *
      * @param bucket bucket
-     * @param path path
-     * @param data data
+     * @param path   path
+     * @param data   data
      */
     void write(String bucket, String path, byte[] data);
 
     /**
      * Copies an object from the source path to the destination path
      *
-     * @param bucket bucket
-     * @param srcPath source path
+     * @param bucket   bucket
+     * @param srcPath  source path
      * @param destPath destination path
      */
     void copy(String bucket, String srcPath, FileReference destPath);
 
     /**
-     * Deletes an object at the specified bucket and path
+     * Deletes all objects at the specified bucket and paths
      *
      * @param bucket bucket
-     * @param path path
+     * @param paths  paths of all objects to be deleted
      */
-    void deleteObject(String bucket, String path);
+    void deleteObjects(String bucket, Collection<String> paths);
 
     /**
      * Returns the size of the object at the specified path
      *
      * @param bucket bucket
-     * @param path path
+     * @param path   path
      * @return size
      */
     long getObjectSize(String bucket, String path) throws HyracksDataException;
@@ -121,7 +122,7 @@ public interface ICloudClient {
      * Checks if an object exists at the specified path
      *
      * @param bucket bucket
-     * @param path path
+     * @param path   path
      * @return {@code true} if the object exists, {@code false} otherwise
      */
     boolean exists(String bucket, String path) throws HyracksDataException;
@@ -129,7 +130,7 @@ public interface ICloudClient {
     /**
      * Syncs files by downloading them from cloud storage to local storage
      *
-     * @param bucket bucket to sync from
+     * @param bucket                   bucket to sync from
      * @param cloudToLocalStoragePaths map of cloud storage partition to local storage path
      * @throws HyracksDataException HyracksDataException
      */

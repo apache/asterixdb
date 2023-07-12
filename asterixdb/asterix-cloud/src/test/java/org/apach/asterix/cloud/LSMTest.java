@@ -21,6 +21,7 @@ package org.apach.asterix.cloud;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Collections;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.WriteBufferProvider;
@@ -46,7 +47,7 @@ public abstract class LSMTest {
     @Test
     public void a4deleteTest() {
         try {
-            CLOUD_CLIENT.deleteObject(PLAYGROUND_CONTAINER, BUCKET_STORAGE_ROOT);
+            CLOUD_CLIENT.deleteObjects(PLAYGROUND_CONTAINER, Collections.singleton(BUCKET_STORAGE_ROOT));
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -31,6 +31,7 @@ import org.apache.asterix.common.storage.IndexCheckpoint;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
@@ -201,10 +202,7 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         final FileReference checkpointPath = getCheckpointPath(checkpoint);
         for (int i = 1; i <= MAX_CHECKPOINT_WRITE_ATTEMPTS; i++) {
             try {
-                // clean up from previous write failure
-                if (ioManager.exists(checkpointPath)) {
-                    ioManager.delete(checkpointPath);
-                }
+                // Overwrite will clean up from previous write failure (if any)
                 ioManager.overwrite(checkpointPath, checkpoint.asJson().getBytes());
                 // ensure it was written correctly by reading it
                 read(checkpointPath);
@@ -247,11 +245,13 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
         try {
             final Collection<FileReference> checkpointFiles = ioManager.list(indexPath, CHECKPOINT_FILE_FILTER);
             if (!checkpointFiles.isEmpty()) {
+                IIOBulkOperation deleteBulk = ioManager.createDeleteBulkOperation();
                 for (FileReference checkpointFile : checkpointFiles) {
                     if (getCheckpointIdFromFileName(checkpointFile) < (latestId - historyToKeep)) {
-                        ioManager.delete(checkpointFile);
+                        deleteBulk.add(checkpointFile);
                     }
                 }
+                ioManager.performBulkOperation(deleteBulk);
             }
         } catch (Exception e) {
             LOGGER.warn(() -> "Couldn't delete history checkpoints at " + indexPath, e);

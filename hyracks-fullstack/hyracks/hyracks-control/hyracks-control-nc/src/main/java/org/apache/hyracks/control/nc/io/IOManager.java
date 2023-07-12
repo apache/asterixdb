@@ -47,11 +47,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IoRequest.State;
+import org.apache.hyracks.control.nc.io.bulk.AbstractBulkOperation;
+import org.apache.hyracks.control.nc.io.bulk.DeleteBulkOperation;
 import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -507,6 +510,11 @@ public class IOManager implements IIOManager {
     }
 
     @Override
+    public IIOBulkOperation createDeleteBulkOperation() {
+        return new DeleteBulkOperation(this);
+    }
+
+    @Override
     public Set<FileReference> list(FileReference dir) throws HyracksDataException {
         return list(dir, IoUtil.NO_OP_FILTER);
     }
@@ -552,15 +560,6 @@ public class IOManager implements IIOManager {
     }
 
     @Override
-    public void deleteDirectory(FileReference root) throws HyracksDataException {
-        try {
-            FileUtils.deleteDirectory(root.getFile());
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
-    }
-
-    @Override
     public boolean exists(FileReference fileRef) throws HyracksDataException {
         return fileRef.getFile().exists();
     }
@@ -591,5 +590,10 @@ public class IOManager implements IIOManager {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public void performBulkOperation(IIOBulkOperation bulkOperation) throws HyracksDataException {
+        ((AbstractBulkOperation) bulkOperation).performOperation();
     }
 }
