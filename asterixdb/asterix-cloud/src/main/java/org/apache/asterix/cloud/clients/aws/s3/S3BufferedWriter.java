@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -39,18 +40,21 @@ import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 
 public class S3BufferedWriter implements ICloudBufferedWriter {
-    private final List<CompletedPart> partQueue;
-    private final String path;
-    private final S3Client s3Client;
-    private final String bucket;
-    private String uploadId;
-    private int partNumber;
     private static final int MAX_RETRIES = 3;
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private final S3Client s3Client;
+    private final IRequestProfiler profiler;
+    private final String bucket;
+    private final String path;
+    private final List<CompletedPart> partQueue;
 
-    public S3BufferedWriter(S3Client s3client, String bucket, String path) {
+    private String uploadId;
+    private int partNumber;
+
+    public S3BufferedWriter(S3Client s3client, IRequestProfiler profiler, String bucket, String path) {
         this.s3Client = s3client;
+        this.profiler = profiler;
         this.bucket = bucket;
         this.path = path;
         partQueue = new ArrayList<>();
@@ -58,6 +62,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     @Override
     public int upload(InputStream stream, int length) {
+        profiler.objectMultipartUpload();
         setUploadId();
         UploadPartRequest upReq =
                 UploadPartRequest.builder().uploadId(uploadId).partNumber(partNumber).bucket(bucket).key(path).build();
@@ -108,6 +113,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     }
 
     private void completeMultipartUpload(CompleteMultipartUploadRequest request) throws HyracksDataException {
+        profiler.objectMultipartUpload();
         try {
             s3Client.completeMultipartUpload(request);
         } catch (Exception e) {

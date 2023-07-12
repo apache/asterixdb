@@ -30,17 +30,21 @@ public class S3ClientConfig {
     private final String endpoint;
     private final String prefix;
     private final boolean anonymousAuth;
+    private final long profilerLogInterval;
 
-    public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth) {
+    public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
+            long profilerLogInterval) {
         this.region = region;
         this.endpoint = endpoint;
         this.prefix = prefix;
         this.anonymousAuth = anonymousAuth;
+        this.profilerLogInterval = profilerLogInterval;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
         return new S3ClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
-                cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth());
+                cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
+                cloudProperties.getProfilerLogInterval());
     }
 
     public String getRegion() {
@@ -62,6 +66,10 @@ public class S3ClientConfig {
 
     public AwsCredentialsProvider createCredentialsProvider() {
         return anonymousAuth ? AnonymousCredentialsProvider.create() : DefaultCredentialsProvider.create();
+    }
+
+    public long getProfilerLogInterval() {
+        return profilerLogInterval;
     }
 
     private boolean isS3Mock() {

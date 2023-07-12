@@ -19,7 +19,10 @@
 package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.hyracks.api.config.IOption;
@@ -39,7 +42,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_REGION(STRING, ""),
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
         CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
-        CLOUD_STORAGE_CACHE_POLICY(STRING, "lazy");
+        CLOUD_STORAGE_CACHE_POLICY(STRING, "lazy"),
+        CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 0);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -59,6 +63,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_ENDPOINT:
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                 case CLOUD_STORAGE_CACHE_POLICY:
+                case CLOUD_PROFILER_LOG_INTERVAL:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -84,6 +89,10 @@ public class CloudProperties extends AbstractProperties {
                     return "The caching policy (either eager or lazy). 'Eager' caching will download all partitions"
                             + " upon booting, whereas lazy caching will download a file upon request to open it."
                             + " (default: 'lazy')";
+                case CLOUD_PROFILER_LOG_INTERVAL:
+                    return "The waiting time (in minutes) to log cloud request statistics (default: 0, which means"
+                            + " the profiler is disabled by default). The minimum is 1 minute."
+                            + " NOTE: Enabling the profiler could perturb the performance of cloud requests";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -127,5 +136,10 @@ public class CloudProperties extends AbstractProperties {
 
     public CloudCachePolicy getCloudCachePolicy() {
         return CloudCachePolicy.fromName(accessor.getString(Option.CLOUD_STORAGE_CACHE_POLICY));
+    }
+
+    public long getProfilerLogInterval() {
+        long interval = TimeUnit.MINUTES.toNanos(accessor.getInt(Option.CLOUD_PROFILER_LOG_INTERVAL));
+        return interval == 0 ? 0 : Math.max(interval, TimeUnit.MINUTES.toNanos(1));
     }
 }
