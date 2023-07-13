@@ -18,19 +18,24 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
+import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
-import java.io.File;
 import java.io.FilenameFilter;
-import java.nio.ByteBuffer;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.asterix.cloud.util.CloudFileUtil;
+import org.apache.asterix.cloud.lazy.accessor.ILazyAccessor;
+import org.apache.asterix.cloud.lazy.accessor.ILazyAccessorReplacer;
+import org.apache.asterix.cloud.lazy.accessor.InitialCloudAccessor;
+import org.apache.asterix.cloud.lazy.accessor.LocalAccessor;
+import org.apache.asterix.cloud.lazy.accessor.ReplaceableCloudAccessor;
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IODeviceHandle;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,12 +43,24 @@ import org.apache.logging.log4j.Logger;
 /**
  * CloudIOManager with lazy caching
  * - Overrides some of {@link IOManager} functions
+ * Note: once everything is cached, this will eventually be similar to {@link EagerCloudIOManager}
  */
-class LazyCloudIOManager extends AbstractCloudIOManager {
+final class LazyCloudIOManager extends AbstractCloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
+    private final ILazyAccessorReplacer replacer;
+    private ILazyAccessor accessor;
 
     public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties) throws HyracksDataException {
         super(ioManager, cloudProperties);
+        accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager, writeBufferProvider);
+        replacer = () -> {
+            synchronized (this) {
+                if (!accessor.isLocalAccessor()) {
+                    LOGGER.warn("Replacing cloud-accessor to local-accessor");
+                    accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+                }
+            }
+        };
     }
 
     /*
@@ -53,28 +70,40 @@ class LazyCloudIOManager extends AbstractCloudIOManager {
      */
 
     @Override
-    protected void downloadPartitions() {
-        // NoOp
+    protected void downloadPartitions() throws HyracksDataException {
+        // Get the files in all relevant partitions from the cloud
+        Set<String> cloudFiles = cloudClient.listObjects(bucket, STORAGE_ROOT_DIR_NAME, IoUtil.NO_OP_FILTER).stream()
+                .filter(f -> partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(f)))
+                .collect(Collectors.toSet());
+
+        // Get all files stored locally
+        Set<String> localFiles = new HashSet<>();
+        for (IODeviceHandle deviceHandle : getIODevices()) {
+            FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
+            Set<FileReference> deviceFiles = localIoManager.list(storageRoot, IoUtil.NO_OP_FILTER);
+            for (FileReference fileReference : deviceFiles) {
+                localFiles.add(fileReference.getRelativePath());
+            }
+        }
+
+        // Keep uncached files list (i.e., files exists in cloud only)
+        cloudFiles.removeAll(localFiles);
+        int remainingUncachedFiles = cloudFiles.size();
+        if (remainingUncachedFiles > 0) {
+            // Local cache misses some files, cloud-based accessor is needed for read operations
+            accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions,
+                    remainingUncachedFiles, writeBufferProvider, replacer);
+        } else {
+            // Everything is cached, no need to invoke cloud-based accessor for read operations
+            accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+        }
+        LOGGER.info("The number of uncached files: {}", remainingUncachedFiles);
     }
 
     @Override
     protected void onOpen(CloudFileHandle fileHandle, FileReadWriteMode rwMode, FileSyncMode syncMode)
             throws HyracksDataException {
-        FileReference fileRef = fileHandle.getFileReference();
-        if (!localIoManager.exists(fileRef) && cloudClient.exists(bucket, fileRef.getRelativePath())) {
-            // File doesn't exist locally, download it.
-            ByteBuffer writeBuffer = writeBufferProvider.getBuffer();
-            try {
-                // TODO download for all partitions at once
-                LOGGER.info("Downloading {} from S3..", fileRef.getRelativePath());
-                CloudFileUtil.downloadFile(localIoManager, cloudClient, bucket, fileHandle, rwMode, syncMode,
-                        writeBuffer);
-                localIoManager.close(fileHandle);
-                LOGGER.info("Finished downloading {} from S3..", fileRef.getRelativePath());
-            } finally {
-                writeBufferProvider.recycle(writeBuffer);
-            }
-        }
+        accessor.doOnOpen(fileHandle, rwMode, syncMode);
     }
 
     /*
@@ -84,58 +113,31 @@ class LazyCloudIOManager extends AbstractCloudIOManager {
      */
     @Override
     public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
-        Set<String> cloudFiles = cloudClient.listObjects(bucket, dir.getRelativePath(), filter);
-        if (cloudFiles.isEmpty()) {
-            return Collections.emptySet();
-        }
+        return accessor.doList(dir, filter);
+    }
 
-        // First get the set of local files
-        Set<FileReference> localFiles = localIoManager.list(dir, filter);
-
-        // Reconcile local files and cloud files
-        for (FileReference file : localFiles) {
-            String path = file.getRelativePath();
-            if (!cloudFiles.contains(path)) {
-                throw new IllegalStateException("Local file is not clean");
-            } else {
-                // No need to re-add it in the following loop
-                cloudFiles.remove(path);
-            }
-        }
-
-        // Add the remaining files that are not stored locally in their designated partitions (if any)
-        for (String cloudFile : cloudFiles) {
-            FileReference localFile = resolve(cloudFile);
-            if (isInNodePartition(cloudFile) && dir.getDeviceHandle().equals(localFile.getDeviceHandle())) {
-                localFiles.add(localFile);
-            }
-        }
-        return new HashSet<>(localFiles);
+    @Override
+    public boolean exists(FileReference fileRef) throws HyracksDataException {
+        return accessor.doExists(fileRef);
     }
 
     @Override
     public long getSize(FileReference fileReference) throws HyracksDataException {
-        if (localIoManager.exists(fileReference)) {
-            return localIoManager.getSize(fileReference);
-        }
-        return cloudClient.getObjectSize(bucket, fileReference.getRelativePath());
+        return accessor.doGetSize(fileReference);
     }
 
     @Override
     public byte[] readAllBytes(FileReference fileRef) throws HyracksDataException {
-        if (!localIoManager.exists(fileRef) && isInNodePartition(fileRef.getRelativePath())) {
-            byte[] bytes = cloudClient.readAllBytes(bucket, fileRef.getRelativePath());
-            if (bytes != null && !partitions.isEmpty()) {
-                localIoManager.overwrite(fileRef, bytes);
-            }
-            return bytes;
-        }
-        return localIoManager.readAllBytes(fileRef);
+        return accessor.doReadAllBytes(fileRef);
     }
 
-    private boolean isInNodePartition(String path) {
-        int start = path.indexOf(PARTITION_DIR_PREFIX) + PARTITION_DIR_PREFIX.length();
-        int length = path.indexOf(File.separatorChar, start);
-        return partitions.contains(Integer.parseInt(path.substring(start, length)));
+    @Override
+    public void delete(FileReference fileRef) throws HyracksDataException {
+        accessor.doDelete(fileRef);
+    }
+
+    @Override
+    public void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
+        accessor.doOverwrite(fileRef, bytes);
     }
 }

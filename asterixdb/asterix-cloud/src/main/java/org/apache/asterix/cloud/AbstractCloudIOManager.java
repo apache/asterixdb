@@ -26,11 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
@@ -151,11 +149,6 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      */
 
     @Override
-    public boolean exists(FileReference fileRef) throws HyracksDataException {
-        return localIoManager.exists(fileRef) || cloudClient.exists(bucket, fileRef.getRelativePath());
-    }
-
-    @Override
     public final IFileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
             throws HyracksDataException {
         CloudFileHandle fHandle = new CloudFileHandle(cloudClient, bucket, fileRef, writeBufferProvider);
@@ -204,20 +197,6 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     @Override
-    public final void delete(FileReference fileRef) throws HyracksDataException {
-        // Never delete the storage dir in cloud storage
-        if (!STORAGE_ROOT_DIR_NAME.equals(IoUtil.getFileNameFromPath(fileRef.getAbsolutePath()))) {
-            File localFile = fileRef.getFile();
-            // if file reference exists,and it is a file, then list is not required
-            Set<String> paths =
-                    localFile.exists() && localFile.isFile() ? Collections.singleton(fileRef.getRelativePath())
-                            : list(fileRef).stream().map(FileReference::getRelativePath).collect(Collectors.toSet());
-            cloudClient.deleteObjects(bucket, paths);
-        }
-        localIoManager.delete(fileRef);
-    }
-
-    @Override
     public IIOBulkOperation createDeleteBulkOperation() {
         return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient);
     }
@@ -256,13 +235,6 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         }
         // Sync only after finalizing the upload to cloud storage
         localIoManager.sync(fileHandle, metadata);
-    }
-
-    @Override
-    public final void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
-        // Write here will overwrite the older object if exists
-        cloudClient.write(bucket, fileRef.getRelativePath(), bytes);
-        localIoManager.overwrite(fileRef, bytes);
     }
 
     @Override
