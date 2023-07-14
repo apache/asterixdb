@@ -261,6 +261,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexInsertUpdateDeleteOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.fulltext.TokenizerCategory;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.Level;
@@ -3524,8 +3525,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (spec != null && !isCompileOnly()) {
                 atomic = dataset.isAtomic();
                 if (atomic) {
-                    int numParticipatingNodes = appCtx.getNodeJobTracker().getJobParticipatingNodes(spec).size();
-                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(spec);
+                    int numParticipatingNodes = appCtx.getNodeJobTracker()
+                            .getJobParticipatingNodes(spec, LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class)
+                            .size();
+                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(spec,
+                            LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class);
                     List<Integer> participatingDatasetIds = new ArrayList<>();
                     participatingDatasetIds.add(dataset.getDatasetId());
                     spec.setProperty(GlobalTxManager.GlOBAL_TX_PROPERTY_NAME, new GlobalTxInfo(participatingDatasetIds,
@@ -3613,8 +3617,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         ((InsertStatement) stmt).getDatasetName());
                 atomic = ds.isAtomic();
                 if (atomic) {
-                    int numParticipatingNodes = appCtx.getNodeJobTracker().getJobParticipatingNodes(jobSpec).size();
-                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec);
+                    int numParticipatingNodes = appCtx.getNodeJobTracker()
+                            .getJobParticipatingNodes(jobSpec, LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class)
+                            .size();
+                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec,
+                            LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class);
                     List<Integer> participatingDatasetIds = new ArrayList<>();
                     participatingDatasetIds.add(ds.getDatasetId());
                     jobSpec.setProperty(GlobalTxManager.GlOBAL_TX_PROPERTY_NAME, new GlobalTxInfo(
@@ -3672,8 +3679,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
                 atomic = ds.isAtomic();
                 if (atomic) {
-                    int numParticipatingNodes = appCtx.getNodeJobTracker().getJobParticipatingNodes(jobSpec).size();
-                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec);
+                    int numParticipatingNodes = appCtx.getNodeJobTracker()
+                            .getJobParticipatingNodes(jobSpec, LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class)
+                            .size();
+                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec,
+                            LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class);
                     List<Integer> participatingDatasetIds = new ArrayList<>();
                     participatingDatasetIds.add(ds.getDatasetId());
                     jobSpec.setProperty(GlobalTxManager.GlOBAL_TX_PROPERTY_NAME, new GlobalTxInfo(
@@ -4791,8 +4801,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         ((InsertStatement) atomicStatement).getDatasetName());
                 atomic = ds.isAtomic();
                 if (atomic) {
-                    int numParticipatingNodes = appCtx.getNodeJobTracker().getJobParticipatingNodes(jobSpec).size();
-                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec);
+                    int numParticipatingNodes = appCtx.getNodeJobTracker()
+                            .getJobParticipatingNodes(jobSpec, LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class)
+                            .size();
+                    int numParticipatingPartitions = appCtx.getNodeJobTracker().getNumParticipatingPartitions(jobSpec,
+                            LSMTreeIndexInsertUpdateDeleteOperatorDescriptor.class);
                     List<Integer> participatingDatasetIds = new ArrayList<>();
                     participatingDatasetIds.add(ds.getDatasetId());
                     jobSpec.setProperty(GlobalTxManager.GlOBAL_TX_PROPERTY_NAME, new GlobalTxInfo(

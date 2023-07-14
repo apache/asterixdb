@@ -4145,24 +4145,24 @@
         -->
   </test-group>
   <test-group name="ddl">
-<!--    <test-case FilePath="ddl">-->
-<!--      <compilation-unit name="create-dataset-1">-->
-<!--        <output-dir compare="Clean-JSON">create-dataset-1</output-dir>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-<!--    <test-case FilePath="ddl">-->
-<!--      <compilation-unit name="create-dataset-2">-->
-<!--        <output-dir compare="Clean-JSON">create-dataset-2</output-dir>-->
-<!--        <source-location>false</source-location>-->
-<!--        <expected-error>type mismatch: missing a required closed field my_id: string</expected-error>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-<!--    <test-case FilePath="ddl">-->
-<!--      <compilation-unit name="create-dataset-3">-->
-<!--        <output-dir compare="Clean-JSON">create-dataset-3</output-dir>-->
-<!--        <expected-error>ASX1077: Cannot find dataset non_existent in dataverse test nor an alias with name non_existent (in line 23, at column 21)</expected-error>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-1">
+        <output-dir compare="Clean-JSON">create-dataset-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-2">
+        <output-dir compare="Clean-JSON">create-dataset-2</output-dir>
+        <source-location>false</source-location>
+        <expected-error>type mismatch: missing a required closed field my_id: string</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-3">
+        <output-dir compare="Clean-JSON">create-dataset-3</output-dir>
+        <expected-error>ASX1077: Cannot find dataset non_existent in dataverse test nor an alias with name non_existent (in line 23, at column 21)</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
@@ -16321,25 +16321,35 @@
       </compilation-unit>
     </test-case>
   </test-group>
-<!--  <test-group name="copy">-->
-<!--    <test-case FilePath="copy">-->
-<!--      <compilation-unit name="copy-1">-->
-<!--        <output-dir compare="Text">copy-1</output-dir>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-<!--  </test-group>-->
-<!--  <test-group name="atomic-statements">-->
-<!--    <test-case FilePath="atomic-statements">-->
-<!--      <compilation-unit name="atomic-statements-1">-->
-<!--        <output-dir compare="Clean-JSON">atomic-statements-1</output-dir>-->
-<!--        <expected-error>HYR0033: Inserting duplicate keys into the primary storage</expected-error>-->
-<!--        <source-location>false</source-location>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-<!--    <test-case FilePath="atomic-statements">-->
-<!--      <compilation-unit name="atomic-statements-2">-->
-<!--        <output-dir compare="Clean-JSON">atomic-statements-2</output-dir>-->
-<!--      </compilation-unit>-->
-<!--    </test-case>-->
-<!--  </test-group>-->
+  <test-group name="copy">
+    <test-case FilePath="copy">
+      <compilation-unit name="copy-1">
+        <output-dir compare="Text">copy-1</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="atomic-statements">
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-1">
+        <output-dir compare="Clean-JSON">atomic-statements-1</output-dir>
+        <expected-error>HYR0033: Inserting duplicate keys into the primary storage</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-2">
+        <output-dir compare="Clean-JSON">atomic-statements-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-3">
+        <output-dir compare="Clean-JSON">atomic-statements-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-4">
+        <output-dir compare="Clean-JSON">atomic-statements-4</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

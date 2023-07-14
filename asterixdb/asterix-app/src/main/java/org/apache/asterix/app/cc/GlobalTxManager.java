@@ -69,8 +69,7 @@ public class GlobalTxManager implements IGlobalTxManager {
     @Override
     public void commitTransaction(JobId jobId) throws ACIDException {
         IGlobalTransactionContext context = getTransactionContext(jobId);
-        if (context.getTxnStatus() == TransactionStatus.ACTIVE
-                || context.getTxnStatus() == TransactionStatus.PREPARED) {
+        if (context.getAcksReceived() != context.getNumPartitions()) {
             synchronized (context) {
                 try {
                     context.wait();
@@ -78,6 +77,19 @@ public class GlobalTxManager implements IGlobalTxManager {
                     Thread.currentThread().interrupt();
                     throw new ACIDException(e);
                 }
+            }
+        }
+        context.setTxnStatus(TransactionStatus.PREPARED);
+        context.persist(ioManager);
+        context.resetAcksReceived();
+        sendJobCommitMessages(context);
+
+        synchronized (context) {
+            try {
+                context.wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new ACIDException(e);
             }
         }
         txnContextRepository.remove(jobId);
@@ -95,17 +107,21 @@ public class GlobalTxManager implements IGlobalTxManager {
     @Override
     public void handleJobPreparedMessage(JobId jobId, String nodeId, int datasetId,
             Map<String, ILSMComponentId> componentIdMap) {
-        IGlobalTransactionContext context = getTransactionContext(jobId);
+        IGlobalTransactionContext context = txnContextRepository.get(jobId);
+        if (context == null) {
+            LOGGER.warn("JobPreparedMessage received for jobId " + jobId
+                    + ", which does not exist. The transaction for the job is already aborted");
+            return;
+        }
         if (context.getNodeResourceMap().containsKey(nodeId)) {
             context.getNodeResourceMap().get(nodeId).putAll(componentIdMap);
         } else {
             context.getNodeResourceMap().put(nodeId, componentIdMap);
         }
         if (context.incrementAndGetAcksReceived() == context.getNumPartitions()) {
-            context.setTxnStatus(TransactionStatus.PREPARED);
-            context.persist(ioManager);
-            context.resetAcksReceived();
-            sendJobCommitMessages(context);
+            synchronized (context) {
+                context.notifyAll();
+            }
         }
     }
 
@@ -127,10 +143,10 @@ public class GlobalTxManager implements IGlobalTxManager {
         if (context.incrementAndGetAcksReceived() == context.getNumNodes()) {
             context.delete(ioManager);
             context.setTxnStatus(TransactionStatus.COMMITTED);
-            sendEnableMergeMessages(context);
             synchronized (context) {
                 context.notifyAll();
             }
+            sendEnableMergeMessages(context);
         }
     }
 

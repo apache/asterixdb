@@ -21,6 +21,7 @@ package org.apache.asterix.common.api;
 import java.util.Set;
 
 import org.apache.hyracks.api.application.IClusterLifecycleListener;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -44,8 +45,8 @@ public interface INodeJobTracker extends IJobLifecycleListener, IClusterLifecycl
      * @param spec
      * @return The participating nodes in the job execution
      */
-    Set<String> getJobParticipatingNodes(JobSpecification spec);
+    Set<String> getJobParticipatingNodes(JobSpecification spec, Class<? extends IOperatorDescriptor> operatorClass);
 
-    int getNumParticipatingPartitions(JobSpecification spec);
+    int getNumParticipatingPartitions(JobSpecification spec, Class<? extends IOperatorDescriptor> operatorClass);
 
 }

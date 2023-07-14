@@ -34,6 +34,9 @@ import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.constraints.Constraint;
 import org.apache.hyracks.api.constraints.expressions.ConstantExpression;
 import org.apache.hyracks.api.constraints.expressions.PartitionCountExpression;
+import org.apache.hyracks.api.constraints.expressions.PartitionLocationExpression;
+import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
@@ -46,7 +49,7 @@ public class NodeJobTracker implements INodeJobTracker {
 
     @Override
     public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) {
-        getJobParticipatingNodes(spec).stream().map(nodeJobs::get).forEach(jobsSet -> jobsSet.add(jobId));
+        getJobParticipatingNodes(spec, null).stream().map(nodeJobs::get).forEach(jobsSet -> jobsSet.add(jobId));
     }
 
     @Override
@@ -76,17 +79,42 @@ public class NodeJobTracker implements INodeJobTracker {
     }
 
     @Override
-    public Set<String> getJobParticipatingNodes(JobSpecification spec) {
-        return spec.getUserConstraints().stream().map(Constraint::getRValue)
-                .filter(ce -> ce.getTag() == ExpressionTag.CONSTANT).map(ConstantExpression.class::cast)
-                .map(ConstantExpression::getValue).map(Object::toString).filter(nodeJobs::containsKey)
-                .collect(Collectors.toSet());
+    public Set<String> getJobParticipatingNodes(JobSpecification spec,
+            Class<? extends IOperatorDescriptor> operatorClass) {
+        if (operatorClass != null) {
+            List<OperatorDescriptorId> operatorDescriptorIds =
+                    spec.getOperatorMap().entrySet().stream().filter(op -> operatorClass.isInstance(op.getValue()))
+                            .map(Map.Entry::getKey).collect(Collectors.toList());
+            return spec.getUserConstraints().stream()
+                    .filter(ce -> ce.getLValue().getTag() == ExpressionTag.PARTITION_LOCATION && operatorDescriptorIds
+                            .contains(((PartitionLocationExpression) ce.getLValue()).getOperatorDescriptorId()))
+                    .map(Constraint::getRValue).map(ConstantExpression.class::cast).map(ConstantExpression::getValue)
+                    .map(Object::toString).filter(nodeJobs::containsKey).collect(Collectors.toSet());
+        } else {
+            return spec.getUserConstraints().stream().map(Constraint::getRValue)
+                    .filter(ce -> ce.getTag() == ExpressionTag.CONSTANT).map(ConstantExpression.class::cast)
+                    .map(ConstantExpression::getValue).map(Object::toString).filter(nodeJobs::containsKey)
+                    .collect(Collectors.toSet());
+        }
     }
 
     @Override
-    public int getNumParticipatingPartitions(JobSpecification spec) {
-        return spec.getUserConstraints().stream().filter(ce -> ce.getLValue() instanceof PartitionCountExpression)
-                .map(Constraint::getRValue).map(ConstantExpression.class::cast).map(ConstantExpression::getValue)
-                .map(Object::toString).map(Integer::parseInt).max(Integer::compare).get();
+    public int getNumParticipatingPartitions(JobSpecification spec,
+            Class<? extends IOperatorDescriptor> operatorClass) {
+        if (operatorClass != null) {
+            List<OperatorDescriptorId> operatorDescriptorIds =
+                    spec.getOperatorMap().entrySet().stream().filter(op -> operatorClass.isInstance(op.getValue()))
+                            .map(Map.Entry::getKey).collect(Collectors.toList());
+            return spec.getUserConstraints().stream()
+                    .filter(ce -> ce.getLValue().getTag() == ExpressionTag.PARTITION_COUNT && operatorDescriptorIds
+                            .contains(((PartitionCountExpression) ce.getLValue()).getOperatorDescriptorId()))
+                    .map(Constraint::getRValue).map(ConstantExpression.class::cast).map(ConstantExpression::getValue)
+                    .map(Object::toString).map(Integer::parseInt).max(Integer::compare).get();
+        } else {
+            return spec.getUserConstraints().stream()
+                    .filter(ce -> ce.getLValue().getTag() == ExpressionTag.PARTITION_COUNT).map(Constraint::getRValue)
+                    .map(ConstantExpression.class::cast).map(ConstantExpression::getValue).map(Object::toString)
+                    .map(Integer::parseInt).max(Integer::compare).get();
+        }
     }
 }

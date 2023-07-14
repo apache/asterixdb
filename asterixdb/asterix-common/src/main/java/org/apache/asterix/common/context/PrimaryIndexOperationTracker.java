@@ -294,6 +294,8 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
     }
 
     public void clear() throws HyracksDataException {
+        List<FlushOperation> flushes = new ArrayList<>(getScheduledFlushes());
+        LSMIndexUtil.waitFor(flushes);
         deleteMemoryComponent(false);
         Set<ILSMIndex> indexes = dsInfo.getDatasetPartitionOpenIndexes(partition);
         for (ILSMIndex lsmIndex : indexes) {

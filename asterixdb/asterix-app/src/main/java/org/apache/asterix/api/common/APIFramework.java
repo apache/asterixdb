@@ -554,7 +554,7 @@ public class APIFramework {
 
     public static AlgebricksAbsolutePartitionConstraint getJobLocations(JobSpecification spec,
             INodeJobTracker jobTracker, AlgebricksAbsolutePartitionConstraint clusterLocations) {
-        final Set<String> jobParticipatingNodes = jobTracker.getJobParticipatingNodes(spec);
+        final Set<String> jobParticipatingNodes = jobTracker.getJobParticipatingNodes(spec, null);
         return new AlgebricksAbsolutePartitionConstraint(Arrays.stream(clusterLocations.getLocations())
                 .filter(jobParticipatingNodes::contains).toArray(String[]::new));
     }
