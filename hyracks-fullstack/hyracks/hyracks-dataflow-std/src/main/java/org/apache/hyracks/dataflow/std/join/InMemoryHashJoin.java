@@ -55,7 +55,7 @@ public class InMemoryHashJoin {
     private ITuplePairComparator tpComparator;
     private final boolean isLeftOuter;
     private final ArrayTupleBuilder missingTupleBuild;
-    private final ISerializableTable table;
+    private ISerializableTable table;
     private final TuplePointer storedTuplePointer;
     private final boolean reverseOutputOrder; //Should we reverse the order of tuples, we are writing in output
     private final TupleInFrameListAccessor tupleAccessor;
@@ -220,6 +220,7 @@ public class InMemoryHashJoin {
     public void closeTable() throws HyracksDataException {
         table.close();
     }
+
 
     private void appendToResult(int probeSidetIx, int buildSidetIx, IFrameWriter writer) throws HyracksDataException {
         if (reverseOutputOrder) {

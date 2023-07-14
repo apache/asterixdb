@@ -145,7 +145,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
     private boolean forceRoleReversal = false;
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private int frameInterval = 0;
+    private int frameInterval = 10;
     private  boolean eventBased = false;
 
     public OptimizedHybridHashJoinOperatorDescriptor(IOperatorDescriptorRegistry spec, int memSizeInFrames,
@@ -304,7 +304,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             getNumberOfPartitions(state.memForJoin, inputsize0, fudgeFactor, nPartitions);
                     state.hybridHJ = new MemoryContentionResponsiveHHJ(ctx.getJobletContext(), state.memForJoin,
                             state.numOfPartitions, PROBE_REL, BUILD_REL, probeRd, buildRd, probeHpc, buildHpc,
-                            probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories,timeInterval,frameInterval,eventBased);
+                            probePredEval, buildPredEval, isLeftOuter, nonMatchWriterFactories,frameInterval,eventBased);
                     state.hybridHJ.setOperatorStats(stats);
 
                     state.hybridHJ.initBuild();
@@ -618,7 +618,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                     IOptimizedHybridHashJoin rHHj;
                     int n = getNumberOfPartitions(state.memForJoin, tableSize, fudgeFactor, nPartitions);
                     rHHj = new MemoryContentionResponsiveHHJ(jobletCtx, state.memForJoin, n, PROBE_REL, BUILD_REL, probeRd,
-                            buildRd, probeHpc, buildHpc, null, null, isLeftOuter, nonMatchWriterFactories,timeInterval,frameInterval,eventBased); //checked-confirmed
+                            buildRd, probeHpc, buildHpc, null, null, isLeftOuter, nonMatchWriterFactories,frameInterval,eventBased); //checked-confirmed
 
                     rHHj.setIsReversed(isReversed);
                     try {

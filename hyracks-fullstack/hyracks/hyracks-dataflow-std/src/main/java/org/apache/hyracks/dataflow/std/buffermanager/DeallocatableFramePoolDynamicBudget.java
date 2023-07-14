@@ -30,7 +30,7 @@ public class DeallocatableFramePoolDynamicBudget extends DeallocatableFramePool{
     @Override
     public boolean updateMemoryBudget(int newBudget){
         desiredBuffer = newBudget * ctx.getInitialFrameSize();
-        if(this.allocated < newBudget){
+        if(this.allocated < desiredBuffer){
             this.memBudget = desiredBuffer; //Simply Update Memory Budget
             return true;
         }
