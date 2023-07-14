@@ -28,7 +28,7 @@ public abstract class AbstractRowImmutableMetadata extends AbstractRowMetadata {
 
     protected AbstractRowImmutableMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             IValueReference serializedMetadata, int numberOfColumns) {
-        super(datasetType, metaType, numberOfPrimaryKeys);
+        super();
         this.serializedMetadata = serializedMetadata;
         this.numberOfColumns = numberOfColumns;
     }

@@ -35,11 +35,11 @@
 //import org.apache.hyracks.api.exceptions.HyracksDataException;
 //import org.apache.hyracks.data.std.api.IValueReference;
 //import org.apache.parquet.bytes.BytesInput;
-//import org.apache.parquet.bytes.BytesUtils;
+//import org.apache.parquet.bytes.BytesUtils; //TODO : CALVIN_DANI remove parquet dependency
 //
 //public abstract class AbstractRowValuesWriter implements IRowValuesWriter {
 //    protected final AbstractRowFilterWriter filterWriter;
-//    protected final ParquetRowRunLengthBitPackingHybridEncoder definitionLevels;
+//    protected final ParquetRowRunLengthBitPackingHybridEncoder definitionLevels; //TODO : CALVIN_DANI remove parquet dependency
 //    protected final int level;
 //
 //    private final int columnIndex;

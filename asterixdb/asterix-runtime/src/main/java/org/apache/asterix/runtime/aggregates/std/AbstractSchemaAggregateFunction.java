@@ -31,6 +31,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserial
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt8SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
+import org.apache.asterix.om.RowMetadata;
 import org.apache.asterix.om.api.IRowWriteMultiPageOp;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
@@ -39,6 +40,9 @@ import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
+import org.apache.asterix.om.lazy.RowTransformer;
+import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -76,7 +80,10 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
     private final ARecordType recType;
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private IPointable inputVal = new VoidPointable();
+//    private IPointable inputVal = new VoidPointable();
+    private RecordLazyVisitablePointable inputVal = new RecordLazyVisitablePointable(true); //TODO : CALVIN_DANI to be tagged
+//    private TypedRecordLazyVisitablePointable inputVal = new TypedRecordLazyVisitablePointable(null);
+
     private IScalarEvaluator eval;
     protected ATypeTag aggType;
     private double sum;
@@ -92,6 +99,10 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
     private IScalarEvaluator evalSum = new AccessibleByteArrayEval(sumBytes);
     private IScalarEvaluator evalCount = new AccessibleByteArrayEval(countBytes);
     private ClosedRecordConstructorEval recordEval;
+
+    private RowTransformer transformer;
+    RowMetadata rowMetaData;
+//    private int recordFieldId = 0;
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<ADouble> doubleSerde =
@@ -119,6 +130,11 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         sum = 0.0;
         count = 0;
         isWarned = false;
+
+        // Schema
+        Mutable<IRowWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
+        rowMetaData = new RowMetadata(multiPageOpRef);
+        transformer = new RowTransformer(rowMetaData,rowMetaData.getRoot());
     }
 
     @Override
@@ -136,15 +152,22 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         if (skipStep()) {
             return;
         }
+
+        //  Mutable<IRowWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
+        //  IRowValuesWriterFactory factory = new RowValuesWriterFactory(multiPageOpRef);
+        //  RowMetadata rowMetaData = new RowMetadata(multiPageOpRef);
+        //  int recordFieldId = rowMetaData.getRecordFieldIndex();
+        //  RowTransformer transformer = new RowTransformer(rowMetaData,rowMetaData.getRoot());
+
+        int recordFieldId = rowMetaData.getRecordFieldIndex();
+        inputVal.set(tuple.getFieldData(recordFieldId), tuple.getFieldStart(recordFieldId),
+                tuple.getFieldLength(recordFieldId));
+        transformer.transform(inputVal);
+
         eval.evaluate(tuple, inputVal);
         byte[] data = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
 
-
-        //
-        Mutable<IRowWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
-//        IRowValuesWriterFactory factory = new RowValuesWriterFactory(multiPageOpRef);
-        //
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
         ATypeTag aggTypeTag = aggType;
         if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {

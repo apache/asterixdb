@@ -71,7 +71,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
             if (childTypeTag != ATypeTag.MISSING) {
                 //Only write actual field values (including NULL) but ignore MISSING fields
                 AbstractRowSchemaNode childNode = objectNode.getOrCreateChild(fieldName, childTypeTag, columnMetadata);
-                //                acceptActualNode(pointable.getChildVisitablePointable(), childNode);
+                // Writing into Columnar format               acceptActualNode(pointable.getChildVisitablePointable(), childNode);
             }
         }
 
@@ -97,7 +97,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
             pointable.nextChild();
             ATypeTag childTypeTag = pointable.getChildTypeTag();
             AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, columnMetadata);
-            //            acceptActualNode(pointable.getChildVisitablePointable(), childNode);
+            //  Writing into Columnar format        acceptActualNode(pointable.getChildVisitablePointable(), childNode);
             /*
              * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
              */

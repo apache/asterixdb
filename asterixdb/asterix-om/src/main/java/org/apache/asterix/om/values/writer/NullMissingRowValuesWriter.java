@@ -30,7 +30,7 @@
 //import org.apache.parquet.bytes.BytesInput;
 //
 //public class NullMissingRowValuesWriter extends AbstractRowValuesWriter {
-//    private static final BytesInput EMPTY = BytesInput.empty();
+//    private static final BytesInput EMPTY = BytesInput.empty(); //TODO : CALVIN_DANI remove parquet dependency
 //    private final RunRowLengthIntArray defLevelsIntArray;
 //
 //    NullMissingRowValuesWriter(int columnIndex, int level, boolean collection, boolean filtered) {
