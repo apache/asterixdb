@@ -303,6 +303,24 @@ public class PhysicalOptimizationConfig {
         return getBoolean(COLUMN_FILTER, AlgebricksConfig.COLUMN_FILTER_DEFAULT);
     }
 
+    public void setExtensionProperty(String property, Object value) {
+        if (value instanceof Integer) {
+            setInt(property, (Integer) value);
+        } else if (value instanceof Double) {
+            setDouble(property, (Double) value);
+        } else if (value instanceof Boolean) {
+            setBoolean(property, (Boolean) value);
+        } else if (value instanceof String) {
+            setString(property, (String) value);
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public Object getExtensionProperty(String property) {
+        return properties.getProperty(property);
+    }
+
     private void setInt(String property, int value) {
         properties.setProperty(property, Integer.toString(value));
     }

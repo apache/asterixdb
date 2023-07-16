@@ -72,11 +72,13 @@ public class ConfigManagerApplicationConfig implements IApplicationConfig, Seria
 
     @Override
     public Set<String> getKeys(String section) {
-        return configManager.getOptionNames(section);
+        Set<String> keys = configManager.getOptionNames(section);
+        return keys.isEmpty() ? configManager.getExtensionKeys(section) : keys;
     }
 
     private Object get(String section, String key) {
-        return get(configManager.lookupOption(section, key));
+        IOption option = configManager.lookupOption(section, key);
+        return option != null ? get(option) : configManager.getExtensionValue(section, key);
     }
 
     @Override

@@ -453,6 +453,23 @@ public class ConfigManager implements IConfigManager, Serializable {
         return optionNames;
     }
 
+    public Set<String> getExtensionKeys(String sectionName) {
+        Set<String> extensionKeys = new HashSet<>();
+        for (Map.Entry<String, String> entry : extensionOptions.get(sectionName)) {
+            extensionKeys.add(entry.getKey());
+        }
+        return extensionKeys;
+    }
+
+    public Object getExtensionValue(String sectionName, String entryKey) {
+        for (Map.Entry<String, String> entry : extensionOptions.get(sectionName)) {
+            if (entry.getKey().equals(entryKey)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
     @Override
     public Set<IOption> getOptions(Section section) {
         return new HashSet<>(getSectionOptionMap(section).values());
