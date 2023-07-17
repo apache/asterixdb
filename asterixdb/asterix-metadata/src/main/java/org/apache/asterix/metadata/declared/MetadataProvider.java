@@ -188,6 +188,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private boolean blockingOperatorDisabled = false;
 
     private final DataPartitioningProvider dataPartitioningProvider;
+    private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
     public static MetadataProvider create(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
         java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
@@ -318,7 +319,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public IDataFormat getDataFormat() {
-        return FormatUtils.getDefaultFormat();
+        return dataFormat;
+    }
+
+    public void setDataFormat(IDataFormat dataFormat) {
+        this.dataFormat = dataFormat;
     }
 
     public StorageProperties getStorageProperties() {

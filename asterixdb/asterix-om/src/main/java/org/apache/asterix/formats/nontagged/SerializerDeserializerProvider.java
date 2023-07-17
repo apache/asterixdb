@@ -72,10 +72,10 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 
 public class SerializerDeserializerProvider implements ISerializerDeserializerProvider, Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public static final SerializerDeserializerProvider INSTANCE = new SerializerDeserializerProvider();
 
-    private SerializerDeserializerProvider() {
+    protected SerializerDeserializerProvider() {
     }
 
     // Can't be shared among threads <Stateful>

@@ -95,7 +95,7 @@ public class NonTaggedDataFormat implements IDataFormat {
 
     public static final String NON_TAGGED_DATA_FORMAT = "org.apache.asterix.runtime.formats.NonTaggedDataFormat";
 
-    private NonTaggedDataFormat() {
+    protected NonTaggedDataFormat() {
     }
 
     @Override
