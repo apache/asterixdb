@@ -90,6 +90,7 @@ import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
@@ -886,10 +887,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             // #. add a new dataset with PendingAddOp
-            dataset = new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName,
-                    metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy, compactionPolicyProperties,
-                    datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
-                    MetadataUtil.PENDING_ADD_OP, compressionScheme, datasetFormatInfo);
+            dataset = (Dataset) createDataset(dd, dataverseName, datasetName, itemTypeDataverseName, itemTypeName,
+                    metaItemTypeDataverseName, metaItemTypeName, dsType, compactionPolicy, compactionPolicyProperties,
+                    compressionScheme, datasetFormatInfo, datasetDetails, ngName);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (itemTypeIsInline) {
@@ -979,6 +979,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         }
         return Optional.of(dataset);
+    }
+
+    protected IDataset createDataset(DatasetDecl dd, DataverseName dataverseName, String datasetName,
+            DataverseName itemTypeDataverseName, String itemTypeName, DataverseName metaItemTypeDataverseName,
+            String metaItemTypeName, DatasetType dsType, String compactionPolicy,
+            Map<String, String> compactionPolicyProperties, String compressionScheme,
+            DatasetFormatInfo datasetFormatInfo, IDatasetDetails datasetDetails, String ngName)
+            throws AlgebricksException {
+        return new Dataset(dataverseName, datasetName, itemTypeDataverseName, itemTypeName, metaItemTypeDataverseName,
+                metaItemTypeName, ngName, compactionPolicy, compactionPolicyProperties, datasetDetails, dd.getHints(),
+                dsType, DatasetIdFactory.generateDatasetId(), MetadataUtil.PENDING_ADD_OP, compressionScheme,
+                datasetFormatInfo);
     }
 
     protected Triple<DataverseName, String, Boolean> extractDatasetItemTypeName(DataverseName datasetDataverseName,
