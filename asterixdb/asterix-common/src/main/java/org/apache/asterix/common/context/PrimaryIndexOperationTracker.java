@@ -51,7 +51,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.ISearchOperationCallback;
-import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -149,10 +148,10 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 }
             }
             if (primaryLsmIndex == null) {
-                LOGGER.fatal(
-                        "Primary index not found in dataset {} and partition {} open indexes {}; halting to clear memory state",
+                LOGGER.warn(
+                        "Primary index not found in dataset {} and partition {} open indexes {}; possible secondary index leaked files",
                         dsInfo.getDatasetID(), partition, indexes);
-                ExitUtil.halt(ExitUtil.EC_INCONSISTENT_STORAGE_REFERENCES);
+                return;
             }
             for (ILSMIndex lsmIndex : indexes) {
                 ILSMOperationTracker opTracker = lsmIndex.getOperationTracker();
