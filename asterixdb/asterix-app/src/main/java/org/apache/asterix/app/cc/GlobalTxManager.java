@@ -30,7 +30,6 @@ import org.apache.asterix.common.cluster.IGlobalTxManager;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.messaging.api.ICCMessageBroker;
 import org.apache.asterix.common.transactions.IGlobalTransactionContext;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTransactionContext;
 import org.apache.asterix.transaction.management.service.transaction.GlobalTxInfo;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -178,7 +177,7 @@ public class GlobalTxManager implements IGlobalTxManager {
 
     @Override
     public void rollback() throws Exception {
-        Set<FileReference> txnLogFileRefs = ioManager.list(ioManager.resolve(StorageConstants.CC_TX_LOG_DIR));
+        Set<FileReference> txnLogFileRefs = ioManager.list(ioManager.resolve("."));
         for (FileReference txnLogFileRef : txnLogFileRefs) {
             IGlobalTransactionContext context = new GlobalTransactionContext(txnLogFileRef, ioManager);
             txnContextRepository.put(context.getJobId(), context);

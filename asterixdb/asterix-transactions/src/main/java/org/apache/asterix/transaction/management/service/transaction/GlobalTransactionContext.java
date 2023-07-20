@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.asterix.common.cluster.IGlobalTxManager.TransactionStatus;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.transactions.IGlobalTransactionContext;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobId;
@@ -124,8 +123,7 @@ public class GlobalTransactionContext implements IGlobalTransactionContext {
     @Override
     public void persist(IOManager ioManager) {
         try {
-            FileReference fref = ioManager
-                    .resolve(Paths.get(StorageConstants.CC_TX_LOG_DIR, String.format("%s.log", jobId)).toString());
+            FileReference fref = ioManager.resolve(Paths.get(String.format("%s.log", jobId)).toString());
             AtomicTransactionLog txnLog = new AtomicTransactionLog(jobId, datasetIds, nodeResourceMap.keySet(),
                     nodeResourceMap, numPartitions);
             ioManager.overwrite(fref,
@@ -138,8 +136,7 @@ public class GlobalTransactionContext implements IGlobalTransactionContext {
     @Override
     public void delete(IOManager ioManager) {
         try {
-            FileReference fref = ioManager
-                    .resolve(Paths.get(StorageConstants.CC_TX_LOG_DIR, String.format("%s.log", jobId)).toString());
+            FileReference fref = ioManager.resolve(Paths.get(String.format("%s.log", jobId)).toString());
             ioManager.delete(fref);
         } catch (HyracksDataException e) {
             throw new RuntimeException(e);

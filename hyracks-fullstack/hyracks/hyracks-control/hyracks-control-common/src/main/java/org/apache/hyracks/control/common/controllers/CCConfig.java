@@ -84,7 +84,12 @@ public class CCConfig extends ControllerConfig {
                 OptionTypes.STRING,
                 (Function<IApplicationConfig, String>) appConfig -> FileUtil
                         .joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR), "passwd"),
-                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd");
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/passwd"),
+        GLOBAL_TXN_LOG_DIR(
+                STRING,
+                appConfig -> FileUtil.joinPath(appConfig.getString(ControllerConfig.Option.DEFAULT_DIR),
+                        "global-txn-log"),
+                ControllerConfig.Option.DEFAULT_DIR.cmdline() + "/global-txn-log");
 
         private final IOptionType parser;
         private Object defaultValue;
@@ -206,6 +211,8 @@ public class CCConfig extends ControllerConfig {
                     return "The password to the provided key store";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
+                case GLOBAL_TXN_LOG_DIR:
+                    return "Directory to store global transaction logs";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -479,6 +486,10 @@ public class CCConfig extends ControllerConfig {
 
     public String getCredentialFilePath() {
         return getAppConfig().getString(Option.CREDENTIAL_FILE);
+    }
+
+    public String getGlobalTxLogDir() {
+        return getAppConfig().getString(Option.GLOBAL_TXN_LOG_DIR);
     }
 
 }

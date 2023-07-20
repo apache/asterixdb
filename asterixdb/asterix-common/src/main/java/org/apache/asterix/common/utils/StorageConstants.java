@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.common.utils;
 
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,8 +30,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFacto
  */
 public class StorageConstants {
 
-    public static final String CC_STORAGE_ROOT_DIR = "/tmp/";
-    public static final String CC_TX_LOG_DIR = Paths.get("cc", "txnlogs").toString();
     public static final String STORAGE_ROOT_DIR_NAME = "storage";
     public static final String INGESTION_LOGS_DIR_NAME = "ingestion_logs";
     public static final String PARTITION_DIR_PREFIX = "partition_";

@@ -82,7 +82,6 @@ import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.utils.Servlets;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.external.adapter.factory.AdapterFactoryService;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -167,9 +166,10 @@ public class CCApplication extends BaseCCApplication {
         componentProvider = new StorageComponentProvider();
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()));
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
+        final CCConfig ccConfig = controllerService.getCCConfig();
 
         List<IODeviceHandle> devices = new ArrayList<>();
-        devices.add(new IODeviceHandle(new File(StorageConstants.CC_STORAGE_ROOT_DIR), "."));
+        devices.add(new IODeviceHandle(new File(ccConfig.getGlobalTxLogDir()), "."));
         IOManager ioManager = new IOManager(devices, new DefaultDeviceResolver(), 1, 10);
         CloudProperties cloudProperties = null;
         if (ccServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT)) {
@@ -180,7 +180,6 @@ public class CCApplication extends BaseCCApplication {
         appCtx = createApplicationContext(null, globalRecoveryManager, lifecycleCoordinator, Receptionist::new,
                 ConfigValidator::new, ccExtensionManager, new AdapterFactoryService(), globalTxManager, ioManager,
                 cloudProperties);
-        final CCConfig ccConfig = controllerService.getCCConfig();
         if (System.getProperty("java.rmi.server.hostname") == null) {
             System.setProperty("java.rmi.server.hostname", ccConfig.getClusterPublicAddress());
         }
