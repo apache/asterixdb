@@ -34,6 +34,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.annotations.CriticalPath;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -45,6 +46,13 @@ import it.unimi.dsi.fastutil.ints.IntList;
 public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     private final Int2IntMap fieldNameIndexToChildIndexMap;
     private final List<AbstractRowSchemaNode> children;
+
+    private ArrayBackedValueStorage fieldName;
+    public ObjectRowSchemaNode(ArrayBackedValueStorage fieldName) {
+        fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
+        children = new ArrayList<>();
+        this.fieldName = fieldName;
+    }
 
     public ObjectRowSchemaNode() {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
@@ -71,7 +79,9 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getOrCreateFieldNameIndex(fieldName);
         int childIndex = fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, numberOfChildren);
         AbstractRowSchemaNode currentChild = childIndex == numberOfChildren ? null : children.get(childIndex);
-        AbstractRowSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag);
+        ArrayBackedValueStorage fieldNameProp = new ArrayBackedValueStorage(fieldName.getLength());
+        fieldNameProp.append(fieldName);
+        AbstractRowSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag,fieldNameProp);
         if (currentChild == null) {
             children.add(childIndex, newChild);
             fieldNameIndexToChildIndexMap.put(fieldNameIndex, childIndex);

@@ -34,7 +34,7 @@ public abstract class AbstractFunctionDescriptor implements IFunctionDescriptor 
     protected SourceLocation sourceLoc;
 
     @Override
-    public void setImmutableStates(Object... states) {
+    public void setImmutableStates(Object... states) { //TODO CALVIN_DANI
     }
 
     @Override

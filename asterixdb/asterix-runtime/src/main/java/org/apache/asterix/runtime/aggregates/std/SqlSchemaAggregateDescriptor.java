@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
@@ -32,8 +33,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class SqlSchemaAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    public static final IFunctionDescriptorFactory FACTORY = SqlSchemaAggregateDescriptor::new;
-
+    public static final IFunctionDescriptorFactory FACTORY = AbstractAggregateFunctionDynamicDescriptor.createFactory(SqlSchemaAggregateDescriptor::new);
+    IAType aggFieldState;
     @Override
     public FunctionIdentifier getIdentifier() {
         return BuiltinFunctions.SQL_SCHEMA;
@@ -47,9 +48,15 @@ public class SqlSchemaAggregateDescriptor extends AbstractAggregateFunctionDynam
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
-                return new SqlSchemaAggregateFunction(args, ctx, sourceLoc);
+                return new SqlSchemaAggregateFunction(args, ctx, sourceLoc,aggFieldState);
             }
         };
+    }
+
+    @Override
+    public void setImmutableStates(Object... types) {
+
+        aggFieldState = (IAType) types[0];
     }
 
 }

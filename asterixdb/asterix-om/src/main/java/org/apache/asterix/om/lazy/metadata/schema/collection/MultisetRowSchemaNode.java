@@ -25,10 +25,13 @@ import java.util.Map;
 import org.apache.asterix.om.lazy.metadata.schema.AbstractRowSchemaNestedNode;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.RunRowLengthIntArray;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public final class MultisetRowSchemaNode extends AbstractRowCollectionSchemaNode {
-    public MultisetRowSchemaNode() {
+    private ArrayBackedValueStorage fieldName;
+    public MultisetRowSchemaNode(ArrayBackedValueStorage fieldName) {
         super();
+        this.fieldName = fieldName;
     }
 
     public MultisetRowSchemaNode(DataInput input,

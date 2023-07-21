@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IAggregateEvaluator;
@@ -33,10 +34,10 @@ public class LocalSqlSchemaAggregateDescriptor extends AbstractAggregateFunction
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = LocalSqlAvgAggregateDescriptor::new;
-
+    IAType aggFieldState;
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.LOCAL_SQL_AVG;
+        return BuiltinFunctions.LOCAL_SQL_SCHEMA;
     }
 
     @Override
@@ -47,8 +48,13 @@ public class LocalSqlSchemaAggregateDescriptor extends AbstractAggregateFunction
             @Override
             public IAggregateEvaluator createAggregateEvaluator(final IEvaluatorContext ctx)
                     throws HyracksDataException {
-                return new LocalSqlSchemaAggregateFunction(args, ctx, sourceLoc);
+                return new LocalSqlSchemaAggregateFunction(args, ctx, sourceLoc,aggFieldState);
             }
         };
+    }
+
+    @Override
+    public void setImmutableStates(Object... states) {
+        aggFieldState = (IAType) states[0];
     }
 }

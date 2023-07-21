@@ -561,6 +561,13 @@ public class BuiltinFunctions {
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-avg", 1);
     public static final FunctionIdentifier LOCAL_AVG =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-avg", 1);
+
+    public static final FunctionIdentifier GLOBAL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-global-schema", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-intermediate-schema", 1);
+    public static final FunctionIdentifier LOCAL_SCHEMA =
+            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-local-schema", 1);
     public static final FunctionIdentifier FIRST_ELEMENT =
             new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-first-element", 1);
     public static final FunctionIdentifier LOCAL_FIRST_ELEMENT =

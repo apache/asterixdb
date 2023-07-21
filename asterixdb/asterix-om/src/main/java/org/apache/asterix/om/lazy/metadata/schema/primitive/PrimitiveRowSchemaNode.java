@@ -27,16 +27,26 @@ import org.apache.asterix.om.lazy.metadata.schema.AbstractRowSchemaNode;
 import org.apache.asterix.om.lazy.metadata.schema.IRowSchemaNodeVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     private final int columnIndex;
     private final ATypeTag typeTag;
     private final boolean primaryKey;
+    private ArrayBackedValueStorage fieldName;
+
+    public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey, ArrayBackedValueStorage fieldName) {
+        this.columnIndex = columnIndex;
+        this.typeTag = typeTag;
+        this.primaryKey = primaryKey;
+        this.fieldName = fieldName;
+    }
 
     public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey) {
         this.columnIndex = columnIndex;
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;
+        this.fieldName = fieldName;
     }
 
     public PrimitiveRowSchemaNode(ATypeTag typeTag, DataInput input) throws IOException {
@@ -72,6 +82,11 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     public final boolean isPrimaryKey() {
         return primaryKey;
     }
+
+    public ArrayBackedValueStorage getFieldName() {
+        return fieldName;
+    }
+
 
     @Override
     public final <R, T> R accept(IRowSchemaNodeVisitor<R, T> visitor, T arg) throws HyracksDataException {

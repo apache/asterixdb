@@ -53,6 +53,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     private static final byte[] MISSING_BYTES = new byte[] { ATypeTag.SERIALIZED_MISSING_TYPE_TAG };
     public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
     private static final IAObject[] NO_FIELDS = new IAObject[0];
+
+    public ARecordType getRecordType() {
+        return recordType;
+    }
+
     private final ARecordType recordType;
     private final int numberOfSchemaFields;
     @SuppressWarnings("rawtypes")

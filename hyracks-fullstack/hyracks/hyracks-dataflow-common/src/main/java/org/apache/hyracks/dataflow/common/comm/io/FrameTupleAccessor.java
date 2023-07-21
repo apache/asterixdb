@@ -42,6 +42,10 @@ public class FrameTupleAccessor implements IFrameTupleAccessor {
     private ByteBuffer buffer;
     private int start;
 
+    public RecordDescriptor getRecordDescriptor() {
+        return recordDescriptor;
+    }
+
     public FrameTupleAccessor(RecordDescriptor recordDescriptor) {
         this.recordDescriptor = recordDescriptor;
     }

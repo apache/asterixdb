@@ -29,6 +29,8 @@ import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import java.util.Arrays;
+
 public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
@@ -50,5 +52,10 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                 return new LocalAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
+    }
+
+    public void setImmutableStates(Object... states) {
+        // no states
+        System.out.println(Arrays.toString(states));
     }
 }

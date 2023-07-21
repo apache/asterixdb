@@ -96,7 +96,8 @@ public final class RowMetadata extends AbstractRowMetadata {
         level = -1;
         repeated = 0;
         fieldNamesDictionary = new RowFieldNamesDictionary();
-        root = new ObjectRowSchemaNode();
+        ArrayBackedValueStorage initFieldName = new ArrayBackedValueStorage();
+        root = new ObjectRowSchemaNode(initFieldName);
         metaRoot = null;
         pathInfoSerializer = new PathRowInfoSerializer();
         nullWriterIndexes = new IntArrayList();
@@ -355,6 +356,21 @@ public final class RowMetadata extends AbstractRowMetadata {
         return currentChild;
     }
 
+
+    public AbstractRowSchemaNode getOrCreateChild(AbstractRowSchemaNode child, ATypeTag childTypeTag,ArrayBackedValueStorage fieldName)
+            throws HyracksDataException {
+        AbstractRowSchemaNode currentChild = child;
+        ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
+        if (currentChild == null || normalizedTypeTag != ATypeTag.MISSING && normalizedTypeTag != ATypeTag.NULL
+                && currentChild.getTypeTag() != ATypeTag.UNION && currentChild.getTypeTag() != normalizedTypeTag) {
+            //Create a new child or union type if required type is different from the current child type
+            currentChild = createChild(child, normalizedTypeTag,fieldName);
+            //Flag that the schema has changed
+            changed = true;
+        }
+        return currentChild;
+    }
+
     public void enterLevel(AbstractRowSchemaNestedNode node) {
         level++;
         if (node.isCollection()) {
@@ -490,7 +506,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         }
     }
 
-    private AbstractRowSchemaNode createChild(AbstractRowSchemaNode child, ATypeTag normalizedTypeTag)
+    private AbstractRowSchemaNode createChild(AbstractRowSchemaNode child, ATypeTag normalizedTypeTag,ArrayBackedValueStorage fieldName)
             throws HyracksDataException {
         AbstractRowSchemaNode createdChild;
         if (child != null) {
@@ -500,28 +516,55 @@ public final class RowMetadata extends AbstractRowMetadata {
 //                RunRowLengthIntArray defLevels = columnWriters.get(columnIndex).getDefinitionLevelsIntArray();
 //                //Add the column index to be garbage collected
 //                nullWriterIndexes.add(columnIndex);
-                createdChild = createChild(normalizedTypeTag);
+                createdChild = createChild(normalizedTypeTag,fieldName);
 //                int mask = RowValuesUtil.getNullMask(level);
 //                flushDefinitionLevels(mask, mask, defLevels, createdChild);
                 System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
             } else {
                 //Different type. Make union
-                createdChild = addDefinitionLevelsAndGet(new UnionRowSchemaNode(child, createChild(normalizedTypeTag)));
+                createdChild = addDefinitionLevelsAndGet(new UnionRowSchemaNode(child, createChild(normalizedTypeTag,fieldName)));
             }
         } else {
-            createdChild = createChild(normalizedTypeTag);
+            createdChild = createChild(normalizedTypeTag,fieldName);
         }
         return createdChild;
     }
 
-    private AbstractRowSchemaNode createChild(ATypeTag normalizedTypeTag) throws HyracksDataException {
+    private AbstractRowSchemaNode createChild(AbstractRowSchemaNode child, ATypeTag normalizedTypeTag)
+            throws HyracksDataException {
+        AbstractRowSchemaNode createdChild;
+        ArrayBackedValueStorage initFieldName = new ArrayBackedValueStorage();
+        if (child != null) {
+            if (child.getTypeTag() == ATypeTag.NULL) {
+                //The previous child was a NULL. The new child needs to inherit the NULL definition levels
+//                int columnIndex = ((PrimitiveRowSchemaNode) child).getColumnIndex();
+//                RunRowLengthIntArray defLevels = columnWriters.get(columnIndex).getDefinitionLevelsIntArray();
+//                //Add the column index to be garbage collected
+//                nullWriterIndexes.add(columnIndex);
+
+                createdChild = createChild(normalizedTypeTag,initFieldName);
+//                int mask = RowValuesUtil.getNullMask(level);
+//                flushDefinitionLevels(mask, mask, defLevels, createdChild);
+                System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
+            } else {
+                //Different type. Make union
+                createdChild = addDefinitionLevelsAndGet(new UnionRowSchemaNode(child, createChild(normalizedTypeTag,initFieldName)));
+            }
+        } else {
+            createdChild = createChild(normalizedTypeTag,initFieldName);
+        }
+        return createdChild;
+    }
+
+
+    private AbstractRowSchemaNode createChild(ATypeTag normalizedTypeTag, ArrayBackedValueStorage fieldName) throws HyracksDataException {
         switch (normalizedTypeTag) {
             case OBJECT:
-                return addDefinitionLevelsAndGet(new ObjectRowSchemaNode());
+                return addDefinitionLevelsAndGet(new ObjectRowSchemaNode(fieldName));
             case ARRAY:
-                return addDefinitionLevelsAndGet(new ArrayRowSchemaNode());
+                return addDefinitionLevelsAndGet(new ArrayRowSchemaNode(fieldName));
             case MULTISET:
-                return addDefinitionLevelsAndGet(new MultisetRowSchemaNode());
+                return addDefinitionLevelsAndGet(new MultisetRowSchemaNode(fieldName));
             case NULL:
             case MISSING:
             case BOOLEAN:
@@ -546,12 +589,51 @@ public final class RowMetadata extends AbstractRowMetadata {
                     //            columnWriters.add(writer);
                 }
                 //                addColumn(columnIndex);
-                return new PrimitiveRowSchemaNode(columnIndex, normalizedTypeTag, false);
+                return new PrimitiveRowSchemaNode(columnIndex, normalizedTypeTag, false, fieldName);
             default:
                 throw new IllegalStateException("Unsupported type " + normalizedTypeTag);
 
         }
     }
+
+//    private AbstractRowSchemaNode createChild(ATypeTag normalizedTypeTag) throws HyracksDataException {
+//        switch (normalizedTypeTag) {
+//            case OBJECT:
+//                return addDefinitionLevelsAndGet(new ObjectRowSchemaNode());
+//            case ARRAY:
+//                return addDefinitionLevelsAndGet(new ArrayRowSchemaNode());
+//            case MULTISET:
+////                return addDefinitionLevelsAndGet(new MultisetRowSchemaNode());
+//            case NULL:
+//            case MISSING:
+//            case BOOLEAN:
+//            case DOUBLE:
+//            case BIGINT:
+//            case STRING:
+//            case UUID:
+//                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
+//                //                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
+////                boolean primaryKey = columnIndex < getNumberOfPrimaryKeys();
+////                boolean writeAlways = primaryKey || repeated > 0;
+////                boolean filtered = !primaryKey;
+////                int maxLevel = primaryKey ? 1 : level + 1;
+////                IRowValuesWriter writer = columnWriterFactory.createValueWriter(normalizedTypeTag, columnIndex,
+////                        maxLevel, writeAlways, filtered);
+////                if (multiPageOpRef.getValue() != null) {
+////                    writer.reset();
+////                }
+//                if (columnIndex == this.sizeOfWriters) {
+//                    this.sizeOfWriters += 1;
+//
+//                    //            columnWriters.add(writer);
+//                }
+//                //                addColumn(columnIndex);
+//                return new PrimitiveRowSchemaNode(columnIndex, normalizedTypeTag, false);
+//            default:
+//                throw new IllegalStateException("Unsupported type " + normalizedTypeTag);
+//
+//        }
+//    }
 
     //    private void addColumn(int index) {
     ////    private void addColumn(int index, IRowValuesWriter writer) {

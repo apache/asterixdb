@@ -21,6 +21,7 @@
 package org.apache.asterix.runtime.aggregates.std;
 
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -30,9 +31,9 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class SchemaAggregateFunction extends AbstractSchemaAggregateFunction {
 
-    public SchemaAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, SourceLocation sourceLoc)
+    public SchemaAggregateFunction(IScalarEvaluatorFactory[] args, IEvaluatorContext context, SourceLocation sourceLoc, IAType aggFieldState)
             throws HyracksDataException {
-        super(args, context, sourceLoc);
+        super(args, context, sourceLoc,aggFieldState);
     }
 
     @Override
@@ -59,5 +60,6 @@ public class SchemaAggregateFunction extends AbstractSchemaAggregateFunction {
     protected boolean skipStep() {
         return aggType == ATypeTag.NULL;
     }
+
 
 }

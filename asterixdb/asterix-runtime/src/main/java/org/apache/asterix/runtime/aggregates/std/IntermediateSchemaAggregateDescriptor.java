@@ -33,7 +33,7 @@ public class IntermediateSchemaAggregateDescriptor extends AbstractAggregateFunc
 
     private static final long serialVersionUID = 1L;
 
-    public static final IFunctionDescriptorFactory FACTORY = IntermediateSchemaAggregateDescriptor::new;
+    public static final IFunctionDescriptorFactory FACTORY = AbstractAggregateFunctionDynamicDescriptor.createFactory(IntermediateSchemaAggregateDescriptor::new);
 
     @Override
     public FunctionIdentifier getIdentifier() {
