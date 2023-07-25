@@ -44,6 +44,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -54,6 +55,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.NodeGroup;
@@ -681,5 +683,29 @@ public class DatasetUtil {
 
     public static boolean isNotView(Dataset dataset) {
         return dataset.getDatasetType() != DatasetType.VIEW;
+    }
+
+    public static boolean isFieldAccessPushdownSupported(Dataset dataset) {
+        DatasetType datasetType = dataset.getDatasetType();
+        if (datasetType == DatasetType.INTERNAL) {
+            return dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
+        } else if (datasetType == DatasetType.EXTERNAL) {
+            ExternalDatasetDetails edd = (ExternalDatasetDetails) dataset.getDatasetDetails();
+            return ExternalDataUtils.supportsPushdown(edd.getProperties());
+        }
+        return false;
+    }
+
+    public static boolean isFilterPushdownSupported(Dataset dataset) {
+        if (dataset.getDatasetType() == DatasetType.INTERNAL) {
+            return dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
+        }
+        // TODO add external dataset with dynamic prefixes
+        return false;
+    }
+
+    public static boolean isRangeFilterPushdownSupported(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.INTERNAL
+                && dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
     }
 }

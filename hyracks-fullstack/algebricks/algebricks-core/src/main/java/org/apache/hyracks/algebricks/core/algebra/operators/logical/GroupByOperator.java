@@ -89,6 +89,9 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         return gByList;
     }
 
+    /**
+     * @return returns the variables of the group-by keys
+     */
     public List<LogicalVariable> getGroupByVarList() {
         List<LogicalVariable> varList = new ArrayList<>(gByList.size());
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> ve : gByList) {
@@ -130,6 +133,18 @@ public class GroupByOperator extends AbstractOperatorWithNestedPlans {
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorList) {
             schema.add(getDecorVariable(p));
         }
+    }
+
+    /**
+     * @return all variables produced by the group-by operator (for group-by-list followed by decor-list)
+     * Note: the list may contain null values -- as some decor expressions may not be assigned to variables
+     * @see #getProducedVariablesExceptNestedPlans(Collection) to get a collection of all variables without nulls
+     */
+    public List<LogicalVariable> getVariables() {
+        List<LogicalVariable> variables = new ArrayList<>(gByList.size() + decorList.size());
+        gByList.stream().map(Pair::getFirst).forEach(variables::add);
+        decorList.stream().map(Pair::getFirst).forEach(variables::add);
+        return variables;
     }
 
     @Override
