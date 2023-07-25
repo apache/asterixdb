@@ -754,10 +754,11 @@ public class ExternalDataUtils {
     public static String getPrefix(Map<String, String> configuration, boolean appendSlash) {
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         String subPath = configuration.get(ExternalDataConstants.SUBPATH);
+
         boolean hasDefinition = definition != null && !definition.isEmpty();
         boolean hasSubPath = subPath != null && !subPath.isEmpty();
         if (hasDefinition && !hasSubPath) {
-            return appendSlash ? definition + (!definition.endsWith("/") ? "/" : "") : definition;
+            return appendSlash(definition, appendSlash);
         }
         String fullPath = "";
         if (hasSubPath) {
@@ -772,9 +773,13 @@ public class ExternalDataUtils {
                 }
                 fullPath = definition + subPath;
             }
-            fullPath = appendSlash ? fullPath + (!fullPath.endsWith("/") ? "/" : "") : fullPath;
+            fullPath = appendSlash(fullPath, appendSlash);
         }
         return fullPath;
+    }
+
+    public static String appendSlash(String string, boolean appendSlash) {
+        return appendSlash ? string + (!string.endsWith("/") ? "/" : "") : string;
     }
 
     /**

@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.util.StorageUtil;
@@ -303,6 +304,8 @@ public class ExternalDataConstants {
     public static final String DEFINITION_FIELD_NAME = "definition";
     public static final String CONTAINER_NAME_FIELD_NAME = "container";
     public static final String SUBPATH = "subpath";
+    public static final String PREFIX_DEFAULT_DELIMITER = "/";
+    public static final Pattern COMPUTED_FIELD_PATTERN = Pattern.compile("\\{[^{}:]+:[^{}:]+}");
 
     public static class ParquetOptions {
         private ParquetOptions() {
