@@ -20,6 +20,7 @@ package org.apache.asterix.transaction.management.service.transaction;
 
 import static org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
 
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
@@ -29,13 +30,13 @@ public class TransactionContextFactory {
     private TransactionContextFactory() {
     }
 
-    public static ITransactionContext create(TxnId txnId, TransactionOptions options) {
+    public static ITransactionContext create(TxnId txnId, TransactionOptions options, INcApplicationContext appCtx) {
         final AtomicityLevel atomicityLevel = options.getAtomicityLevel();
         switch (atomicityLevel) {
             case ATOMIC:
                 return new AtomicTransactionContext(txnId);
             case ATOMIC_NO_WAL:
-                return new AtomicNoWALTransactionContext(txnId);
+                return new AtomicNoWALTransactionContext(txnId, appCtx);
             case ENTITY_LEVEL:
                 return new EntityLevelTransactionContext(txnId);
             default:

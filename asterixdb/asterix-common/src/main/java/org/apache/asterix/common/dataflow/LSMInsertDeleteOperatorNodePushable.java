@@ -249,7 +249,6 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
     private void commitAtomicInsertDelete() throws HyracksDataException {
         if (isPrimary) {
             final Map<String, ILSMComponentId> componentIdMap = new HashMap<>();
-            int datasetID = -1;
             boolean atomic = false;
             for (IIndex index : indexes) {
                 if (((ILSMIndex) index).isAtomic()) {
@@ -259,14 +258,13 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
                     for (Map.Entry<String, FlushOperation> entry : opTracker.getLastFlushOperation().entrySet()) {
                         componentIdMap.put(entry.getKey(), entry.getValue().getFlushingComponent().getId());
                     }
-                    datasetID = opTracker.getDatasetInfo().getDatasetID();
                     atomic = true;
                 }
             }
 
             if (atomic) {
                 AtomicJobPreparedMessage message = new AtomicJobPreparedMessage(ctx.getJobletContext().getJobId(),
-                        ctx.getJobletContext().getServiceContext().getNodeId(), datasetID, componentIdMap);
+                        ctx.getJobletContext().getServiceContext().getNodeId(), componentIdMap);
                 try {
                     ((NodeControllerService) ctx.getJobletContext().getServiceContext().getControllerService())
                             .sendRealTimeApplicationMessageToCC(ctx.getJobletContext().getJobId().getCcId(),

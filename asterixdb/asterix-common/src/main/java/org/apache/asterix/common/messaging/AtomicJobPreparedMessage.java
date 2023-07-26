@@ -38,20 +38,17 @@ public class AtomicJobPreparedMessage implements ICcAddressedMessage {
     private static final long serialVersionUID = 1L;
     private final JobId jobId;
     private final String nodeId;
-    private final int datasetId;
     private final Map<String, ILSMComponentId> componentIdMap;
 
-    public AtomicJobPreparedMessage(JobId jobId, String nodeId, int datasetId,
-            Map<String, ILSMComponentId> componentIdMap) {
+    public AtomicJobPreparedMessage(JobId jobId, String nodeId, Map<String, ILSMComponentId> componentIdMap) {
         this.nodeId = nodeId;
-        this.datasetId = datasetId;
         this.componentIdMap = componentIdMap;
         this.jobId = jobId;
     }
 
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        appCtx.getGlobalTxManager().handleJobPreparedMessage(jobId, nodeId, datasetId, componentIdMap);
+        appCtx.getGlobalTxManager().handleJobPreparedMessage(jobId, nodeId, componentIdMap);
     }
 
 }

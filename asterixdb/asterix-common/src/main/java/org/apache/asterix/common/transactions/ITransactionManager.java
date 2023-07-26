@@ -112,4 +112,9 @@ public interface ITransactionManager {
      */
     void ensureMaxTxnId(long txnId);
 
+    /**
+     * Rollback incomplete metadata transactions without WAL during recovery.
+     */
+    void rollbackMetadataTransactionsWithoutWAL();
+
 }

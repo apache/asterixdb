@@ -175,7 +175,7 @@ public class LogManagerTest {
         LogRecord logRecord = new LogRecord();
         final long txnId = 1;
         logRecord.setTxnCtx(TransactionContextFactory.create(new TxnId(txnId),
-                new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL)));
+                new TransactionOptions(ITransactionManager.AtomicityLevel.ENTITY_LEVEL), ncAppCtx));
         logRecord.setLogSource(LogSource.LOCAL);
         logRecord.setLogType(LogType.WAIT);
         logRecord.setTxnId(txnId);

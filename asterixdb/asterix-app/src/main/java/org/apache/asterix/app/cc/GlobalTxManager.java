@@ -104,8 +104,7 @@ public class GlobalTxManager implements IGlobalTxManager {
     }
 
     @Override
-    public void handleJobPreparedMessage(JobId jobId, String nodeId, int datasetId,
-            Map<String, ILSMComponentId> componentIdMap) {
+    public void handleJobPreparedMessage(JobId jobId, String nodeId, Map<String, ILSMComponentId> componentIdMap) {
         IGlobalTransactionContext context = txnContextRepository.get(jobId);
         if (context == null) {
             LOGGER.warn("JobPreparedMessage received for jobId " + jobId

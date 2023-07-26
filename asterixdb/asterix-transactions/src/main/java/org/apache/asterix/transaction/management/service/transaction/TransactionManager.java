@@ -22,6 +22,7 @@ import static org.apache.asterix.transaction.management.service.transaction.Tran
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,13 +35,18 @@ import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.TransactionUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ThreadSafe
 public class TransactionManager implements ITransactionManager, ILifeCycleComponent {
@@ -61,7 +67,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
         if (txnCtx != null) {
             throw new ACIDException("Transaction with the same (" + txnId + ") already exists");
         }
-        txnCtx = TransactionContextFactory.create(txnId, options);
+        txnCtx = TransactionContextFactory.create(txnId, options, txnSubsystem.getApplicationContext());
         txnCtxRepository.put(txnId, txnCtx);
         ensureMaxTxnId(txnId.getId());
         return txnCtx;
@@ -185,6 +191,29 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
             os.write(sb.toString().getBytes());
         } catch (IOException e) {
             LOGGER.log(Level.WARN, "exception while dumping state", e);
+        }
+    }
+
+    @Override
+    public void rollbackMetadataTransactionsWithoutWAL() {
+        IIOManager ioManager = txnSubsystem.getApplicationContext().getIoManager();
+        try {
+            Set<FileReference> txnLogFileRefs =
+                    ioManager.list(ioManager.resolve(Paths
+                            .get(StorageConstants.METADATA_TXN_NOWAL_DIR_NAME,
+                                    StorageConstants.PARTITION_DIR_PREFIX + StorageConstants.METADATA_PARTITION)
+                            .toString()));
+            ObjectMapper objectMapper = new ObjectMapper();
+            for (FileReference txnLogFileRef : txnLogFileRefs) {
+                MetadataAtomicTransactionLog atomicTransactionLog = objectMapper.readValue(
+                        new String(ioManager.readAllBytes(txnLogFileRef)), MetadataAtomicTransactionLog.class);
+                AtomicNoWALTransactionContext context = new AtomicNoWALTransactionContext(
+                        atomicTransactionLog.getTxnId(), txnSubsystem.getApplicationContext());
+                context.rollback(atomicTransactionLog.getResourceMap());
+                context.deleteLogFile();
+            }
+        } catch (Exception e) {
+            throw new ACIDException(e);
         }
     }
 }

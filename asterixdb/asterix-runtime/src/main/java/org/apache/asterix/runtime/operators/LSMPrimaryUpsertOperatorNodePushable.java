@@ -570,7 +570,6 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     // TODO: Refactor and remove duplicated code
     private void commitAtomicUpsert() throws HyracksDataException {
         final Map<String, ILSMComponentId> componentIdMap = new HashMap<>();
-        int datasetID = -1;
         boolean atomic = false;
         for (IIndex index : indexes) {
             if (((ILSMIndex) index).isAtomic()) {
@@ -580,14 +579,13 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 for (Map.Entry<String, FlushOperation> entry : opTracker.getLastFlushOperation().entrySet()) {
                     componentIdMap.put(entry.getKey(), entry.getValue().getFlushingComponent().getId());
                 }
-                datasetID = opTracker.getDatasetInfo().getDatasetID();
                 atomic = true;
             }
         }
 
         if (atomic) {
             AtomicJobPreparedMessage message = new AtomicJobPreparedMessage(ctx.getJobletContext().getJobId(),
-                    ctx.getJobletContext().getServiceContext().getNodeId(), datasetID, componentIdMap);
+                    ctx.getJobletContext().getServiceContext().getNodeId(), componentIdMap);
             try {
                 ((NodeControllerService) ctx.getJobletContext().getServiceContext().getControllerService())
                         .sendRealTimeApplicationMessageToCC(ctx.getJobletContext().getJobId().getCcId(),

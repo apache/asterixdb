@@ -128,6 +128,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -1742,6 +1743,12 @@ public class MetadataNode implements IMetadataNode {
         return sb.toString();
     }
 
+    private void setAtomicOpContext(IIndexAccessor accessor) {
+        Map<String, Object> indexAccessorOpContextParameters = new HashMap<>();
+        indexAccessorOpContextParameters.put(HyracksConstants.ATOMIC_OP_CONTEXT, true);
+        ((ILSMIndexAccessor) accessor).getOpContext().setParameters(indexAccessorOpContextParameters);
+    }
+
     private <T> void searchIndex(TxnId txnId, IMetadataIndex index, ITupleReference searchKey,
             IValueExtractor<T> valueExtractor, List<T> results) throws AlgebricksException, HyracksDataException {
         IBinaryComparatorFactory[] comparatorFactories = index.getKeyBinaryComparatorFactory();
@@ -1753,6 +1760,9 @@ public class MetadataNode implements IMetadataNode {
         IIndex indexInstance = datasetLifecycleManager.get(resourceName);
         datasetLifecycleManager.open(resourceName);
         IIndexAccessor indexAccessor = indexInstance.createAccessor(NoOpIndexAccessParameters.INSTANCE);
+        if (atomicNoWAL) {
+            setAtomicOpContext(indexAccessor);
+        }
         try {
             IBinaryComparator[] searchCmps = null;
             MultiComparator searchCmp = null;

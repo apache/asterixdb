@@ -46,8 +46,7 @@ public interface IGlobalTxManager extends IJobLifecycleListener {
 
     IGlobalTransactionContext getTransactionContext(JobId jobId) throws ACIDException;
 
-    void handleJobPreparedMessage(JobId jobId, String nodeId, int datasetId,
-            Map<String, ILSMComponentId> componentIdMap);
+    void handleJobPreparedMessage(JobId jobId, String nodeId, Map<String, ILSMComponentId> componentIdMap);
 
     void handleJobCompletionMessage(JobId jobId, String nodeId);
 
