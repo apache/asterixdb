@@ -26,7 +26,6 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
@@ -38,6 +37,7 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractComplexType;
+import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -112,7 +112,7 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                         }
 
                         IAType fieldType =
-                                BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, fieldTypeName);
+                                Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, fieldTypeName);
                         fieldTypes[fieldId] = TypeUtil.createQuantifiedType(fieldType, isNullable, isMissable);
                         fieldId++;
                     }
@@ -123,17 +123,16 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                     String unorderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName,
-                            new AUnorderedListType(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId,
-                                    dataverseName, unorderedlistTypeName), datatypeName),
-                            isAnonymous);
+                    return new Datatype(dataverseName, datatypeName, new AUnorderedListType(
+                            Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, unorderedlistTypeName),
+                            datatypeName), isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
                     return new Datatype(dataverseName, datatypeName, new AOrderedListType(
-                            BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, orderedlistTypeName),
+                            Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, orderedlistTypeName),
                             datatypeName), isAnonymous);
                 }
                 default:

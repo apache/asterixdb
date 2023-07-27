@@ -20,9 +20,13 @@
 package org.apache.asterix.metadata.entities;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataCache;
+import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * Metadata describing a datatype.
@@ -68,5 +72,17 @@ public class Datatype implements IMetadataEntity<Datatype> {
     @Override
     public Datatype dropFromCache(MetadataCache cache) {
         return cache.dropDatatype(this);
+    }
+
+    public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, DataverseName dataverseName,
+            String typeName) throws AlgebricksException {
+        IAType type = BuiltinTypeMap.getBuiltinType(typeName);
+        if (type == null) {
+            Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
+            if (dt != null) {
+                type = dt.getDatatype();
+            }
+        }
+        return type;
     }
 }

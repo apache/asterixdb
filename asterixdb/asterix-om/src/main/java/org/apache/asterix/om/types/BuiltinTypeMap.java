@@ -17,19 +17,12 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.entities;
+package org.apache.asterix.om.types;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.transactions.TxnId;
-import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
  * Maps from a string representation of an Asterix type to an Asterix type.
@@ -89,17 +82,5 @@ public class BuiltinTypeMap {
 
     public static Set<BuiltinType> getAllBuiltinTypes() {
         return new HashSet<>(_builtinTypeMap.values());
-    }
-
-    public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, DataverseName dataverseName,
-            String typeName) throws AlgebricksException {
-        IAType type = _builtinTypeMap.get(typeName);
-        if (type == null) {
-            Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
-            if (dt != null) {
-                type = dt.getDatatype();
-            }
-        }
-        return type;
     }
 }

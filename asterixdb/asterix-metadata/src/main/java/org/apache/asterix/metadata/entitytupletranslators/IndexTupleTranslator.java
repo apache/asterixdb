@@ -43,8 +43,8 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.declared.MetadataManagerUtil;
-import org.apache.asterix.metadata.entities.BuiltinTypeMap;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
@@ -299,7 +299,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 case STRING:
                     // This is a simple element, place in a single-element list.
                     String typeName = ((AString) fieldTypeItem).getStringValue();
-                    IAType fieldType = BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
+                    IAType fieldType = Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
                     searchKeyType.add(Collections.singletonList(fieldType));
                     break;
                 case ARRAY:
@@ -309,8 +309,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     IACursor fieldTypeListCursor = fieldTypeList.getCursor();
                     while (fieldTypeListCursor.next()) {
                         typeName = ((AString) fieldTypeListCursor.get()).getStringValue();
-                        fieldTypes
-                                .add(BuiltinTypeMap.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName));
+                        fieldTypes.add(Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName));
                     }
                     searchKeyType.add(fieldTypes);
                     break;
