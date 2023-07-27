@@ -43,18 +43,9 @@ public class AsterixStateProxy implements IAsterixStateProxy {
 
     public static IAsterixStateProxy registerRemoteObject(INetworkSecurityManager networkSecurityManager,
             int metadataCallbackPort) throws RemoteException {
-        IAsterixStateProxy stub;
-        // clients need to have the client factory on their classpath- to enable older clients, only use
-        // our client socket factory when SSL is enabled
-        if (networkSecurityManager.getConfiguration().isSslEnabled()) {
-            final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
-            final RMIClientFactory clientSocketFactory =
-                    new RMIClientFactory(networkSecurityManager.getConfiguration());
-            stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort, clientSocketFactory,
-                    serverSocketFactory);
-        } else {
-            stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort);
-        }
+        IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort,
+                RMIClientFactory.getSocketFactory(networkSecurityManager),
+                RMIServerFactory.getSocketFactory(networkSecurityManager));
         LOGGER.info("Asterix Distributed State Proxy Bound");
         return stub;
     }

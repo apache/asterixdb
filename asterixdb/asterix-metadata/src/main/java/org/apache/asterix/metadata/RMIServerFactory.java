@@ -19,8 +19,10 @@
 package org.apache.asterix.metadata;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.rmi.server.RMIServerSocketFactory;
+import java.util.Optional;
 
 import javax.net.ServerSocketFactory;
 
@@ -28,17 +30,34 @@ import org.apache.hyracks.api.network.INetworkSecurityManager;
 
 public class RMIServerFactory implements RMIServerSocketFactory {
 
+    // default backlog used by the JDK (e.g. sun.security.ssl.SSLServerSocketFactoryImpl)
+    private static final int DEFAULT_BACKLOG = 50;
     private final INetworkSecurityManager securityManager;
 
-    public RMIServerFactory(INetworkSecurityManager securityManager) {
+    private RMIServerFactory(INetworkSecurityManager securityManager) {
         this.securityManager = securityManager;
+    }
+
+    public static RMIServerSocketFactory getSocketFactory(INetworkSecurityManager securityManager) {
+        if (securityManager.getConfiguration().isSslEnabled()) {
+            return new RMIServerFactory(securityManager);
+        }
+        return null;
     }
 
     @Override
     public ServerSocket createServerSocket(int port) throws IOException {
+        ServerSocketFactory socketFactory;
         if (securityManager.getConfiguration().isSslEnabled()) {
-            return securityManager.newSSLContext().getServerSocketFactory().createServerSocket(port);
+            socketFactory = securityManager.newSSLContext().getServerSocketFactory();
+        } else {
+            socketFactory = ServerSocketFactory.getDefault();
         }
-        return ServerSocketFactory.getDefault().createServerSocket(port);
+        Optional<InetAddress> rmiBindAddress = securityManager.getConfiguration().getRMIBindAddress();
+        if (rmiBindAddress.isPresent()) {
+            return socketFactory.createServerSocket(port, DEFAULT_BACKLOG, rmiBindAddress.get());
+        } else {
+            return socketFactory.createServerSocket(port);
+        }
     }
 }
