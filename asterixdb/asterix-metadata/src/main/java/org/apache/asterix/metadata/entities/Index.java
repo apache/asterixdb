@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -40,6 +39,7 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.job.profiling.IndexStats;
@@ -416,7 +416,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         }
 
         public ARecordType getIndexExpectedType() throws AlgebricksException {
-            return ColumnSecondaryIndexSchemaUtil.getRecordType(getKeyFieldNames());
+            return ProjectionFiltrationTypeUtil.getRecordType(getKeyFieldNames());
         }
     }
 
@@ -511,10 +511,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         public ARecordType getIndexExpectedType() throws AlgebricksException {
             List<ARecordType> types = new ArrayList<>();
             for (Index.ArrayIndexElement element : elementList) {
-                types.add(ColumnSecondaryIndexSchemaUtil.getRecordType(element.getUnnestList(),
-                        element.getProjectList()));
+                types.add(
+                        ProjectionFiltrationTypeUtil.getRecordType(element.getUnnestList(), element.getProjectList()));
             }
-            return ColumnSecondaryIndexSchemaUtil.merge(types);
+            return ProjectionFiltrationTypeUtil.merge(types);
         }
     }
 

@@ -20,6 +20,7 @@ package org.apache.asterix.utils;
 
 import static org.apache.asterix.app.translator.QueryTranslator.abort;
 import static org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
 import java.rmi.RemoteException;
@@ -50,7 +51,6 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -341,10 +341,8 @@ public class RebalanceUtil {
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, source);
         int numberOfPrimaryKeys = source.getPrimaryKeys().size();
 
-        // This could be expensive if record structure is "complex"
-        ARecordType requestedType = DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
-
-        return IndexUtil.createPrimaryIndexScanTupleProjectorFactory(source.getDatasetFormatInfo(), requestedType,
+        // The assembly cost of ALL_FIELDS_TYPE could be expensive if record structure is "complex"
+        return IndexUtil.createPrimaryIndexScanTupleProjectorFactory(source.getDatasetFormatInfo(), ALL_FIELDS_TYPE,
                 itemType, metaType, numberOfPrimaryKeys);
     }
 

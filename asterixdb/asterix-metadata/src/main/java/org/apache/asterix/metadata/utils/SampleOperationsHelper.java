@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +42,6 @@ import org.apache.asterix.runtime.aggregates.collections.FirstElementEvalFactory
 import org.apache.asterix.runtime.evaluators.comparisons.GreaterThanDescriptor;
 import org.apache.asterix.runtime.operators.DatasetStreamStatsOperatorDescriptor;
 import org.apache.asterix.runtime.operators.LSMIndexBulkLoadOperatorDescriptor;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.runningaggregates.std.SampleSlotRunningAggregateFunctionFactory;
 import org.apache.asterix.runtime.runningaggregates.std.TidRunningAggregateDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
@@ -192,8 +193,7 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
         // if format == column. Bring the entire record as we are sampling
         ITupleProjectorFactory projectorFactory = IndexUtil.createPrimaryIndexScanTupleProjectorFactory(
-                dataset.getDatasetFormatInfo(), DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, itemType, metaType,
-                dataset.getPrimaryKeys().size());
+                dataset.getDatasetFormatInfo(), ALL_FIELDS_TYPE, itemType, metaType, dataset.getPrimaryKeys().size());
 
         // dummy key provider ----> primary index scan
         IOperatorDescriptor sourceOp = DatasetUtil.createDummyKeyProviderOp(spec, dataset, metadataProvider);

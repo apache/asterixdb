@@ -29,6 +29,8 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureBlobProperties;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureDataLakeProperties;
 import static org.apache.asterix.external.util.google.gcs.GCSUtils.validateProperties;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 import static org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils.RESERVED_REGEX_CHARS;
 import static org.msgpack.core.MessagePack.Code.ARRAY16;
 
@@ -457,8 +459,7 @@ public class ExternalDataUtils {
     /**
      * Prepares the configuration for data-lake table formats
      *
-     * @param configuration
-     *            external data configuration
+     * @param configuration external data configuration
      */
     public static void prepareTableFormat(Map<String, String> configuration) throws AlgebricksException {
         // Apache Iceberg table format
@@ -900,8 +901,7 @@ public class ExternalDataUtils {
      * @return the expected type as Base64 string
      */
     private static String serializeExpectedTypeToString(ARecordType expectedType) throws IOException {
-        if (expectedType == DataProjectionFiltrationInfo.EMPTY_TYPE
-                || expectedType == DataProjectionFiltrationInfo.ALL_FIELDS_TYPE) {
+        if (expectedType == EMPTY_TYPE || expectedType == ALL_FIELDS_TYPE) {
             //Return the type name of EMPTY_TYPE and ALL_FIELDS_TYPE
             return expectedType.getTypeName();
         }

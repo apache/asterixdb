@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.util;
+package org.apache.asterix.om.utils;
 
 import java.util.List;
 
@@ -25,11 +25,15 @@ import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-public class ColumnSecondaryIndexSchemaUtil {
-    private ColumnSecondaryIndexSchemaUtil() {
+public class ProjectionFiltrationTypeUtil {
+    //Default open record type when requesting the entire fields
+    public static final ARecordType ALL_FIELDS_TYPE = createType("");
+    //Default open record type when requesting none of the fields
+    public static final ARecordType EMPTY_TYPE = createType("{}");
+
+    private ProjectionFiltrationTypeUtil() {
     }
 
     /**
@@ -39,7 +43,7 @@ public class ColumnSecondaryIndexSchemaUtil {
      * @return expected type
      */
     public static ARecordType getRecordType(List<List<String>> paths) throws AlgebricksException {
-        ARecordType result = DataProjectionFiltrationInfo.EMPTY_TYPE;
+        ARecordType result = EMPTY_TYPE;
         for (List<String> path : paths) {
             ARecordType type = getRecordType(path, "root", 0, BuiltinType.ANY);
             result = (ARecordType) RecordMergeTypeComputer.merge(result, type);
@@ -51,7 +55,7 @@ public class ColumnSecondaryIndexSchemaUtil {
 
     public static ARecordType getRecordTypeWithFieldTypes(List<List<String>> paths, List<IAType> types)
             throws AlgebricksException {
-        ARecordType result = DataProjectionFiltrationInfo.EMPTY_TYPE;
+        ARecordType result = EMPTY_TYPE;
         for (int i = 0; i < paths.size(); i++) {
             List<String> path = paths.get(i);
             ARecordType type = getRecordType(path, "root", 0, types.get(i));
@@ -125,6 +129,10 @@ public class ColumnSecondaryIndexSchemaUtil {
 
     private static String getTypeName(String fieldName) {
         return fieldName + "_Type";
+    }
+
+    private static ARecordType createType(String typeName) {
+        return new ARecordType(typeName, new String[] {}, new IAType[] {}, true);
     }
 
 }

@@ -23,7 +23,6 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -46,6 +45,7 @@ import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.DefaultNodeGroupDomain;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -69,9 +69,9 @@ public class MetadataManagerUtil {
      * creates and returns a record type based on the primary key and primary key types information included in the
      * internal details.
      *
-     * @param itemType record type of the dataset
+     * @param itemType     record type of the dataset
      * @param metaItemType record type of the meta part of the dataset
-     * @param dataset the actual dataset
+     * @param dataset      the actual dataset
      * @return type computed from primary keys if dataset without type spec, otherwise the original itemType itself
      * @throws AlgebricksException
      */
@@ -88,7 +88,7 @@ public class MetadataManagerUtil {
 
     private static IAType findType(List<List<String>> primaryKeys, List<IAType> primaryKeyTypes)
             throws AlgebricksException {
-        return ColumnSecondaryIndexSchemaUtil.getRecordTypeWithFieldTypes(primaryKeys, primaryKeyTypes);
+        return ProjectionFiltrationTypeUtil.getRecordTypeWithFieldTypes(primaryKeys, primaryKeyTypes);
     }
 
     public static Datatype findTypeEntity(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -226,7 +229,7 @@ public class HDFSUtils {
         String requestedValues = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS);
         if (requestedValues == null) {
             //No value is requested, return the entire record
-            requestedValues = DataProjectionFiltrationInfo.ALL_FIELDS_TYPE.getTypeName();
+            requestedValues = ALL_FIELDS_TYPE.getTypeName();
         } else {
             //Subset of the values were requested, set the functionCallInformation
             conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
@@ -257,12 +260,12 @@ public class HDFSUtils {
 
     public static ARecordType getExpectedType(Configuration configuration) throws IOException {
         String encoded = configuration.get(ExternalDataConstants.KEY_REQUESTED_FIELDS, "");
-        if (encoded.isEmpty() || encoded.equals(DataProjectionFiltrationInfo.ALL_FIELDS_TYPE.getTypeName())) {
+        if (ALL_FIELDS_TYPE.getTypeName().equals(encoded)) {
             //By default, return the entire records
-            return DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
-        } else if (encoded.equals(DataProjectionFiltrationInfo.EMPTY_TYPE.getTypeName())) {
+            return ALL_FIELDS_TYPE;
+        } else if (EMPTY_TYPE.getTypeName().equals(encoded)) {
             //No fields were requested
-            return DataProjectionFiltrationInfo.EMPTY_TYPE;
+            return EMPTY_TYPE;
         }
         //A subset of the fields was requested
         Base64.Decoder decoder = Base64.getDecoder();

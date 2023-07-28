@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
 import java.util.Collections;
@@ -278,10 +279,9 @@ public class IndexUtil {
         DataProjectionFiltrationInfo dataProjectionInfo = (DataProjectionFiltrationInfo) projectionInfo;
         if (dataProjectionInfo == null) {
             // projecting pushdown is disabled
-            ARecordType metaType = metaItemType == null ? null : DataProjectionFiltrationInfo.ALL_FIELDS_TYPE;
-            return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
-                    DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(), metaType,
-                    Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+            ARecordType metaType = metaItemType == null ? null : ALL_FIELDS_TYPE;
+            return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys, ALL_FIELDS_TYPE,
+                    Collections.emptyMap(), metaType, Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
                     NoOpColumnFilterEvaluatorFactory.INSTANCE);
         }
 

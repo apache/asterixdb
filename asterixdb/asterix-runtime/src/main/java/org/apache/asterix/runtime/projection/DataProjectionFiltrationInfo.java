@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.runtime.projection;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -33,12 +36,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 
 public class DataProjectionFiltrationInfo implements IProjectionFiltrationInfo<ARecordType> {
-    //Default open record type when requesting the entire fields
-    public static final ARecordType ALL_FIELDS_TYPE = createType("");
-    //Default open record type when requesting none of the fields
-    public static final ARecordType EMPTY_TYPE = createType("{}");
-    public static final String FILTER_VALUE_ACCESSOR = "filter-value-accessor";
-
     private final ARecordType root;
     private final Map<String, FunctionCallInformation> functionCallInfoMap;
     private final Map<ILogicalExpression, ARecordType> normalizedPaths;

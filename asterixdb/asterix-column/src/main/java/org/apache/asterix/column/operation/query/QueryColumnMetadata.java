@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.query;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -45,7 +47,6 @@ import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
@@ -239,7 +240,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     protected static ObjectSchemaNode clip(ARecordType requestedType, ObjectSchemaNode root,
             SchemaClipperVisitor clipperVisitor) {
         ObjectSchemaNode clippedRoot;
-        if (requestedType.getTypeName().equals(DataProjectionFiltrationInfo.ALL_FIELDS_TYPE.getTypeName())) {
+        if (ALL_FIELDS_TYPE.getTypeName().equals(requestedType.getTypeName())) {
             clippedRoot = root;
         } else {
             clippedRoot = (ObjectSchemaNode) requestedType.accept(clipperVisitor, root);

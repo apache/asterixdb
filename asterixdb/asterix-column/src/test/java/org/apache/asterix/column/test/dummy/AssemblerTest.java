@@ -44,7 +44,7 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.json.clean.APrintVisitor;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -97,7 +97,7 @@ public class AssemblerTest extends AbstractDummyTest {
         DummyColumnValuesReaderFactory readerFactory = createDummyColumnValuesReaderFactory();
         QueryColumnMetadata queryMetadata = QueryColumnMetadata.create(columnMetadata.getDatasetType(),
                 columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.serializeColumnsMetadata(), readerFactory,
-                DummyValueGetterFactory.INSTANCE, DataProjectionFiltrationInfo.ALL_FIELDS_TYPE, Collections.emptyMap(),
+                DummyValueGetterFactory.INSTANCE, ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, Collections.emptyMap(),
                 NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpColumnFilterEvaluatorFactory.INSTANCE,
                 NoOpWarningCollector.INSTANCE, null);
         AbstractBytesInputStream[] streams = new AbstractBytesInputStream[columnMetadata.getNumberOfColumns()];

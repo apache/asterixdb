@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 
 import java.io.DataOutput;
 import java.util.ArrayList;
@@ -30,7 +31,6 @@ import java.util.UUID;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
-import org.apache.asterix.column.util.ColumnSecondaryIndexSchemaUtil;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
@@ -65,8 +65,8 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -559,10 +559,9 @@ public class DatasetUtil {
             }
         }
 
-        ARecordType result = indexPaths.isEmpty() ? DataProjectionFiltrationInfo.EMPTY_TYPE
-                : ColumnSecondaryIndexSchemaUtil.merge(indexPaths);
+        ARecordType result = indexPaths.isEmpty() ? EMPTY_TYPE : ProjectionFiltrationTypeUtil.merge(indexPaths);
 
-        if (LOGGER.isInfoEnabled() && result != DataProjectionFiltrationInfo.EMPTY_TYPE) {
+        if (LOGGER.isInfoEnabled() && result != EMPTY_TYPE) {
             SimpleStringBuilderForIATypeVisitor schemaPrinter = new SimpleStringBuilderForIATypeVisitor();
             StringBuilder builder = new StringBuilder();
             result.accept(schemaPrinter, builder);

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.metadata.utils.filter;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,7 +31,6 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.IATypeVisitor;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 /**
@@ -46,7 +47,7 @@ public class ArrayPathCheckerVisitor implements IATypeVisitor<Boolean, AbstractC
     }
 
     public boolean containsMultipleArrayPaths(Collection<ARecordType> paths) throws AlgebricksException {
-        ARecordType mergedPaths = DataProjectionFiltrationInfo.EMPTY_TYPE;
+        ARecordType mergedPaths = EMPTY_TYPE;
         for (ARecordType path : paths) {
             mergedPaths = (ARecordType) RecordMergeTypeComputer.merge(mergedPaths, path);
         }
