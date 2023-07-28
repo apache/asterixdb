@@ -29,6 +29,7 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
+import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.ipc.security.NetworkSecurityManager;
 
 public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
@@ -37,9 +38,19 @@ public class RMIClientFactory implements RMIClientSocketFactory, Serializable {
     private final INetworkSecurityConfig config;
     private transient SocketFactory socketFactory;
 
-    public RMIClientFactory(INetworkSecurityConfig config) {
+    private RMIClientFactory(INetworkSecurityConfig config) {
         this.config = config;
 
+    }
+
+    public static RMIClientSocketFactory getSocketFactory(INetworkSecurityManager securityManager) {
+        // clients need to have the client factory on their classpath- to enable older clients, only use
+        // our client socket factory when SSL is enabled
+        INetworkSecurityConfig config = securityManager.getConfiguration();
+        if (config.isSslEnabled()) {
+            return new RMIClientFactory(config);
+        }
+        return null;
     }
 
     public Socket createSocket(String host, int port) throws IOException {

@@ -21,22 +21,21 @@ package org.apache.asterix.replication.management;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
-import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.storage.DatasetResourceReference;
-import org.apache.asterix.common.storage.ResourceReference;
-import org.apache.asterix.replication.api.PartitionReplica;
 import org.apache.asterix.replication.api.ReplicationDestination;
-import org.apache.asterix.replication.sync.IndexSynchronizer;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.replication.IReplicationJob;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationScheduler;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexReplicationJob;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,13 +44,15 @@ public class IndexReplicationManager {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IReplicationManager replicationManager;
-    private final Set<ReplicationDestination> destinations = new HashSet<>();
+    private final Set<ReplicationDestination> destinations = ConcurrentHashMap.newKeySet();
     private final LinkedBlockingQueue<IReplicationJob> replicationJobsQ = new LinkedBlockingQueue<>();
     private final IReplicationStrategy replicationStrategy;
     private final PersistentLocalResourceRepository resourceRepository;
     private final INcApplicationContext appCtx;
+    private final ILSMIOOperationScheduler ioScheduler;
     private final Object transferLock = new Object();
     private final Set<ReplicationDestination> failedDest = new HashSet<>();
+    private final AtomicInteger pendingRepOpsCount = new AtomicInteger();
 
     public IndexReplicationManager(INcApplicationContext appCtx, IReplicationManager replicationManager) {
         this.appCtx = appCtx;
@@ -59,6 +60,8 @@ public class IndexReplicationManager {
         this.resourceRepository = (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         replicationStrategy = replicationManager.getReplicationStrategy();
         appCtx.getThreadExecutor().execute(new ReplicationJobsProcessor());
+        ioScheduler = appCtx.getStorageComponentProvider().getIoOperationSchedulerProvider()
+                .getIoScheduler(appCtx.getServiceContext());
     }
 
     public void register(ReplicationDestination dest) {
@@ -72,12 +75,18 @@ public class IndexReplicationManager {
     public void unregister(IReplicationDestination dest) {
         synchronized (transferLock) {
             LOGGER.info(() -> "unregister " + dest);
+            for (ReplicationDestination existingDest : destinations) {
+                if (existingDest.equals(dest)) {
+                    existingDest.closeConnections();
+                    break;
+                }
+            }
             destinations.remove(dest);
             failedDest.remove(dest);
         }
     }
 
-    private void handleFailure(ReplicationDestination dest, Exception e) {
+    public void handleFailure(ReplicationDestination dest, Exception e) {
         synchronized (transferLock) {
             if (failedDest.contains(dest)) {
                 return;
@@ -87,6 +96,7 @@ public class IndexReplicationManager {
                 LOGGER.error("replica at {} failed", dest);
                 failedDest.add(dest);
             }
+            dest.closeConnections();
             replicationManager.notifyFailure(dest, e);
         }
     }
@@ -99,70 +109,61 @@ public class IndexReplicationManager {
         process(job);
     }
 
-    private void process(IReplicationJob job) {
-        try {
-            if (skip(job)) {
-                return;
-            }
-            synchronized (transferLock) {
-                if (destinations.isEmpty()) {
-                    return;
-                }
-                final IndexSynchronizer synchronizer = new IndexSynchronizer(job, appCtx);
-                final int indexPartition = getJobPartition(job);
-                for (ReplicationDestination dest : destinations) {
-                    try {
-                        Optional<IPartitionReplica> partitionReplica = dest.getPartitionReplica(indexPartition);
-                        if (!partitionReplica.isPresent()) {
-                            continue;
-                        }
-                        PartitionReplica replica = (PartitionReplica) partitionReplica.get();
-                        synchronizer.sync(replica);
-                    } catch (Exception e) {
-                        handleFailure(dest, e);
-                    }
-                }
-                closeChannels();
-            }
-        } finally {
-            afterReplication(job);
+    public Set<ReplicationDestination> getDestinations() {
+        synchronized (transferLock) {
+            return destinations;
         }
     }
 
-    private boolean skip(IReplicationJob job) {
-        try {
-            final String fileToReplicate = job.getAnyFile();
-            final Optional<DatasetResourceReference> indexFileRefOpt =
-                    resourceRepository.getLocalResourceReference(fileToReplicate);
-            if (!indexFileRefOpt.isPresent()) {
-                LOGGER.warn("skipping replication of {} due to missing dataset resource reference", fileToReplicate);
-                return true;
+    private void process(IReplicationJob job) {
+        pendingRepOpsCount.incrementAndGet();
+        Optional<DatasetResourceReference> jobIndexRefOpt = getJobIndexRef(job);
+        if (jobIndexRefOpt.isEmpty()) {
+            LOGGER.warn("skipping replication of {} due to missing dataset resource reference", job.getAnyFile());
+            afterReplication(job);
+            return;
+        }
+        ReplicationOperation rp = new ReplicationOperation(appCtx, jobIndexRefOpt.get(), job, this);
+        if (job.getExecutionType() == IReplicationJob.ReplicationExecutionType.SYNC) {
+            rp.call();
+        } else {
+            try {
+                ioScheduler.scheduleOperation(rp);
+            } catch (HyracksDataException e) {
+                throw new ReplicationException(e);
             }
-            return !replicationStrategy.isMatch(indexFileRefOpt.get().getDatasetId());
+        }
+    }
+
+    public boolean skip(DatasetResourceReference indexRef) {
+        return !replicationStrategy.isMatch(indexRef.getDatasetId());
+    }
+
+    public Optional<DatasetResourceReference> getJobIndexRef(IReplicationJob job) {
+        final String fileToReplicate = job.getAnyFile();
+        try {
+            return resourceRepository.getLocalResourceReference(fileToReplicate);
         } catch (HyracksDataException e) {
             throw new IllegalStateException("Couldn't find resource for " + job.getAnyFile(), e);
         }
     }
 
-    private int getJobPartition(IReplicationJob job) {
-        return ResourceReference.of(job.getAnyFile()).getPartitionNum();
-    }
-
     private void closeChannels() {
-        if (!replicationJobsQ.isEmpty()) {
-            return;
-        }
         LOGGER.trace("no pending replication jobs; closing connections to replicas");
         for (ReplicationDestination dest : destinations) {
-            dest.getReplicas().stream().map(PartitionReplica.class::cast).forEach(PartitionReplica::close);
+            dest.closeConnections();
         }
     }
 
-    private static void afterReplication(IReplicationJob job) {
+    public void afterReplication(IReplicationJob job) {
         try {
+            int pendingOps = pendingRepOpsCount.decrementAndGet();
             if (job.getOperation() == IReplicationJob.ReplicationOperation.REPLICATE
                     && job instanceof ILSMIndexReplicationJob) {
                 ((ILSMIndexReplicationJob) job).endReplication();
+            }
+            if (pendingOps == 0 && replicationJobsQ.isEmpty()) {
+                closeChannels();
             }
         } catch (HyracksDataException e) {
             throw new ReplicationException(e);

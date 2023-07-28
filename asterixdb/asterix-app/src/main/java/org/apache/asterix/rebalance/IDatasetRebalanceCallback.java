@@ -30,7 +30,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IDatasetRebalanceCallback {
 
     /**
-     * The action to perform before the target dataset is populated.
+     * The check to perform before the target dataset is populated.
      *
      * @param metadataProvider,
      *            the metadata provider.
@@ -40,9 +40,13 @@ public interface IDatasetRebalanceCallback {
      *            the target dataset.
      * @param hcc,
      *            the hyracks client connection.
+     *
+     * @return <code>true</code> if the rebalance of the dataset should proceed, otherwise <code>false</code> to skip.
+     *         If the dataset is skipped, the active metadata transaction context, if any, can be expected to be aborted.
+     *
      * @throws HyracksDataException
      */
-    void beforeRebalance(MetadataProvider metadataProvider, Dataset source, Dataset target,
+    boolean canRebalance(MetadataProvider metadataProvider, Dataset source, Dataset target,
             IHyracksClientConnection hcc) throws HyracksDataException;
 
     /**

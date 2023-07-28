@@ -214,8 +214,8 @@ public class ResultExtractor {
             result = OBJECT_READER.readValue(resultStr);
         } catch (Exception e) {
             // whoops, not JSON (e.g. 404) - just include the body
-            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, resultStr);
-            throw new Exception(resultStr);
+            GlobalConfig.ASTERIX_LOGGER.log(Level.ERROR, "result: {} json parse exception: {}", resultStr, e);
+            throw new Exception(resultStr, e);
         }
 
         final boolean isJsonFormat = isJsonFormat(fmt);

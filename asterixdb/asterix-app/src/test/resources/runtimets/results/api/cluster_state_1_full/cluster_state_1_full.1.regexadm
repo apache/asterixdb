@@ -49,6 +49,7 @@
     "replication\.strategy" : "none",
     "replication\.timeout" : 120,
     "ssl\.enabled" : false,
+    "storage.buffercache.pagesize" : 32768,
     "storage.compression.block" : "snappy",
     "storage.global.cleanup.timeout" : 600,
     "storage.lsm.bloomfilter.falsepositiverate" : 0.01,

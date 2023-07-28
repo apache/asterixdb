@@ -20,7 +20,10 @@ package org.apache.asterix.replication.api;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +32,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ReplicationException;
 import org.apache.asterix.common.replication.IPartitionReplica;
 import org.apache.asterix.common.replication.IReplicationDestination;
+import org.apache.asterix.common.storage.ReplicaIdentifier;
 import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.replication.messaging.ReplicationProtocol;
 import org.apache.hyracks.api.network.ISocketChannel;
@@ -41,6 +45,7 @@ public class ReplicationDestination implements IReplicationDestination {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Set<IPartitionReplica> replicas = new HashSet<>();
     private final InetSocketAddress inputLocation;
+    private final Map<ReplicaIdentifier, ArrayDeque<PartitionReplica>> replicasConnPool = new HashMap<>();
     private InetSocketAddress resolvedLocation;
     private ISocketChannel logRepChannel;
 
@@ -64,6 +69,11 @@ public class ReplicationDestination implements IReplicationDestination {
     @Override
     public synchronized void remove(IPartitionReplica replica) {
         replicas.remove(replica);
+        ArrayDeque<PartitionReplica> partitionConnections = replicasConnPool.remove(replica.getIdentifier());
+        if (partitionConnections != null) {
+            partitionConnections.forEach(PartitionReplica::close);
+            partitionConnections.clear();
+        }
     }
 
     @Override
@@ -137,5 +147,27 @@ public class ReplicationDestination implements IReplicationDestination {
     @Override
     public int hashCode() {
         return Objects.hash(inputLocation);
+    }
+
+    public synchronized PartitionReplica getPartitionReplicaConnection(ReplicaIdentifier identifier,
+            INcApplicationContext appCtx) {
+        ArrayDeque<PartitionReplica> partitionReplicas =
+                replicasConnPool.computeIfAbsent(identifier, k -> new ArrayDeque<>());
+        if (!partitionReplicas.isEmpty()) {
+            return partitionReplicas.remove();
+        }
+        return new PartitionReplica(identifier, appCtx);
+    }
+
+    public synchronized void recycleConnection(PartitionReplica partitionReplica) {
+        ArrayDeque<PartitionReplica> partitionReplicas = replicasConnPool.get(partitionReplica.getIdentifier());
+        if (partitionReplicas != null) {
+            partitionReplicas.add(partitionReplica);
+        }
+    }
+
+    public synchronized void closeConnections() {
+        replicasConnPool
+                .forEach(((identifier, partitionReplicas) -> partitionReplicas.forEach(PartitionReplica::close)));
     }
 }

@@ -103,6 +103,6 @@ public class ReplicaSynchronizer {
     private void waitForReplicatedDatasetsIO() throws HyracksDataException {
         // wait for IO operations to ensure replicated datasets files won't change during replica sync
         final IReplicationStrategy replStrategy = appCtx.getReplicationManager().getReplicationStrategy();
-        appCtx.getDatasetLifecycleManager().waitForIO(replStrategy);
+        appCtx.getDatasetLifecycleManager().waitForIO(replStrategy, replica.getIdentifier().getPartition());
     }
 }

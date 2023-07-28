@@ -33,17 +33,19 @@ public class BaseOperationTracker implements ITransactionOperationTracker {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final int datasetID;
     protected final DatasetInfo dsInfo;
+    protected final int partition;
 
-    public BaseOperationTracker(int datasetID, DatasetInfo dsInfo) {
+    public BaseOperationTracker(int datasetID, DatasetInfo dsInfo, int partition) {
         this.datasetID = datasetID;
         this.dsInfo = dsInfo;
+        this.partition = partition;
     }
 
     @Override
     public void beforeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.REPLICATE) {
-            dsInfo.declareActiveIOOperation(REPLICATE);
+            dsInfo.declareActiveIOOperation(REPLICATE, partition);
         }
     }
 
@@ -59,7 +61,7 @@ public class BaseOperationTracker implements ITransactionOperationTracker {
     public void completeOperation(ILSMIndex index, LSMOperationType opType, ISearchOperationCallback searchCallback,
             IModificationOperationCallback modificationCallback) throws HyracksDataException {
         if (opType == LSMOperationType.REPLICATE) {
-            dsInfo.undeclareActiveIOOperation(REPLICATE);
+            dsInfo.undeclareActiveIOOperation(REPLICATE, partition);
         }
     }
 

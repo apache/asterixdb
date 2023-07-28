@@ -20,7 +20,9 @@ package org.apache.hyracks.api.network;
 
 import java.io.File;
 import java.io.Serializable;
+import java.net.InetAddress;
 import java.security.KeyStore;
+import java.util.Optional;
 
 public interface INetworkSecurityConfig extends Serializable {
 
@@ -65,4 +67,11 @@ public interface INetworkSecurityConfig extends Serializable {
      * @return the trust store file
      */
     File getTrustStoreFile();
+
+    /**
+     * The optional address to bind for RMI server sockets; or absent to bind to all addresses / interfaces.
+     *
+     * @return the optional bind address
+     */
+    Optional<InetAddress> getRMIBindAddress();
 }

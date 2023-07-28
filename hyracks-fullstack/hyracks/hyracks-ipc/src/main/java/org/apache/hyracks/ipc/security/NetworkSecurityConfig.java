@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Optional;
 
 import org.apache.hyracks.api.network.INetworkSecurityConfig;
 
@@ -88,6 +90,11 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     @Override
     public File getTrustStoreFile() {
         return trustStoreFile;
+    }
+
+    @Override
+    public Optional<InetAddress> getRMIBindAddress() {
+        return Optional.empty();
     }
 
     private void writeObject(ObjectOutputStream out) throws IOException {

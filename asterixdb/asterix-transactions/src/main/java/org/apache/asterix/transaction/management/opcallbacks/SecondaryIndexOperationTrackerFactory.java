@@ -21,6 +21,7 @@ package org.apache.asterix.transaction.management.opcallbacks;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.context.BaseOperationTracker;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
@@ -46,7 +47,8 @@ public class SecondaryIndexOperationTrackerFactory implements ILSMOperationTrack
     public ILSMOperationTracker getOperationTracker(INCServiceContext ctx, IResource resource) {
         IDatasetLifecycleManager dslcManager =
                 ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
-        return new BaseOperationTracker(datasetId, dslcManager.getDatasetInfo(datasetId));
+        int partition = StoragePathUtil.getPartitionNumFromRelativePath(resource.getPath());
+        return new BaseOperationTracker(datasetId, dslcManager.getDatasetInfo(datasetId), partition);
     }
 
     @Override

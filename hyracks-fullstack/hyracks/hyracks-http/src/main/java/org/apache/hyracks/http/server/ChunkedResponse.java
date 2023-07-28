@@ -25,6 +25,8 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.logging.log4j.Level;
@@ -45,6 +47,7 @@ import io.netty.handler.codec.http.HttpObject;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.LastHttpContent;
+import io.netty.util.ReferenceCountUtil;
 
 /**
  * A chunked http response. Here is how it is expected to work:
@@ -114,28 +117,40 @@ public class ChunkedResponse implements IServletResponse {
 
     @Override
     public void close() throws IOException {
-        if (writer != null) {
-            writer.close();
-        } else {
-            outputStream.close();
-        }
-        if (errorBuf == null && response.status() == HttpResponseStatus.OK) {
-            if (!done) {
-                respond(LastHttpContent.EMPTY_LAST_CONTENT);
-            }
-        } else {
-            // There was an error
-            if (headerSent) {
-                LOGGER.log(Level.WARN, "Error after header write of chunked response");
-                if (errorBuf != null) {
-                    errorBuf.release();
+        try {
+            InvokeUtil.tryIoWithCleanups(() -> {
+                if (writer != null) {
+                    writer.close();
+                } else {
+                    outputStream.close();
                 }
-                future = ctx.channel().close().addListener(handler);
-            } else {
-                // we didn't send anything to the user, we need to send an non-chunked error response
-                fullResponse(response.protocolVersion(), response.status(),
-                        errorBuf == null ? ctx.alloc().buffer(0, 0) : errorBuf, response.headers());
-            }
+                if (errorBuf == null && response.status() == HttpResponseStatus.OK) {
+                    if (!done) {
+                        respond(LastHttpContent.EMPTY_LAST_CONTENT);
+                    }
+                } else {
+                    // There was an error
+                    if (headerSent) {
+                        LOGGER.log(Level.WARN, "Error after header write of chunked response");
+                        future = ctx.channel().close().addListener(handler);
+                    } else {
+                        // we didn't send anything to the user, we need to send an non-chunked error response
+                        fullResponse(response.protocolVersion(), response.status(),
+                                errorBuf == null ? ctx.alloc().buffer(0, 0) : errorBuf, response.headers());
+                        // The responsibility of releasing the error buffer is now with the netty pipeline since it is
+                        // forwarded within the http content. We must nullify buffer to avoid releasing the buffer twice.
+                        errorBuf = null;
+                    }
+                }
+            }, outputStream::close, () -> {
+                ReferenceCountUtil.release(errorBuf);
+                // We must nullify buffer to avoid releasing the buffer twice in case of duplicate close()
+                errorBuf = null;
+            });
+        } catch (IOException e) {
+            throw e;
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
         }
         done = true;
     }

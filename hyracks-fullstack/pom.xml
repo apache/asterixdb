@@ -73,10 +73,10 @@
     <hadoop.version>3.3.1</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
-    <snappy.version>1.1.8.4</snappy.version>
-    <jackson.version>2.14.1</jackson.version>
+    <snappy.version>1.1.10.1</snappy.version>
+    <jackson.version>2.14.3</jackson.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <netty.version>4.1.87.Final</netty.version>
+    <netty.version>4.1.94.Final</netty.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>
@@ -112,6 +112,16 @@
       </dependency>
       <dependency>
         <groupId>io.netty</groupId>
+        <artifactId>netty-codec-dns</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-codec-socks</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
         <artifactId>netty-handler</artifactId>
         <version>${netty.version}</version>
       </dependency>
@@ -123,6 +133,11 @@
       <dependency>
         <groupId>io.netty</groupId>
         <artifactId>netty-transport-classes-epoll</artifactId>
+        <version>${netty.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-resolver</artifactId>
         <version>${netty.version}</version>
       </dependency>
       <dependency>
@@ -482,12 +497,12 @@
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-util</artifactId>
-        <version>9.4.48.v20220622</version>
+        <version>9.4.51.v20230217</version>
       </dependency>
       <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-util-ajax</artifactId>
-        <version>9.4.48.v20220622</version>
+        <version>9.4.51.v20230217</version>
       </dependency>
       <!-- Manually included to avoid CVE-2023-1370 -->
       <dependency>
