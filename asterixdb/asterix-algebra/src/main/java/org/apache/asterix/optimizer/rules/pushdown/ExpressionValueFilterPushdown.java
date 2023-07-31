@@ -37,10 +37,12 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnRangeFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.schema.AnyExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.ColumnFilterPathBuilderVisitor;
+import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder;
 import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaNodeType;
 import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.visitor.ColumnFilterPathBuilderVisitor;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.asterix.runtime.projection.ProjectionFiltrationWarningFactoryProvider;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -66,6 +68,8 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  * TODO Filter could prevent REPLICATE (i.e., we can scan a dataset twice due to the fact one scan is filtered and
  * TODO the other is not or both have different filters)
  * TODO part of this class could potentially be used for external data dynamic prefixes
+ *
+ * @deprecated use {@link ColumnRangeFilterPushdownProcessor} and {@link ColumnFilterPathBuilderVisitor}
  */
 class ExpressionValueFilterPushdown {
     private final ExpectedSchemaBuilder builder;

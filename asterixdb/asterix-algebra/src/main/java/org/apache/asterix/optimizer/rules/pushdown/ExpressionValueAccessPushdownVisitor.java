@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.apache.asterix.metadata.utils.PushdownUtil.ALLOWED_FUNCTIONS;
+import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
 
-import org.apache.asterix.om.functions.BuiltinFunctions;
+import java.util.List;
+
+import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -30,19 +31,10 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
-import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
 class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenceTransform {
-    //Set of allowed functions that can request a type in its entirety
-    static final Set<FunctionIdentifier> ALLOWED_FUNCTIONS = createAllowedFunctions();
-    //Set of supported array functions
-    static final Set<FunctionIdentifier> ARRAY_FUNCTIONS = createSupportedArrayFunctions();
-    //Set of supported functions that we can push down
-    static final Set<FunctionIdentifier> SUPPORTED_FUNCTIONS = createSupportedFunctions();
-
     private final ExpectedSchemaBuilder builder;
     private List<LogicalVariable> producedVariables;
     private IVariableTypeEnvironment typeEnv;
@@ -168,25 +160,5 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
         if (builder.isVariableRegistered(variable)) {
             builder.unregisterVariable(variable);
         }
-    }
-
-    private static Set<FunctionIdentifier> createSupportedArrayFunctions() {
-        return Set.of(BuiltinFunctions.GET_ITEM, BuiltinFunctions.ARRAY_STAR, BuiltinFunctions.SCAN_COLLECTION);
-    }
-
-    private static Set<FunctionIdentifier> createSupportedFunctions() {
-        Set<FunctionIdentifier> supportedFunctions = new HashSet<>();
-        supportedFunctions.add(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
-        supportedFunctions.add(BuiltinFunctions.FIELD_ACCESS_BY_INDEX);
-        supportedFunctions.addAll(ARRAY_FUNCTIONS);
-        return supportedFunctions;
-    }
-
-    private static Set<FunctionIdentifier> createAllowedFunctions() {
-        return Set.of(BuiltinFunctions.IS_ARRAY, BuiltinFunctions.IS_OBJECT, BuiltinFunctions.IS_ATOMIC,
-                BuiltinFunctions.IS_NUMBER, BuiltinFunctions.IS_BOOLEAN, BuiltinFunctions.IS_STRING,
-                AlgebricksBuiltinFunctions.IS_MISSING, AlgebricksBuiltinFunctions.IS_NULL, BuiltinFunctions.IS_UNKNOWN,
-                BuiltinFunctions.LT, BuiltinFunctions.LE, BuiltinFunctions.EQ, BuiltinFunctions.GT, BuiltinFunctions.GE,
-                BuiltinFunctions.SCALAR_SQL_COUNT);
     }
 }

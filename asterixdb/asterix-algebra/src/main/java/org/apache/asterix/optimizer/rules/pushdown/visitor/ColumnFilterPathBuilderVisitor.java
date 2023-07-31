@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.schema;
+package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
 import java.util.Map;
 
@@ -27,6 +27,13 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.IATypeVisitor;
+import org.apache.asterix.optimizer.rules.pushdown.schema.AnyExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.schema.ArrayExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNodeVisitor;
+import org.apache.asterix.optimizer.rules.pushdown.schema.ObjectExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.asterix.runtime.projection.ProjectionFiltrationWarningFactoryProvider;
 
@@ -37,6 +44,10 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
     private IAType type;
     private Map<String, FunctionCallInformation> sourceInformationMap;
     private int counter = 0;
+
+    public ARecordType buildPath(AnyExpectedSchemaNode anyNode) {
+        return buildPath(anyNode, null, null, null);
+    }
 
     public ARecordType buildPath(AnyExpectedSchemaNode anyNode, IAObject constant,
             Map<String, FunctionCallInformation> sourceInformationMap, FunctionCallInformation compareFunctionInfo) {

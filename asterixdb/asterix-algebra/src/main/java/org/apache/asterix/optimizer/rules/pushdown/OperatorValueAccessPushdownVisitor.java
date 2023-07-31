@@ -38,6 +38,7 @@ import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder;
 import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -93,7 +94,10 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 
 /**
  * This visitor visits the entire plan and tries to build the information of the required values from all dataset
+ *
+ * @deprecated use {@link org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor}
  */
+@Deprecated
 public class OperatorValueAccessPushdownVisitor implements ILogicalOperatorVisitor<Void, Void> {
     private static final List<LogicalVariable> EMPTY_VARIABLES = Collections.emptyList();
 

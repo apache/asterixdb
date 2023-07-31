@@ -42,7 +42,7 @@ public class ArrayPathCheckerVisitor implements IATypeVisitor<Boolean, AbstractC
     private final Set<Object> seenCollections;
     private boolean firstPath;
 
-    ArrayPathCheckerVisitor() {
+    public ArrayPathCheckerVisitor() {
         seenCollections = new HashSet<>();
     }
 

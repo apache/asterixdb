@@ -16,27 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown;
+package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessPushdownVisitor.ARRAY_FUNCTIONS;
-import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessPushdownVisitor.SUPPORTED_FUNCTIONS;
+import static org.apache.asterix.metadata.utils.PushdownUtil.ARRAY_FUNCTIONS;
+import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.metadata.utils.PushdownUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.utils.ConstantExpressionUtil;
-import org.apache.asterix.optimizer.rules.pushdown.schema.AbstractComplexExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.AnyExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.ArrayExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaNodeType;
-import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.ObjectExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
-import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpectedSchemaNodeToIATypeTranslatorVisitor;
 import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
@@ -140,7 +132,7 @@ public class ExpectedSchemaBuilder {
         return varToNode.get(variable);
     }
 
-    IExpectedSchemaNode getNode(ILogicalExpression expr) {
+    public IExpectedSchemaNode getNode(ILogicalExpression expr) {
         if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
             return getNode(VariableUtilities.getVariable(expr));
         }
@@ -210,7 +202,7 @@ public class ExpectedSchemaBuilder {
         return newNode;
     }
 
-    private void addChild(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
+    public static void addChild(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
             AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
         switch (parent.getType()) {
             case OBJECT:
@@ -228,33 +220,7 @@ public class ExpectedSchemaBuilder {
         }
     }
 
-    private void handleObject(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
-            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
-        if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(parentExpr.getFunctionIdentifier())) {
-            ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
-            objectNode.addChild(ConstantExpressionUtil.getStringArgument(parentExpr, 1), child);
-        } else {
-            //FIELD_ACCESS_BY_INDEX
-            ARecordType recordType = (ARecordType) typeEnv.getType(parentExpr.getArguments().get(0).getValue());
-            ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
-            int fieldIdx = ConstantExpressionUtil.getIntArgument(parentExpr, 1);
-            objectNode.addChild(recordType.getFieldNames()[fieldIdx], child);
-        }
-    }
-
-    private void handleArray(AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) {
-        ArrayExpectedSchemaNode arrayNode = (ArrayExpectedSchemaNode) parent;
-        arrayNode.addChild(child);
-    }
-
-    private void handleUnion(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
-            IExpectedSchemaNode child) throws AlgebricksException {
-        UnionExpectedSchemaNode unionNode = (UnionExpectedSchemaNode) parent;
-        ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
-        addChild(parentExpr, null, unionNode.getChild(parentType), child);
-    }
-
-    private static ExpectedSchemaNodeType getExpectedNestedNodeType(AbstractFunctionCallExpression funcExpr) {
+    public static ExpectedSchemaNodeType getExpectedNestedNodeType(AbstractFunctionCallExpression funcExpr) {
         FunctionIdentifier fid = funcExpr.getFunctionIdentifier();
         if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fid) || BuiltinFunctions.FIELD_ACCESS_BY_INDEX.equals(fid)) {
             return ExpectedSchemaNodeType.OBJECT;
@@ -262,6 +228,25 @@ public class ExpectedSchemaBuilder {
             return ExpectedSchemaNodeType.ARRAY;
         }
         throw new IllegalStateException("Function " + fid + " should not be pushed down");
+    }
+
+    private static void handleObject(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
+            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
+        String fieldName = PushdownUtil.getFieldName(parentExpr, typeEnv);
+        ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
+        objectNode.addChild(fieldName, child);
+    }
+
+    private static void handleArray(AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) {
+        ArrayExpectedSchemaNode arrayNode = (ArrayExpectedSchemaNode) parent;
+        arrayNode.addChild(child);
+    }
+
+    private static void handleUnion(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
+            IExpectedSchemaNode child) throws AlgebricksException {
+        UnionExpectedSchemaNode unionNode = (UnionExpectedSchemaNode) parent;
+        ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
+        addChild(parentExpr, null, unionNode.getChild(parentType), child);
     }
 
     private static boolean isVariable(ILogicalExpression expr) {

@@ -67,7 +67,7 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
         return new ARecordType("typeName", fieldNames, fieldTypes, false);
     }
 
-    protected String getChildFieldName(IExpectedSchemaNode requestedChild) {
+    public String getChildFieldName(IExpectedSchemaNode requestedChild) {
         String key = null;
         for (Map.Entry<String, IExpectedSchemaNode> child : children.entrySet()) {
             if (child.getValue() == requestedChild) {
