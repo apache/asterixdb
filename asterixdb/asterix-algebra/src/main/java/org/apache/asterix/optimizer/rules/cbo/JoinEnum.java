@@ -52,7 +52,6 @@ import org.apache.asterix.optimizer.cost.ICostMethods;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -74,7 +73,6 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBina
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
@@ -104,11 +102,11 @@ public class JoinEnum {
     protected List<PlanNode> allPlans; // list of all plans
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
-    private List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps;
-    protected Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap;
+    protected List<ILogicalOperator> leafInputs;
     protected List<ILogicalExpression> singleDatasetPreds;
     protected List<AssignOperator> assignOps;
     List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
+    HashMap<LogicalVariable, Integer> varLeafInputIds;
     protected List<JoinOperator> allJoinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
@@ -134,11 +132,10 @@ public class JoinEnum {
     }
 
     protected void initEnum(AbstractLogicalOperator op, boolean cboMode, boolean cboTestMode, int numberOfFromTerms,
-            List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
-            Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap, List<JoinOperator> allJoinOps,
-            List<AssignOperator> assignOps,
+            List<ILogicalOperator> leafInputs, List<JoinOperator> allJoinOps, List<AssignOperator> assignOps,
             List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
-            List<Triple<Integer, Integer, Boolean>> buildSets, IOptimizationContext context) throws AsterixException {
+            List<Triple<Integer, Integer, Boolean>> buildSets, HashMap<LogicalVariable, Integer> varLeafInputIds,
+            IOptimizationContext context) throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -150,13 +147,13 @@ public class JoinEnum {
         this.cboCPEnumMode = getCBOCPEnumMode(context);
         this.connectedJoinGraph = true;
         this.optCtx = context;
-        this.emptyTupleAndDataSourceOps = emptyTupleAndDataSourceOps;
-        this.joinLeafInputsHashMap = joinLeafInputsHashMap;
+        this.leafInputs = leafInputs;
         this.assignOps = assignOps;
         this.outerJoin = false; // assume no outerjoins anywhere in the query at first.
         this.outerJoinsDependencyList = outerJoinsDependencyList;
         this.allJoinOps = allJoinOps;
         this.buildSets = buildSets;
+        this.varLeafInputIds = varLeafInputIds;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
@@ -221,9 +218,7 @@ public class JoinEnum {
 
     protected ILogicalOperator findLeafInput(List<LogicalVariable> logicalVars) throws AlgebricksException {
         Set<LogicalVariable> vars = new HashSet<>();
-        for (Pair<EmptyTupleSourceOperator, DataSourceScanOperator> emptyTupleAndDataSourceOp : emptyTupleAndDataSourceOps) {
-            EmptyTupleSourceOperator emptyOp = emptyTupleAndDataSourceOp.getFirst();
-            ILogicalOperator op = joinLeafInputsHashMap.get(emptyOp);
+        for (ILogicalOperator op : leafInputs) {
             vars.clear();
             // this is expensive to do. So store this once and reuse
             VariableUtilities.getLiveVariables(op, vars);
@@ -385,48 +380,6 @@ public class JoinEnum {
         return JoinNode.NO_JN;
     }
 
-    protected int findJoinNodeIndex(LogicalVariable lv) throws AlgebricksException {
-        List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps =
-                this.emptyTupleAndDataSourceOps;
-        Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap = this.joinLeafInputsHashMap;
-
-        for (Map.Entry<EmptyTupleSourceOperator, ILogicalOperator> mapElement : joinLeafInputsHashMap.entrySet()) {
-            ILogicalOperator joinLeafInput = mapElement.getValue();
-            HashSet<LogicalVariable> vars = new HashSet<>();
-            // this should get the variables from the inputs only, since the join condition is itself set to null
-            VariableUtilities.getLiveVariables(joinLeafInput, vars);
-            if (vars.contains(lv)) {
-                EmptyTupleSourceOperator key = mapElement.getKey();
-                for (int i = 0; i < emptyTupleAndDataSourceOps.size(); i++) {
-                    if (key.equals(emptyTupleAndDataSourceOps.get(i).getFirst())) {
-                        return i;
-                    }
-                }
-            }
-        }
-        return JoinNode.NO_JN;
-    }
-
-    private int findBits(LogicalVariable lv) throws AlgebricksException {
-        int idx = findJoinNodeIndex(lv);
-        if (idx >= 0) {
-            return 1 << idx;
-        }
-
-        // so this variable must be in an internal edge in an assign statement. Find the RHS variables there
-        for (AssignOperator op : this.assignOps) {
-            List<LogicalVariable> vars2 = new ArrayList<>();
-            VariableUtilities.getUsedVariables(op, vars2);
-            int bits = 0;
-            for (LogicalVariable lv2 : vars2) {
-                bits |= findBits(lv2);
-            }
-            return bits;
-        }
-
-        return JoinNode.NO_JN;
-    }
-
     // This finds all the join Conditions in the whole query. This is a global list of all join predicates.
     // It also fills in the dataset Bits for each join predicate.
     private void findJoinConditionsAndAssignSels() throws AlgebricksException {
@@ -496,7 +449,7 @@ public class JoinEnum {
             jc.numberOfVars = usedVars.size();
 
             for (int i = 0; i < jc.numberOfVars; i++) {
-                int bits = findBits(usedVars.get(i)); // rename to findInWhichLeaf
+                int bits = 1 << (varLeafInputIds.get(usedVars.get(i)) - 1);
                 if (bits != JoinCondition.NO_JC) {
                     if (i == 0) {
                         jc.leftSideBits = bits;
@@ -630,7 +583,6 @@ public class JoinEnum {
             return -1;
         }
         for (i = 0; i < buildSets.size(); i++) {
-            //System.out.println("first " + buildSets.get(i).first + " second " + buildSets.get(i).second + " numtabs " + numbTabs + " bits " + jbits);
             if ((buildSets.get(i).third) && (buildSets.get(i).first & jbits) > 0) {
                 return i;
             }
@@ -650,7 +602,6 @@ public class JoinEnum {
             JoinNode jnI = jnArray[i];
             jnI.jnArrayIndex = i;
             if (jnI.highestDatasetId == 0) {
-                // this jn can be skipped
                 continue;
             }
 
@@ -790,10 +741,8 @@ public class JoinEnum {
             jn.jnArrayIndex = i;
             jn.datasetBits = 1 << (i - 1);
             jn.datasetIndexes = new ArrayList<>(Collections.singleton(i));
-            EmptyTupleSourceOperator ets = emptyTupleAndDataSourceOps.get(i - 1).getFirst();
-            ILogicalOperator leafInput = joinLeafInputsHashMap.get(ets);
-
-            DataSourceScanOperator scanOp = emptyTupleAndDataSourceOps.get(i - 1).getSecond();
+            ILogicalOperator leafInput = leafInputs.get(i - 1);
+            DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
             if (scanOp != null) {
                 DataSourceId id = (DataSourceId) scanOp.getDataSource().getId();
                 jn.aliases = new ArrayList<>(Collections.singleton(findAlias(scanOp)));
@@ -835,7 +784,7 @@ public class JoinEnum {
             if (jn.origCardinality >= Cost.MAX_CARD) {
                 noCards = true;
             }
-            jn.correspondingEmptyTupleSourceOp = emptyTupleAndDataSourceOps.get(i - 1).getFirst();
+            jn.leafInput = leafInputs.get(i - 1);
             jn.highestDatasetId = i;
             jn.level = 1;
         }
@@ -843,6 +792,17 @@ public class JoinEnum {
             return PlanNode.NO_PLAN;
         }
         return numberOfTerms;
+    }
+
+    private DataSourceScanOperator findDataSourceScanOperator(ILogicalOperator op) {
+        ILogicalOperator origOp = op;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag().equals(LogicalOperatorTag.DATASOURCESCAN)) {
+                return (DataSourceScanOperator) op;
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return null;
     }
 
     // Most of this work is done in the very first line by calling initializeBaseLevelJoinNodes().
@@ -860,8 +820,7 @@ public class JoinEnum {
         for (int i = 1; i <= this.numberOfTerms; i++) {
             JoinNode jn = jnArray[i];
             Index.SampleIndexDetails idxDetails = jn.getIdxDetails();
-            EmptyTupleSourceOperator ets = this.emptyTupleAndDataSourceOps.get(i - 1).getFirst();
-            ILogicalOperator leafInput = this.joinLeafInputsHashMap.get(ets);
+            ILogicalOperator leafInput = this.leafInputs.get(i - 1);
             if (!cboTestMode) {
                 if (idxDetails == null) {
                     dataScanPlan = jn.addSingleDatasetPlans();
@@ -873,7 +832,7 @@ public class JoinEnum {
                 double origDatasetCard, finalDatasetCard, sampleCard;
 
                 ILogicalOperator parent = findDataSourceScanOperatorParent(leafInput);
-                DataSourceScanOperator scanOp = this.emptyTupleAndDataSourceOps.get(i - 1).getSecond();
+                DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
                 if (scanOp == null) {
                     continue; // what happens to the cards and sizes then? this may happen in case of in lists
                 }
@@ -1078,6 +1037,7 @@ public class JoinEnum {
         markCompositeJoinPredicates();
         int lastJnNum = enumerateHigherLevelJoinNodes();
         JoinNode lastJn = jnArray[allTabsJnNum];
+        //System.out.println(dumpJoinNodes(allTabsJnNum));
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN END");
             LOGGER.trace(dumpJoinNodes(lastJnNum));

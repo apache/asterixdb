@@ -22,10 +22,10 @@ package org.apache.asterix.optimizer.rules.cbo;
 import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 
 public class PlanNode {
 
@@ -50,7 +50,7 @@ public class PlanNode {
     protected ScanMethod scanOp;
     protected ILogicalExpression joinExpr;
     private DataSourceScanOperator correspondingDataSourceScanOp;
-    protected EmptyTupleSourceOperator correspondingEmptyTupleSourceOp;
+    protected ILogicalOperator leafInput;
 
     public enum ScanMethod {
         INDEX_SCAN,
@@ -166,12 +166,12 @@ public class PlanNode {
         return correspondingDataSourceScanOp; // This applies only to singleDataSetPlans
     }
 
-    protected EmptyTupleSourceOperator getEmptyTupleSourceOp() {
-        return correspondingEmptyTupleSourceOp; // This applies only to singleDataSetPlans
+    protected ILogicalOperator getLeafInput() {
+        return leafInput; // This applies only to singleDataSetPlans
     }
 
-    protected void setEmptyTupleSourceOp(EmptyTupleSourceOperator emptyTupleSourceOp) {
-        this.correspondingEmptyTupleSourceOp = emptyTupleSourceOp; // This applies only to singleDataSetPlans
+    protected void setLeafInput(ILogicalOperator leafInput) {
+        this.leafInput = leafInput; // This applies only to singleDataSetPlans
     }
 
     public ICost getOpCost() {

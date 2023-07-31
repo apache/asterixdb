@@ -59,7 +59,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinali
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -88,7 +87,7 @@ public class JoinNode {
     private JoinNode rightJn;
     private JoinNode leftJn;
     private List<Integer> applicableJoinConditions;
-    protected EmptyTupleSourceOperator correspondingEmptyTupleSourceOp; // There is a 1-1 relationship between the LVs and the dataSourceScanOps and the leafInputs.
+    protected ILogicalOperator leafInput;
     private List<Pair<IAccessMethod, Index>> chosenIndexes;
     private Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs;
     protected Index.SampleIndexDetails idxDetails;
@@ -193,8 +192,7 @@ public class JoinNode {
             return false;
         }
 
-        // We need to find out which one of these is the inner joinLeafInput. So for that get the joinLeafInput of this join node.
-        ILogicalOperator innerLeafInput = joinEnum.joinLeafInputsHashMap.get(this.correspondingEmptyTupleSourceOp);
+        ILogicalOperator innerLeafInput = this.leafInput;
 
         // This must equal one of the two joinLeafInputsHashMap found above. check for sanity!!
         if (innerLeafInput != joinLeafInput1 && innerLeafInput != joinLeafInput0) {
@@ -388,7 +386,7 @@ public class JoinNode {
             pn = new PlanNode(allPlans.size(), joinEnum);
             pn.setJoinNode(this);
             pn.datasetName = this.datasetNames.get(0);
-            pn.correspondingEmptyTupleSourceOp = this.correspondingEmptyTupleSourceOp;
+            pn.leafInput = this.leafInput;
             pn.setLeftJoinIndex(this.jnArrayIndex);
             pn.setRightJoinIndex(JoinNode.NO_JN);
             pn.setLeftPlanIndex(PlanNode.NO_PLAN); // There ane no plans below this plan.
@@ -581,7 +579,7 @@ public class JoinNode {
             pn = new PlanNode(allPlans.size(), joinEnum);
             pn.setJoinNode(this);
             pn.setDatasetName(getDatasetNames().get(0));
-            pn.setEmptyTupleSourceOp(this.correspondingEmptyTupleSourceOp);
+            pn.setLeafInput(this.leafInput);
             pn.setLeftJoinIndex(this.jnArrayIndex);
             pn.setRightJoinIndex(JoinNode.NO_JN);
             pn.setLeftPlanIndex(PlanNode.NO_PLAN); // There ane no plans below this plan.

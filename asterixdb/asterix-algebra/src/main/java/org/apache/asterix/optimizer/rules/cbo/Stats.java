@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
+import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -98,8 +99,16 @@ public class Stats {
             // Since there is a left and right dataset here, expecting only two variables.
             return 1.0;
         }
-        int idx1 = joinEnum.findJoinNodeIndex(exprUsedVars.get(0)) + 1;
-        int idx2 = joinEnum.findJoinNodeIndex(exprUsedVars.get(1)) + 1;
+        int idx1, idx2;
+        if (joinEnum.varLeafInputIds.containsKey(exprUsedVars.get(0))) {
+            idx1 = joinEnum.varLeafInputIds.get(exprUsedVars.get(0));
+        } else
+            return 1.0;
+        if (joinEnum.varLeafInputIds.containsKey(exprUsedVars.get(1))) {
+            idx2 = joinEnum.varLeafInputIds.get(exprUsedVars.get(1));
+        } else
+            return 1.0;
+
         double card1 = joinEnum.getJnArray()[idx1].origCardinality;
         double card2 = joinEnum.getJnArray()[idx2].origCardinality;
         if (card1 == 0.0 || card2 == 0.0) // should not happen
@@ -503,6 +512,9 @@ public class Stats {
         OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx);
         LOGGER.info("***returning from sample query***");
 
+        String viewInPlan = new ALogicalPlanImpl(newAggOpRef).toString(); //useful when debugging
+        LOGGER.trace("viewInPlan");
+        LOGGER.trace(viewInPlan);
         return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 }
