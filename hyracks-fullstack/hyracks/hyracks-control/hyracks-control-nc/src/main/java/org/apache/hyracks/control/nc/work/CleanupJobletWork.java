@@ -35,7 +35,7 @@ public class CleanupJobletWork extends AbstractWork {
 
     private final JobId jobId;
 
-    private JobStatus status;
+    private final JobStatus status;
 
     public CleanupJobletWork(NodeControllerService ncs, JobId jobId, JobStatus status) {
         this.ncs = ncs;
@@ -53,5 +53,10 @@ public class CleanupJobletWork extends AbstractWork {
         if (joblet != null) {
             joblet.cleanup(status);
         }
+    }
+
+    @Override
+    public String toString() {
+        return getName() + " jobId:" + jobId + ", status:" + status;
     }
 }

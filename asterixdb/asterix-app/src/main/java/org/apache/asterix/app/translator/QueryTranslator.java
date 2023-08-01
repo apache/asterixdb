@@ -4813,6 +4813,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
             jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("createAndRunJob jobId:{}, uuid:{}", jobId,
+                        requestParameters.getRequestReference().getUuid());
+            }
             clientRequest.setJobId(jobId);
             if (jId != null) {
                 jId.setValue(jobId);

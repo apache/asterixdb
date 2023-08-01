@@ -492,18 +492,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             final INetworkSecurityManager networkSecurityManager =
                     ncServiceContext.getControllerService().getNetworkSecurityManager();
 
-            // clients need to have the client factory on their classpath- to enable older clients, only use
-            // our client socket factory when SSL is enabled
-            if (networkSecurityManager.getConfiguration().isSslEnabled()) {
-                final RMIServerFactory serverSocketFactory = new RMIServerFactory(networkSecurityManager);
-                final RMIClientFactory clientSocketFactory =
-                        new RMIClientFactory(networkSecurityManager.getConfiguration());
-                metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
-                        getMetadataProperties().getMetadataPort(), clientSocketFactory, serverSocketFactory);
-            } else {
-                metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
-                        getMetadataProperties().getMetadataPort());
-            }
+            metadataNodeStub = (IMetadataNode) UnicastRemoteObject.exportObject(MetadataNode.INSTANCE,
+                    getMetadataProperties().getMetadataPort(),
+                    RMIClientFactory.getSocketFactory(networkSecurityManager),
+                    RMIServerFactory.getSocketFactory(networkSecurityManager));
         }
     }
 

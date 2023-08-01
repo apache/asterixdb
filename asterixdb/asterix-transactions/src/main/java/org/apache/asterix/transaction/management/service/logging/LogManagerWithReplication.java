@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.transaction.management.service.logging;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
@@ -26,6 +28,7 @@ import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogSource;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.hyracks.api.util.InvokeUtil;
+import org.apache.logging.log4j.Logger;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
@@ -33,12 +36,16 @@ import it.unimi.dsi.fastutil.longs.LongSets;
 
 public class LogManagerWithReplication extends LogManager {
 
+    private static final Logger LOGGER = org.apache.logging.log4j.LogManager.getLogger();
     private IReplicationManager replicationManager;
     private IReplicationStrategy replicationStrategy;
     private final LongSet replicatedTxn = LongSets.synchronize(new LongOpenHashSet());
+    private final long replicationTimeoutMillis;
 
     public LogManagerWithReplication(ITransactionSubsystem txnSubsystem) {
         super(txnSubsystem);
+        replicationTimeoutMillis = TimeUnit.SECONDS
+                .toMillis(txnSubsystem.getApplicationContext().getReplicationProperties().getReplicationTimeOut());
     }
 
     @SuppressWarnings("squid:S2445")
@@ -94,8 +101,18 @@ public class LogManagerWithReplication extends LogManager {
                     //wait for job Commit/Abort ACK from replicas
                     if (logRecord.isReplicate() && (logRecord.getLogType() == LogType.JOB_COMMIT
                             || logRecord.getLogType() == LogType.ABORT)) {
+                        long replicationTimeOut = replicationTimeoutMillis;
                         while (!logRecord.isReplicated()) {
-                            logRecord.wait();
+                            if (replicationTimeOut <= 0) {
+                                LOGGER.warn(
+                                        "{} ms passed without receiving acks for log {}; setting log as replicated due to timeout",
+                                        replicationTimeoutMillis, logRecord.getLogRecordForDisplay());
+                                logRecord.setReplicated(true);
+                                continue;
+                            }
+                            final long startTime = System.nanoTime();
+                            logRecord.wait(replicationTimeOut);
+                            replicationTimeOut -= TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
                         }
                     }
                 }

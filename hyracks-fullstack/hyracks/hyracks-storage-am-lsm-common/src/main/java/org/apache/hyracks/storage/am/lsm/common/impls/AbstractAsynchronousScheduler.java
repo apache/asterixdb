@@ -38,9 +38,10 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
 
     private final int maxNumFlushes;
     protected final Map<String, ILSMIOOperation> runningFlushOperations = new HashMap<>();
+    protected final Map<String, ILSMIOOperation> runningReplicateOperations = new HashMap<>();
     protected final Deque<ILSMIOOperation> waitingFlushOperations = new ArrayDeque<>();
     protected final Deque<ILSMIOOperation> waitingMergeOperations = new ArrayDeque<>();
-
+    protected final Deque<ILSMIOOperation> waitingReplicateOperations = new ArrayDeque<>();
     protected final Map<String, Throwable> failedGroups = new HashMap<>();
 
     public AbstractAsynchronousScheduler(ThreadFactory threadFactory, final IIoOperationFailedCallback callback,
@@ -58,8 +59,11 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
             case MERGE:
                 scheduleMerge(operation);
                 break;
+            case REPLICATE:
+                scheduleReplicate(operation);
+                break;
             case NOOP:
-                return;
+                break;
             default:
                 // this should never happen
                 // just guard here to avoid silent failures in case of future extensions
@@ -75,6 +79,10 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
                 break;
             case MERGE:
                 completeMerge(operation);
+                break;
+            case REPLICATE:
+                completeReplicate(operation);
+                break;
             case NOOP:
                 return;
             default:
@@ -146,6 +154,46 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
                 }
             }
 
+        }
+    }
+
+    private void scheduleReplicate(ILSMIOOperation operation) {
+        String id = operation.getIndexIdentifier();
+        synchronized (executor) {
+            if (runningReplicateOperations.size() >= maxNumFlushes || runningReplicateOperations.containsKey(id)) {
+                waitingReplicateOperations.add(operation);
+            } else {
+                runningReplicateOperations.put(id, operation);
+                executor.submit(operation);
+            }
+        }
+    }
+
+    private void completeReplicate(ILSMIOOperation operation) {
+        String id = operation.getIndexIdentifier();
+        synchronized (executor) {
+            runningReplicateOperations.remove(id);
+            // Schedule replicate in FIFO order. Must make sure that there is at most one scheduled replicate for each index.
+            for (ILSMIOOperation replicateOp : waitingReplicateOperations) {
+                String replicateOpId = replicateOp.getIndexIdentifier();
+                if (runningReplicateOperations.size() < maxNumFlushes) {
+                    if (!runningReplicateOperations.containsKey(replicateOpId) && !replicateOp.isCompleted()) {
+                        runningReplicateOperations.put(replicateOpId, replicateOp);
+                        executor.submit(replicateOp);
+                    }
+                } else {
+                    break;
+                }
+            }
+            // cleanup scheduled replicate
+            while (!waitingReplicateOperations.isEmpty()) {
+                ILSMIOOperation top = waitingReplicateOperations.peek();
+                if (top.isCompleted() || runningReplicateOperations.get(top.getIndexIdentifier()) == top) {
+                    waitingReplicateOperations.poll();
+                } else {
+                    break;
+                }
+            }
         }
     }
 

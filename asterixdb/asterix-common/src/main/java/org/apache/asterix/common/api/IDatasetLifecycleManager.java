@@ -162,12 +162,14 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     void flushDataset(IReplicationStrategy replicationStrategy, IntPredicate partitions) throws HyracksDataException;
 
     /**
-     * Waits for all ongoing IO operations on all open datasets that are matching {@code replicationStrategy}.
+     * Waits for all ongoing IO operations on all open datasets that are matching {@code replicationStrategy} and
+     * {@code partition}.
      *
      * @param replicationStrategy
+     * @param partition
      * @throws HyracksDataException
      */
-    void waitForIO(IReplicationStrategy replicationStrategy) throws HyracksDataException;
+    void waitForIO(IReplicationStrategy replicationStrategy, int partition) throws HyracksDataException;
 
     /**
      * @return the current datasets io stats

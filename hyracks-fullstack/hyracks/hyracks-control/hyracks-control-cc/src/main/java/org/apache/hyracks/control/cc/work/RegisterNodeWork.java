@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.control.cc.work;
 
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,8 +51,9 @@ public class RegisterNodeWork extends SynchronizableWork {
     protected void doRun() throws Exception {
         String id = reg.getNodeId();
         LOGGER.info("registering node: {}", id);
-        NodeControllerRemoteProxy nc = new NodeControllerRemoteProxy(ccs.getCcId(),
-                ccs.getClusterIPC().getReconnectingHandle(reg.getNodeControllerAddress().resolveInetSocketAddress()));
+        InetSocketAddress ncAddress = reg.getNodeControllerAddress().toInetSocketAddress();
+        NodeControllerRemoteProxy nc =
+                new NodeControllerRemoteProxy(ccs.getCcId(), ccs.getClusterIPC().getReconnectingHandle(ncAddress));
         INodeManager nodeManager = ccs.getNodeManager();
         NodeParameters params = new NodeParameters();
         params.setClusterControllerInfo(ccs.getClusterControllerInfo());

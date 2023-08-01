@@ -20,6 +20,8 @@ package org.apache.asterix.utils;
 
 import static org.apache.asterix.app.translator.QueryTranslator.abort;
 import static org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
+import static org.apache.asterix.metadata.utils.DatasetUtil.getFullyQualifiedDisplayName;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
@@ -88,13 +90,15 @@ public class RebalanceUtil {
      * @param targetNcNames,    the list of target nodes.
      * @param metadataProvider, the metadata provider.
      * @param hcc,              the reusable hyracks connection.
+     * @return <code>false</code> if the rebalance was safely skipped
      * @throws Exception
      */
-    public static void rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
+    public static boolean rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IDatasetRebalanceCallback datasetRebalanceCallback, boolean forceRebalance) throws Exception {
         Dataset sourceDataset;
         Dataset targetDataset;
+        boolean success = true;
         // Executes the first Metadata transaction.
         // Generates the rebalance target files. While doing that, hold read locks on the dataset so
         // that no one can drop the rebalance source dataset.
@@ -106,13 +110,13 @@ public class RebalanceUtil {
 
             // If the source dataset doesn't exist, then it's a no-op.
             if (sourceDataset == null) {
-                return;
+                return true;
             }
 
             Set<String> sourceNodes = new HashSet<>(metadataProvider.findNodes(sourceDataset.getNodeGroupName()));
 
             if (!forceRebalance && sourceNodes.equals(targetNcNames)) {
-                return;
+                return true;
             }
 
             if (!targetNcNames.isEmpty()) {
@@ -123,20 +127,25 @@ public class RebalanceUtil {
                 // The target dataset for rebalance.
                 targetDataset = sourceDataset.getTargetDatasetForRebalance(nodeGroupName);
 
-                LOGGER.info("Rebalancing dataset {} from node group {} with nodes {} to node group {} with nodes {}",
-                        sourceDataset.getDatasetName(), sourceDataset.getNodeGroupName(), sourceNodes,
-                        targetDataset.getNodeGroupName(), targetNcNames);
+                LOGGER.info("Rebalancing {} {} from node group {} with nodes {} to node group {} with nodes {}",
+                        dataset(), getFullyQualifiedDisplayName(sourceDataset), sourceDataset.getNodeGroupName(),
+                        sourceNodes, targetDataset.getNodeGroupName(), targetNcNames);
                 // Rebalances the source dataset into the target dataset.
                 if (sourceDataset.getDatasetType() != DatasetType.EXTERNAL) {
-                    rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
+                    success = rebalance(sourceDataset, targetDataset, metadataProvider, hcc, datasetRebalanceCallback);
                 }
             } else {
                 targetDataset = null;
                 // if this the last NC in the cluster, just drop the dataset
                 purgeDataset(sourceDataset, metadataProvider, hcc);
             }
-            // Complete the metadata transaction.
-            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            if (success) {
+                // Complete the metadata transaction.
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            } else {
+                // Abort the metadata transaction, since we failed to rebalance the dataset
+                MetadataManager.INSTANCE.abortTransaction(mdTxnCtx);
+            }
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
@@ -144,7 +153,10 @@ public class RebalanceUtil {
 
         if (targetNcNames.isEmpty()) {
             // Nothing else to do since the dataset was dropped.
-            return;
+            return true;
+        } else if (!success) {
+            LOGGER.info("Dataset {} rebalance was skipped, see above log for reason", datasetName);
+            return false;
         }
         // Up to this point, since the bulk part of a rebalance operation is done,
         // the following two operations will retry after interrupt and finally rethrow InterruptedException,
@@ -163,6 +175,7 @@ public class RebalanceUtil {
             runMetadataTransaction(metadataProvider, () -> dropSourceDataset(sourceDataset, metadataProvider, hcc));
         });
         LOGGER.info("Dataset {} rebalance completed successfully", datasetName);
+        return true;
     }
 
     @FunctionalInterface
@@ -212,13 +225,16 @@ public class RebalanceUtil {
     }
 
     // Rebalances from the source to the target.
-    private static void rebalance(Dataset source, Dataset target, MetadataProvider metadataProvider,
+    private static boolean rebalance(Dataset source, Dataset target, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc, IDatasetRebalanceCallback datasetRebalanceCallback) throws Exception {
         // Drops the target dataset files (if any) to make rebalance idempotent.
         dropDatasetFiles(target, metadataProvider, hcc);
 
         // Performs the specified operation before the target dataset is populated.
-        datasetRebalanceCallback.beforeRebalance(metadataProvider, source, target, hcc);
+        if (!datasetRebalanceCallback.canRebalance(metadataProvider, source, target, hcc)) {
+            // the callback indicates that this rebalance should be skipped; short circuit the remaining steps
+            return false;
+        }
 
         // Creates the rebalance target.
         createRebalanceTarget(target, metadataProvider, hcc);
@@ -231,6 +247,8 @@ public class RebalanceUtil {
 
         // Performs the specified operation after the target dataset is populated.
         datasetRebalanceCallback.afterRebalance(metadataProvider, source, target, hcc);
+
+        return true;
     }
 
     // Switches the metadata entity from the source dataset to the target dataset.

@@ -559,10 +559,10 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     }
 
     @Override
-    public void waitForIO(IReplicationStrategy replicationStrategy) throws HyracksDataException {
+    public void waitForIO(IReplicationStrategy replicationStrategy, int partition) throws HyracksDataException {
         for (DatasetResource dsr : datasets.values()) {
             if (dsr.isOpen() && replicationStrategy.isMatch(dsr.getDatasetID())) {
-                dsr.getDatasetInfo().waitForIO();
+                dsr.getDatasetInfo().waitForIO(partition);
             }
         }
     }
