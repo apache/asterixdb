@@ -30,8 +30,10 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 
 import org.apache.commons.collections4.MapUtils;
@@ -240,6 +242,12 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
             }
         } catch (ExecutionException e) {
             root = e.getCause();
+        } catch (CancellationException | RejectedExecutionException e) {
+            root = e;
+            // if a task has been cancelled or was rejected for execution, the executor has shut down and will no longer
+            // start tasks; adjust the semaphores accordingly to allow cancelTasks() to run without getting blocked.
+            completeSemaphore.release(-startSemaphore.drainPermits() + 1);
+            startSemaphore.release();
         } catch (Throwable e) { // NOSONAR: Must catch all causes of failure
             root = e;
         }
