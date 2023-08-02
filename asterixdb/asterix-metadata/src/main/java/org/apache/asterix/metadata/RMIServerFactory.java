@@ -39,10 +39,7 @@ public class RMIServerFactory implements RMIServerSocketFactory {
     }
 
     public static RMIServerSocketFactory getSocketFactory(INetworkSecurityManager securityManager) {
-        if (securityManager.getConfiguration().isSslEnabled()) {
-            return new RMIServerFactory(securityManager);
-        }
-        return null;
+        return new RMIServerFactory(securityManager);
     }
 
     @Override
