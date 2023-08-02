@@ -36,6 +36,7 @@ import java.util.regex.Matcher;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
@@ -52,11 +53,11 @@ public class ExternalDataPrefix {
     private final ComputedFieldDetails computedFieldDetails;
 
     public static final String PREFIX_ROOT_FIELD_NAME = "prefix-root";
-    public static final Set<IAType> supportedTypes = new HashSet<>();
+    public static final Set<ATypeTag> supportedTypes = new HashSet<>();
 
     static {
-        supportedTypes.add(BuiltinType.ASTRING);
-        supportedTypes.add(BuiltinType.AINT32);
+        supportedTypes.add(BuiltinType.ASTRING.getTypeTag());
+        supportedTypes.add(BuiltinType.AINT32.getTypeTag());
     }
 
     public ExternalDataPrefix(String prefix) throws AlgebricksException {
@@ -116,42 +117,25 @@ public class ExternalDataPrefix {
         List<Integer> computedFieldIndexes = new ArrayList<>();
 
         // check if there are any segments before doing any testing
-        if (segments.size() != 0) {
+        if (!segments.isEmpty()) {
             // search for computed fields in each segment
-            Matcher matcher = COMPUTED_FIELD_PATTERN.matcher(segments.get(0));
-            if (matcher.find()) {
-                String computedField = matcher.group();
-                String[] splits = computedField.split(":");
-                String namePart = splits[0].substring(1);
-                String typePart = splits[1].substring(0, splits[1].length() - 1);
+            Matcher matcher = COMPUTED_FIELD_PATTERN.matcher("");
+            for (int i = 0; i < segments.size(); i++) {
+                matcher.reset(segments.get(i));
 
-                IAType type = BuiltinTypeMap.getBuiltinType(typePart.substring(0, typePart.length() - 1));
-                validateSupported(type);
+                while (matcher.find()) {
+                    String computedField = matcher.group();
+                    String[] splits = computedField.split(":");
+                    String namePart = splits[0].substring(1);
+                    String typePart = splits[1].substring(0, splits[1].length() - 1);
 
-                List<String> nameParts = List.of(namePart.substring(1, segments.indexOf(":") - 1).split("\\."));
-                computedFieldsNames.add(nameParts);
-                computedFieldTypes.add(type);
-                computedFieldIndexes.add(0);
-            }
+                    IAType type = BuiltinTypeMap.getBuiltinType(typePart);
+                    validateSupported(type.getTypeTag());
 
-            if (segments.size() > 1) {
-                for (int i = 1; i < segments.size(); i++) {
-                    matcher.reset(segments.get(i));
-
-                    while (matcher.find()) {
-                        String computedField = matcher.group();
-                        String[] splits = computedField.split(":");
-                        String namePart = splits[0].substring(1);
-                        String typePart = splits[1].substring(0, splits[1].length() - 1);
-
-                        IAType type = BuiltinTypeMap.getBuiltinType(typePart);
-                        validateSupported(type);
-
-                        List<String> nameParts = List.of(namePart.split("\\."));
-                        computedFieldsNames.add(nameParts);
-                        computedFieldTypes.add(type);
-                        computedFieldIndexes.add(i);
-                    }
+                    List<String> nameParts = List.of(namePart.split("\\."));
+                    computedFieldsNames.add(nameParts);
+                    computedFieldTypes.add(type);
+                    computedFieldIndexes.add(i);
                 }
             }
         }
@@ -159,8 +143,14 @@ public class ExternalDataPrefix {
         return new ComputedFieldDetails(computedFieldsNames, computedFieldTypes, computedFieldIndexes);
     }
 
-    private static void validateSupported(IAType type) throws CompilationException {
-        if (!isSupportedType(type)) {
+    /**
+     * Checks whether the provided type is in the supported types for dynamic prefixes
+     *
+     * @param type type to check
+     * @throws CompilationException exception if type is not supported
+     */
+    private static void validateSupported(ATypeTag type) throws CompilationException {
+        if (!supportedTypes.contains(type)) {
             throw new CompilationException(ErrorCode.UNSUPPORTED_COMPUTED_FIELD_TYPE, type);
         }
     }
@@ -194,17 +184,6 @@ public class ExternalDataPrefix {
         String finalRoot = root.toString();
         finalRoot = finalRoot.substring(0, finalRoot.length() - 1);
         return ExternalDataUtils.appendSlash(finalRoot, this.endsWithSlash);
-    }
-
-    /**
-     * Checks whether the provided type is in the supported types for dynamic prefixes
-     *
-     * @param type type to check
-     *
-     * @return true if type is supported, false otherwise
-     */
-    public static boolean isSupportedType(IAType type) {
-        return supportedTypes.contains(type);
     }
 
     public static class ComputedFieldDetails {
