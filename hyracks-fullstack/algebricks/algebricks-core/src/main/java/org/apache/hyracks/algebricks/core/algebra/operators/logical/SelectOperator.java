@@ -46,19 +46,19 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisit
 public class SelectOperator extends AbstractLogicalOperator {
     private final Mutable<ILogicalExpression> condition;
     private final IAlgebricksConstantValue retainMissingAsValue;
-    private final LogicalVariable nullPlaceholderVar;
+    private LogicalVariable missingPlaceholderVar;
 
     public SelectOperator(Mutable<ILogicalExpression> condition) {
         this(condition, null, null);
     }
 
     public SelectOperator(Mutable<ILogicalExpression> condition, IAlgebricksConstantValue retainMissingAsValue,
-            LogicalVariable nullPlaceholderVar) {
+            LogicalVariable missingPlaceholderVar) {
         this.condition = condition;
         if (retainMissingAsValue == null) {
             this.retainMissingAsValue = null;
-            if (nullPlaceholderVar != null) {
-                throw new IllegalArgumentException(nullPlaceholderVar.toString());
+            if (missingPlaceholderVar != null) {
+                throw new IllegalArgumentException(missingPlaceholderVar.toString());
             }
         } else if (retainMissingAsValue.isMissing()) {
             this.retainMissingAsValue = ConstantExpression.MISSING.getValue();
@@ -67,7 +67,7 @@ public class SelectOperator extends AbstractLogicalOperator {
         } else {
             throw new IllegalArgumentException(retainMissingAsValue.toString());
         }
-        this.nullPlaceholderVar = nullPlaceholderVar;
+        this.missingPlaceholderVar = missingPlaceholderVar;
     }
 
     @Override
@@ -84,12 +84,19 @@ public class SelectOperator extends AbstractLogicalOperator {
     }
 
     public LogicalVariable getMissingPlaceholderVariable() {
-        return nullPlaceholderVar;
+        return missingPlaceholderVar;
+    }
+
+    public void setMissingPlaceholderVar(LogicalVariable var) {
+        if (var != null && retainMissingAsValue == null) {
+            throw new IllegalArgumentException("NULL/MISSING var " + var + " is set, but its value not specified");
+        }
+        missingPlaceholderVar = var;
     }
 
     @Override
     public void recomputeSchema() {
-        schema = new ArrayList<LogicalVariable>(inputs.get(0).getValue().getSchema());
+        schema = new ArrayList<>(inputs.get(0).getValue().getSchema());
     }
 
     @Override

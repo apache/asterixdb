@@ -39,7 +39,7 @@ public class SqlppExecutionFullParallelismIT {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor());
+        LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, new TestExecutor("results_full_parallelism"));
     }
 
     @AfterClass

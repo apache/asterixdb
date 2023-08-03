@@ -267,6 +267,8 @@
                 <exclude>src/test/resources/**/results_parser_sqlpp/**</exclude>
                 <exclude>src/test/resources/**/results/**</exclude>
                 <exclude>src/test/resources/**/results_cbo/**</exclude>
+                <exclude>src/test/resources/**/results_less_parallelism/**</exclude>
+                <exclude>src/test/resources/**/results_full_parallelism/**</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.dot</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.json</exclude>
                 <exclude>**/data/**</exclude>

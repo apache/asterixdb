@@ -257,6 +257,10 @@ public class SubstituteVariableVisitor
     public Void visitSelectOperator(SelectOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
         substUsedVariablesInExpr(op.getCondition(), pair.first, pair.second);
+        LogicalVariable missingPlaceholderVar = op.getMissingPlaceholderVariable();
+        if (missingPlaceholderVar != null && missingPlaceholderVar.equals(pair.first)) {
+            op.setMissingPlaceholderVar(pair.second);
+        }
         // SELECT operator may add its used variable
         // to its own output type environment as 'nonMissableVariable' (not(is-missing($used_var))
         // therefore we need perform variable substitution in its own type environment
