@@ -60,8 +60,7 @@ public class SampleDataSource extends DataSource {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException {
+            IProjectionFiltrationInfo projectionInfo) throws AlgebricksException {
         return metadataProvider.getBtreeSearchRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, dataset,
                 sampleIndexName, null, null, true, true, false, null, null, null, tupleFilterFactory, outputLimit,
                 false, false, DefaultTupleProjectorFactory.INSTANCE, false);

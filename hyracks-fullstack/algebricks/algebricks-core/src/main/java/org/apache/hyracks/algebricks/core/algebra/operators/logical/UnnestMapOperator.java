@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -40,21 +41,20 @@ public class UnnestMapOperator extends AbstractUnnestMapOperator {
     // the maximum of number of results output by this operator
     private long outputLimit = -1;
 
-    private IProjectionFiltrationInfo<?> datasetProjectionInfo;
-    private IProjectionFiltrationInfo<?> metaProjectionInfo;
+    private IProjectionFiltrationInfo projectionFiltrationInfo;
 
     public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput) {
-        this(variables, expression, variableTypes, propagateInput, null, -1, null, null);
+        this(variables, expression, variableTypes, propagateInput, null, -1, DefaultProjectionFiltrationInfo.INSTANCE);
     }
 
     public UnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, boolean propagateInput, Mutable<ILogicalExpression> selectCondition,
-            long outputLimit, IProjectionFiltrationInfo<?> datasetProjectionInfo,
-            IProjectionFiltrationInfo<?> metaProjectionInfo) {
+            long outputLimit, IProjectionFiltrationInfo projectionFiltrationInfo) {
         super(variables, expression, variableTypes, propagateInput);
         this.selectCondition = selectCondition;
         this.outputLimit = outputLimit;
+        setProjectionFiltrationInfo(projectionFiltrationInfo);
     }
 
     @Override
@@ -106,20 +106,13 @@ public class UnnestMapOperator extends AbstractUnnestMapOperator {
         this.outputLimit = outputLimit;
     }
 
-    public void setDatasetProjectionInfo(IProjectionFiltrationInfo<?> projectionInfo) {
-        this.datasetProjectionInfo = projectionInfo;
+    public void setProjectionFiltrationInfo(IProjectionFiltrationInfo projectionFiltrationInfo) {
+        this.projectionFiltrationInfo =
+                projectionFiltrationInfo == null ? DefaultProjectionFiltrationInfo.INSTANCE : projectionFiltrationInfo;
     }
 
-    public IProjectionFiltrationInfo<?> getDatasetProjectionInfo() {
-        return datasetProjectionInfo;
-    }
-
-    public void setMetaProjectionInfo(IProjectionFiltrationInfo<?> metaProjectionInfo) {
-        this.metaProjectionInfo = metaProjectionInfo;
-    }
-
-    public IProjectionFiltrationInfo<?> getMetaProjectionInfo() {
-        return metaProjectionInfo;
+    public IProjectionFiltrationInfo getProjectionFiltrationInfo() {
+        return projectionFiltrationInfo;
     }
 
 }

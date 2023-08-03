@@ -50,11 +50,13 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
+import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
@@ -270,42 +272,36 @@ public class IndexUtil {
     }
 
     public static ITupleProjectorFactory createTupleProjectorFactory(JobGenContext context,
-            DatasetFormatInfo datasetFormatInfo, IProjectionFiltrationInfo<?> projectionInfo,
-            IProjectionFiltrationInfo<?> metaProjectionInfo, ARecordType datasetType, ARecordType metaItemType,
+            IVariableTypeEnvironment typeEnv, DatasetFormatInfo datasetFormatInfo,
+            IProjectionFiltrationInfo projectionFiltrationInfo, ARecordType datasetType, ARecordType metaItemType,
             int numberOfPrimaryKeys) throws AlgebricksException {
         if (datasetFormatInfo.getFormat() == DatasetConfig.DatasetFormat.ROW) {
             return DefaultTupleProjectorFactory.INSTANCE;
         }
-        DataProjectionFiltrationInfo dataProjectionInfo = (DataProjectionFiltrationInfo) projectionInfo;
-        if (dataProjectionInfo == null) {
-            // projecting pushdown is disabled
+
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            // pushdown is disabled
             ARecordType metaType = metaItemType == null ? null : ALL_FIELDS_TYPE;
             return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys, ALL_FIELDS_TYPE,
                     Collections.emptyMap(), metaType, Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
                     NoOpColumnFilterEvaluatorFactory.INSTANCE);
         }
+        ColumnDatasetProjectionFiltrationInfo columnInfo =
+                (ColumnDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
 
-        DataProjectionFiltrationInfo metaDataProjectionInfo = (DataProjectionFiltrationInfo) metaProjectionInfo;
+        ARecordType recordRequestedType = columnInfo.getProjectedType();
+        ARecordType metaRequestedType = columnInfo.getMetaProjectedType();
+        Map<String, FunctionCallInformation> callInfo = columnInfo.getFunctionCallInfoMap();
 
-        ARecordType datasetRequestedType = dataProjectionInfo.getProjectionInfo();
-        Map<String, FunctionCallInformation> datasetFunctionCallInfo = dataProjectionInfo.getFunctionCallInfoMap();
-
-        ARecordType metaRequestedType =
-                metaDataProjectionInfo == null ? null : metaDataProjectionInfo.getProjectionInfo();
-        Map<String, FunctionCallInformation> metaFunctionCallInfo =
-                metaProjectionInfo == null ? null : metaDataProjectionInfo.getFunctionCallInfoMap();
-
-        NormalizedColumnFilterBuilder normalizedColumnFilterBuilder =
-                new NormalizedColumnFilterBuilder(dataProjectionInfo);
+        NormalizedColumnFilterBuilder normalizedColumnFilterBuilder = new NormalizedColumnFilterBuilder(columnInfo);
         IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory =
                 normalizedColumnFilterBuilder.build();
 
-        ColumnFilterBuilder columnFilterBuilder = new ColumnFilterBuilder(dataProjectionInfo, context);
+        ColumnFilterBuilder columnFilterBuilder = new ColumnFilterBuilder(columnInfo, context);
         IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory = columnFilterBuilder.build();
 
-        return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
-                datasetRequestedType, datasetFunctionCallInfo, metaRequestedType, metaFunctionCallInfo,
-                normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory);
+        return new QueryColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys, recordRequestedType,
+                callInfo, metaRequestedType, callInfo, normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory);
     }
 
     public static ITupleProjectorFactory createUpsertTupleProjectorFactory(DatasetFormatInfo datasetFormatInfo,

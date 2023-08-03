@@ -40,7 +40,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
+import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -56,8 +56,8 @@ public class NormalizedColumnFilterBuilder {
     private final Map<ILogicalExpression, ARecordType> filterPaths;
     private final ILogicalExpression filterExpression;
 
-    public NormalizedColumnFilterBuilder(DataProjectionFiltrationInfo projectionFiltrationInfo) {
-        this.filterPaths = projectionFiltrationInfo.getNormalizedPaths();
+    public NormalizedColumnFilterBuilder(ColumnDatasetProjectionFiltrationInfo projectionFiltrationInfo) {
+        this.filterPaths = projectionFiltrationInfo.getFilterPaths();
         this.filterExpression = projectionFiltrationInfo.getFilterExpression();
     }
 

@@ -29,68 +29,45 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.commons.lang3.SerializationUtils;
-import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
+import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
-public class DataProjectionFiltrationInfo implements IProjectionFiltrationInfo<ARecordType> {
-    private final ARecordType root;
-    private final Map<String, FunctionCallInformation> functionCallInfoMap;
-    private final Map<ILogicalExpression, ARecordType> normalizedPaths;
-    private final Map<ILogicalExpression, ARecordType> actualPaths;
-    private final ILogicalExpression filterExpression;
+import com.fasterxml.jackson.core.JsonGenerator;
 
-    public DataProjectionFiltrationInfo(ARecordType root, Map<String, FunctionCallInformation> sourceInformationMap,
-            Map<ILogicalExpression, ARecordType> normalizedPaths, Map<ILogicalExpression, ARecordType> actualPaths,
-            ILogicalExpression filterExpression) {
-        this.root = root;
+public class ExternalDatasetProjectionInfo implements IProjectionFiltrationInfo {
+    protected final ARecordType projectedType;
+    protected final Map<String, FunctionCallInformation> functionCallInfoMap;
+
+    public ExternalDatasetProjectionInfo(ARecordType projectedType,
+            Map<String, FunctionCallInformation> sourceInformationMap) {
+        this.projectedType = projectedType;
         this.functionCallInfoMap = sourceInformationMap;
-        this.normalizedPaths = normalizedPaths;
-        this.actualPaths = actualPaths;
-        this.filterExpression = filterExpression;
     }
 
-    private DataProjectionFiltrationInfo(DataProjectionFiltrationInfo other) {
-        if (other.root == ALL_FIELDS_TYPE) {
-            root = ALL_FIELDS_TYPE;
-        } else if (other.root == EMPTY_TYPE) {
-            root = EMPTY_TYPE;
+    private ExternalDatasetProjectionInfo(ExternalDatasetProjectionInfo other) {
+        if (other.projectedType == ALL_FIELDS_TYPE) {
+            projectedType = ALL_FIELDS_TYPE;
+        } else if (other.projectedType == EMPTY_TYPE) {
+            projectedType = EMPTY_TYPE;
         } else {
-            root = other.root.deepCopy(other.root);
+            projectedType = other.projectedType.deepCopy(other.projectedType);
         }
         functionCallInfoMap = new HashMap<>(other.functionCallInfoMap);
-        normalizedPaths = new HashMap<>(other.normalizedPaths);
-        actualPaths = new HashMap<>(other.actualPaths);
-        filterExpression = other.filterExpression;
     }
 
     @Override
-    public ARecordType getProjectionInfo() {
-        return root;
+    public ExternalDatasetProjectionInfo createCopy() {
+        return new ExternalDatasetProjectionInfo(this);
     }
 
-    @Override
-    public DataProjectionFiltrationInfo createCopy() {
-        return new DataProjectionFiltrationInfo(this);
-    }
-
-    @Override
-    public ILogicalExpression getFilterExpression() {
-        return filterExpression;
+    public ARecordType getProjectedType() {
+        return projectedType;
     }
 
     public Map<String, FunctionCallInformation> getFunctionCallInfoMap() {
         return functionCallInfoMap;
-    }
-
-    public Map<ILogicalExpression, ARecordType> getNormalizedPaths() {
-        return normalizedPaths;
-    }
-
-    public Map<ILogicalExpression, ARecordType> getActualPaths() {
-        return actualPaths;
     }
 
     @Override
@@ -101,23 +78,41 @@ public class DataProjectionFiltrationInfo implements IProjectionFiltrationInfo<A
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        DataProjectionFiltrationInfo otherInfo = (DataProjectionFiltrationInfo) o;
-        return root.deepEqual(otherInfo.root) && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap)
-                && Objects.equals(filterExpression, otherInfo.filterExpression)
-                && Objects.equals(normalizedPaths, otherInfo.normalizedPaths);
+        ExternalDatasetProjectionInfo otherInfo = (ExternalDatasetProjectionInfo) o;
+        return projectedType.deepEqual(otherInfo.projectedType)
+                && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap);
     }
 
     @Override
-    public String toString() {
-        if (root == ALL_FIELDS_TYPE || root == EMPTY_TYPE) {
-            //Return the type name if all fields or empty types
-            return root.getTypeName();
+    public void print(AlgebricksStringBuilderWriter writer) {
+        if (projectedType == ALL_FIELDS_TYPE) {
+            return;
         }
-        //Return a oneliner JSON like representation for the requested fields
-        StringBuilder builder = new StringBuilder();
+
+        writer.append(" project (");
+        if (projectedType == EMPTY_TYPE) {
+            writer.append(projectedType.getTypeName());
+        } else {
+            writer.append(getOnelinerSchema(projectedType, new StringBuilder()));
+        }
+        writer.append(')');
+    }
+
+    @Override
+    public void print(JsonGenerator generator) throws IOException {
+        if (projectedType == ALL_FIELDS_TYPE) {
+            return;
+        }
+        generator.writeStringField("project", getOnelinerSchema(projectedType, new StringBuilder()));
+    }
+
+    protected String getOnelinerSchema(ARecordType type, StringBuilder builder) {
+        //Return oneliner JSON like representation for the requested fields
         SimpleStringBuilderForIATypeVisitor visitor = new SimpleStringBuilderForIATypeVisitor();
-        root.accept(visitor, builder);
-        return builder.toString();
+        type.accept(visitor, builder);
+        String onelinerSchema = builder.toString();
+        builder.setLength(0);
+        return onelinerSchema;
     }
 
     /**
@@ -176,9 +171,5 @@ public class DataProjectionFiltrationInfo implements IProjectionFiltrationInfo<A
             functionCallInfoMap.put(key, functionCallInfo);
         }
         return functionCallInfoMap;
-    }
-
-    private static ARecordType createType(String typeName) {
-        return new ARecordType(typeName, new String[] {}, new IAType[] {}, true);
     }
 }

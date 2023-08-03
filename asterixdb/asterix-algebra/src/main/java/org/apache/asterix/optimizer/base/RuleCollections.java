@@ -79,7 +79,7 @@ import org.apache.asterix.optimizer.rules.PushLimitIntoOrderByRule;
 import org.apache.asterix.optimizer.rules.PushLimitIntoPrimarySearchRule;
 import org.apache.asterix.optimizer.rules.PushProperJoinThroughProduct;
 import org.apache.asterix.optimizer.rules.PushSimilarityFunctionsBelowJoin;
-import org.apache.asterix.optimizer.rules.PushValueAccessToDataScanRule;
+import org.apache.asterix.optimizer.rules.PushValueAccessAndFilterDownRule;
 import org.apache.asterix.optimizer.rules.RemoveDuplicateFieldsRule;
 import org.apache.asterix.optimizer.rules.RemoveLeftOuterUnnestForLeftOuterJoinRule;
 import org.apache.asterix.optimizer.rules.RemoveOrReplaceDefaultNullCastRule;
@@ -427,7 +427,7 @@ public final class RuleCollections {
          * Must run IntroduceProjectsRule before PushValueAccessToDataScanRule to ensure that no entire records are
          * returned if they are projected out
          */
-        physicalRewritesTopLevel.add(new PushValueAccessToDataScanRule());
+        physicalRewritesTopLevel.add(new PushValueAccessAndFilterDownRule());
         physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule());
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());

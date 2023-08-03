@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -50,22 +51,20 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
     // the maximum of number of results output by this operator
     private long outputLimit = -1;
 
-    private IProjectionFiltrationInfo<?> datasetProjectionInfo;
-    private IProjectionFiltrationInfo<?> metaProjectionInfo;
+    private IProjectionFiltrationInfo projectionFiltrationInfo;
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource) {
-        this(variables, dataSource, null, -1, null, null);
+        this(variables, dataSource, null, -1, DefaultProjectionFiltrationInfo.INSTANCE);
     }
 
     public DataSourceScanOperator(List<LogicalVariable> variables, IDataSource<?> dataSource,
             Mutable<ILogicalExpression> selectCondition, long outputLimit,
-            IProjectionFiltrationInfo<?> datasetProjectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo) {
+            IProjectionFiltrationInfo projectionFiltrationInfo) {
         super(variables, dataSource);
         projectVars = new ArrayList<>();
         this.selectCondition = selectCondition;
         this.outputLimit = outputLimit;
-        this.datasetProjectionInfo = datasetProjectionInfo;
-        this.metaProjectionInfo = metaProjectionInfo;
+        setProjectionFiltrationInfo(projectionFiltrationInfo);
     }
 
     @Override
@@ -176,19 +175,12 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
         this.outputLimit = outputLimit;
     }
 
-    public void setDatasetProjectionInfo(IProjectionFiltrationInfo<?> datasetProjectionInfo) {
-        this.datasetProjectionInfo = datasetProjectionInfo;
+    public void setProjectionFiltrationInfo(IProjectionFiltrationInfo projectionFiltrationInfo) {
+        this.projectionFiltrationInfo =
+                projectionFiltrationInfo == null ? DefaultProjectionFiltrationInfo.INSTANCE : projectionFiltrationInfo;
     }
 
-    public IProjectionFiltrationInfo<?> getDatasetProjectionInfo() {
-        return datasetProjectionInfo;
-    }
-
-    public void setMetaProjectionInfo(IProjectionFiltrationInfo<?> metaProjectionInfo) {
-        this.metaProjectionInfo = metaProjectionInfo;
-    }
-
-    public IProjectionFiltrationInfo<?> getMetaProjectionInfo() {
-        return metaProjectionInfo;
+    public IProjectionFiltrationInfo getProjectionFiltrationInfo() {
+        return projectionFiltrationInfo;
     }
 }

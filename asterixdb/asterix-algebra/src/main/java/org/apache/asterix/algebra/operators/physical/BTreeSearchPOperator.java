@@ -143,14 +143,13 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                 }
                 DatasetFormatInfo formatInfo = dataset.getDatasetFormatInfo();
                 if (isPrimaryIndex && formatInfo.getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
-                    IProjectionFiltrationInfo<?> projectionInfo = unnestMapOp.getDatasetProjectionInfo();
-                    IProjectionFiltrationInfo<?> metaProjectionInfo = unnestMapOp.getMetaProjectionInfo();
+                    IProjectionFiltrationInfo projectionFiltrationInfo = unnestMapOp.getProjectionFiltrationInfo();
                     ARecordType datasetType = (ARecordType) metadataProvider.findType(dataset);
                     ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
                     datasetType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(datasetType,
                             metaItemType, dataset);
-                    tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(context, formatInfo, projectionInfo,
-                            metaProjectionInfo, datasetType, metaItemType, dataset.getPrimaryKeys().size());
+                    tupleProjectorFactory = IndexUtil.createTupleProjectorFactory(context, typeEnv, formatInfo,
+                            projectionFiltrationInfo, datasetType, metaItemType, dataset.getPrimaryKeys().size());
                 }
                 break;
             case LEFT_OUTER_UNNEST_MAP:

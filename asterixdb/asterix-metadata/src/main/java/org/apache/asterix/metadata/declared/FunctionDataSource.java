@@ -107,8 +107,7 @@ public abstract class FunctionDataSource extends DataSource {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException {
+            IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         GenericAdapterFactory adapterFactory = new GenericAdapterFactory();
         adapterFactory.setOutputType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         IClusterStateManager csm = metadataProvider.getApplicationContext().getClusterStateManager();

@@ -16,35 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.metadata;
+package org.apache.hyracks.algebricks.core.algebra.base;
 
 import java.io.IOException;
 
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
-/**
- * Generic interface to include the projection information for
- * {@link org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator}
- */
-public interface IProjectionFiltrationInfo {
-    /**
-     * @return a copy of the {@link IProjectionFiltrationInfo}
-     */
-    IProjectionFiltrationInfo createCopy();
+public class DefaultProjectionFiltrationInfo implements IProjectionFiltrationInfo {
+    public static final IProjectionFiltrationInfo INSTANCE = new DefaultProjectionFiltrationInfo();
 
-    /**
-     * Write the information in text query plan
-     *
-     * @param writer plan writer
-     */
-    void print(AlgebricksStringBuilderWriter writer);
+    private DefaultProjectionFiltrationInfo() {
+    }
 
-    /**
-     * Write the information in json query plan
-     *
-     * @param generator json plan generator
-     */
-    void print(JsonGenerator generator) throws IOException;
+    @Override
+    public IProjectionFiltrationInfo createCopy() {
+        return INSTANCE;
+    }
+
+    @Override
+    public void print(AlgebricksStringBuilderWriter writer) {
+        // NoOp
+    }
+
+    @Override
+    public void print(JsonGenerator generator) throws IOException {
+        // NoOp
+    }
 }

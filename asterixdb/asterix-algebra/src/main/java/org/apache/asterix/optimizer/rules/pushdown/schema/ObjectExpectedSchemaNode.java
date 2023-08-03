@@ -59,14 +59,6 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
         children.replace(fieldName, newNode);
     }
 
-    protected IAType getType(IAType childType, IExpectedSchemaNode childNode, String typeName) {
-        String key = getChildFieldName(childNode);
-        IAType[] fieldTypes = { childType };
-        String[] fieldNames = { key };
-
-        return new ARecordType("typeName", fieldNames, fieldTypes, false);
-    }
-
     public String getChildFieldName(IExpectedSchemaNode requestedChild) {
         String key = null;
         for (Map.Entry<String, IExpectedSchemaNode> child : children.entrySet()) {
@@ -81,5 +73,13 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
             throw new IllegalStateException("Node " + requestedChild.getType() + " is not a child");
         }
         return key;
+    }
+
+    protected IAType getType(IAType childType, IExpectedSchemaNode childNode, String typeName) {
+        String key = getChildFieldName(childNode);
+        IAType[] fieldTypes = { childType };
+        String[] fieldNames = { key };
+
+        return new ARecordType("typeName", fieldNames, fieldTypes, false);
     }
 }

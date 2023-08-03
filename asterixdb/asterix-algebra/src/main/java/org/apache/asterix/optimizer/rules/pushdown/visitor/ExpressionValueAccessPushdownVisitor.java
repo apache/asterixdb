@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown;
+package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
 import static org.apache.asterix.metadata.utils.PushdownUtil.ALLOWED_FUNCTIONS;
 import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
@@ -32,53 +32,30 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
-import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 
-class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenceTransform {
+public class ExpressionValueAccessPushdownVisitor {
     private final ExpectedSchemaBuilder builder;
-    private List<LogicalVariable> producedVariables;
-    private IVariableTypeEnvironment typeEnv;
-    private int producedVariableIndex;
 
     public ExpressionValueAccessPushdownVisitor(ExpectedSchemaBuilder builder) {
         this.builder = builder;
-        end();
     }
 
-    public void init(List<LogicalVariable> producedVariables, IVariableTypeEnvironment typeEnv) {
-        this.producedVariables = producedVariables;
-        this.typeEnv = typeEnv;
-        producedVariableIndex = 0;
-    }
-
-    @Override
-    public boolean transform(Mutable<ILogicalExpression> expression) throws AlgebricksException {
-        if (producedVariableIndex == -1) {
-            //This for ensuring that the produced variables (if any) should be set
-            throw new IllegalStateException("init must be called first");
-        }
-        pushValueAccessExpression(expression, getNextProducedVariable(), typeEnv);
+    public boolean transform(ILogicalExpression expression, LogicalVariable producedVariable,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        pushValueAccessExpression(expression, producedVariable, typeEnv);
         return false;
     }
 
-    public void end() {
-        producedVariables = null;
-        typeEnv = null;
-        producedVariableIndex = -1;
-    }
-
-    private LogicalVariable getNextProducedVariable() {
-        LogicalVariable variable = producedVariables != null ? producedVariables.get(producedVariableIndex) : null;
-        producedVariableIndex++;
-        return variable;
+    private void pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        pushValueAccessExpression(exprRef.getValue(), producedVar, typeEnv);
     }
 
     /**
      * Pushdown field access expressions and array access expressions down
      */
-    private void pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
+    private void pushValueAccessExpression(ILogicalExpression expr, LogicalVariable producedVar,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
-        final ILogicalExpression expr = exprRef.getValue();
         if (skipPushdown(expr)) {
             return;
         }
@@ -91,11 +68,11 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
         }
 
         //Check nested arguments if contains any pushable value access
-        pushValueAccessExpressionArg(funcExpr.getArguments(), producedVar);
+        pushValueAccessExpressionArg(funcExpr.getArguments(), producedVar, typeEnv);
     }
 
     /**
-     * Check if we can pushdown an expression. Also, unregister a variable if we found that a common expression value is
+     * Check if we can push down an expression. Also, unregister a variable if we found that a common expression value is
      * required in its entirety.
      */
     private boolean skipPushdown(ILogicalExpression expr) {
@@ -104,7 +81,7 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
             unregisterVariableIfNeeded(variable);
             return true;
         }
-        return expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL || !builder.containsRegisteredDatasets()
+        return expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL || builder.isEmpty()
                 || isTypeCheckOnVariable(expr);
     }
 
@@ -139,8 +116,8 @@ class ExpressionValueAccessPushdownVisitor implements ILogicalExpressionReferenc
                 && funcExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE;
     }
 
-    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList, LogicalVariable producedVar)
-            throws AlgebricksException {
+    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         for (Mutable<ILogicalExpression> exprRef : exprList) {
             /*
              * We need to set the produced variable as null here as the produced variable will not correspond to the

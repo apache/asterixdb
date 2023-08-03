@@ -136,8 +136,7 @@ public class LoadableDataSource extends DataSource {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException {
+            IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         if (tupleFilterFactory != null || outputLimit >= 0) {
             throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,
                     "tuple filter and limit are not supported by LoadableDataSource");

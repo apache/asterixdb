@@ -21,17 +21,12 @@ package org.apache.asterix.optimizer.rules.pushdown.schema;
 import static org.apache.asterix.metadata.utils.PushdownUtil.ARRAY_FUNCTIONS;
 import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.metadata.utils.PushdownUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpectedSchemaNodeToIATypeTranslatorVisitor;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
-import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -54,30 +49,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 public class ExpectedSchemaBuilder {
     //Registered Variables
     private final Map<LogicalVariable, IExpectedSchemaNode> varToNode;
-    //Inferred type for expressions
-    private final Map<AbstractFunctionCallExpression, IExpectedSchemaNode> exprToNode;
 
     public ExpectedSchemaBuilder() {
         varToNode = new HashMap<>();
-        exprToNode = new HashMap<>();
-    }
-
-    public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable) {
-        return createProjectionInfo(recordVariable, Collections.emptyMap(), Collections.emptyMap(), null,
-                Collections.emptyMap());
-    }
-
-    public DataProjectionFiltrationInfo createProjectionInfo(LogicalVariable recordVariable,
-            Map<ILogicalExpression, ARecordType> normalizedPaths, Map<ILogicalExpression, ARecordType> actualPaths,
-            ILogicalExpression filterExpression, Map<String, FunctionCallInformation> sourceInformationMap) {
-        IExpectedSchemaNode rootNode = varToNode.get(recordVariable);
-
-        ExpectedSchemaNodeToIATypeTranslatorVisitor typeBuilder =
-                new ExpectedSchemaNodeToIATypeTranslatorVisitor(sourceInformationMap);
-        ARecordType recordType = (ARecordType) rootNode.accept(typeBuilder, null);
-
-        return new DataProjectionFiltrationInfo(recordType, sourceInformationMap, normalizedPaths, actualPaths,
-                filterExpression);
     }
 
     public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar,
@@ -88,9 +62,6 @@ public class ExpectedSchemaBuilder {
             IExpectedSchemaNode leaf =
                     new AnyExpectedSchemaNode(parent, expr.getSourceLocation(), expr.getFunctionIdentifier().getName());
             addChild(expr, typeEnv, parent, leaf);
-
-            //Associate expression to node
-            exprToNode.put(expr, leaf);
             if (producedVar != null) {
                 //Register the node if a variable is produced
                 varToNode.put(producedVar, leaf);
@@ -124,19 +95,12 @@ public class ExpectedSchemaBuilder {
         return varToNode.containsKey(variable);
     }
 
-    public boolean containsRegisteredDatasets() {
-        return !varToNode.isEmpty();
+    public boolean isEmpty() {
+        return varToNode.isEmpty();
     }
 
-    IExpectedSchemaNode getNode(LogicalVariable variable) {
+    public IExpectedSchemaNode getNode(LogicalVariable variable) {
         return varToNode.get(variable);
-    }
-
-    public IExpectedSchemaNode getNode(ILogicalExpression expr) {
-        if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-            return getNode(VariableUtilities.getVariable(expr));
-        }
-        return exprToNode.get((AbstractFunctionCallExpression) expr);
     }
 
     private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr, IVariableTypeEnvironment typeEnv)

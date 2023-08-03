@@ -54,8 +54,7 @@ public interface IMetadataProvider<S, I> {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException;
+            IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException;
 
     Pair<IPushRuntimeFactory, AlgebricksPartitionConstraint> getWriteFileRuntime(IDataSink sink, int[] printColumns,
             IPrinterFactory[] printerFactories, IAWriterFactory writerFactory, RecordDescriptor inputDesc)

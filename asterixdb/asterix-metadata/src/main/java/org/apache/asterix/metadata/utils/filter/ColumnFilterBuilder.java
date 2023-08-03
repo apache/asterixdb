@@ -35,7 +35,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.DataProjectionFiltrationInfo;
+import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -54,9 +54,9 @@ public class ColumnFilterBuilder {
     private final JobGenContext context;
     private final ArrayPathCheckerVisitor checkerVisitor;
 
-    public ColumnFilterBuilder(DataProjectionFiltrationInfo projectionFiltrationInfo, JobGenContext context) {
+    public ColumnFilterBuilder(ColumnDatasetProjectionFiltrationInfo projectionFiltrationInfo, JobGenContext context) {
         typeEnv = new FilterVariableTypeEnvironment();
-        this.filterPaths = projectionFiltrationInfo.getActualPaths();
+        this.filterPaths = projectionFiltrationInfo.getFilterPaths();
         this.filterExpression = projectionFiltrationInfo.getFilterExpression();
         this.context = context;
         checkerVisitor = new ArrayPathCheckerVisitor();

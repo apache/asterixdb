@@ -318,12 +318,9 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
                 ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
-        IProjectionFiltrationInfo<?> datasetProjectionInfo =
-                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
-        IProjectionFiltrationInfo<?> metaProjectionInfo =
-                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo projectionFiltrationInfo = op.getProjectionFiltrationInfo().createCopy();
         DataSourceScanOperator opCopy = new DataSourceScanOperator(deepCopyVariableList(op.getVariables()),
-                op.getDataSource(), newSelectCondition, op.getOutputLimit(), datasetProjectionInfo, metaProjectionInfo);
+                op.getDataSource(), newSelectCondition, op.getOutputLimit(), projectionFiltrationInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }
@@ -539,14 +536,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
             throws AlgebricksException {
         Mutable<ILogicalExpression> newSelectCondition = op.getSelectCondition() != null
                 ? exprDeepCopyVisitor.deepCopyExpressionReference(op.getSelectCondition()) : null;
-        IProjectionFiltrationInfo<?> datasetProjectionInfo =
-                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
-        IProjectionFiltrationInfo<?> metaProjectionInfo =
-                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo projectionFiltrationInfo =
+                op.getProjectionFiltrationInfo() != null ? op.getProjectionFiltrationInfo().createCopy() : null;
         UnnestMapOperator opCopy = new UnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
-                op.propagatesInput(), newSelectCondition, op.getOutputLimit(), datasetProjectionInfo,
-                metaProjectionInfo);
+                op.propagatesInput(), newSelectCondition, op.getOutputLimit(), projectionFiltrationInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

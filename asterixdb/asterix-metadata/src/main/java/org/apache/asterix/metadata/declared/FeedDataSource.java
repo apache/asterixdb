@@ -164,8 +164,7 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> projectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException {
+            IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         try {
             if (tupleFilterFactory != null || outputLimit >= 0) {
                 throw CompilationException.create(ErrorCode.COMPILATION_ILLEGAL_STATE,

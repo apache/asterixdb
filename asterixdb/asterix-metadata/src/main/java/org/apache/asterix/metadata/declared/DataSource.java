@@ -166,6 +166,5 @@ public abstract class DataSource implements IDataSource<DataSourceId> {
             List<LogicalVariable> minFilterVars, List<LogicalVariable> maxFilterVars,
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
-            IProjectionFiltrationInfo<?> datasetProjectionInfo, IProjectionFiltrationInfo<?> metaProjectionInfo)
-            throws AlgebricksException;
+            IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException;
 }

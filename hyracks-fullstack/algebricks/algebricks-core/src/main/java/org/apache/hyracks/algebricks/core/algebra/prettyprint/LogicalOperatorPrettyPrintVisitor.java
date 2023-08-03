@@ -33,7 +33,6 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -350,9 +349,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         AlgebricksStringBuilderWriter plan = printAbstractUnnestMapOperator(op, indent, "unnest-map", null);
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
-        appendProjectInformation(plan, "project", op.getDatasetProjectionInfo());
-        appendProjectInformation(plan, "project-meta", op.getMetaProjectionInfo());
-        appendFilterExpression(plan, op.getDatasetProjectionInfo());
+        op.getProjectionFiltrationInfo().print(plan);
         return null;
     }
 
@@ -375,14 +372,13 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitDataScanOperator(DataSourceScanOperator op, Integer indent) throws AlgebricksException {
-        AlgebricksStringBuilderWriter plan = addIndent(indent).append(
-                "data-scan " + op.getProjectVariables() + "<-" + op.getVariables() + " <- " + op.getDataSource());
+        AlgebricksStringBuilderWriter plan = addIndent(indent).append("data-scan ")
+                .append(String.valueOf(op.getProjectVariables())).append("<-").append(String.valueOf(op.getVariables()))
+                .append(" <- ").append(String.valueOf(op.getDataSource()));
         appendFilterInformation(plan, op.getMinFilterVars(), op.getMaxFilterVars());
         appendSelectConditionInformation(plan, op.getSelectCondition(), indent);
         appendLimitInformation(plan, op.getOutputLimit());
-        appendProjectInformation(plan, "project", op.getDatasetProjectionInfo());
-        appendProjectInformation(plan, "project-meta", op.getMetaProjectionInfo());
-        appendFilterExpression(plan, op.getDatasetProjectionInfo());
+        op.getProjectionFiltrationInfo().print(plan);
         return null;
     }
 
@@ -410,30 +406,6 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         }
         if (maxFilterVars != null) {
             plan.append(" max:" + maxFilterVars);
-        }
-    }
-
-    private void appendProjectInformation(AlgebricksStringBuilderWriter plan, String projectionSource,
-            IProjectionFiltrationInfo<?> projectionInfo) {
-        final String projectedFields = projectionInfo == null ? "" : projectionInfo.toString();
-        if (!projectedFields.isEmpty()) {
-            plan.append(" ");
-            plan.append(projectionSource);
-            plan.append(" (");
-            plan.append(projectedFields);
-            plan.append(")");
-        }
-    }
-
-    private void appendFilterExpression(AlgebricksStringBuilderWriter plan,
-            IProjectionFiltrationInfo<?> projectionInfo) {
-        final String filterExpr = projectionInfo == null || projectionInfo.getFilterExpression() == null ? ""
-                : projectionInfo.getFilterExpression().toString();
-        if (!filterExpr.isEmpty()) {
-            plan.append(" filter on ");
-            plan.append("(");
-            plan.append(filterExpr);
-            plan.append(")");
         }
     }
 

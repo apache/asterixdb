@@ -490,11 +490,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> projectVariables, boolean projectPushed, List<LogicalVariable> minFilterVars,
             List<LogicalVariable> maxFilterVars, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec,
-            Object implConfig, IProjectionFiltrationInfo<?> projectionInfo,
-            IProjectionFiltrationInfo<?> metaProjectionInfo) throws AlgebricksException {
+            Object implConfig, IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         return ((DataSource) dataSource).buildDatasourceScanRuntime(this, dataSource, scanVariables, projectVariables,
                 projectPushed, minFilterVars, maxFilterVars, tupleFilterFactory, outputLimit, opSchema, typeEnv,
-                context, jobSpec, implConfig, projectionInfo, metaProjectionInfo);
+                context, jobSpec, implConfig, projectionFiltrationInfo);
     }
 
     protected Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getLoadableDatasetScanRuntime(

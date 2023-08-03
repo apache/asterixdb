@@ -452,8 +452,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         isomorphic = op.getExpressionRef().getValue().equals(unnestOpArg.getExpressionRef().getValue())
-                && Objects.equals(op.getDatasetProjectionInfo(), unnestOpArg.getDatasetProjectionInfo())
-                && Objects.equals(op.getMetaProjectionInfo(), unnestOpArg.getMetaProjectionInfo());
+                && Objects.equals(op.getProjectionFiltrationInfo(), unnestOpArg.getProjectionFiltrationInfo());
         return isomorphic;
     }
 
@@ -486,8 +485,7 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         DataSourceScanOperator argScan = (DataSourceScanOperator) arg;
         boolean isomorphic = op.getDataSource().getId().equals(argScan.getDataSource().getId())
                 && op.getOutputLimit() == argScan.getOutputLimit()
-                && Objects.equals(op.getDatasetProjectionInfo(), argScan.getDatasetProjectionInfo())
-                && Objects.equals(op.getMetaProjectionInfo(), argScan.getMetaProjectionInfo());
+                && Objects.equals(op.getProjectionFiltrationInfo(), argScan.getProjectionFiltrationInfo());
 
         if (!isomorphic) {
             return Boolean.FALSE;

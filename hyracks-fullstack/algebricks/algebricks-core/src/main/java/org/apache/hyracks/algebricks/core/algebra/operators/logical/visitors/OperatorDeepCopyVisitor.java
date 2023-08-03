@@ -249,13 +249,10 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         newInputList.addAll(op.getVariables());
         Mutable<ILogicalExpression> newSelectCondition =
                 op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
-        IProjectionFiltrationInfo<?> datasetProjectionInfo =
-                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
-        IProjectionFiltrationInfo<?> metaProjectionInfo =
-                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
+        IProjectionFiltrationInfo projectionFiltrationInfo = op.getProjectionFiltrationInfo().createCopy();
         return new UnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
                 new ArrayList<>(op.getVariableTypes()), op.propagatesInput(), newSelectCondition, op.getOutputLimit(),
-                datasetProjectionInfo, metaProjectionInfo);
+                projectionFiltrationInfo);
     }
 
     @Override
@@ -273,13 +270,9 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         newInputList.addAll(op.getVariables());
         Mutable<ILogicalExpression> newSelectCondition =
                 op.getSelectCondition() != null ? deepCopyExpressionRef(op.getSelectCondition()) : null;
-        IProjectionFiltrationInfo<?> datasetProjectionInfo =
-                op.getDatasetProjectionInfo() != null ? op.getDatasetProjectionInfo().createCopy() : null;
-        IProjectionFiltrationInfo<?> metaProjectionInfo =
-                op.getMetaProjectionInfo() != null ? op.getMetaProjectionInfo().createCopy() : null;
-
+        IProjectionFiltrationInfo projectionFiltrationInfo = op.getProjectionFiltrationInfo().createCopy();
         return new DataSourceScanOperator(newInputList, op.getDataSource(), newSelectCondition, op.getOutputLimit(),
-                datasetProjectionInfo, metaProjectionInfo);
+                projectionFiltrationInfo);
     }
 
     @Override

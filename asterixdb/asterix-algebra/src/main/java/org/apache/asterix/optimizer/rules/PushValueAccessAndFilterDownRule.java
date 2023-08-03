@@ -20,15 +20,19 @@ package org.apache.asterix.optimizer.rules;
 
 import java.util.Set;
 
-import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
+import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
-import org.apache.asterix.optimizer.rules.pushdown.OperatorValueAccessPushdownVisitor;
+import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnFilterPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnRangeFilterPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnValueAccessPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.InlineFilterExpressionsProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.PushdownProcessorsExecutor;
+import org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -39,10 +43,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 
 /**
- * Pushes value access expressions to the external dataset scan to minimize the size of the record.
+ * Pushes value access expressions to datasets' scans (if they permit) to minimize the size of the record.
  * This rule currently does not remove the value access expression. Instead, it adds the requested field names to
- * external dataset details to produce records that only contain the requested values. Thus, no changes would occur
- * to the plan's structure after firing this rule.
+ * data-scan operator to produce records that only contain the requested values. The rule also pushes down filter
+ * expressions to data-scans if scanned datasets permit. This rule does not change the plan's structure after firing.
  * Example:
  * Before plan:
  * ...
@@ -50,7 +54,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
  * ...
  * assign [$$00] <- [$$r.getField("personalInfo").getField("age")]
  * ...
- * data-scan []<-[$$r] <- ParquetDataverse.ParquetDataset
+ * data-scan []<-[$$0, $$r] <- ColumnDataverse.ColumnDataset
  * <p>
  * After plan:
  * ...
@@ -58,13 +62,15 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
  * ...
  * assign [$$00] <- [$$r.getField("personalInfo").getField("age")]
  * ...
- * data-scan []<-[$$r] <- ParquetDataverse.ParquetDataset project ({personalInfo:{age: VALUE},salary:VALUE})
+ * data-scan []<-[$$0, $$r] <- ColumnDataverse.ColumnDataset
+ * project ({personalInfo:{age: any},salary: any})
+ * filter on: and(gt($r.getField("personalInfo").getField("age"), 20), gt($$r.getField("salary"), 70000))
+ * range-filter on: and(gt($r.getField("personalInfo").getField("age"), 20), gt($$r.getField("salary"), 70000))
  * <p>
  * The resulting record $$r will be {"personalInfo":{"age": *AGE*}, "salary": *SALARY*}
  * and other fields will not be included in $$r.
  */
-public class PushValueAccessToDataScanRule implements IAlgebraicRewriteRule {
-    //Initially, assume we need to run the rule
+public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
     private boolean run = true;
 
     @Override
@@ -76,19 +82,38 @@ public class PushValueAccessToDataScanRule implements IAlgebraicRewriteRule {
         }
 
         /*
-         * Only run the rewrite rule once and only if the plan contains a data-scan on a dataset that
-         * support value access pushdown.
+         * Only run this rewrite rule once and only if the plan contains a data-scan on a dataset that
+         * supports value-access, filter, and/or range-filter.
          */
         run = shouldRun(context);
         if (run) {
+            // Context holds all the necessary information to perform pushdowns
+            PushdownContext pushdownContext = new PushdownContext();
+            // Compute all the necessary pushdown information and performs inter-operator pushdown optimizations
+            PushdownOperatorVisitor pushdownInfoComputer = new PushdownOperatorVisitor(pushdownContext, context);
+            opRef.getValue().accept(pushdownInfoComputer, null);
+            // Execute several optimization passes to perform the pushdown
+            PushdownProcessorsExecutor pushdownProcessorsExecutor = new PushdownProcessorsExecutor();
+            addProcessors(pushdownProcessorsExecutor, pushdownContext, context);
+            pushdownProcessorsExecutor.execute();
+            pushdownProcessorsExecutor.finalizePushdown(pushdownContext, context);
             run = false;
-            OperatorValueAccessPushdownVisitor visitor = new OperatorValueAccessPushdownVisitor(context);
-            opRef.getValue().accept(visitor, null);
-            visitor.finish();
         }
-
-        //This rule does not do any actual structural changes to the plan
         return false;
+    }
+
+    private void addProcessors(PushdownProcessorsExecutor pushdownProcessorsExecutor, PushdownContext pushdownContext,
+            IOptimizationContext context) {
+        // Performs value-access pushdowns
+        pushdownProcessorsExecutor.add(new ColumnValueAccessPushdownProcessor(pushdownContext, context));
+        if (context.getPhysicalOptimizationConfig().isColumnFilterEnabled()) {
+            // Performs filter pushdowns
+            pushdownProcessorsExecutor.add(new ColumnFilterPushdownProcessor(pushdownContext, context));
+            // Perform range-filter pushdowns
+            pushdownProcessorsExecutor.add(new ColumnRangeFilterPushdownProcessor(pushdownContext, context));
+            // Inline AND/OR expression
+            pushdownProcessorsExecutor.add(new InlineFilterExpressionsProcessor(pushdownContext, context));
+        }
     }
 
     /**
@@ -117,8 +142,8 @@ public class PushValueAccessToDataScanRule implements IAlgebraicRewriteRule {
         String datasetName = dataSource.getId().getDatasourceName();
         Dataset dataset = metadataProvider.findDataset(dataverse, datasetName);
 
-        return dataset != null && ((dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL && ExternalDataUtils
-                .supportsPushdown(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties()))
-                || dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN);
+        return dataset != null && (DatasetUtil.isFieldAccessPushdownSupported(dataset)
+                || DatasetUtil.isFilterPushdownSupported(dataset)
+                || DatasetUtil.isRangeFilterPushdownSupported(dataset));
     }
 }
