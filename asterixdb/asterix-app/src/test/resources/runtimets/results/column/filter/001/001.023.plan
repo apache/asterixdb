@@ -22,7 +22,7 @@ distribute result [$$item] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        data-scan []<-[$$27, $$d] <- test.ColumnDataset project ({array:[any]}) filter on (gt($$item, 10000)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        data-scan []<-[$$27, $$d] <- test.ColumnDataset project ({array:[any]}) filter on: gt(scan-collection($$d.getField("array")), 10000) range-filter on: gt(scan-collection($$d.getField("array")), 10000) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- DATASOURCE_SCAN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

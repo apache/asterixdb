@@ -16,18 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.accessor;
+package org.apache.asterix.column.filter.range.accessor;
 
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 
-public class ColumnFilterNormalizedValueAccessor implements IColumnFilterNormalizedValueAccessor {
+public class ColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
     private final int columnIndex;
     private final ATypeTag typeTag;
     private final boolean min;
     private long normalizedValue;
 
-    public ColumnFilterNormalizedValueAccessor(int columnIndex, ATypeTag typeTag, boolean min) {
+    public ColumnRangeFilterValueAccessor(int columnIndex, ATypeTag typeTag, boolean min) {
         this.columnIndex = columnIndex;
         this.typeTag = typeTag;
         this.min = min;
@@ -53,5 +53,10 @@ public class ColumnFilterNormalizedValueAccessor implements IColumnFilterNormali
     @Override
     public ATypeTag getTypeTag() {
         return typeTag;
+    }
+
+    @Override
+    public String toString() {
+        return Long.toString(normalizedValue);
     }
 }

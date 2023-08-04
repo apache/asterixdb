@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.utils.filter;
+package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 
@@ -39,7 +39,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  * @see ColumnarRepeatedIterableFilterEvaluator#evaluate()
  */
 public class ArrayPathCheckerVisitor implements IATypeVisitor<Boolean, AbstractCollectionType> {
-    private final Set<Object> seenCollections;
+    private final Set<AbstractCollectionType> seenCollections;
     private boolean firstPath;
 
     public ArrayPathCheckerVisitor() {

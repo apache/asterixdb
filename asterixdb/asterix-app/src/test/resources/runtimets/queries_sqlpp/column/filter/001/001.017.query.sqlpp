@@ -24,7 +24,7 @@ SET `compiler.sort.parallel` "false";
 EXPLAIN
 SELECT VALUE d
 FROM ColumnDataset d
--- The filter should bailout as we
+-- The range filter should bailout as we
 -- don't support type promotion/demotion
 -- for filters
 WHERE (SOME a in d.array SATISFIES a < 100.1)

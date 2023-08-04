@@ -109,7 +109,7 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     protected boolean putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr) {
         ILogicalExpression filterExpr = scanDefineDescriptor.getRangeFilterExpression();
         if (filterExpr != null) {
-            filterExpr = orExpression(filterExpr, inlinedExpr);
+            filterExpr = andExpression(filterExpr, inlinedExpr);
             scanDefineDescriptor.setRangeFilterExpression(filterExpr);
         } else {
             scanDefineDescriptor.setRangeFilterExpression(inlinedExpr);
@@ -131,7 +131,8 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         SourceLocation sourceLocation = funcExpr.getSourceLocation();
         FunctionCallInformation functionCallInfo = new FunctionCallInformation(functionName, sourceLocation,
                 ProjectionFiltrationWarningFactoryProvider.getIncomparableTypesFactory(leftConstant));
-        ARecordType path = pathBuilderVisitor.buildPath(node, constantValue, sourceInformationMap, functionCallInfo);
+        ARecordType path =
+                pathBuilderVisitor.buildPath(node, constantValue.getType(), sourceInformationMap, functionCallInfo);
         paths.put(pathExpr, path);
         return true;
     }

@@ -39,7 +39,7 @@ final class PrimaryScanColumnTupleWithMetaProjector implements IColumnTupleProje
     public PrimaryScanColumnTupleWithMetaProjector(ARecordType datasetType, ARecordType metaType,
             int numberOfPrimaryKeys, ARecordType requestedType) {
         projector = new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
-                Collections.emptyMap(), metaType, Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                Collections.emptyMap(), metaType, NoOpColumnFilterEvaluatorFactory.INSTANCE,
                 NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
     }
 

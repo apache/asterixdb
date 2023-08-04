@@ -16,19 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.evaluator;
+package org.apache.asterix.column.filter.range.evaluator;
 
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 
-public abstract class AbstractColumnFilterEvaluatorFactory implements IColumnNormalizedFilterEvaluatorFactory {
+public abstract class AbstractColumnFilterEvaluatorFactory implements IColumnRangeFilterEvaluatorFactory {
     private static final long serialVersionUID = 1436531448052787426L;
 
-    protected final IColumnNormalizedFilterEvaluatorFactory left;
-    protected final IColumnNormalizedFilterEvaluatorFactory right;
+    protected final IColumnRangeFilterEvaluatorFactory left;
+    protected final IColumnRangeFilterEvaluatorFactory right;
 
-    public AbstractColumnFilterEvaluatorFactory(IColumnNormalizedFilterEvaluatorFactory left,
-            IColumnNormalizedFilterEvaluatorFactory right) {
+    public AbstractColumnFilterEvaluatorFactory(IColumnRangeFilterEvaluatorFactory left,
+            IColumnRangeFilterEvaluatorFactory right) {
         this.left = left;
         this.right = right;
     }
@@ -40,11 +40,11 @@ public abstract class AbstractColumnFilterEvaluatorFactory implements IColumnNor
         return left.toString() + " " + getOp() + " " + right.toString();
     }
 
-    static abstract class AbstractNormalizedEvaluator implements IColumnFilterEvaluator {
+    static abstract class AbstractFilterEvaluator implements IColumnFilterEvaluator {
         protected final IColumnFilterEvaluator left;
         protected final IColumnFilterEvaluator right;
 
-        AbstractNormalizedEvaluator(IColumnFilterEvaluator left, IColumnFilterEvaluator right) {
+        AbstractFilterEvaluator(IColumnFilterEvaluator left, IColumnFilterEvaluator right) {
             this.left = left;
             this.right = right;
         }

@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.tuple.QueryColumnWithMetaTupleReference;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
 import org.apache.asterix.om.types.ARecordType;
@@ -40,19 +40,16 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProj
 public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector {
     private final ARecordType metaType;
     private final ARecordType requestedMetaType;
-    private final Map<String, FunctionCallInformation> metaFunctionCallInfoMap;
 
     public QueryColumnWithMetaTupleProjector(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             ARecordType requestedType, Map<String, FunctionCallInformation> functionCallInfoMap,
-            ARecordType requestedMetaType, Map<String, FunctionCallInformation> metaFunctionCallInfoMap,
-            IColumnNormalizedFilterEvaluatorFactory filterEvaluator,
+            ARecordType requestedMetaType, IColumnRangeFilterEvaluatorFactory filterEvaluator,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context) {
         super(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfoMap, filterEvaluator,
                 columnFilterEvaluatorFactory, warningCollector, context);
         this.metaType = metaType;
         this.requestedMetaType = requestedMetaType;
-        this.metaFunctionCallInfoMap = metaFunctionCallInfoMap;
     }
 
     @Override
@@ -60,8 +57,8 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
         try {
             return QueryColumnWithMetaMetadata.create(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
-                    requestedMetaType, metaFunctionCallInfoMap, normalizedFilterEvaluatorFactory,
-                    columnFilterEvaluatorFactory, warningCollector, context);
+                    requestedMetaType, normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector,
+                    context);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

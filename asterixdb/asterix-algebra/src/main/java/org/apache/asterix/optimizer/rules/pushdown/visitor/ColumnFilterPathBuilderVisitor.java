@@ -46,16 +46,16 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
     private int counter = 0;
 
     public ARecordType buildPath(AnyExpectedSchemaNode anyNode) {
-        return buildPath(anyNode, null, null, null);
+        return buildPath(anyNode, BuiltinType.ANY, null, null);
     }
 
-    public ARecordType buildPath(AnyExpectedSchemaNode anyNode, IAObject constant,
+    public ARecordType buildPath(AnyExpectedSchemaNode anyNode, IAType constType,
             Map<String, FunctionCallInformation> sourceInformationMap, FunctionCallInformation compareFunctionInfo) {
 
         this.sourceInformationMap = sourceInformationMap;
-        this.type = BuiltinType.ANY;
+        this.type = constType;
         if (sourceInformationMap != null) {
-            this.type = rename(constant.getType());
+            this.type = rename(constType);
             sourceInformationMap.put(type.getTypeName(), compareFunctionInfo);
         }
         return (ARecordType) anyNode.accept(this, anyNode);
@@ -104,7 +104,7 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
         IAType[] fieldTypes = { childType };
         String[] fieldNames = { key };
 
-        return new ARecordType(typeName, fieldNames, fieldTypes, false);
+        return new ARecordType(typeName, fieldNames, fieldTypes, true);
     }
 
     private String getTypeName() {

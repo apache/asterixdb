@@ -19,11 +19,11 @@
 package org.apache.asterix.column.filter;
 
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
- * An evaluator created by either {@link IColumnNormalizedFilterEvaluatorFactory}
+ * An evaluator created by either {@link IColumnRangeFilterEvaluatorFactory}
  * or {@link IColumnIterableFilterEvaluatorFactory}.
  */
 public interface IColumnFilterEvaluator {

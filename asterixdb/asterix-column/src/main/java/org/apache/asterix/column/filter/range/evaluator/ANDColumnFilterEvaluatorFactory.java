@@ -16,20 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.evaluator;
+package org.apache.asterix.column.filter.range.evaluator;
 
 import org.apache.asterix.column.filter.FalseColumnFilterEvaluator;
 import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ANDColumnFilterEvaluatorFactory extends AbstractColumnFilterEvaluatorFactory {
     private static final long serialVersionUID = -7902069740719309586L;
 
-    public ANDColumnFilterEvaluatorFactory(IColumnNormalizedFilterEvaluatorFactory left,
-            IColumnNormalizedFilterEvaluatorFactory right) {
+    public ANDColumnFilterEvaluatorFactory(IColumnRangeFilterEvaluatorFactory left,
+            IColumnRangeFilterEvaluatorFactory right) {
         super(left, right);
     }
 
@@ -56,7 +56,7 @@ public class ANDColumnFilterEvaluatorFactory extends AbstractColumnFilterEvaluat
     }
 
     private IColumnFilterEvaluator create(IColumnFilterEvaluator left, IColumnFilterEvaluator right) {
-        return new AbstractNormalizedEvaluator(left, right) {
+        return new AbstractFilterEvaluator(left, right) {
             @Override
             public boolean evaluate() throws HyracksDataException {
                 return left.evaluate() && right.evaluate();

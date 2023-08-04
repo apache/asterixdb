@@ -16,29 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.accessor;
+package org.apache.asterix.column.filter.range.accessor;
 
 import org.apache.asterix.column.filter.FilterAccessorProvider;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.visitor.PathStringBuilderForIATypeVisitor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ColumnFilterNormalizedValueAccessorFactory implements IColumnFilterNormalizedValueAccessorFactory {
+public class ColumnRangeFilterValueAccessorFactory implements IColumnRangeFilterValueAccessorFactory {
     private static final long serialVersionUID = -6341611172763952841L;
     private final ARecordType path;
     private final boolean min;
 
-    public ColumnFilterNormalizedValueAccessorFactory(ARecordType path, boolean min) {
+    public ColumnRangeFilterValueAccessorFactory(ARecordType path, boolean min) {
         this.path = path;
         this.min = min;
     }
 
     @Override
-    public IColumnFilterNormalizedValueAccessor create(FilterAccessorProvider filterAccessorProvider)
+    public IColumnRangeFilterValueAccessor create(FilterAccessorProvider filterAccessorProvider)
             throws HyracksDataException {
-        return filterAccessorProvider.createColumnFilterNormalizedValueAccessor(path, min);
+        return filterAccessorProvider.createRangeFilterValueAccessor(path, min);
     }
 
     @Override

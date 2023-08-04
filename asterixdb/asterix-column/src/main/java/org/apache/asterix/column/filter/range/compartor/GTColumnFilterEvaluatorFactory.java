@@ -16,33 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.compartor;
+package org.apache.asterix.column.filter.range.compartor;
 
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 
-public class LEColumnFilterEvaluatorFactory extends AbstractColumnFilterComparatorFactory {
-    private static final long serialVersionUID = 1068661809768620550L;
+public class GTColumnFilterEvaluatorFactory extends AbstractColumnFilterComparatorFactory {
+    private static final long serialVersionUID = -3104103170926445020L;
 
-    public LEColumnFilterEvaluatorFactory(IColumnFilterNormalizedValueAccessorFactory left,
-            IColumnFilterNormalizedValueAccessorFactory right) {
+    public GTColumnFilterEvaluatorFactory(IColumnRangeFilterValueAccessorFactory left,
+            IColumnRangeFilterValueAccessorFactory right) {
         super(left, right);
     }
 
     @Override
-    protected IColumnFilterEvaluator createComparator(IColumnFilterNormalizedValueAccessor left,
-            IColumnFilterNormalizedValueAccessor right) {
+    protected IColumnFilterEvaluator createComparator(IColumnRangeFilterValueAccessor left,
+            IColumnRangeFilterValueAccessor right) {
         return new AbstractComparator(left, right) {
             @Override
             public boolean evaluate() {
-                return left.getNormalizedValue() <= right.getNormalizedValue();
+                return left.getNormalizedValue() > right.getNormalizedValue();
             }
         };
     }
 
     @Override
     protected String getOpt() {
-        return "<=";
+        return ">";
     }
 }

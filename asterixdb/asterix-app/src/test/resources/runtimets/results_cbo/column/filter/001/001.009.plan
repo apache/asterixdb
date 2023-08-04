@@ -18,7 +18,7 @@ distribute result [$$d] [cardinality: 0.11, op-cost: 0.0, total-cost: 0.11]
                 -- ASSIGN  |PARTITIONED|
                   exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 0.11]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    data-scan []<-[$$20, $$d] <- test.ColumnDataset filter on (and(gt($$19, 1), lt($$19, 3))) [cardinality: 6.0, op-cost: 0.11, total-cost: 0.11]
+                    data-scan []<-[$$20, $$d] <- test.ColumnDataset filter on: and(gt($$d.getField("a"), 1), lt($$d.getField("a"), 3)) range-filter on: and(gt($$d.getField("a"), 1), lt($$d.getField("a"), 3)) [cardinality: 6.0, op-cost: 0.11, total-cost: 0.11]
                     -- DATASOURCE_SCAN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

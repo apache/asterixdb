@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.filter.ArrayPathCheckerVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
@@ -39,6 +38,7 @@ import org.apache.asterix.optimizer.rules.pushdown.descriptor.UseDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.schema.AnyExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaNodeType;
 import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
+import org.apache.asterix.optimizer.rules.pushdown.visitor.ArrayPathCheckerVisitor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.ColumnFilterPathBuilderVisitor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpressionToExpectedSchemaNodeVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -131,7 +131,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
             throws AlgebricksException {
         ILogicalExpression filterExpr = scanDefineDescriptor.getFilterExpression();
         if (filterExpr != null) {
-            filterExpr = orExpression(filterExpr, inlinedExpr);
+            filterExpr = andExpression(filterExpr, inlinedExpr);
             scanDefineDescriptor.setFilterExpression(filterExpr);
         } else {
             scanDefineDescriptor.setFilterExpression(inlinedExpr);
@@ -148,7 +148,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
         return true;
     }
 
-    protected final AbstractFunctionCallExpression orExpression(ILogicalExpression filterExpr,
+    protected final AbstractFunctionCallExpression andExpression(ILogicalExpression filterExpr,
             ILogicalExpression inlinedExpr) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) filterExpr;
         if (!BuiltinFunctions.AND.equals(funcExpr.getFunctionIdentifier())) {

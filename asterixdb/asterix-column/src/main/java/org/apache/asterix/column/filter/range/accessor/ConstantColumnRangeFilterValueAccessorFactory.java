@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.accessor;
+package org.apache.asterix.column.filter.range.accessor;
 
 import org.apache.asterix.column.filter.FilterAccessorProvider;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
@@ -28,20 +28,19 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class ConstantColumnFilterNormalizedValueAccessorFactory implements IColumnFilterNormalizedValueAccessorFactory {
+public class ConstantColumnRangeFilterValueAccessorFactory implements IColumnRangeFilterValueAccessorFactory {
     private static final long serialVersionUID = -4835407779342615453L;
     private final long normalizedValue;
     private final ATypeTag typeTag;
     private final String stringValue;
 
-    private ConstantColumnFilterNormalizedValueAccessorFactory(String stringValue, long normalizedValue,
-            ATypeTag typeTag) {
+    private ConstantColumnRangeFilterValueAccessorFactory(String stringValue, long normalizedValue, ATypeTag typeTag) {
         this.stringValue = stringValue;
         this.normalizedValue = normalizedValue;
         this.typeTag = typeTag;
     }
 
-    public static ConstantColumnFilterNormalizedValueAccessorFactory createFactory(IAObject value) {
+    public static ConstantColumnRangeFilterValueAccessorFactory createFactory(IAObject value) {
         String stringValue;
         long normalizedValue;
         ATypeTag typeTag = value.getType().getTypeTag();
@@ -64,13 +63,13 @@ public class ConstantColumnFilterNormalizedValueAccessorFactory implements IColu
                 return null;
         }
 
-        return new ConstantColumnFilterNormalizedValueAccessorFactory(stringValue, normalizedValue, typeTag);
+        return new ConstantColumnRangeFilterValueAccessorFactory(stringValue, normalizedValue, typeTag);
     }
 
     @Override
-    public IColumnFilterNormalizedValueAccessor create(FilterAccessorProvider filterAccessorProvider)
+    public IColumnRangeFilterValueAccessor create(FilterAccessorProvider filterAccessorProvider)
             throws HyracksDataException {
-        return new ConstantColumnFilterNormalizedValueAccessor(normalizedValue, typeTag);
+        return new ConstantColumnRangeFilterValueAccessor(normalizedValue, typeTag);
     }
 
     @Override

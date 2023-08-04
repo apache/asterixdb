@@ -25,7 +25,7 @@ import java.util.Map;
 import org.apache.asterix.column.assembler.value.MissingValueGetter;
 import org.apache.asterix.column.assembler.value.ValueGetterFactory;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.tuple.AssembledTupleReference;
 import org.apache.asterix.column.tuple.QueryColumnTupleReference;
 import org.apache.asterix.column.values.reader.ColumnValueReaderFactory;
@@ -47,13 +47,13 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
     protected final IWarningCollector warningCollector;
     protected final IHyracksTaskContext context;
-    protected final IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory;
+    protected final IColumnRangeFilterEvaluatorFactory normalizedFilterEvaluatorFactory;
     protected final IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory;
     private final AssembledTupleReference assembledTupleReference;
 
     public QueryColumnTupleProjector(ARecordType datasetType, int numberOfPrimaryKeys, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfoMap,
-            IColumnNormalizedFilterEvaluatorFactory normalizedFilterEvaluatorFactory,
+            IColumnRangeFilterEvaluatorFactory normalizedFilterEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context) {
         this.datasetType = datasetType;

@@ -30,7 +30,7 @@ import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.IFilterApplier;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.operation.query.ColumnAssembler;
 import org.apache.asterix.column.operation.query.QueryColumnMetadata;
 import org.apache.asterix.column.values.IColumnValuesReader;
@@ -46,8 +46,8 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeRea
 
 public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleReference {
     private final ColumnAssembler assembler;
-    private final IColumnFilterEvaluator normalizedFilterEvaluator;
-    private final List<IColumnFilterNormalizedValueAccessor> filterValueAccessors;
+    private final IColumnFilterEvaluator rangeFilterEvaluator;
+    private final List<IColumnRangeFilterValueAccessor> filterValueAccessors;
     private final IColumnIterableFilterEvaluator columnFilterEvaluator;
     private final IFilterApplier filterApplier;
     private final List<IColumnValuesReader> filterColumnReaders;
@@ -58,7 +58,7 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
         super(componentIndex, frame, columnMetadata, multiPageOp);
         assembler = columnMetadata.getAssembler();
 
-        normalizedFilterEvaluator = columnMetadata.getNormalizedFilterEvaluator();
+        rangeFilterEvaluator = columnMetadata.getRangeFilterEvaluator();
         filterValueAccessors = columnMetadata.getFilterValueAccessors();
 
         columnFilterEvaluator = columnMetadata.getColumnFilterEvaluator();
@@ -91,7 +91,7 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
         //Skip filters
         pageZero.position(pageZero.position() + numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE);
         //Check if we should read all column pages
-        boolean readColumns = normalizedFilterEvaluator.evaluate();
+        boolean readColumns = rangeFilterEvaluator.evaluate();
         assembler.reset(readColumns ? numberOfTuples : 0);
         columnFilterEvaluator.reset();
         return readColumns;

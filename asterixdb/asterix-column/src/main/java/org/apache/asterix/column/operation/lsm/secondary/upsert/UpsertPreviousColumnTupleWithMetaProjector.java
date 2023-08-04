@@ -42,7 +42,7 @@ final class UpsertPreviousColumnTupleWithMetaProjector implements IColumnTuplePr
         // +2 one for the record and one for meta
         builder = new ArrayTupleBuilder(numberOfPrimaryKeys + 2);
         projector = new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
-                Collections.emptyMap(), metaType, Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                Collections.emptyMap(), metaType, NoOpColumnFilterEvaluatorFactory.INSTANCE,
                 NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
     }
 

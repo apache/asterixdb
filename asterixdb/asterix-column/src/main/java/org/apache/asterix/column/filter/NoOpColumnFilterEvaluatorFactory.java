@@ -20,7 +20,7 @@ package org.apache.asterix.column.filter;
 
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -28,7 +28,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * The factory returns {@link TrueColumnFilterEvaluator#INSTANCE} which evaluates always to true
  */
 public class NoOpColumnFilterEvaluatorFactory
-        implements IColumnNormalizedFilterEvaluatorFactory, IColumnIterableFilterEvaluatorFactory {
+        implements IColumnRangeFilterEvaluatorFactory, IColumnIterableFilterEvaluatorFactory {
     private static final long serialVersionUID = -7122361396576592000L;
     public static final NoOpColumnFilterEvaluatorFactory INSTANCE = new NoOpColumnFilterEvaluatorFactory();
 

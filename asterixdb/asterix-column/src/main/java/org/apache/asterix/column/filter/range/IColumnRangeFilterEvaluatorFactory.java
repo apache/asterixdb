@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized;
+package org.apache.asterix.column.filter.range;
 
 import java.io.Serializable;
 import java.util.PriorityQueue;
@@ -35,6 +35,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * @see IColumnBatchWriter#writeColumns(PriorityQueue)
  */
 @FunctionalInterface
-public interface IColumnNormalizedFilterEvaluatorFactory extends Serializable {
+public interface IColumnRangeFilterEvaluatorFactory extends Serializable {
     IColumnFilterEvaluator create(FilterAccessorProvider filterAccessorProvider) throws HyracksDataException;
 }

@@ -35,8 +35,8 @@ import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
 import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
@@ -69,7 +69,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     private final FieldNamesDictionary fieldNamesDictionary;
     private final PrimitiveColumnValuesReader[] primaryKeyReaders;
     private final IColumnFilterEvaluator normalizedFilterEvaluator;
-    private final List<IColumnFilterNormalizedValueAccessor> filterValueAccessors;
+    private final List<IColumnRangeFilterValueAccessor> filterValueAccessors;
     private final IColumnIterableFilterEvaluator columnFilterEvaluator;
     private final List<IColumnValuesReader> filterColumnReaders;
 
@@ -79,7 +79,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator normalizedFilterEvaluator,
-            List<IColumnFilterNormalizedValueAccessor> filterValueAccessors,
+            List<IColumnRangeFilterValueAccessor> filterValueAccessors,
             IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders)
             throws HyracksDataException {
         super(datasetType, metaType, primaryKeyReaders.length, serializedMetadata, -1);
@@ -105,11 +105,11 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         return primaryKeyReaders;
     }
 
-    public final IColumnFilterEvaluator getNormalizedFilterEvaluator() {
+    public final IColumnFilterEvaluator getRangeFilterEvaluator() {
         return normalizedFilterEvaluator;
     }
 
-    public final List<IColumnFilterNormalizedValueAccessor> getFilterValueAccessors() {
+    public final List<IColumnRangeFilterValueAccessor> getFilterValueAccessors() {
         return filterValueAccessors;
     }
 
@@ -175,7 +175,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             IValueReference serializedMetadata, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfoMap,
-            IColumnNormalizedFilterEvaluatorFactory normalizedEvaluatorFactory,
+            IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
@@ -204,7 +204,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         IColumnFilterEvaluator normalizedFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         IColumnIterableFilterEvaluator columnFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         List<IColumnValuesReader> filterColumnReaders = Collections.emptyList();
-        List<IColumnFilterNormalizedValueAccessor> filterValueAccessors = Collections.emptyList();
+        List<IColumnRangeFilterValueAccessor> filterValueAccessors = Collections.emptyList();
         if (context != null) {
             FilterAccessorProvider filterAccessorProvider =
                     new FilterAccessorProvider(root, clipperVisitor, readerFactory, valueGetterFactory);

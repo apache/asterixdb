@@ -32,8 +32,8 @@ import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -64,7 +64,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory,
-            IColumnFilterEvaluator filterEvaluator, List<IColumnFilterNormalizedValueAccessor> filterValueAccessors,
+            IColumnFilterEvaluator filterEvaluator, List<IColumnRangeFilterValueAccessor> filterValueAccessors,
             IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders)
             throws HyracksDataException {
         super(datasetType, metaType, primaryKeyReaders, serializedMetadata, fieldNamesDictionary, root, readerFactory,
@@ -121,8 +121,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             int numberOfPrimaryKeys, IValueReference serializedMetadata, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, ARecordType requestedType,
             Map<String, FunctionCallInformation> functionCallInfo, ARecordType metaRequestedType,
-            Map<String, FunctionCallInformation> metaFunctionCallInfo,
-            IColumnNormalizedFilterEvaluatorFactory normalizedEvaluatorFactory,
+            IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
@@ -139,20 +138,18 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         ObjectSchemaNode root = (ObjectSchemaNode) AbstractSchemaNode.deserialize(input, null);
         ObjectSchemaNode metaRoot = (ObjectSchemaNode) AbstractSchemaNode.deserialize(input, null);
 
-        //Clip dataset schema
         SchemaClipperVisitor clipperVisitor =
                 new SchemaClipperVisitor(fieldNamesDictionary, functionCallInfo, warningCollector);
+        //Clip dataset schema
         ObjectSchemaNode clippedRoot = clip(requestedType, root, clipperVisitor);
 
         //Clip meta schema
-        SchemaClipperVisitor metaClipperVisitor =
-                new SchemaClipperVisitor(fieldNamesDictionary, metaFunctionCallInfo, warningCollector);
-        ObjectSchemaNode metaClippedRoot = clip(metaRequestedType, metaRoot, metaClipperVisitor);
+        ObjectSchemaNode metaClippedRoot = clip(metaRequestedType, metaRoot, clipperVisitor);
 
         IColumnFilterEvaluator normalizedFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         IColumnIterableFilterEvaluator columnFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         List<IColumnValuesReader> filterColumnReaders = Collections.emptyList();
-        List<IColumnFilterNormalizedValueAccessor> filterValueAccessors = Collections.emptyList();
+        List<IColumnRangeFilterValueAccessor> filterValueAccessors = Collections.emptyList();
         if (context != null) {
             FilterAccessorProvider filterAccessorProvider =
                     new FilterAccessorProvider(root, clipperVisitor, readerFactory, valueGetterFactory);

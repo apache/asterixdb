@@ -30,9 +30,9 @@ import org.apache.asterix.column.assembler.value.IValueGetterFactory;
 import org.apache.asterix.column.filter.iterable.accessor.ColumnFilterValueAccessorEvaluator;
 import org.apache.asterix.column.filter.iterable.accessor.MissingEvaluator;
 import org.apache.asterix.column.filter.iterable.accessor.UnionColumnFilterValueAccessorEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.accessor.ColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.accessor.NoOpColumnFilterValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.accessor.ColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.accessor.NoOpColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
@@ -54,7 +54,7 @@ public class FilterAccessorProvider {
     private final SchemaClipperVisitor clipperVisitor;
     private final PathExtractorVisitor pathExtractorVisitor;
     private final Map<ARecordType, PrimitiveSchemaNode> cachedNodes;
-    private final List<IColumnFilterNormalizedValueAccessor> filterAccessors;
+    private final List<IColumnRangeFilterValueAccessor> filterAccessors;
     private final List<IColumnValuesReader> filterColumnReaders;
     private final IValueGetterFactory valueGetterFactory;
 
@@ -79,7 +79,7 @@ public class FilterAccessorProvider {
         cachedNodes.clear();
     }
 
-    public IColumnFilterNormalizedValueAccessor createColumnFilterNormalizedValueAccessor(ARecordType path, boolean min)
+    public IColumnRangeFilterValueAccessor createRangeFilterValueAccessor(ARecordType path, boolean min)
             throws HyracksDataException {
         PrimitiveSchemaNode node = cachedNodes.get(path);
         if (node == null) {
@@ -90,10 +90,10 @@ public class FilterAccessorProvider {
 
         ATypeTag typeTag = node.getTypeTag();
         if (typeTag == ATypeTag.MISSING) {
-            return NoOpColumnFilterValueAccessor.INSTANCE;
+            return NoOpColumnRangeFilterValueAccessor.INSTANCE;
         }
-        IColumnFilterNormalizedValueAccessor accessor =
-                new ColumnFilterNormalizedValueAccessor(node.getColumnIndex(), typeTag, min);
+        IColumnRangeFilterValueAccessor accessor =
+                new ColumnRangeFilterValueAccessor(node.getColumnIndex(), typeTag, min);
         filterAccessors.add(accessor);
         return accessor;
     }
@@ -118,7 +118,7 @@ public class FilterAccessorProvider {
         return new UnionColumnFilterValueAccessorEvaluator(unionReaders, valueGetters);
     }
 
-    public List<IColumnFilterNormalizedValueAccessor> getFilterAccessors() {
+    public List<IColumnRangeFilterValueAccessor> getFilterAccessors() {
         return filterAccessors;
     }
 
@@ -126,11 +126,10 @@ public class FilterAccessorProvider {
         return filterColumnReaders;
     }
 
-    public static void setFilterValues(List<IColumnFilterNormalizedValueAccessor> filterValueAccessors,
-            ByteBuffer pageZero, int numberOfColumns) {
+    public static void setFilterValues(List<IColumnRangeFilterValueAccessor> filterValueAccessors, ByteBuffer pageZero,
+            int numberOfColumns) {
         for (int i = 0; i < filterValueAccessors.size(); i++) {
-            ColumnFilterNormalizedValueAccessor accessor =
-                    (ColumnFilterNormalizedValueAccessor) filterValueAccessors.get(i);
+            ColumnRangeFilterValueAccessor accessor = (ColumnRangeFilterValueAccessor) filterValueAccessors.get(i);
             int columnIndex = accessor.getColumnIndex();
             long normalizedValue;
             if (columnIndex < numberOfColumns) {

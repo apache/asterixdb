@@ -16,18 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.accessor;
+package org.apache.asterix.column.filter.range.accessor;
 
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 
-public final class ConstantColumnFilterNormalizedValueAccessor implements IColumnFilterNormalizedValueAccessor {
+public final class ConstantColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
     private final long normalizedValue;
     private final ATypeTag typeTag;
 
     //TODO add UUID
 
-    public ConstantColumnFilterNormalizedValueAccessor(long normalizedValue, ATypeTag typeTag) {
+    public ConstantColumnRangeFilterValueAccessor(long normalizedValue, ATypeTag typeTag) {
         this.normalizedValue = normalizedValue;
         this.typeTag = typeTag;
     }

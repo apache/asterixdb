@@ -26,7 +26,7 @@ distribute result [$$47] [cardinality: 99.0, op-cost: 0.0, total-cost: 99.0]
                         -- STREAM_PROJECT  |PARTITIONED|
                           exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 99.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$48, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on (gt($$D, " ")) [cardinality: 30.0, op-cost: 99.0, total-cost: 99.0]
+                            data-scan []<-[$$48, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on: gt(scan-collection($$C.getField("dates")), " ") range-filter on: gt(scan-collection($$C.getField("dates")), " ") [cardinality: 30.0, op-cost: 99.0, total-cost: 99.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

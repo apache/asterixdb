@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized.compartor;
+package org.apache.asterix.column.filter.range.compartor;
 
 import org.apache.asterix.column.filter.FalseColumnFilterEvaluator;
 import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessor;
-import org.apache.asterix.column.filter.normalized.IColumnFilterNormalizedValueAccessorFactory;
-import org.apache.asterix.column.filter.normalized.IColumnNormalizedFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-abstract class AbstractColumnFilterComparatorFactory implements IColumnNormalizedFilterEvaluatorFactory {
+abstract class AbstractColumnFilterComparatorFactory implements IColumnRangeFilterEvaluatorFactory {
     private static final long serialVersionUID = 4229059703449173694L;
-    private final IColumnFilterNormalizedValueAccessorFactory left;
-    private final IColumnFilterNormalizedValueAccessorFactory right;
+    private final IColumnRangeFilterValueAccessorFactory left;
+    private final IColumnRangeFilterValueAccessorFactory right;
 
-    AbstractColumnFilterComparatorFactory(IColumnFilterNormalizedValueAccessorFactory left,
-            IColumnFilterNormalizedValueAccessorFactory right) {
+    AbstractColumnFilterComparatorFactory(IColumnRangeFilterValueAccessorFactory left,
+            IColumnRangeFilterValueAccessorFactory right) {
         this.left = left;
         this.right = right;
     }
@@ -43,8 +43,8 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnNormalize
     @Override
     public final IColumnFilterEvaluator create(FilterAccessorProvider filterAccessorProvider)
             throws HyracksDataException {
-        IColumnFilterNormalizedValueAccessor leftAccessor = left.create(filterAccessorProvider);
-        IColumnFilterNormalizedValueAccessor rightAccessor = right.create(filterAccessorProvider);
+        IColumnRangeFilterValueAccessor leftAccessor = left.create(filterAccessorProvider);
+        IColumnRangeFilterValueAccessor rightAccessor = right.create(filterAccessorProvider);
 
         ATypeTag leftTypeTag = leftAccessor.getTypeTag();
         ATypeTag rightTypeTag = rightAccessor.getTypeTag();
@@ -61,8 +61,8 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnNormalize
         return rightTypeTag == ATypeTag.MISSING || leftTypeTag != rightTypeTag;
     }
 
-    protected abstract IColumnFilterEvaluator createComparator(IColumnFilterNormalizedValueAccessor left,
-            IColumnFilterNormalizedValueAccessor right);
+    protected abstract IColumnFilterEvaluator createComparator(IColumnRangeFilterValueAccessor left,
+            IColumnRangeFilterValueAccessor right);
 
     protected abstract String getOpt();
 
@@ -72,10 +72,10 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnNormalize
     }
 
     static abstract class AbstractComparator implements IColumnFilterEvaluator {
-        protected final IColumnFilterNormalizedValueAccessor left;
-        protected final IColumnFilterNormalizedValueAccessor right;
+        protected final IColumnRangeFilterValueAccessor left;
+        protected final IColumnRangeFilterValueAccessor right;
 
-        AbstractComparator(IColumnFilterNormalizedValueAccessor left, IColumnFilterNormalizedValueAccessor right) {
+        AbstractComparator(IColumnRangeFilterValueAccessor left, IColumnRangeFilterValueAccessor right) {
             this.left = left;
             this.right = right;
         }

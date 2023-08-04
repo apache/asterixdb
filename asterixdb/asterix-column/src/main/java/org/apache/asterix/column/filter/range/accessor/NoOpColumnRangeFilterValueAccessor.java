@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.normalized;
+package org.apache.asterix.column.filter.range.accessor;
 
+import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 
-/**
- * Creates a normalized value accessor
- */
-public interface IColumnFilterNormalizedValueAccessor {
-    /**
-     * @return the normalized value
-     */
-    long getNormalizedValue();
+public class NoOpColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
+    public static final IColumnRangeFilterValueAccessor INSTANCE = new NoOpColumnRangeFilterValueAccessor();
 
-    /**
-     * @return the type of the normalized value
-     */
-    ATypeTag getTypeTag();
+    private NoOpColumnRangeFilterValueAccessor() {
+    }
+
+    @Override
+    public long getNormalizedValue() {
+        throw new IllegalStateException("should not be invoked");
+    }
+
+    @Override
+    public ATypeTag getTypeTag() {
+        return ATypeTag.MISSING;
+    }
 }
