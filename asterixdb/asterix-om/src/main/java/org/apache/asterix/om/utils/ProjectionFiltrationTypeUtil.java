@@ -45,7 +45,7 @@ public class ProjectionFiltrationTypeUtil {
     public static ARecordType getRecordType(List<List<String>> paths) throws AlgebricksException {
         ARecordType result = EMPTY_TYPE;
         for (List<String> path : paths) {
-            ARecordType type = getRecordType(path, "root", 0, BuiltinType.ANY);
+            ARecordType type = getPathRecordType(path);
             result = (ARecordType) RecordMergeTypeComputer.merge(result, type);
         }
 
@@ -58,11 +58,15 @@ public class ProjectionFiltrationTypeUtil {
         ARecordType result = EMPTY_TYPE;
         for (int i = 0; i < paths.size(); i++) {
             List<String> path = paths.get(i);
-            ARecordType type = getRecordType(path, "root", 0, types.get(i));
+            ARecordType type = getPathRecordType(path, types.get(i));
             result = (ARecordType) RecordMergeTypeComputer.merge(result, type);
         }
 
         return new ARecordType("root", result.getFieldNames(), result.getFieldTypes(), true);
+    }
+
+    public static ARecordType getPathRecordType(List<String> path) {
+        return getRecordType(path, "root", 0, BuiltinType.ANY);
     }
 
     /**
@@ -96,6 +100,10 @@ public class ProjectionFiltrationTypeUtil {
 
         // Rename
         return new ARecordType("root", result.getFieldNames(), result.getFieldTypes(), true);
+    }
+
+    private static ARecordType getPathRecordType(List<String> path, IAType type) {
+        return getRecordType(path, "root", 0, type);
     }
 
     private static IAType getType(String typeName, List<String> path, int fieldIndex, IAType leafType) {
