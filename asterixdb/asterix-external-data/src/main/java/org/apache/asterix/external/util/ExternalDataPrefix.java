@@ -20,8 +20,8 @@
 package org.apache.asterix.external.util;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.COMPUTED_FIELD_PATTERN;
+import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.PREFIX_DEFAULT_DELIMITER;
-import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.getRecordTypeWithFieldTypes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,22 +35,28 @@ import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public class ExternalDataPrefix {
 
     private final String original;
-    private final String root;
+    private String root;
     private final boolean endsWithSlash;
-
     private final List<String> segments;
-    private final ComputedFieldDetails computedFieldDetails;
+
+    private final List<String> computedFieldNames = new ArrayList<>();
+    private final List<IAType> computedFieldTypes = new ArrayList<>();
+    private final List<Integer> computedFieldSegmentIndexes = new ArrayList<>();
+    private final List<ARecordType> paths = new ArrayList<>();
+    private final Map<Integer, Pair<List<String>, List<IAType>>> computedFields = new HashMap<>();
 
     public static final String PREFIX_ROOT_FIELD_NAME = "prefix-root";
     public static final Set<ATypeTag> supportedTypes = new HashSet<>();
@@ -60,62 +66,83 @@ public class ExternalDataPrefix {
         supportedTypes.add(BuiltinType.AINT32.getTypeTag());
     }
 
+    public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
+        this(configuration.get(DEFINITION_FIELD_NAME));
+    }
+
     public ExternalDataPrefix(String prefix) throws AlgebricksException {
         this.original = prefix != null ? prefix : "";
         this.endsWithSlash = this.original.endsWith("/");
 
-        this.segments = getPrefixSegments(this.original);
+        segments = extractPrefixSegments(original);
+        extractComputedFields();
+        extractRoot();
 
-        computedFieldDetails = getComputedFields(segments);
-        this.root = getPrefixRoot(segments, computedFieldDetails.getComputedFieldIndexes());
+        for (int i = 0; i < computedFieldSegmentIndexes.size(); i++) {
+            int segmentIndex = computedFieldSegmentIndexes.get(i);
+
+            if (computedFields.containsKey(segmentIndex)) {
+                Pair<List<String>, List<IAType>> pair = computedFields.get(segmentIndex);
+                pair.getLeft().add(computedFieldNames.get(i));
+                pair.getRight().add(computedFieldTypes.get(i));
+            } else {
+                List<String> names = new ArrayList<>();
+                List<IAType> types = new ArrayList<>();
+
+                names.add(computedFieldNames.get(i));
+                types.add(computedFieldTypes.get(i));
+                computedFields.put(segmentIndex, Pair.of(names, types));
+            }
+        }
     }
 
     public String getOriginal() {
         return original;
     }
 
+    public boolean isEndsWithSlash() {
+        return endsWithSlash;
+    }
+
     public String getRoot() {
         return root;
     }
 
-    public boolean isEndsWithSlash() {
-        return endsWithSlash;
+    public boolean hasComputedFields() {
+        return !computedFieldNames.isEmpty();
     }
 
     public List<String> getSegments() {
         return segments;
     }
 
-    public ComputedFieldDetails getComputedFieldDetails() {
-        return computedFieldDetails;
+    public List<String> getComputedFieldNames() {
+        return computedFieldNames;
+    }
+
+    public List<IAType> getComputedFieldTypes() {
+        return computedFieldTypes;
+    }
+
+    public List<Integer> getComputedFieldSegmentIndexes() {
+        return computedFieldSegmentIndexes;
+    }
+
+    public List<ARecordType> getPaths() {
+        return paths;
     }
 
     /**
-     * returns the segments of a prefix, separated by the delimiter
-     *
-     * @param prefix prefix
-     * @return an array of prefix segments
+     * extracts the segments of a prefix, separated by the delimiter
      */
-    public static List<String> getPrefixSegments(String prefix) {
+    private List<String> extractPrefixSegments(String prefix) {
         return prefix.isEmpty() ? Collections.emptyList() : Arrays.asList(prefix.split(PREFIX_DEFAULT_DELIMITER));
     }
 
     /**
-     * Extracts and returns the computed fields and their indexes from the provided prefix
-     * @param prefix prefix
-     *
-     * @return Pair of computed field names and their segment index in the prefix
+     * extracts and returns the computed fields and their indexes from the provided prefix
      */
-    public static ComputedFieldDetails getComputedFields(String prefix) throws AlgebricksException {
-        List<String> segments = getPrefixSegments(prefix);
-        return getComputedFields(segments);
-    }
-
-    public static ComputedFieldDetails getComputedFields(List<String> segments) throws AlgebricksException {
-        List<List<String>> computedFieldsNames = new ArrayList<>();
-        List<IAType> computedFieldTypes = new ArrayList<>();
-        List<Integer> computedFieldIndexes = new ArrayList<>();
-
+    private void extractComputedFields() throws AlgebricksException {
         // check if there are any segments before doing any testing
         if (!segments.isEmpty()) {
             // search for computed fields in each segment
@@ -132,15 +159,38 @@ public class ExternalDataPrefix {
                     IAType type = BuiltinTypeMap.getBuiltinType(typePart);
                     validateSupported(type.getTypeTag());
 
-                    List<String> nameParts = List.of(namePart.split("\\."));
-                    computedFieldsNames.add(nameParts);
+                    computedFieldNames.add(namePart);
                     computedFieldTypes.add(type);
-                    computedFieldIndexes.add(i);
+                    computedFieldSegmentIndexes.add(i);
+
+                    List<String> nameParts = List.of(namePart.split("\\."));
+                    paths.add(ProjectionFiltrationTypeUtil.getPathRecordType(nameParts));
                 }
             }
         }
+    }
 
-        return new ComputedFieldDetails(computedFieldsNames, computedFieldTypes, computedFieldIndexes);
+    /**
+     * Returns the longest static path (root) before encountering the first computed field
+     */
+    private void extractRoot() {
+        StringBuilder builder = new StringBuilder();
+
+        // check if there are any computed fields before doing any testing
+        if (computedFieldNames.isEmpty()) {
+            root = original;
+            return;
+        }
+
+        // construct all static parts before encountering the first computed field
+        for (int i = 0; i < computedFieldSegmentIndexes.get(0); i++) {
+            builder.append(segments.get(i)).append("/");
+        }
+
+        // remove last "/" and append it only if needed
+        root = builder.toString();
+        root = root.substring(0, root.length() - 1);
+        root = ExternalDataUtils.appendSlash(root, endsWithSlash);
     }
 
     /**
@@ -149,103 +199,50 @@ public class ExternalDataPrefix {
      * @param type type to check
      * @throws CompilationException exception if type is not supported
      */
-    private static void validateSupported(ATypeTag type) throws CompilationException {
+    private void validateSupported(ATypeTag type) throws CompilationException {
         if (!supportedTypes.contains(type)) {
             throw new CompilationException(ErrorCode.UNSUPPORTED_COMPUTED_FIELD_TYPE, type);
         }
     }
 
     /**
-     * Returns the longest static path (root) before encountering the first computed field
+     * Evaluates whether the provided key satisfies the conditions of the evaluator or not
      *
-     * @param prefix prefix
-     * @return prefix root
+     * @param key ke
+     * @param evaluator evaluator
+     *
+     * @return true if key satisfies the evaluator conditions, false otherwise
      */
-    public String getPrefixRoot(String prefix) throws AlgebricksException {
-        List<String> prefixSegments = getPrefixSegments(prefix);
-        List<Integer> computedFieldIndexes = getComputedFields(prefix).getComputedFieldIndexes();
-        return getPrefixRoot(prefixSegments, computedFieldIndexes);
+    public boolean evaluate(String key, IExternalFilterEvaluator evaluator) throws AlgebricksException {
+        List<String> keySegments = extractPrefixSegments(key);
+
+        // segments of object key have to be larger than segments of the prefix
+        if (keySegments.size() <= segments.size()) {
+            return false;
+        }
+
+        // extract values for all compute fields and set them in the evaluator
+        List<String> values = extractValues(keySegments);
+        for (int i = 0; i < computedFieldNames.size(); i++) {
+            evaluator.setValue(i, values.get(i));
+        }
+
+        return evaluator.evaluate();
     }
 
-    public String getPrefixRoot(List<String> prefixSegments, List<Integer> computedFieldIndexes) {
-        StringBuilder root = new StringBuilder();
+    /**
+     * extracts the computed fields values from the object's key
+     *
+     * @param keySegments object's key segments
+     * @return list of computed field values
+     */
+    private List<String> extractValues(List<String> keySegments) {
+        List<String> values = new ArrayList<>();
 
-        // check if there are any computed fields before doing any testing
-        if (computedFieldIndexes.size() == 0) {
-            return this.original;
+        for (Integer computedFieldSegmentIndex : computedFieldSegmentIndexes) {
+            values.add(keySegments.get(computedFieldSegmentIndex));
         }
 
-        // construct all static parts before encountering the first computed field
-        for (int i = 0; i < computedFieldIndexes.get(0); i++) {
-            root.append(prefixSegments.get(i)).append("/");
-        }
-
-        // remove last "/" and append it only if needed
-        String finalRoot = root.toString();
-        finalRoot = finalRoot.substring(0, finalRoot.length() - 1);
-        return ExternalDataUtils.appendSlash(finalRoot, this.endsWithSlash);
-    }
-
-    public static class ComputedFieldDetails {
-        private final List<List<String>> computedFieldNames;
-        private final List<IAType> computedFieldTypes;
-        private final List<Integer> computedFieldIndexes;
-        private final Map<Integer, Pair<List<List<String>>, List<IAType>>> computedFields = new HashMap<>();
-        private final ARecordType recordType;
-
-        public ComputedFieldDetails(List<List<String>> computedFieldNames, List<IAType> computedFieldTypes,
-                List<Integer> computedFieldIndexes) throws AlgebricksException {
-            this.computedFieldNames = computedFieldNames;
-            this.computedFieldTypes = computedFieldTypes;
-            this.computedFieldIndexes = computedFieldIndexes;
-
-            this.recordType = getRecordTypeWithFieldTypes(computedFieldNames, computedFieldTypes);
-
-            for (int i = 0; i < computedFieldIndexes.size(); i++) {
-                int index = computedFieldIndexes.get(i);
-
-                if (computedFields.containsKey(index)) {
-                    Pair<List<List<String>>, List<IAType>> pair = computedFields.get(index);
-                    pair.getLeft().add(computedFieldNames.get(i));
-                    pair.getRight().add(computedFieldTypes.get(i));
-                } else {
-                    List<List<String>> names = new ArrayList<>();
-                    List<IAType> types = new ArrayList<>();
-
-                    names.add(computedFieldNames.get(i));
-                    types.add(computedFieldTypes.get(i));
-                    computedFields.put(index, Pair.of(names, types));
-                }
-            }
-        }
-
-        public boolean isEmpty() {
-            return computedFieldNames.isEmpty();
-        }
-
-        public List<List<String>> getComputedFieldNames() {
-            return computedFieldNames;
-        }
-
-        public List<IAType> getComputedFieldTypes() {
-            return computedFieldTypes;
-        }
-
-        public List<Integer> getComputedFieldIndexes() {
-            return computedFieldIndexes;
-        }
-
-        public ARecordType getRecordType() {
-            return recordType;
-        }
-
-        public Map<Integer, Pair<List<List<String>>, List<IAType>>> getComputedFields() {
-            return computedFields;
-        }
-
-        @Override
-        public String toString() {
-            return computedFields.toString();
-        }
+        return values;
     }
 }

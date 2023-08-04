@@ -18,14 +18,14 @@
  */
 package org.apache.asterix.common.external;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
 public interface IExternalFilterEvaluator {
     boolean isEmpty();
 
     boolean isComputedFieldUsed(int index);
 
-    void setValue(int index, String stringValue) throws HyracksDataException;
+    void setValue(int index, String stringValue) throws AlgebricksException;
 
-    boolean evaluate() throws HyracksDataException;
+    boolean evaluate() throws AlgebricksException;
 }

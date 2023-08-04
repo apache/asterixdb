@@ -752,11 +752,20 @@ public class ExternalDataUtils {
     }
 
     public static String getPrefix(Map<String, String> configuration, boolean appendSlash) {
+        String root = configuration.get(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME);
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         String subPath = configuration.get(ExternalDataConstants.SUBPATH);
 
+        boolean hasRoot = root != null && !root.isEmpty();
         boolean hasDefinition = definition != null && !definition.isEmpty();
         boolean hasSubPath = subPath != null && !subPath.isEmpty();
+
+        // if computed fields are used, subpath will not take effect. we can tell if we're using a computed field or
+        // not by checking if the root matches the definition or not, they never match if computed fields are used
+        if (hasRoot && hasDefinition && !root.equals(definition)) {
+            return appendSlash(root, appendSlash);
+        }
+
         if (hasDefinition && !hasSubPath) {
             return appendSlash(definition, appendSlash);
         }

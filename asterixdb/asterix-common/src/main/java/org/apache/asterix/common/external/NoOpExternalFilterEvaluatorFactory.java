@@ -19,7 +19,6 @@
 package org.apache.asterix.common.external;
 
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class NoOpExternalFilterEvaluatorFactory implements IExternalFilterEvaluatorFactory {
@@ -30,8 +29,7 @@ public class NoOpExternalFilterEvaluatorFactory implements IExternalFilterEvalua
     }
 
     @Override
-    public IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector)
-            throws HyracksDataException {
+    public IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector) {
         return NoOpExternalFilterEvaluator.INSTANCE;
     }
 }

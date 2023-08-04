@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.external;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-
 class NoOpExternalFilterEvaluator implements IExternalFilterEvaluator {
     static final IExternalFilterEvaluator INSTANCE = new NoOpExternalFilterEvaluator();
 
@@ -37,12 +35,12 @@ class NoOpExternalFilterEvaluator implements IExternalFilterEvaluator {
     }
 
     @Override
-    public void setValue(int index, String stringValue) throws HyracksDataException {
+    public void setValue(int index, String stringValue) {
         throw new IndexOutOfBoundsException("Number of paths is 0");
     }
 
     @Override
-    public boolean evaluate() throws HyracksDataException {
+    public boolean evaluate() {
         return true;
     }
 }
