@@ -21,6 +21,7 @@ package org.apache.asterix.app.nc;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -444,17 +445,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
                 ncExtensionManager.getMetadataExtensions(), partitionId);
 
-        //noinspection unchecked
-        ConcurrentHashMap<CcId, IAsterixStateProxy> proxyMap =
-                (ConcurrentHashMap<CcId, IAsterixStateProxy>) getServiceContext().getDistributedState();
-        if (proxyMap == null) {
-            throw new IllegalStateException("Metadata node cannot access distributed state");
-        }
-
         // This is a special case, we just give the metadataNode directly.
         // This way we can delay the registration of the metadataNode until
         // it is completely initialized.
-        MetadataManager.initialize(proxyMap.values(), MetadataNode.INSTANCE);
+        MetadataManager.initialize(getAsterixStateProxies(), MetadataNode.INSTANCE);
         MetadataBootstrap.startUniverse(getServiceContext(), newUniverse);
         MetadataBootstrap.startDDLRecovery();
         ncExtensionManager.initializeMetadata(getServiceContext());
@@ -480,6 +474,17 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             UnicastRemoteObject.unexportObject(MetadataNode.INSTANCE, false);
         }
         metadataNodeStub = null;
+    }
+
+    protected Collection<IAsterixStateProxy> getAsterixStateProxies() {
+        //noinspection unchecked
+        ConcurrentHashMap<CcId, IAsterixStateProxy> proxyMap =
+                (ConcurrentHashMap<CcId, IAsterixStateProxy>) getServiceContext().getDistributedState();
+        if (proxyMap == null) {
+            throw new IllegalStateException("Metadata node cannot access distributed state");
+        }
+
+        return proxyMap.values();
     }
 
     @Override
