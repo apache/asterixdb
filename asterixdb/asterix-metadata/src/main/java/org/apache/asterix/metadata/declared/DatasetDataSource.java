@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -139,7 +140,8 @@ public class DatasetDataSource extends DataSource {
                 properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
                 ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
-                        edd.getAdapter(), properties, (ARecordType) itemType, null, context.getWarningCollector());
+                        edd.getAdapter(), properties, (ARecordType) itemType, context.getWarningCollector(),
+                        NoOpExternalFilterEvaluatorFactory.INSTANCE);
                 return metadataProvider.getExternalDatasetScanRuntime(jobSpec, itemType, adapterFactory,
                         tupleFilterFactory, outputLimit);
             case INTERNAL:

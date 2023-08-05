@@ -43,6 +43,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
@@ -899,13 +900,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     protected ITypedAdapterFactory getConfiguredAdapterFactory(Dataset dataset, String adapterName,
-            Map<String, String> configuration, ARecordType itemType, ARecordType metaType,
-            IWarningCollector warningCollector) throws AlgebricksException {
+            Map<String, String> configuration, ARecordType itemType, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
         try {
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
             return AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
-                    configuration, itemType, metaType, warningCollector);
+                    configuration, itemType, null, warningCollector, filterEvaluatorFactory);
         } catch (Exception e) {
             throw new AlgebricksException("Unable to create adapter", e);
         }

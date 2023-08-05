@@ -27,6 +27,7 @@ import java.util.Set;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -62,10 +63,11 @@ public interface IExternalDataSourceFactory extends Serializable {
      * submitted AQL statement and any additional pairs added by the compiler
      *
      * @param configuration
+     * @param filterEvaluatorFactory
      * @throws AsterixException
      */
-    void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException, HyracksDataException;
+    void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException;
 
     /**
      * returns the passed partition constraints if not null, otherwise returns round robin absolute partition

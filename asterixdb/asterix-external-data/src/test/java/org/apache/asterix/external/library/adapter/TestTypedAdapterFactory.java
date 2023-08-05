@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.dataflow.TupleForwarder;
 import org.apache.asterix.external.parser.ADMDataParser;
@@ -106,7 +107,7 @@ public class TestTypedAdapterFactory implements ITypedAdapterFactory {
 
     @Override
     public void configure(ICCServiceContext serviceContext, Map<String, String> configuration,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory) {
         this.configuration = configuration;
     }
 

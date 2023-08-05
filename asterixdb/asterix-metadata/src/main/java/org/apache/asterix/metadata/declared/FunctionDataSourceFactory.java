@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
@@ -52,8 +53,8 @@ public class FunctionDataSourceFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException, HyracksDataException {
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         // No Op
     }
 

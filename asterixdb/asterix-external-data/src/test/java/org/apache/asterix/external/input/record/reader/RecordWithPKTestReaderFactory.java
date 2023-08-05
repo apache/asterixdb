@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -50,7 +51,7 @@ public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<Recor
 
     @Override
     public void configure(IServiceContext serviceCtx, final Map<String, String> configuration,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory) {
         this.serviceCtx = serviceCtx;
     }
 

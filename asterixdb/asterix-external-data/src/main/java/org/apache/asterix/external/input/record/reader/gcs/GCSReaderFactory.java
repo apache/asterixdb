@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -59,13 +60,13 @@ public class GCSReaderFactory extends StreamRecordReaderFactory {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException, HyracksDataException {
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         this.configuration = configuration;
 
         // Stream factory
         streamFactory = new GCSInputStreamFactory();
-        streamFactory.configure(ctx, configuration, warningCollector);
+        streamFactory.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         // record reader
         recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);

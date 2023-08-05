@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -144,7 +145,8 @@ public class LoadableDataSource extends DataSource {
         LoadableDataSource alds = (LoadableDataSource) dataSource;
         ARecordType itemType = (ARecordType) alds.getLoadedType();
         ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(alds.getTargetDataset(),
-                alds.getAdapter(), alds.getAdapterProperties(), itemType, null, context.getWarningCollector());
+                alds.getAdapter(), alds.getAdapterProperties(), itemType, context.getWarningCollector(),
+                NoOpExternalFilterEvaluatorFactory.INSTANCE);
         RecordDescriptor rDesc = JobGenHelper.mkRecordDescriptor(typeEnv, opSchema, context);
         return metadataProvider.getLoadableDatasetScanRuntime(jobSpec, adapterFactory, rDesc);
     }

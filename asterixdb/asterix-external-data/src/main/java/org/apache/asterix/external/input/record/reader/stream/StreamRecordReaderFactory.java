@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -83,10 +84,11 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
+            throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
         configureInputStreamFactory(configuration);
-        streamFactory.configure(serviceCtx, configuration, warningCollector);
+        streamFactory.configure(serviceCtx, configuration, warningCollector, filterEvaluatorFactory);
         recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
     }
 

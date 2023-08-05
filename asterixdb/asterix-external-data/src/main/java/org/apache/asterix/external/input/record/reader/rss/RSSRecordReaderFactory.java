@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -62,7 +63,7 @@ public class RSSRecordReaderFactory implements IRecordReaderFactory<SyndEntry> {
 
     @Override
     public void configure(IServiceContext serviceContext, Map<String, String> configuration,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory) {
         this.serviceContext = serviceContext;
         String url = configuration.get(ExternalDataConstants.KEY_RSS_URL);
         if (url == null) {

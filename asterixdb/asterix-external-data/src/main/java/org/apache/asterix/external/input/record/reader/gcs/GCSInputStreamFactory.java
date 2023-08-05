@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -47,9 +48,9 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException {
-        super.configure(ctx, configuration, warningCollector);
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+        super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         // Ensure the validity of include/exclude
         ExternalDataUtils.validateIncludeExclude(configuration);
@@ -65,15 +66,15 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
     /**
      * To efficiently utilize the parallelism, work load will be distributed amongst the partitions based on the file
      * size.
-     *
+     * <p>
      * Example:
      * File1 1mb, File2 300kb, File3 300kb, File4 300kb
-     *
+     * <p>
      * Distribution:
      * Partition1: [File1]
      * Partition2: [File2, File3, File4]
      *
-     * @param items items
+     * @param items           items
      * @param partitionsCount Partitions count
      */
     private void distributeWorkLoad(List<Blob> items, int partitionsCount) {

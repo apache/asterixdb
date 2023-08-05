@@ -25,6 +25,8 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
@@ -118,7 +120,8 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
         if (dataSourceFactory == null) {
             dataSourceFactory = createExternalDataSourceFactory(configuration);
             // create and configure parser factory
-            dataSourceFactory.configure(serviceContext, configuration, warningCollector);
+            dataSourceFactory.configure(serviceContext, configuration, warningCollector,
+                    NoOpExternalFilterEvaluatorFactory.INSTANCE);
         }
         if (dataParserFactory == null) {
             // create and configure parser factory
@@ -131,12 +134,13 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
 
     @Override
     public void configure(ICCServiceContext serviceContext, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
+            throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
         ICcApplicationContext appCtx = (ICcApplicationContext) serviceContext.getApplicationContext();
         ExternalDataUtils.validateDataSourceParameters(configuration);
         dataSourceFactory = createExternalDataSourceFactory(configuration);
-        dataSourceFactory.configure(serviceContext, configuration, warningCollector);
+        dataSourceFactory.configure(serviceContext, configuration, warningCollector, filterEvaluatorFactory);
         ExternalDataUtils.validateDataParserParameters(configuration);
         dataParserFactory = createDataParserFactory(configuration);
         dataParserFactory.setRecordType(recordType);
@@ -199,10 +203,8 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
     /**
      * Use pre-configured datasource factory For function datasources
      *
-     * @param dataSourceFactory
-     *         the function datasource factory
-     * @param dataParserFactory
-     *         the function data parser factory
+     * @param dataSourceFactory the function datasource factory
+     * @param dataParserFactory the function data parser factory
      * @throws AlgebricksException
      */
     public void configure(IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory)

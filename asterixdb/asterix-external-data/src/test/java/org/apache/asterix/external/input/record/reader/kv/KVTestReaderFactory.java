@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -60,7 +61,7 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
 
     @Override
     public void configure(IServiceContext serviceCtx, final Map<String, String> configuration,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory) {
         this.serviceCtx = serviceCtx;
         if (configuration.containsKey("num-of-records")) {
             numOfRecords = Integer.parseInt(configuration.get("num-of-records"));

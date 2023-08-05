@@ -24,6 +24,7 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -55,14 +56,20 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /** The unique identifier of the feed that is being ingested. **/
+    /**
+     * The unique identifier of the feed that is being ingested.
+     **/
     private final EntityId feedId;
 
     private final FeedPolicyAccessor policyAccessor;
     private final ARecordType adapterOutputType;
-    /** The adaptor factory that is used to create an instance of the feed adaptor **/
+    /**
+     * The adaptor factory that is used to create an instance of the feed adaptor
+     **/
     private ITypedAdapterFactory adaptorFactory;
-    /** The library that contains the adapter in use. **/
+    /**
+     * The library that contains the adapter in use.
+     **/
     private DataverseName adaptorLibraryDataverse;
     private String adaptorLibraryName;
     /**
@@ -70,7 +77,9 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
      * This value is used only in the case of external adapters.
      **/
     private String adaptorFactoryClassName;
-    /** The configuration parameters associated with the adapter. **/
+    /**
+     * The configuration parameters associated with the adapter.
+     **/
     private Map<String, String> adaptorConfiguration;
 
     public FeedIntakeOperatorDescriptor(JobSpecification spec, IFeed primaryFeed, ITypedAdapterFactory adapterFactory,
@@ -120,7 +129,8 @@ public class FeedIntakeOperatorDescriptor extends AbstractSingleActivityOperator
             try {
                 adapterFactory = (ITypedAdapterFactory) (classLoader.loadClass(adaptorFactoryClassName).newInstance());
                 adapterFactory.setOutputType(adapterOutputType);
-                adapterFactory.configure(null, adaptorConfiguration, ctx.getWarningCollector());
+                adapterFactory.configure(null, adaptorConfiguration, ctx.getWarningCollector(),
+                        NoOpExternalFilterEvaluatorFactory.INSTANCE);
             } catch (Exception e) {
                 throw HyracksDataException.create(e);
             }

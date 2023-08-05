@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -52,9 +53,9 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     }
 
     @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException {
-        super.configure(ctx, configuration, warningCollector);
+    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+        super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
         // Ensure the validity of include/exclude

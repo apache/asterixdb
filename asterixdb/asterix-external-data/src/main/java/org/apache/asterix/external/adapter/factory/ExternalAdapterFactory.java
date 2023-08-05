@@ -24,6 +24,8 @@ import java.util.Map;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -66,7 +68,7 @@ public final class ExternalAdapterFactory implements ITypedAdapterFactory {
 
     @Override
     public void configure(ICCServiceContext serviceContext, Map<String, String> configuration,
-            IWarningCollector warningCollector) {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory) {
         this.serviceContext = serviceContext;
         this.configuration = configuration;
     }
@@ -92,7 +94,8 @@ public final class ExternalAdapterFactory implements ITypedAdapterFactory {
             ITypedAdapterFactory adapterFactory = (ITypedAdapterFactory) cl.loadClass(className).newInstance();
             adapterFactory.setOutputType(outputType);
             adapterFactory.setMetaType(metaType);
-            adapterFactory.configure(null, configuration, ctx.getWarningCollector());
+            adapterFactory.configure(null, configuration, ctx.getWarningCollector(),
+                    NoOpExternalFilterEvaluatorFactory.INSTANCE);
             return adapterFactory.createAdapter(ctx, partition);
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException | AlgebricksException e) {
             throw HyracksDataException.create(e);

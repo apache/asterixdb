@@ -32,6 +32,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
@@ -147,7 +148,8 @@ public class FeedMetadataUtil {
             }
             adapterFactory.setOutputType(adapterOutputType);
             adapterFactory.setMetaType(metaType);
-            adapterFactory.configure(appCtx.getServiceContext(), configuration, warningCollector);
+            adapterFactory.configure(appCtx.getServiceContext(), configuration, warningCollector,
+                    NoOpExternalFilterEvaluatorFactory.INSTANCE);
             if (metaType == null && configuration.containsKey(ExternalDataConstants.KEY_META_TYPE_NAME)) {
                 metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
                 if (metaType == null) {
@@ -227,10 +229,12 @@ public class FeedMetadataUtil {
                 }
                 adapterFactory.setOutputType(adapterOutputType);
                 adapterFactory.setMetaType(metaType);
-                adapterFactory.configure(appCtx.getServiceContext(), configuration, NoOpWarningCollector.INSTANCE);
+                adapterFactory.configure(appCtx.getServiceContext(), configuration, NoOpWarningCollector.INSTANCE,
+                        NoOpExternalFilterEvaluatorFactory.INSTANCE);
             } else {
                 adapterFactory = AdapterFactoryProvider.getAdapterFactory(appCtx.getServiceContext(), adapterName,
-                        configuration, adapterOutputType, metaType, NoOpWarningCollector.INSTANCE);
+                        configuration, adapterOutputType, metaType, NoOpWarningCollector.INSTANCE,
+                        NoOpExternalFilterEvaluatorFactory.INSTANCE);
                 adapterType = IDataSourceAdapter.AdapterType.INTERNAL;
             }
             if (metaType == null) {

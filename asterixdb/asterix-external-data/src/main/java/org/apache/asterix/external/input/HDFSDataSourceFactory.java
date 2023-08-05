@@ -31,6 +31,7 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
@@ -76,7 +77,6 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
     protected static Object initLock = new Object();
     protected Map<String, String> configuration;
     protected Class<?> recordClass;
-    protected boolean indexingOp = false;
     private JobConf conf;
     private InputSplit[] inputSplits;
     private String nodeName;
@@ -84,7 +84,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws AlgebricksException, HyracksDataException {
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
+            throws AlgebricksException, HyracksDataException {
         JobConf hdfsConf = createHdfsConf(serviceCtx, configuration);
         configureHdfsConf(hdfsConf, configuration);
     }

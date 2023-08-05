@@ -60,7 +60,7 @@ public interface IAdapterFactory extends Serializable {
     /**
      * Creates an instance of IDatasourceAdapter.
      *
-     * @param ctx HyracksTaskContext
+     * @param ctx       HyracksTaskContext
      * @param partition partition number
      * @return An instance of IDatasourceAdapter.
      * @throws Exception
@@ -72,10 +72,12 @@ public interface IAdapterFactory extends Serializable {
      *
      * @param serviceContext
      * @param configuration
-     * @param warningCollector warning collector
+     * @param warningCollector       warning collector
+     * @param filterEvaluatorFactory
      * @throws AlgebricksException
      * @throws HyracksDataException
      */
     void configure(ICCServiceContext serviceContext, Map<String, String> configuration,
-            IWarningCollector warningCollector) throws HyracksDataException, AlgebricksException;
+            IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
+            throws HyracksDataException, AlgebricksException;
 }
