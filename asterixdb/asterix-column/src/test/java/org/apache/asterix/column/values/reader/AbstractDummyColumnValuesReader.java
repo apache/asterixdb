@@ -102,7 +102,7 @@ public abstract class AbstractDummyColumnValuesReader implements IColumnValuesRe
 
     @Override
     public final boolean isMissing() {
-        return level < maxLevel;
+        return !isDelimiter() && level < maxLevel;
     }
 
     @Override

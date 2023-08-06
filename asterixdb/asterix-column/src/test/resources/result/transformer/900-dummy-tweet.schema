@@ -2,7 +2,7 @@ root
 |-- coordinates: object <level: 1>
 |    |-- coordinates: array <level: 2>
 |    |    |-- item: double <level: 3, index: 0>
-|    |    |    |-- Def size: 4 [(3,1),(1,1),(3,1),(1,1)]
+|    |    |    |-- Def size: 6 [(3,1),(2,1),(1,1),(3,1),(2,1),(1,1)]
 |    |-- type: string <level: 2, index: 1>
 |    |    |-- Def size: 2 [(2,2)]
 |-- created_at: string <level: 1, index: 2>
@@ -11,27 +11,27 @@ root
 |    |-- urls: array <level: 2>
 |    |    |-- item: object <level: 3>
 |    |    |    |-- display_url: string <level: 4, index: 3>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- expanded_url: string <level: 4, index: 4>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- indices: array <level: 4>
 |    |    |    |    |-- item: bigint <level: 5, index: 5>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(3,1),(1,1),(0,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(4,1),(3,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- url: string <level: 4, index: 6>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |-- user_mentions: array <level: 2>
 |    |    |-- item: object <level: 3>
 |    |    |    |-- id: bigint <level: 4, index: 7>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- id_str: string <level: 4, index: 8>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- indices: array <level: 4>
 |    |    |    |    |-- item: bigint <level: 5, index: 9>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(3,1),(1,1),(0,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(4,1),(3,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- name: string <level: 4, index: 10>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |    |    |    |-- screen_name: string <level: 4, index: 11>
-|    |    |    |    |-- Def size: 3 [(4,1),(1,1),(0,1)]
+|    |    |    |    |-- Def size: 4 [(4,1),(2,1),(1,1),(0,1)]
 |-- favorite_count: bigint <level: 1, index: 12>
 |    |-- Def size: 2 [(1,2)]
 |-- favorited: boolean <level: 1, index: 13>
@@ -41,7 +41,7 @@ root
 |-- geo: object <level: 1>
 |    |-- coordinates: array <level: 2>
 |    |    |-- item: double <level: 3, index: 15>
-|    |    |    |-- Def size: 4 [(3,1),(1,1),(3,1),(1,1)]
+|    |    |    |-- Def size: 6 [(3,1),(2,1),(1,1),(3,1),(2,1),(1,1)]
 |    |-- type: string <level: 2, index: 16>
 |    |    |-- Def size: 2 [(2,2)]
 |-- id: string <level: 1, index: 17>
@@ -68,7 +68,7 @@ root
 |    |    |    |-- item: array <level: 4>
 |    |    |    |    |-- item: array <level: 5>
 |    |    |    |    |    |-- item: double <level: 6, index: 26>
-|    |    |    |    |    |    |-- Def size: 8 [(6,1),(4,1),(3,1),(2,1),(6,1),(4,1),(3,1),(2,1)]
+|    |    |    |    |    |    |-- Def size: 14 [(6,1),(5,1),(4,2),(3,2),(2,1),(6,1),(5,1),(4,2),(3,2),(2,1)]
 |    |    |-- type: string <level: 3, index: 27>
 |    |    |    |-- Def size: 2 [(3,2)]
 |    |-- country: string <level: 2, index: 28>
@@ -94,16 +94,16 @@ root
 |    |    |-- user_mentions: array <level: 3>
 |    |    |    |-- item: object <level: 4>
 |    |    |    |    |-- id: bigint <level: 5, index: 37>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(3,1),(2,1),(5,1),(3,1),(2,1)]
 |    |    |    |    |-- id_str: string <level: 5, index: 38>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(3,1),(2,1),(5,1),(3,1),(2,1)]
 |    |    |    |    |-- indices: array <level: 5>
 |    |    |    |    |    |-- item: bigint <level: 6, index: 39>
-|    |    |    |    |    |    |-- Def size: 6 [(6,1),(4,1),(2,1),(6,1),(4,1),(2,1)]
+|    |    |    |    |    |    |-- Def size: 10 [(6,1),(5,1),(4,1),(3,1),(2,1),(6,1),(5,1),(4,1),(3,1),(2,1)]
 |    |    |    |    |-- name: string <level: 5, index: 40>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(3,1),(2,1),(5,1),(3,1),(2,1)]
 |    |    |    |    |-- screen_name: string <level: 5, index: 41>
-|    |    |    |    |    |-- Def size: 4 [(5,1),(2,1),(5,1),(2,1)]
+|    |    |    |    |    |-- Def size: 6 [(5,1),(3,1),(2,1),(5,1),(3,1),(2,1)]
 |    |-- favorite_count: bigint <level: 2, index: 42>
 |    |    |-- Def size: 2 [(2,2)]
 |    |-- favorited: boolean <level: 2, index: 43>

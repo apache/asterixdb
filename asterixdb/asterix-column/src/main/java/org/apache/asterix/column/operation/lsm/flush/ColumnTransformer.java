@@ -124,6 +124,10 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
             defLevels.add(missingLevel);
         }
 
+        // Add missing as a last element of the array to help indicate empty arrays
+        collectionNode.getOrCreateItem(ATypeTag.MISSING, columnMetadata);
+        defLevels.add(missingLevel);
+
         columnMetadata.exitCollectionNode(collectionNode, numberOfChildren);
         currentParent = previousParent;
         return null;

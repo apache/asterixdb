@@ -19,6 +19,7 @@
 #000-arrayOfInt
 #001-arrayObject
 #002-arrayObject2
+#003-arrayEmpty
 #100-addFields
 #101-nestedAddFields
 #200-unionPrimitive

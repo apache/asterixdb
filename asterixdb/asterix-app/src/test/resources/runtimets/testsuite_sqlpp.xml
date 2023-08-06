@@ -16192,6 +16192,21 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="empty-array/001">
+        <output-dir compare="Text">empty-array/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/002">
+        <output-dir compare="Text">empty-array/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/003">
+        <output-dir compare="Text">empty-array/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="pushdown/array-access-pushdown">
         <output-dir compare="Text">pushdown/array-access-pushdown</output-dir>
       </compilation-unit>

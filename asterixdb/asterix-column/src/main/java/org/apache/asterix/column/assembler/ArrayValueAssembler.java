@@ -28,12 +28,14 @@ public class ArrayValueAssembler extends AbstractNestedValueAssembler {
     private final IAsterixListBuilder listBuilder;
     private final AbstractCollectionType collectionType;
     private final int firstValueIndex;
+    private boolean missing;
 
     ArrayValueAssembler(int level, AssemblerInfo info, int firstValueIndex) {
         super(level, info);
         this.firstValueIndex = firstValueIndex;
         collectionType = (AbstractCollectionType) info.getDeclaredType();
         listBuilder = new ListBuilderFactory().create(collectionType.getTypeTag());
+        missing = false;
     }
 
     final int getFirstValueIndex() {
@@ -42,23 +44,27 @@ public class ArrayValueAssembler extends AbstractNestedValueAssembler {
 
     @Override
     void reset() {
+        missing = false;
         listBuilder.reset(collectionType);
         storage.reset();
     }
 
     @Override
     void addValue(AbstractValueAssembler value) throws HyracksDataException {
+        writePreviousMissing();
         listBuilder.addItem(value.getValue());
     }
 
     @Override
     void addNull(AbstractValueAssembler value) throws HyracksDataException {
+        writePreviousMissing();
         listBuilder.addItem(NULL);
     }
 
     @Override
     void addMissing() throws HyracksDataException {
-        listBuilder.addItem(MISSING);
+        writePreviousMissing();
+        missing = true;
     }
 
     @Override
@@ -71,5 +77,12 @@ public class ArrayValueAssembler extends AbstractNestedValueAssembler {
     @Override
     public IValueReference getValue() {
         return storage;
+    }
+
+    private void writePreviousMissing() throws HyracksDataException {
+        if (missing) {
+            listBuilder.addItem(MISSING);
+            missing = false;
+        }
     }
 }

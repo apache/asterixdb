@@ -165,7 +165,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         // if delegateAssembler is null, that means no column will be accessed
         if (delegateAssembler != null) {
             // Set repeated assembler as a delegate (responsible for writing null values)
-            delegateAssembler.setAsDelegate();
+            delegateAssembler.setAsDelegate(level - 1);
             IColumnValuesReader reader = delegateAssembler.getReader();
             int numberOfDelimiters = reader.getNumberOfDelimiters();
             // End of group assembler is responsible to finalize array/multiset builders

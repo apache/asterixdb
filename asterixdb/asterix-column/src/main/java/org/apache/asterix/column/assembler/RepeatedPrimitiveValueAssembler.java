@@ -28,11 +28,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
     private boolean arrayDelegate;
+    private int arrayLevel;
 
     RepeatedPrimitiveValueAssembler(int level, AssemblerInfo info, IColumnValuesReader reader,
             IValueGetter primitiveValue) {
         super(level, info, reader, primitiveValue);
         this.arrayDelegate = false;
+        arrayLevel = 0;
     }
 
     @Override
@@ -65,9 +67,10 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
         return reader;
     }
 
-    public void setAsDelegate() {
+    public void setAsDelegate(int arrayLevel) {
         // This assembler is responsible for adding null values
         this.arrayDelegate = true;
+        this.arrayLevel = arrayLevel;
     }
 
     private void next() throws HyracksDataException {
@@ -81,9 +84,11 @@ final class RepeatedPrimitiveValueAssembler extends AbstractPrimitiveValueAssemb
              * (i.e., arrayDelegate is true)
              */
             addNullToAncestor(reader.getLevel());
-        } else if (reader.isMissing() && reader.getLevel() + 1 == level) {
+        } else if (reader.isMissing() && (arrayLevel == reader.getLevel() || reader.getLevel() + 1 == level)) {
             /*
-             * Add a missing item
+             * Add a missing item in either
+             * - the array item is MISSING
+             * - the array itself is missing and this reader is a delegate for the array level specified
              */
             addMissingToAncestor(reader.getLevel());
         } else if (reader.isValue()) {
