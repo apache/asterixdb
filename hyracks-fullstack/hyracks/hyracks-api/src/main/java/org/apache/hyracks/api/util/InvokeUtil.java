@@ -32,6 +32,7 @@ import org.apache.hyracks.util.IOInterruptibleAction;
 import org.apache.hyracks.util.IOThrowingAction;
 import org.apache.hyracks.util.IRetryPolicy;
 import org.apache.hyracks.util.InterruptibleAction;
+import org.apache.hyracks.util.InterruptibleSupplier;
 import org.apache.hyracks.util.Span;
 import org.apache.hyracks.util.ThrowingAction;
 import org.apache.logging.log4j.Level;
@@ -82,6 +83,27 @@ public class InvokeUtil {
                 try {
                     interruptible.run();
                     break;
+                } catch (InterruptedException e) { // NOSONAR- we will re-interrupt the thread during unwind
+                    interrupted = true;
+                }
+            }
+        } finally {
+            if (interrupted) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * Executes the passed interruptible supplier, retrying if the operation is interrupted. Once the interruptible
+     * supplier completes, the current thread will be re-interrupted, if the original operation was interrupted.
+     */
+    public static <T> T getUninterruptibly(InterruptibleSupplier<T> interruptible) {
+        boolean interrupted = Thread.interrupted();
+        try {
+            while (true) {
+                try {
+                    return interruptible.get();
                 } catch (InterruptedException e) { // NOSONAR- we will re-interrupt the thread during unwind
                     interrupted = true;
                 }
