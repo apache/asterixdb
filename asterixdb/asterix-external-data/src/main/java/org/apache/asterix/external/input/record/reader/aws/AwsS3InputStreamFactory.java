@@ -65,7 +65,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
         // very expensive since at the root of the prefix we might load millions of files, we should consider (when
         // possible) to get the value and add it
         List<S3Object> filesOnly = S3Utils.listS3Objects(configuration, includeExcludeMatcher, warningCollector);
-        filterPrefixes(externalDataPrefix, filesOnly, filterEvaluatorFactory.create(ctx, warningCollector));
+        filesOnly = filterPrefixes(externalDataPrefix, filesOnly, filterEvaluatorFactory.create(ctx, warningCollector));
 
         // Distribute work load amongst the partitions
         distributeWorkLoad(filesOnly, getPartitionsCount());

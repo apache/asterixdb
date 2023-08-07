@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -43,7 +44,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -58,14 +58,14 @@ public class ExternalDataPrefix {
     private final List<IAType> computedFieldTypes = new ArrayList<>();
     private final List<Integer> computedFieldSegmentIndexes = new ArrayList<>();
     private final List<ARecordType> paths = new ArrayList<>();
-    private final Map<Integer, Pair<List<String>, List<IAType>>> computedFields = new HashMap<>();
+    private final Map<Integer, PrefixSegment> indexToComputedFieldsMap = new HashMap<>();
 
     public static final String PREFIX_ROOT_FIELD_NAME = "prefix-root";
     public static final Set<ATypeTag> supportedTypes = new HashSet<>();
 
     static {
-        supportedTypes.add(BuiltinType.ASTRING.getTypeTag());
-        supportedTypes.add(BuiltinType.AINT32.getTypeTag());
+        supportedTypes.add(ATypeTag.STRING);
+        supportedTypes.add(ATypeTag.BIGINT);
     }
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
@@ -79,23 +79,6 @@ public class ExternalDataPrefix {
         segments = extractPrefixSegments(original);
         extractComputedFields();
         extractRoot();
-
-        for (int i = 0; i < computedFieldSegmentIndexes.size(); i++) {
-            int segmentIndex = computedFieldSegmentIndexes.get(i);
-
-            if (computedFields.containsKey(segmentIndex)) {
-                Pair<List<String>, List<IAType>> pair = computedFields.get(segmentIndex);
-                pair.getLeft().add(computedFieldNames.get(i));
-                pair.getRight().add(computedFieldTypes.get(i));
-            } else {
-                List<String> names = new ArrayList<>();
-                List<IAType> types = new ArrayList<>();
-
-                names.add(computedFieldNames.get(i));
-                types.add(computedFieldTypes.get(i));
-                computedFields.put(segmentIndex, Pair.of(names, types));
-            }
-        }
     }
 
     public String getOriginal() {
@@ -134,10 +117,14 @@ public class ExternalDataPrefix {
         return paths;
     }
 
+    public Map<Integer, PrefixSegment> getIndexToComputedFieldsMap() {
+        return indexToComputedFieldsMap;
+    }
+
     /**
      * extracts the segments of a prefix, separated by the delimiter
      */
-    private List<String> extractPrefixSegments(String prefix) {
+    public static List<String> extractPrefixSegments(String prefix) {
         return prefix.isEmpty() ? Collections.emptyList() : Arrays.asList(prefix.split(PREFIX_DEFAULT_DELIMITER));
     }
 
@@ -149,26 +136,58 @@ public class ExternalDataPrefix {
         if (!segments.isEmpty()) {
             // search for computed fields in each segment
             Matcher matcher = COMPUTED_FIELD_PATTERN.matcher("");
+
+            // we need to keep track of the end position
+            StringBuilder expression = new StringBuilder();
+            int end = 0;
+
             for (int i = 0; i < segments.size(); i++) {
                 matcher.reset(segments.get(i));
+                expression.setLength(0);
+                end = 0;
 
                 while (matcher.find()) {
+                    expression.append(segments.get(i), end, matcher.start());
+
                     String computedField = matcher.group();
                     String[] splits = computedField.split(":");
                     String namePart = splits[0].substring(1);
                     String typePart = splits[1].substring(0, splits[1].length() - 1);
 
                     IAType type = BuiltinTypeMap.getBuiltinType(typePart);
+                    type = getUpdatedType(type);
                     validateSupported(type.getTypeTag());
 
                     computedFieldNames.add(namePart);
                     computedFieldTypes.add(type);
                     computedFieldSegmentIndexes.add(i);
+                    updateIndexToComputedFieldMap(i, namePart, type);
 
                     List<String> nameParts = List.of(namePart.split("\\."));
                     paths.add(ProjectionFiltrationTypeUtil.getPathRecordType(nameParts));
+
+                    expression.append("(.+)");
+                    end = matcher.end();
+                }
+
+                if (expression.length() > 0) {
+                    expression.append(segments.get(i).substring(end));
+                    indexToComputedFieldsMap.get(i).setExpression(expression.toString());
                 }
             }
+        }
+    }
+
+    private void updateIndexToComputedFieldMap(int segmentIndex, String computedFieldName, IAType computedFieldType) {
+        if (indexToComputedFieldsMap.containsKey(segmentIndex)) {
+            PrefixSegment prefixSegment = indexToComputedFieldsMap.get(segmentIndex);
+            prefixSegment.getComputedFieldNames().add(computedFieldName);
+            prefixSegment.getComputedFieldTypes().add(computedFieldType);
+        } else {
+            PrefixSegment prefixSegment = new PrefixSegment();
+            prefixSegment.getComputedFieldNames().add(computedFieldName);
+            prefixSegment.getComputedFieldTypes().add(computedFieldType);
+            indexToComputedFieldsMap.put(segmentIndex, prefixSegment);
         }
     }
 
@@ -224,11 +243,18 @@ public class ExternalDataPrefix {
             return false;
         }
 
+        // no computed fields used in WHERE clause, accept object
+        if (evaluator.isEmpty()) {
+            return true;
+        }
+
         // extract values for all compute fields and set them in the evaluator
         // TODO provide the List to avoid array creation
         List<String> values = extractValues(keySegments);
         for (int i = 0; i < computedFieldNames.size(); i++) {
-            evaluator.setValue(i, values.get(i));
+            if (evaluator.isComputedFieldUsed(i)) {
+                evaluator.setValue(i, values.get(i));
+            }
         }
 
         return evaluator.evaluate();
@@ -243,14 +269,60 @@ public class ExternalDataPrefix {
     private List<String> extractValues(List<String> keySegments) {
         List<String> values = new ArrayList<>();
 
-        for (Integer computedFieldSegmentIndex : computedFieldSegmentIndexes) {
-            values.add(keySegments.get(computedFieldSegmentIndex));
+        for (Map.Entry<Integer, PrefixSegment> entry : indexToComputedFieldsMap.entrySet()) {
+            int index = entry.getKey();
+            String expression = entry.getValue().getExpression();
+
+            String keySegment = keySegments.get(index);
+            Matcher matcher = Pattern.compile(expression).matcher(keySegment);
+
+            if (matcher.find()) {
+                for (int i = 1; i <= matcher.groupCount(); i++) {
+                    values.add(matcher.group(i));
+                }
+            }
         }
 
         return values;
     }
 
+    private IAType getUpdatedType(IAType type) {
+        switch (type.getTypeTag()) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+                return BuiltinType.AINT64;
+            default:
+                return type;
+        }
+    }
+
     private static String getDefinitionOrPath(Map<String, String> configuration) {
         return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
+    }
+
+    public static class PrefixSegment {
+        private String expression;
+        private final List<String> computedFieldNames = new ArrayList<>();
+        private final List<IAType> computedFieldTypes = new ArrayList<>();
+
+        public PrefixSegment() {
+        }
+
+        public String getExpression() {
+            return expression;
+        }
+
+        public List<String> getComputedFieldNames() {
+            return computedFieldNames;
+        }
+
+        public List<IAType> getComputedFieldTypes() {
+            return computedFieldTypes;
+        }
+
+        public void setExpression(String expression) {
+            this.expression = expression;
+        }
     }
 }
