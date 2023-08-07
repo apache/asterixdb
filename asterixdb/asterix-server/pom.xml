@@ -744,6 +744,14 @@
                 <aliasUrl>https://golang.org/LICENSE</aliasUrl>
               </aliasUrls>
             </license>
+            <license>
+              <displayName>MIT No Attribution (MIT-0)</displayName>
+              <url>https://spdx.org/licenses/MIT-0</url>
+              <aliasUrls>
+                <aliasUrl>https://spdx.org/licenses/MIT-0.html</aliasUrl>
+                <aliasUrl>https://github.com/aws/mit-0</aliasUrl>
+              </aliasUrls>
+            </license>
           </licenses>
           <templateProperties>
             <packageName>Apache AsterixDB Server Install</packageName>
