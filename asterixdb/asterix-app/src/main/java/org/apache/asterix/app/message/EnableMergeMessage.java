@@ -24,12 +24,9 @@ import org.apache.asterix.common.context.IndexInfo;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class EnableMergeMessage implements INcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final JobId jobId;
     private final int datasetId;
@@ -47,5 +44,10 @@ public class EnableMergeMessage implements INcAddressedMessage {
                 indexInfo.getIndex().getMergePolicy().diskComponentAdded(indexInfo.getIndex(), false);;
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return "EnableMergeMessage{" + "jobId=" + jobId + ", datasetId=" + datasetId + '}';
     }
 }

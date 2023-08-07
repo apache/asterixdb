@@ -28,15 +28,12 @@ import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from CC to all NCs asking to commit an atomic statement/job.
  */
 public class AtomicJobCommitMessage implements INcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final JobId jobId;
     private final List<Integer> datasetIds;
@@ -64,5 +61,10 @@ public class AtomicJobCommitMessage implements INcAddressedMessage {
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AtomicJobCommitMessage{" + "jobId=" + jobId + ", datasetIds=" + datasetIds + '}';
     }
 }

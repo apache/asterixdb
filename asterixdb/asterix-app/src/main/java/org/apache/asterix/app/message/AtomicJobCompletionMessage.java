@@ -22,15 +22,12 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from NC to CC on successful local commit of an atomic statement/job.
  */
 public class AtomicJobCompletionMessage implements ICcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final JobId jobId;
@@ -43,5 +40,10 @@ public class AtomicJobCompletionMessage implements ICcAddressedMessage {
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         appCtx.getGlobalTxManager().handleJobCompletionMessage(jobId, nodeId);
+    }
+
+    @Override
+    public String toString() {
+        return "AtomicJobCompletionMessage{" + "jobId=" + jobId + ", nodeId='" + nodeId + '\'' + '}';
     }
 }

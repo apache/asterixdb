@@ -22,15 +22,12 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from an NC to CC after successful local rollback of an atomic statement/job.
  */
 public class AtomicJobRollbackCompleteMessage implements ICcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final String nodeId;
     private final JobId jobId;
@@ -45,4 +42,8 @@ public class AtomicJobRollbackCompleteMessage implements ICcAddressedMessage {
         appCtx.getGlobalTxManager().handleJobRollbackCompletionMessage(jobId, nodeId);
     }
 
+    @Override
+    public String toString() {
+        return "AtomicJobRollbackCompleteMessage{" + "jobId=" + jobId + ", nodeId='" + nodeId + '\'' + '}';
+    }
 }

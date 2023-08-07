@@ -25,8 +25,6 @@ import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from an NC to CC for every partition handled by it after all
@@ -34,7 +32,6 @@ import org.apache.logging.log4j.Logger;
  */
 public class AtomicJobPreparedMessage implements ICcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final JobId jobId;
     private final String nodeId;
@@ -51,4 +48,8 @@ public class AtomicJobPreparedMessage implements ICcAddressedMessage {
         appCtx.getGlobalTxManager().handleJobPreparedMessage(jobId, nodeId, componentIdMap);
     }
 
+    @Override
+    public String toString() {
+        return "AtomicJobPreparedMessage{" + "jobId=" + jobId + ", nodeId='" + nodeId + '\'' + '}';
+    }
 }

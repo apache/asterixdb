@@ -148,7 +148,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
                 for (ILSMIndex lsmIndex : indexes) {
                     if (lsmIndex.isPrimaryIndex()) {
                         if (lsmIndex.isCurrentMutableComponentEmpty()) {
-                            LOGGER.debug("Primary index on dataset {} and partition {} is empty... skipping flush",
+                            LOGGER.trace("Primary index on dataset {} and partition {} is empty... skipping flush",
                                     dsInfo.getDatasetID(), partition);
                             return;
                         }
@@ -228,17 +228,18 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
             }
             idGenerator.refresh();
             long flushLsn = logRecord.getLSN();
-            if (flushLsn == 0) {
-                LOGGER.warn("flushing an index with LSN 0. Flush log record: {}", logRecord::getLogRecordForDisplay);
-            }
             ILSMComponentId nextComponentId = idGenerator.getId();
             Map<String, Object> flushMap = new HashMap<>();
             flushMap.put(LSMIOOperationCallback.KEY_FLUSH_LOG_LSN, flushLsn);
             flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
             for (ILSMIndex lsmIndex : dsInfo.getDatasetPartitionOpenIndexes(partition)) {
                 if (lsmIndex.isPrimaryIndex()) {
+                    if (!lsmIndex.isAtomic() && flushLsn == 0) {
+                        LOGGER.warn("flushing an index {} with LSN 0. Flush log record: {}", () -> lsmIndex,
+                                logRecord::getLogRecordForDisplay);
+                    }
                     if (lsmIndex.isCurrentMutableComponentEmpty()) {
-                        LOGGER.debug("Primary index on dataset {} and partition {} is empty... skipping flush",
+                        LOGGER.trace("Primary index on dataset {} and partition {} is empty... skipping flush",
                                 dsInfo.getDatasetID(), partition);
                         return;
                     }
@@ -379,7 +380,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
         for (ILSMIndex lsmIndex : indexes) {
             if (lsmIndex.isPrimaryIndex()) {
                 if (lsmIndex.isCurrentMutableComponentEmpty()) {
-                    LOGGER.info("Primary index on dataset {} and partition {} is empty... skipping delete",
+                    LOGGER.trace("Primary index on dataset {} and partition {} is empty... skipping delete",
                             dsInfo.getDatasetID(), partition);
                     return;
                 }

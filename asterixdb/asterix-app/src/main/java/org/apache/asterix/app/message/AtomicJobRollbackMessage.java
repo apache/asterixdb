@@ -32,15 +32,12 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from CC to all NCs to rollback an atomic statement/job.
  */
 public class AtomicJobRollbackMessage implements INcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final JobId jobId;
     private final List<Integer> datasetIds;
@@ -79,5 +76,10 @@ public class AtomicJobRollbackMessage implements INcAddressedMessage {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "AtomicJobRollbackMessage{" + "jobId=" + jobId + ", datasetIds=" + datasetIds + '}';
     }
 }
