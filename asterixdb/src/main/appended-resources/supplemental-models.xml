@@ -1760,7 +1760,7 @@
         <license.ignoreMissingEmbeddedLicense>1.43.2,1.52.1</license.ignoreMissingEmbeddedLicense>
         <license.ignoreMissingEmbeddedNotice>1.43.2,1.52.1</license.ignoreMissingEmbeddedNotice>
         <license.ignoreLicenseOverride>1.43.2,1.52.1</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.43.2</license.ignoreNoticeOverride>
+        <license.ignoreNoticeOverride>1.43.2,1.52.1</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
