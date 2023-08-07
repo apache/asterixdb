@@ -73,7 +73,10 @@ public final class SerializerDeserializerUtil {
 
     public static void serializeTag(IAObject instance, DataOutput out) throws HyracksDataException {
         IAType t = instance.getType();
-        ATypeTag tag = t.getTypeTag();
+        serializeTag(t.getTypeTag(), out);
+    }
+
+    public static void serializeTag(ATypeTag tag, DataOutput out) throws HyracksDataException {
         try {
             out.writeByte(tag.serialize());
         } catch (IOException e) {

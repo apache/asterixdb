@@ -43,7 +43,7 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetReadS
 import org.apache.asterix.external.input.stream.HDFSInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.runtime.projection.ExternalDatasetProjectionInfo;
+import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
@@ -271,7 +271,7 @@ public class HDFSUtils {
         Base64.Decoder decoder = Base64.getDecoder();
         byte[] typeBytes = decoder.decode(encoded);
         DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(typeBytes));
-        return ExternalDatasetProjectionInfo.createTypeField(dataInputStream);
+        return ExternalDatasetProjectionFiltrationInfo.createTypeField(dataInputStream);
     }
 
     public static void setFunctionCallInformationMap(Map<String, FunctionCallInformation> funcCallInfoMap,
@@ -287,7 +287,7 @@ public class HDFSUtils {
             Base64.Decoder decoder = Base64.getDecoder();
             byte[] functionCallInfoMapBytes = decoder.decode(encoded);
             DataInputStream dataInputStream = new DataInputStream(new ByteArrayInputStream(functionCallInfoMapBytes));
-            return ExternalDatasetProjectionInfo.createFunctionCallInformationMap(dataInputStream);
+            return ExternalDatasetProjectionFiltrationInfo.createFunctionCallInformationMap(dataInputStream);
         }
         return null;
     }

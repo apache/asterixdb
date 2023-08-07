@@ -49,7 +49,7 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
-            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         // Ensure the validity of include/exclude

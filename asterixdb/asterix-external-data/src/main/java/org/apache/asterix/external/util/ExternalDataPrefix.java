@@ -44,6 +44,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ExternalDataPrefix {
 
@@ -208,12 +209,11 @@ public class ExternalDataPrefix {
     /**
      * Evaluates whether the provided key satisfies the conditions of the evaluator or not
      *
-     * @param key ke
+     * @param key       ke
      * @param evaluator evaluator
-     *
      * @return true if key satisfies the evaluator conditions, false otherwise
      */
-    public boolean evaluate(String key, IExternalFilterEvaluator evaluator) throws AlgebricksException {
+    public boolean evaluate(String key, IExternalFilterEvaluator evaluator) throws HyracksDataException {
         List<String> keySegments = extractPrefixSegments(key);
 
         // segments of object key have to be larger than segments of the prefix

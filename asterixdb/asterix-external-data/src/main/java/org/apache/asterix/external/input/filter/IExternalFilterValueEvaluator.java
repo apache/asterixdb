@@ -16,16 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
+package org.apache.asterix.external.input.filter;
 
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IExternalFilterEvaluator {
-    boolean isEmpty();
-
-    boolean isComputedFieldUsed(int index);
-
-    void setValue(int index, String stringValue) throws HyracksDataException;
-
-    boolean evaluate() throws HyracksDataException;
+interface IExternalFilterValueEvaluator extends IScalarEvaluator {
+    void setValue(String stringValue) throws HyracksDataException;
 }

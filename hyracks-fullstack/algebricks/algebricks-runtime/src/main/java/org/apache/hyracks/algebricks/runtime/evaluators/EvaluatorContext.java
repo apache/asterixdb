@@ -26,7 +26,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-public final class EvaluatorContext implements IEvaluatorContext {
+public class EvaluatorContext implements IEvaluatorContext {
 
     private final IServiceContext serviceContext;
 

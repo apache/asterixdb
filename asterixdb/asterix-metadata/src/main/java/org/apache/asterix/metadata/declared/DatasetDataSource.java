@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
-import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -42,7 +42,7 @@ import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.projection.ExternalDatasetProjectionInfo;
+import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -139,9 +139,11 @@ public class DatasetDataSource extends DataSource {
                         addExternalProjectionInfo(projectionFiltrationInfo, edd.getProperties());
                 properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
-                ITypedAdapterFactory adapterFactory = metadataProvider.getConfiguredAdapterFactory(externalDataset,
-                        edd.getAdapter(), properties, (ARecordType) itemType, context.getWarningCollector(),
-                        NoOpExternalFilterEvaluatorFactory.INSTANCE);
+                IExternalFilterEvaluatorFactory filterEvaluatorFactory = IndexUtil
+                        .createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
+                ITypedAdapterFactory adapterFactory =
+                        metadataProvider.getConfiguredAdapterFactory(externalDataset, edd.getAdapter(), properties,
+                                (ARecordType) itemType, context.getWarningCollector(), filterEvaluatorFactory);
                 return metadataProvider.getExternalDatasetScanRuntime(jobSpec, itemType, adapterFactory,
                         tupleFilterFactory, outputLimit);
             case INTERNAL:
@@ -182,7 +184,8 @@ public class DatasetDataSource extends DataSource {
             //properties could be cached and reused, so we make a copy per query
             propertiesCopy = new HashMap<>(properties);
             try {
-                ExternalDatasetProjectionInfo externalProjectionInfo = (ExternalDatasetProjectionInfo) projectionInfo;
+                ExternalDatasetProjectionFiltrationInfo externalProjectionInfo =
+                        (ExternalDatasetProjectionFiltrationInfo) projectionInfo;
                 ExternalDataUtils.setExternalDataProjectionInfo(externalProjectionInfo, propertiesCopy);
             } catch (IOException e) {
                 throw new IllegalStateException(e);

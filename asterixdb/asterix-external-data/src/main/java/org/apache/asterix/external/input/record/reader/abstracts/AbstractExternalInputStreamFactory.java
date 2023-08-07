@@ -64,7 +64,7 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
-            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         this.configuration = configuration;
         this.partitionConstraint =
                 ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();

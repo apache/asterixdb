@@ -54,7 +54,7 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
-            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();

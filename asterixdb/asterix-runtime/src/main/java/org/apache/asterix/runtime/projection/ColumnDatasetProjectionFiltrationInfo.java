@@ -22,7 +22,6 @@ import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELD
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -32,30 +31,21 @@ import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBu
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
-public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjectionInfo {
+public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjectionFiltrationInfo {
     private final ARecordType metaProjectedType;
-    private final ILogicalExpression filterExpression;
-    private final Map<ILogicalExpression, ARecordType> filterPaths;
     private final ILogicalExpression rangeFilterExpression;
 
     public ColumnDatasetProjectionFiltrationInfo(ARecordType recordRequestedType, ARecordType metaProjectedType,
             Map<String, FunctionCallInformation> sourceInformationMap, Map<ILogicalExpression, ARecordType> filterPaths,
             ILogicalExpression filterExpression, ILogicalExpression rangeFilterExpression) {
-        super(recordRequestedType, sourceInformationMap);
+        super(recordRequestedType, sourceInformationMap, filterPaths, filterExpression);
         this.metaProjectedType = metaProjectedType;
-
-        this.filterExpression = filterExpression;
         this.rangeFilterExpression = rangeFilterExpression;
-        this.filterPaths = filterPaths;
     }
 
     private ColumnDatasetProjectionFiltrationInfo(ColumnDatasetProjectionFiltrationInfo other) {
-        super(other.projectedType, other.functionCallInfoMap);
+        super(other.projectedType, other.functionCallInfoMap, other.filterPaths, other.filterExpression);
         metaProjectedType = other.metaProjectedType;
-
-        filterExpression = other.filterExpression;
-        filterPaths = new HashMap<>(other.filterPaths);
-
         rangeFilterExpression = other.rangeFilterExpression;
     }
 
@@ -96,15 +86,13 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
 
     @Override
     public void print(JsonGenerator generator) throws IOException {
-        if (projectedType == ALL_FIELDS_TYPE) {
-            return;
-        }
-
         StringBuilder builder = new StringBuilder();
-        if (projectedType == EMPTY_TYPE) {
-            generator.writeStringField("project", projectedType.getTypeName());
-        } else {
-            generator.writeStringField("project", getOnelinerSchema(projectedType, builder));
+        if (projectedType != ALL_FIELDS_TYPE) {
+            if (projectedType == EMPTY_TYPE) {
+                generator.writeStringField("project", projectedType.getTypeName());
+            } else {
+                generator.writeStringField("project", getOnelinerSchema(projectedType, builder));
+            }
         }
 
         if (metaProjectedType != null && metaProjectedType != ALL_FIELDS_TYPE) {
@@ -122,14 +110,6 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
 
     public ARecordType getMetaProjectedType() {
         return metaProjectedType;
-    }
-
-    public ILogicalExpression getFilterExpression() {
-        return filterExpression;
-    }
-
-    public Map<ILogicalExpression, ARecordType> getFilterPaths() {
-        return filterPaths;
     }
 
     public ILogicalExpression getRangeFilterExpression() {

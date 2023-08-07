@@ -50,7 +50,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
 
     @Override
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
-            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
+            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         // Ensure the validity of include/exclude
@@ -72,7 +72,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
     }
 
     private List<S3Object> filterPrefixes(ExternalDataPrefix prefix, List<S3Object> filesOnly,
-            IExternalFilterEvaluator evaluator) throws AlgebricksException {
+            IExternalFilterEvaluator evaluator) throws HyracksDataException {
 
         // if no computed fields or empty files list, return the original list
         if (filesOnly.isEmpty() || !prefix.hasComputedFields()) {

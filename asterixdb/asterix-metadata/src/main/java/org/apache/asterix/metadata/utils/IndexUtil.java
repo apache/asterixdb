@@ -36,8 +36,11 @@ import org.apache.asterix.column.operation.query.QueryColumnTupleProjectorFactor
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -45,12 +48,14 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.filter.ColumnFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ColumnRangeFilterBuilder;
+import org.apache.asterix.metadata.utils.filter.ExternalFilterBuilder;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
+import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -323,6 +328,21 @@ public class IndexUtil {
 
         return new PrimaryScanColumnTupleProjectorFactory(datasetType, metaItemType, numberOfPrimaryKeys,
                 datasetRequestedType);
+    }
+
+    public static IExternalFilterEvaluatorFactory createExternalFilterEvaluatorFactory(JobGenContext context,
+            IVariableTypeEnvironment typeEnv, IProjectionFiltrationInfo projectionFiltrationInfo,
+            Map<String, String> properties) throws AlgebricksException {
+        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+            return NoOpExternalFilterEvaluatorFactory.INSTANCE;
+        }
+
+        ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
+        ExternalDatasetProjectionFiltrationInfo pfi =
+                (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
+        ExternalFilterBuilder build = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
+
+        return build.build();
     }
 
 }

@@ -31,22 +31,29 @@ import java.util.Objects;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
-public class ExternalDatasetProjectionInfo implements IProjectionFiltrationInfo {
+public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltrationInfo {
     protected final ARecordType projectedType;
+
+    protected final ILogicalExpression filterExpression;
+    protected final Map<ILogicalExpression, ARecordType> filterPaths;
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
 
-    public ExternalDatasetProjectionInfo(ARecordType projectedType,
-            Map<String, FunctionCallInformation> sourceInformationMap) {
+    public ExternalDatasetProjectionFiltrationInfo(ARecordType projectedType,
+            Map<String, FunctionCallInformation> sourceInformationMap, Map<ILogicalExpression, ARecordType> filterPaths,
+            ILogicalExpression filterExpression) {
         this.projectedType = projectedType;
         this.functionCallInfoMap = sourceInformationMap;
+        this.filterExpression = filterExpression;
+        this.filterPaths = filterPaths;
     }
 
-    private ExternalDatasetProjectionInfo(ExternalDatasetProjectionInfo other) {
+    private ExternalDatasetProjectionFiltrationInfo(ExternalDatasetProjectionFiltrationInfo other) {
         if (other.projectedType == ALL_FIELDS_TYPE) {
             projectedType = ALL_FIELDS_TYPE;
         } else if (other.projectedType == EMPTY_TYPE) {
@@ -55,11 +62,14 @@ public class ExternalDatasetProjectionInfo implements IProjectionFiltrationInfo 
             projectedType = other.projectedType.deepCopy(other.projectedType);
         }
         functionCallInfoMap = new HashMap<>(other.functionCallInfoMap);
+
+        filterExpression = other.filterExpression;
+        filterPaths = new HashMap<>(other.filterPaths);
     }
 
     @Override
-    public ExternalDatasetProjectionInfo createCopy() {
-        return new ExternalDatasetProjectionInfo(this);
+    public ExternalDatasetProjectionFiltrationInfo createCopy() {
+        return new ExternalDatasetProjectionFiltrationInfo(this);
     }
 
     public ARecordType getProjectedType() {
@@ -70,6 +80,14 @@ public class ExternalDatasetProjectionInfo implements IProjectionFiltrationInfo 
         return functionCallInfoMap;
     }
 
+    public ILogicalExpression getFilterExpression() {
+        return filterExpression;
+    }
+
+    public Map<ILogicalExpression, ARecordType> getFilterPaths() {
+        return filterPaths;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -78,32 +96,43 @@ public class ExternalDatasetProjectionInfo implements IProjectionFiltrationInfo 
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        ExternalDatasetProjectionInfo otherInfo = (ExternalDatasetProjectionInfo) o;
+        ExternalDatasetProjectionFiltrationInfo otherInfo = (ExternalDatasetProjectionFiltrationInfo) o;
         return projectedType.deepEqual(otherInfo.projectedType)
                 && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap);
     }
 
     @Override
     public void print(AlgebricksStringBuilderWriter writer) {
-        if (projectedType == ALL_FIELDS_TYPE) {
-            return;
+        if (projectedType != ALL_FIELDS_TYPE) {
+            writer.append(" project (");
+            if (projectedType == EMPTY_TYPE) {
+                writer.append(projectedType.getTypeName());
+            } else {
+                writer.append(getOnelinerSchema(projectedType, new StringBuilder()));
+            }
+            writer.append(')');
         }
 
-        writer.append(" project (");
-        if (projectedType == EMPTY_TYPE) {
-            writer.append(projectedType.getTypeName());
-        } else {
-            writer.append(getOnelinerSchema(projectedType, new StringBuilder()));
+        if (filterExpression != null) {
+            writer.append(" prefix-filter on: ");
+            writer.append(filterExpression.toString());
         }
-        writer.append(')');
     }
 
     @Override
     public void print(JsonGenerator generator) throws IOException {
-        if (projectedType == ALL_FIELDS_TYPE) {
-            return;
+        StringBuilder builder = new StringBuilder();
+        if (projectedType != ALL_FIELDS_TYPE) {
+            if (projectedType == EMPTY_TYPE) {
+                generator.writeStringField("project", projectedType.getTypeName());
+            } else {
+                generator.writeStringField("project", getOnelinerSchema(projectedType, builder));
+            }
         }
-        generator.writeStringField("project", getOnelinerSchema(projectedType, new StringBuilder()));
+
+        if (filterExpression != null) {
+            generator.writeStringField("filter-on", filterExpression.toString());
+        }
     }
 
     protected String getOnelinerSchema(ARecordType type, StringBuilder builder) {

@@ -16,16 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
+package org.apache.asterix.external.input.filter;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IPointable;
+import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-public interface IExternalFilterEvaluator {
-    boolean isEmpty();
+class NoOpExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
+    public static final IExternalFilterValueEvaluator INSTANCE = new NoOpExternalFilterValueEvaluator();
 
-    boolean isComputedFieldUsed(int index);
+    @Override
+    public void setValue(String stringValue) throws HyracksDataException {
+        // NoOp
+    }
 
-    void setValue(int index, String stringValue) throws HyracksDataException;
-
-    boolean evaluate() throws HyracksDataException;
+    @Override
+    public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
+        // NoOp
+    }
 }

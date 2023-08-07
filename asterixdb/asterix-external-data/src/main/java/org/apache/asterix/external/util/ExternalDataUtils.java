@@ -75,7 +75,7 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
-import org.apache.asterix.runtime.projection.ExternalDatasetProjectionInfo;
+import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -900,7 +900,7 @@ public class ExternalDataUtils {
                 || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
     }
 
-    public static void setExternalDataProjectionInfo(ExternalDatasetProjectionInfo projectionInfo,
+    public static void setExternalDataProjectionInfo(ExternalDatasetProjectionFiltrationInfo projectionInfo,
             Map<String, String> properties) throws IOException {
         properties.put(ExternalDataConstants.KEY_REQUESTED_FIELDS,
                 serializeExpectedTypeToString(projectionInfo.getProjectedType()));
@@ -922,7 +922,7 @@ public class ExternalDataUtils {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         Base64.Encoder encoder = Base64.getEncoder();
-        ExternalDatasetProjectionInfo.writeTypeField(expectedType, dataOutputStream);
+        ExternalDatasetProjectionFiltrationInfo.writeTypeField(expectedType, dataOutputStream);
         return encoder.encodeToString(byteArrayOutputStream.toByteArray());
     }
 
@@ -938,7 +938,8 @@ public class ExternalDataUtils {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         Base64.Encoder encoder = Base64.getEncoder();
-        ExternalDatasetProjectionInfo.writeFunctionCallInformationMapField(functionCallInfoMap, dataOutputStream);
+        ExternalDatasetProjectionFiltrationInfo.writeFunctionCallInformationMapField(functionCallInfoMap,
+                dataOutputStream);
         return encoder.encodeToString(byteArrayOutputStream.toByteArray());
     }
 

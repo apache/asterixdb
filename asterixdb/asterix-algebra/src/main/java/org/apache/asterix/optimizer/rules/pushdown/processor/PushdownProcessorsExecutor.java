@@ -32,10 +32,9 @@ import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpectedSchemaNodeToIATypeTranslatorVisitor;
 import org.apache.asterix.runtime.projection.ColumnDatasetProjectionFiltrationInfo;
-import org.apache.asterix.runtime.projection.ExternalDatasetProjectionInfo;
+import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
@@ -101,16 +100,19 @@ public class PushdownProcessorsExecutor {
 
     private IProjectionFiltrationInfo createExternalDatasetProjectionInfo(ScanDefineDescriptor scanDefineDescriptor,
             IOptimizationContext context) {
-        if (!context.getPhysicalOptimizationConfig().isExternalFieldPushdown()) {
-            return DefaultProjectionFiltrationInfo.INSTANCE;
+        Map<String, FunctionCallInformation> pathLocations = scanDefineDescriptor.getPathLocations();
+        ARecordType recordRequestedType = ALL_FIELDS_TYPE;
+        Dataset dataset = scanDefineDescriptor.getDataset();
+        if (context.getPhysicalOptimizationConfig().isExternalFieldPushdown()
+                && DatasetUtil.isFieldAccessPushdownSupported(dataset)) {
+            ExpectedSchemaNodeToIATypeTranslatorVisitor converter =
+                    new ExpectedSchemaNodeToIATypeTranslatorVisitor(pathLocations);
+            recordRequestedType = (ARecordType) scanDefineDescriptor.getRecordNode().accept(converter,
+                    scanDefineDescriptor.getDataset().getDatasetName());
         }
 
-        Map<String, FunctionCallInformation> pathLocations = scanDefineDescriptor.getPathLocations();
-        ExpectedSchemaNodeToIATypeTranslatorVisitor converter =
-                new ExpectedSchemaNodeToIATypeTranslatorVisitor(pathLocations);
-        ARecordType recordRequestedType = (ARecordType) scanDefineDescriptor.getRecordNode().accept(converter,
-                scanDefineDescriptor.getDataset().getDatasetName());
-        return new ExternalDatasetProjectionInfo(recordRequestedType, pathLocations);
+        return new ExternalDatasetProjectionFiltrationInfo(recordRequestedType, pathLocations,
+                scanDefineDescriptor.getFilterPaths(), scanDefineDescriptor.getFilterExpression());
     }
 
     private void setInfoToDataScan(AbstractScanOperator scanOp, IProjectionFiltrationInfo info) {

@@ -20,11 +20,11 @@ package org.apache.asterix.common.external;
 
 import java.io.Serializable;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public interface IExternalFilterEvaluatorFactory extends Serializable {
     IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector)
-            throws AlgebricksException;
+            throws HyracksDataException;
 }
