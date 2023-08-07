@@ -260,7 +260,7 @@ class ARecordCaster {
                 ps.print(typeTag);
 
                 //collect the output message and throw the exception
-                throw new HyracksDataException("type mismatch: including an extra field " + fieldBos.toString());
+                throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_EXTRA_FIELD, fieldBos.toString());
             }
         }
 
@@ -270,8 +270,8 @@ class ARecordCaster {
                 IAType t = cachedReqType.getFieldTypes()[i];
                 if (!NonTaggedFormatUtil.isOptional(t)) {
                     // no matched field in the input for a required closed field
-                    throw new HyracksDataException("type mismatch: missing a required closed field "
-                            + cachedReqType.getFieldNames()[i] + ": " + t.getTypeName());
+                    throw new RuntimeDataException(ErrorCode.TYPE_MISMATCH_MISSING_FIELD,
+                            cachedReqType.getFieldNames()[i], t.getTypeName());
                 }
             }
         }

@@ -4154,7 +4154,7 @@
       <compilation-unit name="create-dataset-2">
         <output-dir compare="Clean-JSON">create-dataset-2</output-dir>
         <source-location>false</source-location>
-        <expected-error>type mismatch: missing a required closed field my_id: string</expected-error>
+        <expected-error>Type mismatch: missing a required field my_id: string</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
