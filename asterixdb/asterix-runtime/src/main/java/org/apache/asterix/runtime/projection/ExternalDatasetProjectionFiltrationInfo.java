@@ -131,7 +131,7 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
         }
 
         if (filterExpression != null) {
-            generator.writeStringField("filter-on", filterExpression.toString());
+            generator.writeStringField("prefix-filter-on", filterExpression.toString());
         }
     }
 

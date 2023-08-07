@@ -21,6 +21,7 @@ package org.apache.asterix.external.input.filter;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.SerializerDeserializerUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,18 +30,17 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
-import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
 class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
     private final ATypeTag typeTag;
     private final ArrayBackedValueStorage value;
-    private final UTF8StringWriter utf8StringWriter;
+    private final AStringSerializerDeserializer stringSerDer;
 
     ExternalFilterValueEvaluator(ATypeTag typeTag) {
         this.typeTag = typeTag;
         value = new ArrayBackedValueStorage();
-        utf8StringWriter = new UTF8StringWriter();
+        stringSerDer = new AStringSerializerDeserializer(new UTF8StringWriter(), null);
     }
 
     @Override
@@ -58,7 +58,7 @@ class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
         result.set(value);
     }
 
-    private void writeValue(ATypeTag typeTag, String stringValue) throws IOException {
+    private void writeValue(ATypeTag typeTag, String stringValue) throws HyracksDataException {
         DataOutput output = value.getDataOutput();
         SerializerDeserializerUtil.serializeTag(typeTag, output);
         switch (typeTag) {
@@ -70,7 +70,7 @@ class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
             case DOUBLE:
                 DoubleSerializerDeserializer.write(Double.parseDouble(stringValue), output);
             case STRING:
-                UTF8StringUtil.writeUTF8(stringValue, output, utf8StringWriter);
+                stringSerDer.serialize(stringValue, output);
         }
     }
 }

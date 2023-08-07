@@ -38,13 +38,22 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * Using this singleton object may instantiate too many objects
+     *
+     * @deprecated use {{@link #AStringSerializerDeserializer(UTF8StringWriter, UTF8StringReader)}}
+     */
+    @Deprecated
     public static final AStringSerializerDeserializer INSTANCE = new AStringSerializerDeserializer();
     private final UTF8StringWriter utf8StringWriter;
     private final UTF8StringReader utf8StringReader;
 
     private AStringSerializerDeserializer() {
-        this.utf8StringWriter = null;
-        this.utf8StringReader = null;
+        this(null, null);
+    }
+
+    public AStringSerializerDeserializer(UTF8StringWriter utf8StringWriter) {
+        this(utf8StringWriter, null);
     }
 
     public AStringSerializerDeserializer(UTF8StringWriter utf8StringWriter, UTF8StringReader utf8StringReader) {
@@ -63,8 +72,12 @@ public class AStringSerializerDeserializer implements ISerializerDeserializer<AS
 
     @Override
     public void serialize(AString instance, DataOutput out) throws HyracksDataException {
+        serialize(instance.getStringValue(), out);
+    }
+
+    public void serialize(String value, DataOutput out) throws HyracksDataException {
         try {
-            UTF8StringUtil.writeUTF8(instance.getStringValue(), out, utf8StringWriter);
+            UTF8StringUtil.writeUTF8(value, out, utf8StringWriter);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

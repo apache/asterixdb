@@ -69,7 +69,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
      * @param scanDefineDescriptor data-scan descriptor
      * @return true to skip, false otherwise
      */
-    protected abstract boolean skip(ScanDefineDescriptor scanDefineDescriptor);
+    protected abstract boolean skip(ScanDefineDescriptor scanDefineDescriptor) throws AlgebricksException;
 
     /**
      * Prepare data-scan for a pushdown

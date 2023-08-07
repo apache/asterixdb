@@ -73,7 +73,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected boolean skip(ScanDefineDescriptor scanDefineDescriptor) {
+    protected boolean skip(ScanDefineDescriptor scanDefineDescriptor) throws AlgebricksException {
         Dataset dataset = scanDefineDescriptor.getDataset();
         LogicalOperatorTag scanOpTag = scanDefineDescriptor.getOperator().getOperatorTag();
         /*

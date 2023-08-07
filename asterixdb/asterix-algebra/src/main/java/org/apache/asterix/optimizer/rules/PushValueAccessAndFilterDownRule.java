@@ -27,11 +27,12 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
+import org.apache.asterix.optimizer.rules.pushdown.PushdownProcessorsExecutor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnRangeFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnValueAccessPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ExternalDatasetFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.InlineFilterExpressionsProcessor;
-import org.apache.asterix.optimizer.rules.pushdown.processor.PushdownProcessorsExecutor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -76,6 +77,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
+        // TODO this should be revised after introducing the proper compiler flags
         if (!context.getPhysicalOptimizationConfig().isExternalFieldPushdown() || !run) {
             //The rule was fired, or value access pushdown is disabled
             return false;
@@ -109,9 +111,11 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         if (context.getPhysicalOptimizationConfig().isColumnFilterEnabled()) {
             // Performs filter pushdowns
             pushdownProcessorsExecutor.add(new ColumnFilterPushdownProcessor(pushdownContext, context));
-            // Perform range-filter pushdowns
+            // Performs range-filter pushdowns
             pushdownProcessorsExecutor.add(new ColumnRangeFilterPushdownProcessor(pushdownContext, context));
-            // Inline AND/OR expression
+            // Performs prefix pushdowns
+            pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
+            // Inlines AND/OR expression (must be last to run)
             pushdownProcessorsExecutor.add(new InlineFilterExpressionsProcessor(pushdownContext, context));
         }
     }
