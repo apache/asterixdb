@@ -709,9 +709,9 @@
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.3</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.3</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>1.0.3</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.0.3,1.0.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.3,1.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.0.3</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
