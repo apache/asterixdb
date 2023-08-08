@@ -67,7 +67,8 @@ public class PushdownProcessorsExecutor {
             if (dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
                 info = createInternalColumnarDatasetInfo(scanDefineDescriptor, context);
             } else if (dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL
-                    && DatasetUtil.isFieldAccessPushdownSupported(dataset)) {
+                    && (DatasetUtil.isFieldAccessPushdownSupported(dataset)
+                            || DatasetUtil.isFilterPushdownSupported(dataset))) {
                 info = createExternalDatasetProjectionInfo(scanDefineDescriptor, context);
             }
             setInfoToDataScan(scanOp, info);

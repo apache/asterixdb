@@ -113,11 +113,11 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
             pushdownProcessorsExecutor.add(new ColumnFilterPushdownProcessor(pushdownContext, context));
             // Performs range-filter pushdowns
             pushdownProcessorsExecutor.add(new ColumnRangeFilterPushdownProcessor(pushdownContext, context));
-            // Performs prefix pushdowns
-            pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
-            // Inlines AND/OR expression (must be last to run)
-            pushdownProcessorsExecutor.add(new InlineFilterExpressionsProcessor(pushdownContext, context));
         }
+        // Performs prefix pushdowns
+        pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
+        // Inlines AND/OR expression (must be last to run)
+        pushdownProcessorsExecutor.add(new InlineFilterExpressionsProcessor(pushdownContext, context));
     }
 
     /**

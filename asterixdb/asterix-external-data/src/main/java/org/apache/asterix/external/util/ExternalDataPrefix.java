@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.COMPUTED_FIELD_PATTERN;
 import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.PREFIX_DEFAULT_DELIMITER;
 
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class ExternalDataPrefix {
     }
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
-        this(configuration.get(DEFINITION_FIELD_NAME));
+        this(getDefinitionOrPath(configuration));
     }
 
     public ExternalDataPrefix(String prefix) throws AlgebricksException {
@@ -244,5 +245,9 @@ public class ExternalDataPrefix {
         }
 
         return values;
+    }
+
+    private static String getDefinitionOrPath(Map<String, String> configuration) {
+        return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
     }
 }

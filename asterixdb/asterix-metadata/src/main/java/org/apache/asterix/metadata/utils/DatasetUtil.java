@@ -699,8 +699,8 @@ public class DatasetUtil {
         if (dataset.getDatasetType() == DatasetType.INTERNAL) {
             return dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
         }
-        // TODO add external dataset with dynamic prefixes
-        return false;
+        // External dataset support filter pushdown
+        return true;
     }
 
     public static boolean isRangeFilterPushdownSupported(Dataset dataset) {

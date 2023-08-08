@@ -26,13 +26,11 @@ import java.util.Set;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetFormat;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
@@ -202,11 +200,8 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
 
         Dataset dataset = getDataset(dataSource);
         //Only external dataset can have pushed down expressions
-        if (dataset.getDatasetType() == DatasetConfig.DatasetType.EXTERNAL
-                && !ExternalDataUtils
-                        .supportsPushdown(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties())
-                || dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL
-                        && dataset.getDatasetFormatInfo().getFormat() == DatasetFormat.ROW) {
+        if (dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL
+                && dataset.getDatasetFormatInfo().getFormat() == DatasetFormat.ROW) {
             return null;
         }
 
