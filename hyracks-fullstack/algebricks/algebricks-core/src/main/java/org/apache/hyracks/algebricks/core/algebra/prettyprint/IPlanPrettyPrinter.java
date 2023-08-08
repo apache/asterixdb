@@ -25,6 +25,8 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * Note: Some implementations may be stateful and not thread-safe.
  */
@@ -48,6 +50,10 @@ public interface IPlanPrettyPrinter {
     /** Prints the logical plan, annotated with physical operator and connector ids */
     IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys, boolean printOptimizerEstimates)
             throws AlgebricksException;
+
+    /** Prints the logical plan, annotated with physical operator and connector ids, and profiling info*/
+    IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys, boolean printOptimizerEstimates,
+            ObjectNode profile) throws AlgebricksException;
 
     /** Resets the state of the pretty printer. */
     IPlanPrettyPrinter reset() throws AlgebricksException;

@@ -4780,6 +4780,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         stats.setProcessedObjects(resultMetadata.getProcessedObjects());
         if (jobFlags.contains(JobFlag.PROFILE_RUNTIME)) {
             stats.setJobProfile(resultMetadata.getJobProfile());
+            apiFramework.generateOptimizedLogicalPlanWithProfile(resultMetadata.getJobProfile());
         }
         stats.updateTotalWarningsCount(resultMetadata.getTotalWarningsCount());
         WarningUtil.mergeWarnings(resultMetadata.getWarnings(), warningCollector);
