@@ -209,12 +209,14 @@ public class ExternalDataPrefix {
 
     /**
      * Evaluates whether the provided key satisfies the conditions of the evaluator or not
+     * TODO Check if {@link IExternalFilterEvaluator#isComputedFieldUsed(int)} is useful once we have regex extractor
      *
      * @param key       ke
      * @param evaluator evaluator
      * @return true if key satisfies the evaluator conditions, false otherwise
      */
     public boolean evaluate(String key, IExternalFilterEvaluator evaluator) throws HyracksDataException {
+        // TODO provide the List to avoid array creation
         List<String> keySegments = extractPrefixSegments(key);
 
         // segments of object key have to be larger than segments of the prefix
@@ -223,6 +225,7 @@ public class ExternalDataPrefix {
         }
 
         // extract values for all compute fields and set them in the evaluator
+        // TODO provide the List to avoid array creation
         List<String> values = extractValues(keySegments);
         for (int i = 0; i < computedFieldNames.size(); i++) {
             evaluator.setValue(i, values.get(i));

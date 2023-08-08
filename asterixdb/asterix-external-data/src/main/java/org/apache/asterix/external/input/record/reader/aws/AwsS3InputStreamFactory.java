@@ -75,7 +75,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
             IExternalFilterEvaluator evaluator) throws HyracksDataException {
 
         // if no computed fields or empty files list, return the original list
-        if (filesOnly.isEmpty() || !prefix.hasComputedFields()) {
+        if (filesOnly.isEmpty() || !prefix.hasComputedFields() || evaluator.isEmpty()) {
             return filesOnly;
         }
 

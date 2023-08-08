@@ -221,6 +221,11 @@
       </compilation-unit>
     </test-case>
     <!-- Parquet Tests End -->
+    <test-case FilePath="external-dataset/s3/filter">
+      <compilation-unit name="one-field">
+        <output-dir compare="Text">one-field</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
         <placeholder name="adapter" value="S3" />

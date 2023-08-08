@@ -25,14 +25,17 @@ import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConvert
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 import org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.hyracks.api.util.IoUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
@@ -43,6 +46,8 @@ import org.junit.runners.Parameterized;
 public class ExternalDatasetTestUtils {
 
     protected static final Logger LOGGER = LogManager.getLogger();
+    // Extension filters
+    private static final FilenameFilter JSON_FILTER = ((dir, name) -> name.endsWith(".json"));
 
     // Base directory paths for data files
     private static String JSON_DATA_PATH;
@@ -212,6 +217,9 @@ public class ExternalDatasetTestUtils {
         loadGzData(dataBasePath, "multi-lines-with-arrays", "5-records.json", definition, definitionSegment, false);
         loadGzData(dataBasePath, "multi-lines-with-nested-objects", "5-records.json", definition, definitionSegment,
                 false);
+
+        // Load external filter directories and files
+        loadDirectory(dataBasePath, "external-filter", JSON_FILTER);
     }
 
     private static void loadCsvFiles() {
@@ -272,6 +280,21 @@ public class ExternalDatasetTestUtils {
         loadData(generatedDataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "parquetTypes.parquet", definition, definitionSegment, false, false);
+    }
+
+    private static void loadDirectory(String dataBasePath, String rootPath, FilenameFilter filter) {
+        Collection<File> files = IoUtil.getMatchingFiles(Path.of(dataBasePath, rootPath), filter);
+        int size = 0;
+        for (File file : files) {
+            String path = file.getPath();
+            // +1 to remove the leading '/'
+            int startIndex = path.indexOf(rootPath) + rootPath.length() + 1;
+            int endIndex = path.lastIndexOf(File.separatorChar);
+            String definitionSegment = rootPath + File.separator + path.substring(startIndex, endIndex);
+            loadData(path.substring(0, endIndex), "", file.getName(), "", definitionSegment, false, false);
+            size++;
+        }
+        LOGGER.info("Loaded {} files from {}", size, dataBasePath + File.separator + rootPath);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,
