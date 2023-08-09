@@ -56,6 +56,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -142,7 +143,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        //convertOuterJoinstoJoinsIfPossible(outerJoinsDependencyList);
+        convertOuterJoinstoJoinsIfPossible(outerJoinsDependencyList);
 
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan2");
         int numberOfFromTerms = leafInputs.size();
@@ -420,38 +421,41 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return false;
     }
 
-    /* will implement this soon
     // dependencylist is  first, second, op
     // If we have R outer join S, first is the null extending table as in R, null
     // In this case, if S is to joined, then R must be present. So S depends on R.
     // If we have a case of (first, second, LOJ_operator) = (R_leaf_input_id, S_leaf_input_id, LOJop),
     // and another (S_leaf_input_id, ..., joinOp),
     // OR (..., S_leaf_input_id, joinOp) then the LOJ can be converted to a join!!
-    private void convertOuterJoinstoJoinsIfPossible(List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList) {
-        List<Integer> getRidOff = new ArrayList<>();
-        int i;
-        //for (Triple<Integer, Integer, ILogicalOperator> tr1 : outerJoinsDependencyList) {
-        for (i = 0; i < outerJoinsDependencyList.size(); i++) {
-            Quadruple<Integer, Integer, JoinOperator, Integer> tr1 = outerJoinsDependencyList.get(i);
-            if (tr1.getThird().getOuterJoin()) {
-                for (Quadruple<Integer, Integer, JoinOperator, Integer> tr2 : outerJoinsDependencyList) {
-                    if (tr2.getThird().getOuterJoin()) {
-                        if ((tr1.getSecond().equals(tr2.getFirst())) || (tr1.getSecond().equals(tr2.getSecond()))) {
-                            getRidOff.add(i);
+    private void convertOuterJoinstoJoinsIfPossible(
+            List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList) {
+        int i, j;
+        boolean changes = true;
+        while (changes) {
+            changes = false;
+            for (i = 0; i < outerJoinsDependencyList.size(); i++) {
+                Quadruple<Integer, Integer, JoinOperator, Integer> tr1 = outerJoinsDependencyList.get(i);
+                if (tr1.getThird().getOuterJoin()) {
+                    for (j = 0; j < outerJoinsDependencyList.size(); j++) {
+                        Quadruple<Integer, Integer, JoinOperator, Integer> tr2 = outerJoinsDependencyList.get(j);
+                        if ((i != j) && !(tr2.getThird().getOuterJoin())) {
+                            if ((tr1.getSecond().equals(tr2.getFirst())) || (tr1.getSecond().equals(tr2.getSecond()))) {
+                                outerJoinsDependencyList.get(i).getThird().setOuterJoin(false);
+                                changes = true;
+                            }
                         }
                     }
                 }
             }
         }
-    
-        for (i = getRidOff.size() - 1; i >= 0; i--) {
-            int j = getRidOff.get(i);
-            JoinOperator joinOp = outerJoinsDependencyList.get(j).getThird();
-            joinOp.setOuterJoin(false);
-            outerJoinsDependencyList.remove(j);
+
+        // now remove all joins from the list, as we do not need them anymore! We only need the outer joins
+        for (i = outerJoinsDependencyList.size() - 1; i >= 0; i--) {
+            if (!outerJoinsDependencyList.get(i).getThird().getOuterJoin()) {
+                outerJoinsDependencyList.remove(i);
+            }
         }
     }
-     */
 
     // Each outer join will create one set of dependencies. The right side depends on the left side.
     private boolean buildDependencyList(ILogicalOperator op, JoinOperator jO,
@@ -480,7 +484,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     }
                 }
                 if (leftSideExprBits != 0 && rightSideExprBits != 0) {// avoid expressions like true
-                    outerJoinsDependencyList.add(new Quadruple(leftSideExprBits, rightSideBits, jO, 1));
+                    outerJoinsDependencyList.add(new Quadruple(leftSideExprBits, rightSideBits, jO, 0));
                 }
             }
         } else {
@@ -499,7 +503,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 }
             }
             if (leftSideExprBits != 0 && rightSideExprBits != 0) {// avoid expressions like true
-                outerJoinsDependencyList.add(new Quadruple(leftSideExprBits, rightSideBits, jO, 1));
+                outerJoinsDependencyList.add(new Quadruple(leftSideExprBits, rightSideBits, jO, 0));
             }
         }
         return true;
@@ -547,11 +551,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 lastLeafInputNumber = leafInputNumber; // we are interested in the 2nd input only
                 k = 0;
                 // now we know the leafInput numbers that occurred on the right side of this join.
-                if ((op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) && (i == 1)) {
+                //if ((op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN) && (i == 1)) {
+                if ((joinClause(op)) && (i == 1)) {
                     for (int j = firstLeafInputNumber; j <= lastLeafInputNumber; j++) {
                         k |= 1 << (j - 1);
                     }
-                    if (firstLeafInputNumber < lastLeafInputNumber) { // if more is than one leafInput, only then buildSets make sense.
+                    // buildSets are only for outerjoins.
+                    if ((op.getOperatorTag() == LogicalOperatorTag.LEFTOUTERJOIN)
+                            && (firstLeafInputNumber < lastLeafInputNumber)) { // if more is than one leafInput, only then buildSets make sense.
                         buildSets.add(new Triple<>(k, lastLeafInputNumber - firstLeafInputNumber + 1, true)); // convert the second to boolean later
                     }
                     boolean ret = buildDependencyList(op, jO, outerJoinsDependencyList, k);
@@ -723,21 +730,41 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     private void getJoinNode(PlanNode plan, List<JoinOperator> allJoinOps) throws AlgebricksException {
-        //AbstractBinaryJoinOperator joinOp;
-        Boolean outerJoin;
-        LogicalOperatorTag tag;
-        if (plan.outerJoin) {
-            outerJoin = true;
-        } else {
-            outerJoin = false;
-        }
-        int i = -1;
-        for (JoinOperator ajOp : allJoinOps) {
-            i++;
-            if (ajOp.getOuterJoin() == outerJoin && unUsedJoinOps[i]) {
-                unUsedJoinOps[i] = false;
-                newJoinOps.add(ajOp.getAbstractJoinOp());
-                break;
+        AbstractBinaryJoinOperator abjOp;
+        int i;
+
+        if (plan.outerJoin) { // find an unused outer join op.
+            for (i = 0; i < allJoinOps.size(); i++) {
+                abjOp = allJoinOps.get(i).getAbstractJoinOp();
+                if (unUsedJoinOps[i] && abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.LEFT_OUTER) {
+                    unUsedJoinOps[i] = false;
+                    newJoinOps.add(abjOp);
+                    return;
+                }
+            }
+        } else {// now look for an unused join node.
+            // This may not always be possible as an outer join may have been converted to a join node.
+            // In this case, there won't be as many join nodes. But we are guaranteed to find at least one join node
+            // but it may already have been used. We just need to make a copy of it!
+            for (i = 0; i < allJoinOps.size(); i++) {
+                abjOp = allJoinOps.get(i).getAbstractJoinOp();
+                if (unUsedJoinOps[i] && abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
+                    unUsedJoinOps[i] = false;
+                    newJoinOps.add(abjOp);
+                    return;
+                }
+            }
+            // This means we have not found an unused join node. Find a used join node and make a copy.
+            for (i = 0; i < allJoinOps.size(); i++) {
+                abjOp = allJoinOps.get(i).getAbstractJoinOp();
+                if (abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
+                    //InnerJoinOperator inJOp = new InnerJoinOperator((Mutable<ILogicalExpression>) plan.getJoinExpr());
+                    InnerJoinOperator inJOp =
+                            new InnerJoinOperator(new MutableObject<ILogicalExpression>(plan.getJoinExpr()),
+                                    new MutableObject<>(null), new MutableObject<>(null));
+                    newJoinOps.add(inJOp);
+                    return;
+                }
             }
         }
     }
@@ -853,7 +880,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // our plan, so the rest of the code will be happy. Strange that this assign appears in the join graph.
 
     private ILogicalOperator addRemainingAssignsAtTheTop(ILogicalOperator op, List<AssignOperator> assignOps) {
-
         ILogicalOperator root = op;
         for (AssignOperator aOp : assignOps) {
             aOp.getInputs().get(0).setValue(root);
