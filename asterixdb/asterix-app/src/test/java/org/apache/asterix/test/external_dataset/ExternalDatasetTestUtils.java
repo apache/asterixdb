@@ -283,7 +283,12 @@ public class ExternalDatasetTestUtils {
     }
 
     private static void loadDirectory(String dataBasePath, String rootPath, FilenameFilter filter) {
-        Collection<File> files = IoUtil.getMatchingFiles(Path.of(dataBasePath, rootPath), filter);
+        File dir = new File(dataBasePath, rootPath);
+        if (!dir.exists() || !dir.isDirectory()) {
+            return;
+        }
+
+        Collection<File> files = IoUtil.getMatchingFiles(dir.toPath(), filter);
         int size = 0;
         for (File file : files) {
             String path = file.getPath();
