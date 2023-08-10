@@ -226,6 +226,17 @@
         <output-dir compare="Text">one-field</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/s3/filter" check-warnings="true">
+      <compilation-unit name="type-mismatch">
+        <output-dir compare="Text">type-mismatch</output-dir>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'java.lang.NumberFormatException: For input string: "department"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'java.lang.NumberFormatException: For input string: "department"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'java.lang.NumberFormatException: For input string: "department"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/Jones/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'java.lang.NumberFormatException: For input string: "last-name"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/miller/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'java.lang.NumberFormatException: For input string: "last-name"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/smith/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'java.lang.NumberFormatException: For input string: "last-name"'</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
         <placeholder name="adapter" value="S3" />

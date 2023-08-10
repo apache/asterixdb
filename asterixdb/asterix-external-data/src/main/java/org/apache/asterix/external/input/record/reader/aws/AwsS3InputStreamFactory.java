@@ -58,7 +58,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
 
         //Get a list of S3 objects
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         // TODO(htowaileb): Since we're using the root to load the files then start filtering, it might end up being

@@ -46,6 +46,10 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 public class ExternalDataPrefix {
 
@@ -53,6 +57,7 @@ public class ExternalDataPrefix {
     private String root;
     private final boolean endsWithSlash;
     private final List<String> segments;
+    private final IWarningCollector warningCollector;
 
     private final List<String> computedFieldNames = new ArrayList<>();
     private final List<IAType> computedFieldTypes = new ArrayList<>();
@@ -66,13 +71,20 @@ public class ExternalDataPrefix {
     static {
         supportedTypes.add(ATypeTag.STRING);
         supportedTypes.add(ATypeTag.BIGINT);
+        supportedTypes.add(ATypeTag.DOUBLE);
     }
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
-        this(getDefinitionOrPath(configuration));
+        this(getDefinitionOrPath(configuration), null);
     }
 
-    public ExternalDataPrefix(String prefix) throws AlgebricksException {
+    public ExternalDataPrefix(Map<String, String> configuration, IWarningCollector warningCollector)
+            throws AlgebricksException {
+        this(getDefinitionOrPath(configuration), warningCollector);
+    }
+
+    public ExternalDataPrefix(String prefix, IWarningCollector warningCollector) throws AlgebricksException {
+        this.warningCollector = warningCollector != null ? warningCollector : NoOpWarningCollector.INSTANCE;
         this.original = prefix != null ? prefix : "";
         this.endsWithSlash = this.original.endsWith("/");
 
@@ -251,10 +263,27 @@ public class ExternalDataPrefix {
         // extract values for all compute fields and set them in the evaluator
         // TODO provide the List to avoid array creation
         List<String> values = extractValues(keySegments);
-        for (int i = 0; i < computedFieldNames.size(); i++) {
-            if (evaluator.isComputedFieldUsed(i)) {
-                evaluator.setValue(i, values.get(i));
+
+        String computedFieldName = null;
+        IAType computedFieldType = null;
+        String computedFieldValue = null;
+        try {
+            for (int i = 0; i < computedFieldNames.size(); i++) {
+                computedFieldName = computedFieldNames.get(i);
+                computedFieldType = computedFieldTypes.get(i);
+                computedFieldValue = values.get(i);
+
+                if (evaluator.isComputedFieldUsed(i)) {
+                    evaluator.setValue(i, computedFieldValue);
+                }
             }
+        } catch (HyracksDataException ex) {
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(null, ErrorCode.FAILED_TO_EVALUATE_COMPUTED_FIELD,
+                        LogRedactionUtil.userData(key), computedFieldName, computedFieldType,
+                        LogRedactionUtil.userData(computedFieldValue), LogRedactionUtil.userData(ex.getMessage())));
+            }
+            return false;
         }
 
         return evaluator.evaluate();
