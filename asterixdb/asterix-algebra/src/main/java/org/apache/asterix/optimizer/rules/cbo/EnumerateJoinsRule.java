@@ -56,11 +56,11 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -75,7 +75,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private final JoinEnum joinEnum;
     private int leafInputNumber;
     List<ILogicalOperator> newJoinOps;
-    boolean[] unUsedJoinOps;
     List<JoinOperator> allJoinOps; // can be inner join or left outer join
     // Will be in the order of the from clause. Important for position ordering when assigning bits to join expressions.
     List<ILogicalOperator> leafInputs;
@@ -185,9 +184,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         generateHintWarnings();
 
         if (numberOfFromTerms > 1) {
-            unUsedJoinOps = new boolean[allJoinOps.size()];
-            for (int i = 0; i < allJoinOps.size(); i++)
-                unUsedJoinOps[i] = true;
             getNewJoinOps(cheapestPlanNode, allJoinOps);
             if (allJoinOps.size() != newJoinOps.size()) {
                 return false; // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
@@ -451,8 +447,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
         // now remove all joins from the list, as we do not need them anymore! We only need the outer joins
         for (i = outerJoinsDependencyList.size() - 1; i >= 0; i--) {
-            if (!outerJoinsDependencyList.get(i).getThird().getOuterJoin()) {
+            if (!outerJoinsDependencyList.get(i).getThird().getOuterJoin()) { // not an outerjoin
                 outerJoinsDependencyList.remove(i);
+            }
+        }
+
+        if (outerJoinsDependencyList.size() == 0) {
+            for (i = buildSets.size() - 1; i >= 0; i--) {
+                buildSets.remove(i); // no need for buildSets if there are no OJs.
             }
         }
     }
@@ -531,7 +533,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
      * leafInputs can be switched. The various data structures make the leafInputs accessible efficiently.
      */
     private boolean getJoinOpsAndLeafInputs(ILogicalOperator op) throws AlgebricksException {
-
         if (joinClause(op)) {
             JoinOperator jO = new JoinOperator((AbstractBinaryJoinOperator) op);
             allJoinOps.add(jO);
@@ -668,7 +669,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private int findAssignOp(ILogicalOperator leafInput, List<AssignOperator> assignOps,
             List<ILogicalExpression> assignJoinExprs) throws AlgebricksException {
         int i = -1;
-
         for (AssignOperator aOp : assignOps) {
             i++;
             if (assignJoinExprs.get(i) != null)
@@ -733,36 +733,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         AbstractBinaryJoinOperator abjOp;
         int i;
 
-        if (plan.outerJoin) { // find an unused outer join op.
+        if (plan.outerJoin) {
             for (i = 0; i < allJoinOps.size(); i++) {
                 abjOp = allJoinOps.get(i).getAbstractJoinOp();
-                if (unUsedJoinOps[i] && abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.LEFT_OUTER) {
-                    unUsedJoinOps[i] = false;
-                    newJoinOps.add(abjOp);
+                if (abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.LEFT_OUTER) {
+                    newJoinOps.add(OperatorManipulationUtil.bottomUpCopyOperators(abjOp));
                     return;
                 }
             }
-        } else {// now look for an unused join node.
-            // This may not always be possible as an outer join may have been converted to a join node.
-            // In this case, there won't be as many join nodes. But we are guaranteed to find at least one join node
-            // but it may already have been used. We just need to make a copy of it!
-            for (i = 0; i < allJoinOps.size(); i++) {
-                abjOp = allJoinOps.get(i).getAbstractJoinOp();
-                if (unUsedJoinOps[i] && abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
-                    unUsedJoinOps[i] = false;
-                    newJoinOps.add(abjOp);
-                    return;
-                }
-            }
-            // This means we have not found an unused join node. Find a used join node and make a copy.
+        } else {
             for (i = 0; i < allJoinOps.size(); i++) {
                 abjOp = allJoinOps.get(i).getAbstractJoinOp();
                 if (abjOp.getJoinKind() == AbstractBinaryJoinOperator.JoinKind.INNER) {
-                    //InnerJoinOperator inJOp = new InnerJoinOperator((Mutable<ILogicalExpression>) plan.getJoinExpr());
-                    InnerJoinOperator inJOp =
-                            new InnerJoinOperator(new MutableObject<ILogicalExpression>(plan.getJoinExpr()),
-                                    new MutableObject<>(null), new MutableObject<>(null));
-                    newJoinOps.add(inJOp);
+                    newJoinOps.add(OperatorManipulationUtil.bottomUpCopyOperators(abjOp));
                     return;
                 }
             }
@@ -775,6 +758,52 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             getNewJoinOps(plan.getLeftPlanNode(), allJoinOps);
             getNewJoinOps(plan.getRightPlanNode(), allJoinOps);
         }
+    }
+
+    private void fillJoinAnnotations(PlanNode plan, ILogicalOperator joinOp) {
+        AbstractBinaryJoinOperator abJoinOp = (AbstractBinaryJoinOperator) joinOp;
+        ILogicalExpression expr = plan.getJoinExpr();
+        abJoinOp.getCondition().setValue(expr);
+        // add the annotations
+        if (plan.getJoinOp() == PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN) {
+            // this annotation is needed for the physical optimizer to replace this with the unnest operator later
+            AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
+            removeJoinAnnotations(afcExpr);
+            setAnnotation(afcExpr, IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Added IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX to " + afcExpr.toString());
+            }
+        } else if (plan.getJoinOp() == PlanNode.JoinMethod.HYBRID_HASH_JOIN
+                || plan.getJoinOp() == PlanNode.JoinMethod.BROADCAST_HASH_JOIN
+                || plan.getJoinOp() == PlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN) {
+            if (plan.getJoinOp() == PlanNode.JoinMethod.BROADCAST_HASH_JOIN) {
+                // Broadcast the right branch.
+                BroadcastExpressionAnnotation bcast =
+                        new BroadcastExpressionAnnotation(plan.side == HashJoinExpressionAnnotation.BuildSide.RIGHT
+                                ? BroadcastExpressionAnnotation.BroadcastSide.RIGHT
+                                : BroadcastExpressionAnnotation.BroadcastSide.LEFT);
+                AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
+                removeJoinAnnotations(afcExpr);
+                setAnnotation(afcExpr, bcast);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Added BroadCastAnnotation to " + afcExpr.toString());
+                }
+            } else if (plan.getJoinOp() == PlanNode.JoinMethod.HYBRID_HASH_JOIN) {
+                HashJoinExpressionAnnotation hjAnnotation = new HashJoinExpressionAnnotation(plan.side);
+                AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
+                removeJoinAnnotations(afcExpr);
+                setAnnotation(afcExpr, hjAnnotation);
+                if (LOGGER.isTraceEnabled()) {
+                    LOGGER.trace("Added HashJoinAnnotation to " + afcExpr.toString());
+                }
+            } else {
+                if (expr != ConstantExpression.TRUE) {
+                    AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
+                    removeJoinAnnotations(afcExpr);
+                }
+            }
+        }
+        addCardCostAnnotations(joinOp, plan);
     }
 
     // This one is for join queries
@@ -793,49 +822,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         ILogicalOperator joinOp = joinOps.get(totalNumberOfJoins.intValue()); // intValue set to 0 initially
 
         if (plan.IsJoinNode()) {
-            AbstractBinaryJoinOperator abJoinOp = (AbstractBinaryJoinOperator) joinOp;
-            ILogicalExpression expr = plan.getJoinExpr();
-            abJoinOp.getCondition().setValue(expr);
-            // add the annotations
-            if (plan.getJoinOp() == PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN) {
-                // this annotation is needed for the physical optimizer to replace this with the unnest operator later
-                AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
-                removeJoinAnnotations(afcExpr);
-                setAnnotation(afcExpr, IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX);
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("Added IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX to " + afcExpr.toString());
-                }
-            } else if (plan.getJoinOp() == PlanNode.JoinMethod.HYBRID_HASH_JOIN
-                    || plan.getJoinOp() == PlanNode.JoinMethod.BROADCAST_HASH_JOIN
-                    || plan.getJoinOp() == PlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN) {
-                if (plan.getJoinOp() == PlanNode.JoinMethod.BROADCAST_HASH_JOIN) {
-                    // Broadcast the right branch.
-                    BroadcastExpressionAnnotation bcast =
-                            new BroadcastExpressionAnnotation(plan.side == HashJoinExpressionAnnotation.BuildSide.RIGHT
-                                    ? BroadcastExpressionAnnotation.BroadcastSide.RIGHT
-                                    : BroadcastExpressionAnnotation.BroadcastSide.LEFT);
-                    AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
-                    removeJoinAnnotations(afcExpr);
-                    setAnnotation(afcExpr, bcast);
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace("Added BroadCastAnnotation to " + afcExpr.toString());
-                    }
-                } else if (plan.getJoinOp() == PlanNode.JoinMethod.HYBRID_HASH_JOIN) {
-                    HashJoinExpressionAnnotation hjAnnotation = new HashJoinExpressionAnnotation(plan.side);
-                    AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
-                    removeJoinAnnotations(afcExpr);
-                    setAnnotation(afcExpr, hjAnnotation);
-                    if (LOGGER.isTraceEnabled()) {
-                        LOGGER.trace("Added HashJoinAnnotation to " + afcExpr.toString());
-                    }
-                } else {
-                    if (expr != ConstantExpression.TRUE) {
-                        AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
-                        removeJoinAnnotations(afcExpr);
-                    }
-                }
-            }
-            addCardCostAnnotations(joinOp, plan);
+            fillJoinAnnotations(plan, joinOp);
         }
 
         if (leftPlan.IsScanNode()) {
