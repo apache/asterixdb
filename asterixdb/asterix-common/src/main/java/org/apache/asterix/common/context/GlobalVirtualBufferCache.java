@@ -498,12 +498,13 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                     // note that this is different from flushing a filtered memory component
                     PrimaryIndexOperationTracker opTracker =
                             (PrimaryIndexOperationTracker) primaryIndex.getOperationTracker();
+                    ILSMMemoryComponent memoryComponent = null;
                     synchronized (opTracker) {
                         boolean flushable = !primaryIndex.isCurrentMutableComponentEmpty();
                         if (flushable && !opTracker.isFlushLogCreated()) {
                             // if the flush log has already been created, then we can simply wait for
                             // that flush to complete
-                            ILSMMemoryComponent memoryComponent = primaryIndex.getCurrentMemoryComponent();
+                            memoryComponent = primaryIndex.getCurrentMemoryComponent();
                             if (memoryComponent.getState() == ComponentState.READABLE_WRITABLE) {
                                 // before we schedule the flush, mark the memory component as unwritable to prevent
                                 // future writers
@@ -522,7 +523,9 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                         if ((flushable || opTracker.isFlushLogCreated()) && !isMetadataIndex(primaryIndex)) {
                             // global vbc cannot wait on metadata indexes because metadata indexes support full
                             // ACID transactions. Waiting on metadata indexes can introduce deadlocks.
-                            flushingComponents.add(primaryIndex.getCurrentMemoryComponent());
+                            if (memoryComponent != null) {
+                                flushingComponents.add(memoryComponent);
+                            }
                             return primaryIndex;
                         }
                     }
