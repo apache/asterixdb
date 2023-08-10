@@ -497,6 +497,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
+                <aliasUrl>https://opensource.org/licenses/Apache-2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</aliasUrl>
@@ -594,6 +595,14 @@
               <url>http://golang.org/LICENSE</url>
               <aliasUrls>
                 <aliasUrl>https://golang.org/LICENSE</aliasUrl>
+              </aliasUrls>
+            </license>
+            <license>
+              <displayName>MIT No Attribution (MIT-0)</displayName>
+              <url>https://spdx.org/licenses/MIT-0</url>
+              <aliasUrls>
+                <aliasUrl>https://spdx.org/licenses/MIT-0.html</aliasUrl>
+                <aliasUrl>https://github.com/aws/mit-0</aliasUrl>
               </aliasUrls>
             </license>
           </licenses>
