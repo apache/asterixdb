@@ -22,5 +22,5 @@
 USE test;
 
 SELECT value count(*)
-FROM test t
-WHERE t.name = "accounting";
+FROM company t
+WHERE t.company = "cheese";

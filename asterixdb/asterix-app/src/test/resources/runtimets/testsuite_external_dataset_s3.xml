@@ -230,12 +230,14 @@
     <test-case FilePath="external-dataset/s3/filter" check-warnings="true">
       <compilation-unit name="type-mismatch">
         <output-dir compare="Text">type-mismatch</output-dir>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'For input string: "department"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'For input string: "department"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'department'. Reason: 'For input string: "department"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/Jones/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'For input string: "last-name"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/miller/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'For input string: "last-name"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/last-name/smith/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'last-name'. Reason: 'For input string: "last-name"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'For input string: "accounting"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'For input string: "engineering"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'For input string: "hr"'</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/s3/filter">
+      <compilation-unit name="query">
+        <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
     <!-- Dynamic prefixes tests end -->

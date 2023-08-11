@@ -17,10 +17,4 @@
  * under the License.
  */
 
-// param max-warnings:json=10
-
-USE test;
-
-SELECT value count(*)
-FROM test t
-WHERE t.name = "accounting";
+DROP DATAVERSE test IF EXISTS;

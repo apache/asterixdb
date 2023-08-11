@@ -22,5 +22,7 @@
 USE test;
 
 SELECT value count(*)
-FROM test t
-WHERE t.name = "accounting";
+FROM maintenance t
+WHERE t.year = 2001
+  AND t.month = 01
+  AND t.day = 01;
