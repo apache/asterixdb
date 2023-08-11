@@ -62,20 +62,16 @@ class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
         DataOutput output = value.getDataOutput();
         SerializerDeserializerUtil.serializeTag(typeTag, output);
 
-        try {
-            switch (typeTag) {
-                case TINYINT:
-                case SMALLINT:
-                case INTEGER:
-                case BIGINT:
-                    Integer64SerializerDeserializer.write(Long.parseLong(stringValue), output);
-                case DOUBLE:
-                    DoubleSerializerDeserializer.write(Double.parseDouble(stringValue), output);
-                case STRING:
-                    stringSerDer.serialize(stringValue, output);
-            }
-        } catch (Exception ex) {
-            throw HyracksDataException.create(ex);
+        switch (typeTag) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+                Integer64SerializerDeserializer.write(Long.parseLong(stringValue), output);
+            case DOUBLE:
+                DoubleSerializerDeserializer.write(Double.parseDouble(stringValue), output);
+            case STRING:
+                stringSerDer.serialize(stringValue, output);
         }
     }
 }

@@ -277,7 +277,7 @@ public class ExternalDataPrefix {
                     evaluator.setValue(i, computedFieldValue);
                 }
             }
-        } catch (HyracksDataException ex) {
+        } catch (NumberFormatException ex) {
             if (warningCollector.shouldWarn()) {
                 warningCollector.warn(Warning.of(null, ErrorCode.FAILED_TO_EVALUATE_COMPUTED_FIELD,
                         LogRedactionUtil.userData(key), computedFieldName, computedFieldType,
