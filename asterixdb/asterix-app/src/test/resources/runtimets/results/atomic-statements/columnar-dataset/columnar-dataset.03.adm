@@ -1,0 +1,9 @@
+{ "reviews": { "id": 1, "year": null, "quarter": null, "review": "good" } }
+{ "reviews": { "id": 2, "year": null, "quarter": null, "review": "good" } }
+{ "reviews": { "id": 3, "year": 2018, "quarter": null, "review": "good" } }
+{ "reviews": { "id": 4, "year": 2018, "quarter": null, "review": "bad" } }
+{ "reviews": { "id": 5, "year": 2018, "quarter": 1, "review": "bad" } }
+{ "reviews": { "id": 7, "year": 2018, "quarter": 2, "review": "good" } }
+{ "reviews": { "id": 8, "year": 2018, "quarter": 2, "review": "bad" } }
+{ "reviews": { "id": 9, "year": 2019, "quarter": null, "review": "good" } }
+{ "reviews": { "id": 10, "year": 2019, "quarter": null, "review": "bad" } }

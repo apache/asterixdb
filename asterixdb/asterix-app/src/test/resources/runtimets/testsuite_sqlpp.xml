@@ -16371,5 +16371,10 @@
         <output-dir compare="Clean-JSON">atomic-statements-4</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="columnar-dataset">
+        <output-dir compare="Clean-JSON">columnar-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>
