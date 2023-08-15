@@ -112,12 +112,12 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         LOGGER.info("Starting Global Recovery");
         MetadataManager.INSTANCE.init();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        rollbackIncompleteAtomicTransactions(appCtx);
         if (appCtx.getStorageProperties().isStorageGlobalCleanup()) {
             int storageGlobalCleanupTimeout = appCtx.getStorageProperties().getStorageGlobalCleanupTimeout();
             performGlobalStorageCleanup(mdTxnCtx, storageGlobalCleanupTimeout);
         }
         mdTxnCtx = doRecovery(appCtx, mdTxnCtx);
-        rollbackIncompleteAtomicTransactions(appCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         recoveryCompleted = true;
         recovering = false;

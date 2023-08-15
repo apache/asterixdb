@@ -37,6 +37,7 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.external.IDataSourceAdapter;
+import org.apache.asterix.common.ioopcallbacks.AtomicLSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -403,8 +404,9 @@ public class MetadataBootstrap {
                         : new SecondaryIndexOperationTrackerFactory(datasetId);
         ILSMComponentIdGeneratorFactory idGeneratorProvider = new DatasetLSMComponentIdGeneratorFactory(datasetId);
         DatasetInfoProvider datasetInfoProvider = new DatasetInfoProvider(datasetId);
-        ILSMIOOperationCallbackFactory ioOpCallbackFactory =
-                new LSMIndexIOOperationCallbackFactory(idGeneratorProvider, datasetInfoProvider);
+        ILSMIOOperationCallbackFactory ioOpCallbackFactory = appContext.isCloudDeployment()
+                ? new AtomicLSMIndexIOOperationCallbackFactory(idGeneratorProvider, datasetInfoProvider)
+                : new LSMIndexIOOperationCallbackFactory(idGeneratorProvider, datasetInfoProvider);
         ILSMPageWriteCallbackFactory pageWriteCallbackFactory = new LSMIndexPageWriteCallbackFactory();
 
         IStorageComponentProvider storageComponentProvider = appContext.getStorageComponentProvider();

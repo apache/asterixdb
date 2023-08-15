@@ -279,7 +279,7 @@ public class PrimaryIndexOperationTracker extends BaseOperationTracker implement
         for (FlushOperation flush : lastFlushOperation.values()) {
             FileReference target = flush.getTarget();
             Map<String, Object> map = flush.getParameters();
-            final LSMComponentId id = (LSMComponentId) map.get(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID);
+            final LSMComponentId id = (LSMComponentId) map.get(LSMIOOperationCallback.KEY_FLUSHED_COMPONENT_ID);
             final ResourceReference ref = ResourceReference.of(target.getAbsolutePath());
             final long componentSequence = IndexComponentFileReference.of(ref.getName()).getSequenceEnd();
             indexCheckpointManagerProvider.get(ref).flushed(componentSequence, 0L, id.getMaxId());

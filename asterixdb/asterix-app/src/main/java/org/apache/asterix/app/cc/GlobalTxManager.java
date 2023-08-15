@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.cc;
 
+import static org.apache.hyracks.util.ExitUtil.EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,8 +40,11 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -85,7 +90,8 @@ public class GlobalTxManager implements IGlobalTxManager {
 
         synchronized (context) {
             try {
-                context.wait();
+                CCConfig config = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig();
+                context.wait(config.getGlobalTxCommitTimeout());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new ACIDException(e);
@@ -194,10 +200,12 @@ public class GlobalTxManager implements IGlobalTxManager {
         }
         synchronized (context) {
             try {
-                context.wait();
+                CCConfig config = ((ClusterControllerService) serviceContext.getControllerService()).getCCConfig();
+                context.wait(config.getGlobalTxRollbackTimeout());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ACIDException(e);
+                LOGGER.error("Error while rolling back atomic statement for {}, halting JVM", jobId);
+                ExitUtil.halt(EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT);
             }
         }
         txnContextRepository.remove(jobId);

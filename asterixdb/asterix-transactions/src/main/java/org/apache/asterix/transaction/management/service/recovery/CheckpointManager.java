@@ -139,7 +139,8 @@ public class CheckpointManager extends AbstractCheckpointManager {
         return lsmIndex -> {
             if (lsmIndex.isPrimaryIndex()) {
                 PrimaryIndexOperationTracker opTracker = (PrimaryIndexOperationTracker) lsmIndex.getOperationTracker();
-                return currentTime - opTracker.getLastFlushTime() >= datasetCheckpointIntervalNanos;
+                return !lsmIndex.isAtomic()
+                        && currentTime - opTracker.getLastFlushTime() >= datasetCheckpointIntervalNanos;
             }
             return false;
         };
@@ -148,7 +149,7 @@ public class CheckpointManager extends AbstractCheckpointManager {
     private Predicate<ILSMIndex> newLaggingDatasetPredicate(long checkpointTargetLSN) {
         return lsmIndex -> {
             final LSMIOOperationCallback ioCallback = (LSMIOOperationCallback) lsmIndex.getIOOperationCallback();
-            return ioCallback.getPersistenceLsn() < checkpointTargetLSN;
+            return !lsmIndex.isAtomic() && ioCallback.getPersistenceLsn() < checkpointTargetLSN;
         };
     }
 }

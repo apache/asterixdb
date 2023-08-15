@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.transaction.management.service.transaction;
 
+import static org.apache.hyracks.util.ExitUtil.EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT;
+
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,14 +46,19 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @ThreadSafe
 public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private final INcApplicationContext appCtx;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -111,9 +118,13 @@ public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
         }
         try {
             commit();
-        } catch (Exception e) {
-            rollback(resourceMap);
-            throw new ACIDException(e);
+        } catch (HyracksDataException e) {
+            try {
+                rollback(resourceMap);
+            } catch (Exception ex) {
+                LOGGER.error("Error while rolling back atomic statement for {}, halting JVM", txnId);
+                ExitUtil.halt(EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT);
+            }
         } finally {
             deleteLogFile();
         }
@@ -122,17 +133,25 @@ public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
 
     private void persistLogFile(List<Integer> datasetIds, Map<String, ILSMComponentId> resourceMap)
             throws HyracksDataException, JsonProcessingException {
-        IIOManager ioManager = appCtx.getIoManager();
+        IIOManager ioManager = appCtx.getPersistenceIoManager();
         FileReference fref = ioManager.resolve(Paths.get(StorageConstants.METADATA_TXN_NOWAL_DIR_NAME,
                 StorageConstants.PARTITION_DIR_PREFIX + StorageConstants.METADATA_PARTITION,
                 String.format("%s.log", txnId)).toString());
-        MetadataAtomicTransactionLog txnLog = new MetadataAtomicTransactionLog(txnId, datasetIds,
-                appCtx.getServiceContext().getNodeId(), resourceMap);
-        ioManager.overwrite(fref, OBJECT_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(txnLog).getBytes());
+        ioManager.overwrite(fref, OBJECT_MAPPER.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(toJson(datasetIds, resourceMap)).getBytes());
+    }
+
+    private ObjectNode toJson(List<Integer> datasetIds, Map<String, ILSMComponentId> resourceMap) {
+        ObjectNode jsonNode = OBJECT_MAPPER.createObjectNode();
+        jsonNode.put("txnId", txnId.getId());
+        jsonNode.putPOJO("datasetIds", datasetIds);
+        jsonNode.put("nodeId", appCtx.getServiceContext().getNodeId());
+        jsonNode.putPOJO("resourceMap", resourceMap);
+        return jsonNode;
     }
 
     public void deleteLogFile() {
-        IIOManager ioManager = appCtx.getIoManager();
+        IIOManager ioManager = appCtx.getPersistenceIoManager();
         try {
             FileReference fref = ioManager.resolve(Paths.get(StorageConstants.METADATA_TXN_NOWAL_DIR_NAME,
                     StorageConstants.PARTITION_DIR_PREFIX + StorageConstants.METADATA_PARTITION,
@@ -172,10 +191,13 @@ public class AtomicNoWALTransactionContext extends AtomicTransactionContext {
                 datasetLifecycleManager.getIndexCheckpointManagerProvider();
         resourceMap.forEach((k, v) -> {
             try {
-                IIndexCheckpointManager checkpointManager = indexCheckpointManagerProvider.get(ResourceReference.of(k));
+                IIndexCheckpointManager checkpointManager =
+                        indexCheckpointManagerProvider.get(ResourceReference.ofIndex(k));
                 if (checkpointManager.getCheckpointCount() > 0) {
                     IndexCheckpoint checkpoint = checkpointManager.getLatest();
                     if (checkpoint.getLastComponentId() == v.getMaxId()) {
+                        LOGGER.info("Removing checkpoint for resource {} for component id {}", k,
+                                checkpoint.getLastComponentId());
                         checkpointManager.deleteLatest(v.getMaxId(), 1);
                     }
                 }

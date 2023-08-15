@@ -61,7 +61,6 @@ import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionSubsystem;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.transactions.TxnId;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.asterix.transaction.management.service.logging.LogManager;
@@ -158,9 +157,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     @Override
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;
-        if (appCtx.isCloudDeployment()) {
-            doMetadataRecovery();
-        }
         LOGGER.info("starting recovery for partitions {}", partitions);
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();
         Checkpoint checkpointObject = checkpointManager.getLatest();
@@ -173,11 +169,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
 
         //get active partitions on this node
         replayPartitionsLogs(partitions, logMgr.getLogReader(true), lowWaterMarkLSN, true);
-    }
-
-    public synchronized void doMetadataRecovery() {
-        LOGGER.info("starting recovery for metadata partition {}", StorageConstants.METADATA_PARTITION);
-        appCtx.getTransactionSubsystem().getTransactionManager().rollbackMetadataTransactionsWithoutWAL();
     }
 
     public synchronized void replayPartitionsLogs(Set<Integer> partitions, ILogReader logReader, long lowWaterMarkLSN,

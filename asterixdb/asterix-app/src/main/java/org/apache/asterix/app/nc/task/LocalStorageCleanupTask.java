@@ -46,6 +46,10 @@ public class LocalStorageCleanupTask implements INCLifecycleTask {
         deleteInvalidMetadataIndexes(localResourceRepository);
         final Set<Integer> nodePartitions = appContext.getReplicaManager().getPartitions();
         localResourceRepository.deleteCorruptedResources();
+        INcApplicationContext appCtx = (INcApplicationContext) cs.getApplicationContext();
+        if (appCtx.isCloudDeployment() && nodePartitions.contains(metadataPartitionId)) {
+            appCtx.getTransactionSubsystem().getTransactionManager().rollbackMetadataTransactionsWithoutWAL();
+        }
         for (Integer partition : nodePartitions) {
             localResourceRepository.cleanup(partition);
         }

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.message;
 
+import static org.apache.hyracks.util.ExitUtil.EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT;
+
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +34,9 @@ import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
+import org.apache.hyracks.util.ExitUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Message sent from CC to all NCs to rollback an atomic statement/job.
@@ -42,6 +47,8 @@ public class AtomicJobRollbackMessage implements INcAddressedMessage {
     private final JobId jobId;
     private final List<Integer> datasetIds;
     private final Map<String, ILSMComponentId> componentIdMap;
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public AtomicJobRollbackMessage(JobId jobId, List<Integer> datasetIds,
             Map<String, ILSMComponentId> componentIdMap) {
@@ -57,15 +64,19 @@ public class AtomicJobRollbackMessage implements INcAddressedMessage {
                 datasetLifecycleManager.getIndexCheckpointManagerProvider();
         componentIdMap.forEach((k, v) -> {
             try {
-                IIndexCheckpointManager checkpointManager = indexCheckpointManagerProvider.get(ResourceReference.of(k));
+                IIndexCheckpointManager checkpointManager =
+                        indexCheckpointManagerProvider.get(ResourceReference.ofIndex(k));
                 if (checkpointManager.getCheckpointCount() > 0) {
                     IndexCheckpoint checkpoint = checkpointManager.getLatest();
                     if (checkpoint.getLastComponentId() == v.getMaxId()) {
+                        LOGGER.info("Removing checkpoint for resource {} for component id {}", k,
+                                checkpoint.getLastComponentId());
                         checkpointManager.deleteLatest(v.getMaxId(), 1);
                     }
                 }
-            } catch (HyracksDataException e) {
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                LOGGER.error("Error while rolling back atomic statement for {}, halting JVM", jobId);
+                ExitUtil.halt(EC_FAILED_TO_ROLLBACK_ATOMIC_STATEMENT);
             }
         });
         AtomicJobRollbackCompleteMessage message =
