@@ -18,7 +18,11 @@
  */
 package org.apache.asterix.app.message;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.INcApplicationContext;
@@ -46,11 +50,27 @@ public class AtomicJobCommitMessage implements INcAddressedMessage {
     @Override
     public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         IDatasetLifecycleManager datasetLifecycleManager = appCtx.getDatasetLifecycleManager();
+        ForkJoinPool commonPool = ForkJoinPool.commonPool();
+        List<Future> futures = new ArrayList<>();
         for (Integer datasetId : datasetIds) {
             for (IndexInfo indexInfo : datasetLifecycleManager.getDatasetInfo(datasetId).getIndexes().values()) {
                 if (indexInfo.getIndex().isPrimaryIndex()) {
-                    ((PrimaryIndexOperationTracker) indexInfo.getIndex().getOperationTracker()).commit();
+                    futures.add(commonPool.submit(() -> {
+                        try {
+                            ((PrimaryIndexOperationTracker) indexInfo.getIndex().getOperationTracker()).commit();
+                        } catch (HyracksDataException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }));
                 }
+            }
+        }
+        for (Future f : futures) {
+            try {
+                f.get();
+            } catch (ExecutionException e) {
+                futures.forEach(future -> future.cancel(true));
+                throw HyracksDataException.create(e);
             }
         }
         AtomicJobCompletionMessage message =
