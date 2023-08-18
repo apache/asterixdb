@@ -834,6 +834,8 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("win-mark-first-null-impl", FunctionIdentifier.VARARGS);
     public static final FunctionIdentifier WIN_PARTITION_LENGTH_IMPL =
             FunctionConstants.newAsterix("win-partition-length-impl", 0);
+    public static final FunctionIdentifier WIN_MARK_VALID_TUPLES_IMPL =
+            FunctionConstants.newAsterix("win-mark-valid-tuple-impl", FunctionIdentifier.VARARGS);
 
     // unnesting functions
     public static final FunctionIdentifier SCAN_COLLECTION = FunctionConstants.newAsterix("scan-collection", 1);
@@ -1896,6 +1898,7 @@ public class BuiltinFunctions {
         addPrivateFunction(WIN_MARK_FIRST_MISSING_IMPL, ABooleanTypeComputer.INSTANCE, false);
         addPrivateFunction(WIN_MARK_FIRST_NULL_IMPL, ABooleanTypeComputer.INSTANCE, false);
         addPrivateFunction(WIN_PARTITION_LENGTH_IMPL, AInt64TypeComputer.INSTANCE, false);
+        addPrivateFunction(WIN_MARK_VALID_TUPLES_IMPL, ABooleanTypeComputer.INSTANCE, false);
 
         // Similarity functions
         addFunction(EDIT_DISTANCE_CONTAINS, OrderedListOfAnyTypeComputer.INSTANCE, true);
@@ -2967,6 +2970,7 @@ public class BuiltinFunctions {
         addWindowFunction(null, WIN_MARK_FIRST_MISSING_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
         addWindowFunction(null, WIN_MARK_FIRST_NULL_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
         addWindowFunction(null, WIN_PARTITION_LENGTH_IMPL, NO_FRAME_CLAUSE, MATERIALIZE_PARTITION);
+        addWindowFunction(null, WIN_MARK_VALID_TUPLES_IMPL, NO_FRAME_CLAUSE, INJECT_ORDER_ARGS);
     }
 
     static {

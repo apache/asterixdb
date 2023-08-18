@@ -2,75 +2,27 @@ distribute result [$$34]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    union ($$73, $$98, $$34)
-    -- UNION_ALL  |PARTITIONED|
-      exchange
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        assign [$$73] <- [{"t": $$t}] project: [$$73]
-        -- ASSIGN  |PARTITIONED|
-          select (spatial-intersect($$38, $$70.getField(1))) project: [$$t]
-          -- STREAM_SELECT  |PARTITIONED|
-            project ([$$t, $$38, $$70])
-            -- STREAM_PROJECT  |PARTITIONED|
-              exchange
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                unnest-map [$$69, $$70] <- index-search("OfficerLocations", 0, "Default", "test", "OfficerLocations", true, false, 1, $$50, 1, $$50, true, true, true)
-                -- BTREE_SEARCH  |PARTITIONED|
-                  exchange
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$t, $$38, $$50])
+    assign [$$34] <- [{"t": $$t}] project: [$$34]
+    -- ASSIGN  |PARTITIONED|
+      select ($$52) project: [$$t]
+      -- STREAM_SELECT  |PARTITIONED|
+        project ([$$t, $$52])
+        -- STREAM_PROJECT  |PARTITIONED|
+          window-aggregate [$$52] <- [win-mark-valid-tuple-impl($$46, $$47, $$48, $$49)] partition [$$50] order (ASC, $$46) (ASC, $$47) (ASC, $$48) (ASC, $$49)
+          -- WINDOW_STREAM  |PARTITIONED|
+            exchange
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$50) (ASC, $$46) (ASC, $$47) (ASC, $$48) (ASC, $$49)
+              -- STABLE_SORT [$$50(ASC), $$46(ASC), $$47(ASC), $$48(ASC), $$49(ASC)]  |PARTITIONED|
+                exchange
+                -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+                  select (spatial-intersect($$38, create-point($$46, $$47))) project: [$$t, $$50, $$46, $$47, $$48, $$49]
+                  -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$t, $$38, $$46, $$47, $$48, $$49, $$50])
                     -- STREAM_PROJECT  |PARTITIONED|
                       exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        split ($$51)
-                        -- SPLIT  |PARTITIONED|
-                          exchange
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            project ([$$t, $$38, $$46, $$47, $$50, $$51])
-                            -- STREAM_PROJECT  |PARTITIONED|
-                              exchange
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                unnest-map [$$46, $$47, $$48, $$49, $$50, $$51] <- index-search("o_location", 1, "Default", "test", "OfficerLocations", true, true, 4, $$42, $$43, $$44, $$45)
-                                -- RTREE_SEARCH  |PARTITIONED|
-                                  exchange
-                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                    assign [$$42, $$43, $$44, $$45] <- [create-mbr($$38, 2, 0), create-mbr($$38, 2, 1), create-mbr($$38, 2, 2), create-mbr($$38, 2, 3)]
-                                    -- ASSIGN  |PARTITIONED|
-                                      assign [$$38] <- [create-circle($$t.getField(0), 100.0)]
-                                      -- ASSIGN  |PARTITIONED|
-                                        select (gt($$36.getField(2), 100)) project: [$$t]
-                                        -- STREAM_SELECT  |PARTITIONED|
-                                          project ([$$t, $$36])
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            exchange
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              data-scan []<-[$$35, $$t, $$36] <- test.KVStore with filter on min:[$$72] max:[]
-                                              -- DATASOURCE_SCAN  |PARTITIONED|
-                                                exchange
-                                                -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                  assign [$$72] <- [100]
-                                                  -- ASSIGN  |PARTITIONED|
-                                                    empty-tuple-source
-                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-      exchange
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        assign [$$98] <- [{"t": $$t}] project: [$$98]
-        -- ASSIGN  |PARTITIONED|
-          select (spatial-intersect($$38, create-point($$46, $$47))) project: [$$t]
-          -- STREAM_SELECT  |PARTITIONED|
-            project ([$$t, $$38, $$46, $$47])
-            -- STREAM_PROJECT  |PARTITIONED|
-              exchange
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                split ($$51)
-                -- SPLIT  |PARTITIONED|
-                  exchange
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$t, $$38, $$46, $$47, $$50, $$51])
-                    -- STREAM_PROJECT  |PARTITIONED|
-                      exchange
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        unnest-map [$$46, $$47, $$48, $$49, $$50, $$51] <- index-search("o_location", 1, "Default", "test", "OfficerLocations", true, true, 4, $$42, $$43, $$44, $$45)
+                        unnest-map [$$46, $$47, $$48, $$49, $$50] <- index-search("o_location", 1, "Default", "test", "OfficerLocations", true, true, 4, $$42, $$43, $$44, $$45)
                         -- RTREE_SEARCH  |PARTITIONED|
                           exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
@@ -84,11 +36,11 @@ distribute result [$$34]
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      data-scan []<-[$$35, $$t, $$36] <- test.KVStore with filter on min:[$$72] max:[]
+                                      data-scan []<-[$$35, $$t, $$36] <- test.KVStore with filter on min:[$$53] max:[]
                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                         exchange
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                          assign [$$72] <- [100]
+                                          assign [$$53] <- [100]
                                           -- ASSIGN  |PARTITIONED|
                                             empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,0 +1,16 @@
+distribute result [$$17] [cardinality: 2.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 2.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$17] <- [{"cid": $$18}] project: [$$17] [cardinality: 2.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+    -- ASSIGN  |PARTITIONED|
+      select (gt($$c.getField("age"), 3)) project: [$$18] [cardinality: 2.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+      -- STREAM_SELECT  |PARTITIONED|
+        exchange [cardinality: 5.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          data-scan []<-[$$18, $$c] <- test.Customers [cardinality: 5.0, doc-size: 9.0, op-cost: 0.0, total-cost: 5.0]
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

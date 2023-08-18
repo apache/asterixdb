@@ -207,8 +207,10 @@ public class RTreeAccessMethod implements IAccessMethod {
         if (!isIndexOnlyPlan || dataset.getDatasetType() == DatasetType.EXTERNAL) {
             subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
         } else {
-            // If this is an index-only plan, the topmost operator returned is UNIONALL operator.
-            if (primaryIndexUnnestOp.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+            // If this is an index-only plan, the topmost operator returned is DISTINCT for 
+            //single collection query & SELECT for join query.
+            if (primaryIndexUnnestOp.getOperatorTag() == LogicalOperatorTag.DISTINCT
+                    || primaryIndexUnnestOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 selectRef.setValue(primaryIndexUnnestOp);
             } else {
                 subTree.getDataSourceRef().setValue(primaryIndexUnnestOp);
@@ -248,12 +250,6 @@ public class RTreeAccessMethod implements IAccessMethod {
         IAType spatialType = keyPairType.first;
         int numDimensions = NonTaggedFormatUtil.getNumDimensions(spatialType.getTypeTag());
         int numSecondaryKeys = numDimensions * 2;
-
-        Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo = analysisCtx.getIndexOnlyPlanInfo();
-        boolean isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
-        // We apply index-only plan for an internal dataset.
-        boolean generateInstantTrylockResultFromIndexSearch =
-                dataset.getDatasetType() == DatasetType.INTERNAL && isIndexOnlyPlan ? true : false;
 
         // We made sure that the indexSubTree has a datasource scan.
         AbstractDataSourceOperator dataSourceOp =
@@ -310,9 +306,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         }
         context.computeAndSetTypeEnvironmentForOperator(assignSearchKeys);
 
-        ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, assignSearchKeys, jobGenParams, context, retainInput, retainNull,
-                generateInstantTrylockResultFromIndexSearch, leftOuterMissingValue);
+        ILogicalOperator secondaryIndexUnnestOp =
+                AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType, metaRecordType, chosenIndex,
+                        assignSearchKeys, jobGenParams, context, retainInput, retainNull, leftOuterMissingValue);
 
         // Generates the rest of the upstream plan which feeds the search results into the primary index.
         return dataset.getDatasetType() == DatasetType.EXTERNAL

@@ -71,33 +71,13 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * For the primary-index search, a SELECT operator is followed by DATASOURE_SCAN operator since no ASSIGN / UNNEST
  * operator is required to get the primary key fields (they are already stored fields in the BTree tuples).
  * If the above pattern is found, this rule replaces the pattern with the following pattern.
- * If the given plan is both a secondary-index search and an index-only plan, it builds two paths.
- * The left path has a UNIONALL operator at the top. And the original SELECT operator is followed. Also, the original
- * ASSIGN / UNNEST operators are followed. Then, UNNEST-MAP for the primary-index-search is followed
- * to fetch the record. Before that, a SPLIT operator is introduced. Before this, an UNNEST-MAP for
- * the secondary-index-search is followed to conduct a secondary-index search. The search key (original ASSIGN/UNNEST)
- * to the secondary-index-search (UNNEST-MAP) is placed before that.
- * The right path has the above UNIONALL operator at the top. Then, possibly has optional SELECT and/or ASSIGN/UNNEST
- * operators for the composite BTree or RTree search cases. Then, the above SPLIT operator is followed. Before the SPLIT
- * operator, it shares the same operators with the left path.
+ * If the given plan is both a secondary-index search and an index-only plan,
  * To be qualified as an index-only plan, there are two conditions.
  * 1) Search predicate can be covered by a secondary index-search.
  * 2) there are only PK and/or SK fields in the return clause.
  * If the given query satisfies the above conditions, we call it an index-only plan.
  * The benefit of the index-only plan is that we don't need to traverse the primary index
  * after fetching SK, PK entries from a secondary index.
- * The index-only plan works as follows.
- * 1) During a secondary-index search, after fetching <SK, PK> pair that satisfies the given predicate,
- * we try to get an instantTryLock on PK to verify that <SK, PK> is a valid pair.
- * If it succeeds, the given <SK, PK> pair is trustworthy so that we can return this as a valid output.
- * This tuple goes to the right path of UNIONALL operator since we don't need to traverse the primary index.
- * If instantTryLock on PK fails, an operation on the PK record is ongoing, so we need to traverse
- * the primary index to fetch the entire record and verify the search predicate. So, this <SK, PK> pair
- * goes to the left path of UNIONALL operator to traverse the primary index.
- * In the left path, we fetch the record using the given PK and fetch SK field and does SELECT verification.
- * 2) A UNIONALL operator combines tuples from the left path and the right path and the rest of the plan continues.
- * In an index-only plan, sort before the primary index-search is not required since we assume that
- * the chances that a tuple (<SK, PK> pair) goes into the left path are low.
  * If the given query plan is not an index-only plan, we call this plan as non-index only plan.
  * In this case, the original plan will be transformed into the following pattern.
  * The original SELECT operator is placed at the top. And the original ASSIGN / UNNEST operators are followed.
@@ -116,7 +96,7 @@ import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
  * 5. Rewrite the plan using index(es) (delegated to IAccessMethods).
  * If multiple secondary index access paths are available, the optimizer uses the intersection operator
  * to get the intersected primary key from all the chosen secondary indexes. In this case, we don't check
- * whether the given plan is an index-only plan.
+ * whether the given plan is an index-only plan. (why?)
  * The detailed documentation of intersecting multiple secondary indexes is here:
  * https://cwiki.apache.org/confluence/display/ASTERIXDB/Intersect+multiple+secondary+index
  */

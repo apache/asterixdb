@@ -317,6 +317,7 @@ index-selection: intersection
 index-selection: intersection-with-filter
 index-selection: intersection_with_nodegroup
 index-selection: verify
+index-only-testcases: simple-index-only-rtree
 list: query-ASTERIXDB-159-2
 list: query-ASTERIXDB-159-3
 list: query-ASTERIXDB-673

@@ -403,12 +403,7 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
             boolean retainInput, boolean retainNull, boolean requiresBroadcast, IOptimizationContext context,
             LogicalVariable newMissingNullPlaceHolderForLOJ, IAlgebricksConstantValue leftOuterMissingValue)
             throws AlgebricksException {
-        // TODO: we currently do not support the index-only plan for the inverted index searches since
-        // there can be many <SK, PK> pairs for the same PK and we may see two different records with the same PK
-        // (e.g., the record is deleted and inserted with the same PK). The reason is that there are
-        // no locking processes during a secondary index DML operation. When a secondary index search can see
-        // the only one version of the record during the lifetime of a query, index-only plan can be applied.
-        boolean generateInstantTrylockResultFromIndexSearch = false;
+        // TODO: we currently do not support the index-only plan for the inverted index searches since (how to say no?)
 
         IOptimizableFuncExpr optFuncExpr = AccessMethodUtils.chooseFirstOptFuncExpr(chosenIndex, analysisCtx);
         Dataset dataset = indexSubTree.getDataset();
@@ -453,9 +448,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         jobGenParams.setKeyVarList(keyVarList);
         // By default, we don't generate SK output for an inverted index
         // since it doesn't contain a field value, only part of it.
-        ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, inputOp, jobGenParams, context, retainInput, retainNull,
-                generateInstantTrylockResultFromIndexSearch, leftOuterMissingValue);
+        ILogicalOperator secondaryIndexUnnestOp =
+                AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType, metaRecordType, chosenIndex,
+                        inputOp, jobGenParams, context, retainInput, retainNull, leftOuterMissingValue);
 
         // Generates the rest of the upstream plan which feeds the search results into the primary index.
         ILogicalOperator primaryIndexUnnestOp = AccessMethodUtils.createRestOfIndexSearchPlan(afterTopOpRefs, topOpRef,

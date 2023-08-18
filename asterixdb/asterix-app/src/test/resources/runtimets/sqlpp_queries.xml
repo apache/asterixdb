@@ -6742,6 +6742,28 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="index-only-testcases">
+      <test-case FilePath="index-only-testcases">
+        <compilation-unit name="heterogeneous-index-only-compund-keys">
+          <output-dir compare="Text">heterogeneous-index-only-compund-keys</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="index-only-testcases">
+        <compilation-unit name="simple-index-only">
+          <output-dir compare="Text">simple-index-only</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="index-only-testcases">
+        <compilation-unit name="simple-index-only-compund-keys">
+          <output-dir compare="Text">simple-index-only-compund-keys</output-dir>
+        </compilation-unit>
+      </test-case>
+    <test-case FilePath="index-only-testcases">
+      <compilation-unit name="simple-index-only-rtree">
+        <output-dir compare="Text">simple-index-only-rtree</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="inverted-index-join">
     <test-case FilePath="inverted-index-join">
       <compilation-unit name="ngram-edit-distance">

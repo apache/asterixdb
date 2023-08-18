@@ -1,0 +1,20 @@
+distribute result [$$22] [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$22] <- [{"cid": $$23, "orderstatus": $$24, "orderpriority": $$o.getField("orderpriority")}] project: [$$22] [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+    -- ASSIGN  |PARTITIONED|
+      select (and(eq($$24, "ORDER_DELIVERED"), lt($$23, 800))) [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+      -- STREAM_SELECT  |PARTITIONED|
+        assign [$$23, $$24] <- [$$o.getField("cid"), $$o.getField("orderstatus")] [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+        -- ASSIGN  |PARTITIONED|
+          project ([$$o]) [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+          -- STREAM_PROJECT  |PARTITIONED|
+            exchange [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              data-scan []<-[$$25, $$o] <- test.Orders [cardinality: 4.0, doc-size: 31.75, op-cost: 0.0, total-cost: 4.0]
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

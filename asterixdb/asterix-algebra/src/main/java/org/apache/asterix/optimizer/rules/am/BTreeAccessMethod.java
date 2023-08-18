@@ -314,8 +314,7 @@ public class BTreeAccessMethod implements IAccessMethod {
 
     /**
      * Creates an index utilization plan optimization - in case of an index-only select plan:
-     * union < project < select < assign? < unnest-map(pidx) < split < unnest-map(sidx) < assign? < datasource-scan
-     * ..... < project < ................................... <
+     *  < project < select < distint < sort < unnest-map(sidx) < assign? < datasource-scan
      */
     @Override
     public ILogicalOperator createIndexSearchPlan(List<Mutable<ILogicalOperator>> afterTopOpRefs,
@@ -358,13 +357,6 @@ public class BTreeAccessMethod implements IAccessMethod {
         // Whether the given plan is an index-only plan or not.
         Quadruple<Boolean, Boolean, Boolean, Boolean> indexOnlyPlanInfo = analysisCtx.getIndexOnlyPlanInfo();
         boolean isIndexOnlyPlan = indexOnlyPlanInfo.getFirst();
-
-        // We only apply index-only plan for an internal dataset.
-        boolean generateInstantTrylockResultFromIndexSearch = false;
-        if (dataset.getDatasetType() == DatasetType.INTERNAL && isIndexOnlyPlan) {
-            generateInstantTrylockResultFromIndexSearch = true;
-        }
-
         // List of function expressions that will be replaced by the secondary-index search.
         // These func exprs will be removed from the select condition at the very end of this method.
         Set<ILogicalExpression> replacedFuncExprs = new HashSet<>();
@@ -684,10 +676,9 @@ public class BTreeAccessMethod implements IAccessMethod {
         }
 
         // Creates an unnest-map for the secondary index search.
-        // The result: SK, PK, [Optional - the result of an instantTrylock on PK]
-        ILogicalOperator secondaryIndexUnnestOp = AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType,
-                metaRecordType, chosenIndex, inputOp, jobGenParams, context, retainInput, retainMissing,
-                generateInstantTrylockResultFromIndexSearch, leftOuterMissingValue);
+        ILogicalOperator secondaryIndexUnnestOp =
+                AccessMethodUtils.createSecondaryIndexUnnestMap(dataset, recordType, metaRecordType, chosenIndex,
+                        inputOp, jobGenParams, context, retainInput, retainMissing, leftOuterMissingValue);
 
         // Generate the rest of the upstream plan which feeds the search results into the primary index.
         ILogicalOperator indexSearchOp = null;
