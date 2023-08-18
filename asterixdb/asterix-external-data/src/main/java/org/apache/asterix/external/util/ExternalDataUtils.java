@@ -45,6 +45,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -54,6 +55,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
@@ -979,5 +981,21 @@ public class ExternalDataUtils {
     public static void setVoidArgument(ArrayBackedValueStorage argHolder) throws IOException {
         argHolder.getDataOutput().writeByte(ARRAY16);
         argHolder.getDataOutput().writeShort((short) 0);
+    }
+
+    /**
+     * Tests the provided key against all the provided predicates/evaluators and return true if they all pass.
+     *
+     * @param key key
+     * @param predicate predicate
+     * @param matchers matchers
+     * @param externalDataPrefix external data prefix
+     * @param evaluator evaluator
+     *
+     * @return true if key passes all tests, false otherwise
+     */
+    public static boolean evaluate(String key, BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
+        return !key.endsWith("/") && predicate.test(matchers, key) && externalDataPrefix.evaluate(key, evaluator);
     }
 }

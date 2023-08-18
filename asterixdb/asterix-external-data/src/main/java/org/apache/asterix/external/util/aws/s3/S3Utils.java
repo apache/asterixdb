@@ -56,13 +56,16 @@ import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -360,7 +363,8 @@ public class S3Utils {
      */
     public static List<S3Object> listS3Objects(Map<String, String> configuration,
             AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
-            IWarningCollector warningCollector) throws CompilationException {
+            IWarningCollector warningCollector, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws CompilationException, HyracksDataException {
         // Prepare to retrieve the objects
         List<S3Object> filesOnly;
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -368,13 +372,15 @@ public class S3Utils {
         String prefix = getPrefix(configuration);
 
         try {
-            filesOnly = listS3Objects(s3Client, container, prefix, includeExcludeMatcher);
+            filesOnly =
+                    listS3Objects(s3Client, container, prefix, includeExcludeMatcher, externalDataPrefix, evaluator);
         } catch (S3Exception ex) {
             // New API is not implemented, try falling back to old API
             try {
                 // For error code, see https://docs.aws.amazon.com/AmazonS3/latest/API/ErrorResponses.html
                 if (ex.awsErrorDetails().errorCode().equals(ERROR_METHOD_NOT_IMPLEMENTED)) {
-                    filesOnly = oldApiListS3Objects(s3Client, container, prefix, includeExcludeMatcher);
+                    filesOnly = oldApiListS3Objects(s3Client, container, prefix, includeExcludeMatcher,
+                            externalDataPrefix, evaluator);
                 } else {
                     throw ex;
                 }
@@ -407,7 +413,8 @@ public class S3Utils {
      * @param includeExcludeMatcher include/exclude matchers to apply
      */
     private static List<S3Object> listS3Objects(S3Client s3Client, String container, String prefix,
-            AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher) {
+            AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
         String newMarker = null;
         List<S3Object> filesOnly = new ArrayList<>();
 
@@ -425,7 +432,7 @@ public class S3Utils {
 
             // Collect the paths to files only
             collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
+                    includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator);
 
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
             if (!listObjectsResponse.isTruncated()) {
@@ -447,7 +454,8 @@ public class S3Utils {
      * @param includeExcludeMatcher include/exclude matchers to apply
      */
     private static List<S3Object> oldApiListS3Objects(S3Client s3Client, String container, String prefix,
-            AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher) {
+            AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
         String newMarker = null;
         List<S3Object> filesOnly = new ArrayList<>();
 
@@ -465,7 +473,7 @@ public class S3Utils {
 
             // Collect the paths to files only
             collectAndFilterFiles(listObjectsResponse.contents(), includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
+                    includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator);
 
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
             if (!listObjectsResponse.isTruncated()) {
@@ -479,21 +487,20 @@ public class S3Utils {
     }
 
     /**
-     * AWS S3 returns all the objects as paths, not differentiating between folder and files. The path is considered
-     * a file if it does not end up with a "/" which is the separator in a folder structure.
+     * Collects only files that pass all tests
      *
-     * @param s3Objects List of returned objects
+     * @param s3Objects s3 objects
+     * @param predicate predicate
+     * @param matchers matchers
+     * @param filesOnly filtered files
+     * @param externalDataPrefix external data prefix
+     * @param evaluator evaluator
      */
     private static void collectAndFilterFiles(List<S3Object> s3Objects, BiPredicate<List<Matcher>, String> predicate,
-            List<Matcher> matchers, List<S3Object> filesOnly) {
+            List<Matcher> matchers, List<S3Object> filesOnly, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws HyracksDataException {
         for (S3Object object : s3Objects) {
-            // skip folders
-            if (object.key().endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, object.key())) {
+            if (ExternalDataUtils.evaluate(object.key(), predicate, matchers, externalDataPrefix, evaluator)) {
                 filesOnly.add(object);
             }
         }

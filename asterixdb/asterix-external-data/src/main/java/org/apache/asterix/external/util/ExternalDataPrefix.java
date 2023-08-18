@@ -250,6 +250,11 @@ public class ExternalDataPrefix {
         // TODO provide the List to avoid array creation
         List<String> keySegments = extractPrefixSegments(key);
 
+        // no computed fields filter, accept path
+        if (!hasComputedFields() || evaluator.isEmpty()) {
+            return true;
+        }
+
         // segments of object key have to be larger than segments of the prefix
         if (keySegments.size() <= segments.size()) {
             return false;

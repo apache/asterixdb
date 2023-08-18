@@ -28,10 +28,12 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
@@ -56,9 +58,16 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws AlgebricksException, HyracksDataException {
+
+        // prepare prefix for computed field calculations
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
         //Get path
         String path = configuration.containsKey(ExternalDataConstants.KEY_PATH)
-                ? configuration.get(ExternalDataConstants.KEY_PATH) : buildPathURIs(configuration, warningCollector);
+                ? configuration.get(ExternalDataConstants.KEY_PATH)
+                : buildPathURIs(configuration, warningCollector, externalDataPrefix, evaluator);
         //Put S3 configurations to AsterixDB's Hadoop configuration
         putS3ConfToHadoopConf(configuration, path);
 
@@ -108,11 +117,13 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
      * @return Comma-delimited paths (e.g., "s3a://bucket/file1.parquet,s3a://bucket/file2.parquet")
      * @throws CompilationException Compilation exception
      */
-    private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector)
-            throws CompilationException {
+    private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator)
+            throws CompilationException, HyracksDataException {
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        List<S3Object> filesOnly = S3Utils.listS3Objects(configuration, includeExcludeMatcher, warningCollector);
+        List<S3Object> filesOnly = S3Utils.listS3Objects(configuration, includeExcludeMatcher, warningCollector,
+                externalDataPrefix, evaluator);
         StringBuilder builder = new StringBuilder();
 
         if (!filesOnly.isEmpty()) {
