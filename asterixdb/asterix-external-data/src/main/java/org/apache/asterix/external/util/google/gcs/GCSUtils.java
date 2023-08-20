@@ -46,11 +46,14 @@ import java.util.regex.Matcher;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -154,7 +157,8 @@ public class GCSUtils {
     }
 
     public static List<Blob> listItems(Map<String, String> configuration, IncludeExcludeMatcher includeExcludeMatcher,
-            IWarningCollector warningCollector) throws CompilationException {
+            IWarningCollector warningCollector, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws CompilationException, HyracksDataException {
         // Prepare to retrieve the objects
         List<Blob> filesOnly = new ArrayList<>();
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -170,7 +174,7 @@ public class GCSUtils {
 
         // Collect the paths to files only
         collectAndFilterFiles(items, includeExcludeMatcher.getPredicate(), includeExcludeMatcher.getMatchersList(),
-                filesOnly);
+                filesOnly, externalDataPrefix, evaluator);
 
         // Warn if no files are returned
         if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
@@ -187,15 +191,10 @@ public class GCSUtils {
      * @param items List of returned objects
      */
     private static void collectAndFilterFiles(Page<Blob> items, BiPredicate<List<Matcher>, String> predicate,
-            List<Matcher> matchers, List<Blob> filesOnly) {
+            List<Matcher> matchers, List<Blob> filesOnly, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws HyracksDataException {
         for (Blob item : items.iterateAll()) {
-            // skip folders
-            if (item.getName().endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, item.getName())) {
+            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator)) {
                 filesOnly.add(item);
             }
         }

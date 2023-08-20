@@ -839,6 +839,9 @@ public class ExternalDataUtils {
 
     public static IncludeExcludeMatcher getIncludeExcludeMatchers(Map<String, String> configuration)
             throws CompilationException {
+        // ensure validity of include/exclude matchers
+        validateIncludeExclude(configuration);
+
         // Get and compile the patterns for include/exclude if provided
         List<Matcher> includeMatchers = new ArrayList<>();
         List<Matcher> excludeMatchers = new ArrayList<>();

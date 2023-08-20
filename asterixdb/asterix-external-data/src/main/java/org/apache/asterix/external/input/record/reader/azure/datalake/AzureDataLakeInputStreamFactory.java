@@ -58,9 +58,10 @@ public class AzureDataLakeInputStreamFactory extends AbstractExternalInputStream
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
 
         IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
-        // Ensure the validity of include/exclude
-        ExternalDataUtils.validateIncludeExclude(configuration);
+
+        // get include/exclude matchers
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
+
         DataLakeServiceClient client = buildAzureDatalakeClient(appCtx, configuration);
         List<PathItem> filesOnly =
                 listDatalakePathItems(client, configuration, includeExcludeMatcher, warningCollector);

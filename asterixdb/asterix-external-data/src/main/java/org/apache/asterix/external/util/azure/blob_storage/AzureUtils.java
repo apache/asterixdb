@@ -58,10 +58,14 @@ import java.util.regex.Matcher;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -395,19 +399,24 @@ public class AzureUtils {
         }
     }
 
+    public static List<BlobItem> listBlobItems(IApplicationContext context, Map<String, String> configuration,
+            AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
+            IWarningCollector warningCollector, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws CompilationException {
+        BlobServiceClient blobServiceClient = buildAzureBlobClient(context, configuration);
+        return listBlobItems(blobServiceClient, configuration, includeExcludeMatcher, warningCollector,
+                externalDataPrefix, evaluator);
+    }
+
     public static List<BlobItem> listBlobItems(BlobServiceClient blobServiceClient, Map<String, String> configuration,
             AbstractExternalInputStreamFactory.IncludeExcludeMatcher includeExcludeMatcher,
-            IWarningCollector warningCollector) throws CompilationException {
+            IWarningCollector warningCollector, ExternalDataPrefix externalDataPrefix,
+            IExternalFilterEvaluator evaluator) throws CompilationException {
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-
         List<BlobItem> filesOnly = new ArrayList<>();
 
-        // Ensure the validity of include/exclude
-        validateIncludeExclude(configuration);
-
-        BlobContainerClient blobContainer;
         try {
-            blobContainer = blobServiceClient.getBlobContainerClient(container);
+            BlobContainerClient blobContainer = blobServiceClient.getBlobContainerClient(container);
 
             // Get all objects in a container and extract the paths to files
             ListBlobsOptions listBlobsOptions = new ListBlobsOptions();
@@ -416,7 +425,7 @@ public class AzureUtils {
 
             // Collect the paths to files only
             collectAndFilterBlobFiles(blobItems, includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly);
+                    includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator);
 
             // Warn if no files are returned
             if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
@@ -439,17 +448,10 @@ public class AzureUtils {
      * @param filesOnly List containing the files only (excluding folders)
      */
     private static void collectAndFilterBlobFiles(Iterable<BlobItem> items,
-            BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<BlobItem> filesOnly) {
+            BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<BlobItem> filesOnly,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
         for (BlobItem item : items) {
-            String uri = item.getName();
-
-            // skip folders
-            if (uri.endsWith("/")) {
-                continue;
-            }
-
-            // No filter, add file
-            if (predicate.test(matchers, uri)) {
+            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator)) {
                 filesOnly.add(item);
             }
         }
@@ -461,9 +463,6 @@ public class AzureUtils {
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
         List<PathItem> filesOnly = new ArrayList<>();
-
-        // Ensure the validity of include/exclude
-        validateIncludeExclude(configuration);
 
         DataLakeFileSystemClient fileSystemClient;
         try {

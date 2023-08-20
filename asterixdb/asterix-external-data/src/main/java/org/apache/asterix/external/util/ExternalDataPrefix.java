@@ -151,12 +151,11 @@ public class ExternalDataPrefix {
 
             // we need to keep track of the end position
             StringBuilder expression = new StringBuilder();
-            int end = 0;
 
             for (int i = 0; i < segments.size(); i++) {
                 matcher.reset(segments.get(i));
                 expression.setLength(0);
-                end = 0;
+                int end = 0;
 
                 while (matcher.find()) {
                     expression.append(segments.get(i), end, matcher.start());
@@ -207,13 +206,13 @@ public class ExternalDataPrefix {
      * Returns the longest static path (root) before encountering the first computed field
      */
     private void extractRoot() {
-        StringBuilder builder = new StringBuilder();
-
         // check if there are any computed fields before doing any testing
         if (computedFieldNames.isEmpty()) {
             root = original;
             return;
         }
+
+        StringBuilder builder = new StringBuilder();
 
         // construct all static parts before encountering the first computed field
         for (int i = 0; i < computedFieldSegmentIndexes.get(0); i++) {

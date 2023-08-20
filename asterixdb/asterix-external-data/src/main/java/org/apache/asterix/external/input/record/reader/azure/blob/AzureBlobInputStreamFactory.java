@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.input.record.reader.azure.blob;
 
-import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.buildAzureBlobClient;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.listBlobItems;
 
 import java.util.Comparator;
@@ -27,9 +26,11 @@ import java.util.Map;
 import java.util.PriorityQueue;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -37,7 +38,6 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.models.BlobItem;
 
 public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFactory {
@@ -56,14 +56,18 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         super.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
-
         IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
-        // Ensure the validity of include/exclude
-        ExternalDataUtils.validateIncludeExclude(configuration);
+
+        // get include/exclude matchers
         IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        BlobServiceClient blobServiceClient = buildAzureBlobClient(appCtx, configuration);
-        List<BlobItem> filesOnly =
-                listBlobItems(blobServiceClient, configuration, includeExcludeMatcher, warningCollector);
+
+        // prepare prefix for computed field calculations
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(ctx, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
+        List<BlobItem> filesOnly = listBlobItems(appCtx, configuration, includeExcludeMatcher, warningCollector,
+                externalDataPrefix, evaluator);
 
         // Distribute work load amongst the partitions
         distributeWorkLoad(filesOnly, getPartitionsCount());

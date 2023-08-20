@@ -29,11 +29,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -54,15 +55,30 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws AlgebricksException, HyracksDataException {
         IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
+
+        // get endpoint
         BlobServiceClient blobServiceClient = buildAzureBlobClient(appCtx, configuration);
-        //Get endpoint
         String endPoint = extractEndPoint(blobServiceClient.getAccountUrl());
-        //Get path
-        String path = buildPathURIs(configuration, warningCollector, blobServiceClient, endPoint);
-        //Put Azure configurations to AsterixDB's Hadoop configuration
+
+        // get include/exclude matchers
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
+
+        // prepare prefix for computed field calculations
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
+        List<BlobItem> filesOnly = listBlobItems(blobServiceClient, configuration, includeExcludeMatcher,
+                warningCollector, externalDataPrefix, evaluator);
+
+        // get path
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        String path = buildPathURIs(container, filesOnly, endPoint);
+
+        // put Azure configurations to AsterixDB's Hadoop configuration
         putAzureBlobConfToHadoopConf(configuration, path);
 
-        //Configure Hadoop Azure input splits
+        // configure Hadoop Azure input splits
         JobConf conf = createHdfsConf(serviceCtx, configuration);
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
@@ -92,20 +108,15 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
     /**
      * Build Azure Blob Storage path-style for the requested files
      *
-     * @param configuration    properties
-     * @param warningCollector warning collector
+     * @param container container
+     * @param filesOnly files
+     * @param endPoint endpoint
+     *
      * @return Comma-delimited paths (e.g., "wasbs://container@accountName.blob.core.windows.net/file1.parquet,
      * wasbs://container@accountName.blob.core.windows.net/file2.parquet")
-     * @throws CompilationException Compilation exception
      */
-    private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector,
-            BlobServiceClient blobServiceClient, String endPoint) throws CompilationException {
-        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-        List<BlobItem> filesOnly =
-                listBlobItems(blobServiceClient, configuration, includeExcludeMatcher, warningCollector);
-
+    private static String buildPathURIs(String container, List<BlobItem> filesOnly, String endPoint) {
         StringBuilder builder = new StringBuilder();
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
         if (!filesOnly.isEmpty()) {
             appendFileURI(builder, container, endPoint, filesOnly.get(0));

@@ -23,11 +23,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.HDFSDataSourceFactory;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory.IncludeExcludeMatcher;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.google.gcs.GCSConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
@@ -48,8 +49,21 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws AlgebricksException, HyracksDataException {
+
+        // get include/exclude matchers
+        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
+
+        // prepare prefix for computed field calculations
+        IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
+
+        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        List<Blob> filesOnly = GCSUtils.listItems(configuration, includeExcludeMatcher, warningCollector,
+                externalDataPrefix, evaluator);
+
         // get path
-        String path = buildPathURIs(configuration, warningCollector);
+        String path = buildPathURIs(container, filesOnly);
 
         // put GCS configurations to AsterixDB's Hadoop configuration
         putGCSConfToHadoopConf(configuration, path);
@@ -85,21 +99,13 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
     /**
      * Build Google Cloud Storage path-style for the requested files
      *
-     * @param configuration    properties
-     * @param warningCollector warning collector
+     * @param container container
+     * @param filesOnly files
+     *
      * @return Comma-delimited paths (e.g., "gs://bucket/file1.parquet,gs://bucket/file2.parquet")
-     * @throws CompilationException Compilation exception
      */
-    private static String buildPathURIs(Map<String, String> configuration, IWarningCollector warningCollector)
-            throws CompilationException {
-        String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+    private static String buildPathURIs(String container, List<Blob> filesOnly) {
 
-        // Ensure the validity of include/exclude
-        ExternalDataUtils.validateIncludeExclude(configuration);
-        IncludeExcludeMatcher includeExcludeMatcher = ExternalDataUtils.getIncludeExcludeMatchers(configuration);
-
-        // get the items
-        List<Blob> filesOnly = GCSUtils.listItems(configuration, includeExcludeMatcher, warningCollector);
         StringBuilder builder = new StringBuilder();
 
         if (!filesOnly.isEmpty()) {
