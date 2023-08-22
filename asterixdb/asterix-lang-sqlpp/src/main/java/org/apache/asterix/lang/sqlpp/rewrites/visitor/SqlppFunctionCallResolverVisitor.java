@@ -33,7 +33,7 @@ import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 
-public final class SqlppFunctionCallResolverVisitor extends AbstractSqlppSimpleExpressionVisitor {
+public class SqlppFunctionCallResolverVisitor extends AbstractSqlppSimpleExpressionVisitor {
 
     private final LangRewritingContext context;
 

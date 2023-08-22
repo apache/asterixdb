@@ -437,7 +437,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     // Merges <code>scopeToBeMerged</code> into <code>hostScope</code>.
-    private void mergeScopes(Scope hostScope, Scope scopeToBeMerged, SourceLocation sourceLoc)
+    protected void mergeScopes(Scope hostScope, Scope scopeToBeMerged, SourceLocation sourceLoc)
             throws CompilationException {
         Set<String> symbolsToBeMerged = scopeToBeMerged.getLocalSymbols();
         for (String symbolToBeMerged : symbolsToBeMerged) {
