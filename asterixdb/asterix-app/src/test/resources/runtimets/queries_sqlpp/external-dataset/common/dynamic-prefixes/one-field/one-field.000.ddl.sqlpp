@@ -25,21 +25,15 @@ CREATE TYPE TestType AS {
 };
 
 
-CREATE EXTERNAL DATASET Department(TestType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
+CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
+    %template%,
     ("container"="playground"),
     ("definition"="external-filter/department/{department:string}"),
     ("format"="json")
 );
 
-CREATE EXTERNAL DATASET LastName(TestType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
+CREATE EXTERNAL DATASET LastName(TestType) USING %adapter% (
+    %template%,
     ("container"="playground"),
     ("container"="playground"),
     ("definition"="external-filter/last-name/{name.last:string}"),

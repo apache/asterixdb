@@ -222,13 +222,15 @@
     </test-case>
     <!-- Parquet Tests End -->
     <!-- Dynamic prefixes tests start -->
-    <test-case FilePath="external-dataset/s3/filter">
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="one-field">
+        <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">one-field</output-dir>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/s3/filter" check-warnings="true">
+    <test-case FilePath="external-dataset/common/dynamic-prefixes" check-warnings="true">
       <compilation-unit name="type-mismatch">
+        <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">type-mismatch</output-dir>
         <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'For input string: "accounting"'</expected-warn>
         <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'For input string: "engineering"'</expected-warn>
@@ -236,8 +238,9 @@
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
-    <test-case FilePath="external-dataset/s3/filter">
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="query">
+        <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
