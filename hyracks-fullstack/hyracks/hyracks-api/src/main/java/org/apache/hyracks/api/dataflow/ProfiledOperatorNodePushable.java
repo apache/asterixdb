@@ -19,7 +19,9 @@
 package org.apache.hyracks.api.dataflow;
 
 import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.hyracks.api.com.job.profiling.counters.Counter;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
@@ -27,43 +29,51 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
+import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.rewriter.runtime.SuperActivityOperatorNodePushable;
 
-public class ProfiledOperatorNodePushable extends ProfiledFrameWriter implements IOperatorNodePushable, IPassableTimer {
+public class ProfiledOperatorNodePushable implements IOperatorNodePushable {
 
     IOperatorNodePushable op;
-    ProfiledOperatorNodePushable parentOp;
     ActivityId acId;
-    HashMap<Integer, IFrameWriter> inputs;
-    long frameStart;
+    Map<Integer, ProfiledFrameWriter> inputs;
+    Map<Integer, ProfiledOperatorNodePushable> parents;
+
+    Map<Integer, ProfiledFrameWriter> outputs;
+    IOperatorStats stats;
+    IStatsCollector collector;
+
+    ICounter totalTime;
 
     ProfiledOperatorNodePushable(IOperatorNodePushable op, ActivityId acId, IStatsCollector collector,
-            IOperatorStats stats, ActivityId parent, ProfiledOperatorNodePushable parentOp)
-            throws HyracksDataException {
-        super(null, collector, acId.toString() + " - " + op.getDisplayName(), stats,
-                parentOp != null ? parentOp.getStats() : null);
-        this.parentOp = parentOp;
+            IOperatorStats stats, ProfiledOperatorNodePushable parentOp) {
+        this.stats = stats;
+        this.collector = collector;
+        this.parents = new HashMap<>();
+        parents.put(0, parentOp);
         this.op = op;
         this.acId = acId;
         inputs = new HashMap<>();
+        outputs = new HashMap<>();
+        this.totalTime = new Counter("totalTime");
     }
 
     @Override
     public void initialize() throws HyracksDataException {
-        synchronized (collector) {
-            startClock();
-            op.initialize();
-            stopClock();
-        }
+        ProfiledFrameWriter.timeMethod(op::initialize, totalTime);
     }
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        synchronized (collector) {
-            startClock();
-            op.deinitialize();
-            stopClock();
+        long unNestTime = totalTime.get();
+        for (ProfiledFrameWriter i : inputs.values()) {
+            unNestTime += i.getTotalTime();
         }
+        for (ProfiledFrameWriter w : outputs.values()) {
+            unNestTime -= w.getTotalTime();
+        }
+        op.deinitialize();
+        stats.getTimeCounter().set(unNestTime);
     }
 
     @Override
@@ -74,17 +84,24 @@ public class ProfiledOperatorNodePushable extends ProfiledFrameWriter implements
     @Override
     public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc)
             throws HyracksDataException {
+        if (writer instanceof ProfiledFrameWriter) {
+            ProfiledFrameWriter wrapper = (ProfiledFrameWriter) writer;
+            outputs.put(index, wrapper);
+        }
         op.setOutputFrameWriter(index, writer, recordDesc);
     }
 
     @Override
     public IFrameWriter getInputFrameWriter(int index) {
-        IFrameWriter ifw = op.getInputFrameWriter(index);
-        if (!(op instanceof ProfiledFrameWriter) && ifw.equals(op)) {
-            return new ProfiledFrameWriter(op.getInputFrameWriter(index), collector,
+        if (inputs.get(index) == null) {
+            IOperatorStats parentStats = parents.get(index) == null ? null : parents.get(index).getStats();
+            ProfiledFrameWriter pfw = new ProfiledFrameWriter(op.getInputFrameWriter(index), collector,
                     acId.toString() + "-" + op.getDisplayName(), stats, parentStats);
+            inputs.put(index, pfw);
+            return pfw;
+        } else {
+            return inputs.get(index);
         }
-        return op.getInputFrameWriter(index);
     }
 
     @Override
@@ -92,43 +109,12 @@ public class ProfiledOperatorNodePushable extends ProfiledFrameWriter implements
         return op.getDisplayName();
     }
 
-    private void stopClock() {
-        pause();
-        collector.giveClock(this);
-    }
-
-    private void startClock() {
-        if (frameStart > 0) {
-            return;
-        }
-        frameStart = collector.takeClock(this);
-    }
-
-    @Override
-    public void resume() {
-        if (frameStart > 0) {
-            return;
-        }
-        long nt = System.nanoTime();
-        frameStart = nt;
-    }
-
-    @Override
-    public void pause() {
-        if (frameStart > 0) {
-            long nt = System.nanoTime();
-            long delta = nt - frameStart;
-            timeCounter.update(delta);
-            frameStart = -1;
-        }
+    public void addParent(int index, ProfiledOperatorNodePushable parent) {
+        parents.put(index, parent);
     }
 
     public IOperatorStats getStats() {
         return stats;
-    }
-
-    public IOperatorStats getParentStats() {
-        return parentStats;
     }
 
     public static IOperatorNodePushable time(IOperatorNodePushable op, IHyracksTaskContext ctx, ActivityId acId,
@@ -141,7 +127,7 @@ public class ProfiledOperatorNodePushable extends ProfiledFrameWriter implements
             ((IIntrospectingOperator) op).setOperatorStats(stats);
         }
         if (!(op instanceof ProfiledOperatorNodePushable) && !(op instanceof SuperActivityOperatorNodePushable)) {
-            return new ProfiledOperatorNodePushable(op, acId, ctx.getStatsCollector(), stats, acId, source);
+            return new ProfiledOperatorNodePushable(op, acId, ctx.getStatsCollector(), stats, source);
         }
         return op;
     }
