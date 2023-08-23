@@ -100,7 +100,13 @@ public class CloudResettableInputStream extends InputStream {
     public void finish() throws HyracksDataException {
         open();
         try {
-            if (writeBuffer.position() > 0) {
+            if (writeBuffer.position() > 0 || bufferedWriter.isEmpty()) {
+                /*
+                 * upload if:
+                 * (1) the writeBuffer is not empty
+                 * OR
+                 * (2) nothing was written to the file at all to ensure writing empty file
+                 */
                 uploadAndWait();
             }
             bufferedWriter.finish();

@@ -34,6 +34,13 @@ public interface ICloudBufferedWriter {
     int upload(InputStream stream, int length);
 
     /**
+     * Checks whether the writer has not written anything
+     *
+     * @return true if nothing was written, false otherwise
+     */
+    boolean isEmpty();
+
+    /**
      * Finishes the upload
      *
      * @throws HyracksDataException HyracksDataException

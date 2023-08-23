@@ -73,10 +73,17 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     }
 
     @Override
+    public boolean isEmpty() {
+        return uploadId == null;
+    }
+
+    @Override
     public void finish() throws HyracksDataException {
         if (uploadId == null) {
-            return;
+            throw new IllegalStateException("Cannot finish without writing any bytes");
         }
+
+        // A non-empty files, proceed with completing the multipart upload
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder().parts(partQueue).build();
         CompleteMultipartUploadRequest completeMultipartUploadRequest = CompleteMultipartUploadRequest.builder()
                 .bucket(bucket).key(path).uploadId(uploadId).multipartUpload(completedMultipartUpload).build();
