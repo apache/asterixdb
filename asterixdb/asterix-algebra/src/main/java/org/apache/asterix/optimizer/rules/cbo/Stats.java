@@ -35,6 +35,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.asterix.optimizer.rules.am.array.AbstractOperatorFromSubplanRewrite;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -268,15 +269,31 @@ public class Stats {
         return sel;
     }
 
-    private int countOps(ILogicalOperator op, LogicalOperatorTag tag) {
-        int count = 0;
+    private List<ILogicalOperator> countOps(ILogicalOperator op, LogicalOperatorTag tag) {
+        List<ILogicalOperator> ops = new ArrayList<>();
+
         while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag().equals(tag)) {
-                count++;
+                ops.add(op);
             }
             op = op.getInputs().get(0).getValue();
         }
-        return count;
+        return ops;
+    }
+
+    private AggregateOperator findAggOp(ILogicalOperator op, ILogicalExpression exp) throws AlgebricksException {
+        /*private final */ ContainsExpressionVisitor visitor = new ContainsExpressionVisitor();
+        SubplanOperator subOp;
+        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
+                subOp = (SubplanOperator) op;
+                ILogicalOperator nextOp = subOp.getNestedPlans().get(0).getRoots().get(0).getValue();
+                if (nextOp.getOperatorTag() == LogicalOperatorTag.AGGREGATE)
+                    return (AggregateOperator) nextOp;
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return null;
     }
 
     private SubplanOperator findSubplanWithExpr(ILogicalOperator op, ILogicalExpression exp)
@@ -417,8 +434,8 @@ public class Stats {
                 (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
         deepCopyofScan.setDataSource(sampledatasource);
 
-        int numSubplans = countOps(selOp, LogicalOperatorTag.SUBPLAN);
-
+        List<ILogicalOperator> subPlans = countOps(selOp, LogicalOperatorTag.SUBPLAN);
+        int numSubplans = subPlans.size();
         List<List<IAObject>> result;
 
         // insert this in place of the scandatasourceOp.
@@ -429,11 +446,30 @@ public class Stats {
             result = runSamplingQuery(optCtx, selOp);
             selOp.getCondition().setValue(saveExprs);
         } else {
-            int numSelects = countOps(selOp, LogicalOperatorTag.SELECT);
+            List<ILogicalOperator> selOps = countOps(selOp, LogicalOperatorTag.SELECT);
+            int numSelects = selOps.size();
             int nonSubplanSelects = numSelects - numSubplans;
 
             if (numSubplans == 1 && nonSubplanSelects == 0) {
-                result = runSamplingQuery(optCtx, selOp); // no need to switch anything
+                AggregateOperator aggOp = findAggOp(selOp, exp);
+                if (aggOp.getExpressions().size() > 1) {
+                    // ANY and EVERY IN query; for selectivity purposes, we need to transform this into a ANY IN query
+                    SelectOperator newSelOp = (SelectOperator) OperatorManipulationUtil.bottomUpCopyOperators(selOp);
+                    aggOp = findAggOp(newSelOp, exp);
+                    ILogicalOperator input = aggOp.getInputs().get(0).getValue();
+                    SelectOperator condition = (SelectOperator) OperatorManipulationUtil
+                            .bottomUpCopyOperators(AbstractOperatorFromSubplanRewrite.getSelectFromPlan(aggOp));
+                    //push this condition below aggOp.
+                    aggOp.getInputs().get(0).setValue(condition);
+                    condition.getInputs().get(0).setValue(input);
+                    ILogicalExpression newExp2 = newSelOp.getCondition().getValue();
+                    if (newExp2.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newExp2;
+                        afce.getArguments().get(1).setValue(ConstantExpression.TRUE);
+                    }
+                    result = runSamplingQuery(optCtx, newSelOp); // no need to switch anything
+                } else
+                    result = runSamplingQuery(optCtx, selOp);
             } else { // the painful part; have to find where exp that is passed in is coming from. >= 1 and >= 1 case
                 // Assumption is that there is exaclty one select condition above each subplan.
                 // This was ensured before this routine is called
@@ -482,6 +518,9 @@ public class Stats {
 
         double sel = (double) predicateCardinality / sampleCard;
         return sel;
+    }
+
+    private void transformtoAnyInPlan(SelectOperator newSelOp) {
     }
 
     protected List<List<IAObject>> runSamplingQuery(IOptimizationContext ctx, ILogicalOperator logOp)

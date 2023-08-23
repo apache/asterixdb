@@ -310,7 +310,7 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         return combinedCondition.cloneExpression();
     }
 
-    private SelectOperator getSelectFromPlan(AggregateOperator subplanRoot) {
+    public static SelectOperator getSelectFromPlan(AggregateOperator subplanRoot) {
         ILogicalExpression aggregateCondition = null;
         boolean isNonEmptyStream = false;
         for (Mutable<ILogicalExpression> expression : subplanRoot.getExpressions()) {
@@ -345,7 +345,8 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         if (isNonEmptyStream && aggregateCondition != null) {
             SelectOperator selectFromAgg = new SelectOperator(new MutableObject<>(aggregateCondition));
             selectFromAgg.getInputs().addAll(subplanRoot.getInputs());
-            selectFromAgg.setSourceLocation(sourceLocation);
+            selectFromAgg.setSourceLocation(subplanRoot.getSourceLocation());
+
             return selectFromAgg;
         }
 
