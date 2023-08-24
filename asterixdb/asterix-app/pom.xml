@@ -39,6 +39,7 @@
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
     <pip.path>${project.build.directory}/bin/pip3</pip.path>
     <shiv.path>${project.build.directory}/bin/shiv</shiv.path>
+    <asterix-test-datagenerator-maven-plugin.version>${project.version}</asterix-test-datagenerator-maven-plugin.version>
   </properties>
   <build>
     <plugins>
@@ -108,7 +109,7 @@
       <plugin>
         <groupId>org.apache.asterix</groupId>
         <artifactId>asterix-test-datagenerator-maven-plugin</artifactId>
-        <version>${project.version}</version>
+        <version>${asterix-test-datagenerator-maven-plugin.version}</version>
         <executions>
           <execution>
             <id>replace-template-data</id>

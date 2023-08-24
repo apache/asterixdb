@@ -34,13 +34,14 @@
   </licenses>
   <properties>
     <root.dir>${basedir}/..</root.dir>
+    <record-manager-generator-maven-plugin.version>${project.version}</record-manager-generator-maven-plugin.version>
   </properties>
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.asterix</groupId>
         <artifactId>record-manager-generator-maven-plugin</artifactId>
-        <version>${project.version}</version>
+        <version>${record-manager-generator-maven-plugin.version}</version>
         <configuration>
           <debug>false</debug>
           <inputFiles>
