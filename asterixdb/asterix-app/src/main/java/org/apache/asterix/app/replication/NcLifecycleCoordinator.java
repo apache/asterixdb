@@ -223,7 +223,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
         // Add any cloud-related tasks
-        addCloudTasks(tasks, nodeActivePartitions, metadataNode, metadataPartitionId);
+        addCloudTasks(tasks, nodeActivePartitions, metadataNode, metadataPartitionId, state == SystemState.CORRUPTED);
         tasks.add(new LocalStorageCleanupTask(metadataPartitionId));
         if (state == SystemState.CORRUPTED) {
             // need to perform local recovery for node active partitions
@@ -257,7 +257,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     }
 
     protected void addCloudTasks(List<INCLifecycleTask> tasks, Set<Integer> computePartitions, boolean metadataNode,
-            int metadataPartitionId) {
+            int metadataPartitionId, boolean cleanup) {
         IApplicationContext appCtx = (IApplicationContext) serviceContext.getApplicationContext();
         if (!appCtx.isCloudDeployment()) {
             return;
@@ -266,7 +266,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         StorageComputePartitionsMap map = clusterManager.getStorageComputeMap();
         map = map == null ? StorageComputePartitionsMap.computePartitionsMap(clusterManager) : map;
         Set<Integer> storagePartitions = map.getStoragePartitions(computePartitions);
-        tasks.add(new CloudToLocalStorageCachingTask(storagePartitions, metadataNode, metadataPartitionId, false));
+        tasks.add(new CloudToLocalStorageCachingTask(storagePartitions, metadataNode, metadataPartitionId, cleanup));
     }
 
     private synchronized void process(MetadataNodeResponseMessage response) throws HyracksDataException {
