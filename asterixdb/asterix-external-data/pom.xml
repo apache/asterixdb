@@ -35,13 +35,14 @@
   <properties>
     <root.dir>${basedir}/..</root.dir>
     <generatedSourcesDirectory>${project.build.directory}/generated-sources/lexer/</generatedSourcesDirectory>
+    <lexer-generator-maven-plugin.version>${project.version}</lexer-generator-maven-plugin.version>
   </properties>
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.asterix</groupId>
         <artifactId>lexer-generator-maven-plugin</artifactId>
-        <version>${project.version}</version>
+        <version>${lexer-generator-maven-plugin.version}</version>
         <configuration>
           <grammarFile>src/main/resources/adm.grammar</grammarFile>
           <outputDir>${project.build.directory}/generated-sources/lexer/org/apache/asterix/runtime/operators/file/adm</outputDir>
