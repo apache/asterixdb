@@ -33,8 +33,12 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.nc.io.FileHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CloudFileUtil {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private CloudFileUtil() {
     }
 
@@ -73,6 +77,7 @@ public class CloudFileUtil {
             String path = file.getRelativePath();
             if (!cloudFiles.contains(path)) {
                 // Delete local files that do not exist in cloud storage (the ground truth for valid files)
+                logDeleteFile(file);
                 localFilesIter.remove();
                 ioManager.delete(file);
             } else {
@@ -122,5 +127,11 @@ public class CloudFileUtil {
         long written = ioManager.doSyncWrite(fileHandle, offset, writeBuffer);
         writeBuffer.clear();
         return written;
+    }
+
+    private static void logDeleteFile(FileReference fileReference) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Deleting {} from the local cache as it doesn't exists in the cloud", fileReference);
+        }
     }
 }

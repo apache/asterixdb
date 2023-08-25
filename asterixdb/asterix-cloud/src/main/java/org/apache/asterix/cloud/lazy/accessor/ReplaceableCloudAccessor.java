@@ -71,11 +71,11 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
             ByteBuffer writeBuffer = writeBufferProvider.getBuffer();
             try {
                 // TODO download for all partitions at once
-                LOGGER.info("Downloading {} from S3..", fileRef.getRelativePath());
+                LOGGER.info("Downloading {} ..", fileRef.getRelativePath());
                 CloudFileUtil.downloadFile(localIoManager, cloudClient, bucket, fileHandle, rwMode, syncMode,
                         writeBuffer);
                 localIoManager.close(fileHandle);
-                LOGGER.info("Finished downloading {} from S3..", fileRef.getRelativePath());
+                LOGGER.info("Finished downloading {}..", fileRef.getRelativePath());
             } finally {
                 writeBufferProvider.recycle(writeBuffer);
             }
@@ -98,7 +98,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         for (FileReference file : localFiles) {
             String path = file.getRelativePath();
             if (!cloudFiles.contains(path)) {
-                throw new IllegalStateException("Local file is not clean");
+                throw new IllegalStateException("Local file is not clean. Offending path: " + path);
             } else {
                 // No need to re-add it in the following loop
                 cloudFiles.remove(path);
@@ -134,6 +134,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
             byte[] bytes = cloudClient.readAllBytes(bucket, fileRef.getRelativePath());
             if (bytes != null && !partitions.isEmpty()) {
                 // Download the missing file for subsequent reads
+                LOGGER.info("Downloading {} ..", fileRef.getRelativePath());
                 localIoManager.overwrite(fileRef, bytes);
                 decrementNumberOfUncachedFiles();
             }
@@ -162,7 +163,6 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         boolean existsLocally = localIoManager.exists(fileReference);
         cloudClient.write(bucket, fileReference.getRelativePath(), bytes);
         localIoManager.overwrite(fileReference, bytes);
-
         if (!existsLocally) {
             decrementNumberOfUncachedFiles();
         }

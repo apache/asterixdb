@@ -97,7 +97,8 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             // Everything is cached, no need to invoke cloud-based accessor for read operations
             accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
         }
-        LOGGER.info("The number of uncached files: {}", remainingUncachedFiles);
+
+        LOGGER.info("The number of uncached files: {}. Uncached files: {}", remainingUncachedFiles, cloudFiles);
     }
 
     @Override
@@ -134,10 +135,18 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     @Override
     public void delete(FileReference fileRef) throws HyracksDataException {
         accessor.doDelete(fileRef);
+        log("DELETE", fileRef);
     }
 
     @Override
     public void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
         accessor.doOverwrite(fileRef, bytes);
+        log("WRITE", fileRef);
+    }
+
+    private void log(String op, FileReference fileReference) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("{} {}", op, fileReference.getRelativePath());
+        }
     }
 }

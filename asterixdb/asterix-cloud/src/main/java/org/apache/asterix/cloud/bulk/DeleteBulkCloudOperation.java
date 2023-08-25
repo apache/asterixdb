@@ -26,8 +26,11 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.nc.io.bulk.DeleteBulkOperation;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class DeleteBulkCloudOperation extends DeleteBulkOperation {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final String bucket;
     private final ICloudClient cloudClient;
 
@@ -44,6 +47,9 @@ public class DeleteBulkCloudOperation extends DeleteBulkOperation {
          *      Actually, is there a case where we delete multiple directories from the cloud?
          */
         List<String> paths = fileReferences.stream().map(FileReference::getRelativePath).collect(Collectors.toList());
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Bulk deleting: {}", paths);
+        }
         cloudClient.deleteObjects(bucket, paths);
 
         // Bulk delete locally as well

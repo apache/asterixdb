@@ -108,6 +108,8 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
                 }
             }
         }
+
+        log("FINISHED");
     }
 
     @Override
@@ -117,6 +119,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         }
         s3Client.abortMultipartUpload(
                 AbortMultipartUploadRequest.builder().bucket(bucket).key(path).uploadId(uploadId).build());
+        LOGGER.warn("Multipart upload for {} was aborted", path);
     }
 
     private void completeMultipartUpload(CompleteMultipartUploadRequest request) throws HyracksDataException {
@@ -135,6 +138,13 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
             CreateMultipartUploadResponse uploadResp = s3Client.createMultipartUpload(uploadRequest);
             uploadId = uploadResp.uploadId();
             partNumber = 1;
+            log("STARTED");
+        }
+    }
+
+    private void log(String op) {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("{} multipart upload for {}", op, path);
         }
     }
 }

@@ -70,7 +70,6 @@ public class LocalAccessor extends AbstractLazyAccessor {
 
     @Override
     public void doDelete(FileReference fileReference) throws HyracksDataException {
-        // Never delete the storage dir in cloud storage
         doCloudDelete(fileReference);
         localIoManager.delete(fileReference);
     }
