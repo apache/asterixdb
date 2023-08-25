@@ -146,6 +146,10 @@ public class ValidateUtil {
                     String typeName =
                             ((TypeReferenceExpression) partitioningExprTypes.get(0)).getIdent().second.getValue();
                     fieldType = BuiltinTypeMap.getBuiltinType(typeName);
+                    if (fieldType == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_KEY_TYPE, sourceLoc, typeName,
+                                keyKindDisplayName);
+                    }
                 } else {
                     String unTypeField = fieldName.get(0) == null ? "" : fieldName.get(0);
                     throw new CompilationException(ErrorCode.COMPILATION_FIELD_NOT_FOUND, sourceLoc,
@@ -170,6 +174,10 @@ public class ValidateUtil {
                     String typeName =
                             ((TypeReferenceExpression) partitioningExprTypes.get(i)).getIdent().second.getValue();
                     fieldType = BuiltinTypeMap.getBuiltinType(typeName);
+                    if (fieldType == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_KEY_TYPE, sourceLoc, typeName,
+                                keyKindDisplayName);
+                    }
                     computedPartitioningExprTypes.add(fieldType);
                 } else {
                     fieldType = computedPartitioningExprTypes.get(i);
