@@ -46,7 +46,7 @@ public class ExitUtil {
     public static final int EC_FAILED_TO_ABORT_METADATA_TXN = 7;
     public static final int EC_INCONSISTENT_METADATA = 8;
     public static final int EC_UNCAUGHT_THROWABLE = 9;
-    public static final int EC_UNHANDLED_EXCEPTION = 11;
+    public static final int EC_HALT_UNHANDLED_EXCEPTION = 11;
     public static final int EC_FAILED_TO_DELETE_CORRUPTED_RESOURCES = 12;
     public static final int EC_ERROR_CREATING_RESOURCES = 13;
     public static final int EC_TXN_LOG_FLUSHER_FAILURE = 14;
