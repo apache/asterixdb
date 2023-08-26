@@ -30,34 +30,24 @@ import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
-import org.apache.hyracks.api.util.HyracksConsumer;
 import org.apache.hyracks.api.util.HyracksRunnable;
+import org.apache.hyracks.api.util.HyracksThrowingConsumer;
 import org.apache.hyracks.util.IntSerDeUtils;
 
 public class ProfiledFrameWriter implements IFrameWriter {
 
     // The downstream data consumer of this writer.
     private final IFrameWriter writer;
-    final ICounter timeCounter;
-    final ICounter tupleCounter;
-    final IStatsCollector collector;
-    final IOperatorStats stats;
-    final IOperatorStats parentStats;
-
+    private final ICounter tupleCounter;
+    private final IOperatorStats parentStats;
     private int minSz = Integer.MAX_VALUE;
     private int maxSz = -1;
     private long avgSz;
-    final String name;
-    public ICounter totalTime;
+    private ICounter totalTime;
 
-    public ProfiledFrameWriter(IFrameWriter writer, IStatsCollector collector, String name, IOperatorStats stats,
-            IOperatorStats parentStats) {
+    public ProfiledFrameWriter(IFrameWriter writer, IOperatorStats parentStats) {
         this.writer = writer;
-        this.collector = collector;
-        this.name = name;
-        this.stats = stats;
         this.parentStats = parentStats;
-        this.timeCounter = stats.getTimeCounter();
         this.tupleCounter = parentStats != null ? parentStats.getTupleCounter() : null;
         this.totalTime = new Counter("totalTime");
     }
@@ -72,7 +62,7 @@ public class ProfiledFrameWriter implements IFrameWriter {
         }
     }
 
-    private void timeMethod(HyracksConsumer<ByteBuffer> c, ByteBuffer buffer) throws HyracksDataException {
+    private void timeMethod(HyracksThrowingConsumer<ByteBuffer> c, ByteBuffer buffer) throws HyracksDataException {
         long nt = 0;
         try {
             nt = System.nanoTime();
@@ -152,7 +142,7 @@ public class ProfiledFrameWriter implements IFrameWriter {
             IStatsCollector statsCollector = ctx.getStatsCollector();
             IOperatorStats stats = new OperatorStats(name);
             statsCollector.add(stats);
-            return new ProfiledFrameWriter(writer, ctx.getStatsCollector(), name, stats, null);
+            return new ProfiledFrameWriter(writer, null);
 
         } else
             return writer;

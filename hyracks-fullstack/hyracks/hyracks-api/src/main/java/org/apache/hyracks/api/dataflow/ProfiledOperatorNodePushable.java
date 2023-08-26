@@ -34,25 +34,19 @@ import org.apache.hyracks.api.rewriter.runtime.SuperActivityOperatorNodePushable
 
 public class ProfiledOperatorNodePushable implements IOperatorNodePushable {
 
-    IOperatorNodePushable op;
-    ActivityId acId;
-    Map<Integer, ProfiledFrameWriter> inputs;
-    Map<Integer, ProfiledOperatorNodePushable> parents;
+    private final IOperatorNodePushable op;
+    private final Map<Integer, ProfiledFrameWriter> inputs;
+    private final Map<Integer, ProfiledOperatorNodePushable> parents;
+    private final Map<Integer, ProfiledFrameWriter> outputs;
+    private final IOperatorStats stats;
+    private final ICounter totalTime;
 
-    Map<Integer, ProfiledFrameWriter> outputs;
-    IOperatorStats stats;
-    IStatsCollector collector;
-
-    ICounter totalTime;
-
-    ProfiledOperatorNodePushable(IOperatorNodePushable op, ActivityId acId, IStatsCollector collector,
-            IOperatorStats stats, ProfiledOperatorNodePushable parentOp) {
+    ProfiledOperatorNodePushable(IOperatorNodePushable op, IOperatorStats stats,
+            ProfiledOperatorNodePushable parentOp) {
         this.stats = stats;
-        this.collector = collector;
         this.parents = new HashMap<>();
         parents.put(0, parentOp);
         this.op = op;
-        this.acId = acId;
         inputs = new HashMap<>();
         outputs = new HashMap<>();
         this.totalTime = new Counter("totalTime");
@@ -65,15 +59,15 @@ public class ProfiledOperatorNodePushable implements IOperatorNodePushable {
 
     @Override
     public void deinitialize() throws HyracksDataException {
-        long unNestTime = totalTime.get();
+        long ownTime = totalTime.get();
         for (ProfiledFrameWriter i : inputs.values()) {
-            unNestTime += i.getTotalTime();
+            ownTime += i.getTotalTime();
         }
         for (ProfiledFrameWriter w : outputs.values()) {
-            unNestTime -= w.getTotalTime();
+            ownTime -= w.getTotalTime();
         }
         op.deinitialize();
-        stats.getTimeCounter().set(unNestTime);
+        stats.getTimeCounter().set(ownTime);
     }
 
     @Override
@@ -95,8 +89,7 @@ public class ProfiledOperatorNodePushable implements IOperatorNodePushable {
     public IFrameWriter getInputFrameWriter(int index) {
         if (inputs.get(index) == null) {
             IOperatorStats parentStats = parents.get(index) == null ? null : parents.get(index).getStats();
-            ProfiledFrameWriter pfw = new ProfiledFrameWriter(op.getInputFrameWriter(index), collector,
-                    acId.toString() + "-" + op.getDisplayName(), stats, parentStats);
+            ProfiledFrameWriter pfw = new ProfiledFrameWriter(op.getInputFrameWriter(index), parentStats);
             inputs.put(index, pfw);
             return pfw;
         } else {
@@ -127,7 +120,7 @@ public class ProfiledOperatorNodePushable implements IOperatorNodePushable {
             ((IIntrospectingOperator) op).setOperatorStats(stats);
         }
         if (!(op instanceof ProfiledOperatorNodePushable) && !(op instanceof SuperActivityOperatorNodePushable)) {
-            return new ProfiledOperatorNodePushable(op, acId, ctx.getStatsCollector(), stats, source);
+            return new ProfiledOperatorNodePushable(op, stats, source);
         }
         return op;
     }
