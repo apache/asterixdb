@@ -22,6 +22,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
+import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmObjectNode;
@@ -30,13 +31,15 @@ public class CopyStatement extends AbstractStatement {
 
     private DataverseName dataverseName;
     private String datasetName;
+    private TypeExpression typeExpr;
     private ExternalDetailsDecl externalDetails;
     private AdmObjectNode withObjectNode;
 
-    public CopyStatement(DataverseName dataverseName, String datasetName, ExternalDetailsDecl externalDetails,
-            RecordConstructor withRecord) throws CompilationException {
+    public CopyStatement(DataverseName dataverseName, String datasetName, TypeExpression typeExpr,
+            ExternalDetailsDecl externalDetails, RecordConstructor withRecord) throws CompilationException {
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
+        this.typeExpr = typeExpr;
         this.externalDetails = externalDetails;
         this.withObjectNode = withRecord == null ? new AdmObjectNode() : ExpressionUtils.toNode(withRecord);
     }
@@ -86,5 +89,9 @@ public class CopyStatement extends AbstractStatement {
     @Override
     public byte getCategory() {
         return Category.UPDATE;
+    }
+
+    public TypeExpression getTypeExpr() {
+        return typeExpr;
     }
 }

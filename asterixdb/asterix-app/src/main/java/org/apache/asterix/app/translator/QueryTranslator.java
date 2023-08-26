@@ -3504,9 +3504,22 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             metadataProvider.setWriteTransaction(true);
             Dataset dataset = metadataProvider.findDataset(dataverseName, copyStmt.getDatasetName());
+            if (dataset == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, stmt.getSourceLocation(),
+                        datasetName, dataverseName);
+            }
             Datatype itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName());
-
+            // Copy statement with csv files will have a type expression
+            if (copyStmt.getTypeExpr() != null) {
+                TypeExpression itemTypeExpr = copyStmt.getTypeExpr();
+                Triple<DataverseName, String, Boolean> itemTypeQualifiedName = extractDatasetItemTypeName(dataverseName,
+                        datasetName, itemTypeExpr, false, stmt.getSourceLocation());
+                DataverseName itemTypeDataverseName = itemTypeQualifiedName.first;
+                String itemTypeName = itemTypeQualifiedName.second;
+                IAType itemTypeEntity = translateType(itemTypeDataverseName, itemTypeName, itemTypeExpr, mdTxnCtx);
+                itemType = new Datatype(itemTypeDataverseName, itemTypeName, itemTypeEntity, true);
+            }
             ExternalDetailsDecl externalDetails = copyStmt.getExternalDetails();
             Map<String, String> properties =
                     createExternalDataPropertiesForCopyStmt(dataverseName, copyStmt, itemType, mdTxnCtx);
@@ -3515,7 +3528,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,
                     appCtx);
             CompiledCopyFromFileStatement cls = new CompiledCopyFromFileStatement(dataverseName,
-                    copyStmt.getDatasetName(), externalDetails.getAdapter(), properties);
+                    copyStmt.getDatasetName(), itemType, externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
             JobSpecification spec = apiFramework.compileQuery(hcc, metadataProvider, null, 0, null, sessionOutput, cls,
                     null, responsePrinter, warningCollector, null);

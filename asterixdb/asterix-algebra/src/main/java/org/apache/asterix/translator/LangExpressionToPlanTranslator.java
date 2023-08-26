@@ -224,9 +224,9 @@ abstract class LangExpressionToPlanTranslator
                         ((CompiledLoadFromFileStatement) stmt).getAdapter(),
                         ((CompiledLoadFromFileStatement) stmt).getProperties());
             } else if (stmt.getKind() == Statement.Kind.COPY) {
-                lds = new LoadableDataSource(dataset, itemType, metaItemType,
-                        ((CompiledCopyFromFileStatement) stmt).getAdapter(),
-                        ((CompiledCopyFromFileStatement) stmt).getProperties());
+                CompiledCopyFromFileStatement copyStmt = (CompiledCopyFromFileStatement) stmt;
+                lds = new LoadableDataSource(dataset, copyStmt.getItemType().getDatatype(), metaItemType,
+                        copyStmt.getAdapter(), copyStmt.getProperties());
             } else {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Unrecognized Statement Type",
                         stmt.getKind());

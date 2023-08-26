@@ -2730,6 +2730,7 @@ CopyStatement CopyStatement() throws ParseException:
   Token startToken = null;
   DataverseName dataverseName = null;
   Identifier datasetName = null;
+  TypeExpression typeExpr = null;
   boolean alreadySorted = false;
   String adapterName;
   Map<String,String> properties;
@@ -2741,13 +2742,14 @@ CopyStatement CopyStatement() throws ParseException:
       dataverseName = nameComponents.first;
       datasetName = nameComponents.second;
     }
+  (<AS> typeExpr = DatasetTypeSpecification())?
   <USING> adapterName = AdapterName() properties = Configuration()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();
        edd.setAdapter(adapterName);
        edd.setProperties(properties);
        try {
-         CopyStatement stmt = new CopyStatement(dataverseName, datasetName.getValue(), edd, null);
+         CopyStatement stmt = new CopyStatement(dataverseName, datasetName.getValue(), typeExpr, edd, null);
          return addSourceLocation(stmt, startToken);
        } catch (CompilationException e){
            throw new SqlppParseException(getSourceLocation(startToken), e.getMessage());

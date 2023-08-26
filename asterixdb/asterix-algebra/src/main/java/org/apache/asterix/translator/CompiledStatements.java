@@ -27,6 +27,7 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -290,13 +291,15 @@ public class CompiledStatements {
             implements ICompiledDmlStatement {
         private final DataverseName dataverseName;
         private final String datasetName;
+        private final Datatype itemType;
         private final String adapter;
         private final Map<String, String> properties;
 
-        public CompiledCopyFromFileStatement(DataverseName dataverseName, String datasetName, String adapter,
-                Map<String, String> properties) {
+        public CompiledCopyFromFileStatement(DataverseName dataverseName, String datasetName, Datatype itemType,
+                String adapter, Map<String, String> properties) {
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
+            this.itemType = itemType;
             this.adapter = adapter;
             this.properties = properties;
         }
@@ -317,6 +320,10 @@ public class CompiledStatements {
 
         public Map<String, String> getProperties() {
             return properties;
+        }
+
+        public Datatype getItemType() {
+            return itemType;
         }
 
         @Override
