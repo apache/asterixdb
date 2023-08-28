@@ -238,7 +238,8 @@ public class SecondaryBTreeOperationsHelper extends SecondaryTreeIndexOperations
                 sourceColumn = recordColumn + 1;
                 enforcedType = enforcedMetaType;
             }
-            IAType filterType = Index.getNonNullableKeyFieldType(filterFieldName, sourceType).first;
+            IAType filterType =
+                    Index.getNonNullableKeyFieldType(filterFieldName, sourceType, index.getIndexType()).first;
             IScalarEvaluatorFactory filterAccessor = createFieldAccessor(sourceType, sourceColumn, filterFieldName);
             secondaryFieldAccessEvalFactories[numSecondaryKeys] =
                     createFieldCast(filterAccessor, isOverridingKeyFieldTypes, enforcedType, sourceType, filterType);

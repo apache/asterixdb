@@ -135,7 +135,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
             secondaryFieldAccessEvalFactories[numSecondaryKeys] = metadataProvider.getDataFormat()
                     .getFieldAccessEvaluatorFactory(metadataProvider.getFunctionManager(), filterItemType,
                             filterFieldName, numPrimaryKeys, sourceLoc);
-            Pair<IAType, Boolean> keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
+            Pair<IAType, Boolean> keyTypePair =
+                    Index.getNonNullableKeyFieldType(filterFieldName, filterItemType, indexType);
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;

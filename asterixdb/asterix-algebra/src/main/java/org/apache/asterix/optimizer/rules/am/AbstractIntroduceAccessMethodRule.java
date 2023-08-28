@@ -559,12 +559,12 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (type1 == null || type2 == null) {
             return false;
         }
-        if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1).first.getTypeTag(),
-                Index.getNonNullableType(type2).first.getTypeTag(), useListDomain)) {
+        if (ATypeHierarchy.isSameTypeDomain(Index.getNonNullableType(type1, null).first.getTypeTag(),
+                Index.getNonNullableType(type2, null).first.getTypeTag(), useListDomain)) {
             return true;
         }
-        return ATypeHierarchy.canPromote(Index.getNonNullableType(type1).first.getTypeTag(),
-                Index.getNonNullableType(type2).first.getTypeTag());
+        return ATypeHierarchy.canPromote(Index.getNonNullableType(type1, null).first.getTypeTag(),
+                Index.getNonNullableType(type2, null).first.getTypeTag());
     }
 
     private Set<Index> fetchSecondaryIndexPreferences(IAccessMethod accessMethod,
