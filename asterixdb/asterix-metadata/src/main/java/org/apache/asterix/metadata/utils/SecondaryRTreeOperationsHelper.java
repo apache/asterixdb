@@ -147,7 +147,8 @@ public class SecondaryRTreeOperationsHelper extends SecondaryTreeIndexOperations
                 rtreeFields[i] = i;
             }
 
-            Pair<IAType, Boolean> typePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
+            Pair<IAType, Boolean> typePair =
+                    Index.getNonNullableKeyFieldType(filterFieldName, filterItemType, index.getIndexType());
             IAType type = typePair.first;
             ISerializerDeserializer serde = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numNestedSecondaryKeyFields] = serde;

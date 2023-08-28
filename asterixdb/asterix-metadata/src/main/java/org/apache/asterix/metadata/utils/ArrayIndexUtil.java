@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -166,14 +167,14 @@ public class ArrayIndexUtil {
             }
 
             if (subType == null) {
-                keyPairType = Index.getNonNullableType(fieldType);
+                keyPairType = Index.getNonNullableType(fieldType, DatasetConfig.IndexType.ARRAY);
                 break;
             }
         }
 
         if (subType != null) {
             IAType keyType = ArrayIndexUtil.getSubFieldType(recType, unnestList, projectList);
-            Pair<IAType, Boolean> pair = Index.getNonNullableType(keyType);
+            Pair<IAType, Boolean> pair = Index.getNonNullableType(keyType, DatasetConfig.IndexType.ARRAY);
             pair.second = pair.second || ArrayIndexUtil.isSubFieldNullable(recType, unnestList, projectList);
             keyPairType = pair;
         }

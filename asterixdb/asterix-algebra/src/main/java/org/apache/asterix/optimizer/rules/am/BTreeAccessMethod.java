@@ -1088,7 +1088,7 @@ public class BTreeAccessMethod implements IAccessMethod {
             if (!CAST_NULL_TYPE_CONSTRUCTORS.contains(funId)) {
                 return false;
             }
-            IAType nonNullableType = Index.getNonNullableType(indexedFieldType).first;
+            IAType nonNullableType = Index.getNonNullableType(indexedFieldType, index.getIndexType()).first;
             Pair<FunctionIdentifier, IAObject> constructorWithFmt =
                     IndexUtil.getTypeConstructorDefaultNull(index, nonNullableType, functionExpr.getSourceLocation());
             FunctionIdentifier indexedFieldConstructorFun = constructorWithFmt.first;

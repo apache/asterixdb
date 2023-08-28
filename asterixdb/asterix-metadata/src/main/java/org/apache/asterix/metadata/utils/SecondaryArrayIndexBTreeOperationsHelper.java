@@ -206,7 +206,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
                             : metaType;
             addSKEvalFactories(itemType, numSecondaryKeys, true);
             Pair<IAType, Boolean> keyTypePair;
-            keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType);
+            keyTypePair = Index.getNonNullableKeyFieldType(filterFieldName, filterItemType, index.getIndexType());
             IAType type = keyTypePair.first;
             ISerializerDeserializer serde = serdeProvider.getSerializerDeserializer(type);
             secondaryRecFields[numPrimaryKeys + numSecondaryKeys] = serde;
@@ -535,7 +535,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         IScalarEvaluatorFactory sef = metadataProvider.getDataFormat().getFieldAccessEvaluatorFactory(
                 metadataProvider.getFunctionManager(), recordType, filterFieldName, numPrimaryKeys, sourceLoc);
         evalFactoryAndRecDescStackBuilder.addFilter(sef,
-                Index.getNonNullableKeyFieldType(filterFieldName, recordType).first);
+                Index.getNonNullableKeyFieldType(filterFieldName, recordType, index.getIndexType()).first);
     }
 
     class EvalFactoryAndRecDescInvoker implements ArrayIndexUtil.TypeTrackerCommandExecutor {
