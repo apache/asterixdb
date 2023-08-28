@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.bulk.DeleteBulkOperation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,26 +33,30 @@ public class DeleteBulkCloudOperation extends DeleteBulkOperation {
     private static final Logger LOGGER = LogManager.getLogger();
     private final String bucket;
     private final ICloudClient cloudClient;
+    private final IBulkOperationCallBack callBack;
 
-    public DeleteBulkCloudOperation(IIOManager ioManager, String bucket, ICloudClient cloudClient) {
+    public DeleteBulkCloudOperation(IOManager ioManager, String bucket, ICloudClient cloudClient,
+            IBulkOperationCallBack callBack) {
         super(ioManager);
         this.bucket = bucket;
         this.cloudClient = cloudClient;
+        this.callBack = callBack;
     }
 
     @Override
-    public void performOperation() throws HyracksDataException {
+    public int performOperation() throws HyracksDataException {
         /*
          * TODO What about deleting multiple directories?
          *      Actually, is there a case where we delete multiple directories from the cloud?
          */
         List<String> paths = fileReferences.stream().map(FileReference::getRelativePath).collect(Collectors.toList());
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Bulk deleting: {}", paths);
+            LOGGER.debug("Bulk deleting: local: {}, cloud: {}", fileReferences, paths);
         }
         cloudClient.deleteObjects(bucket, paths);
-
         // Bulk delete locally as well
-        super.performOperation();
+        int localDeletes = super.performOperation();
+        callBack.call(localDeletes, paths);
+        return paths.size();
     }
 }

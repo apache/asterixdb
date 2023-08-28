@@ -22,6 +22,8 @@ import java.io.FilenameFilter;
 import java.util.Set;
 
 import org.apache.asterix.cloud.CloudFileHandle;
+import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
+import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -40,6 +42,11 @@ public class LocalAccessor extends AbstractLazyAccessor {
     @Override
     public boolean isLocalAccessor() {
         return true;
+    }
+
+    @Override
+    public IBulkOperationCallBack getBulkOperationCallBack() {
+        return NoOpDeleteBulkCallBack.INSTANCE;
     }
 
     @Override

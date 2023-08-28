@@ -28,9 +28,12 @@ public class DeleteBulkOperation extends AbstractBulkOperation {
     }
 
     @Override
-    public void performOperation() throws HyracksDataException {
+    public int performOperation() throws HyracksDataException {
+        int count = 0;
         for (FileReference fileReference : fileReferences) {
+            count += ioManager.exists(fileReference) ? 1 : 0;
             ioManager.delete(fileReference);
         }
+        return count;
     }
 }

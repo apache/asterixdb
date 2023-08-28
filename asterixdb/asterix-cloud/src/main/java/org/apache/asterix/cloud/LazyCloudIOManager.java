@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
 import org.apache.asterix.cloud.lazy.accessor.ILazyAccessor;
 import org.apache.asterix.cloud.lazy.accessor.ILazyAccessorReplacer;
 import org.apache.asterix.cloud.lazy.accessor.InitialCloudAccessor;
@@ -34,6 +35,7 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -112,6 +114,12 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
      * IIOManager functions
      * ******************************************************************
      */
+
+    @Override
+    public IIOBulkOperation createDeleteBulkOperation() {
+        return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient, accessor.getBulkOperationCallBack());
+    }
+
     @Override
     public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
         return accessor.doList(dir, filter);

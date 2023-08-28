@@ -22,12 +22,15 @@ import java.io.FilenameFilter;
 import java.util.Set;
 
 import org.apache.asterix.cloud.CloudFileHandle;
+import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 
 public interface ILazyAccessor {
     boolean isLocalAccessor();
+
+    IBulkOperationCallBack getBulkOperationCallBack();
 
     void doOnOpen(CloudFileHandle fileHandle, IIOManager.FileReadWriteMode rwMode, IIOManager.FileSyncMode syncMode)
             throws HyracksDataException;

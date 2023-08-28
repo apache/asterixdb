@@ -16,29 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.control.nc.io.bulk;
+package org.apache.asterix.cloud.bulk;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IIOBulkOperation;
-import org.apache.hyracks.api.io.IIOManager;
+public class NoOpDeleteBulkCallBack implements IBulkOperationCallBack {
+    public static final IBulkOperationCallBack INSTANCE = new NoOpDeleteBulkCallBack();
 
-public abstract class AbstractBulkOperation implements IIOBulkOperation {
-    protected final IIOManager ioManager;
-    protected final List<FileReference> fileReferences;
-
-    AbstractBulkOperation(IIOManager ioManager) {
-        this.ioManager = ioManager;
-        fileReferences = new ArrayList<>();
+    private NoOpDeleteBulkCallBack() {
     }
 
     @Override
-    public final void add(FileReference fileReference) {
-        fileReferences.add(fileReference);
+    public void call(int numberOfAffectedLocalFiles, Collection<String> paths) {
+        // NoOp
     }
-
-    public abstract int performOperation() throws HyracksDataException;
 }

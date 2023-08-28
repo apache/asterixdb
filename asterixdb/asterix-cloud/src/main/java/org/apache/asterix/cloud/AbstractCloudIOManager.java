@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
+import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.util.CloudFileUtil;
@@ -199,7 +200,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public IIOBulkOperation createDeleteBulkOperation() {
-        return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient);
+        return new DeleteBulkCloudOperation(localIoManager, bucket, cloudClient, NoOpDeleteBulkCallBack.INSTANCE);
     }
 
     @Override

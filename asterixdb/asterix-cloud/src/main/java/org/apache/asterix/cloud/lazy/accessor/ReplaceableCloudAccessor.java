@@ -23,9 +23,11 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.CloudFileHandle;
 import org.apache.asterix.cloud.WriteBufferProvider;
+import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.util.CloudFileUtil;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -46,6 +48,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
     private final AtomicInteger numberOfUncachedFiles;
     private final WriteBufferProvider writeBufferProvider;
     private final ILazyAccessorReplacer replacer;
+    private final IBulkOperationCallBack callBack;
 
     public ReplaceableCloudAccessor(ICloudClient cloudClient, String bucket, IOManager localIoManager,
             Set<Integer> partitions, int numberOfUncachedFiles, WriteBufferProvider writeBufferProvider,
@@ -55,11 +58,20 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         this.numberOfUncachedFiles = new AtomicInteger(numberOfUncachedFiles);
         this.writeBufferProvider = writeBufferProvider;
         this.replacer = replacer;
+        this.callBack = (numberOfAffectedLocalFiles, paths) -> {
+            int totalUncached = paths.size() - numberOfAffectedLocalFiles;
+            replaceAccessor(this.numberOfUncachedFiles.addAndGet(-totalUncached));
+        };
     }
 
     @Override
     public boolean isLocalAccessor() {
         return false;
+    }
+
+    @Override
+    public IBulkOperationCallBack getBulkOperationCallBack() {
+        return callBack;
     }
 
     @Override
@@ -148,8 +160,17 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         // Never delete the storage dir in cloud storage
         int numberOfCloudDeletes = doCloudDelete(fileReference);
         // check local
-        if (numberOfCloudDeletes > 0 && localIoManager.exists(fileReference)) {
-            int numberOfLocalDeletes = fileReference.getFile().isFile() ? 1 : localIoManager.list(fileReference).size();
+        if (numberOfCloudDeletes > 0) {
+            int numberOfLocalDeletes;
+            if (numberOfCloudDeletes == 1) {
+                // file delete
+                numberOfLocalDeletes = localIoManager.exists(fileReference) ? 1 : 0;
+            } else {
+                // directory delete
+                Set<String> localToBeDeleted = localIoManager.list(fileReference).stream()
+                        .map(FileReference::getRelativePath).collect(Collectors.toSet());
+                numberOfLocalDeletes = localToBeDeleted.size();
+            }
             // Decrement by number of cloud deletes that have no counterparts locally
             decrementNumberOfUncachedFiles(numberOfCloudDeletes - numberOfLocalDeletes);
         }
