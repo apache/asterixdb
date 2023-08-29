@@ -40,3 +40,28 @@ insert into employee ({
     "fname": "B",
     "lname": "Y"
 });
+insert into employee ({
+    "id": 4,
+    "fname": "C"
+    /* "lname" is missing */
+});
+insert into employeeOpen ({
+    "id": 1,
+    "fname": "A",
+    "lname": "X"
+});
+insert into employeeOpen ({
+    "id": 2,
+    "fname": "A"
+    /* "lname" is missing */
+});
+insert into employeeOpen ({
+    "id": 3,
+    "fname": "B",
+    "lname": "Y"
+});
+insert into employeeOpen ({
+    "id": 4,
+    "fname": "C"
+    /* "lname" is missing */
+});

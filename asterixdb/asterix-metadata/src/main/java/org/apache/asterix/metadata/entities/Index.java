@@ -156,6 +156,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     public static Pair<IAType, Boolean> getNonNullableType(IAType keyType) {
         boolean nullable = false;
         IAType actualKeyType = keyType;
+        // check open field whose type is ANY?
         if (NonTaggedFormatUtil.isOptional(keyType)) {
             actualKeyType = ((AUnionType) keyType).getActualType();
             nullable = true;
@@ -165,6 +166,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     public static Pair<IAType, Boolean> getNonNullableOpenFieldType(Index index, IAType fieldType,
             List<String> fieldName, ARecordType recType) throws AlgebricksException {
+        // check open field whose type is ANY?
         if (IndexUtil.castDefaultNull(index)) {
             Pair<IAType, Boolean> nonNullableType = getNonNullableType(fieldType);
             nonNullableType.second = true;
@@ -199,6 +201,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     public static Pair<IAType, Boolean> getNonNullableKeyFieldType(List<String> expr, ARecordType recType)
             throws AlgebricksException {
         IAType keyType = Index.keyFieldType(expr, recType);
+        // check open field whose type is ANY?
         Pair<IAType, Boolean> pair = getNonNullableType(keyType);
         pair.second = pair.second || recType.isSubFieldNullable(expr);
         return pair;

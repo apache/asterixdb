@@ -453,10 +453,16 @@ public class AccessMethodUtils {
                     dest.addAll(KeyFieldTypeUtil.getArrayBTreeIndexKeyTypes(index, recordType, metaRecordType));
                     break;
                 case BTREE:
-                    //TODO(ali): check if types should be made nullable/missable
                     List<Pair<IAType, Boolean>> bTreeIndexKeyTypes =
                             KeyFieldTypeUtil.getBTreeIndexKeyTypes(index, recordType, metaRecordType);
-                    dest.addAll(bTreeIndexKeyTypes.stream().map(Pair::getFirst).collect(Collectors.toList()));
+                    boolean overridingKeyFieldTypes = index.getIndexDetails().isOverridingKeyFieldTypes();
+                    for (int i = 0; i < bTreeIndexKeyTypes.size(); i++) {
+                        if (bTreeIndexKeyTypes.get(i).second || overridingKeyFieldTypes) {
+                            dest.add(AUnionType.createUnknownableType(bTreeIndexKeyTypes.get(i).first));
+                        } else {
+                            dest.add(bTreeIndexKeyTypes.get(i).first);
+                        }
+                    }
                     break;
                 case RTREE:
                     dest.addAll(KeyFieldTypeUtil.getRTreeIndexKeyTypes(index, recordType, metaRecordType));
