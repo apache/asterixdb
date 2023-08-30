@@ -244,6 +244,28 @@
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="one-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet" check-warnings="true">
+      <compilation-unit name="type-mismatch">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">type-mismatch</output-dir>
+        <expected-warn>Failed to evaluate computed field. File: 'parquet-data/external-filter/department/accounting/0.parquet'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'For input string: "accounting"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'parquet-data/external-filter/department/engineering/0.parquet'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'For input string: "engineering"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'parquet-data/external-filter/department/hr/0.parquet'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'For input string: "hr"'</expected-warn>
+        <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="query">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">query</output-dir>
+      </compilation-unit>
+    </test-case>
     <!-- Dynamic prefixes tests end -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">

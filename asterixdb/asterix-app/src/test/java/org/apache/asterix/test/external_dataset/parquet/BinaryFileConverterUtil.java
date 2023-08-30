@@ -22,9 +22,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData.Record;
@@ -67,6 +69,24 @@ public class BinaryFileConverterUtil {
         }
         //Write parquet example that contains the specialized types
         ParquetFileExampleGeneratorUtil.writeExample();
+    }
+
+    public static void convertToParquetRecursively(File localDataRoot, String dirPath, String dest,
+            FilenameFilter filter, int startIndex) throws IOException {
+        File destPath = new File(localDataRoot, dest);
+
+        File dir = new File(dirPath);
+        if (!dir.exists() || !dir.isDirectory()) {
+            return;
+        }
+
+        Collection<File> files = IoUtil.getMatchingFiles(dir.toPath(), filter);
+        for (File file : files) {
+            String fileName = file.getName().substring(0, file.getName().indexOf(".")) + ".parquet";
+            Path outputPath = new Path(
+                    Paths.get(destPath.getAbsolutePath(), file.getParent().substring(startIndex), fileName).toString());
+            writeParquetFile(file, outputPath);
+        }
     }
 
     private static void writeParquetFile(File jsonInputPath, Path parquetOutputPath) throws IOException {
