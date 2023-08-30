@@ -158,6 +158,12 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 }
                 operatorNodePushablesBFSOrder.add(destOp);
                 operatorNodePushables.put(destId, destOp);
+            } else if (profile) {
+                if (destOp instanceof ProfiledOperatorNodePushable
+                        && sourceOp instanceof ProfiledOperatorNodePushable) {
+                    ((ProfiledOperatorNodePushable) destOp).addParent(inputChannel,
+                            (ProfiledOperatorNodePushable) sourceOp);
+                }
             }
 
             /*

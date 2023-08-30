@@ -114,6 +114,7 @@ import org.apache.hyracks.control.common.config.OptionTypes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * Provides helper methods for compilation of a query into a JobSpec and submission
@@ -131,6 +132,7 @@ public class APIFramework {
     private final IRuleSetFactory ruleSetFactory;
     private final Set<String> configurableParameterNames;
     private final ExecutionPlans executionPlans;
+    private PlanInfo lastPlan;
 
     public APIFramework(ILangCompilationProvider compilationProvider) {
         this.rewriterFactory = compilationProvider.getRewriterFactory();
@@ -139,6 +141,22 @@ public class APIFramework {
         this.ruleSetFactory = compilationProvider.getRuleSetFactory();
         this.configurableParameterNames = compilationProvider.getCompilerOptions();
         executionPlans = new ExecutionPlans();
+        lastPlan = null;
+    }
+
+    private class PlanInfo {
+        ILogicalPlan plan;
+        Map<Object, String> log2Phys;
+        boolean printOptimizerEstimates;
+        SessionConfig.PlanFormat format;
+
+        public PlanInfo(ILogicalPlan plan, Map<Object, String> log2Phys, boolean printOptimizerEstimates,
+                SessionConfig.PlanFormat format) {
+            this.plan = plan;
+            this.log2Phys = log2Phys;
+            this.printOptimizerEstimates = printOptimizerEstimates;
+            this.format = format;
+        }
     }
 
     private static class OptimizationContextFactory implements IOptimizationContextFactory {
@@ -328,6 +346,7 @@ public class APIFramework {
             if (isQuery || isLoad || isCopy) {
                 generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat(),
                         cboMode);
+                lastPlan = new PlanInfo(plan, spec.getLogical2PhysicalMap(), cboMode, output.config().getPlanFormat());
             }
         }
 
@@ -534,6 +553,20 @@ public class APIFramework {
             SessionConfig.PlanFormat format, boolean printOptimizerEstimates) throws AlgebricksException {
         executionPlans.setOptimizedLogicalPlan(
                 getPrettyPrintVisitor(format).printPlan(plan, log2phys, printOptimizerEstimates).toString());
+    }
+
+    public void generateOptimizedLogicalPlanWithProfile(ObjectNode profile) throws HyracksDataException {
+        /*TODO(ian): we call this and overwrite the non-annotated plan, but there should be some way to skip initial
+                     plan printing if both profiling and plan printing are requested. */
+        try {
+            if (lastPlan != null) {
+                executionPlans.setOptimizedLogicalPlan(getPrettyPrintVisitor(lastPlan.format)
+                        .printPlan(lastPlan.plan, lastPlan.log2Phys, lastPlan.printOptimizerEstimates, profile)
+                        .toString());
+            }
+        } catch (AlgebricksException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     private void generateOptimizedLogicalPlan(ILogicalPlan plan, SessionConfig.PlanFormat format,

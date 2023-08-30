@@ -16,17 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.api.dataflow;
+package org.apache.hyracks.api.util;
 
-public interface IPassableTimer {
-    /*
-    A timer intended to be used for timing the individual components of a
-    pipelined process. An instance of IPassableTimer is held by each method
-    in the pipeline, and is paused() when that method passes off control to
-    a component above it, and is resume()d when the component above it returns.
-     */
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-    void pause();
-
-    void resume();
+@FunctionalInterface
+public interface HyracksRunnable {
+    void run() throws HyracksDataException;
 }
