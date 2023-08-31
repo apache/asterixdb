@@ -74,6 +74,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPrettyPrintVisitor<Integer>
         implements IPlanPrettyPrinter {
 
@@ -101,6 +103,14 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
             boolean printOptimizerEstimates) throws AlgebricksException {
         //TODO(ian): would be nice if the text plan returned real operator ids too
+        printPlanImpl(plan, 0, printOptimizerEstimates);
+        return this;
+    }
+
+    @Override
+    public IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
+            boolean printOptimizerEstimates, ObjectNode profile) throws AlgebricksException {
+        //TODO(ian): add times
         printPlanImpl(plan, 0, printOptimizerEstimates);
         return this;
     }

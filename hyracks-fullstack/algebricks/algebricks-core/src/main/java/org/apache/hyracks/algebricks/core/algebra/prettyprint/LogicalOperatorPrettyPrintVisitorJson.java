@@ -80,12 +80,15 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOpe
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
+import org.apache.hyracks.api.dataflow.ActivityId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperatorPrettyPrintVisitor<Void>
         implements IPlanPrettyPrinter {
@@ -102,6 +105,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String OPTIMIZER_ESTIMATES = "optimizer-estimates";
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private Map<Object, String> log2odid = Collections.emptyMap();
+    private Map<String, ProfileInfo> profile = Collections.emptyMap();
     private final IdCounter idCounter = new IdCounter();
     private final JsonGenerator jsonGenerator;
 
@@ -149,6 +153,50 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
+    private class ProfileInfo {
+        Map<Integer, Pair<Double, Double>> activities;
+
+        ProfileInfo() {
+            activities = new HashMap<>();
+        }
+
+        void visit(int id, double time) {
+            Pair<Double, Double> times = activities.computeIfAbsent(id, i -> new Pair(time, time));
+            if (times.getFirst() > time) {
+                times.setFirst(time);
+            }
+            if (times.getSecond() < time) {
+                times.setSecond(time);
+            }
+        }
+    }
+
+    private static ActivityId acIdFromName(String name) {
+        String[] parts = name.split(" - ");
+        return ActivityId.parse(parts[0]);
+    }
+
+    Map<String, ProfileInfo> processProfile(ObjectNode profile) {
+        Map<String, ProfileInfo> profiledOps = new HashMap<>();
+        for (JsonNode joblet : profile.get("joblets")) {
+            for (JsonNode task : joblet.get("tasks")) {
+                for (JsonNode counters : task.get("counters")) {
+                    ProfileInfo info =
+                            profiledOps.computeIfAbsent(counters.get("runtime-id").asText(), i -> new ProfileInfo());
+                    info.visit(acIdFromName(counters.get("name").asText()).getLocalId(),
+                            counters.get("run-time").asDouble());
+                }
+                for (JsonNode partition : task.get("partition-send-profile")) {
+                    String id = partition.get("partition-id").get("connector-id").asText();
+                    ProfileInfo info = profiledOps.computeIfAbsent(id, i -> new ProfileInfo());
+                    //CDIDs are unique
+                    info.visit(0, partition.get("close-time").asDouble() - partition.get("open-time").asDouble());
+                }
+            }
+        }
+        return profiledOps;
+    }
+
     @Override
     public final IPlanPrettyPrinter reset() throws AlgebricksException {
         flushContentToWriter();
@@ -169,6 +217,16 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public final IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
             boolean printOptimizerEstimates) throws AlgebricksException {
         this.log2odid = log2phys;
+        printPlanImpl(plan, printOptimizerEstimates);
+        flushContentToWriter();
+        return this;
+    }
+
+    @Override
+    public IPlanPrettyPrinter printPlan(ILogicalPlan plan, Map<Object, String> log2phys,
+            boolean printOptimizerEstimates, ObjectNode profile) throws AlgebricksException {
+        this.log2odid = log2phys;
+        this.profile = processProfile(profile);
         printPlanImpl(plan, printOptimizerEstimates);
         flushContentToWriter();
         return this;
@@ -208,6 +266,23 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             String od = log2odid.get(op);
             if (od != null) {
                 jsonGenerator.writeStringField("runtime-id", od);
+                ProfileInfo info = profile.get(od);
+                if (info != null) {
+                    if (info.activities.size() == 1) {
+                        jsonGenerator.writeNumberField("min-time", info.activities.get(0).first);
+                        jsonGenerator.writeNumberField("max-time", info.activities.get(0).second);
+                    } else {
+                        jsonGenerator.writeObjectFieldStart("times");
+                        for (Map.Entry<Integer, Pair<Double, Double>> ac : info.activities.entrySet()) {
+                            jsonGenerator.writeObjectFieldStart(ac.getKey().toString());
+                            jsonGenerator.writeNumberField("min-time", ac.getValue().first);
+                            jsonGenerator.writeNumberField("max-time", ac.getValue().second);
+                            jsonGenerator.writeEndObject();
+                        }
+                        jsonGenerator.writeEndObject();
+                    }
+
+                }
             }
             IPhysicalOperator pOp = op.getPhysicalOperator();
             if (pOp != null) {

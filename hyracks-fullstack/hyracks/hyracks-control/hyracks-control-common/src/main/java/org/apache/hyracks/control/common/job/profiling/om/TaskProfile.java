@@ -128,7 +128,7 @@ public class TaskProfile extends AbstractProfile {
         opTimes.forEach((key, value) -> {
             ObjectNode jpe = om.createObjectNode();
             jpe.put("name", key);
-            jpe.put("time", Double
+            jpe.put("run-time", Double
                     .parseDouble(new DecimalFormat("#.####").format((double) value.getTimeCounter().get() / 1000000)));
             if (value.getId().getId() >= 0) {
                 jpe.put("runtime-id", value.getId().toString());

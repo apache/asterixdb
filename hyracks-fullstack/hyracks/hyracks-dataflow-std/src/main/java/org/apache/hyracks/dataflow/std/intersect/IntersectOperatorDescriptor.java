@@ -224,6 +224,11 @@ public class IntersectOperatorDescriptor extends AbstractOperatorDescriptor {
         }
 
         @Override
+        public String getDisplayName() {
+            return "Intersect";
+        }
+
+        @Override
         public IFrameWriter getInputFrameWriter(final int index) {
             return new IFrameWriter() {
                 private final int[] normalizedKey1 =
