@@ -152,7 +152,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
             ILogicalExpression inlinedExpr) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) filterExpr;
         if (!BuiltinFunctions.AND.equals(funcExpr.getFunctionIdentifier())) {
-            IFunctionInfo fInfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.OR);
+            IFunctionInfo fInfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.AND);
             List<Mutable<ILogicalExpression>> args = new ArrayList<>();
             args.add(new MutableObject<>(filterExpr));
             funcExpr = new ScalarFunctionCallExpression(fInfo, args);
