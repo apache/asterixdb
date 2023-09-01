@@ -54,7 +54,7 @@ public class LocalCloudUtil {
         startS3CloudEnvironment(true);
     }
 
-    public static void startS3CloudEnvironment(boolean cleanStart) {
+    public static S3Mock startS3CloudEnvironment(boolean cleanStart) {
         if (cleanStart) {
             FileUtils.deleteQuietly(new File(MOCK_FILE_BACKEND));
         }
@@ -78,6 +78,7 @@ public class LocalCloudUtil {
         client.createBucket(CreateBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
         LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
         client.close();
+        return s3MockServer;
     }
 
     private static void shutdownSilently() {
