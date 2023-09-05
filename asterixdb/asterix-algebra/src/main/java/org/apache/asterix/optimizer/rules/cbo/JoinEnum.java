@@ -29,8 +29,11 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
@@ -69,12 +72,21 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
+import org.apache.hyracks.control.common.config.OptionTypes;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class JoinEnum {
 
     private static final Logger LOGGER = LogManager.getLogger();
+
+    // Number of levels to do full join and plan enumeration
+    public static final String CBO_FULL_ENUM_LEVEL_KEY = "cbofullenumlevel";
+    private static final int CBO_FULL_ENUM_LEVEL_DEFAULT = 0;
+
+    // Mode for cartesian product plan generation during join and plan enumeration
+    public static final String CBO_CP_ENUM_KEY = "cbocpenum";
+    private static final boolean CBO_CP_ENUM_DEFAULT = true;
 
     protected List<JoinCondition> joinConditions; // "global" list of join conditions
     protected List<PlanNode> allPlans; // list of all plans
@@ -92,6 +104,9 @@ public class JoinEnum {
     protected PhysicalOptimizationConfig physOptConfig;
     protected boolean cboMode;
     protected boolean cboTestMode;
+
+    protected int cboFullEnumLevel;
+    protected boolean cboCPEnumMode;
     protected int numberOfTerms;
     protected AbstractLogicalOperator op;
     protected boolean connectedJoinGraph;
@@ -107,7 +122,8 @@ public class JoinEnum {
             List<Pair<EmptyTupleSourceOperator, DataSourceScanOperator>> emptyTupleAndDataSourceOps,
             Map<EmptyTupleSourceOperator, ILogicalOperator> joinLeafInputsHashMap,
             Map<DataSourceScanOperator, EmptyTupleSourceOperator> dataSourceEmptyTupleHashMap,
-            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, IOptimizationContext context) {
+            List<ILogicalOperator> internalEdges, List<ILogicalOperator> joinOps, IOptimizationContext context)
+            throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.internalEdges = new ArrayList<>();
@@ -115,6 +131,8 @@ public class JoinEnum {
         this.numberOfTerms = numberOfFromTerms;
         this.cboMode = cboMode;
         this.cboTestMode = cboTestMode;
+        this.cboFullEnumLevel = getCBOFullEnumLevel(context);
+        this.cboCPEnumMode = getCBOCPEnumMode(context);
         this.connectedJoinGraph = true;
         this.optCtx = context;
         this.physOptConfig = context.getPhysicalOptimizationConfig();
@@ -139,6 +157,24 @@ public class JoinEnum {
         for (int i = 0; i < this.jnArraySize; i++) {
             this.jnArray[i] = new JoinNode(i, this);
         }
+    }
+
+    private int getCBOFullEnumLevel(IOptimizationContext context) throws AsterixException {
+        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
+
+        String valueInQuery = mdp.getProperty(CBO_FULL_ENUM_LEVEL_KEY);
+        try {
+            return valueInQuery == null ? CBO_FULL_ENUM_LEVEL_DEFAULT
+                    : OptionTypes.POSITIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_BAD_QUERY_PARAMETER_VALUE, CBO_FULL_ENUM_LEVEL_KEY, 1,
+                    "");
+        }
+    }
+
+    private boolean getCBOCPEnumMode(IOptimizationContext context) {
+        MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
+        return mdp.getBooleanProperty(CBO_CP_ENUM_KEY, CBO_CP_ENUM_DEFAULT);
     }
 
     public List<JoinCondition> getJoinConditions() {
@@ -618,11 +654,11 @@ public class JoinEnum {
                 JoinNode jnIJ = jnArray[addPlansToThisJn];
                 jnIJ.jnArrayIndex = addPlansToThisJn;
                 jnIJ.addMultiDatasetPlans(jnI, jnJ);
-                if (forceJoinOrderMode) {
+                if (forceJoinOrderMode && level > cboFullEnumLevel) {
                     break;
                 }
             }
-            if (forceJoinOrderMode) {
+            if (forceJoinOrderMode && level > cboFullEnumLevel) {
                 break;
             }
         }

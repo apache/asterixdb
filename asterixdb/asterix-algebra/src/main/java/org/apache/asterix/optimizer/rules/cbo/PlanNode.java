@@ -23,6 +23,7 @@ import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 
@@ -41,6 +42,8 @@ public class PlanNode {
     ICost leftExchangeCost;
     ICost rightExchangeCost;
     JoinMethod joinOp;
+    boolean indexHint;
+    IExpressionAnnotation joinHint;
     // Used to indicate which side to build for HJ and which side to broadcast for BHJ.
     HashJoinExpressionAnnotation.BuildSide side;
     ScanMethod scanOp;
