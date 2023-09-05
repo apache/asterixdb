@@ -989,16 +989,17 @@ public class ExternalDataUtils {
     /**
      * Tests the provided key against all the provided predicates/evaluators and return true if they all pass.
      *
-     * @param key key
-     * @param predicate predicate
-     * @param matchers matchers
+     * @param key                key
+     * @param predicate          predicate
+     * @param matchers           matchers
      * @param externalDataPrefix external data prefix
-     * @param evaluator evaluator
-     *
+     * @param evaluator          evaluator
      * @return true if key passes all tests, false otherwise
      */
     public static boolean evaluate(String key, BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers,
-            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
-        return !key.endsWith("/") && predicate.test(matchers, key) && externalDataPrefix.evaluate(key, evaluator);
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
+            IWarningCollector warningCollector) throws HyracksDataException {
+        return !key.endsWith("/") && predicate.test(matchers, key)
+                && externalDataPrefix.evaluate(key, evaluator, warningCollector);
     }
 }

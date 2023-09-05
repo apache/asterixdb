@@ -57,7 +57,7 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
 
         // prepare prefix for computed field calculations
         IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(ctx, warningCollector);
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         // get the items

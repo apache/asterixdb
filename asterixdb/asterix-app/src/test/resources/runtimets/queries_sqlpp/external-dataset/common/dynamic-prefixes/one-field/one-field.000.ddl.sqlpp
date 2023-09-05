@@ -29,13 +29,14 @@ CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="external-filter/department/{department:string}"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
 CREATE EXTERNAL DATASET LastName(TestType) USING %adapter% (
     %template%,
     ("container"="playground"),
-    ("container"="playground"),
     ("definition"="external-filter/last-name/{name.last:string}"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );

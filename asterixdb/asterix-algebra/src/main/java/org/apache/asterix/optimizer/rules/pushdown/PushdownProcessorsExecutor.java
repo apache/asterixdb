@@ -25,7 +25,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
@@ -112,8 +115,11 @@ public class PushdownProcessorsExecutor {
                     scanDefineDescriptor.getDataset().getDatasetName());
         }
 
+        Map<String, String> configuration = ((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties();
+        boolean embedFilterValues = ExternalDataPrefix.containsComputedFields(configuration) && Boolean.parseBoolean(
+                configuration.getOrDefault(ExternalDataConstants.KEY_EMBED_FILTER_VALUES, ExternalDataConstants.TRUE));
         return new ExternalDatasetProjectionFiltrationInfo(recordRequestedType, pathLocations,
-                scanDefineDescriptor.getFilterPaths(), scanDefineDescriptor.getFilterExpression());
+                scanDefineDescriptor.getFilterPaths(), scanDefineDescriptor.getFilterExpression(), embedFilterValues);
     }
 
     private void setInfoToDataScan(AbstractScanOperator scanOp, IProjectionFiltrationInfo info) {

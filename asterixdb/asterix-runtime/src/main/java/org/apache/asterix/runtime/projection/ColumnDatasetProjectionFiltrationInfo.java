@@ -38,13 +38,13 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
     public ColumnDatasetProjectionFiltrationInfo(ARecordType recordRequestedType, ARecordType metaProjectedType,
             Map<String, FunctionCallInformation> sourceInformationMap, Map<ILogicalExpression, ARecordType> filterPaths,
             ILogicalExpression filterExpression, ILogicalExpression rangeFilterExpression) {
-        super(recordRequestedType, sourceInformationMap, filterPaths, filterExpression);
+        super(recordRequestedType, sourceInformationMap, filterPaths, filterExpression, false);
         this.metaProjectedType = metaProjectedType;
         this.rangeFilterExpression = rangeFilterExpression;
     }
 
     private ColumnDatasetProjectionFiltrationInfo(ColumnDatasetProjectionFiltrationInfo other) {
-        super(other.projectedType, other.functionCallInfoMap, other.filterPaths, other.filterExpression);
+        super(other.projectedType, other.functionCallInfoMap, other.filterPaths, other.filterExpression, false);
         metaProjectedType = other.metaProjectedType;
         rangeFilterExpression = other.rangeFilterExpression;
     }

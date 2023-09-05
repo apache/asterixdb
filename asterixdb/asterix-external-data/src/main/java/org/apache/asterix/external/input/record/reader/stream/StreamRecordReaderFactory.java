@@ -30,6 +30,7 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketClientInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
@@ -48,52 +49,40 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     protected IInputStreamFactory streamFactory;
     protected Map<String, String> configuration;
     protected Class recordReaderClazz;
+    protected IExternalFilterEvaluatorFactory filterEvaluatorFactory;
     private static final List<String> recordReaderNames =
             Collections.unmodifiableList(Arrays.asList(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER,
                     ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET, ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET,
                     ExternalDataConstants.STREAM_SOCKET_CLIENT));
 
     @Override
-    public DataSourceType getDataSourceType() {
+    public final DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
     }
 
     @Override
-    public Class<?> getRecordClass() {
+    public final Class<?> getRecordClass() {
         return char[].class;
     }
 
     @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
+    public final AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
         return streamFactory.getPartitionConstraint();
     }
 
-    private void configureInputStreamFactory(Map<String, String> config) throws CompilationException {
-        String reader = config.get(ExternalDataConstants.KEY_READER);
-        if (reader.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)) {
-            streamFactory = new LocalFSInputStreamFactory();
-        } else if (reader.equals(ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET)
-                || reader.equals(ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET)) {
-            streamFactory = new SocketServerInputStreamFactory();
-        } else if (reader.equals(ExternalDataConstants.STREAM_SOCKET_CLIENT)) {
-            streamFactory = new SocketClientInputStreamFactory();
-        } else {
-            throw new CompilationException(ErrorCode.FEED_UNKNOWN_ADAPTER_NAME);
-        }
-    }
-
     @Override
-    public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
+    public final void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws HyracksDataException, AlgebricksException {
         this.configuration = configuration;
-        configureInputStreamFactory(configuration);
+        setStreamFactory(configuration);
         streamFactory.configure(serviceCtx, configuration, warningCollector, filterEvaluatorFactory);
         recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
+        this.filterEvaluatorFactory = filterEvaluatorFactory;
     }
 
     @Override
-    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public final IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
             throws HyracksDataException {
         try {
             StreamRecordReader streamRecordReader =
@@ -107,7 +96,26 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
+    public final IExternalFilterValueEmbedder createFilterValueEmbedder(IWarningCollector warningCollector) {
+        return filterEvaluatorFactory.createValueEmbedder(warningCollector);
+    }
+
+    @Override
     public List<String> getRecordReaderNames() {
         return recordReaderNames;
+    }
+
+    protected void setStreamFactory(Map<String, String> config) throws CompilationException {
+        String reader = config.get(ExternalDataConstants.KEY_READER);
+        if (reader.equals(ExternalDataConstants.ALIAS_LOCALFS_ADAPTER)) {
+            streamFactory = new LocalFSInputStreamFactory();
+        } else if (reader.equals(ExternalDataConstants.KEY_ALIAS_ADAPTER_NAME_SOCKET)
+                || reader.equals(ExternalDataConstants.KEY_ADAPTER_NAME_SOCKET)) {
+            streamFactory = new SocketServerInputStreamFactory();
+        } else if (reader.equals(ExternalDataConstants.STREAM_SOCKET_CLIENT)) {
+            streamFactory = new SocketClientInputStreamFactory();
+        } else {
+            throw new CompilationException(ErrorCode.FEED_UNKNOWN_ADAPTER_NAME);
+        }
     }
 }

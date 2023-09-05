@@ -27,4 +27,6 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 public interface IExternalFilterEvaluatorFactory extends Serializable {
     IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector)
             throws HyracksDataException;
+
+    <T extends IExternalFilterEmbeddedValueInformation> T createValueEmbedder(IWarningCollector warningCollector);
 }

@@ -55,7 +55,7 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
 
         // prepare prefix for computed field calculations
         IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -101,7 +101,6 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
      *
      * @param container container
      * @param filesOnly files
-     *
      * @return Comma-delimited paths (e.g., "gs://bucket/file1.parquet,gs://bucket/file2.parquet")
      */
     private static String buildPathURIs(String container, List<Blob> filesOnly) {

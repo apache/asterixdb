@@ -29,6 +29,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IInputStreamFactory;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -42,6 +43,7 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
 
     protected Map<String, String> configuration;
     protected final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
+    protected IExternalFilterEvaluatorFactory filterEvaluatorFactory;
     protected transient AlgebricksAbsolutePartitionConstraint partitionConstraint;
 
     @Override
@@ -68,6 +70,12 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
         this.configuration = configuration;
         this.partitionConstraint =
                 ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
+        this.filterEvaluatorFactory = filterEvaluatorFactory;
+    }
+
+    @Override
+    public IExternalFilterValueEmbedder createFilterValueEmbedder(IWarningCollector warningCollector) {
+        return filterEvaluatorFactory.createValueEmbedder(warningCollector);
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {

@@ -16,20 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
 
-import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
+USE test;
 
-public class NoOpExternalFilterEvaluatorFactory implements IExternalFilterEvaluatorFactory {
-    public static final IExternalFilterEvaluatorFactory INSTANCE = new NoOpExternalFilterEvaluatorFactory();
-    private static final long serialVersionUID = 6470035020297216949L;
 
-    private NoOpExternalFilterEvaluatorFactory() {
-    }
-
-    @Override
-    public IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector) {
-        return NoOpExternalFilterEvaluator.INSTANCE;
-    }
-}
+SELECT VALUE d
+FROM Department d
+WHERE d.department = "accounting"
+ORDER BY d.id;

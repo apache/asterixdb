@@ -69,7 +69,7 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
 
             // prepare prefix for computed field calculations
             IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
-            ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+            ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
             configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
@@ -124,7 +124,6 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
      *
      * @param container container
      * @param filesOnly files
-     *
      * @return Comma-delimited paths (e.g., "s3a://bucket/file1.parquet,s3a://bucket/file2.parquet")
      */
     private static String buildPathURIs(String container, List<S3Object> filesOnly) {

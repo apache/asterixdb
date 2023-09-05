@@ -29,13 +29,14 @@ CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="parquet-data/external-filter/department/{department:string}"),
+    ("embed-filter-values" = "false"),
     ("format"="parquet")
 );
 
 CREATE EXTERNAL DATASET LastName(TestType) USING %adapter% (
     %template%,
     ("container"="playground"),
-    ("container"="playground"),
     ("definition"="parquet-data/external-filter/last-name/{name.last:string}"),
+    ("embed-filter-values" = "false"),
     ("format"="parquet")
 );

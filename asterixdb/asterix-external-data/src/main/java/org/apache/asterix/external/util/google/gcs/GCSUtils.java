@@ -174,7 +174,7 @@ public class GCSUtils {
 
         // Collect the paths to files only
         collectAndFilterFiles(items, includeExcludeMatcher.getPredicate(), includeExcludeMatcher.getMatchersList(),
-                filesOnly, externalDataPrefix, evaluator);
+                filesOnly, externalDataPrefix, evaluator, warningCollector);
 
         // Warn if no files are returned
         if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
@@ -192,9 +192,10 @@ public class GCSUtils {
      */
     private static void collectAndFilterFiles(Page<Blob> items, BiPredicate<List<Matcher>, String> predicate,
             List<Matcher> matchers, List<Blob> filesOnly, ExternalDataPrefix externalDataPrefix,
-            IExternalFilterEvaluator evaluator) throws HyracksDataException {
+            IExternalFilterEvaluator evaluator, IWarningCollector warningCollector) throws HyracksDataException {
         for (Blob item : items.iterateAll()) {
-            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator)) {
+            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator,
+                    warningCollector)) {
                 filesOnly.add(item);
             }
         }

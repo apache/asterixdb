@@ -425,7 +425,8 @@ public class AzureUtils {
 
             // Collect the paths to files only
             collectAndFilterBlobFiles(blobItems, includeExcludeMatcher.getPredicate(),
-                    includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator);
+                    includeExcludeMatcher.getMatchersList(), filesOnly, externalDataPrefix, evaluator,
+                    warningCollector);
 
             // Warn if no files are returned
             if (filesOnly.isEmpty() && warningCollector.shouldWarn()) {
@@ -449,9 +450,11 @@ public class AzureUtils {
      */
     private static void collectAndFilterBlobFiles(Iterable<BlobItem> items,
             BiPredicate<List<Matcher>, String> predicate, List<Matcher> matchers, List<BlobItem> filesOnly,
-            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator) throws HyracksDataException {
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator,
+            IWarningCollector warningCollector) throws HyracksDataException {
         for (BlobItem item : items) {
-            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator)) {
+            if (ExternalDataUtils.evaluate(item.getName(), predicate, matchers, externalDataPrefix, evaluator,
+                    warningCollector)) {
                 filesOnly.add(item);
             }
         }

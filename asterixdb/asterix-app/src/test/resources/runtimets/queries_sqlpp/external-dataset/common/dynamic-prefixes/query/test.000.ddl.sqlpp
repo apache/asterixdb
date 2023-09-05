@@ -29,6 +29,7 @@ CREATE EXTERNAL DATASET company(test) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="external-filter/car/{company:string}"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
@@ -36,6 +37,7 @@ CREATE EXTERNAL DATASET customer(test) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="external-filter/car/{company:string}/customer/{customer_id:int}"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
@@ -43,5 +45,6 @@ CREATE EXTERNAL DATASET maintenance(test) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="external-filter/car/{company:string}/customer/{customer_id:int}/maintenance-report/year-{year:int}-month-{month:int}-day-{day:int}-date"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );

@@ -18,12 +18,22 @@
  */
 package org.apache.asterix.metadata.utils.filter;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.getMergedPathRecordType;
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.renameType;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
-import org.apache.asterix.common.external.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.ExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.ExternalFilterValueEvaluatorFactory;
+import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -33,23 +43,38 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
 public class ExternalFilterBuilder extends AbstractFilterBuilder {
     private final ExternalDataPrefix prefix;
+    private final boolean embedFilterValues;
 
     public ExternalFilterBuilder(ExternalDatasetProjectionFiltrationInfo projectionFiltrationInfo,
             JobGenContext context, IVariableTypeEnvironment typeEnv, ExternalDataPrefix prefix) {
         super(projectionFiltrationInfo.getFilterPaths(), projectionFiltrationInfo.getFilterExpression(), context,
                 typeEnv);
         this.prefix = prefix;
+        this.embedFilterValues = projectionFiltrationInfo.isEmbedFilterValues();
     }
 
     public IExternalFilterEvaluatorFactory build() throws AlgebricksException {
-        if (filterExpression == null || filterPaths.isEmpty()) {
+        IScalarEvaluatorFactory evalFactory = null;
+        if (filterExpression != null && !filterPaths.isEmpty()) {
+            evalFactory = createEvaluator(filterExpression);
+        }
+
+        if (evalFactory == null && !embedFilterValues) {
             return NoOpExternalFilterEvaluatorFactory.INSTANCE;
         }
-        IScalarEvaluatorFactory evalFactory = createEvaluator(filterExpression);
-        if (evalFactory == null) {
-            return NoOpExternalFilterEvaluatorFactory.INSTANCE;
+
+        List<String> fieldPaths = prefix.getComputedFieldNames();
+        int numberOfComputedFields = fieldPaths.size();
+        List<ProjectionFiltrationTypeUtil.RenamedType> leafs = new ArrayList<>(numberOfComputedFields);
+        ARecordType previousType = EMPTY_TYPE;
+        for (int i = 0; i < numberOfComputedFields; i++) {
+            ProjectionFiltrationTypeUtil.RenamedType renamedType = renameType(BuiltinType.ANY, i);
+            leafs.add(renamedType);
+            List<String> path = Arrays.asList(fieldPaths.get(i).split("\\."));
+            previousType = getMergedPathRecordType(previousType, path, renamedType);
         }
-        return new ExternalFilterEvaluatorFactory(prefix.getComputedFieldNames().size(), evalFactory);
+
+        return new ExternalFilterEvaluatorFactory(evalFactory, previousType, leafs, prefix, embedFilterValues);
     }
 
     @Override

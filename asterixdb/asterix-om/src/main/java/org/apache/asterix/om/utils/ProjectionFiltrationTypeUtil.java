@@ -20,12 +20,17 @@ package org.apache.asterix.om.utils;
 
 import java.util.List;
 
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.typecomputer.impl.RecordMergeTypeComputer;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.IATypeVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ProjectionFiltrationTypeUtil {
     //Default open record type when requesting the entire fields
@@ -69,6 +74,15 @@ public class ProjectionFiltrationTypeUtil {
         return getRecordType(path, "root", 0, BuiltinType.ANY);
     }
 
+    public static ARecordType getMergedPathRecordType(ARecordType previousType, List<String> path, IAType leafType)
+            throws AlgebricksException {
+        ARecordType type = getRecordType(path, "root", 0, leafType);
+        if (previousType == EMPTY_TYPE) {
+            return type;
+        }
+        return (ARecordType) RecordMergeTypeComputer.merge(previousType, type);
+    }
+
     /**
      * Get the expected type for an array index
      *
@@ -100,6 +114,14 @@ public class ProjectionFiltrationTypeUtil {
 
         // Rename
         return new ARecordType("root", result.getFieldNames(), result.getFieldTypes(), true);
+    }
+
+    public static IAType renameType(IAType type, String name) {
+        return new RenamedType(type, name);
+    }
+
+    public static RenamedType renameType(IAType type, int index) {
+        return new RenamedType(type, String.valueOf(index), index);
     }
 
     private static ARecordType getPathRecordType(List<String> path, IAType type) {
@@ -141,6 +163,80 @@ public class ProjectionFiltrationTypeUtil {
 
     private static ARecordType createType(String typeName) {
         return new ARecordType(typeName, new String[] {}, new IAType[] {}, true);
+    }
+
+    public static class RenamedType implements IAType {
+        private static final long serialVersionUID = 992690669300951839L;
+        private final IAType originalType;
+        private final String name;
+        private final int index;
+
+        RenamedType(IAType originalType, String name) {
+            this(originalType, name, -1);
+        }
+
+        RenamedType(IAType originalType, String name, int index) {
+            this.originalType = originalType;
+            this.name = name;
+            this.index = index;
+        }
+
+        @Override
+        public IAType getType() {
+            return originalType.getType();
+        }
+
+        @Override
+        public boolean deepEqual(IAObject obj) {
+            return originalType.deepEqual(obj);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof RenamedType) {
+                return originalType.equals(((RenamedType) obj).originalType);
+            }
+            return originalType.equals(obj);
+        }
+
+        @Override
+        public int hash() {
+            return originalType.hash();
+        }
+
+        @Override
+        public ATypeTag getTypeTag() {
+            return originalType.getTypeTag();
+        }
+
+        @Override
+        public String getDisplayName() {
+            return originalType.getDisplayName();
+        }
+
+        @Override
+        public String getTypeName() {
+            return name;
+        }
+
+        @Override
+        public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
+            return visitor.visitFlat(this, arg);
+        }
+
+        @Override
+        public ObjectNode toJSON() {
+            return originalType.toJSON();
+        }
+
+        @Override
+        public String toString() {
+            return originalType.toString();
+        }
+
+        public int getIndex() {
+            return index;
+        }
     }
 
 }

@@ -29,5 +29,6 @@ CREATE EXTERNAL DATASET test(test) USING %adapter% (
     %template%,
     ("container"="playground"),
     ("definition"="external-filter/department/{name:bigint}"),
+    ("embed-filter-values" = "false"),
     ("format"="json")
 );

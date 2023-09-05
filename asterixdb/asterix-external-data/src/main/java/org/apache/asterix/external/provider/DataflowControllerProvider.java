@@ -44,6 +44,7 @@ import org.apache.asterix.external.dataflow.FeedStreamDataFlowController;
 import org.apache.asterix.external.dataflow.FeedWithMetaDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.om.types.ARecordType;
@@ -61,15 +62,19 @@ public class DataflowControllerProvider {
             int partition, IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory,
             Map<String, String> configuration, boolean isFeed, IFeedLogManager feedLogManager)
             throws HyracksDataException {
+        IExternalFilterValueEmbedder valueEmbedder =
+                dataSourceFactory.createFilterValueEmbedder(ctx.getWarningCollector());
         try {
             switch (dataSourceFactory.getDataSourceType()) {
                 case RECORDS:
                     IRecordReaderFactory<?> recordReaderFactory = (IRecordReaderFactory<?>) dataSourceFactory;
                     IRecordReader<?> recordReader = recordReaderFactory.createRecordReader(ctx, partition);
+                    recordReader.setValueEmbedder(valueEmbedder);
                     IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
                     IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
                     // TODO(ali): revisit to think about passing data source name via setter or via createRecordParser
                     dataParser.configure(recordReader.getDataSourceName(), recordReader.getLineNumber());
+                    dataParser.setValueEmbedder(valueEmbedder);
                     if (isFeed) {
                         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(configuration);
                         boolean isRecordWithMeta = ExternalDataUtils.isRecordWithMeta(configuration);
@@ -95,10 +100,12 @@ public class DataflowControllerProvider {
                 case STREAM:
                     IInputStreamFactory streamFactory = (IInputStreamFactory) dataSourceFactory;
                     AsterixInputStream stream = streamFactory.createInputStream(ctx, partition);
+                    stream.setValueEmbedder(valueEmbedder);
                     IStreamDataParserFactory streamParserFactory = (IStreamDataParserFactory) dataParserFactory;
                     // TODO(ali): revisit to think about passing data source name to parser
                     IStreamDataParser streamParser = streamParserFactory.createInputStreamParser(ctx, partition);
                     streamParser.setInputStream(stream);
+                    streamParser.setValueEmbedder(valueEmbedder);
                     if (isFeed) {
                         return new FeedStreamDataFlowController(ctx, feedLogManager, streamParser, stream);
                     } else {

@@ -33,8 +33,7 @@ public interface IRecordDataParser<T> extends IDataParser {
      * warning and/or throw an exception in case of failure.
      *
      * @param record input record to parse
-     * @param out output where the parsed record is written into
-     *
+     * @param out    output where the parsed record is written into
      * @return true if the record was parsed successfully and written to out. False, otherwise.
      * @throws HyracksDataException HyracksDataException
      */
@@ -44,7 +43,7 @@ public interface IRecordDataParser<T> extends IDataParser {
      * Configures the parser with information suppliers from the {@link IRecordReader} data source.
      *
      * @param dataSourceName data source name supplier
-     * @param lineNumber line number supplier
+     * @param lineNumber     line number supplier
      */
     default void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
     }

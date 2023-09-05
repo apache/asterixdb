@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.input.record.reader.gcs;
 
-import static org.apache.asterix.external.util.ExternalDataUtils.getIncludeExcludeMatchers;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +57,7 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
 
         // prepare prefix for computed field calculations
         IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(ctx, warningCollector);
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         // get the items

@@ -18,15 +18,14 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
+import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.renameType;
+
 import java.util.Map;
 
-import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.om.types.IATypeVisitor;
 import org.apache.asterix.optimizer.rules.pushdown.schema.AnyExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.ArrayExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.schema.IExpectedSchemaNode;
@@ -36,8 +35,6 @@ import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode
 import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.asterix.runtime.projection.ProjectionFiltrationWarningFactoryProvider;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisitor<IAType, IExpectedSchemaNode> {
 
@@ -55,7 +52,7 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
         this.sourceInformationMap = sourceInformationMap;
         this.type = constType;
         if (sourceInformationMap != null) {
-            this.type = rename(constType);
+            this.type = renameType(constType, getTypeName());
             sourceInformationMap.put(type.getTypeName(), compareFunctionInfo);
         }
         return (ARecordType) anyNode.accept(this, anyNode);
@@ -114,73 +111,5 @@ public class ColumnFilterPathBuilderVisitor implements IExpectedSchemaNodeVisito
     private FunctionCallInformation createFunctionCallInformation(IExpectedSchemaNode node) {
         return new FunctionCallInformation(node.getFunctionName(), node.getSourceLocation(),
                 ProjectionFiltrationWarningFactoryProvider.TYPE_MISMATCH_FACTORY);
-    }
-
-    private IAType rename(IAType type) {
-        return new RenamedType(type, getTypeName());
-    }
-
-    private static class RenamedType implements IAType {
-        private static final long serialVersionUID = 992690669300951839L;
-        private final IAType originalType;
-        private final String name;
-
-        RenamedType(IAType originalType, String name) {
-            this.originalType = originalType;
-            this.name = name;
-        }
-
-        @Override
-        public IAType getType() {
-            return originalType.getType();
-        }
-
-        @Override
-        public boolean deepEqual(IAObject obj) {
-            return originalType.deepEqual(obj);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof RenamedType) {
-                return originalType.equals(((RenamedType) obj).originalType);
-            }
-            return originalType.equals(obj);
-        }
-
-        @Override
-        public int hash() {
-            return originalType.hash();
-        }
-
-        @Override
-        public ATypeTag getTypeTag() {
-            return originalType.getTypeTag();
-        }
-
-        @Override
-        public String getDisplayName() {
-            return originalType.getDisplayName();
-        }
-
-        @Override
-        public String getTypeName() {
-            return name;
-        }
-
-        @Override
-        public <R, T> R accept(IATypeVisitor<R, T> visitor, T arg) {
-            return visitor.visitFlat(this, arg);
-        }
-
-        @Override
-        public ObjectNode toJSON() {
-            return originalType.toJSON();
-        }
-
-        @Override
-        public String toString() {
-            return originalType.toString();
-        }
     }
 }

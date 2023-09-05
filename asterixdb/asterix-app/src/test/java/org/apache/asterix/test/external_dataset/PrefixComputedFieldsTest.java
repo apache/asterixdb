@@ -49,7 +49,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix1 = "";
-        prefix = new ExternalDataPrefix(prefix1, null);
+        prefix = new ExternalDataPrefix(prefix1);
         assertEquals("", prefix.getOriginal());
         assertEquals("", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -60,7 +60,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix2 = "hotel";
-        prefix = new ExternalDataPrefix(prefix2, null);
+        prefix = new ExternalDataPrefix(prefix2);
         assertEquals("hotel", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -71,7 +71,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix3 = "hotel/{hotel-id:inT}/";
-        prefix = new ExternalDataPrefix(prefix3, null);
+        prefix = new ExternalDataPrefix(prefix3);
         assertEquals("hotel/{hotel-id:inT}/", prefix.getOriginal());
         assertEquals("hotel/", prefix.getRoot());
         assertTrue(prefix.isEndsWithSlash());
@@ -82,7 +82,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)", prefix.getIndexToComputedFieldsMap().get(1).getExpression());
 
         String prefix4 = "hotel/{hotel-id:int}-{hotel-name:sTRing}";
-        prefix = new ExternalDataPrefix(prefix4, null);
+        prefix = new ExternalDataPrefix(prefix4);
         assertEquals("hotel/{hotel-id:int}-{hotel-name:sTRing}", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -93,7 +93,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)-(.+)", prefix.getIndexToComputedFieldsMap().get(1).getExpression());
 
         String prefix5 = "hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}-{month:int}-{day:int}/";
-        prefix = new ExternalDataPrefix(prefix5, null);
+        prefix = new ExternalDataPrefix(prefix5);
         assertEquals("hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}-{month:int}-{day:int}/",
                 prefix.getOriginal());
         assertEquals("hotel/something/", prefix.getRoot());
@@ -107,7 +107,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)-(.+)-(.+)", prefix.getIndexToComputedFieldsMap().get(4).getExpression());
 
         String prefix6 = "hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}/{month:int}/{day:int}";
-        prefix = new ExternalDataPrefix(prefix6, null);
+        prefix = new ExternalDataPrefix(prefix6);
         assertEquals("hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}/{month:int}/{day:int}",
                 prefix.getOriginal());
         assertEquals("hotel/something", prefix.getRoot());
@@ -123,7 +123,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)", prefix.getIndexToComputedFieldsMap().get(6).getExpression());
 
         String prefix7 = "hotel/{hotel.details.id:int}-{hotel-name:sTRing}";
-        prefix = new ExternalDataPrefix(prefix7, null);
+        prefix = new ExternalDataPrefix(prefix7);
         assertEquals("hotel/{hotel.details.id:int}-{hotel-name:sTRing}", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -134,7 +134,7 @@ public class PrefixComputedFieldsTest extends TestCase {
 
         String prefix8 =
                 "hotel/hotel-{hotel-id:int}-hotel-{hotel-name:sTRing}/review/year-{year:int}/{month:int}-month/day-{day:int}-day";
-        prefix = new ExternalDataPrefix(prefix8, null);
+        prefix = new ExternalDataPrefix(prefix8);
         assertEquals(
                 "hotel/hotel-{hotel-id:int}-hotel-{hotel-name:sTRing}/review/year-{year:int}/{month:int}-month/day-{day:int}-day",
                 prefix.getOriginal());

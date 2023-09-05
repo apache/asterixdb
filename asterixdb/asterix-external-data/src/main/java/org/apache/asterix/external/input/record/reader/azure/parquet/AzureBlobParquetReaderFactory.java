@@ -65,7 +65,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
 
         // prepare prefix for computed field calculations
         IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(serviceCtx, warningCollector);
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         List<BlobItem> filesOnly = listBlobItems(blobServiceClient, configuration, includeExcludeMatcher,
@@ -110,8 +110,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
      *
      * @param container container
      * @param filesOnly files
-     * @param endPoint endpoint
-     *
+     * @param endPoint  endpoint
      * @return Comma-delimited paths (e.g., "wasbs://container@accountName.blob.core.windows.net/file1.parquet,
      * wasbs://container@accountName.blob.core.windows.net/file2.parquet")
      */

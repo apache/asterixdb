@@ -60,10 +60,13 @@ public abstract class AbstractExternalInputStream extends AbstractMultipleInputS
             CleanupUtils.close(in, null);
         }
 
+        String path = filePaths.get(nextFileIndex);
         boolean isAvailableStream = getInputStream();
         nextFileIndex++; // Always point to next file after getting the current stream
         if (!isAvailableStream) {
             return advance();
+        } else {
+            valueEmbedder.setPath(path);
         }
 
         if (notificationHandler != null) {

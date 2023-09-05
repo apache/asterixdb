@@ -19,9 +19,15 @@
 package org.apache.asterix.external.input.filter;
 
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.input.filter.embedder.ExternalFilterValueEmbedder;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.asterix.external.util.ExternalDataPrefix;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -29,21 +35,42 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class ExternalFilterEvaluatorFactory implements IExternalFilterEvaluatorFactory {
     private static final long serialVersionUID = -309935877927008746L;
-    private final int numberOfComputedFields;
     private final IScalarEvaluatorFactory filterEvalFactory;
+    private final ARecordType allPaths;
+    private final List<ProjectionFiltrationTypeUtil.RenamedType> leafs;
+    private final ExternalDataPrefix prefix;
+    private final boolean embedFilterValues;
 
-    public ExternalFilterEvaluatorFactory(int numberOfComputedFields, IScalarEvaluatorFactory filterEvalFactory) {
-        this.numberOfComputedFields = numberOfComputedFields;
+    public ExternalFilterEvaluatorFactory(IScalarEvaluatorFactory filterEvalFactory, ARecordType allPaths,
+            List<ProjectionFiltrationTypeUtil.RenamedType> leafs, ExternalDataPrefix prefix,
+            boolean embedFilterValues) {
         this.filterEvalFactory = filterEvalFactory;
+        this.allPaths = allPaths;
+        this.leafs = leafs;
+        this.prefix = prefix;
+        this.embedFilterValues = embedFilterValues;
     }
 
     @Override
     public IExternalFilterEvaluator create(IServiceContext serviceContext, IWarningCollector warningCollector)
             throws HyracksDataException {
-        IExternalFilterValueEvaluator[] valueEvaluators = new IExternalFilterValueEvaluator[numberOfComputedFields];
+        if (filterEvalFactory == null) {
+            return NoOpExternalFilterEvaluatorFactory.INSTANCE.create(serviceContext, warningCollector);
+        }
+
+        IExternalFilterValueEvaluator[] valueEvaluators = new IExternalFilterValueEvaluator[leafs.size()];
         Arrays.fill(valueEvaluators, NoOpExternalFilterValueEvaluator.INSTANCE);
         FilterEvaluatorContext filterContext =
                 new FilterEvaluatorContext(serviceContext, warningCollector, valueEvaluators);
         return new ExternalFilterEvaluator(filterEvalFactory.createScalarEvaluator(filterContext), valueEvaluators);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public IExternalFilterValueEmbedder createValueEmbedder(IWarningCollector warningCollector) {
+        if (embedFilterValues) {
+            return new ExternalFilterValueEmbedder(allPaths, leafs, prefix, warningCollector);
+        }
+        return NoOpFilterValueEmbedder.INSTANCE;
     }
 }

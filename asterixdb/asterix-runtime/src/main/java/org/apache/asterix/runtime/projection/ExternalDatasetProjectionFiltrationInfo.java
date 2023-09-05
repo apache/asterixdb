@@ -43,14 +43,16 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
     protected final ILogicalExpression filterExpression;
     protected final Map<ILogicalExpression, ARecordType> filterPaths;
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
+    private final boolean embedFilterValues;
 
     public ExternalDatasetProjectionFiltrationInfo(ARecordType projectedType,
             Map<String, FunctionCallInformation> sourceInformationMap, Map<ILogicalExpression, ARecordType> filterPaths,
-            ILogicalExpression filterExpression) {
+            ILogicalExpression filterExpression, boolean embedFilterValues) {
         this.projectedType = projectedType;
         this.functionCallInfoMap = sourceInformationMap;
         this.filterExpression = filterExpression;
         this.filterPaths = filterPaths;
+        this.embedFilterValues = embedFilterValues;
     }
 
     private ExternalDatasetProjectionFiltrationInfo(ExternalDatasetProjectionFiltrationInfo other) {
@@ -65,6 +67,7 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
 
         filterExpression = other.filterExpression;
         filterPaths = new HashMap<>(other.filterPaths);
+        embedFilterValues = other.embedFilterValues;
     }
 
     @Override
@@ -86,6 +89,10 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
 
     public Map<ILogicalExpression, ARecordType> getFilterPaths() {
         return filterPaths;
+    }
+
+    public boolean isEmbedFilterValues() {
+        return embedFilterValues;
     }
 
     @Override
@@ -117,6 +124,11 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
             writer.append(" prefix-filter on: ");
             writer.append(filterExpression.toString());
         }
+
+        if (embedFilterValues) {
+            writer.append(" embed-filter-value: ");
+            writer.append(String.valueOf(true));
+        }
     }
 
     @Override
@@ -132,6 +144,10 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
 
         if (filterExpression != null) {
             generator.writeStringField("prefix-filter-on", filterExpression.toString());
+        }
+
+        if (embedFilterValues) {
+            generator.writeBooleanField("embed-filter-value", true);
         }
     }
 

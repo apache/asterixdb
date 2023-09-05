@@ -22,15 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReaderFactory;
-import org.apache.asterix.external.provider.StreamRecordReaderProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class AzureDataLakeReaderFactory extends StreamRecordReaderFactory {
 
@@ -45,30 +38,7 @@ public class AzureDataLakeReaderFactory extends StreamRecordReaderFactory {
     }
 
     @Override
-    public DataSourceType getDataSourceType() {
-        return DataSourceType.RECORDS;
-    }
-
-    @Override
-    public Class<?> getRecordClass() {
-        return char[].class;
-    }
-
-    @Override
-    public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() throws AlgebricksException {
-        return streamFactory.getPartitionConstraint();
-    }
-
-    @Override
-    public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
-            IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
-        this.configuration = configuration;
-
-        // Stream factory
+    protected void setStreamFactory(Map<String, String> config) {
         streamFactory = new AzureDataLakeInputStreamFactory();
-        streamFactory.configure(ctx, configuration, warningCollector, filterEvaluatorFactory);
-
-        // record reader
-        recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
     }
 }

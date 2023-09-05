@@ -134,6 +134,8 @@ public class ExternalDataConstants {
     public static final String KEY_REQUESTED_FIELDS = "requested-fields";
     public static final String KEY_EXTERNAL_SCAN_BUFFER_SIZE = "external-scan-buffer-size";
 
+    public static final String KEY_EMBED_FILTER_VALUES = "embed-filter-values";
+
     /**
      * Keys for adapter name
      **/

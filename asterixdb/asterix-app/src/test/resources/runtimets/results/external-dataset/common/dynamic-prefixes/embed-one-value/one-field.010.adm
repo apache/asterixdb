@@ -1,0 +1,3 @@
+{ "id": 1, "name": { "first": "John", "last": "Smith" }, "department": "accounting" }
+{ "id": 2, "name": { "first": "Mike", "last": "Jones" }, "department": "accounting" }
+{ "id": 3, "name": { "first": "Alex", "last": "Miller" }, "department": "accounting" }

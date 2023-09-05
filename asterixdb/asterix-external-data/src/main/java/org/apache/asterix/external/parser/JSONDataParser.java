@@ -31,6 +31,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.parser.jackson.ADMToken;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
@@ -49,10 +50,8 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
     /**
      * Initialize JSONDataParser
      *
-     * @param recordType
-     *            defined type.
-     * @param jsonFactory
-     *            Jackson JSON parser factory.
+     * @param recordType  defined type.
+     * @param jsonFactory Jackson JSON parser factory.
      */
     public JSONDataParser(ARecordType recordType, JsonFactory jsonFactory) {
         super(recordType, jsonFactory);
@@ -61,6 +60,11 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
     @Override
     public void setInputStream(InputStream in) throws IOException {
         setInput(jsonFactory.createParser(in));
+    }
+
+    @Override
+    public void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
+        this.valueEmbedder = valueEmbedder;
     }
 
     public void setInputNode(JsonNode node) {
@@ -81,6 +85,7 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
             if (nextToken() != ADMToken.OBJECT_START) {
                 throw new ParseException(PARSER_DATA_PARSER_UNEXPECTED_TOKEN, currentToken(), ADMToken.OBJECT_START);
             }
+            valueEmbedder.reset();
             parseObject(rootType, out);
             return true;
         } catch (IOException e) {
@@ -100,6 +105,7 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
             if (nextToken() == ADMToken.EOF) {
                 return false;
             }
+            valueEmbedder.reset();
             parseObject(rootType, out);
             return true;
         } catch (IOException e) {

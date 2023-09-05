@@ -24,6 +24,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.PREFIX_DEFAULT_DELIMITER;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,17 +48,15 @@ import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.NoOpWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
 
-public class ExternalDataPrefix {
-
+public class ExternalDataPrefix implements Serializable {
+    private static final long serialVersionUID = -7612997190679310483L;
     private final String original;
     private String root;
     private final boolean endsWithSlash;
     private final List<String> segments;
-    private final IWarningCollector warningCollector;
 
     private final List<String> computedFieldNames = new ArrayList<>();
     private final List<IAType> computedFieldTypes = new ArrayList<>();
@@ -75,16 +74,10 @@ public class ExternalDataPrefix {
     }
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
-        this(getDefinitionOrPath(configuration), null);
+        this(getDefinitionOrPath(configuration));
     }
 
-    public ExternalDataPrefix(Map<String, String> configuration, IWarningCollector warningCollector)
-            throws AlgebricksException {
-        this(getDefinitionOrPath(configuration), warningCollector);
-    }
-
-    public ExternalDataPrefix(String prefix, IWarningCollector warningCollector) throws AlgebricksException {
-        this.warningCollector = warningCollector != null ? warningCollector : NoOpWarningCollector.INSTANCE;
+    public ExternalDataPrefix(String prefix) throws AlgebricksException {
         this.original = prefix != null ? prefix : "";
         this.endsWithSlash = this.original.endsWith("/");
 
@@ -237,6 +230,10 @@ public class ExternalDataPrefix {
         }
     }
 
+    public List<String> getValues(String key) {
+        return extractValues(extractPrefixSegments(key));
+    }
+
     /**
      * Evaluates whether the provided key satisfies the conditions of the evaluator or not
      * TODO Check if {@link IExternalFilterEvaluator#isComputedFieldUsed(int)} is useful once we have regex extractor
@@ -245,7 +242,8 @@ public class ExternalDataPrefix {
      * @param evaluator evaluator
      * @return true if key satisfies the evaluator conditions, false otherwise
      */
-    public boolean evaluate(String key, IExternalFilterEvaluator evaluator) throws HyracksDataException {
+    public boolean evaluate(String key, IExternalFilterEvaluator evaluator, IWarningCollector warningCollector)
+            throws HyracksDataException {
         // TODO provide the List to avoid array creation
         List<String> keySegments = extractPrefixSegments(key);
 
@@ -293,6 +291,11 @@ public class ExternalDataPrefix {
         return evaluator.evaluate();
     }
 
+    public static boolean containsComputedFields(Map<String, String> configuration) {
+        String path = getDefinitionOrPath(configuration);
+        return path != null && path.contains("{");
+    }
+
     /**
      * extracts the computed fields values from the object's key
      *
@@ -334,7 +337,8 @@ public class ExternalDataPrefix {
         return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
     }
 
-    public static class PrefixSegment {
+    public static class PrefixSegment implements Serializable {
+        private static final long serialVersionUID = 8788939199985336347L;
         private String expression;
         private final List<String> computedFieldNames = new ArrayList<>();
         private final List<IAType> computedFieldTypes = new ArrayList<>();

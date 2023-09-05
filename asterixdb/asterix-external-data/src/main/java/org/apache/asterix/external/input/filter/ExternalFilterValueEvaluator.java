@@ -32,7 +32,7 @@ import org.apache.hyracks.dataflow.common.data.marshalling.DoubleSerializerDeser
 import org.apache.hyracks.dataflow.common.data.marshalling.Integer64SerializerDeserializer;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
+public class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
     private final ATypeTag typeTag;
     private final ArrayBackedValueStorage value;
     private final AStringSerializerDeserializer stringSerDer;
@@ -47,7 +47,7 @@ class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
     public void setValue(String stringValue) throws HyracksDataException {
         value.reset();
         try {
-            writeValue(typeTag, stringValue);
+            writeValue(typeTag, stringValue, value, stringSerDer);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -58,7 +58,8 @@ class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluator {
         result.set(value);
     }
 
-    private void writeValue(ATypeTag typeTag, String stringValue) throws HyracksDataException {
+    public static void writeValue(ATypeTag typeTag, String stringValue, ArrayBackedValueStorage value,
+            AStringSerializerDeserializer stringSerDer) throws HyracksDataException {
         DataOutput output = value.getDataOutput();
         SerializerDeserializerUtil.serializeTag(typeTag, output);
 

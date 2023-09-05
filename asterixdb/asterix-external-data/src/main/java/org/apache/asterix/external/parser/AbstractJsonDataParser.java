@@ -30,6 +30,8 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.filter.NoOpFilterValueEmbedder;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.parser.jackson.ADMToken;
 import org.apache.asterix.external.parser.jackson.GeometryCoParser;
 import org.apache.asterix.external.parser.jackson.ParserContext;
@@ -48,6 +50,7 @@ import org.apache.asterix.runtime.exceptions.UnsupportedTypeException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.hyracks.util.ParseUtil;
 
@@ -71,6 +74,8 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
 
     protected JsonParser jsonParser;
 
+    protected IExternalFilterValueEmbedder valueEmbedder;
+
     /**
      * Initialize JSONDataParser with GeometryCoParser
      *
@@ -84,6 +89,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         //GeometryCoParser to parse GeoJSON objects to AsterixDB internal spatial types.
         geometryCoParser = new GeometryCoParser(jsonParser);
         parserContext = new ParserContext();
+        valueEmbedder = NoOpFilterValueEmbedder.INSTANCE;
     }
 
     /*
@@ -189,6 +195,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         final IMutableValueStorage valueBuffer = parserContext.enterObject();
         final IARecordBuilder objectBuilder = parserContext.getObjectBuilder(recordType);
         final BitSet nullBitMap = parserContext.getNullBitmap(recordType.getFieldTypes().length);
+        valueEmbedder.enterObject();
         while (nextToken() != ADMToken.OBJECT_END) {
             /*
              * Jackson parser calls String.intern() for field names (if enabled).
@@ -203,11 +210,17 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
             }
             valueBuffer.reset();
             nextToken();
-
             if (fieldIndex < 0) {
-                //field is not defined and the type is open
-                parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
-                objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), valueBuffer);
+                IValueReference fieldValue;
+                // field is not defined and the type is open
+                if (valueEmbedder.shouldEmbed(fieldName, currentToken().getTypeTag())) {
+                    // It is an embedded value, set it
+                    fieldValue = valueEmbedder.getEmbeddedValue();
+                } else {
+                    fieldValue = valueBuffer;
+                    parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());
+                }
+                objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), fieldValue);
             } else {
                 //field is defined
                 final IAType fieldType = recordType.getFieldType(fieldName);
@@ -231,6 +244,18 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
         if (nullBitMap != null) {
             checkOptionalConstraints(recordType, nullBitMap);
         }
+
+        if (valueEmbedder.IsMissingEmbeddedValues()) {
+            String[] embeddedFieldNames = valueEmbedder.getEmbeddedFieldNames();
+            for (int i = 0; i < embeddedFieldNames.length; i++) {
+                String embeddedFieldName = embeddedFieldNames[i];
+                if (valueEmbedder.isMissing(embeddedFieldName)) {
+                    IValueReference embeddedValue = valueEmbedder.getEmbeddedValue();
+                    objectBuilder.addField(parserContext.getSerializedFieldName(embeddedFieldName), embeddedValue);
+                }
+            }
+        }
+        valueEmbedder.exitObject();
         parserContext.exitObject(valueBuffer, nullBitMap, objectBuilder);
         objectBuilder.write(out, true);
     }

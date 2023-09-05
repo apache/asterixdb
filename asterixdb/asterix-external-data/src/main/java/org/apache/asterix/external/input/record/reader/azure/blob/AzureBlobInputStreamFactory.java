@@ -63,7 +63,7 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
 
         // prepare prefix for computed field calculations
         IExternalFilterEvaluator evaluator = filterEvaluatorFactory.create(ctx, warningCollector);
-        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration, warningCollector);
+        ExternalDataPrefix externalDataPrefix = new ExternalDataPrefix(configuration);
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         List<BlobItem> filesOnly = listBlobItems(appCtx, configuration, includeExcludeMatcher, warningCollector,
