@@ -66,6 +66,8 @@ public class CloudFileUtil {
         // First get the set of local files
         Set<FileReference> localFiles = ioManager.list(partitionPath);
         Iterator<FileReference> localFilesIter = localFiles.iterator();
+        LOGGER.info("Cleaning partition {}. Total number of unchecked cloud files {}", partitionPath.getRelativePath(),
+                cloudFiles.size());
 
         // Reconcile local files and cloud files
         while (localFilesIter.hasNext()) {
@@ -131,7 +133,8 @@ public class CloudFileUtil {
 
     private static void logDeleteFile(FileReference fileReference) {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Deleting {} from the local cache as it doesn't exists in the cloud", fileReference);
+            LOGGER.debug("Deleting {} from the local cache as {} doesn't exist in the cloud", fileReference,
+                    fileReference.getRelativePath());
         }
     }
 }

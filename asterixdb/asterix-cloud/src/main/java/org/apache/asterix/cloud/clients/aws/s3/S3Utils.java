@@ -23,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
 
 import software.amazon.awssdk.services.s3.S3Client;
@@ -41,6 +42,7 @@ public class S3Utils {
         ListObjectsV2Response listObjectsResponse;
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(bucket);
         listObjectsBuilder.prefix(toCloudPrefix(path));
+        List<S3Object> files = new ArrayList<>();
         while (true) {
             // List the objects from the start, or from the last marker in case of truncated result
             if (newMarker == null) {
@@ -49,6 +51,8 @@ public class S3Utils {
                 listObjectsResponse = s3Client.listObjectsV2(listObjectsBuilder.continuationToken(newMarker).build());
             }
 
+            files.addAll(listObjectsResponse.contents());
+
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
             if (Boolean.FALSE.equals(listObjectsResponse.isTruncated())) {
                 break;
@@ -56,7 +60,7 @@ public class S3Utils {
                 newMarker = listObjectsResponse.nextContinuationToken();
             }
         }
-        return listObjectsResponse.contents();
+        return files;
     }
 
     public static String encodeURI(String path) {
