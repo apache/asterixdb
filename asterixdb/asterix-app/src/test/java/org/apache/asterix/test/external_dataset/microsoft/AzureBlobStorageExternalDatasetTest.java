@@ -94,6 +94,7 @@ public class AzureBlobStorageExternalDatasetTest {
     private static final String CSV_DATA_PATH = joinPath("data", "csv");
     private static final String TSV_DATA_PATH = joinPath("data", "tsv");
     private static final String PARQUET_RAW_DATA_PATH = joinPath("data", "hdfs", "parquet");
+    public static final String EXTERNAL_FILTER_DATA_PATH = joinPath("data", "json", "external-filter");
 
     // Region, container and definitions
     private static final String PLAYGROUND_CONTAINER = "playground";
@@ -122,6 +123,7 @@ public class AzureBlobStorageExternalDatasetTest {
     public static void setUp() throws Exception {
         final TestExecutor testExecutor = new AzureTestExecutor();
         ExternalDatasetTestUtils.createBinaryFiles(PARQUET_RAW_DATA_PATH);
+        createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
         setNcEndpoints(testExecutor);
         createBlobServiceClient();

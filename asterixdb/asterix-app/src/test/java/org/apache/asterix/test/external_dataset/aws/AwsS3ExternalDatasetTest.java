@@ -19,6 +19,7 @@
 package org.apache.asterix.test.external_dataset.aws;
 
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFiles;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFilesRecursively;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
@@ -106,6 +107,9 @@ public class AwsS3ExternalDatasetTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final String PATH_BASE = joinPath("data");
+    private static final String EXTERNAL_FILTER_DATA_PATH = joinPath(PATH_BASE, "json", "external-filter");
+
     // subclasses of this class MUST instantiate these variables before using them to avoid unexpected behavior
     static String SUITE_TESTS;
     static String ONLY_TESTS;
@@ -186,6 +190,7 @@ public class AwsS3ExternalDatasetTest {
         final TestExecutor testExecutor = new AwsTestExecutor();
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
         createBinaryFiles(DEFAULT_PARQUET_SRC_PATH);
+        createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         setNcEndpoints(testExecutor);
         startAwsS3MockServer();
     }

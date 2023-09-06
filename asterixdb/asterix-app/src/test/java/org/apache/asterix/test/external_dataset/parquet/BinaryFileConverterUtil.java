@@ -71,11 +71,11 @@ public class BinaryFileConverterUtil {
         ParquetFileExampleGeneratorUtil.writeExample();
     }
 
-    public static void convertToParquetRecursively(File localDataRoot, String dirPath, String dest,
-            FilenameFilter filter, int startIndex) throws IOException {
+    public static void convertToParquetRecursively(File localDataRoot, String src, String dest, FilenameFilter filter,
+            int startIndex) throws IOException {
         File destPath = new File(localDataRoot, dest);
 
-        File dir = new File(dirPath);
+        File dir = new File(src);
         if (!dir.exists() || !dir.isDirectory()) {
             return;
         }

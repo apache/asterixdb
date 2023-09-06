@@ -96,12 +96,19 @@ public class ExternalDatasetTestUtils {
         BinaryFileConverterUtil.cleanBinaryDirectory(basePath, BINARY_GEN_BASEDIR);
         //Convert files in DEFAULT_PARQUET_SRC_PATH to parquet
         BinaryFileConverterUtil.convertToParquet(basePath, parquetRawJsonDir, BINARY_GEN_BASEDIR);
+    }
+
+    /**
+     * Generate binary files (e.g., parquet files)
+     */
+    public static void createBinaryFilesRecursively(String dataToConvertDirPath) throws IOException {
+        //base path
+        File basePath = new File(".");
 
         // convert certain files related to dynamic prefixes
-        String dataPath = "data/json/external-filter";
-        int startIndex = "data/json/".length(); // length to substring out of the final file name
-        BinaryFileConverterUtil.convertToParquetRecursively(basePath, dataPath, BINARY_GEN_BASEDIR, JSON_FILTER,
-                startIndex);
+        int startIndex = dataToConvertDirPath.indexOf("/external-filter");
+        BinaryFileConverterUtil.convertToParquetRecursively(basePath, dataToConvertDirPath, BINARY_GEN_BASEDIR,
+                JSON_FILTER, startIndex);
     }
 
     public static void setDataPaths(String jsonDataPath, String csvDataPath, String tsvDataPath) {
