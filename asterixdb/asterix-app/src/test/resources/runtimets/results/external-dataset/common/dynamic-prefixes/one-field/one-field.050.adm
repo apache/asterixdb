@@ -1,0 +1,6 @@
+{ "id": 1, "department": "accounting", "name": { "first": "John", "last": "Smith" } }
+{ "id": 2, "department": "accounting", "name": { "first": "Mike", "last": "Jones" } }
+{ "id": 3, "department": "accounting", "name": { "first": "Alex", "last": "Miller" } }
+{ "id": 7, "department": "hr", "name": { "first": "James", "last": "Smith" } }
+{ "id": 8, "department": "hr", "name": { "first": "David", "last": "Jones" } }
+{ "id": 9, "department": "hr", "name": { "first": "Noah", "last": "Miller" } }

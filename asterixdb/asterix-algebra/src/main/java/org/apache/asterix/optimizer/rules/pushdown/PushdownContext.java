@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown;
 
+import static org.apache.asterix.metadata.utils.PushdownUtil.getArrayConstantFromScanCollection;
+
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -28,16 +30,25 @@ import java.util.Set;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.constants.AsterixConstantValue;
+import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.DefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.UseDescriptor;
 import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.IFunctionInfo;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -147,11 +158,12 @@ public class PushdownContext {
         return registeredScans;
     }
 
-    public ILogicalExpression cloneAndInlineExpression(UseDescriptor useDescriptor) throws CompilationException {
+    public ILogicalExpression cloneAndInlineExpression(UseDescriptor useDescriptor, IOptimizationContext context)
+            throws CompilationException {
         ILogicalOperator op = useDescriptor.getOperator();
         ILogicalExpression inlinedExpr = inlinedCache.get(op);
         if (inlinedExpr == null) {
-            inlinedExpr = cloneAndInline(useDescriptor.getExpression());
+            inlinedExpr = cloneAndInline(useDescriptor.getExpression(), context);
             inlinedCache.put(op, inlinedExpr);
         }
 
@@ -159,12 +171,13 @@ public class PushdownContext {
         return inlinedExpr.cloneExpression();
     }
 
-    private ILogicalExpression cloneAndInline(ILogicalExpression expression) throws CompilationException {
+    private ILogicalExpression cloneAndInline(ILogicalExpression expression, IOptimizationContext context)
+            throws CompilationException {
         switch (expression.getExpressionTag()) {
             case CONSTANT:
                 return expression;
             case FUNCTION_CALL:
-                return cloneAndInlineFunction(expression);
+                return cloneAndInlineFunction(expression, context);
             case VARIABLE:
                 LogicalVariable variable = ((VariableReferenceExpression) expression).getVariableReference();
                 DefineDescriptor defineDescriptor = defineChain.get(variable);
@@ -172,18 +185,60 @@ public class PushdownContext {
                     // Reached the recordVariable
                     return expression;
                 }
-                return cloneAndInline(defineDescriptor.getExpression());
+                return cloneAndInline(defineDescriptor.getExpression(), context);
             default:
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, expression.getSourceLocation());
         }
     }
 
-    private ILogicalExpression cloneAndInlineFunction(ILogicalExpression expression) throws CompilationException {
+    private ILogicalExpression cloneAndInlineFunction(ILogicalExpression expression, IOptimizationContext context)
+            throws CompilationException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression.cloneExpression();
         for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
-            arg.setValue(cloneAndInline(arg.getValue()));
+            arg.setValue(cloneAndInline(arg.getValue(), context));
         }
-        return funcExpr;
+        return convertToOr(funcExpr, context);
+    }
+
+    /**
+     * Converts eq(scan-collection(array: [a, b, c...]), expr) to or(eq(a, expr), eq(b, expr), eq(c, expr), ...)
+     *
+     * @param expression a function expression
+     * @return a converted expression if applicable
+     */
+    private static ILogicalExpression convertToOr(AbstractFunctionCallExpression expression,
+            IOptimizationContext context) {
+        if (!BuiltinFunctions.EQ.equals(expression.getFunctionIdentifier())) {
+            return expression;
+        }
+        ILogicalExpression left = expression.getArguments().get(0).getValue();
+        ILogicalExpression right = expression.getArguments().get(1).getValue();
+
+        ILogicalExpression valueExpr = left;
+        AOrderedList constArray = getArrayConstantFromScanCollection(right);
+        if (constArray == null) {
+            valueExpr = right;
+            constArray = getArrayConstantFromScanCollection(left);
+        }
+
+        if (constArray == null) {
+            return expression;
+        }
+
+        IFunctionInfo orInfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.OR);
+        List<Mutable<ILogicalExpression>> orArgs = new ArrayList<>();
+        AbstractFunctionCallExpression orExpr = new ScalarFunctionCallExpression(orInfo, orArgs);
+
+        IFunctionInfo eqInfo = context.getMetadataProvider().lookupFunction(AlgebricksBuiltinFunctions.EQ);
+        for (int i = 0; i < constArray.size(); i++) {
+            List<Mutable<ILogicalExpression>> eqArgs = new ArrayList<>(2);
+            eqArgs.add(new MutableObject<>(valueExpr));
+            eqArgs.add(new MutableObject<>(new ConstantExpression(new AsterixConstantValue(constArray.getItem(i)))));
+
+            orArgs.add(new MutableObject<>(new ScalarFunctionCallExpression(eqInfo, eqArgs)));
+        }
+
+        return orExpr;
     }
 
     private static Set<LogicalOperatorTag> getScopeOperators() {

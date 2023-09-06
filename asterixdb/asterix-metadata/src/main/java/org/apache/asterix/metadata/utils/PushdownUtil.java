@@ -24,10 +24,12 @@ import java.util.Set;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
+import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -88,6 +90,22 @@ public class PushdownUtil {
     public static boolean isOr(ILogicalExpression expression) {
         FunctionIdentifier fid = getFunctionIdentifier(expression);
         return BuiltinFunctions.OR.equals(fid);
+    }
+
+    public static AOrderedList getArrayConstantFromScanCollection(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        if (!BuiltinFunctions.SCAN_COLLECTION.equals(fid)) {
+            return null;
+        }
+
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
+        ILogicalExpression argExpr = funcExpr.getArguments().get(0).getValue();
+        if (!isConstant(argExpr)) {
+            return null;
+        }
+
+        IAObject constValue = getConstant(argExpr);
+        return constValue.getType().getTypeTag() == ATypeTag.ARRAY ? (AOrderedList) constValue : null;
     }
 
     public static boolean isTypeFunction(FunctionIdentifier fid) {

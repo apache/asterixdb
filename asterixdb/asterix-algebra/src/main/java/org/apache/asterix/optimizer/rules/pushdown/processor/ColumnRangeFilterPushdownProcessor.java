@@ -106,7 +106,7 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     }
 
     @Override
-    protected boolean putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr) {
+    protected void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr) {
         ILogicalExpression filterExpr = scanDefineDescriptor.getRangeFilterExpression();
         if (filterExpr != null) {
             filterExpr = andExpression(filterExpr, inlinedExpr);
@@ -117,7 +117,6 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         scanDefineDescriptor.getFilterPaths().putAll(paths);
         scanDefineDescriptor.getPathLocations().putAll(sourceInformationMap);
 
-        return true;
     }
 
     private boolean pushdownRangeFilter(ILogicalExpression pathExpr, ILogicalExpression constExpr,

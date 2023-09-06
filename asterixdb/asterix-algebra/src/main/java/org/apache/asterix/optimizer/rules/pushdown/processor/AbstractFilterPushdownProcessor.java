@@ -114,12 +114,11 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
      *
      * @param scanDefineDescriptor data-scan descriptor
      * @param inlinedExpr          inlined filter expression
-     * @return true if the filter expression was set to data-scan, false otherwise
      */
-    protected abstract boolean putFilterInformation(ScanDefineDescriptor scanDefineDescriptor,
+    protected abstract void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor,
             ILogicalExpression inlinedExpr) throws AlgebricksException;
 
-    private boolean pushdownFilter(DefineDescriptor defineDescriptor, ScanDefineDescriptor scanDefineDescriptor)
+    private void pushdownFilter(DefineDescriptor defineDescriptor, ScanDefineDescriptor scanDefineDescriptor)
             throws AlgebricksException {
         List<UseDescriptor> useDescriptors = pushdownContext.getUseDescriptors(defineDescriptor);
         for (UseDescriptor useDescriptor : useDescriptors) {
@@ -127,44 +126,41 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
              * Pushdown works only if the scope(use) and scope(scan) are the same, as we cannot pushdown when
              * scope(use) > scope(scan) (e.g., after join or group-by)
              */
+            ILogicalOperator useOperator = useDescriptor.getOperator();
             if (useDescriptor.getScope() == scanDefineDescriptor.getScope()
-                    && useDescriptor.getOperator().getOperatorTag() == LogicalOperatorTag.SELECT) {
-                if (!inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor)) {
-                    return false;
-                }
+                    && useOperator.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
+            } else if (useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
+                inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
             }
         }
 
         for (UseDescriptor useDescriptor : useDescriptors) {
             DefineDescriptor nextDefineDescriptor = pushdownContext.getDefineDescriptor(useDescriptor);
-            if (useDescriptor.getScope() == scanDefineDescriptor.getScope() && nextDefineDescriptor != null) {
-                if (!pushdownFilter(nextDefineDescriptor, scanDefineDescriptor)) {
-                    return false;
-                }
+            if (nextDefineDescriptor != null) {
+                pushdownFilter(nextDefineDescriptor, scanDefineDescriptor);
             }
         }
-
-        return true;
     }
 
-    private boolean inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)
+    private void inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)
             throws AlgebricksException {
         ILogicalOperator selectOp = useDescriptor.getOperator();
         if (visitedOperators.contains(selectOp)) {
             // Skip and follow through to find any other selects that can be pushed down
-            return true;
+            return;
         }
 
         // Get a clone of the SELECT expression and inline it
-        ILogicalExpression inlinedExpr = pushdownContext.cloneAndInlineExpression(useDescriptor);
+        ILogicalExpression inlinedExpr = pushdownContext.cloneAndInlineExpression(useDescriptor, context);
         // Prepare for pushdown
         preparePushdown(useDescriptor);
-        boolean pushdown =
-                pushdownFilterExpression(inlinedExpr) && putFilterInformation(scanDefineDescriptor, inlinedExpr);
+        if (pushdownFilterExpression(inlinedExpr)) {
+            putFilterInformation(scanDefineDescriptor, inlinedExpr);
+        }
 
         // Do not push down a select twice.
         visitedOperators.add(selectOp);
-        return pushdown;
     }
 
     protected final boolean pushdownFilterExpression(ILogicalExpression expression) throws AlgebricksException {

@@ -127,7 +127,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected boolean putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr)
+    protected void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor, ILogicalExpression inlinedExpr)
             throws AlgebricksException {
         ILogicalExpression filterExpr = scanDefineDescriptor.getFilterExpression();
         if (filterExpr != null) {
@@ -141,11 +141,10 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
             // Cannot pushdown a filter with multiple unnest
             // TODO allow rewindable column readers for filters
             // TODO this is a bit conservative (maybe too conservative) as we can push part of expression down
-            return false;
+            return;
         }
 
         scanDefineDescriptor.getFilterPaths().putAll(paths);
-        return true;
     }
 
     protected final AbstractFunctionCallExpression andExpression(ILogicalExpression filterExpr,
