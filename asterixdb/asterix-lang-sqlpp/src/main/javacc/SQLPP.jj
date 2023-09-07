@@ -133,6 +133,7 @@ import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
+import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -142,6 +143,7 @@ import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.CreateFullTextFilterStatement;
 import org.apache.asterix.lang.common.statement.CreateFullTextConfigStatement;
 import org.apache.asterix.lang.common.statement.CreateViewStatement;
+import org.apache.asterix.lang.common.statement.DatabaseDropStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -974,6 +976,7 @@ Statement CreateStatement() throws ParseException:
     | stmt = CreateNodegroupStatement(startToken)
     | stmt = CreateDatasetStatement(startToken)
     | stmt = CreateIndexStatement(startToken)
+    | stmt = CreateDatabaseStatement(startToken)
     | stmt = CreateDataverseStatement(startToken)
     | stmt = CreateFunctionStatement(startToken, false)
     | stmt = CreateAdapterStatement(startToken)
@@ -1555,6 +1558,30 @@ IndexParams IndexType() throws ParseException:
     {
       return new IndexParams(type, gramLength, fullTextConfig);
     }
+}
+
+CreateDatabaseStatement CreateDatabaseStatement(Token startStmtToken) throws ParseException :
+{
+  CreateDatabaseStatement stmt = null;
+}
+{
+  <DATABASE> stmt = DatabaseSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+CreateDatabaseStatement DatabaseSpecification(Token startStmtToken) throws ParseException :
+{
+  String dbName = null;
+  boolean ifNotExists = false;
+}
+{
+  dbName = Identifier() ifNotExists = IfNotExists()
+  {
+    CreateDatabaseStatement stmt = new CreateDatabaseStatement(new Identifier(dbName), ifNotExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
 }
 
 CreateDataverseStatement CreateDataverseStatement(Token startStmtToken) throws ParseException :
@@ -2253,6 +2280,7 @@ Statement DropStatement() throws ParseException:
     | stmt = DropIndexStatement(startToken)
     | stmt = DropNodeGroupStatement(startToken)
     | stmt = DropTypeStatement(startToken)
+    | stmt = DropDatabaseStatement(startToken)
     | stmt = DropDataverseStatement(startToken)
     | stmt = DropAdapterStatement(startToken)
     | stmt = DropFunctionStatement(startToken)
@@ -2427,6 +2455,30 @@ TypeDropStatement DropTypeSpecification(Token startStmtToken) throws ParseExcept
   pairId = TypeName() ifExists = IfExists()
   {
     TypeDropStatement stmt = new TypeDropStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
+}
+
+DatabaseDropStatement DropDatabaseStatement(Token startStmtToken) throws ParseException:
+{
+  DatabaseDropStatement stmt = null;
+}
+{
+  <DATABASE> stmt = DropDatabaseSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+DatabaseDropStatement DropDatabaseSpecification(Token startStmtToken) throws ParseException:
+{
+  String dbName = null;
+  boolean ifExists = false;
+}
+{
+  dbName = Identifier() ifExists = IfExists()
+  {
+    DatabaseDropStatement stmt = new DatabaseDropStatement(new Identifier(dbName), ifExists);
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -5650,6 +5702,7 @@ TOKEN [IGNORE_CASE]:
   | <CORRELATE : "correlate">
   | <DATASET : "dataset">
   | <COLLECTION : "collection">
+  | <DATABASE : "database">
   | <DATAVERSE : "dataverse">
   | <DECLARE : "declare">
   | <DEFINITION : "definition">

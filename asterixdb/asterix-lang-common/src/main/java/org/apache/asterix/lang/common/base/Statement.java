@@ -66,6 +66,7 @@ public interface Statement extends ILangExpression {
     enum Kind {
         DATASET_DECL,
         DATAVERSE_DECL,
+        DATABASE_DROP,
         DATAVERSE_DROP,
         DATASET_DROP,
         DELETE,
@@ -82,6 +83,7 @@ public interface Statement extends ILangExpression {
         TYPE_DECL,
         TYPE_DROP,
         CREATE_INDEX,
+        CREATE_DATABASE,
         CREATE_DATAVERSE,
         CREATE_VIEW,
         CREATE_FULL_TEXT_FILTER,

@@ -71,6 +71,7 @@ import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CopyStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
+import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -81,6 +82,7 @@ import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.CreateViewStatement;
+import org.apache.asterix.lang.common.statement.DatabaseDropStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -713,6 +715,13 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     }
 
     @Override
+    public Void visit(CreateDatabaseStatement cds, Integer step) throws CompilationException {
+        out.println(skip(step) + "create database " + normalize(cds.getDatabaseName().getValue())
+                + generateIfNotExists(cds.ifNotExists()) + SEMICOLON);
+        return null;
+    }
+
+    @Override
     public Void visit(CreateDataverseStatement del, Integer step) throws CompilationException {
         out.print(CREATE + dataverseSymbol);
         out.print(generateDataverseName(del.getDataverseName()));
@@ -755,6 +764,13 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.print(skip(step) + "drop nodegroup ");
         out.print(del.getNodeGroupName());
         out.println(generateIfExists(del.getIfExists()) + SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(DatabaseDropStatement dds, Integer step) throws CompilationException {
+        out.println(skip(step) + "drop database " + normalize(dds.getDatabaseName().getValue())
+                + generateIfExists(dds.ifExists()) + SEMICOLON);
         return null;
     }
 
