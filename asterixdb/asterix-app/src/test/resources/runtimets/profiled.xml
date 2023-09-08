@@ -38,5 +38,11 @@
         <output-dir compare="Text">full-scan-3</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="sleep">
+        <parameter name="profile" value="timings" type="string"/>
+        <output-dir compare="Text">sleep</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

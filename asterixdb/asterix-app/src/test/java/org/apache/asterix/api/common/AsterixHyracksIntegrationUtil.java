@@ -64,6 +64,7 @@ import org.apache.hyracks.test.support.TestUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.kohsuke.args4j.CmdLineException;
 
 @SuppressWarnings({ "squid:ClassVariableVisibilityCheck", "squid:S00112" })
@@ -129,7 +130,7 @@ public class AsterixHyracksIntegrationUtil {
         configManager.processConfig();
         ccConfig.setKeyStorePath(joinPath(RESOURCES_PATH, ccConfig.getKeyStorePath()));
         ccConfig.setTrustStorePath(joinPath(RESOURCES_PATH, ccConfig.getTrustStorePath()));
-        cc = new ClusterControllerService(ccConfig, ccApplication);
+        cc = createCC(ccApplication, ccConfig);
 
         nodeNames = ccConfig.getConfigManager().getNodeNames();
         if (deleteOldInstanceData && nodeNames != null) {
@@ -150,8 +151,7 @@ public class AsterixHyracksIntegrationUtil {
             }
             ncApplication.registerConfig(ncConfigManager);
             opts.forEach(opt -> ncConfigManager.set(nodeId, opt.getLeft(), opt.getRight()));
-            nodeControllers
-                    .add(new NodeControllerService(fixupPaths(createNCConfig(nodeId, ncConfigManager)), ncApplication));
+            nodeControllers.add(createNC(fixupPaths(createNCConfig(nodeId, ncConfigManager)), ncApplication));
         }
 
         opts.forEach(opt -> configManager.set(opt.getLeft(), opt.getRight()));
@@ -185,6 +185,7 @@ public class AsterixHyracksIntegrationUtil {
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }
 
+    @NotNull
     private void configureExternalLibDir() {
         // hack to ensure we have a unique location for external libraries in our tests (asterix cluster has a shared
         // home directory)-- TODO: rework this once the external lib dir can be configured explicitly
@@ -223,8 +224,18 @@ public class AsterixHyracksIntegrationUtil {
         return ccConfig;
     }
 
+    protected ClusterControllerService createCC(ICCApplication ccApplication, CCConfig ccConfig) throws Exception {
+        return new ClusterControllerService(ccConfig, ccApplication);
+    }
+
     protected ICCApplication createCCApplication() {
         return new CCApplication();
+    }
+
+    @NotNull
+    protected NodeControllerService createNC(NCConfig config, INCApplication ncApplication)
+            throws IOException, CmdLineException, AsterixException {
+        return new NodeControllerService(config, ncApplication);
     }
 
     protected NCConfig createNCConfig(String ncName, ConfigManager configManager) {

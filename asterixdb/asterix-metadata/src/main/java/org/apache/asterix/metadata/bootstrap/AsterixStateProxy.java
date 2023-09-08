@@ -39,10 +39,11 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private IMetadataNode metadataNode;
-    private static final IAsterixStateProxy cc = new AsterixStateProxy();
+    private static IAsterixStateProxy cc;
 
     public static IAsterixStateProxy registerRemoteObject(INetworkSecurityManager networkSecurityManager,
             int metadataCallbackPort) throws RemoteException {
+        cc = new AsterixStateProxy();
         IAsterixStateProxy stub = (IAsterixStateProxy) UnicastRemoteObject.exportObject(cc, metadataCallbackPort,
                 RMIClientFactory.getSocketFactory(networkSecurityManager),
                 RMIServerFactory.getSocketFactory(networkSecurityManager));
@@ -51,8 +52,10 @@ public class AsterixStateProxy implements IAsterixStateProxy {
     }
 
     public static void unregisterRemoteObject() throws RemoteException {
-        UnicastRemoteObject.unexportObject(cc, true);
-        LOGGER.info("Asterix Distributed State Proxy Unbound");
+        if (cc != null) {
+            UnicastRemoteObject.unexportObject(cc, true);
+            LOGGER.info("Asterix Distributed State Proxy Unbound");
+        }
     }
 
     @Override

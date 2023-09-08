@@ -88,6 +88,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.config.IConfigManager;
@@ -154,7 +155,7 @@ public class NCApplication extends BaseNCApplication {
         MetadataBuiltinFunctions.init();
 
         ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()));
-        runtimeContext = new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory());
+        runtimeContext = createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isInfoEnabled()) {
@@ -184,6 +185,12 @@ public class NCApplication extends BaseNCApplication {
         }
         webManager = new WebManager();
         performLocalCleanUp();
+    }
+
+    protected INcApplicationContext createNCApplicationContext(INCServiceContext ncServiceCtx,
+            NCExtensionManager ncExtensionManager, IPropertiesFactory propertiesFactory)
+            throws IOException, AsterixException {
+        return new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, propertiesFactory);
     }
 
     protected IRecoveryManagerFactory getRecoveryManagerFactory() {
