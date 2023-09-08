@@ -27,6 +27,7 @@ import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -120,7 +121,7 @@ import org.apache.logging.log4j.Logger;
 public class CCApplication extends BaseCCApplication {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static IAsterixStateProxy proxy;
+    private IAsterixStateProxy proxy;
     protected CCExtensionManager ccExtensionManager;
     protected IStorageComponentProvider componentProvider;
     protected WebManager webManager;
@@ -166,8 +167,7 @@ public class CCApplication extends BaseCCApplication {
         }
         MetadataProperties metadataProperties = appCtx.getMetadataProperties();
 
-        setAsterixStateProxy(AsterixStateProxy.registerRemoteObject(controllerService.getNetworkSecurityManager(),
-                metadataProperties.getMetadataCallbackPort()));
+        proxy = getAsterixStateProxy(controllerService, metadataProperties);
         ccServiceCtx.setDistributedState(proxy);
         MetadataManager.initialize(proxy, metadataProperties, appCtx);
         ccServiceCtx.addJobLifecycleListener(appCtx.getActiveNotificationHandler());
@@ -362,8 +362,10 @@ public class CCApplication extends BaseCCApplication {
         ApplicationConfigurator.registerConfigOptions(configManager);
     }
 
-    public static synchronized void setAsterixStateProxy(IAsterixStateProxy proxy) {
-        CCApplication.proxy = proxy;
+    protected IAsterixStateProxy getAsterixStateProxy(ClusterControllerService controllerService,
+            MetadataProperties metadataProperties) throws RemoteException {
+        return AsterixStateProxy.registerRemoteObject(controllerService.getNetworkSecurityManager(),
+                metadataProperties.getMetadataCallbackPort());
     }
 
     @Override
