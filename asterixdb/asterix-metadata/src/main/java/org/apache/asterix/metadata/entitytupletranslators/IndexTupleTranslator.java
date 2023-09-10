@@ -40,8 +40,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
+import org.apache.asterix.metadata.bootstrap.IndexEntity;
 import org.apache.asterix.metadata.declared.MetadataManagerUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -83,9 +82,7 @@ import com.google.common.base.Strings;
  */
 public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
-    // Payload field containing serialized Index.
-    private static final int INDEX_PAYLOAD_TUPLE_FIELD_INDEX = 3;
-
+    private final IndexEntity indexEntity;
     // Field name of open field.
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";
     public static final String FULL_TEXT_CONFIG_FIELD_NAME = "FullTextConfig";
@@ -124,10 +121,11 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     protected ISerializerDeserializer<AInt8> int8Serde;
 
     @SuppressWarnings("unchecked")
-    protected IndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.INDEX_DATASET, INDEX_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected IndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple, IndexEntity indexEntity) {
+        super(getTuple, indexEntity.getIndex(), indexEntity.payloadPosition());
         this.txnId = txnId;
         this.metadataNode = metadataNode;
+        this.indexEntity = indexEntity;
         if (getTuple) {
             listBuilder = new OrderedListBuilder();
             innerListBuilder = new OrderedListBuilder();
@@ -150,21 +148,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     @Override
     protected Index createMetadataEntityFromARecord(ARecord indexRecord) throws AlgebricksException {
         String dataverseCanonicalName =
-                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) indexRecord.getValueByPos(indexEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-        String datasetName =
-                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX))
-                        .getStringValue();
-        String indexName =
-                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX))
-                        .getStringValue();
-        IndexType indexType = IndexType.valueOf(
-                ((AString) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX))
-                        .getStringValue());
-        boolean isPrimaryIndex =
-                ((ABoolean) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX))
-                        .getBoolean();
+        String datasetName = ((AString) indexRecord.getValueByPos(indexEntity.datasetNameIndex())).getStringValue();
+        String indexName = ((AString) indexRecord.getValueByPos(indexEntity.indexNameIndex())).getStringValue();
+        IndexType indexType = IndexType
+                .valueOf(((AString) indexRecord.getValueByPos(indexEntity.indexStructureIndex())).getStringValue());
+        boolean isPrimaryIndex = ((ABoolean) indexRecord.getValueByPos(indexEntity.isPrimaryIndex())).getBoolean();
 
         // Read key names
         List<Pair<List<List<String>>, List<List<String>>>> searchElements = new ArrayList<>();
@@ -172,8 +162,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             case VALUE:
             case TEXT:
                 // Read the key names from the SearchKeyName field
-                IACursor fieldNameCursor = ((AOrderedList) indexRecord
-                        .getValueByPos(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX)).getCursor();
+                IACursor fieldNameCursor =
+                        ((AOrderedList) indexRecord.getValueByPos(indexEntity.searchKeyIndex())).getCursor();
                 AOrderedList fieldNameList;
                 while (fieldNameCursor.next()) {
                     fieldNameList = (AOrderedList) fieldNameCursor.get();
@@ -532,8 +522,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (isEnforcedFieldPos > 0) {
             isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
         }
-        int pendingOp = ((AInt32) indexRecord.getValueByPos(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX))
-                .getIntegerValue();
+        int pendingOp = ((AInt32) indexRecord.getValueByPos(indexEntity.pendingOpIndex())).getIntegerValue();
 
         return new Index(dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
                 isPrimaryIndex, pendingOp);
@@ -556,36 +545,36 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the fourth field of the tuple
-        recordBuilder.reset(MetadataRecordTypes.INDEX_RECORDTYPE);
+        recordBuilder.reset(indexEntity.getRecordType());
 
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.dataverseNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(index.getDatasetName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_DATASETNAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.datasetNameIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aString.setValue(index.getIndexName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXNAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.indexNameIndex(), fieldValue);
 
         // write field 3
         IndexType indexType = index.getIndexType();
         fieldValue.reset();
         aString.setValue(indexType.toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_INDEXSTRUCTURE_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.indexStructureIndex(), fieldValue);
 
         // write field 4
-        primaryKeyListBuilder.reset((AOrderedListType) MetadataRecordTypes.INDEX_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX]);
+        primaryKeyListBuilder
+                .reset((AOrderedListType) indexEntity.getRecordType().getFieldTypes()[indexEntity.searchKeyIndex()]);
         List<List<String>> searchKey;
         switch (Index.IndexCategory.of(indexType)) {
             case VALUE:
@@ -618,7 +607,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
         fieldValue.reset();
         primaryKeyListBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_SEARCHKEY_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.searchKeyIndex(), fieldValue);
 
         // write field 5
         fieldValue.reset();
@@ -627,18 +616,18 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         } else {
             booleanSerde.serialize(ABoolean.FALSE, fieldValue.getDataOutput());
         }
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_ISPRIMARY_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.isPrimaryIndex(), fieldValue);
 
         // write field 6
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.timestampIndex(), fieldValue);
 
         // write field 7
         fieldValue.reset();
         int32Serde.serialize(new AInt32(index.getPendingOp()), fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.INDEX_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(indexEntity.pendingOpIndex(), fieldValue);
 
         // write open fields
         writeOpenFields(index);

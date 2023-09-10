@@ -71,7 +71,6 @@ import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
-import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexOperationTrackerFactory;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
@@ -119,16 +118,7 @@ public class MetadataBootstrap {
     private static String metadataNodeName;
     private static List<String> nodeNames;
     private static boolean isNewUniverse;
-    private static final IMetadataIndex[] PRIMARY_INDEXES =
-            new IMetadataIndex[] { MetadataPrimaryIndexes.DATAVERSE_DATASET, MetadataPrimaryIndexes.DATASET_DATASET,
-                    MetadataPrimaryIndexes.DATATYPE_DATASET, MetadataPrimaryIndexes.INDEX_DATASET,
-                    MetadataPrimaryIndexes.NODE_DATASET, MetadataPrimaryIndexes.NODEGROUP_DATASET,
-                    MetadataPrimaryIndexes.FUNCTION_DATASET, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET,
-                    MetadataPrimaryIndexes.FEED_DATASET, MetadataPrimaryIndexes.FEED_POLICY_DATASET,
-                    MetadataPrimaryIndexes.LIBRARY_DATASET, MetadataPrimaryIndexes.COMPACTION_POLICY_DATASET,
-                    MetadataPrimaryIndexes.EXTERNAL_FILE_DATASET, MetadataPrimaryIndexes.FEED_CONNECTION_DATASET,
-                    MetadataPrimaryIndexes.SYNONYM_DATASET, MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET,
-                    MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET };
+    private static IMetadataIndex[] PRIMARY_INDEXES;
 
     private MetadataBootstrap() {
     }
@@ -138,13 +128,15 @@ public class MetadataBootstrap {
      *
      * @param ncServiceContext
      * @param isNewUniverse
+     * @param mdIndexesProvider
      * @throws ACIDException
      * @throws RemoteException
      * @throws AlgebricksException
      * @throws Exception
      */
-    public static void startUniverse(INCServiceContext ncServiceContext, boolean isNewUniverse)
-            throws RemoteException, ACIDException, AlgebricksException {
+    public static void startUniverse(INCServiceContext ncServiceContext, boolean isNewUniverse,
+            MetadataIndexesProvider mdIndexesProvider) throws RemoteException, ACIDException, AlgebricksException {
+        PRIMARY_INDEXES = mdIndexesProvider.getMetadataIndexes();
         MetadataBootstrap.setNewUniverse(isNewUniverse);
         appContext = (INcApplicationContext) ncServiceContext.getApplicationContext();
 
@@ -157,7 +149,7 @@ public class MetadataBootstrap {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
             for (int i = 0; i < PRIMARY_INDEXES.length; i++) {
-                enlistMetadataDataset(ncServiceContext, PRIMARY_INDEXES[i]);
+                enlistMetadataDataset(ncServiceContext, PRIMARY_INDEXES[i], mdIndexesProvider);
             }
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info(
@@ -177,8 +169,8 @@ public class MetadataBootstrap {
                 }
             } else {
                 insertNewCompactionPoliciesIfNotExist(mdTxnCtx);
-                insertSynonymEntitiesIfNotExist(mdTxnCtx);
-                insertFullTextConfigAndFilterIfNotExist(mdTxnCtx);
+                insertSynonymEntitiesIfNotExist(mdTxnCtx, mdIndexesProvider);
+                insertFullTextConfigAndFilterIfNotExist(mdTxnCtx, mdIndexesProvider);
             }
             // #. initialize datasetIdFactory
             MetadataManager.INSTANCE.initializeDatasetIdFactory(mdTxnCtx);
@@ -199,9 +191,7 @@ public class MetadataBootstrap {
     }
 
     private static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
-        String dataFormat = NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT;
-        MetadataManager.INSTANCE.addDataverse(mdTxnCtx,
-                new Dataverse(MetadataConstants.METADATA_DATAVERSE_NAME, dataFormat, MetadataUtil.PENDING_NO_OP));
+        MetadataManager.INSTANCE.addDataverse(mdTxnCtx, MetadataBuiltinEntities.METADATA_DATAVERSE);
         MetadataManager.INSTANCE.addDataverse(mdTxnCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
     }
 
@@ -306,9 +296,9 @@ public class MetadataBootstrap {
         }
     }
 
-    private static void insertSynonymEntitiesIfNotExist(MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException {
-        IAType synonymDatasetRecordType = MetadataPrimaryIndexes.SYNONYM_DATASET.getPayloadRecordType();
+    private static void insertSynonymEntitiesIfNotExist(MetadataTransactionContext mdTxnCtx,
+            MetadataIndexesProvider mdIndexesProvider) throws AlgebricksException {
+        IAType synonymDatasetRecordType = mdIndexesProvider.getSynonymEntity().getRecordType();
         if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 synonymDatasetRecordType.getTypeName()) == null) {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -316,7 +306,7 @@ public class MetadataBootstrap {
         }
         if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 MetadataConstants.SYNONYM_DATASET_NAME) == null) {
-            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.SYNONYM_DATASET });
+            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { mdIndexesProvider.getSynonymEntity().getIndex() });
         }
     }
 
@@ -324,18 +314,18 @@ public class MetadataBootstrap {
     // 1) may not have such a full-text config dataset in the metadata catalog,
     // 2) may not have the default full-text config as an entry in the metadata catalog
     // So here, let's try to insert if not exists
-    private static void insertFullTextConfigAndFilterIfNotExist(MetadataTransactionContext mdTxnCtx)
-            throws AlgebricksException {
+    private static void insertFullTextConfigAndFilterIfNotExist(MetadataTransactionContext mdTxnCtx,
+            MetadataIndexesProvider metadataIndexesProvider) throws AlgebricksException {
 
         // We need to insert data types first because datasets depend on data types
         // ToDo: create a new function to reduce duplicated code here: addDatatypeIfNotExist()
-        IAType fullTextConfigRecordType = MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET.getPayloadRecordType();
+        IAType fullTextConfigRecordType = metadataIndexesProvider.getFullTextConfigEntity().getRecordType();
         if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 fullTextConfigRecordType.getTypeName()) == null) {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
                     fullTextConfigRecordType.getTypeName(), fullTextConfigRecordType, false));
         }
-        IAType fullTextFilterRecordType = MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET.getPayloadRecordType();
+        IAType fullTextFilterRecordType = metadataIndexesProvider.getFullTextFilterEntity().getRecordType();
         if (MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 fullTextFilterRecordType.getTypeName()) == null) {
             MetadataManager.INSTANCE.addDatatype(mdTxnCtx, new Datatype(MetadataConstants.METADATA_DATAVERSE_NAME,
@@ -344,11 +334,13 @@ public class MetadataBootstrap {
 
         if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 MetadataConstants.FULL_TEXT_CONFIG_DATASET_NAME) == null) {
-            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET });
+            insertMetadataDatasets(mdTxnCtx,
+                    new IMetadataIndex[] { metadataIndexesProvider.getFullTextConfigEntity().getIndex() });
         }
         if (MetadataManager.INSTANCE.getDataset(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
                 MetadataConstants.FULL_TEXT_FILTER_DATASET_NAME) == null) {
-            insertMetadataDatasets(mdTxnCtx, new IMetadataIndex[] { MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET });
+            insertMetadataDatasets(mdTxnCtx,
+                    new IMetadataIndex[] { metadataIndexesProvider.getFullTextFilterEntity().getIndex() });
         }
     }
 
@@ -376,14 +368,14 @@ public class MetadataBootstrap {
     }
 
     /**
-     * Enlist a metadata index so it is available for metadata operations should be
-     * performed upon bootstrapping
+     * Enlist a metadata index so it is available for metadata operations should be performed upon bootstrapping
      *
      * @param index
+     * @param mdIndexesProvider
      * @throws HyracksDataException
      */
-    public static void enlistMetadataDataset(INCServiceContext ncServiceCtx, IMetadataIndex index)
-            throws HyracksDataException {
+    public static void enlistMetadataDataset(INCServiceContext ncServiceCtx, IMetadataIndex index,
+            MetadataIndexesProvider mdIndexesProvider) throws HyracksDataException {
         final int datasetId = index.getDatasetId().getId();
         String metadataPartitionPath =
                 StoragePathUtil.prepareStoragePartitionPath(MetadataNode.INSTANCE.getMetadataStoragePartition());
@@ -419,7 +411,7 @@ public class MetadataBootstrap {
             resource = localResourceRepository.get(file.getRelativePath());
             createMetadataDataset = resource == null;
             if (createMetadataDataset) {
-                ensureCatalogUpgradability(index);
+                ensureCatalogUpgradability(index, mdIndexesProvider);
             }
         }
         if (createMetadataDataset) {
@@ -572,12 +564,12 @@ public class MetadataBootstrap {
         MetadataBootstrap.isNewUniverse = isNewUniverse;
     }
 
-    private static void ensureCatalogUpgradability(IMetadataIndex index) {
-        if (index != MetadataPrimaryIndexes.SYNONYM_DATASET
+    private static void ensureCatalogUpgradability(IMetadataIndex index, MetadataIndexesProvider mdIndexesProvider) {
+        if (index != mdIndexesProvider.getSynonymEntity().getIndex()
                 // Backward-compatibility: FULLTEXT_ENTITY_DATASET is added to AsterixDB recently
                 // and may not exist in an older dataverse
-                && index != MetadataPrimaryIndexes.FULL_TEXT_CONFIG_DATASET
-                && index != MetadataPrimaryIndexes.FULL_TEXT_FILTER_DATASET) {
+                && index != mdIndexesProvider.getFullTextConfigEntity().getIndex()
+                && index != mdIndexesProvider.getFullTextFilterEntity().getIndex()) {
             throw new IllegalStateException(
                     "attempt to create metadata index " + index.getIndexName() + ". Index should already exist");
         }

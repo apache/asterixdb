@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.metadata.api.IMetadataExtension;
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -106,20 +107,21 @@ public class ExtensionUtil {
      * Validates no extension conflict and extends tuple translator provider
      *
      * @param metadataExtension
-     *            place holder for tuple translator provider extension
+     *         place holder for tuple translator provider extension
      * @param mde
-     *            user defined metadata extension
+     *         user defined metadata extension
+     * @param metadataIndexesProvider
      * @return the metadata extension if the extension defines a metadata tuple translator, null otherwise
      * @throws RuntimeDataException
-     *             if an extension conflict was detected
+     *         if an extension conflict was detected
      */
     public static IMetadataExtension extendTupleTranslatorProvider(IMetadataExtension metadataExtension,
-            IMetadataExtension mde) throws RuntimeDataException {
+            IMetadataExtension mde, MetadataIndexesProvider metadataIndexesProvider) throws RuntimeDataException {
         if (metadataExtension != null) {
             throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, metadataExtension.getId(),
                     mde.getId(), IMetadataExtension.class.getSimpleName());
         }
-        return mde.getMetadataTupleTranslatorProvider() == null ? null : mde;
+        return mde.getMetadataTupleTranslatorProvider(metadataIndexesProvider) == null ? null : mde;
     }
 
     /**

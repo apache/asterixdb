@@ -26,6 +26,7 @@ import java.util.function.Function;
 import org.apache.asterix.common.api.IExtension;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -45,13 +46,15 @@ public interface IMetadataExtension extends IExtension {
      * @return The tuple translator provider that must be used by the {@code IMetadataNode } to read and write core
      *         {@code IMetadataEntity} objects
      */
-    MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider();
+    MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider(MetadataIndexesProvider metadataIndexesProvider);
+
+    MetadataIndexesProvider getMetadataIndexesProvider(INCServiceContext ncServiceCtx);
 
     /**
      * @return A list of additional extension instances of {@code IMetadataIndex} that are introduced by the extension
      */
     @SuppressWarnings("rawtypes")
-    List<ExtensionMetadataDataset> getExtensionIndexes();
+    List<ExtensionMetadataDataset> getExtensionIndexes(MetadataIndexesProvider metadataIndexesProvider);
 
     /**
      * Called when booting the {@code IMetadataNode}
@@ -60,7 +63,8 @@ public interface IMetadataExtension extends IExtension {
      * @throws RemoteException
      * @throws ACIDException
      */
-    void initializeMetadata(INCServiceContext ncServiceCtx) throws HyracksDataException, RemoteException, ACIDException;
+    void initializeMetadata(INCServiceContext ncServiceCtx, MetadataIndexesProvider mdIndexesProvider)
+            throws HyracksDataException, RemoteException, ACIDException;
 
     /**
      * Returns a factory for {@link org.apache.asterix.metadata.declared.MetadataProvider},

@@ -28,7 +28,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.FeedEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.om.base.AMutableString;
@@ -47,24 +47,21 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
-    // Payload field containing serialized feed.
-    private static final int FEED_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private final FeedEntity feedEntity;
 
-    protected FeedTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.FEED_DATASET, FEED_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected FeedTupleTranslator(boolean getTuple, FeedEntity feedEntity) {
+        super(getTuple, feedEntity.getIndex(), feedEntity.payloadPosition());
+        this.feedEntity = feedEntity;
     }
 
     @Override
     protected Feed createMetadataEntityFromARecord(ARecord feedRecord) throws AlgebricksException {
         String dataverseCanonicalName =
-                ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) feedRecord.getValueByPos(feedEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-        String feedName = ((AString) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_FEED_NAME_FIELD_INDEX))
-                .getStringValue();
+        String feedName = ((AString) feedRecord.getValueByPos(feedEntity.feedNameIndex())).getStringValue();
 
-        AUnorderedList feedConfig =
-                (AUnorderedList) feedRecord.getValueByPos(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIG_INDEX);
+        AUnorderedList feedConfig = (AUnorderedList) feedRecord.getValueByPos(feedEntity.adapterConfigIndex());
         IACursor cursor = feedConfig.getCursor();
         // restore configurations
         Map<String, String> adaptorConfiguration = new HashMap<>();
@@ -94,19 +91,19 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
-        recordBuilder.reset(MetadataRecordTypes.FEED_RECORDTYPE);
+        recordBuilder.reset(feedEntity.getRecordType());
 
         // write dataverse name
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_DATAVERSE_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(feedEntity.dataverseNameIndex(), fieldValue);
 
         // write feed name
         fieldValue.reset();
         aString.setValue(feed.getFeedName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_FEED_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(feedEntity.feedNameIndex(), fieldValue);
 
         // write adaptor configuration
         fieldValue.reset();
@@ -116,7 +113,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(feedEntity.timestampIndex(), fieldValue);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
@@ -131,8 +128,8 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         UnorderedListBuilder listBuilder = new UnorderedListBuilder();
         ArrayBackedValueStorage listEleBuffer = new ArrayBackedValueStorage();
 
-        listBuilder.reset((AUnorderedListType) MetadataRecordTypes.FEED_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIG_INDEX]);
+        listBuilder.reset(
+                (AUnorderedListType) feedEntity.getRecordType().getFieldTypes()[feedEntity.adapterConfigIndex()]);
         for (Map.Entry<String, String> property : feed.getConfiguration().entrySet()) {
             String name = property.getKey();
             String value = property.getValue();
@@ -141,7 +138,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
             listBuilder.addItem(listEleBuffer);
         }
         listBuilder.write(fieldValueBuffer.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.FEED_ARECORD_ADAPTOR_CONFIG_INDEX, fieldValueBuffer);
+        recordBuilder.addField(feedEntity.adapterConfigIndex(), fieldValueBuffer);
     }
 
     private void writePropertyTypeRecord(String name, String value, DataOutput out) throws HyracksDataException {

@@ -466,17 +466,19 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
     @Override
     public void initializeMetadata(boolean newUniverse, int partitionId) throws Exception {
-        LOGGER.info("Bootstrapping metadata");
-        MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
-                ncExtensionManager.getMetadataExtensions(), partitionId);
+        LOGGER.info("Bootstrapping ({}) metadata in partition {}", newUniverse ? "new" : "existing", partitionId);
+        MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataIndexesProvider(),
+                ncExtensionManager.getMetadataTupleTranslatorProvider(), ncExtensionManager.getMetadataExtensions(),
+                partitionId);
 
         // This is a special case, we just give the metadataNode directly.
         // This way we can delay the registration of the metadataNode until
         // it is completely initialized.
         MetadataManager.initialize(getAsterixStateProxies(), MetadataNode.INSTANCE);
-        MetadataBootstrap.startUniverse(getServiceContext(), newUniverse);
+        MetadataBootstrap.startUniverse(getServiceContext(), newUniverse,
+                ncExtensionManager.getMetadataIndexesProvider());
         MetadataBootstrap.startDDLRecovery();
-        ncExtensionManager.initializeMetadata(getServiceContext());
+        ncExtensionManager.initializeMetadata(getServiceContext(), ncExtensionManager.getMetadataIndexesProvider());
         LOGGER.info("Metadata node bound");
     }
 

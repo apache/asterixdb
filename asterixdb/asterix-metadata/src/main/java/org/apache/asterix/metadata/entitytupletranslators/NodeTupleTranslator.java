@@ -19,8 +19,7 @@
 
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
+import org.apache.asterix.metadata.bootstrap.NodeEntity;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ARecord;
@@ -33,13 +32,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
 
-    // Payload field containing serialized Node.
-    private static final int NODE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
-
+    private final NodeEntity nodeEntity;
     protected AMutableInt64 aInt64;
 
-    protected NodeTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.NODE_DATASET, NODE_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected NodeTupleTranslator(boolean getTuple, NodeEntity nodeEntity) {
+        super(getTuple, nodeEntity.getIndex(), nodeEntity.payloadPosition());
+        this.nodeEntity = nodeEntity;
         if (getTuple) {
             aInt64 = new AMutableInt64(-1);
         }
@@ -80,24 +78,24 @@ public class NodeTupleTranslator extends AbstractTupleTranslator<Node> {
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the second field of the tuple
-        recordBuilder.reset(MetadataRecordTypes.NODE_RECORDTYPE);
+        recordBuilder.reset(nodeEntity.getRecordType());
         // write field 0
         fieldValue.reset();
         aString.setValue(instance.getNodeName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.NODE_ARECORD_NODENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeEntity.nodeNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aInt64.setValue(instance.getNumberOfCores());
         int64Serde.serialize(aInt64, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.NODE_ARECORD_NUMBEROFCORES_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeEntity.numberOfCoresIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aInt64.setValue(instance.getWorkingMemorySize());
         int64Serde.serialize(aInt64, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.NODE_ARECORD_WORKINGMEMORYSIZE_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeEntity.memorySizeIndex(), fieldValue);
 
         // write field 3
         // listBuilder.reset((AOrderedListType)

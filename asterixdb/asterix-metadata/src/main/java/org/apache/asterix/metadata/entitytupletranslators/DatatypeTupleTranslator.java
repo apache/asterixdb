@@ -24,7 +24,7 @@ import java.util.Calendar;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.DatatypeEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.utils.TypeUtil;
@@ -48,28 +48,25 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Datatype> {
 
-    // Payload field containing serialized Datatype.
-    private static final int DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private final DatatypeEntity datatypeEntity;
 
-    protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        super(txnId, metadataNode, getTuple, MetadataPrimaryIndexes.DATATYPE_DATASET,
-                DATATYPE_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected DatatypeTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple,
+            DatatypeEntity datatypeEntity) {
+        super(txnId, metadataNode, getTuple, datatypeEntity.getIndex(), datatypeEntity.payloadPosition());
+        this.datatypeEntity = datatypeEntity;
     }
 
     @Override
     protected Datatype createMetadataEntityFromARecord(ARecord datatypeRecord) throws AlgebricksException {
         String dataverseCanonicalName =
-                ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) datatypeRecord.getValueByPos(datatypeEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String datatypeName =
-                ((AString) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) datatypeRecord.getValueByPos(datatypeEntity.datatypeNameIndex())).getStringValue();
         IAType type = BuiltinTypeMap.getBuiltinType(datatypeName);
         if (type == null) {
             // Derived Type
-            ARecord derivedTypeRecord =
-                    (ARecord) datatypeRecord.getValueByPos(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX);
+            ARecord derivedTypeRecord = (ARecord) datatypeRecord.getValueByPos(datatypeEntity.derivedIndex());
             DerivedTypeTag tag = DerivedTypeTag.valueOf(
                     ((AString) derivedTypeRecord.getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_TAG_FIELD_INDEX))
                             .getStringValue());
@@ -156,19 +153,19 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the third field of the tuple
-        recordBuilder.reset(MetadataRecordTypes.DATATYPE_RECORDTYPE);
+        recordBuilder.reset(datatypeEntity.getRecordType());
 
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datatypeEntity.dataverseNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(dataType.getDatatypeName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DATATYPENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datatypeEntity.datatypeNameIndex(), fieldValue);
 
         // write field 2
         IAType fieldType = dataType.getDatatype();
@@ -176,14 +173,14 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
             fieldValue.reset();
             writeDerivedTypeRecord(dataType.getDataverseName(), (AbstractComplexType) fieldType,
                     fieldValue.getDataOutput(), dataType.getIsAnonymous());
-            recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_DERIVED_FIELD_INDEX, fieldValue);
+            recordBuilder.addField(datatypeEntity.derivedIndex(), fieldValue);
         }
 
         // write field 3
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATATYPE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datatypeEntity.timestampIndex(), fieldValue);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);

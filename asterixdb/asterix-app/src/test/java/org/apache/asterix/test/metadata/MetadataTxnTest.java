@@ -40,7 +40,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.NodeGroupEntity;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.NodeGroup;
@@ -271,7 +271,7 @@ public class MetadataTxnTest {
         INcApplicationContext appCtx = (INcApplicationContext) integrationUtil.ncs[0].getApplicationContext();
         IDatasetLifecycleManager dlcm = appCtx.getDatasetLifecycleManager();
         dlcm.flushAllDatasets();
-        IMetadataIndex idx = MetadataPrimaryIndexes.NODEGROUP_DATASET;
+        IMetadataIndex idx = NodeGroupEntity.of(false).getIndex();
         DatasetInfo datasetInfo = dlcm.getDatasetInfo(idx.getDatasetId().getId());
         AbstractLSMIndex index = (AbstractLSMIndex) appCtx.getDatasetLifecycleManager()
                 .getIndex(idx.getDatasetId().getId(), idx.getResourceId());

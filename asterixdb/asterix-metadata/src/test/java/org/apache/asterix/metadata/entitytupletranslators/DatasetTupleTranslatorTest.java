@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
@@ -58,7 +59,7 @@ public class DatasetTupleTranslatorTest {
                     "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details,
                     Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
                     DatasetFormatInfo.SYSTEM_DEFAULT);
-            DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true);
+            DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true, DatasetEntity.of(false));
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);
             Assert.assertEquals(dataset.getMetaItemTypeDataverseName(),

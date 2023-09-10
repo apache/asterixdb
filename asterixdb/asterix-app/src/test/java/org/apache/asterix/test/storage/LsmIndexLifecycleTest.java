@@ -25,7 +25,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.metadata.api.IMetadataIndex;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
@@ -57,7 +57,7 @@ public class LsmIndexLifecycleTest {
         TestDataUtil.createIdOnlyDataset(datasetName);
         INcApplicationContext appCtx = (INcApplicationContext) (integrationUtil.ncs[0].getApplicationContext());
         IDatasetLifecycleManager dlcm = appCtx.getDatasetLifecycleManager();
-        IMetadataIndex dsIdx = MetadataPrimaryIndexes.DATASET_DATASET;
+        IMetadataIndex dsIdx = DatasetEntity.of(false).getIndex();
         DatasetInfo datasetInfo = dlcm.getDatasetInfo(dsIdx.getDatasetId().getId());
         // flush to ensure multiple disk components
         dlcm.flushAllDatasets();

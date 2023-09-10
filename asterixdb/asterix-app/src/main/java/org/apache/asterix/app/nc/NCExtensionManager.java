@@ -31,6 +31,7 @@ import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.metadata.api.INCExtensionManager;
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 import org.apache.asterix.utils.ExtensionUtil;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -45,28 +46,30 @@ public class NCExtensionManager implements INCExtensionManager {
 
     private final ILangCompilationProvider sqlppCompilationProvider;
     private final MetadataTupleTranslatorProvider tupleTranslatorProvider;
+    private final MetadataIndexesProvider metadataIndexesProvider;
     private final List<IMetadataExtension> mdExtensions;
 
     /**
      * Initialize {@code CCExtensionManager} from configuration
      *
      * @param list
-     *            list of user configured extensions
+     *         list of user configured extensions
+     * @param ncServiceCtx
      * @throws InstantiationException
-     *             if an extension couldn't be created
+     *         if an extension couldn't be created
      * @throws IllegalAccessException
-     *             if user doesn't have enough acess priveleges
+     *         if user doesn't have enough acess priveleges
      * @throws ClassNotFoundException
-     *             if a class was not found
+     *         if a class was not found
      * @throws HyracksDataException
-     *             if two extensions conlict with each other
+     *         if two extensions conlict with each other
      */
-    public NCExtensionManager(List<AsterixExtension> list)
+    public NCExtensionManager(List<AsterixExtension> list, INCServiceContext ncServiceCtx)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
-        Pair<ExtensionId, ILangCompilationProvider> aqlcp = null;
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         IMetadataExtension tupleTranslatorProviderExtension = null;
         mdExtensions = new ArrayList<>();
+        MetadataIndexesProvider mdIndexesProvider = new MetadataIndexesProvider(ncServiceCtx);
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
@@ -80,8 +83,9 @@ public class NCExtensionManager implements INCExtensionManager {
                     case METADATA:
                         IMetadataExtension mde = (IMetadataExtension) extension;
                         mdExtensions.add(mde);
-                        tupleTranslatorProviderExtension =
-                                ExtensionUtil.extendTupleTranslatorProvider(tupleTranslatorProviderExtension, mde);
+                        //TODO(DB) clean up
+                        tupleTranslatorProviderExtension = ExtensionUtil.extendTupleTranslatorProvider(
+                                tupleTranslatorProviderExtension, mde, mdIndexesProvider);
                         break;
                     default:
                         break;
@@ -89,8 +93,14 @@ public class NCExtensionManager implements INCExtensionManager {
             }
         }
         this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
-        this.tupleTranslatorProvider = tupleTranslatorProviderExtension == null ? new MetadataTupleTranslatorProvider()
-                : tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider();
+        if (tupleTranslatorProviderExtension == null) {
+            this.metadataIndexesProvider = mdIndexesProvider;
+            this.tupleTranslatorProvider = new MetadataTupleTranslatorProvider(metadataIndexesProvider);
+        } else {
+            this.metadataIndexesProvider = tupleTranslatorProviderExtension.getMetadataIndexesProvider(ncServiceCtx);
+            this.tupleTranslatorProvider =
+                    tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider(metadataIndexesProvider);
+        }
     }
 
     public ILangCompilationProvider getCompilationProvider(ILangExtension.Language lang) {
@@ -111,18 +121,25 @@ public class NCExtensionManager implements INCExtensionManager {
         return tupleTranslatorProvider;
     }
 
+    @Override
+    public MetadataIndexesProvider getMetadataIndexesProvider() {
+        return metadataIndexesProvider;
+    }
+
     /**
      * Called on bootstrap of metadata node allowing extensions to instantiate their Metadata artifacts
      *
      * @param ncServiceCtx
-     *            the node controller service context
+     *         the node controller service context
+     * @param mdIndexesProvider
      * @throws HyracksDataException
      */
-    public void initializeMetadata(INCServiceContext ncServiceCtx) throws HyracksDataException {
+    public void initializeMetadata(INCServiceContext ncServiceCtx, MetadataIndexesProvider mdIndexesProvider)
+            throws HyracksDataException {
         if (mdExtensions != null) {
             for (IMetadataExtension mdExtension : mdExtensions) {
                 try {
-                    mdExtension.initializeMetadata(ncServiceCtx);
+                    mdExtension.initializeMetadata(ncServiceCtx, mdIndexesProvider);
                 } catch (RemoteException | ACIDException e) {
                     throw HyracksDataException.create(e);
                 }

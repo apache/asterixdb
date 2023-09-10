@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.api;
 
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entitytupletranslators.MetadataTupleTranslatorProvider;
 
 public interface INCExtensionManager {
@@ -25,4 +26,6 @@ public interface INCExtensionManager {
      * @return the metadata tuple translator provider
      */
     MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider();
+
+    MetadataIndexesProvider getMetadataIndexesProvider();
 }

@@ -24,8 +24,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
+import org.apache.asterix.metadata.bootstrap.NodeGroupEntity;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -41,14 +40,13 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup> {
 
-    // Payload field containing serialized NodeGroup.
-    private static final int NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX = 1;
-
+    private final NodeGroupEntity nodeGroupEntity;
     protected UnorderedListBuilder listBuilder;
     protected ArrayBackedValueStorage itemValue;
 
-    protected NodeGroupTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.NODEGROUP_DATASET, NODEGROUP_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected NodeGroupTupleTranslator(boolean getTuple, NodeGroupEntity nodeGroupEntity) {
+        super(getTuple, nodeGroupEntity.getIndex(), nodeGroupEntity.payloadPosition());
+        this.nodeGroupEntity = nodeGroupEntity;
         if (getTuple) {
             listBuilder = new UnorderedListBuilder();
             itemValue = new ArrayBackedValueStorage();
@@ -57,11 +55,9 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
 
     @Override
     protected NodeGroup createMetadataEntityFromARecord(ARecord nodeGroupRecord) {
-        String gpName =
-                ((AString) nodeGroupRecord.getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX))
-                        .getStringValue();
-        IACursor cursor = ((AUnorderedList) nodeGroupRecord
-                .getValueByPos(MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX)).getCursor();
+        String gpName = ((AString) nodeGroupRecord.getValueByPos(nodeGroupEntity.groupNameIndex())).getStringValue();
+        IACursor cursor =
+                ((AUnorderedList) nodeGroupRecord.getValueByPos(nodeGroupEntity.nodeNamesIndex())).getCursor();
         List<String> nodeNames = new ArrayList<>();
         while (cursor.next()) {
             nodeNames.add(((AString) cursor.get()).getStringValue());
@@ -78,16 +74,16 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the second field of the tuple
-        recordBuilder.reset(MetadataRecordTypes.NODEGROUP_RECORDTYPE);
+        recordBuilder.reset(nodeGroupEntity.getRecordType());
         // write field 0
         fieldValue.reset();
         aString.setValue(instance.getNodeGroupName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_GROUPNAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeGroupEntity.groupNameIndex(), fieldValue);
 
         // write field 1
-        listBuilder.reset((AUnorderedListType) MetadataRecordTypes.NODEGROUP_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX]);
+        listBuilder.reset(
+                (AUnorderedListType) nodeGroupEntity.getRecordType().getFieldTypes()[nodeGroupEntity.nodeNamesIndex()]);
         List<String> nodeNames = instance.getNodeNames();
         for (String nodeName : nodeNames) {
             itemValue.reset();
@@ -97,13 +93,13 @@ public class NodeGroupTupleTranslator extends AbstractTupleTranslator<NodeGroup>
         }
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_NODENAMES_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeGroupEntity.nodeNamesIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.NODEGROUP_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(nodeGroupEntity.timestampIndex(), fieldValue);
 
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();

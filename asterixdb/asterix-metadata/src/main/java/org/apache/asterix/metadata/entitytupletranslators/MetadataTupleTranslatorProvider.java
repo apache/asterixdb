@@ -20,76 +20,83 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 
 public class MetadataTupleTranslatorProvider {
 
+    protected final MetadataIndexesProvider mdIndexesProvider;
+
+    public MetadataTupleTranslatorProvider(MetadataIndexesProvider metadataIndexesProvider) {
+        this.mdIndexesProvider = metadataIndexesProvider;
+    }
+
     public CompactionPolicyTupleTranslator getCompactionPolicyTupleTranslator(boolean getTuple) {
-        return new CompactionPolicyTupleTranslator(getTuple);
+        return new CompactionPolicyTupleTranslator(getTuple, mdIndexesProvider.getCompactionPolicyEntity());
     }
 
     public DatasetTupleTranslator getDatasetTupleTranslator(boolean getTuple) {
-        return new DatasetTupleTranslator(getTuple);
+        return new DatasetTupleTranslator(getTuple, mdIndexesProvider.getDatasetEntity());
     }
 
     public DatasourceAdapterTupleTranslator getAdapterTupleTranslator(boolean getTuple) {
-        return new DatasourceAdapterTupleTranslator(getTuple);
+        return new DatasourceAdapterTupleTranslator(getTuple, mdIndexesProvider.getDatasourceAdapterEntity());
     }
 
     public DatatypeTupleTranslator getDataTypeTupleTranslator(TxnId txnId, MetadataNode metadataNode,
             boolean getTuple) {
-        return new DatatypeTupleTranslator(txnId, metadataNode, getTuple);
+        return new DatatypeTupleTranslator(txnId, metadataNode, getTuple, mdIndexesProvider.getDatatypeEntity());
     }
 
     public DataverseTupleTranslator getDataverseTupleTranslator(boolean getTuple) {
-        return new DataverseTupleTranslator(getTuple);
+        return new DataverseTupleTranslator(getTuple, mdIndexesProvider.getDataverseEntity());
     }
 
     public ExternalFileTupleTranslator getExternalFileTupleTranslator(boolean getTuple) {
-        return new ExternalFileTupleTranslator(getTuple);
+        return new ExternalFileTupleTranslator(getTuple, mdIndexesProvider.getExternalFileEntity());
     }
 
     public FeedPolicyTupleTranslator getFeedPolicyTupleTranslator(boolean getTuple) {
-        return new FeedPolicyTupleTranslator(getTuple);
+        return new FeedPolicyTupleTranslator(getTuple, mdIndexesProvider.getFeedPolicyEntity());
     }
 
     public FeedTupleTranslator getFeedTupleTranslator(boolean getTuple) {
-        return new FeedTupleTranslator(getTuple);
+        return new FeedTupleTranslator(getTuple, mdIndexesProvider.getFeedEntity());
     }
 
     public FeedConnectionTupleTranslator getFeedConnectionTupleTranslator(boolean getTuple) {
-        return new FeedConnectionTupleTranslator(getTuple);
+        return new FeedConnectionTupleTranslator(getTuple, mdIndexesProvider.getFeedConnectionEntity());
     }
 
     public FunctionTupleTranslator getFunctionTupleTranslator(TxnId txnId, MetadataNode metadataNode,
             boolean getTuple) {
-        return new FunctionTupleTranslator(txnId, metadataNode, getTuple);
+        return new FunctionTupleTranslator(txnId, metadataNode, getTuple, mdIndexesProvider.getFunctionEntity());
     }
 
     public FullTextConfigMetadataEntityTupleTranslator getFullTextConfigTupleTranslator(boolean getTuple) {
-        return new FullTextConfigMetadataEntityTupleTranslator(getTuple);
+        return new FullTextConfigMetadataEntityTupleTranslator(getTuple, mdIndexesProvider.getFullTextConfigEntity());
     }
 
     public FullTextFilterMetadataEntityTupleTranslator getFullTextFilterTupleTranslator(boolean getTuple) {
-        return new FullTextFilterMetadataEntityTupleTranslator(getTuple);
+        return new FullTextFilterMetadataEntityTupleTranslator(getTuple, mdIndexesProvider.getFullTextFilterEntity());
     }
 
     public IndexTupleTranslator getIndexTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        return new IndexTupleTranslator(txnId, metadataNode, getTuple);
+        return new IndexTupleTranslator(txnId, metadataNode, getTuple, mdIndexesProvider.getIndexEntity());
     }
 
     public LibraryTupleTranslator getLibraryTupleTranslator(boolean getTuple) {
-        return new LibraryTupleTranslator(getTuple);
+        return new LibraryTupleTranslator(getTuple, mdIndexesProvider.getLibraryEntity());
     }
 
     public NodeTupleTranslator getNodeTupleTranslator(boolean getTuple) {
-        return new NodeTupleTranslator(getTuple);
+        return new NodeTupleTranslator(getTuple, mdIndexesProvider.getNodeEntity());
     }
 
     public NodeGroupTupleTranslator getNodeGroupTupleTranslator(boolean getTuple) {
-        return new NodeGroupTupleTranslator(getTuple);
+        return new NodeGroupTupleTranslator(getTuple, mdIndexesProvider.getNodeGroupEntity());
     }
 
     public SynonymTupleTranslator getSynonymTupleTranslator(boolean getTuple) {
-        return new SynonymTupleTranslator(getTuple);
+        return new SynonymTupleTranslator(getTuple, mdIndexesProvider.getSynonymEntity());
     }
 }

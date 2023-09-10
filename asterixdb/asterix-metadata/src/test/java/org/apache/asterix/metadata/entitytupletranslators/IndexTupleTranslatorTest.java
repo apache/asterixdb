@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataNode;
+import org.apache.asterix.metadata.bootstrap.IndexEntity;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -83,7 +84,8 @@ public class IndexTupleTranslatorTest {
                     new ARecordType("", new String[] { "row_id" }, new IAType[] { BuiltinType.AINT64 }, true), true));
             when(mockMetadataNode.getDataset(any(), any(DataverseName.class), anyString())).thenReturn(dataset);
 
-            IndexTupleTranslator idxTranslator = new IndexTupleTranslator(null, mockMetadataNode, true);
+            IndexTupleTranslator idxTranslator =
+                    new IndexTupleTranslator(null, mockMetadataNode, true, IndexEntity.of(false));
             ITupleReference tuple = idxTranslator.getTupleFromMetadataEntity(index);
             Index deserializedIndex = idxTranslator.getMetadataEntityFromTuple(tuple);
             if (indicator == null) {

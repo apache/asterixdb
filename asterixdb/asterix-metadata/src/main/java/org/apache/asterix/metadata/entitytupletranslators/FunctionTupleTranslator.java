@@ -53,7 +53,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.FunctionEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.base.ABoolean;
@@ -80,9 +80,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Function> {
 
-    // Payload field containing serialized Function.
-    private static final int FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
-
+    private final FunctionEntity functionEntity;
     protected OrderedListBuilder dependenciesListBuilder;
     protected OrderedListBuilder dependencyListBuilder;
     protected OrderedListBuilder dependencyNameListBuilder;
@@ -90,9 +88,10 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     protected AOrderedListType stringList;
     protected AOrderedListType listOfLists;
 
-    protected FunctionTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple) {
-        super(txnId, metadataNode, getTuple, MetadataPrimaryIndexes.FUNCTION_DATASET,
-                FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected FunctionTupleTranslator(TxnId txnId, MetadataNode metadataNode, boolean getTuple,
+            FunctionEntity functionEntity) {
+        super(txnId, metadataNode, getTuple, functionEntity.getIndex(), functionEntity.payloadPosition());
+        this.functionEntity = functionEntity;
         if (getTuple) {
             dependenciesListBuilder = new OrderedListBuilder();
             dependencyListBuilder = new OrderedListBuilder();
@@ -105,17 +104,15 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
     protected Function createMetadataEntityFromARecord(ARecord functionRecord) throws AlgebricksException {
         String dataverseCanonicalName =
-                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) functionRecord.getValueByPos(functionEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String functionName =
-                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTIONNAME_FIELD_INDEX))
-                        .getStringValue();
-        int arity = Integer.parseInt(((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_ARITY_FIELD_INDEX)).getStringValue());
+                ((AString) functionRecord.getValueByPos(functionEntity.functionNameIndex())).getStringValue();
+        int arity = Integer.parseInt(
+                ((AString) functionRecord.getValueByPos(functionEntity.functionArityIndex())).getStringValue());
 
-        IACursor paramNameCursor = ((AOrderedList) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX)).getCursor();
+        IACursor paramNameCursor =
+                ((AOrderedList) functionRecord.getValueByPos(functionEntity.functionParamListIndex())).getCursor();
         List<String> paramNames = new ArrayList<>();
         while (paramNameCursor.next()) {
             paramNames.add(((AString) paramNameCursor.get()).getStringValue());
@@ -124,8 +121,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         List<TypeSignature> paramTypes = getParamTypes(functionRecord, dataverseName);
 
         TypeSignature returnType;
-        String returnTypeName = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX)).getStringValue();
+        String returnTypeName =
+                ((AString) functionRecord.getValueByPos(functionEntity.functionReturnTypeIndex())).getStringValue();
         if (returnTypeName.isEmpty()) {
             returnType = null; // == any
         } else {
@@ -133,13 +130,12 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             returnType = getTypeSignature(returnTypeName, returnTypeDataverseNameCanonical, dataverseName);
         }
 
-        String definition = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX)).getStringValue();
-        String language = ((AString) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX)).getStringValue();
+        String definition =
+                ((AString) functionRecord.getValueByPos(functionEntity.functionDefinitionIndex())).getStringValue();
+        String language =
+                ((AString) functionRecord.getValueByPos(functionEntity.functionLanguageIndex())).getStringValue();
         String functionKind =
-                ((AString) functionRecord.getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX))
-                        .getStringValue();
+                ((AString) functionRecord.getValueByPos(functionEntity.functionKindIndex())).getStringValue();
 
         Map<String, String> resources = null;
         DataverseName libraryDataverseName = null;
@@ -176,8 +172,8 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             deterministic = getBoolean(functionRecord, FUNCTION_ARECORD_FUNCTION_DETERMINISTIC_FIELD_NAME);
         }
 
-        IACursor dependenciesCursor = ((AOrderedList) functionRecord
-                .getValueByPos(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX)).getCursor();
+        IACursor dependenciesCursor =
+                ((AOrderedList) functionRecord.getValueByPos(functionEntity.functionDependenciesIndex())).getCursor();
         List<List<Triple<DataverseName, String, String>>> dependencies = new ArrayList<>();
         while (dependenciesCursor.next()) {
             List<Triple<DataverseName, String, String>> dependencyList = new ArrayList<>();
@@ -301,31 +297,31 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         // write the pay-load in the fourth field of the tuple
 
-        recordBuilder.reset(MetadataRecordTypes.FUNCTION_RECORDTYPE);
+        recordBuilder.reset(functionEntity.getRecordType());
 
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.dataverseNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(function.getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTIONNAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionNameIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aString.setValue(String.valueOf(function.getArity()));
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_ARITY_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionArityIndex(), fieldValue);
 
         // write field 3
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
-        listBuilder.reset((AOrderedListType) MetadataRecordTypes.FUNCTION_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX]);
+        listBuilder.reset((AOrderedListType) functionEntity.getRecordType().getFieldTypes()[functionEntity
+                .functionParamListIndex()]);
         for (String p : function.getParameterNames()) {
             itemValue.reset();
             aString.setValue(p);
@@ -334,7 +330,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
         fieldValue.reset();
         listBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_PARAM_LIST_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionParamListIndex(), fieldValue);
 
         // write field 4
         // Note: return type's dataverse name is written later in the open part
@@ -342,29 +338,29 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         fieldValue.reset();
         aString.setValue(returnType != null ? returnType.getName() : "");
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_RETURN_TYPE_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionReturnTypeIndex(), fieldValue);
 
         // write field 5
         fieldValue.reset();
         aString.setValue(function.isExternal() ? "" : function.getFunctionBody());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEFINITION_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionDefinitionIndex(), fieldValue);
 
         // write field 6
         fieldValue.reset();
         aString.setValue(function.getLanguage());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_LANGUAGE_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionLanguageIndex(), fieldValue);
 
         // write field 7
         fieldValue.reset();
         aString.setValue(function.getKind());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_KIND_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionKindIndex(), fieldValue);
 
         // write field 8
-        dependenciesListBuilder.reset((AOrderedListType) MetadataRecordTypes.FUNCTION_RECORDTYPE
-                .getFieldTypes()[MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX]);
+        dependenciesListBuilder.reset((AOrderedListType) functionEntity.getRecordType().getFieldTypes()[functionEntity
+                .functionDependenciesIndex()]);
         List<List<Triple<DataverseName, String, String>>> dependenciesList = function.getDependencies();
         List<String> subNames = new ArrayList<>();
         for (List<Triple<DataverseName, String, String>> dependencies : dependenciesList) {
@@ -390,7 +386,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
         }
         fieldValue.reset();
         dependenciesListBuilder.write(fieldValue.getDataOutput(), true);
-        recordBuilder.addField(MetadataRecordTypes.FUNCTION_ARECORD_FUNCTION_DEPENDENCIES_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(functionEntity.functionDependenciesIndex(), fieldValue);
 
         writeOpenFields(function);
 

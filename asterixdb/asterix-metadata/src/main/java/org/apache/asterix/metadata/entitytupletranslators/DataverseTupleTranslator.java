@@ -22,8 +22,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.util.Calendar;
 
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
-import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
+import org.apache.asterix.metadata.bootstrap.DataverseEntity;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
@@ -38,13 +37,12 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  */
 public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse> {
 
-    // Payload field containing serialized Dataverse.
-    private static final int DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
+    private final DataverseEntity dataverseEntity;
+    private AMutableInt32 aInt32;
 
-    protected AMutableInt32 aInt32;
-
-    protected DataverseTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATAVERSE_DATASET, DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected DataverseTupleTranslator(boolean getTuple, DataverseEntity dataverseEntity) {
+        super(getTuple, dataverseEntity.getIndex(), dataverseEntity.payloadPosition());
+        this.dataverseEntity = dataverseEntity;
         if (getTuple) {
             aInt32 = new AMutableInt32(-1);
         }
@@ -52,10 +50,11 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
 
     @Override
     protected Dataverse createMetadataEntityFromARecord(ARecord dataverseRecord) throws AlgebricksException {
-        String dataverseCanonicalName = ((AString) dataverseRecord.getValueByPos(0)).getStringValue();
+        String dataverseCanonicalName =
+                ((AString) dataverseRecord.getValueByPos(dataverseEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-        String format = ((AString) dataverseRecord.getValueByPos(1)).getStringValue();
-        int pendingOp = ((AInt32) dataverseRecord.getValueByPos(3)).getIntegerValue();
+        String format = ((AString) dataverseRecord.getValueByPos(dataverseEntity.dataFormatIndex())).getStringValue();
+        int pendingOp = ((AInt32) dataverseRecord.getValueByPos(dataverseEntity.pendingOpIndex())).getIntegerValue();
 
         return new Dataverse(dataverseName, format, pendingOp);
     }
@@ -71,30 +70,30 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the second field of the tuple
-        recordBuilder.reset(MetadataRecordTypes.DATAVERSE_RECORDTYPE);
+        recordBuilder.reset(dataverseEntity.getRecordType());
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(dataverseEntity.dataverseNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(dataverse.getDataFormat());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_FORMAT_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(dataverseEntity.dataFormatIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(dataverseEntity.timestampIndex(), fieldValue);
 
         // write field 3
         fieldValue.reset();
         aInt32.setValue(dataverse.getPendingOp());
         int32Serde.serialize(aInt32, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATAVERSE_ARECORD_PENDINGOP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(dataverseEntity.pendingOpIndex(), fieldValue);
 
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);

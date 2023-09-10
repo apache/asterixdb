@@ -19,13 +19,8 @@
 
 package org.apache.asterix.metadata.bootstrap;
 
-import java.util.Arrays;
-
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
-import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.IAType;
 
 /**
  * Contains static primary-index descriptors of all metadata datasets.
@@ -65,97 +60,6 @@ public class MetadataPrimaryIndexes {
             new MetadataIndexImmutableProperties(MetadataConstants.FULL_TEXT_CONFIG_DATASET_NAME, 16, 16);
     public static final MetadataIndexImmutableProperties PROPERTIES_FULL_TEXT_FILTER =
             new MetadataIndexImmutableProperties(MetadataConstants.FULL_TEXT_FILTER_DATASET_NAME, 17, 17);
-
-    public static final IMetadataIndex DATAVERSE_DATASET =
-            new MetadataIndex(PROPERTIES_DATAVERSE, 2, new IAType[] { BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME)), 0,
-                    MetadataRecordTypes.DATAVERSE_RECORDTYPE, true, new int[] { 0 });
-    public static final IMetadataIndex DATASET_DATASET =
-            new MetadataIndex(PROPERTIES_DATASET, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME)),
-                    0, MetadataRecordTypes.DATASET_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex DATATYPE_DATASET =
-            new MetadataIndex(PROPERTIES_DATATYPE, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATATYPE_NAME)),
-                    0, MetadataRecordTypes.DATATYPE_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex INDEX_DATASET = new MetadataIndex(PROPERTIES_INDEX, 4,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_INDEX_NAME)),
-            0, MetadataRecordTypes.INDEX_RECORDTYPE, true, new int[] { 0, 1, 2 });
-    public static final IMetadataIndex NODE_DATASET =
-            new MetadataIndex(PROPERTIES_NODE, 2, new IAType[] { BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_NODE_NAME)), 0,
-                    MetadataRecordTypes.NODE_RECORDTYPE, true, new int[] { 0 });
-    public static final IMetadataIndex NODEGROUP_DATASET =
-            new MetadataIndex(PROPERTIES_NODEGROUP, 2, new IAType[] { BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_GROUP_NAME)), 0,
-                    MetadataRecordTypes.NODEGROUP_RECORDTYPE, true, new int[] { 0 });
-    public static final IMetadataIndex FUNCTION_DATASET = new MetadataIndex(PROPERTIES_FUNCTION, 4,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_ARITY)),
-            0, MetadataRecordTypes.FUNCTION_RECORDTYPE, true, new int[] { 0, 1, 2 });
-    public static final IMetadataIndex DATASOURCE_ADAPTER_DATASET = new MetadataIndex(PROPERTIES_DATASOURCE_ADAPTER, 3,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_NAME)),
-            0, MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex LIBRARY_DATASET =
-            new MetadataIndex(PROPERTIES_LIBRARY, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_NAME)),
-                    0, MetadataRecordTypes.LIBRARY_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex FEED_DATASET =
-            new MetadataIndex(PROPERTIES_FEED, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_FEED_NAME)),
-                    0, MetadataRecordTypes.FEED_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex FEED_ACTIVITY_DATASET = null;
-    public static final IMetadataIndex FEED_POLICY_DATASET =
-            new MetadataIndex(PROPERTIES_FEED_POLICY, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_POLICY_NAME)),
-                    0, MetadataRecordTypes.FEED_POLICY_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex COMPACTION_POLICY_DATASET = new MetadataIndex(PROPERTIES_COMPACTION_POLICY, 3,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_COMPACTION_POLICY)),
-            0, MetadataRecordTypes.COMPACTION_POLICY_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex EXTERNAL_FILE_DATASET = new MetadataIndex(PROPERTIES_EXTERNAL_FILE, 4,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_FILE_NUMBER)),
-            0, MetadataRecordTypes.EXTERNAL_FILE_RECORDTYPE, true, new int[] { 0, 1, 2 });
-
-    public static final IMetadataIndex FEED_CONNECTION_DATASET = new MetadataIndex(PROPERTIES_FEED_CONNECTION, 4,
-            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
-            Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_FEED_NAME),
-                    Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATASET_NAME)),
-            0, MetadataRecordTypes.FEED_CONNECTION_RECORDTYPE, true, new int[] { 0, 1, 2 });
-
-    public static final IMetadataIndex SYNONYM_DATASET =
-            new MetadataIndex(PROPERTIES_SYNONYM, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_SYNONYM_NAME)),
-                    0, MetadataRecordTypes.SYNONYM_RECORDTYPE, true, new int[] { 0, 1 });
-
-    public static final IMetadataIndex FULL_TEXT_CONFIG_DATASET =
-            new MetadataIndex(PROPERTIES_FULL_TEXT_CONFIG, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_FULL_TEXT_CONFIG_NAME)),
-                    0, MetadataRecordTypes.FULL_TEXT_CONFIG_RECORDTYPE, true, new int[] { 0, 1 });
-    public static final IMetadataIndex FULL_TEXT_FILTER_DATASET =
-            new MetadataIndex(PROPERTIES_FULL_TEXT_FILTER, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    Arrays.asList(Arrays.asList(MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME),
-                            Arrays.asList(MetadataRecordTypes.FIELD_NAME_FULL_TEXT_FILTER_NAME)),
-                    0, MetadataRecordTypes.FULL_TEXT_FILTER_RECORDTYPE, true, new int[] { 0, 1 });
 
     private MetadataPrimaryIndexes() {
     }

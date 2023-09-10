@@ -24,7 +24,7 @@ import java.util.Calendar;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
-import org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes;
+import org.apache.asterix.metadata.bootstrap.DatasourceAdapterEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.om.base.ARecord;
@@ -35,27 +35,24 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<DatasourceAdapter> {
 
-    // Payload field containing serialized Adapter.
-    private static final int ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    private final DatasourceAdapterEntity datasourceAdapterEntity;
 
-    protected DatasourceAdapterTupleTranslator(boolean getTuple) {
-        super(getTuple, MetadataPrimaryIndexes.DATASOURCE_ADAPTER_DATASET, ADAPTER_PAYLOAD_TUPLE_FIELD_INDEX);
+    protected DatasourceAdapterTupleTranslator(boolean getTuple, DatasourceAdapterEntity datasourceAdapterEntity) {
+        super(getTuple, datasourceAdapterEntity.getIndex(), datasourceAdapterEntity.payloadPosition());
+        this.datasourceAdapterEntity = datasourceAdapterEntity;
     }
 
     @Override
     protected DatasourceAdapter createMetadataEntityFromARecord(ARecord adapterRecord) throws AlgebricksException {
-        String dataverseCanonicalName = ((AString) adapterRecord
-                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX))
-                        .getStringValue();
+        String dataverseCanonicalName =
+                ((AString) adapterRecord.getValueByPos(datasourceAdapterEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String adapterName =
-                ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX))
-                        .getStringValue();
-        String classname = ((AString) adapterRecord
-                .getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_CLASSNAME_FIELD_INDEX)).getStringValue();
-        IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType.valueOf(
-                ((AString) adapterRecord.getValueByPos(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX))
-                        .getStringValue());
+                ((AString) adapterRecord.getValueByPos(datasourceAdapterEntity.adapterNameIndex())).getStringValue();
+        String classname =
+                ((AString) adapterRecord.getValueByPos(datasourceAdapterEntity.classNameIndex())).getStringValue();
+        IDataSourceAdapter.AdapterType adapterType = IDataSourceAdapter.AdapterType
+                .valueOf(((AString) adapterRecord.getValueByPos(datasourceAdapterEntity.typeIndex())).getStringValue());
 
         DataverseName libraryDataverseName = null;
         String libraryName = null;
@@ -91,37 +88,37 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
 
         // write the pay-load in the third field of the tuple
 
-        recordBuilder.reset(MetadataRecordTypes.DATASOURCE_ADAPTER_RECORDTYPE);
+        recordBuilder.reset(datasourceAdapterEntity.getRecordType());
 
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_DATAVERSENAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datasourceAdapterEntity.dataverseNameIndex(), fieldValue);
 
         // write field 1
         fieldValue.reset();
         aString.setValue(adapterIdentifier.getName());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_NAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datasourceAdapterEntity.adapterNameIndex(), fieldValue);
 
         // write field 2
         fieldValue.reset();
         aString.setValue(adapter.getClassname());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_CLASSNAME_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datasourceAdapterEntity.classNameIndex(), fieldValue);
 
         // write field 3
         fieldValue.reset();
         aString.setValue(adapter.getType().name());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TYPE_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datasourceAdapterEntity.typeIndex(), fieldValue);
 
         // write field 4
         fieldValue.reset();
         aString.setValue(Calendar.getInstance().getTime().toString());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
-        recordBuilder.addField(MetadataRecordTypes.DATASOURCE_ADAPTER_ARECORD_TIMESTAMP_FIELD_INDEX, fieldValue);
+        recordBuilder.addField(datasourceAdapterEntity.timestampIndex(), fieldValue);
 
         // write open fields
         writeOpenFields(adapter);

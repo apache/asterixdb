@@ -154,7 +154,7 @@ public class NCApplication extends BaseNCApplication {
         }
         MetadataBuiltinFunctions.init();
 
-        ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()));
+        ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()), ncServiceCtx);
         runtimeContext = createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory());
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {

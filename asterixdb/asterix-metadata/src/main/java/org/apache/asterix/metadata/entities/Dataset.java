@@ -134,7 +134,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     /*
      * Constants
      */
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final RTreeResourceFactoryProvider rTreeResourceFactoryProvider =
             RTreeResourceFactoryProvider.INSTANCE;
@@ -144,6 +144,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
      * Members
      */
     private final int datasetId;
+    private final String databaseName = null;
     private final DataverseName dataverseName;
     private final String datasetName;
     private final DataverseName recordTypeDataverseName;
@@ -212,6 +213,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.compressionScheme = compressionScheme;
         datasetFullyQualifiedName = new DatasetFullyQualifiedName(dataverseName, datasetName);
         this.datasetFormatInfo = datasetFormatInfo;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     @Override
