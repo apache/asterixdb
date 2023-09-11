@@ -53,6 +53,11 @@ import org.apache.hyracks.api.util.IoUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
@@ -98,22 +103,6 @@ public class S3CloudClient implements ICloudClient {
             profiler = NoOpRequestProfiler.INSTANCE;
         }
 
-    }
-
-    private S3Client buildClient() {
-        S3ClientBuilder builder = S3Client.builder();
-        builder.credentialsProvider(config.createCredentialsProvider());
-        builder.region(Region.of(config.getRegion()));
-        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
-            URI uri;
-            try {
-                uri = new URI(config.getEndpoint());
-            } catch (URISyntaxException ex) {
-                throw new IllegalArgumentException(ex);
-            }
-            builder.endpointOverride(uri);
-        }
-        return builder.build();
     }
 
     @Override
@@ -253,17 +242,6 @@ public class S3CloudClient implements ICloudClient {
         }
     }
 
-    private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
-        Set<String> files = new HashSet<>();
-        for (S3Object s3Object : contents) {
-            String path = config.isEncodeKeys() ? S3Utils.decodeURI(s3Object.key()) : s3Object.key();
-            if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
-                files.add(path);
-            }
-        }
-        return files;
-    }
-
     @Override
     public void syncFiles(String bucket, Map<String, String> cloudToLocalStoragePaths) throws HyracksDataException {
         LOGGER.info("Syncing cloud storage to local storage started");
@@ -309,6 +287,58 @@ public class S3CloudClient implements ICloudClient {
             throw HyracksDataException.create(e);
         }
         LOGGER.info("Syncing cloud storage to local storage successful");
+    }
+
+    @Override
+    public JsonNode listAsJson(ObjectMapper objectMapper, String bucket) {
+        List<S3Object> objects = listS3Objects(s3Client, bucket, "/");
+        ArrayNode objectsInfo = objectMapper.createArrayNode();
+
+        objects.sort((x, y) -> String.CASE_INSENSITIVE_ORDER.compare(x.key(), y.key()));
+        for (S3Object object : objects) {
+            ObjectNode objectInfo = objectsInfo.addObject();
+            objectInfo.put("path", object.key());
+            objectInfo.put("size", object.size());
+        }
+        return objectsInfo;
+    }
+
+    @Override
+    public void close() {
+        if (s3Client != null) {
+            s3Client.close();
+        }
+
+        if (s3TransferManager != null) {
+            s3TransferManager.close();
+        }
+    }
+
+    private S3Client buildClient() {
+        S3ClientBuilder builder = S3Client.builder();
+        builder.credentialsProvider(config.createCredentialsProvider());
+        builder.region(Region.of(config.getRegion()));
+        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
+            URI uri;
+            try {
+                uri = new URI(config.getEndpoint());
+            } catch (URISyntaxException ex) {
+                throw new IllegalArgumentException(ex);
+            }
+            builder.endpointOverride(uri);
+        }
+        return builder.build();
+    }
+
+    private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
+        Set<String> files = new HashSet<>();
+        for (S3Object s3Object : contents) {
+            String path = config.isEncodeKeys() ? S3Utils.decodeURI(s3Object.key()) : s3Object.key();
+            if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
+                files.add(path);
+            }
+        }
+        return files;
     }
 
     private void downloadFiles(String bucket, Map<String, String> cloudToLocalStoragePaths)
@@ -363,16 +393,5 @@ public class S3CloudClient implements ICloudClient {
         S3AsyncClient client = builder.build();
         s3TransferManager = S3TransferManager.builder().s3Client(client).build();
         return s3TransferManager;
-    }
-
-    @Override
-    public void close() {
-        if (s3Client != null) {
-            s3Client.close();
-        }
-
-        if (s3TransferManager != null) {
-            s3TransferManager.close();
-        }
     }
 }

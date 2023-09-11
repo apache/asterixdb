@@ -49,6 +49,9 @@ import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DATAVERSE_PATH =
@@ -259,5 +262,15 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         cloudClient.close();
         super.close();
         localIoManager.close();
+    }
+
+    /**
+     * Returns a list of all stored objects (sorted ASC by path) in the cloud and their sizes
+     *
+     * @param objectMapper to create the result {@link JsonNode}
+     * @return {@link JsonNode} with stored objects' information
+     */
+    public final JsonNode listAsJson(ObjectMapper objectMapper) {
+        return cloudClient.listAsJson(objectMapper, bucket);
     }
 }

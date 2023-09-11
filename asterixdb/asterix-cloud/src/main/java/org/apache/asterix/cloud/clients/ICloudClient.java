@@ -28,6 +28,9 @@ import java.util.Set;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Interface containing methods to perform IO operation on the Cloud Storage
  */
@@ -135,6 +138,15 @@ public interface ICloudClient {
      * @throws HyracksDataException HyracksDataException
      */
     void syncFiles(String bucket, Map<String, String> cloudToLocalStoragePaths) throws HyracksDataException;
+
+    /**
+     * Produces a {@link JsonNode} that contains information about the stored objects in the cloud
+     *
+     * @param objectMapper to create the result {@link JsonNode}
+     * @param bucket       bucket name
+     * @return {@link JsonNode} with stored objects' information
+     */
+    JsonNode listAsJson(ObjectMapper objectMapper, String bucket);
 
     /**
      * Performs any necessary closing and cleaning up
