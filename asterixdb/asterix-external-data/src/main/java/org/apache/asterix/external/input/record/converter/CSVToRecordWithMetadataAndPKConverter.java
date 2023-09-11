@@ -23,6 +23,7 @@ import java.util.function.LongSupplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
@@ -39,17 +40,19 @@ public class CSVToRecordWithMetadataAndPKConverter
     private final int valueIndex;
     private final RecordWithMetadataAndPK<char[]> recordWithMetadata;
     private final CharArrayRecord record;
-    private LongSupplier lineNumber = ExternalDataConstants.NO_LINES;
+    private final LongSupplier lineNumber;
 
     public CSVToRecordWithMetadataAndPKConverter(final int valueIndex, final char delimiter, final ARecordType metaType,
             final ARecordType recordType, final int[] keyIndicator, final int[] keyIndexes, final IAType[] keyTypes,
-            IWarningCollector warningCollector) {
+            IExternalDataRuntimeContext context) {
+        IWarningCollector warningCollector = context.getTaskContext().getWarningCollector();
         this.cursor = new FieldCursorForDelimitedDataParser(null, delimiter, ExternalDataConstants.QUOTE,
                 warningCollector, ExternalDataConstants.EMPTY_STRING);
         this.record = new CharArrayRecord();
         this.valueIndex = valueIndex;
         this.recordWithMetadata = new RecordWithMetadataAndPK<>(record, metaType.getFieldTypes(), recordType,
                 keyIndicator, keyIndexes, keyTypes);
+        lineNumber = context.getLineNumberSupplier();
     }
 
     @Override
@@ -78,10 +81,5 @@ public class CSVToRecordWithMetadataAndPKConverter
             throw new RuntimeDataException(ErrorCode.FAILED_TO_PARSE_RECORD);
         }
         return recordWithMetadata;
-    }
-
-    @Override
-    public void configure(LongSupplier lineNumber) {
-        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
     }
 }

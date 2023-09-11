@@ -23,11 +23,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.RSSParser;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import com.rometools.rome.feed.synd.SyndEntry;
 
@@ -48,7 +48,7 @@ public class RSSParserFactory implements IRecordDataParserFactory<SyndEntry> {
     }
 
     @Override
-    public IRecordDataParser<SyndEntry> createRecordParser(IHyracksTaskContext ctx) {
+    public IRecordDataParser<SyndEntry> createRecordParser(IExternalDataRuntimeContext context) {
         RSSParser dataParser = new RSSParser(recordType);
         return dataParser;
     }

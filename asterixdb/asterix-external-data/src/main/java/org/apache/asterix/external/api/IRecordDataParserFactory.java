@@ -19,16 +19,15 @@
 package org.apache.asterix.external.api;
 
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordDataParserFactory<T> extends IDataParserFactory {
-    public IRecordDataParser<T> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException;
+    IRecordDataParser<T> createRecordParser(IExternalDataRuntimeContext context) throws HyracksDataException;
 
-    public Class<?> getRecordClass();
+    Class<?> getRecordClass();
 
     @Override
-    public default DataSourceType getDataSourceType() {
+    default DataSourceType getDataSourceType() {
         return DataSourceType.RECORDS;
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.input.record.RecordWithPK;
@@ -32,7 +33,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 @SuppressWarnings({ "unchecked" })
@@ -66,8 +66,9 @@ public class TestRecordWithPKParserFactory<T> implements IRecordDataParserFactor
 
     @SuppressWarnings("rawtypes")
     @Override
-    public IRecordDataParser<RecordWithPK<T>> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        return new TestRecordWithPKParser(recordParserFactory.createRecordParser(ctx));
+    public IRecordDataParser<RecordWithPK<T>> createRecordParser(IExternalDataRuntimeContext context)
+            throws HyracksDataException {
+        return new TestRecordWithPKParser(recordParserFactory.createRecordParser(context));
     }
 
     @Override

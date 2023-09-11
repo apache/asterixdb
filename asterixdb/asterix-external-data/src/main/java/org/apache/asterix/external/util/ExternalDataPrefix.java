@@ -20,8 +20,6 @@
 package org.apache.asterix.external.util;
 
 import static org.apache.asterix.external.util.ExternalDataConstants.COMPUTED_FIELD_PATTERN;
-import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.PREFIX_DEFAULT_DELIMITER;
 
 import java.io.Serializable;
@@ -51,10 +49,10 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.util.LogRedactionUtil;
 
-public class ExternalDataPrefix implements Serializable {
+public final class ExternalDataPrefix implements Serializable {
     private static final long serialVersionUID = -7612997190679310483L;
     private final String original;
-    private String root;
+    private final String protocolContainerPair;
     private final boolean endsWithSlash;
     private final List<String> segments;
 
@@ -63,6 +61,7 @@ public class ExternalDataPrefix implements Serializable {
     private final List<Integer> computedFieldSegmentIndexes = new ArrayList<>();
     private final List<ARecordType> paths = new ArrayList<>();
     private final Map<Integer, PrefixSegment> indexToComputedFieldsMap = new HashMap<>();
+    private String root;
 
     public static final String PREFIX_ROOT_FIELD_NAME = "prefix-root";
     public static final Set<ATypeTag> supportedTypes = new HashSet<>();
@@ -74,13 +73,10 @@ public class ExternalDataPrefix implements Serializable {
     }
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
-        this(getDefinitionOrPath(configuration));
-    }
-
-    public ExternalDataPrefix(String prefix) throws AlgebricksException {
+        String prefix = ExternalDataUtils.getDefinitionOrPath(configuration);
         this.original = prefix != null ? prefix : "";
         this.endsWithSlash = this.original.endsWith("/");
-
+        protocolContainerPair = ExternalDataUtils.getProtocolContainerPair(configuration);
         segments = extractPrefixSegments(original);
         extractComputedFields();
         extractRoot();
@@ -291,8 +287,12 @@ public class ExternalDataPrefix implements Serializable {
         return evaluator.evaluate();
     }
 
+    public String removeProtocolContainerPair(String path) {
+        return path.replace(protocolContainerPair, "");
+    }
+
     public static boolean containsComputedFields(Map<String, String> configuration) {
-        String path = getDefinitionOrPath(configuration);
+        String path = ExternalDataUtils.getDefinitionOrPath(configuration);
         return path != null && path.contains("{");
     }
 
@@ -331,10 +331,6 @@ public class ExternalDataPrefix implements Serializable {
             default:
                 return type;
         }
-    }
-
-    private static String getDefinitionOrPath(Map<String, String> configuration) {
-        return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
     }
 
     public static class PrefixSegment implements Serializable {

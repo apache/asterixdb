@@ -18,11 +18,13 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.external.util.ExternalDataConstants.DEFINITION_FIELD_NAME;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_DELIMITER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_ESCAPE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNAL_SCAN_BUFFER_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
@@ -70,6 +72,8 @@ import org.apache.asterix.external.library.msgpack.MessagePackUtils;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
+import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
+import org.apache.asterix.external.util.google.gcs.GCSConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
@@ -1001,5 +1005,41 @@ public class ExternalDataUtils {
             IWarningCollector warningCollector) throws HyracksDataException {
         return !key.endsWith("/") && predicate.test(matchers, key)
                 && externalDataPrefix.evaluate(key, evaluator, warningCollector);
+    }
+
+    public static String getDefinitionOrPath(Map<String, String> configuration) {
+        return configuration.getOrDefault(DEFINITION_FIELD_NAME, configuration.get(KEY_PATH));
+    }
+
+    public static String getProtocolContainerPair(Map<String, String> configurations) {
+        String container = configurations.getOrDefault(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME, "");
+        String type = configurations.getOrDefault(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, "");
+        String protocol;
+        switch (type) {
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
+                protocol = S3Constants.HADOOP_S3_PROTOCOL;
+                break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
+                protocol = AzureConstants.HADOOP_AZURE_BLOB_PROTOCOL;
+                break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+                protocol = AzureConstants.HADOOP_AZURE_DATALAKE_PROTOCOL;
+                break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
+                protocol = GCSConstants.HADOOP_GCS_PROTOCOL;
+                break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS:
+                String path = getDefinitionOrPath(configurations);
+                String[] nodePathPair = path.trim().split("://");
+                protocol = nodePathPair[0];
+                break;
+            case ExternalDataConstants.KEY_HDFS_URL:
+                protocol = ExternalDataConstants.KEY_HDFS_URL;
+                break;
+            default:
+                return "";
+        }
+
+        return protocol + "://" + container + "/";
     }
 }

@@ -29,6 +29,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
@@ -50,8 +51,9 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
     private final S3Client s3Client;
     private static final int MAX_RETRIES = 5; // We will retry 5 times in case of internal error from AWS S3 service
 
-    public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
-        super(configuration, filePaths);
+    public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths,
+            IExternalFilterValueEmbedder valueEmbedder) throws HyracksDataException {
+        super(configuration, filePaths, valueEmbedder);
         this.s3Client = buildAwsS3Client(configuration);
         this.bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }

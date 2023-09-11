@@ -31,7 +31,6 @@ import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IStreamNotificationHandler;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
-import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataUtils;
@@ -49,11 +48,9 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     protected IFeedLogManager feedLogManager;
     private Supplier<String> dataSourceName = EMPTY_STRING;
     private Supplier<String> previousDataSourceName = EMPTY_STRING;
-    private AsterixInputStream inputStream;
 
     public void configure(AsterixInputStream inputStream, Map<String, String> config) {
         int bufferSize = ExternalDataUtils.getOrDefaultBufferSize(config);
-        this.inputStream = inputStream;
         this.reader = new AsterixInputStreamReader(inputStream, bufferSize);
         record = new CharArrayRecord();
         inputBuffer = new char[bufferSize];
@@ -121,11 +118,6 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     @Override
     public final Supplier<String> getDataSourceName() {
         return dataSourceName;
-    }
-
-    @Override
-    public void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
-        inputStream.setValueEmbedder(valueEmbedder);
     }
 
     String getPreviousStreamName() {

@@ -23,12 +23,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.TweetParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class TweetParserFactory implements IRecordDataParserFactory<char[]> {
 
@@ -48,9 +48,8 @@ public class TweetParserFactory implements IRecordDataParserFactory<char[]> {
     }
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
-        TweetParser dataParser = new TweetParser(recordType);
-        return dataParser;
+    public IRecordDataParser<char[]> createRecordParser(IExternalDataRuntimeContext context) {
+        return new TweetParser(recordType);
     }
 
     @Override

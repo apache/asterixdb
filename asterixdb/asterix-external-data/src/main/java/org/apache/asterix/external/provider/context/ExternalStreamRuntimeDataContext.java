@@ -16,14 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
+package org.apache.asterix.external.provider.context;
 
-public interface IExternalFilterEmbeddedValueInformation {
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-    String[] getEmbeddedFieldNames();
+public class ExternalStreamRuntimeDataContext extends DefaultExternalRuntimeDataContext {
+    private final IExternalFilterValueEmbedder valueEmbedder;
 
-    boolean isMissingEmbeddedValues();
+    public ExternalStreamRuntimeDataContext(IHyracksTaskContext context, int partition,
+            IExternalFilterValueEmbedder valueEmbedder) {
+        super(context, partition);
+        this.valueEmbedder = valueEmbedder;
+    }
 
-    boolean isMissing(String fieldName);
-
+    @Override
+    public IExternalFilterValueEmbedder getValueEmbedder() {
+        return valueEmbedder;
+    }
 }

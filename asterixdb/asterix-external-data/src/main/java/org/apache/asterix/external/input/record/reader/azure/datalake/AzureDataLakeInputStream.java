@@ -30,6 +30,7 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -47,8 +48,8 @@ public class AzureDataLakeInputStream extends AbstractExternalInputStream {
     private final String container;
 
     public AzureDataLakeInputStream(IApplicationContext appCtx, Map<String, String> configuration,
-            List<String> filePaths) throws HyracksDataException {
-        super(configuration, filePaths);
+            List<String> filePaths, IExternalFilterValueEmbedder valueEmbedder) throws HyracksDataException {
+        super(configuration, filePaths, valueEmbedder);
         this.client = buildAzureClient(appCtx, configuration);
         this.container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }

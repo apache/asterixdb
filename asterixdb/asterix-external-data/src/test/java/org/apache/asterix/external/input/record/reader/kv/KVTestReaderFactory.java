@@ -25,11 +25,11 @@ import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
@@ -81,7 +81,8 @@ public class KVTestReaderFactory implements IRecordReaderFactory<DCPRequest> {
     }
 
     @Override
-    public IRecordReader<? extends DCPRequest> createRecordReader(final IHyracksTaskContext ctx, final int partition) {
+    public IRecordReader<? extends DCPRequest> createRecordReader(IExternalDataRuntimeContext context) {
+        int partition = context.getPartition();
         return new KVTestReader(partition, bucket, schedule,
                 (int) Math.ceil((double) numOfRecords / (double) numOfReaders), deleteCycle, upsertCycle,
                 (numOfRecords / numOfReaders) * partition);

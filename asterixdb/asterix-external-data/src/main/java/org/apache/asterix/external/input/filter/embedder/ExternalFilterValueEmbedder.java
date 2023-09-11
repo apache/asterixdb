@@ -34,7 +34,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-public final class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder {
+public class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder {
     private final ARecordType allPaths;
     private final IWarningCollector warningCollector;
     private final Map<IAType, BitSet> setValues;
@@ -79,11 +79,6 @@ public final class ExternalFilterValueEmbedder implements IExternalFilterValueEm
     }
 
     @Override
-    public boolean shouldEmbed(IValueReference fieldName, ATypeTag typeTag) {
-        throw new IllegalAccessError("Should not be invoked");
-    }
-
-    @Override
     public IValueReference getEmbeddedValue() {
         IValueReference value = builder.getValue(currentType);
         if (currentType.getTypeTag() != ATypeTag.OBJECT) {
@@ -96,7 +91,7 @@ public final class ExternalFilterValueEmbedder implements IExternalFilterValueEm
     }
 
     @Override
-    public boolean IsMissingEmbeddedValues() {
+    public boolean isMissingEmbeddedValues() {
         if (currentType.getTypeTag() == ATypeTag.MISSING) {
             return false;
         }

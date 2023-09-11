@@ -19,8 +19,6 @@
 package org.apache.asterix.external.api;
 
 import java.io.DataOutput;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -37,14 +35,5 @@ public interface IRecordDataParser<T> extends IDataParser {
      * @return true if the record was parsed successfully and written to out. False, otherwise.
      * @throws HyracksDataException HyracksDataException
      */
-    public boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException;
-
-    /**
-     * Configures the parser with information suppliers from the {@link IRecordReader} data source.
-     *
-     * @param dataSourceName data source name supplier
-     * @param lineNumber     line number supplier
-     */
-    default void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
-    }
+    boolean parse(IRawRecord<? extends T> record, DataOutput out) throws HyracksDataException;
 }

@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -32,7 +33,6 @@ import org.apache.asterix.external.input.record.RecordWithPK;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<RecordWithPK<char[]>> {
@@ -56,8 +56,7 @@ public class RecordWithPKTestReaderFactory implements IRecordReaderFactory<Recor
     }
 
     @Override
-    public IRecordReader<? extends RecordWithPK<char[]>> createRecordReader(final IHyracksTaskContext ctx,
-            final int partition) {
+    public IRecordReader<? extends RecordWithPK<char[]>> createRecordReader(IExternalDataRuntimeContext context) {
         return new TestAsterixMembersReader();
     }
 

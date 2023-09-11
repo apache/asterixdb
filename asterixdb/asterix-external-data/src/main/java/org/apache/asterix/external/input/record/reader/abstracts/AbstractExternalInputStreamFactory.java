@@ -28,8 +28,10 @@ import java.util.regex.Matcher;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.asterix.external.provider.context.ExternalStreamRuntimeDataContext;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
@@ -52,7 +54,7 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
     }
 
     @Override
-    public abstract AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition)
+    public abstract AsterixInputStream createInputStream(IExternalDataRuntimeContext context)
             throws HyracksDataException;
 
     @Override
@@ -74,8 +76,10 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
     }
 
     @Override
-    public IExternalFilterValueEmbedder createFilterValueEmbedder(IWarningCollector warningCollector) {
-        return filterEvaluatorFactory.createValueEmbedder(warningCollector);
+    public IExternalDataRuntimeContext createExternalDataRuntimeContext(IHyracksTaskContext context, int partition) {
+        IExternalFilterValueEmbedder valueEmbedder =
+                filterEvaluatorFactory.createValueEmbedder(context.getWarningCollector());
+        return new ExternalStreamRuntimeDataContext(context, partition, valueEmbedder);
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {

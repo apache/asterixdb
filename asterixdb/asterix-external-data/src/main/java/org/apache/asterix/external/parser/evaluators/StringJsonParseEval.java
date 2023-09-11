@@ -26,6 +26,7 @@ import java.io.IOException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.external.parser.factory.JSONDataParserFactory;
+import org.apache.asterix.external.provider.context.DefaultExternalRuntimeDataContext;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
@@ -57,7 +58,8 @@ public class StringJsonParseEval implements IScalarEvaluator {
             throws IOException {
         this.ctx = ctx;
         this.inputEval = inputEval;
-        this.parser = (JSONDataParser) new JSONDataParserFactory().createInputStreamParser(ctx.getTaskContext(), 0);
+        this.parser = (JSONDataParser) new JSONDataParserFactory()
+                .createInputStreamParser(new DefaultExternalRuntimeDataContext(ctx.getTaskContext()));
         this.sourceLocation = sourceLocation;
         inputVal = new VoidPointable();
         utf8Val = new UTF8StringPointable();

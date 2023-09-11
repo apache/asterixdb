@@ -30,12 +30,11 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.external.input.filter.NoOpFilterValueEmbedder;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.parser.jackson.ADMToken;
 import org.apache.asterix.external.parser.jackson.GeometryCoParser;
 import org.apache.asterix.external.parser.jackson.ParserContext;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AUnorderedList;
@@ -69,12 +68,11 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
     protected final JsonFactory jsonFactory;
     protected final ARecordType rootType;
     protected final GeometryCoParser geometryCoParser;
-    protected Supplier<String> dataSourceName = ExternalDataConstants.EMPTY_STRING;
-    protected LongSupplier lineNumber = ExternalDataConstants.NO_LINES;
+    protected final Supplier<String> dataSourceName;
+    protected final LongSupplier lineNumber;
+    protected final IExternalFilterValueEmbedder valueEmbedder;
 
     protected JsonParser jsonParser;
-
-    protected IExternalFilterValueEmbedder valueEmbedder;
 
     /**
      * Initialize JSONDataParser with GeometryCoParser
@@ -82,14 +80,17 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
      * @param recordType  defined type.
      * @param jsonFactory Jackson JSON parser factory.
      */
-    public AbstractJsonDataParser(ARecordType recordType, JsonFactory jsonFactory) {
+    public AbstractJsonDataParser(ARecordType recordType, JsonFactory jsonFactory,
+            IExternalDataRuntimeContext context) {
         // recordType currently cannot be null, however this is to guarantee for any future changes.
         this.rootType = recordType != null ? recordType : RecordUtil.FULLY_OPEN_RECORD_TYPE;
         this.jsonFactory = jsonFactory;
         //GeometryCoParser to parse GeoJSON objects to AsterixDB internal spatial types.
         geometryCoParser = new GeometryCoParser(jsonParser);
         parserContext = new ParserContext();
-        valueEmbedder = NoOpFilterValueEmbedder.INSTANCE;
+        dataSourceName = context.getDatasourceNameSupplier();
+        lineNumber = context.getLineNumberSupplier();
+        valueEmbedder = context.getValueEmbedder();
     }
 
     /*
@@ -245,7 +246,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
             checkOptionalConstraints(recordType, nullBitMap);
         }
 
-        if (valueEmbedder.IsMissingEmbeddedValues()) {
+        if (valueEmbedder.isMissingEmbeddedValues()) {
             String[] embeddedFieldNames = valueEmbedder.getEmbeddedFieldNames();
             for (int i = 0; i < embeddedFieldNames.length; i++) {
                 String embeddedFieldName = embeddedFieldNames[i];

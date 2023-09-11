@@ -22,22 +22,22 @@ import java.io.Serializable;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public interface IRecordConverterFactory<I, O> extends Serializable {
 
-    public IRecordConverter<I, O> createConverter(IHyracksTaskContext ctx);
+    IRecordConverter<I, O> createConverter(IExternalDataRuntimeContext context);
 
-    public void configure(Map<String, String> configuration) throws AsterixException;
+    void configure(Map<String, String> configuration) throws AsterixException;
 
-    public Class<?> getInputClass();
+    Class<?> getInputClass();
 
-    public Class<?> getOutputClass();
+    Class<?> getOutputClass();
 
-    public void setRecordType(ARecordType recordType);
+    void setRecordType(ARecordType recordType);
 
-    public void setMetaType(ARecordType metaType);
+    void setMetaType(ARecordType metaType);
 
 }

@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.parser.NoOpDataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
@@ -45,7 +45,7 @@ public class NoOpDataParserFactory implements IRecordDataParserFactory<IValueRef
 
     @Override
     public void setRecordType(ARecordType recordType) throws AsterixException {
-        //it always return open type
+        //it always returns open type
     }
 
     @Override
@@ -59,7 +59,8 @@ public class NoOpDataParserFactory implements IRecordDataParserFactory<IValueRef
     }
 
     @Override
-    public IRecordDataParser<IValueReference> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    public IRecordDataParser<IValueReference> createRecordParser(IExternalDataRuntimeContext context)
+            throws HyracksDataException {
         return new NoOpDataParser();
     }
 

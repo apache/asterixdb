@@ -19,18 +19,8 @@
 package org.apache.asterix.external.api;
 
 import java.io.IOException;
-import java.util.function.LongSupplier;
 
 @FunctionalInterface
 public interface IRecordConverter<I, O> {
-
-    public O convert(IRawRecord<? extends I> input) throws IOException;
-
-    /**
-     * Configures the converter with information suppliers from the {@link IRecordReader} data source.
-     *
-     * @param lineNumber line number supplier
-     */
-    default void configure(LongSupplier lineNumber) {
-    }
+    O convert(IRawRecord<? extends I> input) throws IOException;
 }

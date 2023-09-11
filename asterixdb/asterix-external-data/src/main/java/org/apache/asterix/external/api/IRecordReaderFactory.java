@@ -22,12 +22,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
 
-    IRecordReader<? extends T> createRecordReader(IHyracksTaskContext ctx, int partition) throws HyracksDataException;
+    IRecordReader<? extends T> createRecordReader(IExternalDataRuntimeContext context) throws HyracksDataException;
 
     Class<?> getRecordClass();
 

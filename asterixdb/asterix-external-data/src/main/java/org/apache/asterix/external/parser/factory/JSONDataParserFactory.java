@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.JSONDataParser;
@@ -33,8 +34,6 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -58,9 +57,8 @@ public class JSONDataParserFactory extends AbstractRecordStreamParserFactory<cha
     }
 
     @Override
-    public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        return createParser();
+    public IStreamDataParser createInputStreamParser(IExternalDataRuntimeContext context) {
+        return createParser(context);
     }
 
     @Override
@@ -74,8 +72,8 @@ public class JSONDataParserFactory extends AbstractRecordStreamParserFactory<cha
     }
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        return createParser();
+    public IRecordDataParser<char[]> createRecordParser(IExternalDataRuntimeContext context) {
+        return createParser(context);
     }
 
     @Override
@@ -83,8 +81,8 @@ public class JSONDataParserFactory extends AbstractRecordStreamParserFactory<cha
         return char[].class;
     }
 
-    private JSONDataParser createParser() throws HyracksDataException {
-        return new JSONDataParser(recordType, jsonFactory);
+    private JSONDataParser createParser(IExternalDataRuntimeContext context) {
+        return new JSONDataParser(recordType, jsonFactory, context);
     }
 
     /*

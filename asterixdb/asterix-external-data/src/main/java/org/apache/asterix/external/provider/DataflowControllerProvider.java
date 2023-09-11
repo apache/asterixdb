@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordDataParser;
@@ -44,7 +45,6 @@ import org.apache.asterix.external.dataflow.FeedStreamDataFlowController;
 import org.apache.asterix.external.dataflow.FeedWithMetaDataFlowController;
 import org.apache.asterix.external.dataflow.RecordDataFlowController;
 import org.apache.asterix.external.dataflow.StreamDataFlowController;
-import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
 import org.apache.asterix.om.types.ARecordType;
@@ -62,19 +62,14 @@ public class DataflowControllerProvider {
             int partition, IExternalDataSourceFactory dataSourceFactory, IDataParserFactory dataParserFactory,
             Map<String, String> configuration, boolean isFeed, IFeedLogManager feedLogManager)
             throws HyracksDataException {
-        IExternalFilterValueEmbedder valueEmbedder =
-                dataSourceFactory.createFilterValueEmbedder(ctx.getWarningCollector());
+        IExternalDataRuntimeContext runtimeContext = dataSourceFactory.createExternalDataRuntimeContext(ctx, partition);
         try {
             switch (dataSourceFactory.getDataSourceType()) {
                 case RECORDS:
                     IRecordReaderFactory<?> recordReaderFactory = (IRecordReaderFactory<?>) dataSourceFactory;
-                    IRecordReader<?> recordReader = recordReaderFactory.createRecordReader(ctx, partition);
-                    recordReader.setValueEmbedder(valueEmbedder);
+                    IRecordReader<?> recordReader = recordReaderFactory.createRecordReader(runtimeContext);
                     IRecordDataParserFactory<?> recordParserFactory = (IRecordDataParserFactory<?>) dataParserFactory;
-                    IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(ctx);
-                    // TODO(ali): revisit to think about passing data source name via setter or via createRecordParser
-                    dataParser.configure(recordReader.getDataSourceName(), recordReader.getLineNumber());
-                    dataParser.setValueEmbedder(valueEmbedder);
+                    IRecordDataParser<?> dataParser = recordParserFactory.createRecordParser(runtimeContext);
                     if (isFeed) {
                         boolean isChangeFeed = ExternalDataUtils.isChangeFeed(configuration);
                         boolean isRecordWithMeta = ExternalDataUtils.isRecordWithMeta(configuration);
@@ -99,13 +94,11 @@ public class DataflowControllerProvider {
                     }
                 case STREAM:
                     IInputStreamFactory streamFactory = (IInputStreamFactory) dataSourceFactory;
-                    AsterixInputStream stream = streamFactory.createInputStream(ctx, partition);
-                    stream.setValueEmbedder(valueEmbedder);
+                    AsterixInputStream stream = streamFactory.createInputStream(runtimeContext);
                     IStreamDataParserFactory streamParserFactory = (IStreamDataParserFactory) dataParserFactory;
                     // TODO(ali): revisit to think about passing data source name to parser
-                    IStreamDataParser streamParser = streamParserFactory.createInputStreamParser(ctx, partition);
+                    IStreamDataParser streamParser = streamParserFactory.createInputStreamParser(runtimeContext);
                     streamParser.setInputStream(stream);
-                    streamParser.setValueEmbedder(valueEmbedder);
                     if (isFeed) {
                         return new FeedStreamDataFlowController(ctx, feedLogManager, streamParser, stream);
                     } else {

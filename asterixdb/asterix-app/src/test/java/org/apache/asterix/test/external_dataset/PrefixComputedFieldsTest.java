@@ -24,17 +24,21 @@ import static org.apache.asterix.om.types.BuiltinType.ASTRING;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.junit.Test;
 
 import junit.framework.TestCase;
 
 public class PrefixComputedFieldsTest extends TestCase {
+    private final Map<String, String> configuration = new HashMap<>();
 
     @Test
     public void test() throws Exception {
@@ -49,7 +53,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix1 = "";
-        prefix = new ExternalDataPrefix(prefix1);
+        prefix = createExternalDataPrefix(prefix1);
         assertEquals("", prefix.getOriginal());
         assertEquals("", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -60,7 +64,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix2 = "hotel";
-        prefix = new ExternalDataPrefix(prefix2);
+        prefix = createExternalDataPrefix(prefix2);
         assertEquals("hotel", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -71,7 +75,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertTrue(prefix.getIndexToComputedFieldsMap().isEmpty());
 
         String prefix3 = "hotel/{hotel-id:inT}/";
-        prefix = new ExternalDataPrefix(prefix3);
+        prefix = createExternalDataPrefix(prefix3);
         assertEquals("hotel/{hotel-id:inT}/", prefix.getOriginal());
         assertEquals("hotel/", prefix.getRoot());
         assertTrue(prefix.isEndsWithSlash());
@@ -82,7 +86,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)", prefix.getIndexToComputedFieldsMap().get(1).getExpression());
 
         String prefix4 = "hotel/{hotel-id:int}-{hotel-name:sTRing}";
-        prefix = new ExternalDataPrefix(prefix4);
+        prefix = createExternalDataPrefix(prefix4);
         assertEquals("hotel/{hotel-id:int}-{hotel-name:sTRing}", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -93,7 +97,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)-(.+)", prefix.getIndexToComputedFieldsMap().get(1).getExpression());
 
         String prefix5 = "hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}-{month:int}-{day:int}/";
-        prefix = new ExternalDataPrefix(prefix5);
+        prefix = createExternalDataPrefix(prefix5);
         assertEquals("hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}-{month:int}-{day:int}/",
                 prefix.getOriginal());
         assertEquals("hotel/something/", prefix.getRoot());
@@ -107,7 +111,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)-(.+)-(.+)", prefix.getIndexToComputedFieldsMap().get(4).getExpression());
 
         String prefix6 = "hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}/{month:int}/{day:int}";
-        prefix = new ExternalDataPrefix(prefix6);
+        prefix = createExternalDataPrefix(prefix6);
         assertEquals("hotel/something/{hotel-id:int}-{hotel-name:sTRing}/review/{year:int}/{month:int}/{day:int}",
                 prefix.getOriginal());
         assertEquals("hotel/something", prefix.getRoot());
@@ -123,7 +127,7 @@ public class PrefixComputedFieldsTest extends TestCase {
         assertEquals("(.+)", prefix.getIndexToComputedFieldsMap().get(6).getExpression());
 
         String prefix7 = "hotel/{hotel.details.id:int}-{hotel-name:sTRing}";
-        prefix = new ExternalDataPrefix(prefix7);
+        prefix = createExternalDataPrefix(prefix7);
         assertEquals("hotel/{hotel.details.id:int}-{hotel-name:sTRing}", prefix.getOriginal());
         assertEquals("hotel", prefix.getRoot());
         assertFalse(prefix.isEndsWithSlash());
@@ -134,7 +138,7 @@ public class PrefixComputedFieldsTest extends TestCase {
 
         String prefix8 =
                 "hotel/hotel-{hotel-id:int}-hotel-{hotel-name:sTRing}/review/year-{year:int}/{month:int}-month/day-{day:int}-day";
-        prefix = new ExternalDataPrefix(prefix8);
+        prefix = createExternalDataPrefix(prefix8);
         assertEquals(
                 "hotel/hotel-{hotel-id:int}-hotel-{hotel-name:sTRing}/review/year-{year:int}/{month:int}-month/day-{day:int}-day",
                 prefix.getOriginal());
@@ -174,5 +178,11 @@ public class PrefixComputedFieldsTest extends TestCase {
             }
             System.out.println("\n");
         }
+    }
+
+    private ExternalDataPrefix createExternalDataPrefix(String path) throws AlgebricksException {
+        configuration.clear();
+        configuration.put(ExternalDataConstants.KEY_PATH, path);
+        return new ExternalDataPrefix(configuration);
     }
 }

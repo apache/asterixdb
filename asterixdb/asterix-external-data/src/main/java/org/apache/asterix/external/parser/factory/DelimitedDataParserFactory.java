@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
@@ -29,7 +30,6 @@ import org.apache.asterix.external.parser.DelimitedDataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
 
@@ -41,17 +41,18 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
                     ExternalDataConstants.FORMAT_DELIMITED_TEXT, ExternalDataConstants.FORMAT_TSV));
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        return createParser(ctx);
+    public IRecordDataParser<char[]> createRecordParser(IExternalDataRuntimeContext context)
+            throws HyracksDataException {
+        return createParser(context);
     }
 
-    private DelimitedDataParser createParser(IHyracksTaskContext ctx) throws HyracksDataException {
+    private DelimitedDataParser createParser(IExternalDataRuntimeContext context) throws HyracksDataException {
         IValueParserFactory[] valueParserFactories = ExternalDataUtils.getValueParserFactories(recordType);
         char delimiter = ExternalDataUtils.validateGetDelimiter(configuration);
         char quote = ExternalDataUtils.validateGetQuote(configuration, delimiter);
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
         String nullString = configuration.get(ExternalDataConstants.KEY_NULL_STR);
-        return new DelimitedDataParser(ctx, valueParserFactories, delimiter, quote, hasHeader, recordType,
+        return new DelimitedDataParser(context, valueParserFactories, delimiter, quote, hasHeader, recordType,
                 ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM), nullString);
     }
 
@@ -61,9 +62,8 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
     }
 
     @Override
-    public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
-        return createParser(ctx);
+    public IStreamDataParser createInputStreamParser(IExternalDataRuntimeContext context) throws HyracksDataException {
+        return createParser(context);
     }
 
     @Override

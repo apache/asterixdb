@@ -29,6 +29,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.TransactionState;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
@@ -71,6 +72,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
     }
 
     public Map<String, String> getProperties() {
+        properties.computeIfAbsent(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, k -> getAdapter());
         return properties;
     }
 

@@ -30,6 +30,7 @@ import java.util.zip.GZIPInputStream;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
@@ -49,8 +50,9 @@ public class GCSInputStream extends AbstractExternalInputStream {
     private final String container;
     private static final int MAX_ATTEMPTS = 5; // We try a total of 5 times in case of retryable errors
 
-    public GCSInputStream(Map<String, String> configuration, List<String> filePaths) throws HyracksDataException {
-        super(configuration, filePaths);
+    public GCSInputStream(Map<String, String> configuration, List<String> filePaths,
+            IExternalFilterValueEmbedder valueEmbedder) throws HyracksDataException {
+        super(configuration, filePaths, valueEmbedder);
         this.client = buildClient(configuration);
         this.container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
     }

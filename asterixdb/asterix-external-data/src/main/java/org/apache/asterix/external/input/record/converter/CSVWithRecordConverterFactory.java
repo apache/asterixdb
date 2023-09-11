@@ -22,12 +22,12 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class CSVWithRecordConverterFactory implements IRecordConverterFactory<char[], RecordWithMetadataAndPK<char[]>> {
 
@@ -41,9 +41,10 @@ public class CSVWithRecordConverterFactory implements IRecordConverterFactory<ch
     private IAType[] keyTypes;
 
     @Override
-    public IRecordConverter<char[], RecordWithMetadataAndPK<char[]>> createConverter(IHyracksTaskContext ctx) {
+    public IRecordConverter<char[], RecordWithMetadataAndPK<char[]>> createConverter(
+            IExternalDataRuntimeContext context) {
         return new CSVToRecordWithMetadataAndPKConverter(recordIndex, delimiter, metaType, recordType, keyIndicators,
-                keyIndexes, keyTypes, ctx.getWarningCollector());
+                keyIndexes, keyTypes, context);
     }
 
     @Override

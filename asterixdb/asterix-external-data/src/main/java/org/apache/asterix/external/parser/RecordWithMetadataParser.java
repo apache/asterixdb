@@ -20,8 +20,6 @@ package org.apache.asterix.external.parser;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.external.api.IDataParser;
@@ -112,11 +110,5 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     @Override
     public void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws HyracksDataException {
         rwm.appendPrimaryKeyToTuple(tb);
-    }
-
-    @Override
-    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
-        this.recordParser.configure(dataSourceName, lineNumber);
-        this.converter.configure(lineNumber);
     }
 }

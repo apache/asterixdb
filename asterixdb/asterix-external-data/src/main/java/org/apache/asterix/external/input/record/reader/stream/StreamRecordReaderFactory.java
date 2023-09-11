@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IInputStreamFactory;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
@@ -35,6 +36,7 @@ import org.apache.asterix.external.input.stream.factory.LocalFSInputStreamFactor
 import org.apache.asterix.external.input.stream.factory.SocketClientInputStreamFactory;
 import org.apache.asterix.external.input.stream.factory.SocketServerInputStreamFactory;
 import org.apache.asterix.external.provider.StreamRecordReaderProvider;
+import org.apache.asterix.external.provider.context.ExternalReaderRuntimeDataContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -82,22 +84,19 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public final IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public final IRecordReader<? extends char[]> createRecordReader(IExternalDataRuntimeContext context)
             throws HyracksDataException {
-        try {
-            StreamRecordReader streamRecordReader =
-                    (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
-            streamRecordReader.configure(ctx, streamFactory.createInputStream(ctx, partition), configuration);
-            return streamRecordReader;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException e) {
-            throw HyracksDataException.create(e);
-        }
+        StreamRecordReader reader = createReader(context);
+        ((ExternalReaderRuntimeDataContext) context).setReader(reader);
+        return reader;
     }
 
     @Override
-    public final IExternalFilterValueEmbedder createFilterValueEmbedder(IWarningCollector warningCollector) {
-        return filterEvaluatorFactory.createValueEmbedder(warningCollector);
+    public final IExternalDataRuntimeContext createExternalDataRuntimeContext(IHyracksTaskContext context,
+            int partition) throws HyracksDataException {
+        IExternalFilterValueEmbedder valueEmbedder =
+                filterEvaluatorFactory.createValueEmbedder(context.getWarningCollector());
+        return new ExternalReaderRuntimeDataContext(context, partition, valueEmbedder);
     }
 
     @Override
@@ -116,6 +115,20 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<char[]> {
             streamFactory = new SocketClientInputStreamFactory();
         } else {
             throw new CompilationException(ErrorCode.FEED_UNKNOWN_ADAPTER_NAME);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private StreamRecordReader createReader(IExternalDataRuntimeContext context) throws HyracksDataException {
+        try {
+            StreamRecordReader streamRecordReader =
+                    (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
+            streamRecordReader.configure(context.getTaskContext(), streamFactory.createInputStream(context),
+                    configuration);
+            return streamRecordReader;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
+                | NoSuchMethodException e) {
+            throw HyracksDataException.create(e);
         }
     }
 }

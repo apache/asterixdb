@@ -45,17 +45,12 @@ public final class NoOpFilterValueEmbedder implements IExternalFilterValueEmbedd
     }
 
     @Override
-    public boolean shouldEmbed(IValueReference fieldName, ATypeTag typeTag) {
-        return false;
-    }
-
-    @Override
     public IValueReference getEmbeddedValue() {
         throw new IllegalAccessError("Cannot embed a value to " + this.getClass().getName());
     }
 
     @Override
-    public boolean IsMissingEmbeddedValues() {
+    public boolean isMissingEmbeddedValues() {
         return false;
     }
 

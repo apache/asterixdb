@@ -79,7 +79,7 @@ public class AzureBlobParquetReaderFactory extends HDFSDataSourceFactory {
         putAzureBlobConfToHadoopConf(configuration, path);
 
         // configure Hadoop Azure input splits
-        JobConf conf = createHdfsConf(serviceCtx, configuration);
+        JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
     }

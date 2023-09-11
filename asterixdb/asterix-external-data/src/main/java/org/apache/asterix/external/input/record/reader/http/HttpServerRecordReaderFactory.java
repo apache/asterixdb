@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -32,7 +33,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.http.server.HttpServerConfigBuilder;
@@ -54,10 +54,10 @@ public class HttpServerRecordReaderFactory implements IRecordReaderFactory<char[
     private List<Pair<String, Integer>> serverAddrs;
 
     @Override
-    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public IRecordReader<? extends char[]> createRecordReader(IExternalDataRuntimeContext context)
             throws HyracksDataException {
         try {
-            return new HttpServerRecordReader(serverAddrs.get(partition).getRight(), entryPoint, queueSize,
+            return new HttpServerRecordReader(serverAddrs.get(context.getPartition()).getRight(), entryPoint, queueSize,
                     HttpServerConfigBuilder.createDefault());
         } catch (Exception e) {
             throw HyracksDataException.create(e);

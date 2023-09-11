@@ -21,10 +21,10 @@ package org.apache.asterix.external.input.record.converter;
 import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordConverter;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 import com.couchbase.client.core.message.dcp.DCPRequest;
 
@@ -51,7 +51,8 @@ public class DCPConverterFactory implements IRecordConverterFactory<DCPRequest, 
     }
 
     @Override
-    public IRecordConverter<DCPRequest, RecordWithMetadataAndPK<char[]>> createConverter(IHyracksTaskContext ctx) {
+    public IRecordConverter<DCPRequest, RecordWithMetadataAndPK<char[]>> createConverter(
+            IExternalDataRuntimeContext context) {
         return new DCPMessageToRecordConverter();
     }
 

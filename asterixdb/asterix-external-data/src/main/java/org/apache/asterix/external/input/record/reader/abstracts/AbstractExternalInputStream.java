@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.stream.AbstractMultipleInputStream;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.logging.log4j.LogManager;
@@ -36,11 +37,14 @@ public abstract class AbstractExternalInputStream extends AbstractMultipleInputS
 
     // File fields
     protected final List<String> filePaths;
+    private final IExternalFilterValueEmbedder valueEmbedder;
     protected int nextFileIndex = 0;
 
-    public AbstractExternalInputStream(Map<String, String> configuration, List<String> filePaths) {
+    public AbstractExternalInputStream(Map<String, String> configuration, List<String> filePaths,
+            IExternalFilterValueEmbedder valueEmbedder) {
         this.configuration = configuration;
         this.filePaths = filePaths;
+        this.valueEmbedder = valueEmbedder;
     }
 
     @Override

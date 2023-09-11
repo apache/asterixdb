@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
@@ -59,9 +59,9 @@ public class FunctionDataSourceFactory implements IRecordReaderFactory<char[]> {
     }
 
     @Override
-    public IRecordReader<? extends char[]> createRecordReader(IHyracksTaskContext ctx, int partition)
+    public IRecordReader<? extends char[]> createRecordReader(IExternalDataRuntimeContext context)
             throws HyracksDataException {
-        return function.createRecordReader(ctx, partition);
+        return function.createRecordReader(context.getTaskContext(), context.getPartition());
     }
 
     @Override

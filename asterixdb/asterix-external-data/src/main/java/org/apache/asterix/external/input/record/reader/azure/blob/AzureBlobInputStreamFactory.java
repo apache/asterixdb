@@ -29,12 +29,13 @@ import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
@@ -45,11 +46,13 @@ public class AzureBlobInputStreamFactory extends AbstractExternalInputStreamFact
     private static final long serialVersionUID = 1L;
 
     @Override
-    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, int partition) throws HyracksDataException {
-        IApplicationContext appCtx =
-                (IApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
+    public AsterixInputStream createInputStream(IExternalDataRuntimeContext context) throws HyracksDataException {
+        IApplicationContext appCtx = (IApplicationContext) context.getTaskContext().getJobletContext()
+                .getServiceContext().getApplicationContext();
+        IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
+        int partition = context.getPartition();
         return new AzureBlobInputStream(appCtx, configuration,
-                partitionWorkLoadsBasedOnSize.get(partition).getFilePaths());
+                partitionWorkLoadsBasedOnSize.get(partition).getFilePaths(), valueEmbedder);
     }
 
     @Override

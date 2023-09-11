@@ -30,8 +30,6 @@ public interface IExternalFilterValueEmbedder extends IExternalFilterEmbeddedVal
 
     boolean shouldEmbed(String fieldName, ATypeTag typeTag);
 
-    boolean shouldEmbed(IValueReference fieldName, ATypeTag typeTag);
-
     void enterObject();
 
     void exitObject();

@@ -34,17 +34,16 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IDataParser;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -65,20 +64,20 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final ArrayBackedValueStorage fieldValueBuffer;
     private final DataOutput fieldValueBufferOutput;
     private final IValueParser[] valueParsers;
-    private FieldCursorForDelimitedDataParser cursor;
-    private Supplier<String> dataSourceName;
-    private LongSupplier lineNumber;
+    private final Supplier<String> dataSourceName;
+    private final LongSupplier lineNumber;
     private final byte[] fieldTypeTags;
     private final int[] fldIds;
     private final ArrayBackedValueStorage[] nameBuffers;
     private final char[] nullChars;
+    private FieldCursorForDelimitedDataParser cursor;
 
-    public DelimitedDataParser(IHyracksTaskContext ctx, IValueParserFactory[] valueParserFactories, char fieldDelimiter,
-            char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser, String nullString)
-            throws HyracksDataException {
-        this.dataSourceName = ExternalDataConstants.EMPTY_STRING;
-        this.lineNumber = ExternalDataConstants.NO_LINES;
-        this.warnings = ctx.getWarningCollector();
+    public DelimitedDataParser(IExternalDataRuntimeContext context, IValueParserFactory[] valueParserFactories,
+            char fieldDelimiter, char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser,
+            String nullString) throws HyracksDataException {
+        this.dataSourceName = context.getDatasourceNameSupplier();
+        this.lineNumber = context.getLineNumberSupplier();
+        this.warnings = context.getTaskContext().getWarningCollector();
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
         this.hasHeader = hasHeader;
@@ -243,13 +242,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
                 this::getDataSourceName);
         return true;
-    }
-
-    @Override
-    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
-        this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
-        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
-
     }
 
     private String getDataSourceName() {

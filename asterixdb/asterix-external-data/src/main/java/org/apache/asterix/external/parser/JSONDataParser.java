@@ -23,17 +23,15 @@ import static org.apache.asterix.common.exceptions.ErrorCode.PARSER_DATA_PARSER_
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.parser.jackson.ADMToken;
-import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.provider.context.NoOpExternalRuntimeDataContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -48,23 +46,28 @@ import com.fasterxml.jackson.databind.node.TreeTraversingParser;
 public class JSONDataParser extends AbstractJsonDataParser implements IStreamDataParser, IRecordDataParser<char[]> {
 
     /**
-     * Initialize JSONDataParser
+     * This constructor is used by several query runtime evaluators and tests
      *
      * @param recordType  defined type.
      * @param jsonFactory Jackson JSON parser factory.
      */
     public JSONDataParser(ARecordType recordType, JsonFactory jsonFactory) {
-        super(recordType, jsonFactory);
+        this(recordType, jsonFactory, NoOpExternalRuntimeDataContext.INSTANCE);
+    }
+
+    /**
+     * Initialize JSONDataParser
+     *
+     * @param recordType  defined type.
+     * @param jsonFactory Jackson JSON parser factory.
+     */
+    public JSONDataParser(ARecordType recordType, JsonFactory jsonFactory, IExternalDataRuntimeContext context) {
+        super(recordType, jsonFactory, context);
     }
 
     @Override
     public void setInputStream(InputStream in) throws IOException {
         setInput(jsonFactory.createParser(in));
-    }
-
-    @Override
-    public void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
-        this.valueEmbedder = valueEmbedder;
     }
 
     public void setInputNode(JsonNode node) {
@@ -91,12 +94,6 @@ public class JSONDataParser extends AbstractJsonDataParser implements IStreamDat
         } catch (IOException e) {
             throw createException(e);
         }
-    }
-
-    @Override
-    public void configure(Supplier<String> dataSourceName, LongSupplier lineNumber) {
-        this.dataSourceName = dataSourceName == null ? ExternalDataConstants.EMPTY_STRING : dataSourceName;
-        this.lineNumber = lineNumber == null ? ExternalDataConstants.NO_LINES : lineNumber;
     }
 
     @Override

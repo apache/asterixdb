@@ -34,6 +34,7 @@ import org.apache.asterix.external.input.record.reader.stream.LineRecordReader;
 import org.apache.asterix.external.input.stream.LocalFSInputStream;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.parser.RecordWithMetadataParser;
+import org.apache.asterix.external.provider.context.DefaultExternalRuntimeDataContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.FileSystemWatcher;
 import org.apache.asterix.formats.nontagged.ADMPrinterFactoryProvider;
@@ -97,7 +98,7 @@ public class RecordWithMetaTest {
             // create csv with json record reader
             CSVToRecordWithMetadataAndPKConverter recordConverter =
                     new CSVToRecordWithMetadataAndPKConverter(valueIndex, delimiter, metaType, recordType, pkIndicators,
-                            pkIndexes, keyTypes, ctx.getWarningCollector());
+                            pkIndexes, keyTypes, new DefaultExternalRuntimeDataContext(ctx));
             // create the value parser <ADM in this case>
             ADMDataParser valueParser = new ADMDataParser(recordType, false);
             // create parser.

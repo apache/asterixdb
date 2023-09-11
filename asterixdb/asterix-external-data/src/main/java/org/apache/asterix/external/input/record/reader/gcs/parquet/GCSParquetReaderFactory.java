@@ -69,7 +69,7 @@ public class GCSParquetReaderFactory extends HDFSDataSourceFactory {
         putGCSConfToHadoopConf(configuration, path);
 
         // configure hadoop input splits
-        JobConf conf = createHdfsConf(serviceCtx, configuration);
+        JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         int numberOfPartitions = getPartitionConstraint().getLocations().length;
         GCSUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
         configureHdfsConf(conf, configuration);

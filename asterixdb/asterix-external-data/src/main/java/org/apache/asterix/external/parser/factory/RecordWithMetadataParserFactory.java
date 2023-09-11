@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IRecordDataParserFactory;
 import org.apache.asterix.external.input.record.RecordWithMetadataAndPK;
@@ -36,7 +37,6 @@ import org.apache.asterix.external.util.ExternalDataCompatibilityUtils;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserFactory<I> {
@@ -98,9 +98,9 @@ public class RecordWithMetadataParserFactory<I, O> implements IRecordDataParserF
     }
 
     @Override
-    public IRecordDataParser<I> createRecordParser(IHyracksTaskContext ctx) throws HyracksDataException {
-        IRecordDataParser<O> recordParser = recordParserFactory.createRecordParser(ctx);
-        return new RecordWithMetadataParser<I, O>(metaType, recordParser, converterFactory.createConverter(ctx));
+    public IRecordDataParser<I> createRecordParser(IExternalDataRuntimeContext context) throws HyracksDataException {
+        IRecordDataParser<O> recordParser = recordParserFactory.createRecordParser(context);
+        return new RecordWithMetadataParser<I, O>(metaType, recordParser, converterFactory.createConverter(context));
     }
 
 }

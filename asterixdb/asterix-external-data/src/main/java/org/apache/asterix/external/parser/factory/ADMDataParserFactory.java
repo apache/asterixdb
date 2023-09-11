@@ -22,14 +22,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IExternalDataSourceFactory.DataSourceType;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
 import org.apache.asterix.external.parser.ADMDataParser;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char[]> {
 
@@ -38,7 +37,7 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
             Collections.unmodifiableList(Arrays.asList("adm", "semi-structured"));
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IHyracksTaskContext ctx) {
+    public IRecordDataParser<char[]> createRecordParser(IExternalDataRuntimeContext context) {
         return createParser();
     }
 
@@ -53,8 +52,7 @@ public class ADMDataParserFactory extends AbstractRecordStreamParserFactory<char
     }
 
     @Override
-    public IStreamDataParser createInputStreamParser(IHyracksTaskContext ctx, int partition)
-            throws HyracksDataException {
+    public IStreamDataParser createInputStreamParser(IExternalDataRuntimeContext context) {
         return createParser();
     }
 

@@ -16,14 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.common.external;
+package org.apache.asterix.external.api;
 
-public interface IExternalFilterEmbeddedValueInformation {
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 
-    String[] getEmbeddedFieldNames();
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-    boolean isMissingEmbeddedValues();
+/**
+ * A runtime context, where different {@link IRecordReader} and {@link IDataParser} can have different implementations
+ * of this interface. This context can be created by {@link IExternalDataSourceFactory}.
+ */
+public interface IExternalDataRuntimeContext {
+    IHyracksTaskContext getTaskContext();
 
-    boolean isMissing(String fieldName);
+    int getPartition();
 
+    IExternalFilterValueEmbedder getValueEmbedder();
+
+    Supplier<String> getDatasourceNameSupplier();
+
+    LongSupplier getLineNumberSupplier();
 }

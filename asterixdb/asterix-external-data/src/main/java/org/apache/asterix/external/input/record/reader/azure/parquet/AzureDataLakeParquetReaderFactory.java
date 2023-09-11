@@ -66,7 +66,7 @@ public class AzureDataLakeParquetReaderFactory extends HDFSDataSourceFactory {
         putAzureDataLakeConfToHadoopConf(configuration, path);
 
         //Configure Hadoop Azure input splits
-        JobConf conf = createHdfsConf(serviceCtx, configuration);
+        JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
         configureAzureHdfsJobConf(conf, configuration, endPoint);
         configureHdfsConf(conf, configuration);
     }

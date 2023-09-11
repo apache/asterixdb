@@ -60,7 +60,7 @@ class EmbeddedValueBuilder {
     }
 
     void build(String path) throws HyracksDataException {
-        List<String> values = prefix.getValues(path);
+        List<String> values = prefix.getValues(prefix.removeProtocolContainerPair(path));
         build(allPaths, values);
     }
 

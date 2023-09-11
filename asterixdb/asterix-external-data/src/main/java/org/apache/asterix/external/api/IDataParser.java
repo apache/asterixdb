@@ -24,7 +24,6 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
-import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AMutableOrderedList;
 import org.apache.asterix.om.base.AMutableRecord;
@@ -39,9 +38,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public interface IDataParser {
-    default void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
-        // NoOp
-    }
 
     /*
      * The following two static methods are expensive. right now, they are used by RSSFeeds and
