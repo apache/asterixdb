@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FULL_TEXT_FILTER;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FULL_TEXT_FILTER_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FULL_TEXT_FILTER_TYPE;
@@ -39,6 +40,13 @@ public final class FullTextFilterEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_FULL_TEXT_FILTER_NAME)), 0,
                     fullTextFilterType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final FullTextFilterEntity DB_FULL_TEXT_CONFIG =
+            new FullTextFilterEntity(new MetadataIndex(PROPERTIES_FULL_TEXT_FILTER, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_FULL_TEXT_FILTER_NAME)),
+                    0, databaseFullTextFilterType(), true, new int[] { 0, 1, 2 }), 3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -93,5 +101,13 @@ public final class FullTextFilterEntity {
                 new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FULL_TEXT_FILTER_NAME,
                         FIELD_NAME_FULL_TEXT_FILTER_TYPE },
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING }, true);
+    }
+
+    private static ARecordType databaseFullTextFilterType() {
+        return MetadataRecordTypes.createRecordType(RECORD_NAME_FULL_TEXT_FILTER,
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FULL_TEXT_FILTER_NAME,
+                        FIELD_NAME_FULL_TEXT_FILTER_TYPE },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                true);
     }
 }

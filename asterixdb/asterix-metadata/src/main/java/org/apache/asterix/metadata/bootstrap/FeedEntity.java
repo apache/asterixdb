@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.bootstrap;
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FEED;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FEED_ADAPTER_CONFIGURATION_RECORDTYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_ADAPTER_CONFIGURATION;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FEED_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TIMESTAMP;
@@ -42,6 +43,15 @@ public final class FeedEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_FEED_NAME)), 0, feedType(),
                     true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final FeedEntity DB_FEED =
+            new FeedEntity(
+                    new MetadataIndex(PROPERTIES_FEED, 4,
+                            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                            Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                                    List.of(FIELD_NAME_FEED_NAME)),
+                            0, databaseFeedType(), true, new int[] { 0, 1, 2 }),
+                    3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -106,6 +116,20 @@ public final class FeedEntity {
                         FIELD_NAME_TIMESTAMP },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AUnorderedListType(FEED_ADAPTER_CONFIGURATION_RECORDTYPE, null), BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseFeedType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_FEED,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME,
+                        FIELD_NAME_ADAPTER_CONFIGURATION, FIELD_NAME_TIMESTAMP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AUnorderedListType(FEED_ADAPTER_CONFIGURATION_RECORDTYPE, null), BuiltinType.ASTRING },
                 //IsOpen?
                 true);

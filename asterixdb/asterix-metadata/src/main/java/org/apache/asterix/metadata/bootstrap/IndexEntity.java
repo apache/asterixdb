@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_INDEX;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_INDEX_NAME;
@@ -48,6 +49,12 @@ public final class IndexEntity {
                                     List.of(FIELD_NAME_INDEX_NAME)),
                             0, indexType(), true, new int[] { 0, 1, 2 }),
                     3, -1);
+
+    private static final IndexEntity DB_INDEX = new IndexEntity(new MetadataIndex(PROPERTIES_INDEX, 5,
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+            Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                    List.of(FIELD_NAME_DATASET_NAME), List.of(FIELD_NAME_INDEX_NAME)),
+            0, databaseIndexType(), true, new int[] { 0, 1, 2, 3 }), 4, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -137,6 +144,23 @@ public final class IndexEntity {
                         FIELD_NAME_PENDING_OP },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AOrderedListType(new AOrderedListType(BuiltinType.ASTRING, null), null),
+                        BuiltinType.ABOOLEAN, BuiltinType.ASTRING, BuiltinType.AINT32 },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseIndexType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_INDEX,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATASET_NAME,
+                        FIELD_NAME_INDEX_NAME, FIELD_NAME_INDEX_STRUCTURE, FIELD_NAME_SEARCH_KEY, FIELD_NAME_IS_PRIMARY,
+                        FIELD_NAME_TIMESTAMP, FIELD_NAME_PENDING_OP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING,
                         new AOrderedListType(new AOrderedListType(BuiltinType.ASTRING, null), null),
                         BuiltinType.ABOOLEAN, BuiltinType.ASTRING, BuiltinType.AINT32 },
                 //IsOpen?

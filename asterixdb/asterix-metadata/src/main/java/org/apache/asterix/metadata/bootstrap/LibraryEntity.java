@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_LIBRARY;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TIMESTAMP;
@@ -39,6 +40,15 @@ public final class LibraryEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_NAME)), 0, libraryType(), true,
                     new int[] { 0, 1 }),
             2, -1);
+
+    private static final LibraryEntity DB_LIBRARY =
+            new LibraryEntity(
+                    new MetadataIndex(PROPERTIES_LIBRARY, 4,
+                            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                            Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                                    List.of(FIELD_NAME_NAME)),
+                            0, databaseLibraryType(), true, new int[] { 0, 1, 2 }),
+                    3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -96,6 +106,19 @@ public final class LibraryEntity {
                 new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_NAME, FIELD_NAME_TIMESTAMP },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseLibraryType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_LIBRARY,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_NAME,
+                        FIELD_NAME_TIMESTAMP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
                 //IsOpen?
                 true);
     }

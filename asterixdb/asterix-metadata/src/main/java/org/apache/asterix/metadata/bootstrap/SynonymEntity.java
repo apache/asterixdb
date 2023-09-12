@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_SYNONYM;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_OBJECT_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_OBJECT_NAME;
@@ -40,6 +41,14 @@ public final class SynonymEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_SYNONYM_NAME)), 0,
                     synonymType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final SynonymEntity DB_SYNONYM = new SynonymEntity(
+            new MetadataIndex(PROPERTIES_SYNONYM, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_SYNONYM_NAME)),
+                    0, databaseSynonymType(), true, new int[] { 0, 1, 2 }),
+            3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -104,6 +113,20 @@ public final class SynonymEntity {
                         FIELD_NAME_OBJECT_NAME },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseSynonymType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_SYNONYM,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_SYNONYM_NAME,
+                        FIELD_NAME_OBJECT_DATAVERSE_NAME, FIELD_NAME_OBJECT_NAME },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING },
                 //IsOpen?
                 true);
     }

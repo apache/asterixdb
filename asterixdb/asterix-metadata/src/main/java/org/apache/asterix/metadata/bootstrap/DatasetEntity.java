@@ -25,6 +25,7 @@ import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.DATASET_
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.EXTERNAL_DETAILS_RECORDTYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_COMPACTION_POLICY;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_COMPACTION_POLICY_PROPERTIES;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_ID;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_TYPE;
@@ -57,6 +58,14 @@ public final class DatasetEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_DATASET_NAME)), 0,
                     datasetType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final DatasetEntity DB_DATASET = new DatasetEntity(
+            new MetadataIndex(PROPERTIES_DATASET, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_DATASET_NAME)),
+                    0, databaseDatasetType(), true, new int[] { 0, 1, 2 }),
+            3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -185,6 +194,28 @@ public final class DatasetEntity {
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AOrderedListType(COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null),
+                        AUnionType.createUnknownableType(INTERNAL_DETAILS_RECORDTYPE),
+                        AUnionType.createUnknownableType(EXTERNAL_DETAILS_RECORDTYPE),
+                        new AUnorderedListType(DATASET_HINTS_RECORDTYPE, null), BuiltinType.ASTRING, BuiltinType.AINT32,
+                        BuiltinType.AINT32 },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseDatasetType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_DATASET,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATASET_NAME,
+                        FIELD_NAME_DATATYPE_DATAVERSE_NAME, FIELD_NAME_DATATYPE_NAME, FIELD_NAME_DATASET_TYPE,
+                        FIELD_NAME_GROUP_NAME, FIELD_NAME_COMPACTION_POLICY, FIELD_NAME_COMPACTION_POLICY_PROPERTIES,
+                        FIELD_NAME_INTERNAL_DETAILS, FIELD_NAME_EXTERNAL_DETAILS, FIELD_NAME_HINTS,
+                        FIELD_NAME_TIMESTAMP, FIELD_NAME_DATASET_ID, FIELD_NAME_PENDING_OP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AOrderedListType(COMPACTION_POLICY_PROPERTIES_RECORDTYPE, null),
                         AUnionType.createUnknownableType(INTERNAL_DETAILS_RECORDTYPE),
                         AUnionType.createUnknownableType(EXTERNAL_DETAILS_RECORDTYPE),

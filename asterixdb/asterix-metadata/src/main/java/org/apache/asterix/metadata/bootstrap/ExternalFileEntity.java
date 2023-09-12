@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_EXTERNAL_FILE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FILE_MOD_TIME;
@@ -45,6 +46,13 @@ public final class ExternalFileEntity {
                             List.of(FIELD_NAME_FILE_NUMBER)),
                     0, externalFileType(), true, new int[] { 0, 1, 2 }),
             3, -1);
+
+    private static final ExternalFileEntity DB_EXTERNAL_FILE =
+            new ExternalFileEntity(new MetadataIndex(PROPERTIES_EXTERNAL_FILE, 5,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_DATASET_NAME), List.of(FIELD_NAME_FILE_NUMBER)),
+                    0, databaseExternalFileType(), true, new int[] { 0, 1, 2, 3 }), 4, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -128,6 +136,21 @@ public final class ExternalFileEntity {
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ASTRING,
                         BuiltinType.AINT64, BuiltinType.ADATETIME, BuiltinType.AINT32 },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseExternalFileType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_EXTERNAL_FILE,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATASET_NAME,
+                        FIELD_NAME_FILE_NUMBER, FIELD_NAME_FILE_NAME, FIELD_NAME_FILE_SIZE, FIELD_NAME_FILE_MOD_TIME,
+                        FIELD_NAME_PENDING_OP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32,
+                        BuiltinType.ASTRING, BuiltinType.AINT64, BuiltinType.ADATETIME, BuiltinType.AINT32 },
                 //IsOpen?
                 true);
     }

@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.bootstrap;
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_COMPACTION_POLICY;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_CLASSNAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_COMPACTION_POLICY;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.RECORD_NAME_COMPACTION_POLICY;
 
@@ -39,6 +40,13 @@ public final class CompactionPolicyEntity {
                     new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_COMPACTION_POLICY)), 0,
                     compactionPolicyType(), true, new int[] { 0, 1 }), 2, -1);
+
+    private static final CompactionPolicyEntity DB_COMPACTION_POLICY =
+            new CompactionPolicyEntity(new MetadataIndex(PROPERTIES_COMPACTION_POLICY, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_COMPACTION_POLICY)),
+                    0, databaseCompactionPolicyType(), true, new int[] { 0, 1, 2 }), 3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -96,6 +104,19 @@ public final class CompactionPolicyEntity {
                 new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_COMPACTION_POLICY, FIELD_NAME_CLASSNAME },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseCompactionPolicyType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_COMPACTION_POLICY,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_COMPACTION_POLICY,
+                        FIELD_NAME_CLASSNAME },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
                 //IsOpen?
                 true);
     }

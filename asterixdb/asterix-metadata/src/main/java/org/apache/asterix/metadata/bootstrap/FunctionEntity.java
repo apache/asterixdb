@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FUNCTION;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_ARITY;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DEFINITION;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DEPENDENCIES;
@@ -45,6 +46,12 @@ public final class FunctionEntity {
             new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
             Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_NAME), List.of(FIELD_NAME_ARITY)), 0,
             functionType(), true, new int[] { 0, 1, 2 }), 3, -1);
+
+    private static final FunctionEntity DB_FUNCTION = new FunctionEntity(new MetadataIndex(PROPERTIES_FUNCTION, 5,
+            new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+            Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                    List.of(FIELD_NAME_NAME), List.of(FIELD_NAME_ARITY)),
+            0, databaseFunctionType(), true, new int[] { 0, 1, 2, 3 }), 4, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -140,6 +147,24 @@ public final class FunctionEntity {
                         FIELD_NAME_DEPENDENCIES },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AOrderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AOrderedListType(
+                                new AOrderedListType(new AOrderedListType(BuiltinType.ASTRING, null), null), null) },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseFunctionType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_FUNCTION,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_NAME, FIELD_NAME_ARITY,
+                        FIELD_NAME_PARAMS, FIELD_NAME_RETURN_TYPE, FIELD_NAME_DEFINITION, FIELD_NAME_LANGUAGE,
+                        FIELD_NAME_KIND, FIELD_NAME_DEPENDENCIES },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AOrderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING, BuiltinType.ASTRING,
                         BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AOrderedListType(

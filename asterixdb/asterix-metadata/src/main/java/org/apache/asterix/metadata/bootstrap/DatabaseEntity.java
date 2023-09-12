@@ -19,13 +19,13 @@
 
 package org.apache.asterix.metadata.bootstrap;
 
-import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_DATAVERSE;
+import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_DATABASE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_ID;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATA_FORMAT;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_PENDING_OP;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_SYSTEM_DATABASE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TIMESTAMP;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.RECORD_NAME_DATAVERSE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.RECORD_NAME_DATABASE;
 
 import java.util.List;
 
@@ -33,40 +33,34 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 
-public final class DataverseEntity {
+public final class DatabaseEntity {
 
-    private static final DataverseEntity DATAVERSE =
-            new DataverseEntity(
-                    new MetadataIndex(PROPERTIES_DATAVERSE, 2, new IAType[] { BuiltinType.ASTRING },
-                            List.of(List.of(FIELD_NAME_DATAVERSE_NAME)), 0, dataverseType(), true, new int[] { 0 }),
-                    1, -1);
-
-    private static final DataverseEntity DB_DATAVERSE = new DataverseEntity(
-            new MetadataIndex(PROPERTIES_DATAVERSE, 3, new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
-                    List.of(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME)), 0,
-                    databaseDataverseType(), true, new int[] { 0, 1 }),
-            2, 0);
+    private static final DatabaseEntity DATABASE =
+            new DatabaseEntity(
+                    new MetadataIndex(PROPERTIES_DATABASE, 2, new IAType[] { BuiltinType.ASTRING },
+                            List.of(List.of(FIELD_NAME_DATABASE_NAME)), 0, databaseType(), true, new int[] { 0 }),
+                    1, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
     private final int databaseNameIndex;
-    private final int dataverseNameIndex;
-    private final int dataFormatIndex;
+    private final int databaseIdIndex;
+    private final int systemDatabaseIndex;
     private final int timestampIndex;
     private final int pendingOpIndex;
 
-    private DataverseEntity(MetadataIndex index, int payloadPosition, int startIndex) {
+    private DatabaseEntity(MetadataIndex index, int payloadPosition, int startIndex) {
         this.index = index;
         this.payloadPosition = payloadPosition;
         this.databaseNameIndex = startIndex++;
-        this.dataverseNameIndex = startIndex++;
-        this.dataFormatIndex = startIndex++;
+        this.databaseIdIndex = startIndex++;
+        this.systemDatabaseIndex = startIndex++;
         this.timestampIndex = startIndex++;
         this.pendingOpIndex = startIndex++;
     }
 
-    public static DataverseEntity of(boolean cloudDeployment) {
-        return DATAVERSE;
+    public static DatabaseEntity of(boolean cloudDeployment) {
+        return DATABASE;
     }
 
     public MetadataIndex getIndex() {
@@ -85,12 +79,12 @@ public final class DataverseEntity {
         return databaseNameIndex;
     }
 
-    public int dataverseNameIndex() {
-        return dataverseNameIndex;
+    public int databaseIdIndex() {
+        return databaseIdIndex;
     }
 
-    public int dataFormatIndex() {
-        return dataFormatIndex;
+    public int systemDatabaseIndex() {
+        return systemDatabaseIndex;
     }
 
     public int timestampIndex() {
@@ -101,28 +95,15 @@ public final class DataverseEntity {
         return pendingOpIndex;
     }
 
-    private static ARecordType dataverseType() {
+    private static ARecordType databaseType() {
         return MetadataRecordTypes.createRecordType(
                 // RecordTypeName
-                RECORD_NAME_DATAVERSE,
+                RECORD_NAME_DATABASE,
                 // FieldNames
-                new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATA_FORMAT, FIELD_NAME_TIMESTAMP,
-                        FIELD_NAME_PENDING_OP },
-                // FieldTypes
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.AINT32 },
-                //IsOpen?
-                true);
-    }
-
-    private static ARecordType databaseDataverseType() {
-        return MetadataRecordTypes.createRecordType(
-                // RecordTypeName
-                RECORD_NAME_DATAVERSE,
-                // FieldNames
-                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATA_FORMAT,
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATABASE_ID, FIELD_NAME_SYSTEM_DATABASE,
                         FIELD_NAME_TIMESTAMP, FIELD_NAME_PENDING_OP },
                 // FieldTypes
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ABOOLEAN, BuiltinType.ASTRING,
                         BuiltinType.AINT32 },
                 //IsOpen?
                 true);

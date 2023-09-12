@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FULL_TEXT_CONFIG;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FULL_TEXT_CONFIG_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FULL_TEXT_FILTER_PIPELINE;
@@ -42,6 +43,13 @@ public final class FullTextConfigEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_FULL_TEXT_CONFIG_NAME)), 0,
                     fullTextConfigType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final FullTextConfigEntity DB_FULL_TEXT_CONFIG =
+            new FullTextConfigEntity(new MetadataIndex(PROPERTIES_FULL_TEXT_CONFIG, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_FULL_TEXT_CONFIG_NAME)),
+                    0, databaseFullTextConfigType(), true, new int[] { 0, 1, 2 }), 3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -103,6 +111,18 @@ public final class FullTextConfigEntity {
                         new String[] { FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FULL_TEXT_CONFIG_NAME,
                                 FIELD_NAME_FULL_TEXT_TOKENIZER, FIELD_NAME_FULL_TEXT_FILTER_PIPELINE },
                         new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
+                                AUnionType.createNullableType(BuiltinType.ASTRING), AUnionType.createNullableType(
+                                        new AOrderedListType(BuiltinType.ASTRING, "FullTextFilterPipeline")) },
+                        true);
+    }
+
+    private static ARecordType databaseFullTextConfigType() {
+        return MetadataRecordTypes
+                .createRecordType(RECORD_NAME_FULL_TEXT_CONFIG,
+                        new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME,
+                                FIELD_NAME_FULL_TEXT_CONFIG_NAME, FIELD_NAME_FULL_TEXT_TOKENIZER,
+                                FIELD_NAME_FULL_TEXT_FILTER_PIPELINE },
+                        new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                                 AUnionType.createNullableType(BuiltinType.ASTRING), AUnionType.createNullableType(
                                         new AOrderedListType(BuiltinType.ASTRING, "FullTextFilterPipeline")) },
                         true);

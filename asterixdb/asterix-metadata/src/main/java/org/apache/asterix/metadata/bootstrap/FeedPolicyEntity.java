@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FEED_POLICY;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DESCRIPTION;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_POLICY_NAME;
@@ -42,6 +43,14 @@ public final class FeedPolicyEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_POLICY_NAME)), 0,
                     feedPolicyType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final FeedPolicyEntity DB_FEED_POLICY = new FeedPolicyEntity(
+            new MetadataIndex(PROPERTIES_FEED_POLICY, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_POLICY_NAME)),
+                    0, databaseFeedPolicyType(), true, new int[] { 0, 1, 2 }),
+            3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -106,6 +115,20 @@ public final class FeedPolicyEntity {
                         FIELD_NAME_PROPERTIES },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        new AUnorderedListType(POLICY_PARAMS_RECORDTYPE, null) },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseFeedPolicyType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_FEED_POLICY,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_POLICY_NAME,
+                        FIELD_NAME_DESCRIPTION, FIELD_NAME_PROPERTIES },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AUnorderedListType(POLICY_PARAMS_RECORDTYPE, null) },
                 //IsOpen?
                 true);

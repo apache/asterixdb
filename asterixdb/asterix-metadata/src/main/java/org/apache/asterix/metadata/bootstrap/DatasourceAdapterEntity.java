@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_DATASOURCE_ADAPTER;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_CLASSNAME;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_TIMESTAMP;
@@ -41,6 +42,14 @@ public final class DatasourceAdapterEntity {
                     new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING },
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_NAME)), 0,
                     datasourceAdapterType(), true, new int[] { 0, 1 }), 2, -1);
+
+    private static final DatasourceAdapterEntity DB_DATASOURCE_ADAPTER = new DatasourceAdapterEntity(
+            new MetadataIndex(PROPERTIES_DATASOURCE_ADAPTER, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_NAME)),
+                    0, databaseDatasourceAdapterType(), true, new int[] { 0, 1, 2 }),
+            3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -112,6 +121,20 @@ public final class DatasourceAdapterEntity {
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseDatasourceAdapterType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_DATASOURCE_ADAPTER,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_NAME,
+                        FIELD_NAME_CLASSNAME, FIELD_NAME_TYPE, FIELD_NAME_TIMESTAMP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING, BuiltinType.ASTRING },
                 //IsOpen?
                 true);
     }

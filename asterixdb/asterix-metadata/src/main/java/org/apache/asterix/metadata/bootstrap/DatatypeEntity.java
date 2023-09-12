@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_DATATYPE;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.DERIVEDTYPE_RECORDTYPE;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATATYPE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DERIVED;
@@ -42,6 +43,14 @@ public final class DatatypeEntity {
                     Arrays.asList(List.of(FIELD_NAME_DATAVERSE_NAME), List.of(FIELD_NAME_DATATYPE_NAME)), 0,
                     datatypeType(), true, new int[] { 0, 1 }),
             2, -1);
+
+    private static final DatatypeEntity DB_DATATYPE = new DatatypeEntity(
+            new MetadataIndex(PROPERTIES_DATATYPE, 4,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_DATATYPE_NAME)),
+                    0, databaseDatatypeType(), true, new int[] { 0, 1, 2 }),
+            3, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -106,6 +115,20 @@ public final class DatatypeEntity {
                         FIELD_NAME_TIMESTAMP },
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        AUnionType.createUnknownableType(DERIVEDTYPE_RECORDTYPE), BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseDatatypeType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_DATATYPE,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_DATATYPE_NAME,
+                        FIELD_NAME_DERIVED, FIELD_NAME_TIMESTAMP },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         AUnionType.createUnknownableType(DERIVEDTYPE_RECORDTYPE), BuiltinType.ASTRING },
                 //IsOpen?
                 true);

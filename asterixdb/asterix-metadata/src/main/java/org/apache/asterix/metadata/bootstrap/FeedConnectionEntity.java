@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_FEED_CONNECTION;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_APPLIED_FUNCTIONS;
+import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATASET_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATAVERSE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_FEED_NAME;
@@ -45,6 +46,13 @@ public final class FeedConnectionEntity {
                             List.of(FIELD_NAME_DATASET_NAME)),
                     0, feedConnectionType(), true, new int[] { 0, 1, 2 }),
             3, -1);
+
+    private static final FeedConnectionEntity DB_FEED_CONNECTION =
+            new FeedConnectionEntity(new MetadataIndex(PROPERTIES_FEED_CONNECTION, 5,
+                    new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING },
+                    Arrays.asList(List.of(FIELD_NAME_DATABASE_NAME), List.of(FIELD_NAME_DATAVERSE_NAME),
+                            List.of(FIELD_NAME_FEED_NAME), List.of(FIELD_NAME_DATASET_NAME)),
+                    0, databaseFeedConnectionType(), true, new int[] { 0, 1, 2, 3 }), 4, 0);
 
     private final int payloadPosition;
     private final MetadataIndex index;
@@ -122,6 +130,21 @@ public final class FeedConnectionEntity {
                 // FieldTypes
                 new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
                         new AUnorderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING },
+                //IsOpen?
+                true);
+    }
+
+    private static ARecordType databaseFeedConnectionType() {
+        return MetadataRecordTypes.createRecordType(
+                // RecordTypeName
+                RECORD_NAME_FEED_CONNECTION,
+                // FieldNames
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATAVERSE_NAME, FIELD_NAME_FEED_NAME,
+                        FIELD_NAME_DATASET_NAME, FIELD_NAME_RETURN_TYPE, FIELD_NAME_APPLIED_FUNCTIONS,
+                        FIELD_NAME_POLICY_NAME },
+                // FieldTypes
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING, BuiltinType.ASTRING,
+                        BuiltinType.ASTRING, new AUnorderedListType(BuiltinType.ASTRING, null), BuiltinType.ASTRING },
                 //IsOpen?
                 true);
     }

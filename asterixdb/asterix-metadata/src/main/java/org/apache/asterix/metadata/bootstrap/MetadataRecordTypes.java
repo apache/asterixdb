@@ -44,6 +44,9 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_DATASOURCE_ADAPTER = "DatasourceAdapter";
     public static final String FIELD_NAME_DATATYPE_DATAVERSE_NAME = "DatatypeDataverseName";
     public static final String FIELD_NAME_DATATYPE_NAME = "DatatypeName";
+    public static final String FIELD_NAME_DATABASE_NAME = "DatabaseName";
+    public static final String FIELD_NAME_DATABASE_ID = "DatabaseId";
+    public static final String FIELD_NAME_SYSTEM_DATABASE = "SystemDatabase";
     public static final String FIELD_NAME_DATAVERSE_NAME = "DataverseName";
     public static final String FIELD_NAME_DATA_FORMAT = "DataFormat";
     public static final String FIELD_NAME_DEFAULT = "Default";
@@ -227,6 +230,9 @@ public final class MetadataRecordTypes {
             true);
     //---------------------------------------- Data Type ----------------------------------------//
     public static final String RECORD_NAME_DATATYPE = "DatatypeRecordType";
+
+    //-------------------------------------- Database ------------------------------------------//
+    public static final String RECORD_NAME_DATABASE = "DatabaseRecordType";
 
     //-------------------------------------- Dataverse ------------------------------------------//
     public static final String RECORD_NAME_DATAVERSE = "DataverseRecordType";
