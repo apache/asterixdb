@@ -69,10 +69,13 @@ public class ExternalFilterValueEvaluator implements IExternalFilterValueEvaluat
             case INTEGER:
             case BIGINT:
                 Integer64SerializerDeserializer.write(Long.parseLong(stringValue), output);
+                break;
             case DOUBLE:
                 DoubleSerializerDeserializer.write(Double.parseDouble(stringValue), output);
+                break;
             case STRING:
                 stringSerDer.serialize(stringValue, output);
+                break;
         }
     }
 }
