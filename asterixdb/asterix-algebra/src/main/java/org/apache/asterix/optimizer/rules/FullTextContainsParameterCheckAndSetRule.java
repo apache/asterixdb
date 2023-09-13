@@ -26,9 +26,11 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.utils.FullTextUtil;
+import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.runtime.evaluators.functions.FullTextContainsFunctionDescriptor;
@@ -239,82 +241,111 @@ public class FullTextContainsParameterCheckAndSetRule implements IAlgebraicRewri
                 List<Mutable<ILogicalExpression>> newArgs, String functionName) throws AlgebricksException {
             String ftConfigName = null;
 
-            // Get the last parameter - this should be a record-constructor.
-            AbstractFunctionCallExpression openRecConsExpr = (AbstractFunctionCallExpression) expr.getValue();
-            FunctionIdentifier openRecConsFi = openRecConsExpr.getFunctionIdentifier();
-            if (openRecConsFi != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
-                    && openRecConsFi != BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
-                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, openRecConsExpr.getSourceLocation(),
-                        functionName, openRecConsFi);
-            }
-
-            // We multiply 2 because the layout of the arguments are: [expr, val, expr1, val1, ...]
-            if (openRecConsExpr.getArguments().size() > FullTextContainsFunctionDescriptor.getParamTypeMap().size()
-                    * 2) {
-                throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION,
-                        openRecConsExpr.getSourceLocation(), functionName);
-            }
-
-            if (openRecConsExpr.getArguments().size() % 2 != 0) {
-                throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
-                        openRecConsExpr.getSourceLocation(), functionName);
-            }
-
-            for (int i = 0; i < openRecConsExpr.getArguments().size(); i = i + 2) {
-                ILogicalExpression optionExpr = openRecConsExpr.getArguments().get(i).getValue();
-                ILogicalExpression optionExprVal = openRecConsExpr.getArguments().get(i + 1).getValue();
-
-                String option = ConstantExpressionUtil.getStringConstant(optionExpr);
-
-                if (optionExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT || option == null) {
-                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExpr.getSourceLocation(),
-                            functionName, optionExpr.getExpressionTag());
+            // Get the last parameter - this should be a record-constructor or a constant expression.
+            if (expr.getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                ConstantExpression constantExpression = (ConstantExpression) expr.getValue();
+                ARecord record =
+                        (ARecord) ConstantExpressionUtil.getConstantIaObject(constantExpression, ATypeTag.OBJECT);
+                if (record == null) {
+                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
+                            constantExpression.getSourceLocation(), functionName,
+                            constantExpression.getExpressionTag());
+                }
+                ARecordType recordType = record.getType();
+                if (record.numberOfFields() > FullTextContainsFunctionDescriptor.getParamTypeMap().size()) {
+                    throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION,
+                            constantExpression.getSourceLocation(), functionName);
+                }
+                for (int i = 0; i < record.numberOfFields(); i++) {
+                    String option = recordType.getFieldNames()[i].toLowerCase();
+                    ILogicalExpression optionExpr =
+                            new ConstantExpression(new AsterixConstantValue(new AString(option)));
+                    ILogicalExpression optionExprVal =
+                            new ConstantExpression(new AsterixConstantValue(record.getValueByPos(i)));
+                    ftConfigName = handleThirdParameterOptions(optionExpr, optionExprVal, newArgs, functionName);
+                }
+            } else {
+                AbstractFunctionCallExpression openRecConsExpr = (AbstractFunctionCallExpression) expr.getValue();
+                FunctionIdentifier openRecConsFi = openRecConsExpr.getFunctionIdentifier();
+                if (openRecConsFi != BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR
+                        && openRecConsFi != BuiltinFunctions.CLOSED_RECORD_CONSTRUCTOR) {
+                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, openRecConsExpr.getSourceLocation(),
+                            functionName, openRecConsFi);
                 }
 
-                option = option.toLowerCase();
-                if (!FullTextContainsFunctionDescriptor.getParamTypeMap().containsKey(option)) {
-                    throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
-                            functionName, option);
+                // We multiply 2 because the layout of the arguments are: [expr, val, expr1, val1, ...]
+                if (openRecConsExpr.getArguments().size() > FullTextContainsFunctionDescriptor.getParamTypeMap().size()
+                        * 2) {
+                    throw CompilationException.create(ErrorCode.TOO_MANY_OPTIONS_FOR_FUNCTION,
+                            openRecConsExpr.getSourceLocation(), functionName);
                 }
 
-                String optionTypeStringVal = null;
-                // If the option value is a constant, then we can check here.
-                if (optionExprVal.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
-                    switch (FullTextContainsFunctionDescriptor.getParamTypeMap().get(option)) {
-                        case STRING:
-                            optionTypeStringVal = ConstantExpressionUtil.getStringConstant(optionExprVal);
-                            if (optionTypeStringVal == null) {
-                                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
-                                        optionExprVal.getSourceLocation(), functionName, option);
-                            }
-                            optionTypeStringVal = optionTypeStringVal.toLowerCase();
-                            break;
-                        default:
-                            // Currently, we only have a string parameter. So, the flow doesn't reach here.
+                if (openRecConsExpr.getArguments().size() % 2 != 0) {
+                    throw CompilationException.create(ErrorCode.COMPILATION_INVALID_PARAMETER_NUMBER,
+                            openRecConsExpr.getSourceLocation(), functionName);
+                }
+
+                for (int i = 0; i < openRecConsExpr.getArguments().size(); i = i + 2) {
+                    ILogicalExpression optionExpr = openRecConsExpr.getArguments().get(i).getValue();
+                    ILogicalExpression optionExprVal = openRecConsExpr.getArguments().get(i + 1).getValue();
+                    ftConfigName = handleThirdParameterOptions(optionExpr, optionExprVal, newArgs, functionName);
+                }
+            }
+            return ftConfigName;
+        }
+
+        private String handleThirdParameterOptions(ILogicalExpression optionExpr, ILogicalExpression optionExprVal,
+                List<Mutable<ILogicalExpression>> newArgs, String functionName) throws AlgebricksException {
+            String ftConfigName = null;
+            String option = ConstantExpressionUtil.getStringConstant(optionExpr);
+
+            if (optionExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT || option == null) {
+                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExpr.getSourceLocation(),
+                        functionName, optionExpr.getExpressionTag());
+            }
+
+            option = option.toLowerCase();
+            if (!FullTextContainsFunctionDescriptor.getParamTypeMap().containsKey(option)) {
+                throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
+                        functionName, option);
+            }
+
+            String optionTypeStringVal = null;
+            // If the option value is a constant, then we can check here.
+            if (optionExprVal.getExpressionTag() == LogicalExpressionTag.CONSTANT) {
+                switch (FullTextContainsFunctionDescriptor.getParamTypeMap().get(option)) {
+                    case STRING:
+                        optionTypeStringVal = ConstantExpressionUtil.getStringConstant(optionExprVal);
+                        if (optionTypeStringVal == null) {
                             throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
                                     optionExprVal.getSourceLocation(), functionName, option);
-                    }
-
-                    // Check the validity of option value
-                    switch (option) {
-                        case FullTextContainsFunctionDescriptor.SEARCH_MODE_OPTION:
-                            checkSearchModeOption(optionTypeStringVal, functionName, optionExprVal.getSourceLocation());
-                            break;
-                        case FullTextContainsFunctionDescriptor.FULLTEXT_CONFIG_OPTION:
-                            checkFullTextConfigOption(optionTypeStringVal, functionName,
-                                    optionExprVal.getSourceLocation());
-                            ftConfigName = optionTypeStringVal;
-                            break;
-                        default:
-                            throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED,
-                                    optionExprVal.getSourceLocation(), functionName, option);
-                    }
+                        }
+                        optionTypeStringVal = optionTypeStringVal.toLowerCase();
+                        break;
+                    default:
+                        // Currently, we only have a string parameter. So, the flow doesn't reach here.
+                        throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
+                                functionName, option);
                 }
 
-                // Add this option as arguments to the ftcontains().
-                newArgs.add(new MutableObject<ILogicalExpression>(optionExpr));
-                newArgs.add(new MutableObject<ILogicalExpression>(optionExprVal));
+                // Check the validity of option value
+                switch (option) {
+                    case FullTextContainsFunctionDescriptor.SEARCH_MODE_OPTION:
+                        checkSearchModeOption(optionTypeStringVal, functionName, optionExprVal.getSourceLocation());
+                        break;
+                    case FullTextContainsFunctionDescriptor.FULLTEXT_CONFIG_OPTION:
+                        checkFullTextConfigOption(optionTypeStringVal, functionName, optionExprVal.getSourceLocation());
+                        ftConfigName = optionTypeStringVal;
+                        break;
+                    default:
+                        throw CompilationException.create(ErrorCode.TYPE_UNSUPPORTED, optionExprVal.getSourceLocation(),
+                                functionName, option);
+                }
             }
+
+            // Add this option as arguments to the ftcontains().
+            newArgs.add(new MutableObject<>(optionExpr));
+            newArgs.add(new MutableObject<>(optionExprVal));
             return ftConfigName;
         }
 

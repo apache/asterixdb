@@ -167,7 +167,7 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
         }
 
         /** see whether the input record type needs to be casted */
-        boolean cast = !compatible(requiredRecordType, inputRecordType, op.getSourceLocation());
+        boolean cast = !compatible(requiredRecordType, inputRecordType, op);
 
         if (checkUnknown) {
             recordVar = addWrapperFunction(requiredRecordType, recordVar, op, context, BuiltinFunctions.CHECK_UNKNOWN);
@@ -252,8 +252,9 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
      * @return true if compatible; false otherwise
      * @throws AlgebricksException
      */
-    public static boolean compatible(ARecordType reqType, IAType inputType, SourceLocation sourceLoc)
+    public static boolean compatible(ARecordType reqType, IAType inputType, ILogicalOperator op)
             throws AlgebricksException {
+        SourceLocation sourceLoc = op.getSourceLocation();
         if (inputType.getTypeTag() == ATypeTag.ANY) {
             return false;
         }
@@ -279,19 +280,25 @@ public class IntroduceDynamicTypeCastRule implements IAlgebraicRewriteRule {
                 return false;
             }
             IAType reqTypeInside = reqTypes[i];
-            if (NonTaggedFormatUtil.isOptional(reqTypes[i])) {
-                reqTypeInside = ((AUnionType) reqTypes[i]).getActualType();
-            }
             IAType inputTypeInside = inputTypes[i];
-            if (NonTaggedFormatUtil.isOptional(inputTypes[i])) {
-                if (!NonTaggedFormatUtil.isOptional(reqTypes[i])) {
-                    /** if the required type is not optional, the two types are incompatible */
+            if (op.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
+                if (!reqTypeInside.equals(inputTypeInside)) {
                     return false;
                 }
-                inputTypeInside = ((AUnionType) inputTypes[i]).getActualType();
-            }
-            if (inputTypeInside.getTypeTag() != ATypeTag.MISSING && !reqTypeInside.equals(inputTypeInside)) {
-                return false;
+            } else {
+                if (NonTaggedFormatUtil.isOptional(reqTypes[i])) {
+                    reqTypeInside = ((AUnionType) reqTypes[i]).getActualType();
+                }
+                if (NonTaggedFormatUtil.isOptional(inputTypes[i])) {
+                    if (!NonTaggedFormatUtil.isOptional(reqTypes[i])) {
+                        /** if the required type is not optional, the two types are incompatible */
+                        return false;
+                    }
+                    inputTypeInside = ((AUnionType) inputTypes[i]).getActualType();
+                }
+                if (inputTypeInside.getTypeTag() != ATypeTag.MISSING && !reqTypeInside.equals(inputTypeInside)) {
+                    return false;
+                }
             }
         }
         return true;

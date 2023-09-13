@@ -4570,6 +4570,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
+      <compilation-unit name="insert-closed">
+        <output-dir compare="Text">insert-closed</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-duplicated-keys">
         <output-dir compare="Text">insert-duplicated-keys</output-dir>
         <expected-error>Inserting duplicate keys into the primary storage</expected-error>

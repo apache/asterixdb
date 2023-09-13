@@ -2,7 +2,7 @@ distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    unnest $$d <- scan-collection(ordered-list-constructor({"id": 1, "t1": array-remove(ordered-list-constructor(1, 2, 3, ordered-list-constructor(9, 8), ordered-list-constructor("str1", "str2"), ordered-list-constructor(90, 100)), array: [ 9, 8 ], array: [ 90, 100 ])}, {"id": 2, "t2": cast(array: [ array: [ 5, 1, 2 ], array: [ 90, 100 ] ])}, {"id": 3, "t3": cast(array-remove(ordered-list-constructor({"id": 1, "age": 34}, {"id": 2, "age": 29}, {"id": 3, "age": 90}), {"id": 4, "age": 90}, {"id": 2, "age": 29}))})) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    unnest $$d <- scan-collection(ordered-list-constructor({"id": 1, "t1": array-remove(ordered-list-constructor(1, 2, 3, ordered-list-constructor(9, 8), ordered-list-constructor("str1", "str2"), ordered-list-constructor(90, 100)), array: [ 9, 8 ], array: [ 90, 100 ])}, {"id": 2, "t2": cast(array: [ array: [ 5, 1, 2 ], array: [ 90, 100 ] ])}, {"id": 3, "t3": cast(array: [ { "id": 1, "age": 34 }, { "id": 3, "age": 90 } ])})) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- UNNEST  |UNPARTITIONED|
       empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

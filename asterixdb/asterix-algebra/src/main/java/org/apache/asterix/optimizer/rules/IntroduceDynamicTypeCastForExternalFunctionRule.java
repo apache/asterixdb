@@ -81,8 +81,7 @@ public class IntroduceDynamicTypeCastForExternalFunctionRule implements IAlgebra
             reqArgType = ((ExternalFunctionInfo) funcCallExpr.getFunctionInfo()).getParameterTypes().get(i);
 
             if (reqArgType.getTypeTag() == ATypeTag.OBJECT) {
-                castFlag = !IntroduceDynamicTypeCastRule.compatible((ARecordType) reqArgType, inputType,
-                        argExpr.getValue().getSourceLocation());
+                castFlag = !IntroduceDynamicTypeCastRule.compatible((ARecordType) reqArgType, inputType, op);
             } else if (reqArgType.getTypeTag() == ATypeTag.ANY) {
                 IAType inputPrimeType = TypeComputeUtils.getActualType(inputType);
                 castFlag = inputPrimeType.getTypeTag().isDerivedType();

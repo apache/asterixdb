@@ -395,12 +395,14 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
             if (fi.isExternal()) {
                 return false;
             }
+            IAType returnType = (IAType) _emptyTypeEnv.getType(function);
             // skip all functions that would produce records/arrays/multisets (derived types) in their open format
             // this is because constant folding them will make them closed (currently)
             if (function.getFunctionIdentifier().equals(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR)) {
-                return false;
+                if (returnType.getTypeTag() != ATypeTag.OBJECT || ((ARecordType) returnType).isOpen()) {
+                    return false;
+                }
             }
-            IAType returnType = (IAType) _emptyTypeEnv.getType(function);
             return canConstantFoldType(returnType);
         }
 
