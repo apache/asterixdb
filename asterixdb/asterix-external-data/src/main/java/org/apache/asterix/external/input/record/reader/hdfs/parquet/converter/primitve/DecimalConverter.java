@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
-import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.Binary;
 
 /**
@@ -36,9 +37,9 @@ public class DecimalConverter extends GenericPrimitiveConverter {
     private final int precision;
     private final int scale;
 
-    DecimalConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context, int precision, int scale) {
-        super(parent, fieldName, index, context);
+    DecimalConverter(AbstractComplexConverter parent, String stringFieldName, int index,
+            ParquetConverterContext context, int precision, int scale) throws IOException {
+        super(ATypeTag.DOUBLE, parent, stringFieldName, index, context);
         this.precision = precision;
         this.scale = scale;
     }

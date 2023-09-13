@@ -20,6 +20,7 @@ package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
 import java.io.IOException;
 
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.input.record.ValueReferenceRecord;
 import org.apache.asterix.external.input.record.reader.hdfs.AbstractHDFSRecordReader;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -38,9 +39,10 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     private final IWarningCollector warningCollector;
 
     public ParquetFileRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, IWarningCollector warningCollector) {
+            JobConf conf, IExternalDataRuntimeContext context) {
         super(read, inputSplits, readSchedule, nodeName, new ValueReferenceRecord<>(), conf);
-        this.warningCollector = warningCollector;
+        this.warningCollector = context.getTaskContext().getWarningCollector();
+        ((MapredParquetInputFormat) inputFormat).setValueEmbedder(context.getValueEmbedder());
     }
 
     @Override
@@ -59,7 +61,9 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     @Override
     protected RecordReader<Void, V> getRecordReader(int splitIndex) throws IOException {
         try {
-            reader = (RecordReader<Void, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+            ParquetRecordReaderWrapper readerWrapper = (ParquetRecordReaderWrapper) inputFormat
+                    .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+            reader = (RecordReader<Void, V>) readerWrapper;
         } catch (AsterixParquetRuntimeException e) {
             throw e.getHyracksDataException();
         }

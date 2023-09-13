@@ -139,7 +139,7 @@ public class DatasetDataSource extends DataSource {
                         addExternalProjectionInfo(projectionFiltrationInfo, edd.getProperties());
                 properties = addSubPath(externalDataSource.getProperties(), properties);
                 properties.put(KEY_EXTERNAL_SCAN_BUFFER_SIZE, String.valueOf(externalScanBufferSize));
-                IExternalFilterEvaluatorFactory filterEvaluatorFactory = IndexUtil
+                IExternalFilterEvaluatorFactory filterEvaluatorFactory = metadataProvider
                         .createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
                 ITypedAdapterFactory adapterFactory =
                         metadataProvider.getConfiguredAdapterFactory(externalDataset, edd.getAdapter(), properties,

@@ -19,8 +19,10 @@
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.DataOutput;
+import java.io.IOException;
 import java.util.List;
 
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -31,8 +33,9 @@ import org.apache.parquet.schema.GroupType;
 public class RootConverter extends ObjectConverter {
     private final ArrayBackedValueStorage rootBuffer;
 
-    public RootConverter(GroupType parquetType, Configuration configuration, List<Warning> warnings) {
-        super(null, -1, parquetType, new ParquetConverterContext(configuration, warnings));
+    public RootConverter(GroupType parquetType, IExternalFilterValueEmbedder valueEmbedder, Configuration configuration,
+            List<Warning> warnings) throws IOException {
+        super(null, -1, parquetType, new ParquetConverterContext(configuration, valueEmbedder, warnings));
         this.rootBuffer = new ArrayBackedValueStorage();
     }
 
@@ -40,6 +43,11 @@ public class RootConverter extends ObjectConverter {
     protected DataOutput getParentDataOutput() {
         rootBuffer.reset();
         return rootBuffer.getDataOutput();
+    }
+
+    @Override
+    protected boolean isRoot() {
+        return true;
     }
 
     public IValueReference getRecord() {

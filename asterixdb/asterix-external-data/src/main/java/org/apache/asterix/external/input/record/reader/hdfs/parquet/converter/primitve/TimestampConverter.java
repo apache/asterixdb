@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
-import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 
@@ -35,9 +36,10 @@ class TimestampConverter extends GenericPrimitiveConverter {
     private final LogicalTypeAnnotation.TimeUnit timeUnit;
     private final int timeZoneOffset;
 
-    TimestampConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context, LogicalTypeAnnotation.TimeUnit timeUnit, int timeZoneOffset) {
-        super(parent, fieldName, index, context);
+    TimestampConverter(AbstractComplexConverter parent, String stringFieldName, int index,
+            ParquetConverterContext context, LogicalTypeAnnotation.TimeUnit timeUnit, int timeZoneOffset)
+            throws IOException {
+        super(ATypeTag.DATETIME, parent, stringFieldName, index, context);
         this.timeUnit = timeUnit;
         this.timeZoneOffset = timeZoneOffset;
     }

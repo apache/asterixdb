@@ -1830,6 +1830,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
+    public IExternalFilterEvaluatorFactory createExternalFilterEvaluatorFactory(JobGenContext context,
+            IVariableTypeEnvironment typeEnv, IProjectionFiltrationInfo projectionFiltrationInfo,
+            Map<String, String> properties) throws AlgebricksException {
+        return IndexUtil.createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
+    }
+
     public void validateDatabaseObjectName(DataverseName dataverseName, String objectName, SourceLocation sourceLoc)
             throws AlgebricksException {
         if (dataverseName != null) {

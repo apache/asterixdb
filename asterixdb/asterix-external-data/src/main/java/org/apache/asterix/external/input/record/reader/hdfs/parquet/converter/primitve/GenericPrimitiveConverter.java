@@ -18,26 +18,42 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
+
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.PrimitiveConverter;
 
 public class GenericPrimitiveConverter extends PrimitiveConverter implements IFieldValue {
-
+    private final ATypeTag typeTag;
     protected final AbstractComplexConverter parent;
+    protected final String stringFieldName;
     protected final IValueReference fieldName;
     protected final int index;
     protected final ParquetConverterContext context;
 
-    GenericPrimitiveConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context) {
+    GenericPrimitiveConverter(ATypeTag typeTag, AbstractComplexConverter parent, String stringFieldName, int index,
+            ParquetConverterContext context) throws IOException {
+        this.typeTag = typeTag;
         this.parent = parent;
-        this.fieldName = fieldName;
+        this.stringFieldName = stringFieldName;
+        this.fieldName = context.getSerializedFieldName(stringFieldName);
         this.index = index;
         this.context = context;
+    }
+
+    @Override
+    public ATypeTag getTypeTag() {
+        return typeTag;
+    }
+
+    @Override
+    public String getStringFieldName() {
+        return stringFieldName;
     }
 
     @Override

@@ -18,19 +18,20 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
+
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.Warning;
-import org.apache.hyracks.data.std.api.IValueReference;
 
 public class UnsignedIntegerConverter extends GenericPrimitiveConverter {
     private boolean overflowed;
 
-    UnsignedIntegerConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context) {
-        super(parent, fieldName, index, context);
+    UnsignedIntegerConverter(AbstractComplexConverter parent, String stringFieldName, int index,
+            ParquetConverterContext context) throws IOException {
+        super(ATypeTag.BIGINT, parent, stringFieldName, index, context);
         overflowed = false;
     }
 

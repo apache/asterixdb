@@ -18,15 +18,17 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
+
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
-import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.Binary;
 
 public class UUIDConverter extends GenericPrimitiveConverter {
-    UUIDConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context) {
-        super(parent, fieldName, index, context);
+    UUIDConverter(AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
+            throws IOException {
+        super(ATypeTag.UUID, parent, stringFieldName, index, context);
     }
 
     @Override

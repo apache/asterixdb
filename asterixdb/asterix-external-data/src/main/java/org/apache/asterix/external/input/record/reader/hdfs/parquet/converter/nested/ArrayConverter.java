@@ -25,8 +25,8 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IF
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.PrimitiveType;
@@ -35,13 +35,13 @@ class ArrayConverter extends AbstractComplexConverter {
     private IAsterixListBuilder builder;
 
     public ArrayConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
-            ParquetConverterContext context) {
+            ParquetConverterContext context) throws IOException {
         super(parent, index, parquetType, context);
     }
 
-    public ArrayConverter(AbstractComplexConverter parent, IValueReference fieldName, int index, GroupType parquetType,
-            ParquetConverterContext context) {
-        super(parent, fieldName, index, parquetType, context);
+    public ArrayConverter(AbstractComplexConverter parent, String stringFieldName, int index, GroupType parquetType,
+            ParquetConverterContext context) throws IOException {
+        super(parent, stringFieldName, index, parquetType, context);
     }
 
     @Override
@@ -64,6 +64,11 @@ class ArrayConverter extends AbstractComplexConverter {
     }
 
     @Override
+    public ATypeTag getTypeTag() {
+        return ATypeTag.ARRAY;
+    }
+
+    @Override
     public void addValue(IFieldValue value) {
         try {
             builder.addItem(tempStorage);
@@ -74,19 +79,31 @@ class ArrayConverter extends AbstractComplexConverter {
 
     @Override
     protected PrimitiveConverter createAtomicConverter(GroupType type, int index) {
-        PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
-        return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
+        try {
+            PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
+            return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
     protected ArrayConverter createArrayConverter(GroupType type, int index) {
-        final GroupType arrayType = type.getType(index).asGroupType();
-        return new ArrayConverter(this, index, arrayType, context);
+        try {
+            GroupType arrayType = type.getType(index).asGroupType();
+            return new ArrayConverter(this, index, arrayType, context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
     protected ObjectConverter createObjectConverter(GroupType type, int index) {
-        final GroupType objectType = type.getType(index).asGroupType();
-        return new ObjectConverter(this, index, objectType, context);
+        try {
+            GroupType objectType = type.getType(index).asGroupType();
+            return new ObjectConverter(this, index, objectType, context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }

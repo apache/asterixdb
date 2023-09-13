@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
@@ -35,20 +36,22 @@ import org.apache.parquet.schema.Type.Repetition;
 public abstract class AbstractComplexConverter extends GroupConverter implements IFieldValue {
     protected final AbstractComplexConverter parent;
     private final IValueReference fieldName;
+    private final String stringFieldName;
     private final int index;
     private final Converter[] converters;
     protected final ParquetConverterContext context;
     protected IMutableValueStorage tempStorage;
 
     AbstractComplexConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
-            ParquetConverterContext context) {
+            ParquetConverterContext context) throws IOException {
         this(parent, null, index, parquetType, context);
     }
 
-    AbstractComplexConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            GroupType parquetType, ParquetConverterContext context) {
+    AbstractComplexConverter(AbstractComplexConverter parent, String stringFieldName, int index, GroupType parquetType,
+            ParquetConverterContext context) throws IOException {
         this.parent = parent;
-        this.fieldName = fieldName;
+        this.stringFieldName = stringFieldName;
+        this.fieldName = context.getSerializedFieldName(stringFieldName);
         this.index = index;
         this.context = context;
         converters = new Converter[parquetType.getFieldCount()];
@@ -117,7 +120,7 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
      *
      * @formatter:on
      */
-    protected AbstractComplexConverter createRepeatedConverter(GroupType type, int index) {
+    protected AbstractComplexConverter createRepeatedConverter(GroupType type, int index) throws IOException {
         GroupType repeatedType = type.getType(index).asGroupType();
         String name = repeatedType.getName();
         if (repeatedType.getFieldCount() > 1 || "array".equals(name) || "key_value".equals(name)) {
@@ -126,6 +129,11 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
             return new ObjectConverter(this, index, repeatedType, context);
         }
         return new RepeatedConverter(this, index, repeatedType, context);
+    }
+
+    @Override
+    public String getStringFieldName() {
+        return stringFieldName;
     }
 
     @Override
@@ -148,7 +156,7 @@ public abstract class AbstractComplexConverter extends GroupConverter implements
         return tempStorage.getDataOutput();
     }
 
-    protected IMutableValueStorage getValue() {
+    public IMutableValueStorage getValue() {
         return tempStorage;
     }
 

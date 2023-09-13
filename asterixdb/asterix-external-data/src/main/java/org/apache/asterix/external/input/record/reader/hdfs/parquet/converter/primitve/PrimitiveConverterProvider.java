@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
+
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.AsterixTypeToParquetTypeVisitor;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 import org.apache.parquet.schema.LogicalTypeAnnotation.DecimalLogicalTypeAnnotation;
@@ -41,12 +42,12 @@ public class PrimitiveConverterProvider {
     }
 
     public static PrimitiveConverter createPrimitiveConverter(PrimitiveType type, AbstractComplexConverter parent,
-            int index, ParquetConverterContext context) {
+            int index, ParquetConverterContext context) throws IOException {
         return createPrimitiveConverter(type, parent, null, index, context);
     }
 
     public static PrimitiveConverter createPrimitiveConverter(PrimitiveType type, AbstractComplexConverter parent,
-            IValueReference fieldName, int index, ParquetConverterContext context) {
+            String stringFieldName, int index, ParquetConverterContext context) throws IOException {
 
         if (type == MISSING) {
             return MissingConverter.INSTANCE;
@@ -56,63 +57,65 @@ public class PrimitiveConverterProvider {
         switch (mappedType) {
             case BOOLEAN:
             case STRING:
-                return new GenericPrimitiveConverter(parent, fieldName, index, context);
+                return new GenericPrimitiveConverter(mappedType, parent, stringFieldName, index, context);
             case BIGINT:
-                return getIntConverter(type, parent, fieldName, index, context);
+                return getIntConverter(mappedType, type, parent, stringFieldName, index, context);
             case DOUBLE:
-                return getDoubleConverter(type, parent, fieldName, index, context);
+                return getDoubleConverter(mappedType, type, parent, stringFieldName, index, context);
             case BINARY:
-                return new BinaryConverter(parent, fieldName, index, context);
+                return new BinaryConverter(parent, stringFieldName, index, context);
             case UUID:
-                return new UUIDConverter(parent, fieldName, index, context);
+                return new UUIDConverter(parent, stringFieldName, index, context);
             case DATE:
-                return new DateConverter(parent, fieldName, index, context);
+                return new DateConverter(parent, stringFieldName, index, context);
             case TIME:
-                return getTimeConverter(type, parent, fieldName, index, context);
+                return getTimeConverter(type, parent, stringFieldName, index, context);
             case DATETIME:
-                return getTimeStampConverter(type, parent, fieldName, index, context);
+                return getTimeStampConverter(type, parent, stringFieldName, index, context);
             case ANY:
-                return new JsonStringConverter(parent, fieldName, index, context);
+                return new JsonStringConverter(parent, stringFieldName, index, context);
             default:
                 return MissingConverter.INSTANCE;
         }
     }
 
-    private static PrimitiveConverter getIntConverter(PrimitiveType type, AbstractComplexConverter parent,
-            IValueReference fieldName, int index, ParquetConverterContext context) {
+    private static PrimitiveConverter getIntConverter(ATypeTag typeTag, PrimitiveType type,
+            AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
+            throws IOException {
         IntLogicalTypeAnnotation intType = (IntLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         if (intType != null && !intType.isSigned()) {
-            return new UnsignedIntegerConverter(parent, fieldName, index, context);
+            return new UnsignedIntegerConverter(parent, stringFieldName, index, context);
         }
-        return new GenericPrimitiveConverter(parent, fieldName, index, context);
+        return new GenericPrimitiveConverter(typeTag, parent, stringFieldName, index, context);
     }
 
-    private static PrimitiveConverter getDoubleConverter(PrimitiveType type, AbstractComplexConverter parent,
-            IValueReference fieldName, int index, ParquetConverterContext context) {
+    private static PrimitiveConverter getDoubleConverter(ATypeTag typeTag, PrimitiveType type,
+            AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
+            throws IOException {
         LogicalTypeAnnotation logicalType = type.getLogicalTypeAnnotation();
         if (logicalType instanceof DecimalLogicalTypeAnnotation) {
             DecimalLogicalTypeAnnotation decimalLogicalType = (DecimalLogicalTypeAnnotation) logicalType;
-            return new DecimalConverter(parent, fieldName, index, context, decimalLogicalType.getPrecision(),
+            return new DecimalConverter(parent, stringFieldName, index, context, decimalLogicalType.getPrecision(),
                     decimalLogicalType.getScale());
 
         }
-        return new GenericPrimitiveConverter(parent, fieldName, index, context);
+        return new GenericPrimitiveConverter(typeTag, parent, stringFieldName, index, context);
     }
 
     private static PrimitiveConverter getTimeConverter(PrimitiveType type, AbstractComplexConverter parent,
-            IValueReference fieldName, int index, ParquetConverterContext context) {
+            String stringFieldName, int index, ParquetConverterContext context) throws IOException {
         TimeLogicalTypeAnnotation timeLogicalType = (TimeLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
-        return new TimeConverter(parent, fieldName, index, context, timeLogicalType.getUnit());
+        return new TimeConverter(parent, stringFieldName, index, context, timeLogicalType.getUnit());
     }
 
     private static PrimitiveConverter getTimeStampConverter(PrimitiveType type, AbstractComplexConverter parent,
-            IValueReference fieldName, int index, ParquetConverterContext context) {
+            String stringFieldName, int index, ParquetConverterContext context) throws IOException {
         TimestampLogicalTypeAnnotation tsType = (TimestampLogicalTypeAnnotation) type.getLogicalTypeAnnotation();
         if (tsType != null) {
             int offset = tsType.isAdjustedToUTC() ? context.getTimeZoneOffset() : 0;
-            return new TimestampConverter(parent, fieldName, index, context, tsType.getUnit(), offset);
+            return new TimestampConverter(parent, stringFieldName, index, context, tsType.getUnit(), offset);
         }
         //INT96: the converter will convert the value to millis
-        return new TimestampConverter(parent, fieldName, index, context, TimeUnit.MILLIS, 0);
+        return new TimestampConverter(parent, stringFieldName, index, context, TimeUnit.MILLIS, 0);
     }
 }

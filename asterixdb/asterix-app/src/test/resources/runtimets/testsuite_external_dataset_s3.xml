@@ -278,6 +278,18 @@
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="embed-one-value">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-one-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="embed-multiple-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-multiple-values</output-dir>
+      </compilation-unit>
+    </test-case>
     <!-- Dynamic prefixes tests end -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">

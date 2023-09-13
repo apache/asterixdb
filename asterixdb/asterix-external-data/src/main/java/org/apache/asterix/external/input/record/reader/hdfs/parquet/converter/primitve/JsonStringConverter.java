@@ -25,6 +25,7 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.Pa
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
 import org.apache.asterix.external.parser.JSONDataParser;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
@@ -37,9 +38,9 @@ class JsonStringConverter extends GenericPrimitiveConverter {
     private final JSONDataParser parser;
     private final ByteArrayAccessibleInputStream in;
 
-    JsonStringConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context) {
-        super(parent, fieldName, index, context);
+    JsonStringConverter(AbstractComplexConverter parent, String stringFieldName, int index,
+            ParquetConverterContext context) throws IOException {
+        super(ATypeTag.ANY, parent, stringFieldName, index, context);
         parser = new JSONDataParser(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, new JsonFactory());
         in = new ByteArrayAccessibleInputStream(EMPTY, 0, 0);
         try {
@@ -47,6 +48,14 @@ class JsonStringConverter extends GenericPrimitiveConverter {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public ATypeTag getTypeTag() {
+        IValueReference value = parent.getValue();
+        byte[] bytes = value.getByteArray();
+        int startOffset = value.getStartOffset();
+        return ATypeTag.VALUE_TYPE_MAPPING[bytes[startOffset]];
     }
 
     @Override

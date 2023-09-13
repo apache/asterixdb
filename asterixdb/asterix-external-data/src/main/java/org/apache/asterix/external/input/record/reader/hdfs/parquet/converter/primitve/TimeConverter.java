@@ -18,19 +18,20 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
-import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.schema.LogicalTypeAnnotation;
 
 public class TimeConverter extends GenericPrimitiveConverter {
     private final LogicalTypeAnnotation.TimeUnit timeUnit;
 
-    TimeConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context, LogicalTypeAnnotation.TimeUnit timeUnit) {
-        super(parent, fieldName, index, context);
+    TimeConverter(AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context,
+            LogicalTypeAnnotation.TimeUnit timeUnit) throws IOException {
+        super(ATypeTag.TIME, parent, stringFieldName, index, context);
         this.timeUnit = timeUnit;
     }
 

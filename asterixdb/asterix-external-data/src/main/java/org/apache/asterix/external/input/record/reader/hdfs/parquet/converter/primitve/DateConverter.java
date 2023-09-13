@@ -18,14 +18,16 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
+import java.io.IOException;
+
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
-import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.asterix.om.types.ATypeTag;
 
 class DateConverter extends GenericPrimitiveConverter {
-    DateConverter(AbstractComplexConverter parent, IValueReference fieldName, int index,
-            ParquetConverterContext context) {
-        super(parent, fieldName, index, context);
+    DateConverter(AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
+            throws IOException {
+        super(ATypeTag.DATE, parent, stringFieldName, index, context);
     }
 
     @Override

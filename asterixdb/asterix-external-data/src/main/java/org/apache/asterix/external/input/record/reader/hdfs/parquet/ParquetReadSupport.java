@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.RootConverter;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -38,6 +39,8 @@ import org.apache.parquet.io.api.RecordMaterializer;
 import org.apache.parquet.schema.MessageType;
 
 public class ParquetReadSupport extends ReadSupport<IValueReference> {
+    private IExternalFilterValueEmbedder valueEmbedder;
+
     @Override
     public ReadContext init(InitContext context) {
         MessageType requestedSchema = getRequestedSchema(context);
@@ -47,7 +50,12 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
     @Override
     public RecordMaterializer<IValueReference> prepareForRead(Configuration configuration,
             Map<String, String> keyValueMetaData, MessageType fileSchema, ReadContext readContext) {
-        return new ADMRecordMaterializer(configuration, readContext);
+        try {
+            return new ADMRecordMaterializer(configuration, valueEmbedder, readContext);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     private static MessageType getRequestedSchema(InitContext initContext) {
@@ -75,14 +83,19 @@ public class ParquetReadSupport extends ReadSupport<IValueReference> {
         }
     }
 
+    void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
+        this.valueEmbedder = valueEmbedder;
+    }
+
     private static class ADMRecordMaterializer extends RecordMaterializer<IValueReference> {
         private final RootConverter rootConverter;
         private final List<Warning> warnings;
         private final Configuration configuration;
 
-        public ADMRecordMaterializer(Configuration configuration, ReadContext readContext) {
+        public ADMRecordMaterializer(Configuration configuration, IExternalFilterValueEmbedder valueEmbedder,
+                ReadContext readContext) throws IOException {
             warnings = new ArrayList<>();
-            rootConverter = new RootConverter(readContext.getRequestedSchema(), configuration, warnings);
+            rootConverter = new RootConverter(readContext.getRequestedSchema(), valueEmbedder, configuration, warnings);
             this.configuration = configuration;
         }
 

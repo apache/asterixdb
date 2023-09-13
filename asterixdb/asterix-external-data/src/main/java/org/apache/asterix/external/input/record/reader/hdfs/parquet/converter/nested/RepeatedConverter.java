@@ -19,17 +19,19 @@
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
 import java.io.DataOutput;
+import java.io.IOException;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.PrimitiveType;
 
 class RepeatedConverter extends AbstractComplexConverter {
     public RepeatedConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
-            ParquetConverterContext context) {
+            ParquetConverterContext context) throws IOException {
         super(parent, index, parquetType, context);
     }
 
@@ -44,25 +46,44 @@ class RepeatedConverter extends AbstractComplexConverter {
     }
 
     @Override
+    public ATypeTag getTypeTag() {
+        return parent.getTypeTag();
+    }
+
+    @Override
     public void addValue(IFieldValue value) {
         parent.addValue(value);
     }
 
     @Override
     protected PrimitiveConverter createAtomicConverter(GroupType type, int index) {
-        PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
-        return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
+        try {
+            PrimitiveType primitiveType = type.getType(index).asPrimitiveType();
+            return PrimitiveConverterProvider.createPrimitiveConverter(primitiveType, this, index, context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
     protected ArrayConverter createArrayConverter(GroupType type, int index) {
-        final GroupType arrayType = type.getType(index).asGroupType();
-        return new ArrayConverter(this, index, arrayType, context);
+        try {
+            GroupType arrayType = type.getType(index).asGroupType();
+            return new ArrayConverter(this, index, arrayType, context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     @Override
     protected ObjectConverter createObjectConverter(GroupType type, int index) {
-        return new ObjectConverter(this, index, type.getType(index).asGroupType(), context);
+        try {
+            return new ObjectConverter(this, index, type.getType(index).asGroupType(), context);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
     }
 
     @Override

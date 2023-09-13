@@ -265,8 +265,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
             IExternalDataRuntimeContext context) {
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
-            IWarningCollector warningCollector = context.getTaskContext().getWarningCollector();
-            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, warningCollector);
+            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context);
         } else {
             return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf);
         }

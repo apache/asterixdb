@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter;
 
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
@@ -25,7 +26,11 @@ import org.apache.hyracks.data.std.api.IValueReference;
  * index of associated with a value.
  */
 public interface IFieldValue {
+    ATypeTag getTypeTag();
+
     IValueReference getFieldName();
+
+    String getStringFieldName();
 
     /**
      * @return the index of the value as appeared in the schema

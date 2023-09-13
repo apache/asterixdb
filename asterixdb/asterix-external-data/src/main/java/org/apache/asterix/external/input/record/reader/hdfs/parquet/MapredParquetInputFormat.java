@@ -25,22 +25,16 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.hadoop.mapred.FileSplit;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.parquet.hadoop.Footer;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 import org.apache.parquet.hadoop.ParquetInputSplit;
-import org.apache.parquet.hadoop.ParquetRecordReader;
 
 /**
  * For the Original implementation, see {@code DeprecatedParquetInputFormat}
@@ -53,12 +47,13 @@ import org.apache.parquet.hadoop.ParquetRecordReader;
  */
 public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInputFormat<Void, VoidPointable> {
 
-    protected ParquetInputFormat<ArrayBackedValueStorage> realInputFormat = new ParquetInputFormat<>();
+    private final ParquetInputFormat<ArrayBackedValueStorage> realInputFormat = new ParquetInputFormat<>();
+    private IExternalFilterValueEmbedder valueEmbedder;
 
     @Override
     public RecordReader<Void, VoidPointable> getRecordReader(InputSplit split, JobConf job, Reporter reporter)
             throws IOException {
-        return new RecordReaderWrapper(split, job, reporter);
+        return new ParquetRecordReaderWrapper(split, job, reporter, valueEmbedder);
     }
 
     @Override
@@ -84,130 +79,15 @@ public class MapredParquetInputFormat extends org.apache.hadoop.mapred.FileInput
         return realInputFormat.getFooters(job, asList(super.listStatus(job)));
     }
 
-    private static class RecordReaderWrapper implements RecordReader<Void, VoidPointable> {
-
-        private final ParquetRecordReader<IValueReference> realReader;
-        private final long splitLen; // for getPos()
-
-        private final VoidPointable valueContainer;
-
-        private boolean firstRecord;
-        private boolean eof;
-
-        public RecordReaderWrapper(InputSplit oldSplit, JobConf oldJobConf, Reporter reporter) throws IOException {
-            splitLen = oldSplit.getLength();
-
-            try {
-                realReader = new ParquetRecordReader<>(
-                        ParquetInputFormat.<IValueReference> getReadSupportInstance(oldJobConf),
-                        ParquetInputFormat.getFilter(oldJobConf));
-
-                if (oldSplit instanceof ParquetInputSplitWrapper) {
-                    realReader.initialize(((ParquetInputSplitWrapper) oldSplit).realSplit, oldJobConf, reporter);
-                } else if (oldSplit instanceof FileSplit) {
-                    realReader.initialize((FileSplit) oldSplit, oldJobConf, reporter);
-                } else {
-                    throw RuntimeDataException.create(ErrorCode.INVALID_PARQUET_FILE,
-                            LogRedactionUtil.userData(oldSplit.toString()), "invalid file split");
-                }
-                valueContainer = new VoidPointable();
-                firstRecord = false;
-                eof = false;
-                // read once to gain access to key and value objects
-                if (realReader.nextKeyValue()) {
-                    firstRecord = true;
-                    valueContainer.set(realReader.getCurrentValue());
-
-                } else {
-                    eof = true;
-                }
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            } catch (HyracksDataException | AsterixParquetRuntimeException e) {
-                throw e;
-            } catch (Exception e) {
-                if (e.getMessage() != null && e.getMessage().contains("not a Parquet file")) {
-                    throw RuntimeDataException.create(ErrorCode.INVALID_PARQUET_FILE,
-                            LogRedactionUtil.userData(getPath(oldSplit)), "not a Parquet file");
-                }
-
-                throw RuntimeDataException.create(ErrorCode.UNEXPECTED_ERROR_ENCOUNTERED,
-                        LogRedactionUtil.userData(e.toString()));
-            }
-        }
-
-        private String getPath(InputSplit split) {
-            if (split instanceof FileSplit) {
-                return ((FileSplit) split).getPath().toString();
-            } else if (split instanceof ParquetInputSplitWrapper) {
-                return ((ParquetInputSplitWrapper) split).realSplit.getPath().toString();
-            } else {
-                return split.toString();
-            }
-        }
-
-        @Override
-        public void close() throws IOException {
-            realReader.close();
-        }
-
-        @Override
-        public Void createKey() {
-            return null;
-        }
-
-        @Override
-        public VoidPointable createValue() {
-            return valueContainer;
-        }
-
-        @Override
-        public long getPos() throws IOException {
-            return (long) (splitLen * getProgress());
-        }
-
-        @Override
-        public float getProgress() throws IOException {
-            try {
-                return realReader.getProgress();
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
-        }
-
-        @Override
-        public boolean next(Void key, VoidPointable value) throws IOException {
-            if (eof) {
-                return false;
-            }
-
-            if (firstRecord) { // key & value are already read.
-                firstRecord = false;
-                value.set(valueContainer);
-                return true;
-            }
-
-            try {
-                if (realReader.nextKeyValue()) {
-                    if (value != null) {
-                        value.set(realReader.getCurrentValue());
-                    }
-                    return true;
-                }
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
-
-            eof = true; // strictly not required, just for consistency
-            return false;
-        }
+    public void setValueEmbedder(IExternalFilterValueEmbedder valueEmbedder) {
+        this.valueEmbedder = valueEmbedder;
     }
 
     public static boolean isTaskSideMetaData(JobConf job) {
         return job.getBoolean(ParquetInputFormat.TASK_SIDE_METADATA, true);
     }
 
-    private static class ParquetInputSplitWrapper implements InputSplit {
+    static class ParquetInputSplitWrapper implements InputSplit {
 
         ParquetInputSplit realSplit;
 
