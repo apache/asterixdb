@@ -103,6 +103,11 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     protected Function createMetadataEntityFromARecord(ARecord functionRecord) throws AlgebricksException {
+        int databaseNameIndex = functionEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) functionRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) functionRecord.getValueByPos(functionEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -285,6 +290,11 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
+        if (functionEntity.databaseNameIndex() >= 0) {
+            aString.setValue(function.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -299,6 +309,12 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
 
         recordBuilder.reset(functionEntity.getRecordType());
 
+        if (functionEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(function.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(functionEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

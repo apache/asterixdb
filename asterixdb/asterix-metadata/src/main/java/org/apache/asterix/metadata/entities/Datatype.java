@@ -33,10 +33,10 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
  */
 public class Datatype implements IMetadataEntity<Datatype> {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
+    private final String databaseName = null;
     private final DataverseName dataverseName;
-    // Enforced to be unique within a dataverse.
     private final String datatypeName;
     private final IAType datatype;
     private final boolean isAnonymous;
@@ -46,6 +46,10 @@ public class Datatype implements IMetadataEntity<Datatype> {
         this.datatypeName = datatypeName;
         this.datatype = datatype;
         this.isAnonymous = isAnonymous;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

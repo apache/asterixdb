@@ -27,7 +27,9 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class Synonym implements IMetadataEntity<Synonym> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+
+    private final String databaseName = null;
 
     private final DataverseName dataverseName;
 
@@ -43,6 +45,10 @@ public class Synonym implements IMetadataEntity<Synonym> {
         this.synonymName = Objects.requireNonNull(synonymName);
         this.objectDataverseName = Objects.requireNonNull(objectDataverseName);
         this.objectName = Objects.requireNonNull(objectName);
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -68,13 +74,14 @@ public class Synonym implements IMetadataEntity<Synonym> {
         if (o == null || getClass() != o.getClass())
             return false;
         Synonym synonym = (Synonym) o;
-        return dataverseName.equals(synonym.dataverseName) && synonymName.equals(synonym.synonymName)
-                && objectDataverseName.equals(synonym.objectDataverseName) && objectName.equals(synonym.objectName);
+        return Objects.equals(databaseName, synonym.databaseName) && dataverseName.equals(synonym.dataverseName)
+                && synonymName.equals(synonym.synonymName) && objectDataverseName.equals(synonym.objectDataverseName)
+                && objectName.equals(synonym.objectName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverseName, synonymName, objectDataverseName, objectName);
+        return Objects.hash(databaseName, dataverseName, synonymName, objectDataverseName, objectName);
     }
 
     @Override

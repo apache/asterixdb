@@ -50,10 +50,11 @@ import org.apache.hyracks.util.OptionalBoolean;
  */
 public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
     public static final int RECORD_INDICATOR = 0;
     public static final int META_RECORD_INDICATOR = 1;
 
+    private final String databaseName = null;
     private final DataverseName dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
@@ -102,6 +103,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
                 datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
                         keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty(), null, null, null),
                 false, true, pendingOp);
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -213,7 +218,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     @Override
     public int hashCode() {
-        return indexName.hashCode() ^ datasetName.hashCode() ^ dataverseName.hashCode();
+        return Objects.hash(indexName, datasetName, dataverseName, databaseName);
     }
 
     @Override
@@ -228,7 +233,8 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (!datasetName.equals(otherIndex.getDatasetName())) {
             return false;
         }
-        return dataverseName.equals(otherIndex.getDataverseName());
+        return Objects.equals(databaseName, otherIndex.databaseName)
+                && dataverseName.equals(otherIndex.getDataverseName());
     }
 
     @Override
@@ -276,6 +282,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (result != 0) {
             return result;
         }
+        //TODO(DB): fix to also consider database
         return dataverseName.compareTo(otherIndex.getDataverseName());
     }
 

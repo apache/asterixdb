@@ -64,6 +64,11 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
 
     @Override
     protected FullTextFilterMetadataEntity createMetadataEntityFromARecord(ARecord aRecord) throws AlgebricksException {
+        int databaseNameIndex = fullTextFilterEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) aRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         AString dataverseName = (AString) aRecord.getValueByPos(fullTextFilterEntity.dataverseNameIndex());
         AString filterName = (AString) aRecord.getValueByPos(fullTextFilterEntity.filterNameIndex());
         AString filterTypeAString = (AString) aRecord.getValueByPos(fullTextFilterEntity.filterTypeIndex());
@@ -135,6 +140,12 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
 
     private void writeFulltextFilter(AbstractFullTextFilterDescriptor filterDescriptor)
             throws AsterixException, HyracksDataException {
+        if (fullTextFilterEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(filterDescriptor.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fullTextFilterEntity.databaseNameIndex(), fieldValue);
+        }
         fieldValue.reset();
         aString.setValue(filterDescriptor.getDataverseName().getCanonicalForm());
         stringSerde.serialize(aString, fieldValue.getDataOutput());
@@ -161,8 +172,13 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
         }
     }
 
-    private void writeIndex(String dataverseName, String filterName, ArrayTupleBuilder tupleBuilder)
-            throws HyracksDataException {
+    private void writeIndex(String databaseName, String dataverseName, String filterName,
+            ArrayTupleBuilder tupleBuilder) throws HyracksDataException {
+        if (fullTextFilterEntity.databaseNameIndex() >= 0) {
+            aString.setValue(databaseName);
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -177,7 +193,8 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
             throws HyracksDataException, AsterixException {
         tupleBuilder.reset();
 
-        writeIndex(filterMetadataEntity.getFullTextFilter().getDataverseName().getCanonicalForm(),
+        writeIndex(filterMetadataEntity.getFullTextFilter().getDatabaseName(),
+                filterMetadataEntity.getFullTextFilter().getDataverseName().getCanonicalForm(),
                 filterMetadataEntity.getFullTextFilter().getName(), tupleBuilder);
 
         // Write the record

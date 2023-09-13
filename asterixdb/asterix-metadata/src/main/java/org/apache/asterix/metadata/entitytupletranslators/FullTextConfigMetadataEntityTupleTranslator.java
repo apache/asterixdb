@@ -61,6 +61,11 @@ public class FullTextConfigMetadataEntityTupleTranslator extends AbstractTupleTr
     @Override
     protected FullTextConfigMetadataEntity createMetadataEntityFromARecord(ARecord aRecord)
             throws HyracksDataException, AlgebricksException {
+        int databaseNameIndex = fullTextConfigEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) aRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(
                 ((AString) aRecord.getValueByPos(fullTextConfigEntity.dataverseNameIndex())).getStringValue());
 
@@ -81,8 +86,13 @@ public class FullTextConfigMetadataEntityTupleTranslator extends AbstractTupleTr
         return new FullTextConfigMetadataEntity(configDescriptor);
     }
 
-    private void writeIndex(String dataverseName, String configName, ArrayTupleBuilder tupleBuilder)
-            throws HyracksDataException {
+    private void writeIndex(String databaseName, String dataverseName, String configName,
+            ArrayTupleBuilder tupleBuilder) throws HyracksDataException {
+        if (fullTextConfigEntity.databaseNameIndex() >= 0) {
+            aString.setValue(databaseName);
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -99,10 +109,17 @@ public class FullTextConfigMetadataEntityTupleTranslator extends AbstractTupleTr
 
         FullTextConfigDescriptor configDescriptor = configMetadataEntity.getFullTextConfig();
 
-        writeIndex(configDescriptor.getDataverseName().getCanonicalForm(), configDescriptor.getName(), tupleBuilder);
+        writeIndex(configDescriptor.getDatabaseName(), configDescriptor.getDataverseName().getCanonicalForm(),
+                configDescriptor.getName(), tupleBuilder);
 
         recordBuilder.reset(fullTextConfigEntity.getRecordType());
 
+        if (fullTextConfigEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(configDescriptor.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fullTextConfigEntity.databaseNameIndex(), fieldValue);
+        }
         // write dataverse name
         fieldValue.reset();
         aString.setValue(configDescriptor.getDataverseName().getCanonicalForm());

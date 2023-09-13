@@ -29,7 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
- * Translates a Dataset metadata entity to an ITupleReference and vice versa.
+ * Translates a CompactionPolicy metadata entity to an ITupleReference and vice versa.
  */
 public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<CompactionPolicy> {
 
@@ -43,6 +43,11 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     @Override
     protected CompactionPolicy createMetadataEntityFromARecord(ARecord compactionPolicyRecord)
             throws AlgebricksException {
+        int databaseNameIndex = compactionPolicyEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) compactionPolicyRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) compactionPolicyRecord.getValueByPos(compactionPolicyEntity.dataverseNameIndex()))
                         .getStringValue();
@@ -60,6 +65,11 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
         String dataverseCanonicalName = compactionPolicy.getDataverseName().getCanonicalForm();
 
         tupleBuilder.reset();
+        if (compactionPolicyEntity.databaseNameIndex() >= 0) {
+            aString.setValue(compactionPolicy.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -70,6 +80,12 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
 
         recordBuilder.reset(compactionPolicyEntity.getRecordType());
 
+        if (compactionPolicyEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(compactionPolicy.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(compactionPolicyEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

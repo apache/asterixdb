@@ -52,6 +52,11 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
 
     @Override
     protected FeedConnection createMetadataEntityFromARecord(ARecord feedConnectionRecord) throws AlgebricksException {
+        int databaseNameIndex = feedConnectionEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) feedConnectionRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) feedConnectionRecord.getValueByPos(feedConnectionEntity.dataverseNameIndex()))
                         .getStringValue();
@@ -98,6 +103,11 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
 
         tupleBuilder.reset();
 
+        if (feedConnectionEntity.databaseNameIndex() >= 0) {
+            aString.setValue(feedConnection.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         // key: dataverse
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
@@ -114,6 +124,13 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
         tupleBuilder.addFieldEndOffset();
 
         recordBuilder.reset(feedConnectionEntity.getRecordType());
+
+        if (feedConnectionEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(feedConnection.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(feedConnectionEntity.databaseNameIndex(), fieldValue);
+        }
 
         // field dataverse
         fieldValue.reset();

@@ -32,7 +32,7 @@ import org.apache.asterix.om.types.TypeSignature;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Function implements IMetadataEntity<Function> {
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     private final FunctionSignature signature;
     private final List<String> paramNames;
@@ -41,6 +41,7 @@ public class Function implements IMetadataEntity<Function> {
     private final String body;
     private final String language;
     private final String kind;
+    private final String databaseName = null;
     private final DataverseName libraryDataverseName;
     private final String libraryName;
     private final List<String> externalIdentifier;
@@ -74,6 +75,10 @@ public class Function implements IMetadataEntity<Function> {
 
     public FunctionSignature getSignature() {
         return signature;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

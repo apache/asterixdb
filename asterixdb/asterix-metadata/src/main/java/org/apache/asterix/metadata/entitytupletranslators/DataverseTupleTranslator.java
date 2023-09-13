@@ -50,6 +50,11 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
 
     @Override
     protected Dataverse createMetadataEntityFromARecord(ARecord dataverseRecord) throws AlgebricksException {
+        int databaseNameIndex = dataverseEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) dataverseRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) dataverseRecord.getValueByPos(dataverseEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -65,12 +70,24 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
 
         // write the key in the first field of the tuple
         tupleBuilder.reset();
+        if (dataverseEntity.databaseNameIndex() >= 0) {
+            aString.setValue(dataverse.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
 
         // write the payload in the second field of the tuple
         recordBuilder.reset(dataverseEntity.getRecordType());
+
+        if (dataverseEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(dataverse.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(dataverseEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

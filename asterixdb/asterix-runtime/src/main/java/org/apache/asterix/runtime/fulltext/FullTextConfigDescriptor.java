@@ -31,8 +31,9 @@ import com.google.common.collect.ImmutableList;
 // to tokenize and process tokens of full-text documents
 // When running the ftcontains() function, the full-text config can be used with or without a full-text index
 public class FullTextConfigDescriptor implements IFullTextConfigDescriptor {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
+    private final String databaseName = null;
     private final DataverseName dataverseName;
     private final String name;
     private final TokenizerCategory tokenizerCategory;
@@ -53,6 +54,10 @@ public class FullTextConfigDescriptor implements IFullTextConfigDescriptor {
     // In this way we avoid the edge cases to insert or delete the default config in the metadata catalog
     public static FullTextConfigDescriptor getDefaultFullTextConfig() {
         return new FullTextConfigDescriptor(null, null, TokenizerCategory.WORD, ImmutableList.of());
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

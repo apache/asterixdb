@@ -61,6 +61,11 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
 
     @Override
     protected ExternalFile createMetadataEntityFromARecord(ARecord externalFileRecord) throws AlgebricksException {
+        int databaseNameIndex = externalFileEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) externalFileRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) externalFileRecord.getValueByPos(externalFileEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -86,6 +91,11 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
 
         // write the key in the first 3 fields of the tuple
         tupleBuilder.reset();
+        if (externalFileEntity.databaseNameIndex() >= 0) {
+            aString.setValue(externalFile.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         // dataverse name
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
@@ -102,6 +112,12 @@ public class ExternalFileTupleTranslator extends AbstractTupleTranslator<Externa
         // write the pay-load in the fourth field of the tuple
         recordBuilder.reset(externalFileEntity.getRecordType());
 
+        if (externalFileEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(externalFile.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(externalFileEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

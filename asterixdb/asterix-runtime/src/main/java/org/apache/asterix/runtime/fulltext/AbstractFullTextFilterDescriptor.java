@@ -22,14 +22,19 @@ package org.apache.asterix.runtime.fulltext;
 import org.apache.asterix.common.metadata.DataverseName;
 
 public abstract class AbstractFullTextFilterDescriptor implements IFullTextFilterDescriptor {
-    private static final long serialVersionUID = 6884215200256734408L;
+    private static final long serialVersionUID = 5325972301942118022L;
 
+    private final String databaseName = null;
     protected final DataverseName dataverseName;
     protected final String name;
 
     public AbstractFullTextFilterDescriptor(DataverseName dataverseName, String name) {
         this.dataverseName = dataverseName;
         this.name = name;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

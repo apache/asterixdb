@@ -33,17 +33,18 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class FeedConnection implements IMetadataEntity<FeedConnection> {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
-    private EntityId feedId;
-    private String connectionId;
-    private DataverseName dataverseName;
-    private String feedName;
-    private String datasetName;
-    private String policyName;
-    private String whereClauseBody;
-    private String outputType;
-    private List<FunctionSignature> appliedFunctions;
+    private final EntityId feedId;
+    private final String connectionId;
+    private final String databaseName = null;
+    private final DataverseName dataverseName;
+    private final String feedName;
+    private final String datasetName;
+    private final String policyName;
+    private final String whereClauseBody;
+    private final String outputType;
+    private final List<FunctionSignature> appliedFunctions;
 
     public FeedConnection(DataverseName dataverseName, String feedName, String datasetName,
             List<FunctionSignature> appliedFunctions, String policyName, String whereClauseBody, String outputType) {
@@ -86,6 +87,10 @@ public class FeedConnection implements IMetadataEntity<FeedConnection> {
     @Override
     public FeedConnection dropFromCache(MetadataCache cache) {
         return null;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

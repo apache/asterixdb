@@ -44,6 +44,11 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
 
     @Override
     protected DatasourceAdapter createMetadataEntityFromARecord(ARecord adapterRecord) throws AlgebricksException {
+        int databaseNameIndex = datasourceAdapterEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) adapterRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) adapterRecord.getValueByPos(datasourceAdapterEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -79,6 +84,11 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         // write the key in the first 2 fields of the tuple
         tupleBuilder.reset();
 
+        if (datasourceAdapterEntity.databaseNameIndex() >= 0) {
+            aString.setValue(adapterIdentifier.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -87,9 +97,14 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
         tupleBuilder.addFieldEndOffset();
 
         // write the pay-load in the third field of the tuple
-
         recordBuilder.reset(datasourceAdapterEntity.getRecordType());
 
+        if (datasourceAdapterEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(adapterIdentifier.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(datasourceAdapterEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

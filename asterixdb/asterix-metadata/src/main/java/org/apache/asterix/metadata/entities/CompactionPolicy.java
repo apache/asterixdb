@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -28,10 +30,10 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class CompactionPolicy implements IMetadataEntity<CompactionPolicy> {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
+    private final String databaseName = null;
     private final DataverseName dataverseName;
-    // Enforced to be unique within a dataverse.
     private final String policyName;
     private final String className;
 
@@ -39,6 +41,10 @@ public class CompactionPolicy implements IMetadataEntity<CompactionPolicy> {
         this.dataverseName = dataverseName;
         this.policyName = policyName;
         this.className = className;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -62,6 +68,9 @@ public class CompactionPolicy implements IMetadataEntity<CompactionPolicy> {
             return false;
         }
         CompactionPolicy otherPolicy = (CompactionPolicy) other;
+        if (!Objects.equals(databaseName, otherPolicy.databaseName)) {
+            return false;
+        }
         if (!otherPolicy.dataverseName.equals(dataverseName)) {
             return false;
         }

@@ -52,6 +52,11 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
 
     @Override
     protected Library createMetadataEntityFromARecord(ARecord libraryRecord) throws AlgebricksException {
+        int databaseNameIndex = libraryEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) libraryRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) libraryRecord.getValueByPos(libraryEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -77,6 +82,11 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         String dataverseCanonicalName = library.getDataverseName().getCanonicalForm();
 
         // write the key in the first 2 fields of the tuple
+        if (libraryEntity.databaseNameIndex() >= 0) {
+            aString.setValue(library.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         tupleBuilder.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
@@ -86,9 +96,14 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         tupleBuilder.addFieldEndOffset();
 
         // write the pay-load in the third field of the tuple
-
         recordBuilder.reset(libraryEntity.getRecordType());
 
+        if (libraryEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(library.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(libraryEntity.databaseNameIndex(), fieldValue);
+        }
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

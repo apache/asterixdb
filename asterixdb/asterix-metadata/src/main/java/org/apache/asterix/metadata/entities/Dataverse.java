@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
@@ -28,8 +30,8 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class Dataverse implements IMetadataEntity<Dataverse> {
 
-    private static final long serialVersionUID = 2L;
-    // Enforced to be unique within an Asterix cluster..
+    private static final long serialVersionUID = 3L;
+    private final String databaseName = null;
     private final DataverseName dataverseName;
     private final String dataFormat;
     private final int pendingOp;
@@ -38,6 +40,10 @@ public class Dataverse implements IMetadataEntity<Dataverse> {
         this.dataverseName = dataverseName;
         this.dataFormat = format;
         this.pendingOp = pendingOp;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -64,7 +70,7 @@ public class Dataverse implements IMetadataEntity<Dataverse> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + ":" + dataverseName;
+        return getClass().getSimpleName() + ":" + databaseName + ":" + dataverseName;
     }
 
     @Override
@@ -73,11 +79,11 @@ public class Dataverse implements IMetadataEntity<Dataverse> {
             return false;
         }
         Dataverse other = (Dataverse) o;
-        return dataverseName.equals(other.getDataverseName());
+        return Objects.equals(databaseName, other.databaseName) && dataverseName.equals(other.getDataverseName());
     }
 
     @Override
     public int hashCode() {
-        return dataverseName.hashCode();
+        return Objects.hash(databaseName, dataverseName);
     }
 }

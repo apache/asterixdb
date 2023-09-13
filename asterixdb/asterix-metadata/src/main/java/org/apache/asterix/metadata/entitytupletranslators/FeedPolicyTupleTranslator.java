@@ -41,7 +41,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
- * Translates a Dataset metadata entity to an ITupleReference and vice versa.
+ * Translates a FeedPolicyEntity metadata entity to an ITupleReference and vice versa.
  */
 public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolicyEntity> {
 
@@ -55,6 +55,11 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
     @Override
     protected FeedPolicyEntity createMetadataEntityFromARecord(ARecord feedPolicyRecord) throws AlgebricksException {
+        int databaseNameIndex = feedPolicyEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) feedPolicyRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        }
         String dataverseCanonicalName =
                 ((AString) feedPolicyRecord.getValueByPos(feedPolicyEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
@@ -84,6 +89,11 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
         // write the key in the first three fields of the tuple
         tupleBuilder.reset();
+        if (feedPolicyEntity.databaseNameIndex() >= 0) {
+            aString.setValue(feedPolicy.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -95,6 +105,12 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
         recordBuilder.reset(feedPolicyEntity.getRecordType());
 
         // write field 0
+        if (feedPolicyEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(feedPolicy.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(feedPolicyEntity.databaseNameIndex(), fieldValue);
+        }
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, fieldValue.getDataOutput());

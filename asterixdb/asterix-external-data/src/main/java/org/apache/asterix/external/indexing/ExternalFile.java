@@ -32,8 +32,9 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
      * A class for metadata entity externalFile
      * This class represents an external dataset file and is intended for use for saving external data snapshot
      */
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
+    private final String databaseName = null;
     private DataverseName dataverseName;
     private String datasetName;
     private Date lastModefiedTime;
@@ -61,6 +62,10 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
         this.lastModefiedTime = lastModefiedTime;
         this.size = size;
         this.setPendingOp(pendingOp);
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -121,7 +126,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverseName, datasetName, fileName);
+        return Objects.hash(databaseName, dataverseName, datasetName, fileName);
     }
 
     @Override
@@ -133,7 +138,8 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
             return false;
         }
         ExternalFile anotherFile = (ExternalFile) obj;
-        return fileNumber == anotherFile.fileNumber && Objects.equals(dataverseName, anotherFile.getDataverseName())
+        return fileNumber == anotherFile.fileNumber && Objects.equals(databaseName, anotherFile.databaseName)
+                && Objects.equals(dataverseName, anotherFile.getDataverseName())
                 && Objects.equals(datasetName, anotherFile.getDatasetName());
     }
 
