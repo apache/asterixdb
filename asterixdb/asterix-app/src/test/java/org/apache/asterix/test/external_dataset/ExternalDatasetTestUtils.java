@@ -48,6 +48,7 @@ public class ExternalDatasetTestUtils {
     protected static final Logger LOGGER = LogManager.getLogger();
     // Extension filters
     private static final FilenameFilter JSON_FILTER = ((dir, name) -> name.endsWith(".json"));
+    private static final FilenameFilter CSV_FILTER = ((dir, name) -> name.endsWith(".csv"));
     private static final FilenameFilter PARQUET_FILTER = ((dir, name) -> name.endsWith(".parquet"));
 
     // Base directory paths for data files
@@ -256,6 +257,9 @@ public class ExternalDatasetTestUtils {
         loadData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
         loadGzData(dataBasePath, "", "01.csv", definition, definitionSegment, false);
         loadGzData(dataBasePath, "", "02.csv", definition, definitionSegment, false);
+
+        // Load external filter directories and files
+        loadDirectory(dataBasePath, "external-filter", CSV_FILTER);
     }
 
     private static void loadTsvFiles() {

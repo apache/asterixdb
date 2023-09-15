@@ -38,6 +38,8 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
@@ -46,6 +48,7 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParser;
 import org.apache.hyracks.dataflow.common.data.parsers.IValueParserFactory;
@@ -69,7 +72,10 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final byte[] fieldTypeTags;
     private final int[] fldIds;
     private final ArrayBackedValueStorage[] nameBuffers;
+    private final String[] fieldNames;
     private final char[] nullChars;
+    private final IExternalFilterValueEmbedder valueEmbedder;
+    private final ParserContext parserContext;
     private FieldCursorForDelimitedDataParser cursor;
 
     public DelimitedDataParser(IExternalDataRuntimeContext context, IValueParserFactory[] valueParserFactories,
@@ -78,6 +84,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         this.dataSourceName = context.getDatasourceNameSupplier();
         this.lineNumber = context.getLineNumberSupplier();
         this.warnings = context.getTaskContext().getWarningCollector();
+        this.valueEmbedder = context.getValueEmbedder();
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
         this.hasHeader = hasHeader;
@@ -102,6 +109,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
 
         fldIds = new int[n];
         nameBuffers = new ArrayBackedValueStorage[n];
+        fieldNames = new String[n];
         AMutableString str = new AMutableString(null);
         for (int i = 0; i < n; i++) {
             String name = recordType.getFieldNames()[i];
@@ -116,12 +124,14 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     IDataParser.toBytes(str, nameBuffers[i], stringSerde);
                 }
             }
+            fieldNames[i] = name;
         }
         if (!isStreamParser) {
             cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings,
                     this::getDataSourceName);
         }
         this.nullChars = nullString != null ? nullString.toCharArray() : null;
+        this.parserContext = new ParserContext();
     }
 
     @Override
@@ -145,7 +155,6 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private boolean parseRecord() throws HyracksDataException {
         recBuilder.reset(recordType);
         recBuilder.init();
-
         for (int i = 0; i < valueParsers.length; ++i) {
             try {
                 FieldCursorForDelimitedDataParser.Result result = cursor.nextField();
@@ -190,11 +199,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                         return false;
                     }
                 }
-                if (fldIds[i] < 0) {
-                    recBuilder.addField(nameBuffers[i], fieldValueBuffer);
-                } else {
-                    recBuilder.addField(fldIds[i], fieldValueBuffer);
-                }
+
+                addValue(i);
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
             }
@@ -212,7 +218,11 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     @Override
     public boolean parse(IRawRecord<? extends char[]> record, DataOutput out) throws HyracksDataException {
         cursor.nextRecord(record.get(), record.size(), lineNumber.getAsLong());
+        valueEmbedder.reset();
+        valueEmbedder.enterObject();
         if (parseRecord()) {
+            valueEmbedder.exitObject();
+            finalizeEmbedding();
             recBuilder.write(out, true);
             return true;
         }
@@ -244,6 +254,19 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
         return true;
     }
 
+    private void addValue(int index) throws HyracksDataException {
+        IValueReference value = fieldValueBuffer;
+        if (valueEmbedder.shouldEmbed(fieldNames[index], ATypeTag.VALUE_TYPE_MAPPING[fieldTypeTags[index]])) {
+            value = valueEmbedder.getEmbeddedValue();
+        }
+
+        if (fldIds[index] < 0) {
+            recBuilder.addField(nameBuffers[index], value);
+        } else {
+            recBuilder.addField(fldIds[index], value);
+        }
+    }
+
     private String getDataSourceName() {
         return dataSourceName.get();
     }
@@ -268,5 +291,32 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             }
         }
         return true;
+    }
+
+    private void finalizeEmbedding() throws HyracksDataException {
+        if (valueEmbedder.isMissingEmbeddedValues()) {
+            String[] embeddedFieldNames = valueEmbedder.getEmbeddedFieldNames();
+            for (int i = 0; i < embeddedFieldNames.length; i++) {
+                String embeddedFieldName = embeddedFieldNames[i];
+                int index = recordType.getFieldIndex(embeddedFieldName);
+                if (valueEmbedder.isMissing(embeddedFieldName)) {
+                    IValueReference embeddedValue = valueEmbedder.getEmbeddedValue();
+                    if (index < 0) {
+                        recBuilder.addField(getSerializedFieldName(embeddedFieldName), embeddedValue);
+                    } else {
+                        recBuilder.addField(index, embeddedValue);
+                    }
+                }
+            }
+        }
+    }
+
+    private IValueReference getSerializedFieldName(String fieldName) throws HyracksDataException {
+        try {
+            return parserContext.getSerializedFieldName(fieldName);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+
     }
 }
