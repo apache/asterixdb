@@ -118,6 +118,11 @@ public class ColumnRangeFilterBuilder {
         }
 
         ComparisonKind comparisonKind = getComparisonKind(fid, constant.getType().getTypeTag());
+        if (comparisonKind == ComparisonKind.NEQ) {
+            // Ignore NEQ
+            return NoOpColumnFilterEvaluatorFactory.INSTANCE;
+        }
+
         IColumnRangeFilterValueAccessorFactory constValue =
                 ConstantColumnRangeFilterValueAccessorFactory.createFactory(constant);
         IColumnRangeFilterValueAccessorFactory min = new ColumnRangeFilterValueAccessorFactory(path, true);
@@ -153,15 +158,20 @@ public class ColumnRangeFilterBuilder {
     }
 
     private static ComparisonKind invert(ComparisonKind comparisonKind) {
-        if (comparisonKind == ComparisonKind.LT) {
-            return ComparisonKind.GE;
-        } else if (comparisonKind == ComparisonKind.LE) {
-            return ComparisonKind.GT;
-        } else if (comparisonKind == ComparisonKind.GT) {
-            return ComparisonKind.LE;
+        switch (comparisonKind) {
+            case EQ:
+                return ComparisonKind.EQ;
+            case LE:
+                return ComparisonKind.GT;
+            case GE:
+                return ComparisonKind.LT;
+            case LT:
+                return ComparisonKind.GE;
+            case GT:
+                return ComparisonKind.LE;
+            default:
+                throw new IllegalStateException("Unsupported comparison type: " + comparisonKind);
         }
-        //ComparisonKind.GE
-        return ComparisonKind.LT;
     }
 
     private static IColumnRangeFilterEvaluatorFactory createEvaluator(ComparisonKind comparisonKind,

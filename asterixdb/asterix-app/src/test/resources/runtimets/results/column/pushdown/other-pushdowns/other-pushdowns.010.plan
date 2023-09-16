@@ -46,7 +46,7 @@ distribute result [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      data-scan []<-[$$71, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any,indices:any}]}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      data-scan []<-[$$71, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any,indices:any}]}}) filter on: eq(lowercase(scan-collection($$p1.getField("entities").getField("urls")).getField("display_url")), "string") [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

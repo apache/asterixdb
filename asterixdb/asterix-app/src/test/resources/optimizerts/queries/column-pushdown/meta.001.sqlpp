@@ -40,6 +40,7 @@
  CREATE DATASET `nation`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
  CREATE DATASET `region`(CH2Type) WITH META(CH2MetaType) PRIMARY KEY META().uid WITH {"storage-format": {"format": "column"}};
 
+SET `compiler.column.filter` "false";
 SELECT s.s_i_id, SUM(s.s_order_cnt) as ordercount
 FROM   nation n, supplier su, stock s
 WHERE  s.s_w_id * s.s_i_id MOD 10000 = su.su_suppkey

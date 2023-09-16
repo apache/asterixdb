@@ -133,9 +133,14 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
         } else {
             // array
             reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(), level,
-                    delimiters.toIntArray());
+                    getReversedDelimiters());
         }
         readers.add(reader);
         return reader;
+    }
+
+    private int[] getReversedDelimiters() {
+        Collections.reverse(delimiters);
+        return delimiters.toIntArray();
     }
 }
