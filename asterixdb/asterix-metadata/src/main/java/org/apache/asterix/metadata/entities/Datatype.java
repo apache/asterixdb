@@ -78,11 +78,11 @@ public class Datatype implements IMetadataEntity<Datatype> {
         return cache.dropDatatype(this);
     }
 
-    public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, DataverseName dataverseName,
-            String typeName) throws AlgebricksException {
+    public static IAType getTypeFromTypeName(MetadataNode metadataNode, TxnId txnId, String database,
+            DataverseName dataverseName, String typeName) throws AlgebricksException {
         IAType type = BuiltinTypeMap.getBuiltinType(typeName);
         if (type == null) {
-            Datatype dt = metadataNode.getDatatype(txnId, dataverseName, typeName);
+            Datatype dt = metadataNode.getDatatype(txnId, database, dataverseName, typeName);
             if (dt != null) {
                 type = dt.getDatatype();
             }

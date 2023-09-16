@@ -477,16 +477,15 @@ public class MetadataNode implements IMetadataNode {
     public void addFullTextFilter(TxnId txnId, FullTextFilterMetadataEntity filterMetadataEntity)
             throws RemoteException, AlgebricksException {
         insertFullTextFilterMetadataEntityToCatalog(txnId, filterMetadataEntity);
-        return;
     }
 
     @Override
-    public FullTextFilterMetadataEntity getFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
-            throws AlgebricksException {
+    public FullTextFilterMetadataEntity getFullTextFilter(TxnId txnId, String database, DataverseName dataverseName,
+            String filterName) throws AlgebricksException {
         try {
             FullTextFilterMetadataEntityTupleTranslator translator =
                     tupleTranslatorProvider.getFullTextFilterTupleTranslator(true);
-            ITupleReference searchKey = createTuple(dataverseName.getCanonicalForm(), filterName);
+            ITupleReference searchKey = createTuple(database, dataverseName, filterName);
             IValueExtractor<FullTextFilterMetadataEntity> valueExtractor =
                     new MetadataEntityValueExtractor<>(translator);
             List<FullTextFilterMetadataEntity> results = new ArrayList<>();
@@ -502,18 +501,18 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
+    public void dropFullTextFilter(TxnId txnId, String database, DataverseName dataverseName, String filterName)
             throws AlgebricksException {
-        dropFullTextFilterDescriptor(txnId, dataverseName, filterName, false);
+        dropFullTextFilterDescriptor(txnId, database, dataverseName, filterName, false);
     }
 
-    private void dropFullTextFilterDescriptor(TxnId txnId, DataverseName dataverseName, String filterName,
-            boolean force) throws AlgebricksException {
+    private void dropFullTextFilterDescriptor(TxnId txnId, String database, DataverseName dataverseName,
+            String filterName, boolean force) throws AlgebricksException {
         if (!force) {
-            confirmFullTextFilterCanBeDeleted(txnId, dataverseName, filterName);
+            confirmFullTextFilterCanBeDeleted(txnId, database, dataverseName, filterName);
         }
         try {
-            ITupleReference key = createTuple(dataverseName.getCanonicalForm(), filterName);
+            ITupleReference key = createTuple(database, dataverseName, filterName);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getFullTextFilterEntity().getIndex(), key);
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -555,15 +554,15 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FullTextConfigMetadataEntity getFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
-            throws AlgebricksException {
+    public FullTextConfigMetadataEntity getFullTextConfig(TxnId txnId, String database, DataverseName dataverseName,
+            String configName) throws AlgebricksException {
         FullTextConfigMetadataEntityTupleTranslator translator =
                 tupleTranslatorProvider.getFullTextConfigTupleTranslator(true);
 
         ITupleReference searchKey;
         List<FullTextConfigMetadataEntity> results = new ArrayList<>();
         try {
-            searchKey = createTuple(dataverseName.getCanonicalForm(), configName);
+            searchKey = createTuple(database, dataverseName, configName);
             IValueExtractor<FullTextConfigMetadataEntity> valueExtractor =
                     new MetadataEntityValueExtractor<>(translator);
             searchIndex(txnId, mdIndexesProvider.getFullTextConfigEntity().getIndex(), searchKey, valueExtractor,
@@ -576,24 +575,23 @@ public class MetadataNode implements IMetadataNode {
             return null;
         }
 
-        FullTextConfigMetadataEntity result = results.get(0);
-        return result;
+        return results.get(0);
     }
 
     @Override
-    public void dropFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
+    public void dropFullTextConfig(TxnId txnId, String database, DataverseName dataverseName, String configName)
             throws AlgebricksException {
-        dropFullTextConfigDescriptor(txnId, dataverseName, configName, false);
+        dropFullTextConfigDescriptor(txnId, database, dataverseName, configName, false);
     }
 
-    private void dropFullTextConfigDescriptor(TxnId txnId, DataverseName dataverseName, String configName,
-            boolean force) throws AlgebricksException {
+    private void dropFullTextConfigDescriptor(TxnId txnId, String database, DataverseName dataverseName,
+            String configName, boolean force) throws AlgebricksException {
         if (!force) {
-            confirmFullTextConfigCanBeDeleted(txnId, dataverseName, configName);
+            confirmFullTextConfigCanBeDeleted(txnId, database, dataverseName, configName);
         }
 
         try {
-            ITupleReference key = createTuple(dataverseName.getCanonicalForm(), configName);
+            ITupleReference key = createTuple(database, dataverseName, configName);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getFullTextConfigEntity().getIndex(), key);
         } catch (HyracksDataException e) {
             throw new AlgebricksException(e);
@@ -679,31 +677,33 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public void dropDataverse(TxnId txnId, String database, DataverseName dataverseName) throws AlgebricksException {
         try {
-            confirmDataverseCanBeDeleted(txnId, dataverseName);
+            confirmDataverseCanBeDeleted(txnId, database, dataverseName);
 
             // Drop all feeds and connections in this dataverse.
             // Feeds may depend on datatypes and adapters
-            List<Feed> dataverseFeeds = getDataverseFeeds(txnId, dataverseName);
+            List<Feed> dataverseFeeds = getDataverseFeeds(txnId, database, dataverseName);
             for (Feed feed : dataverseFeeds) {
-                List<FeedConnection> feedConnections = getFeedConnections(txnId, dataverseName, feed.getFeedName());
+                List<FeedConnection> feedConnections =
+                        getFeedConnections(txnId, database, dataverseName, feed.getFeedName());
                 for (FeedConnection feedConnection : feedConnections) {
-                    dropFeedConnection(txnId, dataverseName, feed.getFeedName(), feedConnection.getDatasetName());
+                    dropFeedConnection(txnId, database, dataverseName, feed.getFeedName(),
+                            feedConnection.getDatasetName());
                 }
-                dropFeed(txnId, dataverseName, feed.getFeedName());
+                dropFeed(txnId, database, dataverseName, feed.getFeedName());
             }
 
             // Drop all feed ingestion policies in this dataverse.
-            List<FeedPolicyEntity> feedPolicies = getDataverseFeedPolicies(txnId, dataverseName);
+            List<FeedPolicyEntity> feedPolicies = getDataverseFeedPolicies(txnId, database, dataverseName);
             for (FeedPolicyEntity feedPolicy : feedPolicies) {
-                dropFeedPolicy(txnId, dataverseName, feedPolicy.getPolicyName());
+                dropFeedPolicy(txnId, database, dataverseName, feedPolicy.getPolicyName());
             }
 
             // Drop all functions in this dataverse.
             // Functions may depend on libraries, datasets, functions, datatypes, synonyms
             // As a side effect, acquires an S lock on the 'Function' dataset on behalf of txnId.
-            List<Function> dataverseFunctions = getDataverseFunctions(txnId, dataverseName);
+            List<Function> dataverseFunctions = getDataverseFunctions(txnId, database, dataverseName);
             for (Function function : dataverseFunctions) {
                 dropFunction(txnId, function.getSignature(), true);
             }
@@ -711,59 +711,60 @@ public class MetadataNode implements IMetadataNode {
             // Drop all adapters in this dataverse.
             // Adapters depend on libraries.
             // As a side effect, acquires an S lock on the 'Adapter' dataset on behalf of txnId.
-            List<DatasourceAdapter> dataverseAdapters = getDataverseAdapters(txnId, dataverseName);
+            List<DatasourceAdapter> dataverseAdapters = getDataverseAdapters(txnId, database, dataverseName);
             for (DatasourceAdapter adapter : dataverseAdapters) {
-                dropAdapter(txnId, dataverseName, adapter.getAdapterIdentifier().getName());
+                dropAdapter(txnId, database, dataverseName, adapter.getAdapterIdentifier().getName());
             }
 
             // Drop all libraries in this dataverse.
-            List<Library> dataverseLibraries = getDataverseLibraries(txnId, dataverseName);
+            List<Library> dataverseLibraries = getDataverseLibraries(txnId, database, dataverseName);
             for (Library lib : dataverseLibraries) {
-                dropLibrary(txnId, lib.getDataverseName(), lib.getName());
+                dropLibrary(txnId, lib.getDatabaseName(), lib.getDataverseName(), lib.getName());
             }
 
             // Drop all synonyms in this dataverse.
-            List<Synonym> dataverseSynonyms = getDataverseSynonyms(txnId, dataverseName);
+            List<Synonym> dataverseSynonyms = getDataverseSynonyms(txnId, database, dataverseName);
             for (Synonym synonym : dataverseSynonyms) {
-                dropSynonym(txnId, dataverseName, synonym.getSynonymName(), true);
+                dropSynonym(txnId, database, dataverseName, synonym.getSynonymName(), true);
             }
 
             // Drop all datasets and indexes in this dataverse.
             // Datasets depend on datatypes
-            List<Dataset> dataverseDatasets = getDataverseDatasets(txnId, dataverseName);
+            List<Dataset> dataverseDatasets = getDataverseDatasets(txnId, database, dataverseName);
             for (Dataset ds : dataverseDatasets) {
-                dropDataset(txnId, dataverseName, ds.getDatasetName(), true);
+                dropDataset(txnId, database, dataverseName, ds.getDatasetName(), true);
             }
 
             // Drop full-text configs in this dataverse.
             // Note that full-text configs are utilized by the index, and we need to always drop index first
             // and then full-text config
             List<FullTextConfigMetadataEntity> configMetadataEntities =
-                    getDataverseFullTextConfigs(txnId, dataverseName);
+                    getDataverseFullTextConfigs(txnId, database, dataverseName);
             for (FullTextConfigMetadataEntity configMetadataEntity : configMetadataEntities) {
-                dropFullTextConfigDescriptor(txnId, dataverseName, configMetadataEntity.getFullTextConfig().getName(),
-                        true);
+                dropFullTextConfigDescriptor(txnId, database, dataverseName,
+                        configMetadataEntity.getFullTextConfig().getName(), true);
             }
 
             // Drop full-text filters in this dataverse.
             // Note that full-text filters are utilized by the full-text configs,
             // and we need to always drop full-text configs first
             // and then full-text filter
-            List<FullTextFilterMetadataEntity> filters = getDataverseFullTextFilters(txnId, dataverseName);
+            List<FullTextFilterMetadataEntity> filters = getDataverseFullTextFilters(txnId, database, dataverseName);
             for (FullTextFilterMetadataEntity filter : filters) {
-                dropFullTextFilterDescriptor(txnId, dataverseName, filter.getFullTextFilter().getName(), true);
+                dropFullTextFilterDescriptor(txnId, database, dataverseName, filter.getFullTextFilter().getName(),
+                        true);
             }
 
             // Drop all types in this dataverse.
             // As a side effect, acquires an S lock on the 'datatype' dataset on behalf of txnId.
-            List<Datatype> dataverseDatatypes = getDataverseDatatypes(txnId, dataverseName);
+            List<Datatype> dataverseDatatypes = getDataverseDatatypes(txnId, database, dataverseName);
             for (Datatype dataverseDatatype : dataverseDatatypes) {
-                forceDropDatatype(txnId, dataverseName, dataverseDatatype.getDatatypeName());
+                forceDropDatatype(txnId, database, dataverseName, dataverseDatatype.getDatatypeName());
             }
 
             // Delete the dataverse entry from the 'dataverse' dataset.
             // As a side effect, acquires an S lock on the 'dataverse' dataset on behalf of txnId.
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             ITupleReference tuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getDataverseEntity().getIndex(), searchKey);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getDataverseEntity().getIndex(), tuple);
@@ -778,35 +779,36 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public boolean isDataverseNotEmpty(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
-        return !getDataverseDatatypes(txnId, dataverseName).isEmpty()
-                || !getDataverseDatasets(txnId, dataverseName).isEmpty()
-                || !getDataverseLibraries(txnId, dataverseName).isEmpty()
-                || !getDataverseAdapters(txnId, dataverseName).isEmpty()
-                || !getDataverseFunctions(txnId, dataverseName).isEmpty()
-                || !getDataverseFeedPolicies(txnId, dataverseName).isEmpty()
-                || !getDataverseFeeds(txnId, dataverseName).isEmpty()
-                || !getDataverseSynonyms(txnId, dataverseName).isEmpty()
-                || !getDataverseFullTextConfigs(txnId, dataverseName).isEmpty()
-                || !getDataverseFullTextFilters(txnId, dataverseName).isEmpty();
+    public boolean isDataverseNotEmpty(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
+        return !getDataverseDatatypes(txnId, database, dataverseName).isEmpty()
+                || !getDataverseDatasets(txnId, database, dataverseName).isEmpty()
+                || !getDataverseLibraries(txnId, database, dataverseName).isEmpty()
+                || !getDataverseAdapters(txnId, database, dataverseName).isEmpty()
+                || !getDataverseFunctions(txnId, database, dataverseName).isEmpty()
+                || !getDataverseFeedPolicies(txnId, database, dataverseName).isEmpty()
+                || !getDataverseFeeds(txnId, database, dataverseName).isEmpty()
+                || !getDataverseSynonyms(txnId, database, dataverseName).isEmpty()
+                || !getDataverseFullTextConfigs(txnId, database, dataverseName).isEmpty()
+                || !getDataverseFullTextFilters(txnId, database, dataverseName).isEmpty();
     }
 
     @Override
-    public void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
-            throws AlgebricksException {
-        Dataset dataset = getDataset(txnId, dataverseName, datasetName);
+    public void dropDataset(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
+            boolean force) throws AlgebricksException {
+        Dataset dataset = getDataset(txnId, database, dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE,
                     datasetName, dataverseName);
         }
         if (!force) {
             String datasetTypeDisplayName = DatasetUtil.getDatasetTypeDisplayName(dataset.getDatasetType());
-            confirmDatasetCanBeDeleted(txnId, datasetTypeDisplayName, dataverseName, datasetName);
+            confirmDatasetCanBeDeleted(txnId, datasetTypeDisplayName, database, dataverseName, datasetName);
         }
 
         try {
             // Delete entry from the 'datasets' dataset.
-            ITupleReference searchKey = createTuple(dataverseName, datasetName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datasetName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'dataset' dataset.
             ITupleReference datasetTuple = null;
@@ -816,19 +818,19 @@ public class MetadataNode implements IMetadataNode {
                 switch (dataset.getDatasetType()) {
                     case INTERNAL:
                         // Delete entry(s) from the 'indexes' dataset.
-                        List<Index> datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
+                        List<Index> datasetIndexes = getDatasetIndexes(txnId, database, dataverseName, datasetName);
                         if (datasetIndexes != null) {
                             for (Index index : datasetIndexes) {
-                                dropIndex(txnId, dataverseName, datasetName, index.getIndexName());
+                                dropIndex(txnId, database, dataverseName, datasetName, index.getIndexName());
                             }
                         }
                         break;
                     case EXTERNAL:
                         // Delete entry(s) from the 'indexes' dataset.
-                        datasetIndexes = getDatasetIndexes(txnId, dataverseName, datasetName);
+                        datasetIndexes = getDatasetIndexes(txnId, database, dataverseName, datasetName);
                         if (datasetIndexes != null) {
                             for (Index index : datasetIndexes) {
-                                dropIndex(txnId, dataverseName, datasetName, index.getIndexName());
+                                dropIndex(txnId, database, dataverseName, datasetName, index.getIndexName());
                             }
                         }
                         // Delete External Files
@@ -838,7 +840,8 @@ public class MetadataNode implements IMetadataNode {
                         if (datasetFiles != null && !datasetFiles.isEmpty()) {
                             // Drop all external files in this dataset.
                             for (ExternalFile file : datasetFiles) {
-                                dropExternalFile(txnId, dataverseName, file.getDatasetName(), file.getFileNumber());
+                                dropExternalFile(txnId, database, dataverseName, file.getDatasetName(),
+                                        file.getFileNumber());
                             }
                         }
                         break;
@@ -860,10 +863,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
-            throws AlgebricksException {
+    public void dropIndex(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
+            String indexName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datasetName, indexName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datasetName, indexName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'index' dataset.
             ITupleReference tuple =
@@ -909,29 +912,31 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName) throws AlgebricksException {
-        dropDatatype(txnId, dataverseName, datatypeName, false);
+    public void dropDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
+            throws AlgebricksException {
+        dropDatatype(txnId, database, dataverseName, datatypeName, false);
     }
 
-    private void dropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName, boolean force)
-            throws AlgebricksException {
+    private void dropDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName,
+            boolean force) throws AlgebricksException {
         if (!force) {
-            confirmDatatypeIsUnused(txnId, dataverseName, datatypeName);
+            confirmDatatypeIsUnused(txnId, database, dataverseName, datatypeName);
         }
         // Delete the datatype entry, including all it's nested anonymous types.
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datatypeName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datatypeName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'datatype' dataset.
             ITupleReference tuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getDatatypeEntity().getIndex(), searchKey);
             // Get nested types
-            List<String> nestedTypes = getNestedComplexDatatypeNamesForThisDatatype(txnId, dataverseName, datatypeName);
+            List<String> nestedTypes =
+                    getNestedComplexDatatypeNamesForThisDatatype(txnId, database, dataverseName, datatypeName);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getDatatypeEntity().getIndex(), tuple);
             for (String nestedType : nestedTypes) {
-                Datatype dt = getDatatype(txnId, dataverseName, nestedType);
+                Datatype dt = getDatatype(txnId, database, dataverseName, nestedType);
                 if (dt != null && dt.getIsAnonymous()) {
-                    dropDatatype(txnId, dataverseName, dt.getDatatypeName());
+                    dropDatatype(txnId, database, dataverseName, dt.getDatatypeName());
                 }
             }
         } catch (HyracksDataException e) {
@@ -944,10 +949,10 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void forceDropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+    private void forceDropDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datatypeName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datatypeName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'datatype' dataset.
             ITupleReference tuple =
@@ -982,9 +987,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Dataverse getDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public Dataverse getDataverse(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(false);
             IValueExtractor<Dataverse> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Dataverse> results = new ArrayList<>();
@@ -999,9 +1005,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Dataset> getDataverseDatasets(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public List<Dataset> getDataverseDatasets(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
             IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Dataset> results = new ArrayList<>();
@@ -1013,9 +1020,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Feed> getDataverseFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public List<Feed> getDataverseFeeds(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Feed> results = new ArrayList<>();
@@ -1027,9 +1035,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Library> getDataverseLibraries(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public List<Library> getDataverseLibraries(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(false);
             IValueExtractor<Library> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Library> results = new ArrayList<>();
@@ -1040,9 +1049,10 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<Datatype> getDataverseDatatypes(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    private List<Datatype> getDataverseDatatypes(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             DatatypeTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getDataTypeTupleTranslator(txnId, this, false);
             IValueExtractor<Datatype> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1054,9 +1064,9 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<FullTextConfigMetadataEntity> getDataverseFullTextConfigs(TxnId txnId, DataverseName dataverseName)
-            throws AlgebricksException {
-        ITupleReference searchKey = createTuple(dataverseName);
+    private List<FullTextConfigMetadataEntity> getDataverseFullTextConfigs(TxnId txnId, String database,
+            DataverseName dataverseName) throws AlgebricksException {
+        ITupleReference searchKey = createTuple(database, dataverseName);
         FullTextConfigMetadataEntityTupleTranslator tupleReaderWriter =
                 tupleTranslatorProvider.getFullTextConfigTupleTranslator(true);
         IValueExtractor<FullTextConfigMetadataEntity> valueExtractor =
@@ -1071,9 +1081,9 @@ public class MetadataNode implements IMetadataNode {
         return results;
     }
 
-    private List<FullTextFilterMetadataEntity> getDataverseFullTextFilters(TxnId txnId, DataverseName dataverseName)
-            throws AlgebricksException {
-        ITupleReference searchKey = createTuple(dataverseName);
+    private List<FullTextFilterMetadataEntity> getDataverseFullTextFilters(TxnId txnId, String database,
+            DataverseName dataverseName) throws AlgebricksException {
+        ITupleReference searchKey = createTuple(database, dataverseName);
         FullTextFilterMetadataEntityTupleTranslator tupleReaderWriter =
                 tupleTranslatorProvider.getFullTextFilterTupleTranslator(true);
         IValueExtractor<FullTextFilterMetadataEntity> valueExtractor =
@@ -1089,9 +1099,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Dataset getDataset(TxnId txnId, DataverseName dataverseName, String datasetName) throws AlgebricksException {
+    public Dataset getDataset(TxnId txnId, String database, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datasetName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datasetName);
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
             List<Dataset> results = new ArrayList<>();
             IValueExtractor<Dataset> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1161,7 +1172,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDataverseCanBeDeleted(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    private void confirmDataverseCanBeDeleted(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         // If a dataset from a DIFFERENT dataverse
         // uses a type from this dataverse
         // throw an error
@@ -1260,28 +1272,28 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmFunctionIsUnusedByViews(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
-        confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, signature.getDataverseName(),
+        confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, null, signature.getDataverseName(),
                 signature.getName(), Integer.toString(signature.getArity()));
     }
 
     private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
             throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, signature.getDataverseName(),
+        confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, null, signature.getDataverseName(),
                 signature.getName(), Integer.toString(signature.getArity()));
     }
 
     private void confirmObjectIsUnusedByFunctions(TxnId txnId, String objectKindDisplayName,
-            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
-            throws AlgebricksException {
+            DependencyKind dependencyKind, String database, DataverseName dataverseName, String objectName,
+            String objectArg) throws AlgebricksException {
         // If any function uses this object, throw an error
         List<Function> functions = getAllFunctions(txnId);
-        confirmObjectIsUnusedByFunctionsImpl(functions, objectKindDisplayName, dependencyKind, dataverseName,
+        confirmObjectIsUnusedByFunctionsImpl(functions, objectKindDisplayName, dependencyKind, database, dataverseName,
                 objectName, objectArg);
     }
 
     private void confirmObjectIsUnusedByFunctionsImpl(List<Function> allFunctions, String objectKindDisplayName,
-            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
-            throws AlgebricksException {
+            DependencyKind dependencyKind, String database, DataverseName dataverseName, String objectName,
+            String objectArg) throws AlgebricksException {
         int functionDependencyIdx = Function.DEPENDENCIES_SCHEMA.indexOf(dependencyKind);
         if (functionDependencyIdx < 0) {
             throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
@@ -1307,16 +1319,17 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmObjectIsUnusedByViews(TxnId txnId, String objectKindDisplayName, DependencyKind dependencyKind,
-            DataverseName dataverseName, String objectName, String objectArg) throws AlgebricksException {
+            String database, DataverseName dataverseName, String objectName, String objectArg)
+            throws AlgebricksException {
         // If any function uses this object, throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
-        confirmObjectIsUnusedByViewsImpl(datasets, objectKindDisplayName, dependencyKind, dataverseName, objectName,
-                objectArg);
+        confirmObjectIsUnusedByViewsImpl(datasets, objectKindDisplayName, dependencyKind, database, dataverseName,
+                objectName, objectArg);
     }
 
     private void confirmObjectIsUnusedByViewsImpl(List<Dataset> allDatasets, String objectKindDisplayName,
-            DependencyKind dependencyKind, DataverseName dataverseName, String objectName, String objectArg)
-            throws AlgebricksException {
+            DependencyKind dependencyKind, String database, DataverseName dataverseName, String objectName,
+            String objectArg) throws AlgebricksException {
         int viewDependencyIdx = ViewDetails.DEPENDENCIES_SCHEMA.indexOf(dependencyKind);
         if (viewDependencyIdx < 0) {
             throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
@@ -1344,8 +1357,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmFullTextConfigCanBeDeleted(TxnId txnId, DataverseName dataverseNameFullTextConfig,
-            String configName) throws AlgebricksException {
+    private void confirmFullTextConfigCanBeDeleted(TxnId txnId, String database,
+            DataverseName dataverseNameFullTextConfig, String configName) throws AlgebricksException {
         if (Strings.isNullOrEmpty(configName)) {
             throw new MetadataException(
                     org.apache.asterix.common.exceptions.ErrorCode.FULL_TEXT_DEFAULT_CONFIG_CANNOT_BE_DELETED_OR_CREATED);
@@ -1354,7 +1367,8 @@ public class MetadataNode implements IMetadataNode {
         // If any index uses this full-text config, throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset dataset : datasets) {
-            List<Index> indexes = getDatasetIndexes(txnId, dataset.getDataverseName(), dataset.getDatasetName());
+            List<Index> indexes = getDatasetIndexes(txnId, dataset.getDatabaseName(), dataset.getDataverseName(),
+                    dataset.getDatasetName());
             for (Index index : indexes) {
                 // ToDo: to support index to access full-text config in another dataverse,
                 //   we may need to include the dataverse of the full-text config in the index.getFullTextConfigDataverse()
@@ -1376,32 +1390,32 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatasetCanBeDeleted(TxnId txnId, String datasetTypeDisplayName, DataverseName dataverseName,
-            String datasetName) throws AlgebricksException {
-        confirmDatasetIsUnusedByFunctions(txnId, datasetTypeDisplayName, dataverseName, datasetName);
-        confirmDatasetIsUnusedByViews(txnId, datasetTypeDisplayName, dataverseName, datasetName);
+    private void confirmDatasetCanBeDeleted(TxnId txnId, String datasetTypeDisplayName, String database,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        confirmDatasetIsUnusedByFunctions(txnId, datasetTypeDisplayName, database, dataverseName, datasetName);
+        confirmDatasetIsUnusedByViews(txnId, datasetTypeDisplayName, database, dataverseName, datasetName);
     }
 
-    private void confirmDatasetIsUnusedByFunctions(TxnId txnId, String datasetKindDisplayName,
+    private void confirmDatasetIsUnusedByFunctions(TxnId txnId, String datasetKindDisplayName, String database,
             DataverseName dataverseName, String datasetName) throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, datasetKindDisplayName, DependencyKind.DATASET, dataverseName,
+        confirmObjectIsUnusedByFunctions(txnId, datasetKindDisplayName, DependencyKind.DATASET, database, dataverseName,
                 datasetName, null);
     }
 
-    private void confirmDatasetIsUnusedByViews(TxnId txnId, String datasetKindDisplayName, DataverseName dataverseName,
-            String datasetName) throws AlgebricksException {
-        confirmObjectIsUnusedByViews(txnId, datasetKindDisplayName, DependencyKind.DATASET, dataverseName, datasetName,
-                null);
+    private void confirmDatasetIsUnusedByViews(TxnId txnId, String datasetKindDisplayName, String database,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        confirmObjectIsUnusedByViews(txnId, datasetKindDisplayName, DependencyKind.DATASET, database, dataverseName,
+                datasetName, null);
     }
 
-    private void confirmLibraryCanBeDeleted(TxnId txnId, DataverseName dataverseName, String libraryName)
-            throws AlgebricksException {
-        confirmLibraryIsUnusedByFunctions(txnId, dataverseName, libraryName);
-        confirmLibraryIsUnusedByAdapters(txnId, dataverseName, libraryName);
+    private void confirmLibraryCanBeDeleted(TxnId txnId, String database, DataverseName dataverseName,
+            String libraryName) throws AlgebricksException {
+        confirmLibraryIsUnusedByFunctions(txnId, database, dataverseName, libraryName);
+        confirmLibraryIsUnusedByAdapters(txnId, database, dataverseName, libraryName);
     }
 
-    private void confirmLibraryIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String libraryName)
-            throws AlgebricksException {
+    private void confirmLibraryIsUnusedByFunctions(TxnId txnId, String database, DataverseName dataverseName,
+            String libraryName) throws AlgebricksException {
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
             if (libraryName.equals(function.getLibraryName())
@@ -1414,8 +1428,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmLibraryIsUnusedByAdapters(TxnId txnId, DataverseName dataverseName, String libraryName)
-            throws AlgebricksException {
+    private void confirmLibraryIsUnusedByAdapters(TxnId txnId, String database, DataverseName dataverseName,
+            String libraryName) throws AlgebricksException {
         List<DatasourceAdapter> adapters = getAllAdapters(txnId);
         for (DatasourceAdapter adapter : adapters) {
             if (libraryName.equals(adapter.getLibraryName())
@@ -1429,15 +1443,15 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatatypeIsUnused(TxnId txnId, DataverseName dataverseName, String datatypeName)
+    private void confirmDatatypeIsUnused(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException {
-        confirmDatatypeIsUnusedByDatatypes(txnId, dataverseName, datatypeName);
-        confirmDatatypeIsUnusedByDatasets(txnId, dataverseName, datatypeName);
-        confirmDatatypeIsUnusedByFunctions(txnId, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByDatatypes(txnId, database, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByDatasets(txnId, database, dataverseName, datatypeName);
+        confirmDatatypeIsUnusedByFunctions(txnId, database, dataverseName, datatypeName);
     }
 
-    private void confirmDatatypeIsUnusedByDatasets(TxnId txnId, DataverseName dataverseName, String datatypeName)
-            throws AlgebricksException {
+    private void confirmDatatypeIsUnusedByDatasets(TxnId txnId, String database, DataverseName dataverseName,
+            String datatypeName) throws AlgebricksException {
         // If any dataset uses this type, throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset dataset : datasets) {
@@ -1454,15 +1468,16 @@ public class MetadataNode implements IMetadataNode {
 
         // additionally, if a view uses this type, throw an error
         // Note: for future use. currently views don't have any type dependencies
-        confirmObjectIsUnusedByViewsImpl(datasets, null, DependencyKind.TYPE, dataverseName, datatypeName, null);
+        confirmObjectIsUnusedByViewsImpl(datasets, null, DependencyKind.TYPE, database, dataverseName, datatypeName,
+                null);
     }
 
-    private void confirmDatatypeIsUnusedByDatatypes(TxnId txnId, DataverseName dataverseName, String datatypeName)
-            throws AlgebricksException {
+    private void confirmDatatypeIsUnusedByDatatypes(TxnId txnId, String database, DataverseName dataverseName,
+            String datatypeName) throws AlgebricksException {
         // If any datatype uses this type, throw an error
         // TODO: Currently this loads all types into memory. This will need to be fixed
         // for large numbers of types
-        Datatype dataTypeToBeDropped = getDatatype(txnId, dataverseName, datatypeName);
+        Datatype dataTypeToBeDropped = getDatatype(txnId, database, dataverseName, datatypeName);
         assert dataTypeToBeDropped != null;
         IAType typeToBeDropped = dataTypeToBeDropped.getDatatype();
         List<Datatype> datatypes = getAllDatatypes(txnId);
@@ -1482,14 +1497,16 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmDatatypeIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String dataTypeName)
-            throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, "datatype", DependencyKind.TYPE, dataverseName, dataTypeName, null);
+    private void confirmDatatypeIsUnusedByFunctions(TxnId txnId, String database, DataverseName dataverseName,
+            String dataTypeName) throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, "datatype", DependencyKind.TYPE, database, dataverseName, dataTypeName,
+                null);
     }
 
-    private void confirmFullTextFilterCanBeDeleted(TxnId txnId, DataverseName dataverseName, String fullTextFilterName)
-            throws AlgebricksException {
-        List<FullTextConfigMetadataEntity> configMetadataEntities = getDataverseFullTextConfigs(txnId, dataverseName);
+    private void confirmFullTextFilterCanBeDeleted(TxnId txnId, String database, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException {
+        List<FullTextConfigMetadataEntity> configMetadataEntities =
+                getDataverseFullTextConfigs(txnId, database, dataverseName);
         for (FullTextConfigMetadataEntity configMetadataEntity : configMetadataEntities) {
             FullTextConfigDescriptor config = configMetadataEntity.getFullTextConfig();
             for (String filterName : config.getFilterNames()) {
@@ -1503,10 +1520,10 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<String> getNestedComplexDatatypeNamesForThisDatatype(TxnId txnId, DataverseName dataverseName,
-            String datatypeName) throws AlgebricksException {
+    private List<String> getNestedComplexDatatypeNamesForThisDatatype(TxnId txnId, String database,
+            DataverseName dataverseName, String datatypeName) throws AlgebricksException {
         // Return all field types that aren't builtin types
-        Datatype parentType = getDatatype(txnId, dataverseName, datatypeName);
+        Datatype parentType = getDatatype(txnId, database, dataverseName, datatypeName);
 
         List<IAType> subTypes = null;
         if (parentType.getDatatype().getTypeTag() == ATypeTag.OBJECT) {
@@ -1547,10 +1564,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Index getIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
-            throws AlgebricksException {
+    public Index getIndex(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
+            String indexName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datasetName, indexName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datasetName, indexName);
             IndexTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getIndexTupleTranslator(txnId, this, false);
             IValueExtractor<Index> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1566,10 +1583,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Index> getDatasetIndexes(TxnId txnId, DataverseName dataverseName, String datasetName)
+    public List<Index> getDatasetIndexes(TxnId txnId, String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datasetName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datasetName);
             IndexTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getIndexTupleTranslator(txnId, this, false);
             IValueExtractor<Index> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1582,10 +1599,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Datatype getDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+    public Datatype getDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, datatypeName);
+            ITupleReference searchKey = createTuple(database, dataverseName, datatypeName);
             DatatypeTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getDataTypeTupleTranslator(txnId, this, false);
             IValueExtractor<Datatype> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -1619,14 +1636,15 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException {
-        List<Function> functions = getFunctionsImpl(txnId, createTuple(functionSignature.getDataverseName(),
+        List<Function> functions = getFunctionsImpl(txnId, createTuple(null, functionSignature.getDataverseName(),
                 functionSignature.getName(), Integer.toString(functionSignature.getArity())));
         return functions.isEmpty() ? null : functions.get(0);
     }
 
     @Override
-    public List<Function> getDataverseFunctions(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
-        return getFunctionsImpl(txnId, createTuple(dataverseName));
+    public List<Function> getDataverseFunctions(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
+        return getFunctionsImpl(txnId, createTuple(database, dataverseName));
     }
 
     private List<Function> getFunctionsImpl(TxnId txnId, ITupleReference searchKey) throws AlgebricksException {
@@ -1654,8 +1672,8 @@ public class MetadataNode implements IMetadataNode {
         }
         try {
             // Delete entry from the 'function' dataset.
-            ITupleReference searchKey = createTuple(functionSignature.getDataverseName(), functionSignature.getName(),
-                    Integer.toString(functionSignature.getArity()));
+            ITupleReference searchKey = createTuple(null, functionSignature.getDataverseName(),
+                    functionSignature.getName(), Integer.toString(functionSignature.getArity()));
             // Searches the index for the tuple to be deleted. Acquires an S lock on the 'function' dataset.
             ITupleReference functionTuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getFunctionEntity().getIndex(), searchKey);
@@ -1868,7 +1886,40 @@ public class MetadataNode implements IMetadataNode {
     }
 
     public static ITupleReference createTuple(DataverseName dataverseName, String... rest) {
+        //TODO(DB): remove this method after
         return createTuple(dataverseName.getCanonicalForm(), rest);
+    }
+
+    private static ITupleReference createTuple(String databaseName, DataverseName dataverseName, String... rest) {
+        //TODO(DB): pass mdIndexesProvider and use it instead of checking for null
+        if (databaseName == null) {
+            return createTuple(dataverseName.getCanonicalForm(), rest);
+        } else {
+            return createDatabaseTuple(databaseName, dataverseName, rest);
+        }
+    }
+
+    private static ITupleReference createDatabaseTuple(String databaseName, DataverseName dataverseName,
+            String... rest) {
+        try {
+            ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(2 + rest.length);
+            ISerializerDeserializer<AString> stringSerde =
+                    SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
+            AMutableString aString = new AMutableString(databaseName);
+            tupleBuilder.addField(stringSerde, aString);
+            aString.setValue(dataverseName.getCanonicalForm());
+            tupleBuilder.addField(stringSerde, aString);
+            for (String s : rest) {
+                aString.setValue(s);
+                tupleBuilder.addField(stringSerde, aString);
+            }
+            ArrayTupleReference tuple = new ArrayTupleReference();
+            tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
+            return tuple;
+        } catch (HyracksDataException e) {
+            // This should never happen
+            throw new IllegalStateException("Failed to create search tuple", e);
+        }
     }
 
     public static ITupleReference createTuple(String first, String... rest) {
@@ -1877,12 +1928,10 @@ public class MetadataNode implements IMetadataNode {
             ISerializerDeserializer<AString> stringSerde =
                     SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
             AMutableString aString = new AMutableString(first);
-            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
-            tupleBuilder.addFieldEndOffset();
+            tupleBuilder.addField(stringSerde, aString);
             for (String s : rest) {
                 aString.setValue(s);
-                stringSerde.serialize(aString, tupleBuilder.getDataOutput());
-                tupleBuilder.addFieldEndOffset();
+                tupleBuilder.addField(stringSerde, aString);
             }
             ArrayTupleReference tuple = new ArrayTupleReference();
             tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
@@ -1919,10 +1968,11 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropAdapter(TxnId txnId, DataverseName dataverseName, String adapterName) throws AlgebricksException {
+    public void dropAdapter(TxnId txnId, String database, DataverseName dataverseName, String adapterName)
+            throws AlgebricksException {
         try {
             // Delete entry from the 'Adapter' dataset.
-            ITupleReference searchKey = createTuple(dataverseName, adapterName);
+            ITupleReference searchKey = createTuple(database, dataverseName, adapterName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'Adapter' dataset.
             ITupleReference datasetTuple =
@@ -1939,10 +1989,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public DatasourceAdapter getAdapter(TxnId txnId, DataverseName dataverseName, String adapterName)
+    public DatasourceAdapter getAdapter(TxnId txnId, String database, DataverseName dataverseName, String adapterName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, adapterName);
+            ITupleReference searchKey = createTuple(database, dataverseName, adapterName);
             DatasourceAdapterTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getAdapterTupleTranslator(false);
             List<DatasourceAdapter> results = new ArrayList<>();
@@ -1978,10 +2028,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public CompactionPolicy getCompactionPolicy(TxnId txnId, DataverseName dataverseName, String policyName)
-            throws AlgebricksException {
+    public CompactionPolicy getCompactionPolicy(TxnId txnId, String database, DataverseName dataverseName,
+            String policyName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, policyName);
+            ITupleReference searchKey = createTuple(database, dataverseName, policyName);
             CompactionPolicyTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getCompactionPolicyTupleTranslator(false);
             List<CompactionPolicy> results = new ArrayList<>();
@@ -1998,10 +2048,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, DataverseName dataverseName)
+    public List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             DatasourceAdapterTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getAdapterTupleTranslator(false);
             IValueExtractor<DatasourceAdapter> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2032,18 +2082,19 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropLibrary(TxnId txnId, DataverseName dataverseName, String libraryName) throws AlgebricksException {
-        dropLibrary(txnId, dataverseName, libraryName, false);
+    public void dropLibrary(TxnId txnId, String database, DataverseName dataverseName, String libraryName)
+            throws AlgebricksException {
+        dropLibrary(txnId, database, dataverseName, libraryName, false);
     }
 
-    private void dropLibrary(TxnId txnId, DataverseName dataverseName, String libraryName, boolean force)
-            throws AlgebricksException {
+    private void dropLibrary(TxnId txnId, String database, DataverseName dataverseName, String libraryName,
+            boolean force) throws AlgebricksException {
         if (!force) {
-            confirmLibraryCanBeDeleted(txnId, dataverseName, libraryName);
+            confirmLibraryCanBeDeleted(txnId, database, dataverseName, libraryName);
         }
         try {
             // Delete entry from the 'Library' dataset.
-            ITupleReference searchKey = createTuple(dataverseName, libraryName);
+            ITupleReference searchKey = createTuple(database, dataverseName, libraryName);
             // Searches the index for the tuple to be deleted. Acquires an S lock on the 'Library' dataset.
             ITupleReference datasetTuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getLibraryEntity().getIndex(), searchKey);
@@ -2059,9 +2110,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Library getLibrary(TxnId txnId, DataverseName dataverseName, String libraryName) throws AlgebricksException {
+    public Library getLibrary(TxnId txnId, String database, DataverseName dataverseName, String libraryName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, libraryName);
+            ITupleReference searchKey = createTuple(database, dataverseName, libraryName);
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(false);
             List<Library> results = new ArrayList<>();
             IValueExtractor<Library> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2098,10 +2150,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedPolicyEntity getFeedPolicy(TxnId txnId, DataverseName dataverseName, String policyName)
+    public FeedPolicyEntity getFeedPolicy(TxnId txnId, String database, DataverseName dataverseName, String policyName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, policyName);
+            ITupleReference searchKey = createTuple(database, dataverseName, policyName);
             FeedPolicyTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedPolicyTupleTranslator(false);
             List<FeedPolicyEntity> results = new ArrayList<>();
             IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2133,10 +2185,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<FeedConnection> getFeedConnections(TxnId txnId, DataverseName dataverseName, String feedName)
-            throws AlgebricksException {
+    public List<FeedConnection> getFeedConnections(TxnId txnId, String database, DataverseName dataverseName,
+            String feedName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, feedName);
+            ITupleReference searchKey = createTuple(database, dataverseName, feedName);
             FeedConnectionTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getFeedConnectionTupleTranslator(false);
             List<FeedConnection> results = new ArrayList<>();
@@ -2150,10 +2202,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public FeedConnection getFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName,
+    public FeedConnection getFeedConnection(TxnId txnId, String database, DataverseName dataverseName, String feedName,
             String datasetName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
+            ITupleReference searchKey = createTuple(database, dataverseName, feedName, datasetName);
             FeedConnectionTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getFeedConnectionTupleTranslator(false);
             List<FeedConnection> results = new ArrayList<>();
@@ -2170,10 +2222,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName, String datasetName)
-            throws AlgebricksException {
+    public void dropFeedConnection(TxnId txnId, String database, DataverseName dataverseName, String feedName,
+            String datasetName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, feedName, datasetName);
+            ITupleReference searchKey = createTuple(database, dataverseName, feedName, datasetName);
             ITupleReference tuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getFeedConnectionEntity().getIndex(), searchKey);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getFeedConnectionEntity().getIndex(), tuple);
@@ -2205,9 +2257,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public Feed getFeed(TxnId txnId, DataverseName dataverseName, String feedName) throws AlgebricksException {
+    public Feed getFeed(TxnId txnId, String database, DataverseName dataverseName, String feedName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, feedName);
+            ITupleReference searchKey = createTuple(database, dataverseName, feedName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
             List<Feed> results = new ArrayList<>();
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2222,9 +2275,9 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Feed> getFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public List<Feed> getFeeds(TxnId txnId, String database, DataverseName dataverseName) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             FeedTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedTupleTranslator(false);
             List<Feed> results = new ArrayList<>();
             IValueExtractor<Feed> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2236,9 +2289,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeed(TxnId txnId, DataverseName dataverseName, String feedName) throws AlgebricksException {
+    public void dropFeed(TxnId txnId, String database, DataverseName dataverseName, String feedName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, feedName);
+            ITupleReference searchKey = createTuple(database, dataverseName, feedName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'nodegroup' dataset.
             ITupleReference tuple = getTupleToBeDeleted(txnId, mdIndexesProvider.getFeedEntity().getIndex(), searchKey);
@@ -2253,9 +2307,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropFeedPolicy(TxnId txnId, DataverseName dataverseName, String policyName) throws AlgebricksException {
+    public void dropFeedPolicy(TxnId txnId, String database, DataverseName dataverseName, String policyName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, policyName);
+            ITupleReference searchKey = createTuple(database, dataverseName, policyName);
             ITupleReference tuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getFeedPolicyEntity().getIndex(), searchKey);
             deleteTupleFromIndex(txnId, mdIndexesProvider.getFeedPolicyEntity().getIndex(), tuple);
@@ -2270,10 +2325,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<FeedPolicyEntity> getDataverseFeedPolicies(TxnId txnId, DataverseName dataverseName)
+    public List<FeedPolicyEntity> getDataverseFeedPolicies(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             FeedPolicyTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getFeedPolicyTupleTranslator(false);
             IValueExtractor<FeedPolicyEntity> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<FeedPolicyEntity> results = new ArrayList<>();
@@ -2305,7 +2360,8 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public List<ExternalFile> getExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
+            ITupleReference searchKey =
+                    createTuple(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
             ExternalFileTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getExternalFileTupleTranslator(false);
             IValueExtractor<ExternalFile> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2319,11 +2375,11 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName, int fileNumber)
-            throws AlgebricksException {
+    public void dropExternalFile(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
+            int fileNumber) throws AlgebricksException {
         try {
             // Delete entry from the 'ExternalFile' dataset.
-            ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
+            ITupleReference searchKey = createExternalFileSearchTuple(database, dataverseName, datasetName, fileNumber);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'ExternalFile' dataset.
             ITupleReference datasetTuple =
@@ -2344,15 +2400,15 @@ public class MetadataNode implements IMetadataNode {
         List<ExternalFile> files = getExternalFiles(txnId, dataset);
         // loop through files and delete them
         for (int i = 0; i < files.size(); i++) {
-            dropExternalFile(txnId, files.get(i).getDataverseName(), files.get(i).getDatasetName(),
-                    files.get(i).getFileNumber());
+            dropExternalFile(txnId, files.get(i).getDatabaseName(), files.get(i).getDataverseName(),
+                    files.get(i).getDatasetName(), files.get(i).getFileNumber());
         }
     }
 
     // This method is used to create a search tuple for external data file since the
     // search tuple has an int value
-    public ITupleReference createExternalFileSearchTuple(DataverseName dataverseName, String datasetName,
-            int fileNumber) throws HyracksDataException {
+    private ITupleReference createExternalFileSearchTuple(String database, DataverseName dataverseName,
+            String datasetName, int fileNumber) throws HyracksDataException {
         ISerializerDeserializer<AString> stringSerde =
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ASTRING);
         ISerializerDeserializer<AInt32> intSerde =
@@ -2361,6 +2417,12 @@ public class MetadataNode implements IMetadataNode {
         AMutableString aString = new AMutableString("");
         ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(3);
 
+        // database field
+        if (mdIndexesProvider.isUsingDatabase()) {
+            aString.setValue(database);
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         // dataverse field
         aString.setValue(dataverseName.getCanonicalForm());
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
@@ -2381,10 +2443,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public ExternalFile getExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName,
+    public ExternalFile getExternalFile(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
             Integer fileNumber) throws AlgebricksException {
         try {
-            ITupleReference searchKey = createExternalFileSearchTuple(dataverseName, datasetName, fileNumber);
+            ITupleReference searchKey = createExternalFileSearchTuple(database, dataverseName, datasetName, fileNumber);
             ExternalFileTupleTranslator tupleReaderWriter =
                     tupleTranslatorProvider.getExternalFileTupleTranslator(false);
             IValueExtractor<ExternalFile> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2418,19 +2480,20 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
-        dropSynonym(txnId, dataverseName, synonymName, false);
+    public void dropSynonym(TxnId txnId, String database, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
+        dropSynonym(txnId, database, dataverseName, synonymName, false);
     }
 
-    private void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName, boolean force)
-            throws AlgebricksException {
+    private void dropSynonym(TxnId txnId, String database, DataverseName dataverseName, String synonymName,
+            boolean force) throws AlgebricksException {
         if (!force) {
-            confirmSynonymCanBeDeleted(txnId, dataverseName, synonymName);
+            confirmSynonymCanBeDeleted(txnId, database, dataverseName, synonymName);
         }
 
         try {
             // Delete entry from the 'Synonym' dataset.
-            ITupleReference searchKey = createTuple(dataverseName, synonymName);
+            ITupleReference searchKey = createTuple(database, dataverseName, synonymName);
             // Searches the index for the tuple to be deleted. Acquires an S
             // lock on the 'Synonym' dataset.
             ITupleReference synonymTuple =
@@ -2446,26 +2509,29 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private void confirmSynonymCanBeDeleted(TxnId txnId, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        confirmSynonymIsUnusedByFunctions(txnId, dataverseName, synonymName);
-        confirmSynonymIsUnusedByViews(txnId, dataverseName, synonymName);
+    private void confirmSynonymCanBeDeleted(TxnId txnId, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        confirmSynonymIsUnusedByFunctions(txnId, database, dataverseName, synonymName);
+        confirmSynonymIsUnusedByViews(txnId, database, dataverseName, synonymName);
     }
 
-    private void confirmSynonymIsUnusedByFunctions(TxnId txnId, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, "synonym", DependencyKind.SYNONYM, dataverseName, synonymName, null);
+    private void confirmSynonymIsUnusedByFunctions(TxnId txnId, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        confirmObjectIsUnusedByFunctions(txnId, "synonym", DependencyKind.SYNONYM, database, dataverseName, synonymName,
+                null);
     }
 
-    private void confirmSynonymIsUnusedByViews(TxnId txnId, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        confirmObjectIsUnusedByViews(txnId, "synonym", DependencyKind.SYNONYM, dataverseName, synonymName, null);
+    private void confirmSynonymIsUnusedByViews(TxnId txnId, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        confirmObjectIsUnusedByViews(txnId, "synonym", DependencyKind.SYNONYM, database, dataverseName, synonymName,
+                null);
     }
 
     @Override
-    public Synonym getSynonym(TxnId txnId, DataverseName dataverseName, String synonymName) throws AlgebricksException {
+    public Synonym getSynonym(TxnId txnId, String database, DataverseName dataverseName, String synonymName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName, synonymName);
+            ITupleReference searchKey = createTuple(database, dataverseName, synonymName);
             SynonymTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getSynonymTupleTranslator(false);
             List<Synonym> results = new ArrayList<>();
             IValueExtractor<Synonym> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2480,9 +2546,10 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public List<Synonym> getDataverseSynonyms(TxnId txnId, DataverseName dataverseName) throws AlgebricksException {
+    public List<Synonym> getDataverseSynonyms(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException {
         try {
-            ITupleReference searchKey = createTuple(dataverseName);
+            ITupleReference searchKey = createTuple(database, dataverseName);
             SynonymTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getSynonymTupleTranslator(false);
             IValueExtractor<Synonym> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
             List<Synonym> results = new ArrayList<>();
@@ -2498,7 +2565,8 @@ public class MetadataNode implements IMetadataNode {
         try {
             // This method will delete previous entry of the dataset and insert the new one
             // Delete entry from the 'datasets' dataset.
-            ITupleReference searchKey = createTuple(dataset.getDataverseName(), dataset.getDatasetName());
+            ITupleReference searchKey =
+                    createTuple(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
             // Searches the index for the tuple to be deleted. Acquires an S lock on the 'dataset' dataset.
             ITupleReference datasetTuple =
                     getTupleToBeDeleted(txnId, mdIndexesProvider.getDatasetEntity().getIndex(), searchKey);
@@ -2519,7 +2587,7 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void updateLibrary(TxnId txnId, Library library) throws AlgebricksException {
-        dropLibrary(txnId, library.getDataverseName(), library.getName(), true);
+        dropLibrary(txnId, library.getDatabaseName(), library.getDataverseName(), library.getName(), true);
         addLibrary(txnId, library);
     }
 
@@ -2531,7 +2599,7 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public void updateDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException {
-        dropDatatype(txnId, datatype.getDataverseName(), datatype.getDatatypeName(), true);
+        dropDatatype(txnId, datatype.getDatabaseName(), datatype.getDataverseName(), datatype.getDatatypeName(), true);
         addDatatype(txnId, datatype);
     }
 

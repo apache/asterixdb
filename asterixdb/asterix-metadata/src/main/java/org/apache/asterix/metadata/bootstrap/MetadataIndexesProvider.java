@@ -108,4 +108,8 @@ public class MetadataIndexesProvider {
                 getExternalFileEntity().getIndex(), getFeedConnectionEntity().getIndex(),
                 getFullTextConfigEntity().getIndex(), getFullTextFilterEntity().getIndex() };
     }
+
+    public boolean isUsingDatabase() {
+        return false;
+    }
 }

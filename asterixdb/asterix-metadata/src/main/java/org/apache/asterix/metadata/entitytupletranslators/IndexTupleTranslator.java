@@ -148,7 +148,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
     @Override
     protected Index createMetadataEntityFromARecord(ARecord indexRecord) throws AlgebricksException {
         int databaseNameIndex = indexEntity.databaseNameIndex();
-        String databaseName;
+        String databaseName = null;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) indexRecord.getValueByPos(databaseNameIndex)).getStringValue();
         }
@@ -294,7 +294,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 case STRING:
                     // This is a simple element, place in a single-element list.
                     String typeName = ((AString) fieldTypeItem).getStringValue();
-                    IAType fieldType = Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName);
+                    IAType fieldType =
+                            Datatype.getTypeFromTypeName(metadataNode, txnId, databaseName, dataverseName, typeName);
                     searchKeyType.add(Collections.singletonList(fieldType));
                     break;
                 case ARRAY:
@@ -304,7 +305,8 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                     IACursor fieldTypeListCursor = fieldTypeList.getCursor();
                     while (fieldTypeListCursor.next()) {
                         typeName = ((AString) fieldTypeListCursor.get()).getStringValue();
-                        fieldTypes.add(Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, typeName));
+                        fieldTypes.add(Datatype.getTypeFromTypeName(metadataNode, txnId, databaseName, dataverseName,
+                                typeName));
                     }
                     searchKeyType.add(fieldTypes);
                     break;
@@ -316,16 +318,17 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         if (searchKeyType.isEmpty()) {
             // if index key type information is not persisted, then we extract type information
             // from the record metadata
-            Dataset dataset = metadataNode.getDataset(txnId, dataverseName, datasetName);
+            Dataset dataset = metadataNode.getDataset(txnId, databaseName, dataverseName, datasetName);
             String datatypeName = dataset.getItemTypeName();
+            //TODO(DB): get 'database' of item type and meta type
             DataverseName datatypeDataverseName = dataset.getItemTypeDataverseName();
-            ARecordType recordDt =
-                    (ARecordType) metadataNode.getDatatype(txnId, datatypeDataverseName, datatypeName).getDatatype();
+            ARecordType recordDt = (ARecordType) metadataNode
+                    .getDatatype(txnId, null, datatypeDataverseName, datatypeName).getDatatype();
             String metatypeName = dataset.getMetaItemTypeName();
             DataverseName metatypeDataverseName = dataset.getMetaItemTypeDataverseName();
             ARecordType metaDt = null;
             if (metatypeName != null && metatypeDataverseName != null) {
-                metaDt = (ARecordType) metadataNode.getDatatype(txnId, metatypeDataverseName, metatypeName)
+                metaDt = (ARecordType) metadataNode.getDatatype(txnId, null, metatypeDataverseName, metatypeName)
                         .getDatatype();
             }
             recordDt = (ARecordType) MetadataManagerUtil.findTypeForDatasetWithoutType(recordDt, metaDt, dataset);

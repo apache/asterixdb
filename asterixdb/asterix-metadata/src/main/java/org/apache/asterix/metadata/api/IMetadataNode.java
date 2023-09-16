@@ -60,21 +60,21 @@ public interface IMetadataNode extends Remote, Serializable {
     /**
      * Begins a local transaction against the metadata.
      *
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void beginTransaction(TxnId txnId) throws RemoteException;
 
     /**
      * Commits a local transaction against the metadata.
      *
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void commitTransaction(TxnId txnId) throws RemoteException;
 
     /**
      * Aborts a local transaction against the metadata.
      *
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void abortTransaction(TxnId txnId) throws RemoteException;
 
@@ -88,7 +88,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Dataverse instance to be inserted.
      * @throws AlgebricksException
      *             For example, if the dataverse already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addDataverse(TxnId txnId, Dataverse dataverse) throws AlgebricksException, RemoteException;
 
@@ -101,7 +101,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A list of dataverse instances.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     List<Dataverse> getDataverses(TxnId txnId) throws AlgebricksException, RemoteException;
 
@@ -116,9 +116,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A dataverse instance.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Dataverse getDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+    Dataverse getDataverse(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException, RemoteException;
 
     /**
      * Retrieves all datasets belonging to the given dataverse, acquiring local
@@ -132,7 +133,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist. RemoteException
      */
-    List<Dataset> getDataverseDatasets(TxnId txnId, DataverseName dataverseName)
+    List<Dataset> getDataverseDatasets(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -147,7 +148,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
      */
-    void dropDataverse(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+    void dropDataverse(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException, RemoteException;
 
     /**
      * Returns {@code true} if given dataverse is not empty
@@ -157,7 +159,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataverseName
      *            Name of the dataverse
      */
-    boolean isDataverseNotEmpty(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+    boolean isDataverseNotEmpty(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a new dataset into the metadata, acquiring local locks on behalf of
@@ -169,7 +172,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Dataset instance to be inserted.
      * @throws AlgebricksException
      *             For example, if the dataset already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
@@ -186,9 +189,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A dataset instance.
      * @throws AlgebricksException
      *             For example, if the dataset does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Dataset getDataset(TxnId txnId, DataverseName dataverseName, String datasetName)
+    Dataset getDataset(TxnId txnId, String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -204,9 +207,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A list of Index instances.
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<Index> getDatasetIndexes(TxnId txnId, DataverseName dataverseName, String datasetName)
+    List<Index> getDatasetIndexes(TxnId txnId, String database, DataverseName dataverseName, String datasetName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -223,9 +226,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            If true, forces drop the dataset. Setting it to true could make the metadata inconsistent.
      * @throws AlgebricksException
      *             For example, if the dataset and/or dataverse does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropDataset(TxnId txnId, DataverseName dataverseName, String datasetName, boolean force)
+    void dropDataset(TxnId txnId, String database, DataverseName dataverseName, String datasetName, boolean force)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -239,7 +242,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Index instance to be inserted.
      * @throws AlgebricksException
      *             For example, if the index already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addIndex(TxnId txnId, Index index) throws AlgebricksException, RemoteException;
 
@@ -253,13 +256,14 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of the datavers holding the given dataset.
      * @param datasetName
      *            Name of the dataset holding the index.
-     * @indexName Name of the index to retrieve.
+     * @param indexName
+     *            Name of the index to retrieve.
      * @return An Index instance.
      * @throws AlgebricksException
      *             For example, if the index does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Index getIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
+    Index getIndex(TxnId txnId, String database, DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -272,12 +276,13 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of the datavers holding the given dataset.
      * @param datasetName
      *            Name of the dataset holding the index.
-     * @indexName Name of the index to retrieve.
+     * @param indexName
+     *            Name of the index to retrieve.
      * @throws AlgebricksException
      *             For example, if the index does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropIndex(TxnId txnId, DataverseName dataverseName, String datasetName, String indexName)
+    void dropIndex(TxnId txnId, String database, DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -290,7 +295,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Datatype instance to be inserted.
      * @throws AlgebricksException
      *             For example, if the datatype already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addDatatype(TxnId txnId, Datatype datatype) throws AlgebricksException, RemoteException;
 
@@ -307,9 +312,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A datatype instance.
      * @throws AlgebricksException
      *             For example, if the datatype does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Datatype getDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+    Datatype getDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -325,9 +330,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, if there are still datasets using the type to be
      *             deleted.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropDatatype(TxnId txnId, DataverseName dataverseName, String datatypeName)
+    void dropDatatype(TxnId txnId, String database, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -341,7 +346,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param modificationOp
      * @throws AlgebricksException
      *             For example, if the node group already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void modifyNodeGroup(TxnId txnId, NodeGroup nodeGroup,
             AbstractIndexModificationOperationCallback.Operation modificationOp)
@@ -357,7 +362,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of node group to be retrieved.
      * @throws AlgebricksException
      *             For example, if the node group does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     NodeGroup getNodeGroup(TxnId txnId, String nodeGroupName) throws AlgebricksException, RemoteException;
 
@@ -376,7 +381,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, there are still datasets partitioned on the node
      *             group to be deleted.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     boolean dropNodegroup(TxnId txnId, String nodeGroupName, boolean failSilently)
             throws AlgebricksException, RemoteException;
@@ -391,7 +396,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Node instance to be inserted.
      * @throws AlgebricksException
      *             For example, if the node already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addNode(TxnId txnId, Node node) throws AlgebricksException, RemoteException;
 
@@ -402,7 +407,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            An instance of functionSignature representing the function
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
 
@@ -417,9 +422,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return A list of function instances.
      * @throws AlgebricksException
      *             For example, if the dataverse does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<Function> getDataverseFunctions(TxnId txnId, DataverseName dataverseName)
+    List<Function> getDataverseFunctions(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -433,7 +438,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             For example, there are still datasets partitioned on the node
      *             group to be deleted.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void dropFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException, RemoteException;
 
@@ -445,7 +450,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *             for example, if the function already exists or refers to an
      *             unknown function
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addFunction(TxnId txnId, Function function) throws AlgebricksException, RemoteException;
 
@@ -470,8 +475,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *              For example, if the filter doesn't exist
      */
-    FullTextFilterMetadataEntity getFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
-            throws RemoteException, AlgebricksException;
+    FullTextFilterMetadataEntity getFullTextFilter(TxnId txnId, String database, DataverseName dataverseName,
+            String filterName) throws RemoteException, AlgebricksException;
 
     /**
      * @param txnId
@@ -483,7 +488,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *              For example, if ifExists is set to false and the filter doesn't exist
      */
-    void dropFullTextFilter(TxnId txnId, DataverseName dataverseName, String filterName)
+    void dropFullTextFilter(TxnId txnId, String database, DataverseName dataverseName, String filterName)
             throws RemoteException, AlgebricksException;
 
     /**
@@ -507,8 +512,8 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *              For example, if the full-text config doesn't exist
      */
-    FullTextConfigMetadataEntity getFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
-            throws AlgebricksException, RemoteException;
+    FullTextConfigMetadataEntity getFullTextConfig(TxnId txnId, String database, DataverseName dataverseName,
+            String configName) throws AlgebricksException, RemoteException;
 
     /**
      * @param txnId
@@ -520,7 +525,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws AlgebricksException
      *              For example, if ifExists is set to false and the config doesn't exist
      */
-    void dropFullTextConfig(TxnId txnId, DataverseName dataverseName, String configName)
+    void dropFullTextConfig(TxnId txnId, String database, DataverseName dataverseName, String configName)
             throws RemoteException, AlgebricksException;
 
     /**
@@ -529,9 +534,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return List<Adapter> A list containing the adapters in the specified
      *         dataverse
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, DataverseName dataverseName)
+    List<DatasourceAdapter> getDataverseAdapters(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -540,9 +545,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param adapterName
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    DatasourceAdapter getAdapter(TxnId txnId, DataverseName dataverseName, String adapterName)
+    DatasourceAdapter getAdapter(TxnId txnId, String database, DataverseName dataverseName, String adapterName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -557,9 +562,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of adapter to be deleted. AlgebricksException for example, if
      *            the adapter does not exists.
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropAdapter(TxnId txnId, DataverseName dataverseName, String adapterName)
+    void dropAdapter(TxnId txnId, String database, DataverseName dataverseName, String adapterName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -569,7 +574,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Adapter to be inserted
      * @throws AlgebricksException
      *             for example, if the adapter already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addAdapter(TxnId txnId, DatasourceAdapter adapter) throws AlgebricksException, RemoteException;
 
@@ -577,7 +582,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param txnId
      * @param compactionPolicy
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addCompactionPolicy(TxnId txnId, CompactionPolicy compactionPolicy)
             throws AlgebricksException, RemoteException;
@@ -588,22 +593,22 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param policy
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    CompactionPolicy getCompactionPolicy(TxnId txnId, DataverseName dataverseName, String policy)
+    CompactionPolicy getCompactionPolicy(TxnId txnId, String database, DataverseName dataverseName, String policy)
             throws AlgebricksException, RemoteException;
 
     /**
      * @param txnId
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void initializeDatasetIdFactory(TxnId txnId) throws AlgebricksException, RemoteException;
 
     /**
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     int getMostRecentDatasetId() throws AlgebricksException, RemoteException;
 
@@ -611,7 +616,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param txnId
      * @param feed
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addFeed(TxnId txnId, Feed feed) throws AlgebricksException, RemoteException;
 
@@ -621,27 +626,29 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param feedName
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Feed getFeed(TxnId txnId, DataverseName dataverseName, String feedName) throws AlgebricksException, RemoteException;
+    Feed getFeed(TxnId txnId, String database, DataverseName dataverseName, String feedName)
+            throws AlgebricksException, RemoteException;
 
-    List<Feed> getFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+    List<Feed> getFeeds(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException, RemoteException;
 
     /**
      * @param txnId
      * @param dataverseName
      * @param feedName
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropFeed(TxnId txnId, DataverseName dataverseName, String feedName)
+    void dropFeed(TxnId txnId, String database, DataverseName dataverseName, String feedName)
             throws AlgebricksException, RemoteException;
 
     /**
      * @param txnId
      * @param feedPolicy
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addFeedPolicy(TxnId txnId, FeedPolicyEntity feedPolicy) throws AlgebricksException, RemoteException;
 
@@ -651,9 +658,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param policy
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    FeedPolicyEntity getFeedPolicy(TxnId txnId, DataverseName dataverseName, String policy)
+    FeedPolicyEntity getFeedPolicy(TxnId txnId, String database, DataverseName dataverseName, String policy)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -668,9 +675,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of library to be deleted. AlgebricksException for example, if
      *            the library does not exists.
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropLibrary(TxnId txnId, DataverseName dataverseName, String libraryName)
+    void dropLibrary(TxnId txnId, String database, DataverseName dataverseName, String libraryName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -682,7 +689,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Library to be added
      * @throws AlgebricksException
      *             for example, if the library is already added.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addLibrary(TxnId txnId, Library library) throws AlgebricksException, RemoteException;
 
@@ -695,9 +702,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            name of the library that is to be retrieved
      * @return Library
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Library getLibrary(TxnId txnId, DataverseName dataverseName, String libraryName)
+    Library getLibrary(TxnId txnId, String database, DataverseName dataverseName, String libraryName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -709,9 +716,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            dataverse asociated with the library that is to be retrieved.
      * @return Library
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<Library> getDataverseLibraries(TxnId txnId, DataverseName dataverseName)
+    List<Library> getDataverseLibraries(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -719,9 +726,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataverseName
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<Feed> getDataverseFeeds(TxnId txnId, DataverseName dataverseName) throws AlgebricksException, RemoteException;
+    List<Feed> getDataverseFeeds(TxnId txnId, String database, DataverseName dataverseName)
+            throws AlgebricksException, RemoteException;
 
     /**
      * delete a give feed (ingestion) policy
@@ -730,10 +738,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataverseName
      * @param policyName
      * @return
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      * @throws AlgebricksException
      */
-    void dropFeedPolicy(TxnId txnId, DataverseName dataverseName, String policyName)
+    void dropFeedPolicy(TxnId txnId, String database, DataverseName dataverseName, String policyName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -741,9 +749,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataverseName
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<FeedPolicyEntity> getDataverseFeedPolicies(TxnId txnId, DataverseName dataverseName)
+    List<FeedPolicyEntity> getDataverseFeedPolicies(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -753,7 +761,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            An object representing the external file entity
      * @throws AlgebricksException
      *             for example, if the file already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addExternalFile(TxnId txnId, ExternalFile externalFile) throws AlgebricksException, RemoteException;
 
@@ -763,7 +771,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataset
      *            A dataset the files belongs to.
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     List<ExternalFile> getExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
@@ -781,9 +789,9 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param fileNumber
      *            the id number for the file to be deleted
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName, int fileNumber)
+    void dropExternalFile(TxnId txnId, String database, DataverseName dataverseName, String datasetName, int fileNumber)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -795,7 +803,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param dataset
      *            An external dataset the files belong to.
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void dropExternalFiles(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
@@ -814,10 +822,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @return An ExternalFile instance.
      * @throws AlgebricksException
      *             For example, if the index does not exist.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    ExternalFile getExternalFile(TxnId txnId, DataverseName dataverseName, String datasetName, Integer fileNumber)
-            throws AlgebricksException, RemoteException;
+    ExternalFile getExternalFile(TxnId txnId, String database, DataverseName dataverseName, String datasetName,
+            Integer fileNumber) throws AlgebricksException, RemoteException;
 
     /**
      * Adds a synonym, acquiring local locks on behalf of the given transaction id.
@@ -828,7 +836,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Synonym to be added
      * @throws AlgebricksException
      *             for example, if the synonym is already added.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void addSynonym(TxnId txnId, Synonym synonym) throws AlgebricksException, RemoteException;
 
@@ -843,9 +851,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            Name of synonym to be deleted. AlgebricksException for example, if
      *            the synonym does not exists.
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    void dropSynonym(TxnId txnId, DataverseName dataverseName, String synonymName)
+    void dropSynonym(TxnId txnId, String database, DataverseName dataverseName, String synonymName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -857,9 +865,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            name of the synonym that is to be retrieved
      * @return Synonym
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    Synonym getSynonym(TxnId txnId, DataverseName dataverseName, String synonymName)
+    Synonym getSynonym(TxnId txnId, String database, DataverseName dataverseName, String synonymName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -871,9 +879,9 @@ public interface IMetadataNode extends Remote, Serializable {
      *            dataverse associated with synonyms that are to be retrieved.
      * @return list of synonyms
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
-    List<Synonym> getDataverseSynonyms(TxnId txnId, DataverseName dataverseName)
+    List<Synonym> getDataverseSynonyms(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
     /**
@@ -886,7 +894,7 @@ public interface IMetadataNode extends Remote, Serializable {
      *            updated Dataset instance.
      * @throws AlgebricksException
      *             For example, if the dataset already exists.
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     void updateDataset(TxnId txnId, Dataset dataset) throws AlgebricksException, RemoteException;
 
@@ -929,7 +937,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param txnId
      * @param entity
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     <T extends IExtensionMetadataEntity> void addEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
@@ -940,7 +948,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param txnId
      * @param entity
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     <T extends IExtensionMetadataEntity> void upsertEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
@@ -951,7 +959,7 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param txnId
      * @param entity
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     <T extends IExtensionMetadataEntity> void deleteEntity(TxnId txnId, T entity)
             throws AlgebricksException, RemoteException;
@@ -964,19 +972,19 @@ public interface IMetadataNode extends Remote, Serializable {
      * @param searchKey
      * @return
      * @throws AlgebricksException
-     * @throws RemoteException
+     * @throws RemoteException remote exception
      */
     <T extends IExtensionMetadataEntity> List<T> getEntities(TxnId txnId, IExtensionMetadataSearchKey searchKey)
             throws AlgebricksException, RemoteException;
 
     void addFeedConnection(TxnId txnId, FeedConnection feedConnection) throws AlgebricksException, RemoteException;
 
-    FeedConnection getFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName, String datasetName)
-            throws AlgebricksException, RemoteException;
+    FeedConnection getFeedConnection(TxnId txnId, String database, DataverseName dataverseName, String feedName,
+            String datasetName) throws AlgebricksException, RemoteException;
 
-    void dropFeedConnection(TxnId txnId, DataverseName dataverseName, String feedName, String datasetName)
-            throws AlgebricksException, RemoteException;
+    void dropFeedConnection(TxnId txnId, String database, DataverseName dataverseName, String feedName,
+            String datasetName) throws AlgebricksException, RemoteException;
 
-    List<FeedConnection> getFeedConnections(TxnId txnId, DataverseName dataverseName, String feedName)
+    List<FeedConnection> getFeedConnections(TxnId txnId, String database, DataverseName dataverseName, String feedName)
             throws AlgebricksException, RemoteException;
 }

@@ -181,7 +181,7 @@ public abstract class MetadataManager implements IMetadataManager {
     @Override
     public void dropDataverse(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException {
         try {
-            metadataNode.dropDataverse(ctx.getTxnId(), dataverseName);
+            metadataNode.dropDataverse(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -192,7 +192,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public boolean isDataverseNotEmpty(MetadataTransactionContext ctx, DataverseName dataverseName)
             throws AlgebricksException {
         try {
-            return metadataNode.isDataverseNotEmpty(ctx.getTxnId(), dataverseName);
+            return metadataNode.isDataverseNotEmpty(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -229,7 +229,7 @@ public abstract class MetadataManager implements IMetadataManager {
             return dataverse;
         }
         try {
-            dataverse = metadataNode.getDataverse(ctx.getTxnId(), dataverseName);
+            dataverse = metadataNode.getDataverse(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -247,7 +247,7 @@ public abstract class MetadataManager implements IMetadataManager {
         List<Dataset> dataverseDatasets;
         try {
             // Assuming that the transaction can read its own writes on the metadata node.
-            dataverseDatasets = metadataNode.getDataverseDatasets(ctx.getTxnId(), dataverseName);
+            dataverseDatasets = metadataNode.getDataverseDatasets(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -272,7 +272,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropDataset(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName,
             boolean force) throws AlgebricksException {
         try {
-            metadataNode.dropDataset(ctx.getTxnId(), dataverseName, datasetName, force);
+            metadataNode.dropDataset(ctx.getTxnId(), null, dataverseName, datasetName, force);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -304,7 +304,7 @@ public abstract class MetadataManager implements IMetadataManager {
             return dataset;
         }
         try {
-            dataset = metadataNode.getDataset(ctx.getTxnId(), dataverseName, datasetName);
+            dataset = metadataNode.getDataset(ctx.getTxnId(), null, dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -325,7 +325,7 @@ public abstract class MetadataManager implements IMetadataManager {
         }
         List<Index> datasetIndexes;
         try {
-            datasetIndexes = metadataNode.getDatasetIndexes(ctx.getTxnId(), dataverseName, datasetName);
+            datasetIndexes = metadataNode.getDatasetIndexes(ctx.getTxnId(), null, dataverseName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -348,7 +348,7 @@ public abstract class MetadataManager implements IMetadataManager {
             String policyName) throws AlgebricksException {
         CompactionPolicy compactionPolicy;
         try {
-            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getTxnId(), dataverse, policyName);
+            compactionPolicy = metadataNode.getCompactionPolicy(ctx.getTxnId(), null, dataverse, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -363,8 +363,8 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         try {
-            ctx.addDatatype(
-                    metadataNode.getDatatype(ctx.getTxnId(), datatype.getDataverseName(), datatype.getDatatypeName()));
+            ctx.addDatatype(metadataNode.getDatatype(ctx.getTxnId(), datatype.getDatabaseName(),
+                    datatype.getDataverseName(), datatype.getDatatypeName()));
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -374,7 +374,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropDatatype(MetadataTransactionContext ctx, DataverseName dataverseName, String datatypeName)
             throws AlgebricksException {
         try {
-            metadataNode.dropDatatype(ctx.getTxnId(), dataverseName, datatypeName);
+            metadataNode.dropDatatype(ctx.getTxnId(), null, dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -404,7 +404,7 @@ public abstract class MetadataManager implements IMetadataManager {
             return datatype;
         }
         try {
-            datatype = metadataNode.getDatatype(ctx.getTxnId(), dataverseName, datatypeName);
+            datatype = metadataNode.getDatatype(ctx.getTxnId(), null, dataverseName, datatypeName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -440,7 +440,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropIndex(MetadataTransactionContext ctx, DataverseName dataverseName, String datasetName,
             String indexName) throws AlgebricksException {
         try {
-            metadataNode.dropIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
+            metadataNode.dropIndex(ctx.getTxnId(), null, dataverseName, datasetName, indexName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -472,7 +472,7 @@ public abstract class MetadataManager implements IMetadataManager {
             return index;
         }
         try {
-            index = metadataNode.getIndex(ctx.getTxnId(), dataverseName, datasetName, indexName);
+            index = metadataNode.getIndex(ctx.getTxnId(), null, dataverseName, datasetName, indexName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -624,7 +624,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public List<Function> getDataverseFunctions(MetadataTransactionContext ctx, DataverseName dataverseName)
             throws AlgebricksException {
         try {
-            return metadataNode.getDataverseFunctions(ctx.getTxnId(), dataverseName);
+            return metadataNode.getDataverseFunctions(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -645,7 +645,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropFullTextFilter(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String filterName)
             throws AlgebricksException {
         try {
-            metadataNode.dropFullTextFilter(mdTxnCtx.getTxnId(), dataverseName, filterName);
+            metadataNode.dropFullTextFilter(mdTxnCtx.getTxnId(), null, dataverseName, filterName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -683,7 +683,7 @@ public abstract class MetadataManager implements IMetadataManager {
         }
 
         try {
-            filter = metadataNode.getFullTextFilter(ctx.getTxnId(), dataverseName, filterName);
+            filter = metadataNode.getFullTextFilter(ctx.getTxnId(), null, dataverseName, filterName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -741,7 +741,7 @@ public abstract class MetadataManager implements IMetadataManager {
         }
 
         try {
-            configMetadataEntity = metadataNode.getFullTextConfig(ctx.getTxnId(), dataverseName, configName);
+            configMetadataEntity = metadataNode.getFullTextConfig(ctx.getTxnId(), null, dataverseName, configName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -758,7 +758,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropFullTextConfig(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String configName)
             throws AlgebricksException {
         try {
-            metadataNode.dropFullTextConfig(mdTxnCtx.getTxnId(), dataverseName, configName);
+            metadataNode.dropFullTextConfig(mdTxnCtx.getTxnId(), null, dataverseName, configName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -798,7 +798,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropAdapter(MetadataTransactionContext ctx, DataverseName dataverseName, String name)
             throws AlgebricksException {
         try {
-            metadataNode.dropAdapter(ctx.getTxnId(), dataverseName, name);
+            metadataNode.dropAdapter(ctx.getTxnId(), null, dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -810,7 +810,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         DatasourceAdapter adapter;
         try {
-            adapter = metadataNode.getAdapter(ctx.getTxnId(), dataverseName, name);
+            adapter = metadataNode.getAdapter(ctx.getTxnId(), null, dataverseName, name);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -821,7 +821,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropLibrary(MetadataTransactionContext ctx, DataverseName dataverseName, String libraryName)
             throws AlgebricksException {
         try {
-            metadataNode.dropLibrary(ctx.getTxnId(), dataverseName, libraryName);
+            metadataNode.dropLibrary(ctx.getTxnId(), null, dataverseName, libraryName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -835,7 +835,7 @@ public abstract class MetadataManager implements IMetadataManager {
         try {
             // Assuming that the transaction can read its own writes on the
             // metadata node.
-            dataverseLibaries = metadataNode.getDataverseLibraries(ctx.getTxnId(), dataverseName);
+            dataverseLibaries = metadataNode.getDataverseLibraries(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -859,7 +859,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         Library library;
         try {
-            library = metadataNode.getLibrary(ctx.getTxnId(), dataverseName, libraryName);
+            library = metadataNode.getLibrary(ctx.getTxnId(), null, dataverseName, libraryName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -871,7 +871,7 @@ public abstract class MetadataManager implements IMetadataManager {
             String policyName) throws AlgebricksException {
         FeedPolicyEntity feedPolicy;
         try {
-            feedPolicy = metadataNode.getFeedPolicy(ctx.getTxnId(), dataverseName, policyName);
+            feedPolicy = metadataNode.getFeedPolicy(ctx.getTxnId(), null, dataverseName, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -883,7 +883,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         Feed feed;
         try {
-            feed = metadataNode.getFeed(ctx.getTxnId(), dataverseName, feedName);
+            feed = metadataNode.getFeed(ctx.getTxnId(), null, dataverseName, feedName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -894,7 +894,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public List<Feed> getFeeds(MetadataTransactionContext ctx, DataverseName dataverseName) throws AlgebricksException {
         List<Feed> feeds;
         try {
-            feeds = metadataNode.getFeeds(ctx.getTxnId(), dataverseName);
+            feeds = metadataNode.getFeeds(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -907,11 +907,11 @@ public abstract class MetadataManager implements IMetadataManager {
         Feed feed;
         List<FeedConnection> feedConnections;
         try {
-            feed = metadataNode.getFeed(ctx.getTxnId(), dataverseName, feedName);
-            feedConnections = metadataNode.getFeedConnections(ctx.getTxnId(), dataverseName, feedName);
-            metadataNode.dropFeed(ctx.getTxnId(), dataverseName, feedName);
+            feed = metadataNode.getFeed(ctx.getTxnId(), null, dataverseName, feedName);
+            feedConnections = metadataNode.getFeedConnections(ctx.getTxnId(), null, dataverseName, feedName);
+            metadataNode.dropFeed(ctx.getTxnId(), null, dataverseName, feedName);
             for (FeedConnection feedConnection : feedConnections) {
-                metadataNode.dropFeedConnection(ctx.getTxnId(), dataverseName, feedName,
+                metadataNode.dropFeedConnection(ctx.getTxnId(), null, dataverseName, feedName,
                         feedConnection.getDatasetName());
                 ctx.dropFeedConnection(dataverseName, feedName, feedConnection.getDatasetName());
             }
@@ -946,7 +946,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropFeedConnection(MetadataTransactionContext ctx, DataverseName dataverseName, String feedName,
             String datasetName) throws AlgebricksException {
         try {
-            metadataNode.dropFeedConnection(ctx.getTxnId(), dataverseName, feedName, datasetName);
+            metadataNode.dropFeedConnection(ctx.getTxnId(), null, dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -957,7 +957,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public FeedConnection getFeedConnection(MetadataTransactionContext ctx, DataverseName dataverseName,
             String feedName, String datasetName) throws AlgebricksException {
         try {
-            return metadataNode.getFeedConnection(ctx.getTxnId(), dataverseName, feedName, datasetName);
+            return metadataNode.getFeedConnection(ctx.getTxnId(), null, dataverseName, feedName, datasetName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -967,7 +967,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public List<FeedConnection> getFeedConections(MetadataTransactionContext ctx, DataverseName dataverseName,
             String feedName) throws AlgebricksException {
         try {
-            return metadataNode.getFeedConnections(ctx.getTxnId(), dataverseName, feedName);
+            return metadataNode.getFeedConnections(ctx.getTxnId(), null, dataverseName, feedName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -978,7 +978,7 @@ public abstract class MetadataManager implements IMetadataManager {
             DataverseName dataverseName) throws AlgebricksException {
         List<DatasourceAdapter> dataverseAdapters;
         try {
-            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getTxnId(), dataverseName);
+            dataverseAdapters = metadataNode.getDataverseAdapters(mdTxnCtx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -990,8 +990,8 @@ public abstract class MetadataManager implements IMetadataManager {
             throws AlgebricksException {
         FeedPolicyEntity feedPolicy;
         try {
-            feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getTxnId(), dataverseName, policyName);
-            metadataNode.dropFeedPolicy(mdTxnCtx.getTxnId(), dataverseName, policyName);
+            feedPolicy = metadataNode.getFeedPolicy(mdTxnCtx.getTxnId(), null, dataverseName, policyName);
+            metadataNode.dropFeedPolicy(mdTxnCtx.getTxnId(), null, dataverseName, policyName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1003,7 +1003,7 @@ public abstract class MetadataManager implements IMetadataManager {
             DataverseName dataverseName) throws AlgebricksException {
         List<FeedPolicyEntity> dataverseFeedPolicies;
         try {
-            dataverseFeedPolicies = metadataNode.getDataverseFeedPolicies(mdTxnCtx.getTxnId(), dataverseName);
+            dataverseFeedPolicies = metadataNode.getDataverseFeedPolicies(mdTxnCtx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1034,7 +1034,7 @@ public abstract class MetadataManager implements IMetadataManager {
     @Override
     public void dropExternalFile(MetadataTransactionContext ctx, ExternalFile externalFile) throws AlgebricksException {
         try {
-            metadataNode.dropExternalFile(ctx.getTxnId(), externalFile.getDataverseName(),
+            metadataNode.dropExternalFile(ctx.getTxnId(), null, externalFile.getDataverseName(),
                     externalFile.getDatasetName(), externalFile.getFileNumber());
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
@@ -1046,7 +1046,7 @@ public abstract class MetadataManager implements IMetadataManager {
             Integer fileNumber) throws AlgebricksException {
         ExternalFile file;
         try {
-            file = metadataNode.getExternalFile(ctx.getTxnId(), dataverseName, datasetName, fileNumber);
+            file = metadataNode.getExternalFile(ctx.getTxnId(), null, dataverseName, datasetName, fileNumber);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1066,7 +1066,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public void dropSynonym(MetadataTransactionContext ctx, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
         try {
-            metadataNode.dropSynonym(ctx.getTxnId(), dataverseName, synonymName);
+            metadataNode.dropSynonym(ctx.getTxnId(), null, dataverseName, synonymName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1076,7 +1076,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public Synonym getSynonym(MetadataTransactionContext ctx, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
         try {
-            return metadataNode.getSynonym(ctx.getTxnId(), dataverseName, synonymName);
+            return metadataNode.getSynonym(ctx.getTxnId(), null, dataverseName, synonymName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
@@ -1086,7 +1086,7 @@ public abstract class MetadataManager implements IMetadataManager {
     public List<Synonym> getDataverseSynonyms(MetadataTransactionContext ctx, DataverseName dataverseName)
             throws AlgebricksException {
         try {
-            return metadataNode.getDataverseSynonyms(ctx.getTxnId(), dataverseName);
+            return metadataNode.getDataverseSynonyms(ctx.getTxnId(), null, dataverseName);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }

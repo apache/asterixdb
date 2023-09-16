@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.entitytupletranslators;
 
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -79,10 +80,12 @@ public class IndexTupleTranslatorTest {
                     Collections.singletonList(BuiltinType.AINT64), false, false, false, 0, OptionalBoolean.of(false));
 
             MetadataNode mockMetadataNode = mock(MetadataNode.class);
-            when(mockMetadataNode.getDatatype(any(), any(DataverseName.class), anyString())).thenReturn(new Datatype(
-                    dvTest, "d1",
-                    new ARecordType("", new String[] { "row_id" }, new IAType[] { BuiltinType.AINT64 }, true), true));
-            when(mockMetadataNode.getDataset(any(), any(DataverseName.class), anyString())).thenReturn(dataset);
+            when(mockMetadataNode.getDatatype(any(), isNull(), any(DataverseName.class), anyString()))
+                    .thenReturn(new Datatype(dvTest, "d1",
+                            new ARecordType("", new String[] { "row_id" }, new IAType[] { BuiltinType.AINT64 }, true),
+                            true));
+            when(mockMetadataNode.getDataset(any(), isNull(), any(DataverseName.class), anyString()))
+                    .thenReturn(dataset);
 
             IndexTupleTranslator idxTranslator =
                     new IndexTupleTranslator(null, mockMetadataNode, true, IndexEntity.of(false));

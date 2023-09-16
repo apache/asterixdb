@@ -59,7 +59,7 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
     @Override
     protected Datatype createMetadataEntityFromARecord(ARecord datatypeRecord) throws AlgebricksException {
         int databaseNameIndex = datatypeEntity.databaseNameIndex();
-        String databaseName;
+        String databaseName = null;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) datatypeRecord.getValueByPos(databaseNameIndex)).getStringValue();
         }
@@ -113,8 +113,8 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                             isMissable = isNullable;
                         }
 
-                        IAType fieldType =
-                                Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, fieldTypeName);
+                        IAType fieldType = Datatype.getTypeFromTypeName(metadataNode, txnId, databaseName,
+                                dataverseName, fieldTypeName);
                         fieldTypes[fieldId] = TypeUtil.createQuantifiedType(fieldType, isNullable, isMissable);
                         fieldId++;
                     }
@@ -125,17 +125,19 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                     String unorderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AUnorderedListType(
-                            Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, unorderedlistTypeName),
-                            datatypeName), isAnonymous);
+                    return new Datatype(dataverseName, datatypeName,
+                            new AUnorderedListType(Datatype.getTypeFromTypeName(metadataNode, txnId, databaseName,
+                                    dataverseName, unorderedlistTypeName), datatypeName),
+                            isAnonymous);
                 }
                 case ORDEREDLIST: {
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName, new AOrderedListType(
-                            Datatype.getTypeFromTypeName(metadataNode, txnId, dataverseName, orderedlistTypeName),
-                            datatypeName), isAnonymous);
+                    return new Datatype(
+                            dataverseName, datatypeName, new AOrderedListType(Datatype.getTypeFromTypeName(metadataNode,
+                                    txnId, databaseName, dataverseName, orderedlistTypeName), datatypeName),
+                            isAnonymous);
                 }
                 default:
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
