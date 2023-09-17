@@ -164,7 +164,7 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         IAObject simThresh = ((AsterixConstantValue) similarityThreshold).getObject();
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
-                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
+                dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (secondaryIndex == null) {
             throw new AlgebricksException(
                     "Code generation error: no index " + indexName + " for " + dataset() + " " + datasetName);

@@ -465,7 +465,7 @@ public class RebalanceUtil {
             // drop dataset entry from metadata
             runMetadataTransaction(metadataProvider,
                     () -> MetadataManager.INSTANCE.dropDataset(metadataProvider.getMetadataTxnContext(),
-                            dataset.getDataverseName(), dataset.getDatasetName(), true));
+                            dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(), true));
             MetadataManager.INSTANCE.commitTransaction(metadataProvider.getMetadataTxnContext());
             // try to drop the dataset's node group
             runMetadataTransaction(metadataProvider, () -> tryDropDatasetNodegroup(dataset, metadataProvider));

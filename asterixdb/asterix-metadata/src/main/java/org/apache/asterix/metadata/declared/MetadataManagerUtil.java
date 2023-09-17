@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataManager;
@@ -60,7 +61,7 @@ public class MetadataManagerUtil {
 
     public static IAType findType(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String typeName)
             throws AlgebricksException {
-        Datatype type = findTypeEntity(mdTxnCtx, dataverseName, typeName);
+        Datatype type = findTypeEntity(mdTxnCtx, null, dataverseName, typeName);
         return type != null ? type.getDatatype() : null;
     }
 
@@ -73,7 +74,7 @@ public class MetadataManagerUtil {
      * @param metaItemType record type of the meta part of the dataset
      * @param dataset      the actual dataset
      * @return type computed from primary keys if dataset without type spec, otherwise the original itemType itself
-     * @throws AlgebricksException
+     * @throws AlgebricksException AlgebricksException
      */
     public static IAType findTypeForDatasetWithoutType(IAType itemType, IAType metaItemType, Dataset dataset)
             throws AlgebricksException {
@@ -91,12 +92,12 @@ public class MetadataManagerUtil {
         return ProjectionFiltrationTypeUtil.getRecordTypeWithFieldTypes(primaryKeys, primaryKeyTypes);
     }
 
-    public static Datatype findTypeEntity(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
-            String typeName) throws AlgebricksException {
+    public static Datatype findTypeEntity(MetadataTransactionContext mdTxnCtx, String database,
+            DataverseName dataverseName, String typeName) throws AlgebricksException {
         if (dataverseName == null || typeName == null) {
             return null;
         }
-        Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataverseName, typeName);
+        Datatype type = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, database, dataverseName, typeName);
         if (type == null) {
             throw new AsterixException(ErrorCode.UNKNOWN_TYPE, dataverseName + "." + typeName);
         }
@@ -109,31 +110,34 @@ public class MetadataManagerUtil {
             return null;
         }
         if (dataverseName == null) {
-            throw new AlgebricksException("Cannot declare output-record-type with no " + dataverse());
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                    "Cannot declare output-record-type with no " + dataverse());
         }
         IAType type = findType(mdTxnCtx, dataverseName, outputRecordType);
         if (!(type instanceof ARecordType)) {
-            throw new AlgebricksException("Type " + outputRecordType + " is not a record type!");
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                    "Type " + outputRecordType + " is not a record type!");
         }
         return (ARecordType) type;
     }
 
-    public static DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
-            String adapterName) throws AlgebricksException {
+    public static DatasourceAdapter getAdapter(MetadataTransactionContext mdTxnCtx, String database,
+            DataverseName dataverseName, String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
-        adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
+        adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, MetadataConstants.METADATA_DATAVERSE_NAME,
+                adapterName);
 
         // search in dataverse (user-defined adapter)
         if (adapter == null) {
-            adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, dataverseName, adapterName);
+            adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, database, dataverseName, adapterName);
         }
         return adapter;
     }
 
-    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+    public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, String database, DataverseName dataverseName,
             String datasetName, boolean includingViews) throws AlgebricksException {
-        Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, dataverseName, datasetName);
+        Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxnCtx, database, dataverseName, datasetName);
         if (!includingViews && dataset != null && dataset.getDatasetType() == DatasetConfig.DatasetType.VIEW) {
             return null;
         }
@@ -142,7 +146,7 @@ public class MetadataManagerUtil {
 
     public static Dataset findDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
             String datasetName) throws AlgebricksException {
-        return findDataset(mdTxnCtx, dataverseName, datasetName, false);
+        return findDataset(mdTxnCtx, null, dataverseName, datasetName, false);
     }
 
     public static Dataset findExistingDataset(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
@@ -172,44 +176,44 @@ public class MetadataManagerUtil {
         return MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroupName).getNodeNames();
     }
 
-    public static Feed findFeed(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName, String feedName)
-            throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeed(mdTxnCtx, dataverseName, feedName);
+    public static Feed findFeed(MetadataTransactionContext mdTxnCtx, String database, DataverseName dataverseName,
+            String feedName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getFeed(mdTxnCtx, database, dataverseName, feedName);
     }
 
-    public static FeedConnection findFeedConnection(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
-            String feedName, String datasetName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, dataverseName, feedName, datasetName);
+    public static FeedConnection findFeedConnection(MetadataTransactionContext mdTxnCtx, String database,
+            DataverseName dataverseName, String feedName, String datasetName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getFeedConnection(mdTxnCtx, database, dataverseName, feedName, datasetName);
     }
 
-    public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
-            String policyName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, dataverseName, policyName);
+    public static FeedPolicyEntity findFeedPolicy(MetadataTransactionContext mdTxnCtx, String database,
+            DataverseName dataverseName, String policyName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, database, dataverseName, policyName);
     }
 
-    public static Synonym findSynonym(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
+    public static Synonym findSynonym(MetadataTransactionContext mdTxnCtx, String database, DataverseName dataverseName,
             String synonymName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getSynonym(mdTxnCtx, dataverseName, synonymName);
+        return MetadataManager.INSTANCE.getSynonym(mdTxnCtx, database, dataverseName, synonymName);
     }
 
     public static FullTextConfigMetadataEntity findFullTextConfigDescriptor(MetadataTransactionContext mdTxnCtx,
-            DataverseName dataverseName, String ftConfigName) throws AlgebricksException {
+            String database, DataverseName dataverseName, String ftConfigName) throws AlgebricksException {
         // If the config name is null, then the default config will be returned
         if (Strings.isNullOrEmpty(ftConfigName)) {
             return FullTextConfigMetadataEntity.getDefaultFullTextConfigMetadataEntity();
         }
 
-        return MetadataManager.INSTANCE.getFullTextConfig(mdTxnCtx, dataverseName, ftConfigName);
+        return MetadataManager.INSTANCE.getFullTextConfig(mdTxnCtx, database, dataverseName, ftConfigName);
     }
 
     public static FullTextFilterMetadataEntity findFullTextFilterDescriptor(MetadataTransactionContext mdTxnCtx,
-            DataverseName dataverseName, String ftFilterName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getFullTextFilter(mdTxnCtx, dataverseName, ftFilterName);
+            String database, DataverseName dataverseName, String ftFilterName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getFullTextFilter(mdTxnCtx, database, dataverseName, ftFilterName);
     }
 
-    public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, DataverseName dataverseName,
-            String datasetName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+    public static List<Index> getDatasetIndexes(MetadataTransactionContext mdTxnCtx, String database,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        return MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, database, dataverseName, datasetName);
     }
 
     public static DataSource findDataSource(IClusterStateManager clusterStateManager,

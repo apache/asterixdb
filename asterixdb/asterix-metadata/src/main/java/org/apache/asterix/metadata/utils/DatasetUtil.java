@@ -250,7 +250,7 @@ public class DatasetUtil {
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         String policyName = dataset.getCompactionPolicy();
-        CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
+        CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx, null,
                 MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
         String compactionPolicyFactoryClassName = compactionPolicy.getClassName();
         ILSMMergePolicyFactory mergePolicyFactory;

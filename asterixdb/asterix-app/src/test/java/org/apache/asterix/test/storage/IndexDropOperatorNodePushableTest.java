@@ -152,7 +152,7 @@ public class IndexDropOperatorNodePushableTest {
             MetadataProvider metadataProver = MetadataProvider.create(appCtx, null);
             metadataProver.setMetadataTxnContext(mdTxn);
             final DataverseName defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
-            final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, defaultDv, datasetName);
+            final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, null, defaultDv, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,
                     indexName, Arrays.asList("asterix_nc1"));

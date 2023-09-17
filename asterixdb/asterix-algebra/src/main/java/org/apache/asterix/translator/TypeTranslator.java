@@ -146,7 +146,7 @@ public class TypeTranslator {
         // solve remaining top level references
         for (TypeSignature typeSignature : incompleteTopLevelTypeReferences.keySet()) {
             IAType t;
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getDataverseName(),
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeSignature.getDataverseName(),
                     typeSignature.getName());
             if (dt == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());
@@ -160,9 +160,9 @@ public class TypeTranslator {
         // solve remaining field type references
         for (String trefName : incompleteFieldTypes.keySet()) {
             IAType t;
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDataverse, trefName);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeDataverse, trefName);
             if (dt == null) {
-                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
+                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, MetadataConstants.METADATA_DATAVERSE_NAME,
                         trefName);
             }
             if (dt == null) {
@@ -190,7 +190,7 @@ public class TypeTranslator {
             IAType t;
             Datatype dt;
             if (MetadataManager.INSTANCE != null) {
-                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeSignature.getDataverseName(),
+                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeSignature.getDataverseName(),
                         typeSignature.getName());
                 if (dt == null) {
                     throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());

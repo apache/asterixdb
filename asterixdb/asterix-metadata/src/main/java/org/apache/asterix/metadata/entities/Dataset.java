@@ -47,7 +47,6 @@ import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.common.utils.StoragePathUtil;
-import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.formats.nontagged.BinaryHashFunctionFactoryProvider;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -87,7 +86,6 @@ import org.apache.asterix.transaction.management.service.transaction.DatasetIdFa
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
@@ -355,11 +353,10 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             List<JobSpecification> jobsToExecute, MutableBoolean bActiveTxn, MutableObject<ProgressState> progress,
             IHyracksClientConnection hcc, boolean dropCorrespondingNodeGroup, SourceLocation sourceLoc,
             Set<DropOption> options, boolean force) throws Exception {
-        Map<FeedConnectionId, Pair<JobSpecification, Boolean>> disconnectJobList = new HashMap<>();
         if (getDatasetType() == DatasetType.INTERNAL) {
             // #. prepare jobs to drop the datatset and the indexes in NC
-            List<Index> indexes =
-                    MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), dataverseName, datasetName);
+            List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx.getValue(), databaseName,
+                    dataverseName, datasetName);
             for (int j = 0; j < indexes.size(); j++) {
                 if (indexes.get(j).isSecondaryIndex()) {
                     jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(indexes.get(j), metadataProvider, this, options,
@@ -368,7 +365,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             }
             jobsToExecute.add(DatasetUtil.dropDatasetJobSpec(this, metadataProvider, options));
             // #. mark the existing dataset as PendingDropOp
-            MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), dataverseName, datasetName, force);
+            MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), databaseName, dataverseName, datasetName, force);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx.getValue(),
                     new Dataset(dataverseName, datasetName, getItemTypeDataverseName(), getItemTypeName(),
                             getMetaItemTypeDataverseName(), getMetaItemTypeName(), getNodeGroupName(),
@@ -379,11 +376,6 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
             bActiveTxn.setValue(false);
             progress.setValue(ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA);
-
-            // # disconnect the feeds
-            for (Pair<JobSpecification, Boolean> p : disconnectJobList.values()) {
-                JobUtils.runJob(hcc, p.first, true);
-            }
 
             // #. run the jobs
             for (JobSpecification jobSpec : jobsToExecute) {
@@ -397,14 +389,18 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         }
 
         // #. finally, delete the dataset.
-        MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), dataverseName, datasetName, force);
+        MetadataManager.INSTANCE.dropDataset(mdTxnCtx.getValue(), databaseName, dataverseName, datasetName, force);
 
         // drop inline types
+        String recordTypeDatabase = null;
         if (TypeUtil.isDatasetInlineTypeName(this, recordTypeDataverseName, recordTypeName)) {
-            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), recordTypeDataverseName, recordTypeName);
+            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), recordTypeDatabase, recordTypeDataverseName,
+                    recordTypeName);
         }
+        String metaTypeDatabase = null;
         if (hasMetaPart() && TypeUtil.isDatasetInlineTypeName(this, metaTypeDataverseName, metaTypeName)) {
-            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), metaTypeDataverseName, metaTypeName);
+            MetadataManager.INSTANCE.dropDatatype(mdTxnCtx.getValue(), metaTypeDatabase, metaTypeDataverseName,
+                    metaTypeName);
         }
 
         // Drops the associated nodegroup if it is no longer used by any other dataset.

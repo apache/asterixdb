@@ -89,7 +89,8 @@ public class FeedMetadataUtil {
 
     public static Feed validateIfFeedExists(DataverseName dataverseName, String feedName,
             MetadataTransactionContext ctx) throws AlgebricksException {
-        Feed feed = MetadataManager.INSTANCE.getFeed(ctx, dataverseName, feedName);
+        String database = null;
+        Feed feed = MetadataManager.INSTANCE.getFeed(ctx, database, dataverseName, feedName);
         if (feed == null) {
             throw new CompilationException("Unknown source feed: " + feedName);
         }
@@ -98,10 +99,11 @@ public class FeedMetadataUtil {
 
     public static FeedPolicyEntity validateIfPolicyExists(DataverseName dataverseName, String policyName,
             MetadataTransactionContext ctx) throws AlgebricksException {
-        FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, dataverseName, policyName);
+        String database = null;
+        FeedPolicyEntity feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, database, dataverseName, policyName);
         if (feedPolicy == null) {
-            feedPolicy =
-                    MetadataManager.INSTANCE.getFeedPolicy(ctx, MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
+            feedPolicy = MetadataManager.INSTANCE.getFeedPolicy(ctx, null, MetadataConstants.METADATA_DATAVERSE_NAME,
+                    policyName);
             if (feedPolicy == null) {
                 throw new CompilationException("Unknown feed policy" + policyName);
             }
@@ -121,11 +123,12 @@ public class FeedMetadataUtil {
             if (adapterName == null) {
                 throw new AlgebricksException("cannot find adapter name");
             }
-            DatasourceAdapter adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx,
+            DatasourceAdapter adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null,
                     MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
             // Get adapter from metadata dataset <The feed dataverse>
             if (adapterEntity == null) {
-                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
+                adapterEntity =
+                        MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, feed.getDataverseName(), adapterName);
             }
             AdapterType adapterType;
             ITypedAdapterFactory adapterFactory;
@@ -177,7 +180,7 @@ public class FeedMetadataUtil {
             throws AlgebricksException, RemoteException, HyracksDataException {
         DataverseName libraryDataverse = adapterEntity.getLibraryDataverseName();
         String libraryName = adapterEntity.getLibraryName();
-        Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, libraryDataverse, libraryName);
+        Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, null, libraryDataverse, libraryName);
         if (library == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_LIBRARY, libraryName);
         }
@@ -208,11 +211,12 @@ public class FeedMetadataUtil {
             metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
             ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
-            adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME,
-                    adapterName);
+            adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null,
+                    MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
             // Get adapter from metadata dataset <The feed dataverse>
             if (adapterEntity == null) {
-                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDataverseName(), adapterName);
+                adapterEntity =
+                        MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, feed.getDataverseName(), adapterName);
             }
             if (adapterEntity != null) {
                 adapterType = adapterEntity.getType();
@@ -305,7 +309,7 @@ public class FeedMetadataUtil {
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, feed.getDataverseName(), fqOutputType);
+            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, null, feed.getDataverseName(), fqOutputType);
             if (t == null || t.getDatatype().getTypeTag() != ATypeTag.OBJECT) {
                 throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, fqOutputType);
             }

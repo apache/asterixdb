@@ -249,7 +249,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     private Iterable<Dataset> getDatasetsInDataverseForRebalance(DataverseName dvName,
             MetadataTransactionContext mdTxnCtx) throws Exception {
         return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dvName) ? Collections.emptyList()
-                : IterableUtils.filteredIterable(MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dvName),
+                : IterableUtils.filteredIterable(MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, null, dvName),
                         DatasetUtil::isNotView);
     }
 

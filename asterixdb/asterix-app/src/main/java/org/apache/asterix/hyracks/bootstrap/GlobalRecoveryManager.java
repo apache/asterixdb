@@ -137,8 +137,8 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         List<Dataverse> dataverses = MetadataManager.INSTANCE.getDataverses(mdTxnCtx);
         IntOpenHashSet validDatasetIds = new IntOpenHashSet();
         for (Dataverse dataverse : dataverses) {
-            List<Dataset> dataverseDatasets =
-                    MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx, dataverse.getDataverseName());
+            List<Dataset> dataverseDatasets = MetadataManager.INSTANCE.getDataverseDatasets(mdTxnCtx,
+                    dataverse.getDatabaseName(), dataverse.getDataverseName());
             dataverseDatasets.stream().filter(DatasetUtil::isNotView).mapToInt(Dataset::getDatasetId)
                     .forEach(validDatasetIds::add);
         }
@@ -159,7 +159,7 @@ public class GlobalRecoveryManager implements IGlobalRecoveryManager {
         // Loop over datasets
         for (Dataverse dataverse : MetadataManager.INSTANCE.getDataverses(mdTxnCtx)) {
             // Fixes ASTERIXDB-2386 by caching the dataverse during recovery
-            MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse.getDataverseName());
+            MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverse.getDatabaseName(), dataverse.getDataverseName());
         }
         return mdTxnCtx;
     }

@@ -356,7 +356,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
         appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dvName);
         appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, dvName, datasetName);
-        return MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName, includingViews);
+        return MetadataManagerUtil.findDataset(mdTxnCtx, null, dvName, datasetName, includingViews);
     }
 
     public INodeDomain findNodeDomain(String nodeGroupName) throws AlgebricksException {
@@ -368,7 +368,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Datatype findTypeEntity(DataverseName dataverseName, String typeName) throws AlgebricksException {
-        return MetadataManagerUtil.findTypeEntity(mdTxnCtx, dataverseName, typeName);
+        return MetadataManagerUtil.findTypeEntity(mdTxnCtx, null, dataverseName, typeName);
     }
 
     public IAType findTypeForDatasetWithoutType(IAType recordType, IAType metaRecordType, Dataset dataset)
@@ -389,16 +389,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Feed findFeed(DataverseName dataverseName, String feedName) throws AlgebricksException {
-        return MetadataManagerUtil.findFeed(mdTxnCtx, dataverseName, feedName);
+        return MetadataManagerUtil.findFeed(mdTxnCtx, null, dataverseName, feedName);
     }
 
     public FeedConnection findFeedConnection(DataverseName dataverseName, String feedName, String datasetName)
             throws AlgebricksException {
-        return MetadataManagerUtil.findFeedConnection(mdTxnCtx, dataverseName, feedName, datasetName);
+        return MetadataManagerUtil.findFeedConnection(mdTxnCtx, null, dataverseName, feedName, datasetName);
     }
 
     public FeedPolicyEntity findFeedPolicy(DataverseName dataverseName, String policyName) throws AlgebricksException {
-        return MetadataManagerUtil.findFeedPolicy(mdTxnCtx, dataverseName, policyName);
+        return MetadataManagerUtil.findFeedPolicy(mdTxnCtx, null, dataverseName, policyName);
     }
 
     @Override
@@ -424,11 +424,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public Index getIndex(DataverseName dataverseName, String datasetName, String indexName)
             throws AlgebricksException {
-        return MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataverseName, datasetName, indexName);
+        return MetadataManager.INSTANCE.getIndex(mdTxnCtx, null, dataverseName, datasetName, indexName);
     }
 
     public List<Index> getDatasetIndexes(DataverseName dataverseName, String datasetName) throws AlgebricksException {
-        return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, dataverseName, datasetName);
+        return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, null, dataverseName, datasetName);
     }
 
     public Index findSampleIndex(DataverseName dataverseName, String datasetName) throws AlgebricksException {
@@ -448,7 +448,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             return null;
         }
         Synonym synonym = null;
-        while (MetadataManagerUtil.findDataset(mdTxnCtx, dvName, datasetName, includingViews) == null) {
+        while (MetadataManagerUtil.findDataset(mdTxnCtx, null, dvName, datasetName, includingViews) == null) {
             synonym = findSynonym(dvName, datasetName);
             if (synonym == null) {
                 return null;
@@ -460,17 +460,17 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Synonym findSynonym(DataverseName dataverseName, String synonymName) throws AlgebricksException {
-        return MetadataManagerUtil.findSynonym(mdTxnCtx, dataverseName, synonymName);
+        return MetadataManagerUtil.findSynonym(mdTxnCtx, null, dataverseName, synonymName);
     }
 
     public FullTextConfigMetadataEntity findFullTextConfig(DataverseName dataverseName, String ftConfigName)
             throws AlgebricksException {
-        return MetadataManagerUtil.findFullTextConfigDescriptor(mdTxnCtx, dataverseName, ftConfigName);
+        return MetadataManagerUtil.findFullTextConfigDescriptor(mdTxnCtx, null, dataverseName, ftConfigName);
     }
 
     public FullTextFilterMetadataEntity findFullTextFilter(DataverseName dataverseName, String ftFilterName)
             throws AlgebricksException {
-        return MetadataManagerUtil.findFullTextFilterDescriptor(mdTxnCtx, dataverseName, ftFilterName);
+        return MetadataManagerUtil.findFullTextFilterDescriptor(mdTxnCtx, null, dataverseName, ftFilterName);
     }
 
     @Override
@@ -509,7 +509,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public Dataverse findDataverse(DataverseName dataverseName) throws AlgebricksException {
-        return MetadataManager.INSTANCE.getDataverse(mdTxnCtx, dataverseName);
+        return MetadataManager.INSTANCE.getDataverse(mdTxnCtx, null, dataverseName);
     }
 
     public Triple<IOperatorDescriptor, AlgebricksPartitionConstraint, ITypedAdapterFactory> getFeedIntakeRuntime(
@@ -549,13 +549,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             boolean isIndexOnlyPlan, boolean isPrimaryIndexPointSearch, ITupleProjectorFactory tupleProjectorFactory,
             boolean partitionInputTuples) throws AlgebricksException {
         boolean isSecondary = true;
-        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), dataset.getDatasetName());
+        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName());
         if (primaryIndex != null && (dataset.getDatasetType() != DatasetType.EXTERNAL)) {
             isSecondary = !indexName.equals(primaryIndex.getIndexName());
         }
-        Index theIndex = isSecondary ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName) : primaryIndex;
+        Index theIndex = isSecondary ? MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName) : primaryIndex;
 
         int numSecondaryKeys;
         switch (theIndex.getIndexType()) {
@@ -641,8 +641,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             boolean propagateFilter, IMissingWriterFactory nonFilterWriterFactory, int[] minFilterFieldIndexes,
             int[] maxFilterFieldIndexes, boolean isIndexOnlyPlan) throws AlgebricksException {
         int numPrimaryKeys = dataset.getPrimaryKeys().size();
-        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName);
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         if (secondaryIndex == null) {
             throw new AlgebricksException("Code generation error: no index " + indexName + " for " + dataset() + " "
                     + dataset.getDatasetName());
@@ -861,8 +861,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName);
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         // TokenizeOperator only supports a keyword or n-gram index.
         switch (secondaryIndex.getIndexType()) {
             case SINGLE_PARTITION_WORD_INVIX:
@@ -936,11 +936,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             String adapterName) throws AlgebricksException {
         DatasourceAdapter adapter;
         // search in default namespace (built-in adapter)
-        adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
+        adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, MetadataConstants.METADATA_DATAVERSE_NAME,
+                adapterName);
 
         // search in dataverse (user-defined adapter)
         if (adapter == null) {
-            adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, dataverseName, adapterName);
+            adapter = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, null, dataverseName, adapterName);
         }
         return adapter;
     }
@@ -1029,8 +1030,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             filterFields[0] = idx;
         }
 
-        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), dataset.getDatasetName());
+        Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName());
         PartitioningProperties partitioningProperties = getPartitioningProperties(dataset);
 
         // prepare callback
@@ -1059,8 +1060,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 ISearchOperationCallbackFactory searchCallbackFactory = dataset
                         .getSearchCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
 
-                Optional<Index> primaryKeyIndex = MetadataManager.INSTANCE
-                        .getDatasetIndexes(mdTxnCtx, dataset.getDataverseName(), dataset.getDatasetName()).stream()
+                Optional<Index> primaryKeyIndex = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
+                        dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName()).stream()
                         .filter(Index::isPrimaryKeyIndex).findFirst();
                 IIndexDataflowHelperFactory pkidfh = null;
                 if (primaryKeyIndex.isPresent()) {
@@ -1116,8 +1117,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
-        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName);
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
 
         ArrayList<LogicalVariable> prevAdditionalFilteringKeys = null;
         if (indexOp == IndexOperation.UPSERT && prevAdditionalFilteringKey != null) {
@@ -1235,8 +1236,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
         try {
             // Index parameters.
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                    dataset.getDataverseName(), dataset.getDatasetName(), indexName);
             PartitioningProperties partitioningProperties =
                     getPartitioningProperties(dataset, secondaryIndex.getIndexName());
             // prepare callback
@@ -1304,8 +1305,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
         try {
             // Index parameters.
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                    dataset.getDataverseName(), dataset.getDatasetName(), indexName);
 
             PartitioningProperties partitioningProperties =
                     getPartitioningProperties(dataset, secondaryIndex.getIndexName());
@@ -1346,12 +1347,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataverseName, datasetName);
         String itemTypeName = dataset.getItemTypeName();
+        String itemTypeDatabase = null;
         IAType itemType = MetadataManager.INSTANCE
-                .getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
+                .getDatatype(mdTxnCtx, itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName)
+                .getDatatype();
         validateRecordType(itemType);
         ARecordType recType = (ARecordType) itemType;
-        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName);
+        Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName(), indexName);
         Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
         List<List<String>> secondaryKeyExprs = secondaryIndexDetails.getKeyFieldNames();
         List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
@@ -1528,8 +1531,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
         try {
             // Index parameters.
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                    dataset.getDataverseName(), dataset.getDatasetName(), indexName);
 
             PartitioningProperties partitioningProperties =
                     getPartitioningProperties(dataset, secondaryIndex.getIndexName());
@@ -1654,7 +1657,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType;
         try {
-            itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDataverseName(), itemTypeName)
+            String itemTypeDatabase = null;
+            itemType = MetadataManager.INSTANCE
+                    .getDatatype(mdTxnCtx, itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName)
                     .getDatatype();
 
             if (itemType.getTypeTag() != ATypeTag.OBJECT) {
@@ -1664,8 +1669,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             ARecordType recType = (ARecordType) itemType;
 
             // Index parameters.
-            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDataverseName(),
-                    dataset.getDatasetName(), indexName);
+            Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
+                    dataset.getDataverseName(), dataset.getDatasetName(), indexName);
             Index.TextIndexDetails secondaryIndexDetails = (Index.TextIndexDetails) secondaryIndex.getIndexDetails();
 
             List<List<String>> secondaryKeyExprs = secondaryIndexDetails.getKeyFieldNames();

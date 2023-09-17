@@ -1890,12 +1890,11 @@ public class MetadataNode implements IMetadataNode {
         return createTuple(dataverseName.getCanonicalForm(), rest);
     }
 
-    private static ITupleReference createTuple(String databaseName, DataverseName dataverseName, String... rest) {
-        //TODO(DB): pass mdIndexesProvider and use it instead of checking for null
-        if (databaseName == null) {
-            return createTuple(dataverseName.getCanonicalForm(), rest);
-        } else {
+    private ITupleReference createTuple(String databaseName, DataverseName dataverseName, String... rest) {
+        if (mdIndexesProvider.isUsingDatabase()) {
             return createDatabaseTuple(databaseName, dataverseName, rest);
+        } else {
+            return createTuple(dataverseName.getCanonicalForm(), rest);
         }
     }
 

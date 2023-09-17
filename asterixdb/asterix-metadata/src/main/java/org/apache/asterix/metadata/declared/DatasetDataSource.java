@@ -125,9 +125,9 @@ public class DatasetDataSource extends DataSource {
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = MetadataManager.INSTANCE
-                .getDatatype(metadataProvider.getMetadataTxnContext(), dataset.getItemTypeDataverseName(), itemTypeName)
-                .getDatatype();
+        String itemTypeDatabase = null;
+        IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
+                itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
         switch (dataset.getDatasetType()) {
             case EXTERNAL:
                 DatasetDataSource externalDataSource = (DatasetDataSource) dataSource;
@@ -148,16 +148,18 @@ public class DatasetDataSource extends DataSource {
                         tupleFilterFactory, outputLimit);
             case INTERNAL:
                 DataSourceId id = getId();
+                String database = null;
                 DataverseName dataverseName = id.getDataverseName();
                 String datasetName = id.getDatasourceName();
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
-                        dataverseName, datasetName, datasetName);
+                        database, dataverseName, datasetName, datasetName);
 
                 ARecordType datasetType = (ARecordType) itemType;
                 ARecordType metaItemType = null;
                 if (dataset.hasMetaPart()) {
+                    String metaItemTypeDatabase = null;
                     metaItemType = (ARecordType) MetadataManager.INSTANCE
-                            .getDatatype(metadataProvider.getMetadataTxnContext(),
+                            .getDatatype(metadataProvider.getMetadataTxnContext(), metaItemTypeDatabase,
                                     dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName())
                             .getDatatype();
                 }
