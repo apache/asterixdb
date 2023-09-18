@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.translator;
 
-import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.io.IOException;
@@ -213,8 +212,8 @@ abstract class LangExpressionToPlanTranslator
                 validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
         List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, dataset.getDatasetName() + ": load "
-                    + dataset() + " is not supported on " + dataset(PLURAL) + " with meta records");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, dataset.getDatasetName(),
+                    stmt.getKind() == Statement.Kind.LOAD ? "load" : "copy into");
         }
 
         LoadableDataSource lds;
@@ -476,9 +475,8 @@ abstract class LangExpressionToPlanTranslator
             ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName() + ": delete from " + dataset()
-                            + " is not supported on " + dataset(PLURAL) + " with meta records");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
+                    targetDatasource.getDataset().getDatasetName(), "delete from");
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
@@ -507,9 +505,8 @@ abstract class LangExpressionToPlanTranslator
             IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (!targetDatasource.getDataset().allow(topOp, DatasetUtil.OP_UPSERT)) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName() + ": upsert into " + dataset()
-                            + " is not supported on " + dataset(PLURAL) + " with meta records");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
+                    targetDatasource.getDataset().getDatasetName(), "upsert into");
         }
         ProjectOperator project = (ProjectOperator) topOp;
         CompiledUpsertStatement compiledUpsert = (CompiledUpsertStatement) stmt;
@@ -520,8 +517,8 @@ abstract class LangExpressionToPlanTranslator
 
         if (targetDatasource.getDataset().hasMetaPart()) {
             if (returnExpression != null) {
-                throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                        "Returning not allowed on " + dataset(PLURAL) + " with meta records");
+                throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
+                        targetDatasource.getDataset().getDatasetName(), "return expression");
             }
             List<LogicalVariable> metaAndKeysVars;
             List<Mutable<ILogicalExpression>> metaAndKeysExprs;
@@ -631,9 +628,8 @@ abstract class LangExpressionToPlanTranslator
             ICompiledDmlStatement stmt, IResultMetadata resultMetadata) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         if (targetDatasource.getDataset().hasMetaPart()) {
-            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
-                    targetDatasource.getDataset().getDatasetName() + ": insert into " + dataset()
-                            + " is not supported on " + dataset(PLURAL) + " with meta records");
+            throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc,
+                    targetDatasource.getDataset().getDatasetName(), "insert into");
         }
 
         List<String> filterField = DatasetUtil.getFilterField(targetDatasource.getDataset());
