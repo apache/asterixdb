@@ -20,19 +20,28 @@ package org.apache.hyracks.algebricks.core.algebra.base;
 
 public interface OperatorAnnotations {
     // hints
-    public static final String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
-    public static final String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
-    public static final String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
-    public static final String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
+    String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
+    String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
+    String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
+    String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
     // Boolean
-    public static final String CARDINALITY = "CARDINALITY"; // -->
+    String CARDINALITY = "CARDINALITY"; // -->
     // Integer
-    public static final String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
+    String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
     // Integer
-    public static final String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
-    public static final String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
-    public static final String OP_COST_TOTAL = "TOTAL_COST";
-    public static final String OP_COST_LOCAL = "OP_COST";
-    public static final String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
-    public static final String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
+    String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
+    String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
+    String OP_COST_TOTAL = "TOTAL_COST";
+    String OP_COST_LOCAL = "OP_COST";
+    String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
+    String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
+
+    /**
+     * An annotation to indicate that a SELECT predicate should not be pushed to data-scan.
+     * <p>
+     * Returns TRUE if it is disallowed, FALSE otherwise.
+     * <p>
+     * If the annotation is missing (i.e., {@code null}), it should mean FALSE.
+     */
+    String DISALLOW_FILTER_PUSHDOWN_TO_SCAN = "DISALLOW_FILTER_PUSHDOWN_TO_SCAN";
 }

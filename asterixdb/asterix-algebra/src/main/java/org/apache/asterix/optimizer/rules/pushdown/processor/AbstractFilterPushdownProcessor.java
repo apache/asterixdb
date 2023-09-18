@@ -41,6 +41,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor {
@@ -128,7 +129,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
              */
             ILogicalOperator useOperator = useDescriptor.getOperator();
             if (useDescriptor.getScope() == scanDefineDescriptor.getScope()
-                    && useOperator.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                    && useOperator.getOperatorTag() == LogicalOperatorTag.SELECT && isPushdownAllowed(useOperator)) {
                 inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
             } else if (useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
                 inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
@@ -141,6 +142,12 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
                 pushdownFilter(nextDefineDescriptor, scanDefineDescriptor);
             }
         }
+    }
+
+    private boolean isPushdownAllowed(ILogicalOperator useOperator) {
+        Boolean disallowed = (Boolean) useOperator.getAnnotations()
+                .getOrDefault(OperatorAnnotations.DISALLOW_FILTER_PUSHDOWN_TO_SCAN, Boolean.FALSE);
+        return disallowed == Boolean.FALSE;
     }
 
     private void inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)

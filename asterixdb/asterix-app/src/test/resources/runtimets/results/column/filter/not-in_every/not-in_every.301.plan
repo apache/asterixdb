@@ -1,0 +1,39 @@
+distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$d]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$28(ASC) ]  |PARTITIONED|
+        order (ASC, $$28) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$d, $$28]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              select ($$26) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_SELECT  |PARTITIONED|
+                project ([$$28, $$d, $$26]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  subplan {
+                            aggregate [$$26] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (not(if-missing-or-null(ge($$x, 100), false))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                unnest $$x <- scan-collection($$29) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- UNNEST  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- SUBPLAN  |PARTITIONED|
+                    assign [$$29] <- [$$d.getField("array")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$28, $$d] <- test.ColumnDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

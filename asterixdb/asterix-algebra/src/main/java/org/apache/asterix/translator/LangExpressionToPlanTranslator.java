@@ -1445,6 +1445,8 @@ abstract class LangExpressionToPlanTranslator
                         BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs);
                 notExpr.setSourceLocation(sourceLoc);
                 s = new SelectOperator(new MutableObject<>(notExpr));
+                // Disable pushdowns
+                s.getAnnotations().put(OperatorAnnotations.DISALLOW_FILTER_PUSHDOWN_TO_SCAN, Boolean.TRUE);
                 s.getInputs().add(eo2.second);
                 s.setSourceLocation(sourceLoc);
                 fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM,

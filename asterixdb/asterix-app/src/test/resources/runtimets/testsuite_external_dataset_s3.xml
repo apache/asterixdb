@@ -256,6 +256,12 @@
         <output-dir compare="Text">embed-multiple-values</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="not-in">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">not-in</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="one-field">
         <placeholder name="adapter" value="S3" />
