@@ -63,6 +63,7 @@ import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -82,6 +83,7 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.entitytupletranslators.CompactionPolicyTupleTranslator;
+import org.apache.asterix.metadata.entitytupletranslators.DatabaseTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasetTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatasourceAdapterTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.DatatypeTupleTranslator;
@@ -347,6 +349,28 @@ public class MetadataNode implements IMetadataNode {
                     "Metadata Extension Index: " + datasetId + " was not found");
         }
         return index;
+    }
+
+    @Override
+    public void addDatabase(TxnId txnId, Database database) throws AlgebricksException, RemoteException {
+        try {
+            DatabaseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatabaseTupleTranslator(true);
+            ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(database);
+            insertTupleIntoIndex(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.DUPLICATE_KEY)) {
+                //TODO(DB): change to database
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.DATAVERSE_EXISTS, e,
+                        database.getDatabaseName());
+            } else {
+                throw new AlgebricksException(e);
+            }
+        }
+    }
+
+    @Override
+    public void dropDatabase(TxnId txnId, String databaseName) throws AlgebricksException, RemoteException {
+        //TODO(DB): implement
     }
 
     @Override

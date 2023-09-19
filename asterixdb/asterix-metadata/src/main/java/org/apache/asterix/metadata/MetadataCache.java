@@ -30,6 +30,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -51,10 +52,11 @@ import org.apache.asterix.runtime.fulltext.FullTextConfigDescriptor;
  * Caches metadata entities such that the MetadataManager does not have to
  * contact the MetadataNode. The cache is updated transactionally via logical
  * logging in the MetadataTransactionContext. Note that transaction abort is
- * simply ignored, i.e., updates are not not applied to the cache.
+ * simply ignored, i.e., updates are not applied to the cache.
  */
 public class MetadataCache {
 
+    protected final Map<String, Database> databases = new HashMap<>();
     // Key is dataverse name.
     protected final Map<DataverseName, Dataverse> dataverses = new HashMap<>();
     // Key is dataverse name. Key of value map is dataset name.
@@ -152,6 +154,16 @@ public class MetadataCache {
         }
     }
 
+    public Database addDatabaseIfNotExists(Database database) {
+        synchronized (databases) {
+            String databaseName = database.getDatabaseName();
+            if (!databases.containsKey(databaseName)) {
+                return databases.put(databaseName, database);
+            }
+            return null;
+        }
+    }
+
     public Dataverse addDataverseIfNotExists(Dataverse dataverse) {
         synchronized (dataverses) {
             synchronized (datasets) {
@@ -241,6 +253,36 @@ public class MetadataCache {
                 return p.remove(compactionPolicy.getPolicyName());
             }
             return null;
+        }
+    }
+
+    public Database dropDatabase(Database database) {
+        synchronized (databases) {
+            synchronized (dataverses) {
+                synchronized (datasets) {
+                    synchronized (indexes) {
+                        synchronized (datatypes) {
+                            synchronized (functions) {
+                                synchronized (fullTextConfigs) {
+                                    synchronized (fullTextFilters) {
+                                        synchronized (adapters) {
+                                            synchronized (libraries) {
+                                                synchronized (feeds) {
+                                                    synchronized (compactionPolicies) {
+                                                        synchronized (synonyms) {
+                                                            return databases.remove(database.getDatabaseName());
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

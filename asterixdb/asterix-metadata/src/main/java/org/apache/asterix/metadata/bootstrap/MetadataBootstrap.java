@@ -156,6 +156,7 @@ public class MetadataBootstrap {
                         "Finished enlistment of metadata B-trees in " + (isNewUniverse ? "new" : "old") + " universe");
             }
             if (isNewUniverse) {
+                insertInitialDatabases(mdTxnCtx, mdIndexesProvider);
                 insertInitialDataverses(mdTxnCtx);
                 insertMetadataDatasets(mdTxnCtx, PRIMARY_INDEXES);
                 insertMetadataDatatypes(mdTxnCtx);
@@ -190,6 +191,14 @@ public class MetadataBootstrap {
         }
     }
 
+    private static void insertInitialDatabases(MetadataTransactionContext mdTxnCtx,
+            MetadataIndexesProvider mdIndexesProvider) throws AlgebricksException {
+        if (mdIndexesProvider.isUsingDatabase()) {
+            MetadataManager.INSTANCE.addDatabase(mdTxnCtx, MetadataBuiltinEntities.SYSTEM_DATABASE);
+            MetadataManager.INSTANCE.addDatabase(mdTxnCtx, MetadataBuiltinEntities.DEFAULT_DATABASE);
+        }
+    }
+
     private static void insertInitialDataverses(MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         MetadataManager.INSTANCE.addDataverse(mdTxnCtx, MetadataBuiltinEntities.METADATA_DATAVERSE);
         MetadataManager.INSTANCE.addDataverse(mdTxnCtx, MetadataBuiltinEntities.DEFAULT_DATAVERSE);
@@ -213,7 +222,7 @@ public class MetadataBootstrap {
                     new Dataset(indexes[i].getDataverseName(), indexes[i].getIndexedDatasetName(),
                             indexes[i].getDataverseName(), indexes[i].getPayloadRecordType().getTypeName(),
                             indexes[i].getNodeGroupName(), StorageConstants.DEFAULT_COMPACTION_POLICY_NAME,
-                            StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<String, String>(),
+                            StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<>(),
                             DatasetType.INTERNAL, indexes[i].getDatasetId().getId(), MetadataUtil.PENDING_NO_OP));
         }
         if (LOGGER.isInfoEnabled()) {

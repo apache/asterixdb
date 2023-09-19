@@ -31,6 +31,10 @@ public class MetadataIndexesProvider {
         cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
     }
 
+    public DatabaseEntity getDatabaseEntity() {
+        return DatabaseEntity.of(cloudDeployment);
+    }
+
     public DataverseEntity getDataverseEntity() {
         return DataverseEntity.of(cloudDeployment);
     }
@@ -100,13 +104,25 @@ public class MetadataIndexesProvider {
     }
 
     public IMetadataIndex[] getMetadataIndexes() {
-        return new IMetadataIndex[] { getDataverseEntity().getIndex(), getDatasetEntity().getIndex(),
-                getDatatypeEntity().getIndex(), getIndexEntity().getIndex(), getSynonymEntity().getIndex(),
-                getNodeEntity().getIndex(), getNodeGroupEntity().getIndex(), getFunctionEntity().getIndex(),
-                getDatasourceAdapterEntity().getIndex(), getFeedEntity().getIndex(), getFeedPolicyEntity().getIndex(),
-                getLibraryEntity().getIndex(), getCompactionPolicyEntity().getIndex(),
-                getExternalFileEntity().getIndex(), getFeedConnectionEntity().getIndex(),
-                getFullTextConfigEntity().getIndex(), getFullTextFilterEntity().getIndex() };
+        if (isUsingDatabase()) {
+            return new IMetadataIndex[] { getDatabaseEntity().getIndex(), getDataverseEntity().getIndex(),
+                    getDatasetEntity().getIndex(), getDatatypeEntity().getIndex(), getIndexEntity().getIndex(),
+                    getSynonymEntity().getIndex(), getNodeEntity().getIndex(), getNodeGroupEntity().getIndex(),
+                    getFunctionEntity().getIndex(), getDatasourceAdapterEntity().getIndex(), getFeedEntity().getIndex(),
+                    getFeedPolicyEntity().getIndex(), getLibraryEntity().getIndex(),
+                    getCompactionPolicyEntity().getIndex(), getExternalFileEntity().getIndex(),
+                    getFeedConnectionEntity().getIndex(), getFullTextConfigEntity().getIndex(),
+                    getFullTextFilterEntity().getIndex() };
+        } else {
+            return new IMetadataIndex[] { getDataverseEntity().getIndex(), getDatasetEntity().getIndex(),
+                    getDatatypeEntity().getIndex(), getIndexEntity().getIndex(), getSynonymEntity().getIndex(),
+                    getNodeEntity().getIndex(), getNodeGroupEntity().getIndex(), getFunctionEntity().getIndex(),
+                    getDatasourceAdapterEntity().getIndex(), getFeedEntity().getIndex(),
+                    getFeedPolicyEntity().getIndex(), getLibraryEntity().getIndex(),
+                    getCompactionPolicyEntity().getIndex(), getExternalFileEntity().getIndex(),
+                    getFeedConnectionEntity().getIndex(), getFullTextConfigEntity().getIndex(),
+                    getFullTextFilterEntity().getIndex() };
+        }
     }
 
     public boolean isUsingDatabase() {

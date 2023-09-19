@@ -47,6 +47,10 @@ public class MetadataTupleTranslatorProvider {
         return new DatatypeTupleTranslator(txnId, metadataNode, getTuple, mdIndexesProvider.getDatatypeEntity());
     }
 
+    public DatabaseTupleTranslator getDatabaseTupleTranslator(boolean getTuple) {
+        return new DatabaseTupleTranslator(getTuple, mdIndexesProvider.getDatabaseEntity());
+    }
+
     public DataverseTupleTranslator getDataverseTupleTranslator(boolean getTuple) {
         return new DataverseTupleTranslator(getTuple, mdIndexesProvider.getDataverseEntity());
     }

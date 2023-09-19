@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -77,6 +78,10 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException remote exception
      */
     void abortTransaction(TxnId txnId) throws RemoteException;
+
+    void addDatabase(TxnId txnId, Database database) throws AlgebricksException, RemoteException;
+
+    void dropDatabase(TxnId txnId, String databaseName) throws AlgebricksException, RemoteException;
 
     /**
      * Inserts a new dataverse into the metadata, acquiring local locks on behalf of

@@ -20,7 +20,6 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import static org.apache.asterix.metadata.bootstrap.MetadataPrimaryIndexes.PROPERTIES_DATABASE;
-import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_ID;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_DATABASE_NAME;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_PENDING_OP;
 import static org.apache.asterix.metadata.bootstrap.MetadataRecordTypes.FIELD_NAME_SYSTEM_DATABASE;
@@ -44,7 +43,6 @@ public final class DatabaseEntity {
     private final int payloadPosition;
     private final MetadataIndex index;
     private final int databaseNameIndex;
-    private final int databaseIdIndex;
     private final int systemDatabaseIndex;
     private final int timestampIndex;
     private final int pendingOpIndex;
@@ -53,7 +51,6 @@ public final class DatabaseEntity {
         this.index = index;
         this.payloadPosition = payloadPosition;
         this.databaseNameIndex = startIndex++;
-        this.databaseIdIndex = startIndex++;
         this.systemDatabaseIndex = startIndex++;
         this.timestampIndex = startIndex++;
         this.pendingOpIndex = startIndex++;
@@ -79,10 +76,6 @@ public final class DatabaseEntity {
         return databaseNameIndex;
     }
 
-    public int databaseIdIndex() {
-        return databaseIdIndex;
-    }
-
     public int systemDatabaseIndex() {
         return systemDatabaseIndex;
     }
@@ -100,11 +93,10 @@ public final class DatabaseEntity {
                 // RecordTypeName
                 RECORD_NAME_DATABASE,
                 // FieldNames
-                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_DATABASE_ID, FIELD_NAME_SYSTEM_DATABASE,
-                        FIELD_NAME_TIMESTAMP, FIELD_NAME_PENDING_OP },
+                new String[] { FIELD_NAME_DATABASE_NAME, FIELD_NAME_SYSTEM_DATABASE, FIELD_NAME_TIMESTAMP,
+                        FIELD_NAME_PENDING_OP },
                 // FieldTypes
-                new IAType[] { BuiltinType.ASTRING, BuiltinType.AINT32, BuiltinType.ABOOLEAN, BuiltinType.ASTRING,
-                        BuiltinType.AINT32 },
+                new IAType[] { BuiltinType.ASTRING, BuiltinType.ABOOLEAN, BuiltinType.ASTRING, BuiltinType.AINT32 },
                 //IsOpen?
                 true);
     }

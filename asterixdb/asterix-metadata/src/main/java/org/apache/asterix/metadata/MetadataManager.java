@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -166,6 +167,26 @@ public abstract class MetadataManager implements IMetadataManager {
             LOGGER.fatal("Failure aborting a metadata transaction", th);
             ExitUtil.halt(ExitUtil.EC_FAILED_TO_ABORT_METADATA_TXN);
         }
+    }
+
+    @Override
+    public void addDatabase(MetadataTransactionContext ctx, Database database) throws AlgebricksException {
+        try {
+            metadataNode.addDatabase(ctx.getTxnId(), database);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.addDatabase(database);
+    }
+
+    @Override
+    public void dropDatabase(MetadataTransactionContext ctx, String databaseName) throws AlgebricksException {
+        try {
+            metadataNode.dropDatabase(ctx.getTxnId(), databaseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        ctx.dropDatabase(databaseName);
     }
 
     @Override

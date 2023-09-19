@@ -27,6 +27,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -84,6 +85,11 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public TxnId getTxnId() {
         return txnId;
+    }
+
+    public void addDatabase(Database database) {
+        droppedCache.dropDatabase(database);
+        logAndApply(new MetadataLogicalOperation(database, true));
     }
 
     public void addDataverse(Dataverse dataverse) {
@@ -148,6 +154,12 @@ public class MetadataTransactionContext extends MetadataCache {
                 new Index(dataverseName, datasetName, indexName, null, null, false, false, MetadataUtil.PENDING_NO_OP);
         droppedCache.addIndexIfNotExists(index);
         logAndApply(new MetadataLogicalOperation(index, false));
+    }
+
+    public void dropDatabase(String databaseName) {
+        Database database = new Database(databaseName, false, MetadataUtil.PENDING_NO_OP);
+        droppedCache.addDatabaseIfNotExists(database);
+        logAndApply(new MetadataLogicalOperation(database, false));
     }
 
     public void dropDataverse(DataverseName dataverseName) {

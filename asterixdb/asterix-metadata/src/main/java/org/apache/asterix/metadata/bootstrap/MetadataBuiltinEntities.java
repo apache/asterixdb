@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.MetadataConstants;
@@ -27,6 +28,13 @@ import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 
 public class MetadataBuiltinEntities {
+
+    //--------------------------------------- Databases ----------------------------------------//
+    public static final Database SYSTEM_DATABASE =
+            new Database(MetadataConstants.SYSTEM_DATABASE, true, MetadataUtil.PENDING_NO_OP);
+    public static final Database DEFAULT_DATABASE =
+            new Database(MetadataConstants.DEFAULT_DATABASE, false, MetadataUtil.PENDING_NO_OP);
+
     //--------------------------------------- Dataverses ----------------------------------------//
     public static final Dataverse METADATA_DATAVERSE = new Dataverse(MetadataConstants.METADATA_DATAVERSE_NAME,
             NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, MetadataUtil.PENDING_NO_OP);

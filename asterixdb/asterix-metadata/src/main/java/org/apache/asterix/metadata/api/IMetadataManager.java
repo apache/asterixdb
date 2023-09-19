@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -88,6 +89,10 @@ public interface IMetadataManager extends IMetadataBootstrap {
      * @throws RemoteException
      */
     void abortTransaction(MetadataTransactionContext ctx) throws ACIDException, RemoteException;
+
+    void addDatabase(MetadataTransactionContext ctx, Database database) throws AlgebricksException;
+
+    void dropDatabase(MetadataTransactionContext ctx, String databaseName) throws AlgebricksException;
 
     /**
      * Inserts a new dataverse into the metadata.
