@@ -86,6 +86,7 @@ public class JoinNode {
     protected int highestDatasetId;
     private JoinNode rightJn;
     private JoinNode leftJn;
+    private int limitVal = -1; // only for single dataset joinNodes.
     private List<Integer> applicableJoinConditions;
     protected ILogicalOperator leafInput;
     private List<Pair<IAccessMethod, Index>> chosenIndexes;
@@ -135,6 +136,14 @@ public class JoinNode {
 
     protected void setAvgDocSize(double avgDocSize) {
         size = avgDocSize;
+    }
+
+    public void setLimitVal(int val) {
+        limitVal = val;
+    }
+
+    public int getLimitVal() {
+        return limitVal;
     }
 
     public double getInputSize() {

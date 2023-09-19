@@ -74,6 +74,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
@@ -817,6 +818,10 @@ public class JoinEnum {
 
         int dataScanPlan;
         JoinNode[] jnArray = this.getJnArray();
+        int limit = -1;
+        if (this.numberOfTerms == 1) {
+            jnArray[1].setLimitVal(findLimitValue(this.op));
+        }
         for (int i = 1; i <= this.numberOfTerms; i++) {
             JoinNode jn = jnArray[i];
             Index.SampleIndexDetails idxDetails = jn.getIdxDetails();
@@ -884,6 +889,23 @@ public class JoinEnum {
             jn.addIndexAccessPlans(leafInput);
         }
         return this.numberOfTerms;
+    }
+
+    private int findLimitValue(AbstractLogicalOperator oper) {
+        ILogicalOperator op = oper;
+        while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (op.getOperatorTag() == LogicalOperatorTag.LIMIT) {
+                LimitOperator lop = (LimitOperator) op;
+                ILogicalExpression expr = lop.getMaxObjects().getValue();
+                if (expr != null) {
+                    if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) { // must be a constant
+                        return Integer.parseInt(lop.getMaxObjects().getValue().toString());
+                    }
+                }
+            }
+            op = op.getInputs().get(0).getValue();
+        }
+        return -1;
     }
 
     private boolean isPredicateCardinalityAnnotationPresent(ILogicalExpression leExpr) {
