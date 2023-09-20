@@ -898,7 +898,7 @@ public class JoinEnum {
                 LimitOperator lop = (LimitOperator) op;
                 ILogicalExpression expr = lop.getMaxObjects().getValue();
                 if (expr != null) {
-                    if (expr.getExpressionTag() != LogicalExpressionTag.VARIABLE) { // must be a constant
+                    if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) { // must be a constant
                         return Integer.parseInt(lop.getMaxObjects().getValue().toString());
                     }
                 }
