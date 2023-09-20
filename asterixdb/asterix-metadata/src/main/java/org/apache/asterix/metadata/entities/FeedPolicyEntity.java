@@ -31,9 +31,9 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
  */
 public class FeedPolicyEntity extends FeedPolicy implements IMetadataEntity<FeedPolicyEntity> {
 
-    public FeedPolicyEntity(DataverseName dataverseName, String policyName, String description,
+    public FeedPolicyEntity(String databaseName, DataverseName dataverseName, String policyName, String description,
             Map<String, String> properties) {
-        super(dataverseName, policyName, description, properties);
+        super(databaseName, dataverseName, policyName, description, properties);
     }
 
     private static final long serialVersionUID = 2L;

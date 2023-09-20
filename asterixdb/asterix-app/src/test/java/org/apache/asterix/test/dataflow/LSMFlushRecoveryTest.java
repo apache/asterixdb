@@ -186,9 +186,10 @@ public class LSMFlushRecoveryTest {
 
     public void createIndex() throws Exception {
         dataset = StorageTestUtils.DATASET;
-        secondaryIndexEntity = new Index(dataset.getDataverseName(), dataset.getDatasetName(), SECONDARY_INDEX_NAME,
-                SECONDARY_INDEX_TYPE, SECONDARY_INDEX_FIELD_NAMES, SECONDARY_INDEX_FIELD_INDICATORS,
-                SECONDARY_INDEX_FIELD_TYPES, false, false, false, 0, OptionalBoolean.of(false));
+        secondaryIndexEntity = new Index(dataset.getDatabaseName(), dataset.getDataverseName(),
+                dataset.getDatasetName(), SECONDARY_INDEX_NAME, SECONDARY_INDEX_TYPE, SECONDARY_INDEX_FIELD_NAMES,
+                SECONDARY_INDEX_FIELD_INDICATORS, SECONDARY_INDEX_FIELD_TYPES, false, false, false, 0,
+                OptionalBoolean.of(false));
 
         primaryIndexInfos = new PrimaryIndexInfo[NUM_PARTITIONS];
         secondaryIndexInfo = new SecondaryIndexInfo[NUM_PARTITIONS];

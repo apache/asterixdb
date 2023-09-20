@@ -33,9 +33,9 @@ public class StopwordsFullTextFilterDescriptor extends AbstractFullTextFilterDes
 
     public ImmutableList<String> stopwordList;
 
-    public StopwordsFullTextFilterDescriptor(DataverseName dataverseName, String name,
+    public StopwordsFullTextFilterDescriptor(String database, DataverseName dataverseName, String name,
             ImmutableList<String> stopwordList) {
-        super(dataverseName, name);
+        super(database, dataverseName, name);
         this.stopwordList = stopwordList;
     }
 

@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
 import org.apache.asterix.transaction.management.runtime.CommitRuntime;
@@ -50,8 +51,9 @@ public class TestDataset extends Dataset {
             String recordTypeName, String nodeGroupName, String compactionPolicy,
             Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
             DatasetType datasetType, int datasetId, int pendingOp) {
-        super(dataverseName, datasetName, recordTypeDataverseName, recordTypeName, nodeGroupName, compactionPolicy,
-                compactionPolicyProperties, datasetDetails, hints, datasetType, datasetId, pendingOp);
+        super(MetadataUtil.databaseFor(dataverseName), dataverseName, datasetName, recordTypeDataverseName,
+                recordTypeName, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints,
+                datasetType, datasetId, pendingOp);
     }
 
     @Override

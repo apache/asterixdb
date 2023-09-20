@@ -31,12 +31,13 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 public class Dataverse implements IMetadataEntity<Dataverse> {
 
     private static final long serialVersionUID = 3L;
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String dataFormat;
     private final int pendingOp;
 
-    public Dataverse(DataverseName dataverseName, String format, int pendingOp) {
+    public Dataverse(String databaseName, DataverseName dataverseName, String format, int pendingOp) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.dataFormat = format;
         this.pendingOp = pendingOp;

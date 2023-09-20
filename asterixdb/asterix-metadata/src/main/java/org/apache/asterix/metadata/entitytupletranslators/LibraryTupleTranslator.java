@@ -52,14 +52,16 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
 
     @Override
     protected Library createMetadataEntityFromARecord(ARecord libraryRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
+                ((AString) libraryRecord.getValueByPos(libraryEntity.dataverseNameIndex())).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         int databaseNameIndex = libraryEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) libraryRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-        String dataverseCanonicalName =
-                ((AString) libraryRecord.getValueByPos(libraryEntity.dataverseNameIndex())).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String libraryName = ((AString) libraryRecord.getValueByPos(libraryEntity.libraryNameIndex())).getStringValue();
 
         ARecordType libraryRecordType = libraryRecord.getType();
@@ -74,7 +76,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         int hashIdx = libraryRecordType.getFieldIndex(FIELD_NAME_HASH);
         String hash = hashIdx >= 0 ? ((AString) libraryRecord.getValueByPos(hashIdx)).getStringValue() : null;
 
-        return new Library(dataverseName, libraryName, language, hash, pendingOp);
+        return new Library(databaseName, dataverseName, libraryName, language, hash, pendingOp);
     }
 
     @Override

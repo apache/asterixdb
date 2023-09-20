@@ -51,6 +51,7 @@ import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.asterix.om.base.ADouble;
@@ -105,15 +106,17 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
     @Override
     protected Dataset createMetadataEntityFromARecord(ARecord datasetRecord) throws AlgebricksException {
         ARecordType recType = datasetRecord.getType();
-        int databaseNameIndex = datasetEntity.databaseNameIndex();
-        String databaseName;
-        if (databaseNameIndex >= 0) {
-            databaseName = ((AString) datasetRecord.getValueByPos(databaseNameIndex)).getStringValue();
-        }
 
         String dataverseCanonicalName =
                 ((AString) datasetRecord.getValueByPos(datasetEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        int databaseNameIndex = datasetEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) datasetRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String datasetName = ((AString) datasetRecord.getValueByPos(datasetEntity.datasetNameIndex())).getStringValue();
         String typeName = ((AString) datasetRecord.getValueByPos(datasetEntity.datatypeNameIndex())).getStringValue();
         String typeDataverseCanonicalName =
@@ -382,9 +385,9 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         String compressionScheme = getCompressionScheme(datasetRecord);
         DatasetFormatInfo datasetFormatInfo = getDatasetFormatInfo(datasetRecord);
 
-        return new Dataset(dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName, metaTypeName,
-                nodeGroupName, compactionPolicy.first, compactionPolicy.second, datasetDetails, hints, datasetType,
-                datasetId, pendingOp, rebalanceCount, compressionScheme, datasetFormatInfo);
+        return new Dataset(databaseName, dataverseName, datasetName, typeDataverseName, typeName, metaTypeDataverseName,
+                metaTypeName, nodeGroupName, compactionPolicy.first, compactionPolicy.second, datasetDetails, hints,
+                datasetType, datasetId, pendingOp, rebalanceCount, compressionScheme, datasetFormatInfo);
     }
 
     protected Pair<String, Map<String, String>> readCompactionPolicy(DatasetType datasetType, ARecord datasetRecord) {

@@ -29,6 +29,7 @@ import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -55,14 +56,16 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
 
     @Override
     protected FeedPolicyEntity createMetadataEntityFromARecord(ARecord feedPolicyRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
+                ((AString) feedPolicyRecord.getValueByPos(feedPolicyEntity.dataverseNameIndex())).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         int databaseNameIndex = feedPolicyEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) feedPolicyRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-        String dataverseCanonicalName =
-                ((AString) feedPolicyRecord.getValueByPos(feedPolicyEntity.dataverseNameIndex())).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String policyName =
                 ((AString) feedPolicyRecord.getValueByPos(feedPolicyEntity.policyNameIndex())).getStringValue();
         String description =
@@ -80,7 +83,7 @@ public class FeedPolicyTupleTranslator extends AbstractTupleTranslator<FeedPolic
             policyParamters.put(key, value);
         }
 
-        return new FeedPolicyEntity(dataverseName, policyName, description, policyParamters);
+        return new FeedPolicyEntity(databaseName, dataverseName, policyName, description, policyParamters);
     }
 
     @Override

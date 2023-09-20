@@ -52,6 +52,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.lock.MetadataLockManager;
 import org.apache.asterix.metadata.utils.MetadataLockUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.runtime.functions.FunctionCollection;
 import org.apache.asterix.runtime.functions.FunctionManager;
 import org.apache.asterix.test.active.TestEventsListener.Behavior;
@@ -83,6 +84,7 @@ public class ActiveEventsListenerTest {
     static String[] nodes = { "node1", "node2" };
     static ActiveNotificationHandler handler;
     static DataverseName dataverseName = MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME;
+    static String database = MetadataUtil.databaseFor(dataverseName);
     static String entityName = "entityName";
     static EntityId entityId = new EntityId(Feed.EXTENSION_NAME, dataverseName, entityName);
     static Dataset firstDataset;
@@ -110,9 +112,10 @@ public class ActiveEventsListenerTest {
         jobIdFactory = new JobIdFactory(CcId.valueOf((short) 0));
         handler = new ActiveNotificationHandler();
         allDatasets = new ArrayList<>();
-        firstDataset = new Dataset(dataverseName, "firstDataset", null, null, null, null, null, null, null, null, 0, 0);
-        secondDataset =
-                new Dataset(dataverseName, "secondDataset", null, null, null, null, null, null, null, null, 0, 0);
+        firstDataset = new Dataset(database, dataverseName, "firstDataset", null, null, null, null, null, null, null,
+                null, 0, 0);
+        secondDataset = new Dataset(database, dataverseName, "secondDataset", null, null, null, null, null, null, null,
+                null, 0, 0);
         allDatasets.add(firstDataset);
         allDatasets.add(secondDataset);
         AtomicInteger threadCounter = new AtomicInteger(0);
@@ -987,8 +990,8 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber recoveringSubscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action add = users[1].addDataset(newDataset, listener);
         listener.allowStep();
         runningSubscriber.sync();
@@ -1014,8 +1017,8 @@ public class ActiveEventsListenerTest {
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
         tempFailSubscriber = new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action add = users[1].addDataset(newDataset, listener);
         listener.allowStep();
         tempFailSubscriber.sync();
@@ -1041,8 +1044,8 @@ public class ActiveEventsListenerTest {
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.RECOVERING));
         recoveringSubscriber.sync();
         tempFailSubscriber = new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.TEMPORARILY_FAILED));
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action add = users[1].addDataset(newDataset, listener);
         listener.allowStep();
         tempFailSubscriber.sync();
@@ -1060,8 +1063,8 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber subscriber =
                 new WaitForStateSubscriber(listener, Collections.singleton(ActivityState.STARTING));
         subscriber.sync();
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action createDatasetAction = users[1].addDataset(newDataset, listener);
         listener.allowStep();
         startAction.sync();
@@ -1076,8 +1079,8 @@ public class ActiveEventsListenerTest {
     @Test
     public void testCreateNewDatasetWhileRunning() throws Exception {
         testStartWhenStartSucceed();
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action createDatasetAction = users[1].addDataset(newDataset, listener);
         createDatasetAction.sync();
         assertFailure(createDatasetAction, ErrorCode.CANNOT_ADD_DATASET_TO_ACTIVE_ENTITY);
@@ -1096,8 +1099,8 @@ public class ActiveEventsListenerTest {
         WaitForStateSubscriber subscriber =
                 new WaitForStateSubscriber(listener, EnumSet.of(ActivityState.SUSPENDING, ActivityState.SUSPENDED));
         subscriber.sync();
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action createDatasetAction = users[0].addDataset(newDataset, listener);
         listener.allowStep();
         listener.allowStep();
@@ -1115,8 +1118,8 @@ public class ActiveEventsListenerTest {
     public void testCreateNewDatasetWhilePermanentFailure() throws Exception {
         testRecoveryFailureAfterOneAttemptCompilationFailure();
         Assert.assertEquals(ActivityState.STOPPED, listener.getState());
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action createDatasetAction = users[0].addDataset(newDataset, listener);
         createDatasetAction.sync();
         assertSuccess(createDatasetAction);
@@ -1548,8 +1551,8 @@ public class ActiveEventsListenerTest {
         Action query = users[1].query(firstDataset, new Semaphore(1));
         query.sync();
         assertSuccess(query);
-        Dataset newDataset =
-                new Dataset(dataverseName, "newDataset", null, null, null, null, null, null, null, null, 0, 0);
+        Dataset newDataset = new Dataset(database, dataverseName, "newDataset", null, null, null, null, null, null,
+                null, null, 0, 0);
         Action addDataset = users[1].addDataset(newDataset, listener);
         // blocked by suspension
         Assert.assertFalse(addDataset.isDone());

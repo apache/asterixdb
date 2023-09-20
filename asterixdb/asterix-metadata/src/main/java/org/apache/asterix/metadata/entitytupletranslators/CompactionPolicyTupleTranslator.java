@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.CompactionPolicyEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -43,21 +44,23 @@ public class CompactionPolicyTupleTranslator extends AbstractTupleTranslator<Com
     @Override
     protected CompactionPolicy createMetadataEntityFromARecord(ARecord compactionPolicyRecord)
             throws AlgebricksException {
-        int databaseNameIndex = compactionPolicyEntity.databaseNameIndex();
-        String databaseName;
-        if (databaseNameIndex >= 0) {
-            databaseName = ((AString) compactionPolicyRecord.getValueByPos(databaseNameIndex)).getStringValue();
-        }
         String dataverseCanonicalName =
                 ((AString) compactionPolicyRecord.getValueByPos(compactionPolicyEntity.dataverseNameIndex()))
                         .getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        String databaseName;
+        int databaseNameIndex = compactionPolicyEntity.databaseNameIndex();
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) compactionPolicyRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String policyName = ((AString) compactionPolicyRecord.getValueByPos(compactionPolicyEntity.policyNameIndex()))
                 .getStringValue();
         String className = ((AString) compactionPolicyRecord.getValueByPos(compactionPolicyEntity.classNameIndex()))
                 .getStringValue();
 
-        return new CompactionPolicy(dataverseName, policyName, className);
+        return new CompactionPolicy(databaseName, dataverseName, policyName, className);
     }
 
     @Override

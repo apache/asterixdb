@@ -25,6 +25,7 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.FullTextConfigEntity;
 import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -61,14 +62,15 @@ public class FullTextConfigMetadataEntityTupleTranslator extends AbstractTupleTr
     @Override
     protected FullTextConfigMetadataEntity createMetadataEntityFromARecord(ARecord aRecord)
             throws HyracksDataException, AlgebricksException {
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(
+                ((AString) aRecord.getValueByPos(fullTextConfigEntity.dataverseNameIndex())).getStringValue());
         int databaseNameIndex = fullTextConfigEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) aRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(
-                ((AString) aRecord.getValueByPos(fullTextConfigEntity.dataverseNameIndex())).getStringValue());
-
         String name = ((AString) aRecord.getValueByPos(fullTextConfigEntity.configNameIndex())).getStringValue();
 
         TokenizerCategory tokenizerCategory = EnumUtils.getEnumIgnoreCase(TokenizerCategory.class,
@@ -81,8 +83,8 @@ public class FullTextConfigMetadataEntityTupleTranslator extends AbstractTupleTr
             filterNamesBuilder.add(((AString) filterNamesCursor.get()).getStringValue());
         }
 
-        FullTextConfigDescriptor configDescriptor =
-                new FullTextConfigDescriptor(dataverseName, name, tokenizerCategory, filterNamesBuilder.build());
+        FullTextConfigDescriptor configDescriptor = new FullTextConfigDescriptor(databaseName, dataverseName, name,
+                tokenizerCategory, filterNamesBuilder.build());
         return new FullTextConfigMetadataEntity(configDescriptor);
     }
 

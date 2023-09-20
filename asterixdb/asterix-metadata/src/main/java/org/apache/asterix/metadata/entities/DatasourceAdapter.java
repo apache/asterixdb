@@ -26,19 +26,21 @@ import org.apache.asterix.metadata.api.IMetadataEntity;
 
 public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private final AdapterIdentifier adapterIdentifier;
     private final String classname;
     private final AdapterType type;
+    private final String libraryDatabase;
     private final DataverseName libraryDataverseName;
     private final String libraryName;
 
     public DatasourceAdapter(AdapterIdentifier adapterIdentifier, AdapterType type, String classname,
-            DataverseName libraryDataverseName, String libraryName) {
+            String libraryDatabase, DataverseName libraryDataverseName, String libraryName) {
         this.adapterIdentifier = adapterIdentifier;
         this.type = type;
         this.classname = classname;
+        this.libraryDatabase = libraryDatabase;
         this.libraryDataverseName = libraryDataverseName;
         this.libraryName = libraryName;
     }
@@ -63,6 +65,10 @@ public class DatasourceAdapter implements IMetadataEntity<DatasourceAdapter> {
 
     public AdapterType getType() {
         return type;
+    }
+
+    public String getLibraryDatabaseName() {
+        return libraryDatabase;
     }
 
     public DataverseName getLibraryDataverseName() {

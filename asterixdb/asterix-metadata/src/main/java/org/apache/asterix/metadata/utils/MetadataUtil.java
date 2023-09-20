@@ -44,4 +44,16 @@ public class MetadataUtil {
     public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String objectName) {
         return dataverseName + "." + objectName;
     }
+
+    public static String databaseFor(DataverseName dataverse) {
+        return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse) ? MetadataConstants.SYSTEM_DATABASE
+                : MetadataConstants.DEFAULT_DATABASE;
+    }
+
+    public static String resolveDatabase(String database, DataverseName dataverse) {
+        if (database != null) {
+            return database;
+        }
+        return databaseFor(dataverse);
+    }
 }

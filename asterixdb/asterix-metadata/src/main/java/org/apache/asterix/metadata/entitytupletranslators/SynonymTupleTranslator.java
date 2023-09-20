@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.SynonymEntity;
 import org.apache.asterix.metadata.entities.Synonym;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -42,15 +43,16 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
 
     @Override
     protected Synonym createMetadataEntityFromARecord(ARecord synonymRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
+                ((AString) synonymRecord.getValueByPos(synonymEntity.dataverseNameIndex())).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         int databaseNameIndex = synonymEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) synonymRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-        String dataverseCanonicalName =
-                ((AString) synonymRecord.getValueByPos(synonymEntity.dataverseNameIndex())).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
-
         String synonymName = ((AString) synonymRecord.getValueByPos(synonymEntity.synonymNameIndex())).getStringValue();
 
         String objectDataverseCanonicalName =
@@ -59,7 +61,7 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
 
         String objectName = ((AString) synonymRecord.getValueByPos(synonymEntity.objectNameIndex())).getStringValue();
 
-        return new Synonym(dataverseName, synonymName, objectDataverseName, objectName);
+        return new Synonym(databaseName, dataverseName, synonymName, objectDataverseName, objectName);
     }
 
     @Override

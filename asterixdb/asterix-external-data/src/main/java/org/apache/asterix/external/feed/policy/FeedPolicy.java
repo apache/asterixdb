@@ -27,7 +27,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 public class FeedPolicy implements Serializable {
 
     private static final long serialVersionUID = 3L;
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String policyName;
     // A description of the policy
@@ -35,8 +35,9 @@ public class FeedPolicy implements Serializable {
     // The policy properties associated with the feed dataset
     private Map<String, String> properties;
 
-    public FeedPolicy(DataverseName dataverseName, String policyName, String description,
+    public FeedPolicy(String databaseName, DataverseName dataverseName, String policyName, String description,
             Map<String, String> properties) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.policyName = policyName;
         this.description = description;

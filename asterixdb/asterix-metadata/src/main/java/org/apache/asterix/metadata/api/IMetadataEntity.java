@@ -24,7 +24,7 @@ import org.apache.asterix.metadata.MetadataCache;
 
 public interface IMetadataEntity<T> extends Serializable {
 
-    public T addToCache(MetadataCache cache);
+    T addToCache(MetadataCache cache);
 
-    public T dropFromCache(MetadataCache cache);
+    T dropFromCache(MetadataCache cache);
 }

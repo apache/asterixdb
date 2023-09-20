@@ -319,9 +319,10 @@ public class MetadataTxnTest {
 
     private void addDataset(ICcApplicationContext appCtx, Dataset source, int datasetPostfix, boolean abort)
             throws Exception {
-        Dataset dataset = new Dataset(source.getDataverseName(), "ds_" + datasetPostfix, source.getDataverseName(),
-                source.getDatasetType().name(), source.getNodeGroupName(), NoMergePolicyFactory.NAME, null,
-                source.getDatasetDetails(), source.getHints(), DatasetConfig.DatasetType.INTERNAL, datasetPostfix, 0);
+        Dataset dataset = new Dataset(source.getDatabaseName(), source.getDataverseName(), "ds_" + datasetPostfix,
+                source.getDataverseName(), source.getDatasetType().name(), source.getNodeGroupName(),
+                NoMergePolicyFactory.NAME, null, source.getDatasetDetails(), source.getHints(),
+                DatasetConfig.DatasetType.INTERNAL, datasetPostfix, 0);
         MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
         final MetadataTransactionContext writeTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(writeTxn);

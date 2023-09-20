@@ -35,11 +35,11 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     public static final String EXTENSION_NAME = "Feed";
 
     /** A unique identifier for the feed */
-    private EntityId feedId;
+    private final EntityId feedId;
     /** A string representation of the instance **/
-    private String displayName;
+    private final String displayName;
     /** Feed configurations */
-    private Map<String, String> feedConfiguration;
+    private final Map<String, String> feedConfiguration;
 
     public Feed(DataverseName dataverseName, String feedName, Map<String, String> feedConfiguration) {
         this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);

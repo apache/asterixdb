@@ -30,6 +30,7 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -209,7 +210,8 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
     protected void handleNestedDerivedType(DataverseName dataverseName, String typeName, AbstractComplexType nestedType)
             throws HyracksDataException {
         try {
-            metadataNode.addDatatype(txnId, new Datatype(dataverseName, typeName, nestedType, true));
+            String database = MetadataUtil.databaseFor(dataverseName);
+            metadataNode.addDatatype(txnId, new Datatype(database, dataverseName, typeName, nestedType, true));
         } catch (AlgebricksException e) {
             // The nested record type may have been inserted by a previous DDL statement or
             // by a previous nested type.

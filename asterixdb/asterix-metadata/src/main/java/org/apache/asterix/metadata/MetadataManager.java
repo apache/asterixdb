@@ -207,7 +207,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropDataverse(dataverseName);
+        ctx.dropDataverse(database, dataverseName);
     }
 
     @Override
@@ -301,7 +301,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         // Drops the dataset from cache
-        ctx.dropDataset(dataverseName, datasetName);
+        ctx.dropDataset(database, dataverseName, datasetName);
     }
 
     @Override
@@ -402,7 +402,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropDataDatatype(dataverseName, datatypeName);
+        ctx.dropDataDatatype(database, dataverseName, datatypeName);
     }
 
     @Override
@@ -468,7 +468,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropIndex(dataverseName, datasetName, indexName);
+        ctx.dropIndex(database, dataverseName, datasetName, indexName);
     }
 
     @Override
@@ -673,7 +673,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        mdTxnCtx.dropFullTextFilter(dataverseName, filterName);
+        mdTxnCtx.dropFullTextFilter(database, dataverseName, filterName);
     }
 
     @Override
@@ -786,7 +786,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        mdTxnCtx.dropFullTextConfig(dataverseName, configName);
+        mdTxnCtx.dropFullTextConfig(database, dataverseName, configName);
     }
 
     @Override
@@ -826,7 +826,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropAdapter(dataverseName, name);
+        ctx.dropAdapter(database, dataverseName, name);
     }
 
     @Override
@@ -849,7 +849,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropLibrary(dataverseName, libraryName);
+        ctx.dropLibrary(database, dataverseName, libraryName);
     }
 
     @Override
@@ -938,7 +938,7 @@ public abstract class MetadataManager implements IMetadataManager {
             for (FeedConnection feedConnection : feedConnections) {
                 metadataNode.dropFeedConnection(ctx.getTxnId(), database, dataverseName, feedName,
                         feedConnection.getDatasetName());
-                ctx.dropFeedConnection(dataverseName, feedName, feedConnection.getDatasetName());
+                ctx.dropFeedConnection(database, dataverseName, feedName, feedConnection.getDatasetName());
             }
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
@@ -975,7 +975,7 @@ public abstract class MetadataManager implements IMetadataManager {
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
-        ctx.dropFeedConnection(dataverseName, feedName, datasetName);
+        ctx.dropFeedConnection(database, dataverseName, feedName, datasetName);
     }
 
     @Override
@@ -1136,7 +1136,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         // reflect the dataset into the cache
-        ctx.dropDataset(dataset.getDataverseName(), dataset.getDatasetName());
+        ctx.dropDataset(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         ctx.addDataset(dataset);
     }
 
@@ -1148,7 +1148,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         // reflect the library into the cache
-        ctx.dropLibrary(library.getDataverseName(), library.getName());
+        ctx.dropLibrary(library.getDatabaseName(), library.getDataverseName(), library.getName());
         ctx.addLibrary(library);
     }
 
@@ -1172,7 +1172,7 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         // reflect the datatype into the cache
-        ctx.dropDataDatatype(datatype.getDataverseName(), datatype.getDatatypeName());
+        ctx.dropDataDatatype(datatype.getDatabaseName(), datatype.getDataverseName(), datatype.getDatatypeName());
         ctx.addDatatype(datatype);
     }
 

@@ -54,7 +54,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     public static final int RECORD_INDICATOR = 0;
     public static final int META_RECORD_INDICATOR = 1;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     // Enforced to be unique within a dataverse.
     private final String datasetName;
@@ -67,14 +67,16 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
 
-    public Index(DataverseName dataverseName, String datasetName, String indexName, IndexType indexType,
-            IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex, int pendingOp) {
+    public Index(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
+            IndexType indexType, IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex,
+            int pendingOp) {
         boolean categoryOk = (indexType == null && indexDetails == null) || (IndexCategory
                 .of(Objects.requireNonNull(indexType)) == ((AbstractIndexDetails) Objects.requireNonNull(indexDetails))
                         .getIndexCategory());
         if (!categoryOk) {
             throw new IllegalArgumentException();
         }
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = Objects.requireNonNull(dataverseName);
         this.datasetName = Objects.requireNonNull(datasetName);
         this.indexName = Objects.requireNonNull(indexName);
@@ -86,20 +88,20 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     }
 
     @Deprecated
-    public Index(DataverseName dataverseName, String datasetName, String indexName, IndexType indexType,
-            List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
-            boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
-            OptionalBoolean excludeUnknownKey) {
-        this(dataverseName, datasetName,
+    public Index(String database, DataverseName dataverseName, String datasetName, String indexName,
+            IndexType indexType, List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
+            List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex,
+            int pendingOp, OptionalBoolean excludeUnknownKey) {
+        this(database, dataverseName, datasetName,
                 indexName, indexType, createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators,
                         keyFieldTypes, overrideKeyFieldTypes, excludeUnknownKey),
                 isEnforced, isPrimaryIndex, pendingOp);
     }
 
-    public static Index createPrimaryIndex(DataverseName dataverseName, String datasetName,
+    public static Index createPrimaryIndex(String database, DataverseName dataverseName, String datasetName,
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
             int pendingOp) {
-        return new Index(dataverseName, datasetName,
+        return new Index(database, dataverseName, datasetName,
                 datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
                         keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty(), null, null, null),
                 false, true, pendingOp);

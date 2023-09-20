@@ -46,6 +46,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
 import org.apache.asterix.om.base.AInt32;
@@ -147,14 +148,16 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
     @Override
     protected Index createMetadataEntityFromARecord(ARecord indexRecord) throws AlgebricksException {
-        int databaseNameIndex = indexEntity.databaseNameIndex();
-        String databaseName = null;
-        if (databaseNameIndex >= 0) {
-            databaseName = ((AString) indexRecord.getValueByPos(databaseNameIndex)).getStringValue();
-        }
         String dataverseCanonicalName =
                 ((AString) indexRecord.getValueByPos(indexEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        int databaseNameIndex = indexEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) indexRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String datasetName = ((AString) indexRecord.getValueByPos(indexEntity.datasetNameIndex())).getStringValue();
         String indexName = ((AString) indexRecord.getValueByPos(indexEntity.indexNameIndex())).getStringValue();
         IndexType indexType = IndexType
@@ -322,14 +325,16 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             String datatypeName = dataset.getItemTypeName();
             //TODO(DB): get 'database' of item type and meta type
             DataverseName datatypeDataverseName = dataset.getItemTypeDataverseName();
+            String datatypeDatabase = MetadataUtil.databaseFor(datatypeDataverseName);
             ARecordType recordDt = (ARecordType) metadataNode
-                    .getDatatype(txnId, null, datatypeDataverseName, datatypeName).getDatatype();
+                    .getDatatype(txnId, datatypeDatabase, datatypeDataverseName, datatypeName).getDatatype();
             String metatypeName = dataset.getMetaItemTypeName();
             DataverseName metatypeDataverseName = dataset.getMetaItemTypeDataverseName();
+            String metaTypeDatabase = MetadataUtil.databaseFor(metatypeDataverseName);
             ARecordType metaDt = null;
             if (metatypeName != null && metatypeDataverseName != null) {
-                metaDt = (ARecordType) metadataNode.getDatatype(txnId, null, metatypeDataverseName, metatypeName)
-                        .getDatatype();
+                metaDt = (ARecordType) metadataNode
+                        .getDatatype(txnId, metaTypeDatabase, metatypeDataverseName, metatypeName).getDatatype();
             }
             recordDt = (ARecordType) MetadataManagerUtil.findTypeForDatasetWithoutType(recordDt, metaDt, dataset);
             searchKeyType = new ArrayList<>(searchElementCount);
@@ -532,7 +537,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         }
         int pendingOp = ((AInt32) indexRecord.getValueByPos(indexEntity.pendingOpIndex())).getIntegerValue();
 
-        return new Index(dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
+        return new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
                 isPrimaryIndex, pendingOp);
     }
 

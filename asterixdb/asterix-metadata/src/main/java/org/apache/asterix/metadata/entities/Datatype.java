@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataCache;
@@ -35,13 +37,15 @@ public class Datatype implements IMetadataEntity<Datatype> {
 
     private static final long serialVersionUID = 3L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String datatypeName;
     private final IAType datatype;
     private final boolean isAnonymous;
 
-    public Datatype(DataverseName dataverseName, String datatypeName, IAType datatype, boolean isAnonymous) {
+    public Datatype(String databaseName, DataverseName dataverseName, String datatypeName, IAType datatype,
+            boolean isAnonymous) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.datatypeName = datatypeName;
         this.datatype = datatype;

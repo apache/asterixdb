@@ -67,7 +67,8 @@ public class BuiltinFeedPolicies {
         policyParams.put(FeedPolicyAccessor.ELASTIC, Boolean.toString(false));
 
         String description = "Basic";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Basic", description, policyParams);
+        return new FeedPolicyEntity(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
+                "Basic", description, policyParams);
     }
 
     // Discard
@@ -80,7 +81,8 @@ public class BuiltinFeedPolicies {
         policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, Boolean.toString(true));
 
         String description = "FlowControl 100% Discard during congestion";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Discard", description, policyParams);
+        return new FeedPolicyEntity(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
+                "Discard", description, policyParams);
     }
 
     // Spill
@@ -92,7 +94,8 @@ public class BuiltinFeedPolicies {
         policyParams.put(FeedPolicyAccessor.MAX_SPILL_SIZE_ON_DISK, "" + Long.toString(FeedPolicyAccessor.NO_LIMIT));
 
         String description = "FlowControl 100% Spill during congestion";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "Spill", description, policyParams);
+        return new FeedPolicyEntity(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
+                "Spill", description, policyParams);
     }
 
     // AdvancedFT_Elastic
@@ -102,8 +105,8 @@ public class BuiltinFeedPolicies {
         policyParams.put(FeedPolicyAccessor.FLOWCONTROL_ENABLED, Boolean.toString(true));
         policyParams.put(FeedPolicyAccessor.LOGGING_STATISTICS, Boolean.toString(true));
         String description = "Basic Monitored Fault-Tolerant Elastic";
-        return new FeedPolicyEntity(MetadataConstants.METADATA_DATAVERSE_NAME, "AdvancedFT_Elastic", description,
-                policyParams);
+        return new FeedPolicyEntity(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
+                "AdvancedFT_Elastic", description, policyParams);
     }
 
     public static void insertInitialFeedPolicies(MetadataTransactionContext mdTxnCtx) throws AlgebricksException {

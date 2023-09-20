@@ -31,6 +31,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.compression.CompressionManager;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -54,11 +55,12 @@ public class DatasetTupleTranslatorTest {
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, null, null);
 
-            Dataset dataset = new Dataset(DataverseName.createSinglePartName("test"), "log",
-                    DataverseName.createSinglePartName("foo"), "LogType", DataverseName.createSinglePartName("CB"),
-                    "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details,
-                    Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
-                    DatasetFormatInfo.SYSTEM_DEFAULT);
+            DataverseName dv = DataverseName.createSinglePartName("test");
+            String db = MetadataUtil.databaseFor(dv);
+            Dataset dataset = new Dataset(db, dv, "log", DataverseName.createSinglePartName("foo"), "LogType",
+                    DataverseName.createSinglePartName("CB"), "MetaType", "DEFAULT_NG_ALL_NODES", "prefix",
+                    compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
+                    CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
             DatasetTupleTranslator dtTranslator = new DatasetTupleTranslator(true, DatasetEntity.of(false));
             ITupleReference tuple = dtTranslator.getTupleFromMetadataEntity(dataset);
             Dataset deserializedDataset = dtTranslator.getMetadataEntityFromTuple(tuple);

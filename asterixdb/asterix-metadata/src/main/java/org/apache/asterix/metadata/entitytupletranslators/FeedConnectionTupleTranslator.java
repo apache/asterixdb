@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.FeedConnectionEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.FeedConnection;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AMissing;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.ARecord;
@@ -52,15 +53,17 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
 
     @Override
     protected FeedConnection createMetadataEntityFromARecord(ARecord feedConnectionRecord) throws AlgebricksException {
-        int databaseNameIndex = feedConnectionEntity.databaseNameIndex();
-        String databaseName;
-        if (databaseNameIndex >= 0) {
-            databaseName = ((AString) feedConnectionRecord.getValueByPos(databaseNameIndex)).getStringValue();
-        }
         String dataverseCanonicalName =
                 ((AString) feedConnectionRecord.getValueByPos(feedConnectionEntity.dataverseNameIndex()))
                         .getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        int databaseNameIndex = feedConnectionEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) feedConnectionRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String feedName =
                 ((AString) feedConnectionRecord.getValueByPos(feedConnectionEntity.feedNameIndex())).getStringValue();
         String datasetName = ((AString) feedConnectionRecord.getValueByPos(feedConnectionEntity.datasetNameIndex()))
@@ -93,8 +96,8 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
         String whereClauseBody = whereClauseIdx >= 0
                 ? ((AString) feedConnectionRecord.getValueByPos(whereClauseIdx)).getStringValue() : "";
 
-        return new FeedConnection(dataverseName, feedName, datasetName, appliedFunctions, policyName, whereClauseBody,
-                outputType);
+        return new FeedConnection(databaseName, dataverseName, feedName, datasetName, appliedFunctions, policyName,
+                whereClauseBody, outputType);
     }
 
     @Override

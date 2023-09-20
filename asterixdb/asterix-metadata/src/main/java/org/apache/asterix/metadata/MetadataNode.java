@@ -399,8 +399,9 @@ public class MetadataNode implements IMetadataNode {
             if (dataset.getDatasetType() == DatasetType.INTERNAL) {
                 // Add the primary index for the dataset.
                 InternalDatasetDetails id = (InternalDatasetDetails) dataset.getDatasetDetails();
-                Index primaryIndex = Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(),
-                        id.getPrimaryKey(), id.getKeySourceIndicator(), id.getPrimaryKeyType(), dataset.getPendingOp());
+                Index primaryIndex = Index.createPrimaryIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
+                        dataset.getDatasetName(), id.getPrimaryKey(), id.getKeySourceIndicator(),
+                        id.getPrimaryKeyType(), dataset.getPendingOp());
 
                 addIndex(txnId, primaryIndex);
             }

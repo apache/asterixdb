@@ -29,7 +29,7 @@ public class Synonym implements IMetadataEntity<Synonym> {
 
     private static final long serialVersionUID = 2L;
 
-    private final String databaseName = null;
+    private final String databaseName;
 
     private final DataverseName dataverseName;
 
@@ -39,8 +39,9 @@ public class Synonym implements IMetadataEntity<Synonym> {
 
     private final String objectName;
 
-    public Synonym(DataverseName dataverseName, String synonymName, DataverseName objectDataverseName,
-            String objectName) {
+    public Synonym(String databaseName, DataverseName dataverseName, String synonymName,
+            DataverseName objectDataverseName, String objectName) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = Objects.requireNonNull(dataverseName);
         this.synonymName = Objects.requireNonNull(synonymName);
         this.objectDataverseName = Objects.requireNonNull(objectDataverseName);

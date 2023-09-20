@@ -489,8 +489,8 @@ public class TestNodeController {
 
     public IResourceFactory getPrimaryResourceFactory(IHyracksTaskContext ctx, PrimaryIndexInfo primaryIndexInfo,
             IStorageComponentProvider storageComponentProvider, Dataset dataset) throws AlgebricksException {
-        Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
-                MetadataUtil.PENDING_NO_OP);
+        Dataverse dataverse = new Dataverse(dataset.getDatabaseName(), dataset.getDataverseName(),
+                NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
         Index index = primaryIndexInfo.getIndex();
         CcApplicationContext appCtx =
                 (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
@@ -513,8 +513,8 @@ public class TestNodeController {
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
-        Dataverse dataverse = new Dataverse(dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
-                MetadataUtil.PENDING_NO_OP);
+        Dataverse dataverse = new Dataverse(dataset.getDatabaseName(), dataset.getDataverseName(),
+                NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
         MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         try {
@@ -539,8 +539,9 @@ public class TestNodeController {
         org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                 DatasetUtil.getMergePolicyFactory(primaryIndexInfo.dataset, mdTxnCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        Dataverse dataverse = new Dataverse(primaryIndexInfo.dataset.getDataverseName(),
-                NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
+        Dataverse dataverse =
+                new Dataverse(primaryIndexInfo.dataset.getDatabaseName(), primaryIndexInfo.dataset.getDataverseName(),
+                        NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
         MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), dataverse);
         SecondaryIndexInfo secondaryIndexInfo = new SecondaryIndexInfo(primaryIndexInfo, secondaryIndex);
@@ -753,8 +754,9 @@ public class TestNodeController {
                         indicator == Index.RECORD_INDICATOR ? recordType.getFieldNames() : metaType.getFieldNames();
                 keyFieldNames.add(Collections.singletonList(fieldNames[primaryKeyIndexes[i]]));
             }
-            index = Index.createPrimaryIndex(dataset.getDataverseName(), dataset.getDatasetName(), keyFieldNames,
-                    primaryKeyIndicators, keyFieldTypes, MetadataUtil.PENDING_NO_OP);
+            index = Index.createPrimaryIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
+                    dataset.getDatasetName(), keyFieldNames, primaryKeyIndicators, keyFieldTypes,
+                    MetadataUtil.PENDING_NO_OP);
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();

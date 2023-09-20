@@ -56,6 +56,7 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.FunctionEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AOrderedList;
@@ -103,14 +104,16 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
     }
 
     protected Function createMetadataEntityFromARecord(ARecord functionRecord) throws AlgebricksException {
+        String dataverseCanonicalName =
+                ((AString) functionRecord.getValueByPos(functionEntity.dataverseNameIndex())).getStringValue();
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         int databaseNameIndex = functionEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) functionRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-        String dataverseCanonicalName =
-                ((AString) functionRecord.getValueByPos(functionEntity.dataverseNameIndex())).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         String functionName =
                 ((AString) functionRecord.getValueByPos(functionEntity.functionNameIndex())).getStringValue();
         int arity = Integer.parseInt(

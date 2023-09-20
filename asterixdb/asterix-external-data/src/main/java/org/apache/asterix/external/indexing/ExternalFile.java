@@ -34,7 +34,7 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
      */
     private static final long serialVersionUID = 2L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private DataverseName dataverseName;
     private String datasetName;
     private Date lastModefiedTime;
@@ -43,18 +43,9 @@ public class ExternalFile implements Serializable, Comparable<ExternalFile> {
     private int fileNumber;
     private ExternalFilePendingOp pendingOp;
 
-    public ExternalFile() {
-        this.dataverseName = null;
-        this.datasetName = "";
-        this.fileNumber = -1;
-        this.fileName = "";
-        this.lastModefiedTime = new Date();
-        this.size = 0;
-        this.pendingOp = ExternalFilePendingOp.NO_OP;
-    }
-
-    public ExternalFile(DataverseName dataverseName, String datasetName, int fileNumber, String fileName,
-            Date lastModefiedTime, long size, ExternalFilePendingOp pendingOp) {
+    public ExternalFile(String databaseName, DataverseName dataverseName, String datasetName, int fileNumber,
+            String fileName, Date lastModefiedTime, long size, ExternalFilePendingOp pendingOp) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.fileNumber = fileNumber;

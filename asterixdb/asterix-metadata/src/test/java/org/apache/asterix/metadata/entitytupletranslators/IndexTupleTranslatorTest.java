@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.metadata.entitytupletranslators;
 
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -41,6 +40,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -70,21 +70,22 @@ public class IndexTupleTranslatorTest {
             DataverseName dvTest = DataverseName.createSinglePartName("test");
             DataverseName dvFoo = DataverseName.createSinglePartName("foo");
             DataverseName dvCB = DataverseName.createSinglePartName("CB");
-            Dataset dataset = new Dataset(dvTest, "d1", dvFoo, "LogType", dvCB, "MetaType", "DEFAULT_NG_ALL_NODES",
-                    "prefix", compactionPolicyProperties, details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0,
-                    CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
+            String dvTestDatabase = MetadataUtil.databaseFor(dvTest);
+            Dataset dataset = new Dataset(dvTestDatabase, dvTest, "d1", dvFoo, "LogType", dvCB, "MetaType",
+                    "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details, Collections.emptyMap(),
+                    DatasetType.INTERNAL, 115, 0, CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
 
-            Index index = new Index(dvTest, "d1", "i1", IndexType.BTREE,
+            Index index = new Index(dvTestDatabase, dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),
                     indicator == null ? null : Collections.singletonList(indicator),
                     Collections.singletonList(BuiltinType.AINT64), false, false, false, 0, OptionalBoolean.of(false));
 
             MetadataNode mockMetadataNode = mock(MetadataNode.class);
-            when(mockMetadataNode.getDatatype(any(), isNull(), any(DataverseName.class), anyString()))
-                    .thenReturn(new Datatype(dvTest, "d1",
+            when(mockMetadataNode.getDatatype(any(), anyString(), any(DataverseName.class), anyString()))
+                    .thenReturn(new Datatype(dvTestDatabase, dvTest, "d1",
                             new ARecordType("", new String[] { "row_id" }, new IAType[] { BuiltinType.AINT64 }, true),
                             true));
-            when(mockMetadataNode.getDataset(any(), isNull(), any(DataverseName.class), anyString()))
+            when(mockMetadataNode.getDataset(any(), anyString(), any(DataverseName.class), anyString()))
                     .thenReturn(dataset);
 
             IndexTupleTranslator idxTranslator =

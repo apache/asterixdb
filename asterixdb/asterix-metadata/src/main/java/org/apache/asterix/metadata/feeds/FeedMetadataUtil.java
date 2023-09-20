@@ -178,9 +178,11 @@ public class FeedMetadataUtil {
     private static ITypedAdapterFactory createExternalAdapterFactory(MetadataTransactionContext mdTxnCtx,
             DatasourceAdapter adapterEntity, String adapterFactoryClassname)
             throws AlgebricksException, RemoteException, HyracksDataException {
+        String libraryDatabaseName = adapterEntity.getLibraryDatabaseName();
         DataverseName libraryDataverse = adapterEntity.getLibraryDataverseName();
         String libraryName = adapterEntity.getLibraryName();
-        Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, null, libraryDataverse, libraryName);
+        Library library =
+                MetadataManager.INSTANCE.getLibrary(mdTxnCtx, libraryDatabaseName, libraryDataverse, libraryName);
         if (library == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_LIBRARY, libraryName);
         }

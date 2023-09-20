@@ -29,6 +29,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.bootstrap.FullTextFilterEntity;
 import org.apache.asterix.metadata.entities.FullTextFilterMetadataEntity;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -95,9 +96,10 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
             }
         }
 
-        StopwordsFullTextFilterDescriptor filterDescriptor = new StopwordsFullTextFilterDescriptor(
-                DataverseName.createFromCanonicalForm(dataverseName.getStringValue()), name.getStringValue(),
-                stopwordsBuilder.build());
+        DataverseName dataverse = DataverseName.createFromCanonicalForm(dataverseName.getStringValue());
+        String database = MetadataUtil.databaseFor(dataverse);
+        StopwordsFullTextFilterDescriptor filterDescriptor = new StopwordsFullTextFilterDescriptor(database, dataverse,
+                name.getStringValue(), stopwordsBuilder.build());
         return new FullTextFilterMetadataEntity(filterDescriptor);
     }
 

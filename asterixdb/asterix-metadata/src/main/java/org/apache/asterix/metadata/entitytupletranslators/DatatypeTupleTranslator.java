@@ -27,6 +27,7 @@ import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.DatatypeEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Datatype;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AOrderedList;
@@ -58,14 +59,16 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
 
     @Override
     protected Datatype createMetadataEntityFromARecord(ARecord datatypeRecord) throws AlgebricksException {
-        int databaseNameIndex = datatypeEntity.databaseNameIndex();
-        String databaseName = null;
-        if (databaseNameIndex >= 0) {
-            databaseName = ((AString) datatypeRecord.getValueByPos(databaseNameIndex)).getStringValue();
-        }
         String dataverseCanonicalName =
                 ((AString) datatypeRecord.getValueByPos(datatypeEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        int databaseNameIndex = datatypeEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) datatypeRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String datatypeName =
                 ((AString) datatypeRecord.getValueByPos(datatypeEntity.datatypeNameIndex())).getStringValue();
         IAType type = BuiltinTypeMap.getBuiltinType(datatypeName);
@@ -118,14 +121,14 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                         fieldTypes[fieldId] = TypeUtil.createQuantifiedType(fieldType, isNullable, isMissable);
                         fieldId++;
                     }
-                    return new Datatype(dataverseName, datatypeName,
+                    return new Datatype(databaseName, dataverseName, datatypeName,
                             new ARecordType(datatypeName, fieldNames, fieldTypes, isOpen), isAnonymous);
                 }
                 case UNORDEREDLIST: {
                     String unorderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(dataverseName, datatypeName,
+                    return new Datatype(databaseName, dataverseName, datatypeName,
                             new AUnorderedListType(Datatype.getTypeFromTypeName(metadataNode, txnId, databaseName,
                                     dataverseName, unorderedlistTypeName), datatypeName),
                             isAnonymous);
@@ -134,7 +137,7 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                     String orderedlistTypeName = ((AString) derivedTypeRecord
                             .getValueByPos(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX))
                                     .getStringValue();
-                    return new Datatype(
+                    return new Datatype(databaseName,
                             dataverseName, datatypeName, new AOrderedListType(Datatype.getTypeFromTypeName(metadataNode,
                                     txnId, databaseName, dataverseName, orderedlistTypeName), datatypeName),
                             isAnonymous);
@@ -143,7 +146,7 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
                     throw new UnsupportedOperationException("Unsupported derived type: " + tag);
             }
         }
-        return new Datatype(dataverseName, datatypeName, type, false);
+        return new Datatype(databaseName, dataverseName, datatypeName, type, false);
     }
 
     @Override

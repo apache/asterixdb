@@ -32,12 +32,13 @@ public class CompactionPolicy implements IMetadataEntity<CompactionPolicy> {
 
     private static final long serialVersionUID = 3L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String policyName;
     private final String className;
 
-    public CompactionPolicy(DataverseName dataverseName, String policyName, String className) {
+    public CompactionPolicy(String databaseName, DataverseName dataverseName, String policyName, String className) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.policyName = policyName;
         this.className = className;

@@ -183,6 +183,11 @@ public class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
+    public String getDatabaseName() {
+        return MetadataConstants.SYSTEM_DATABASE;
+    }
+
+    @Override
     public DataverseName getDataverseName() {
         return MetadataConstants.METADATA_DATAVERSE_NAME;
     }

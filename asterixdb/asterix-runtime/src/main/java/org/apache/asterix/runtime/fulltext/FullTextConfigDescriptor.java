@@ -33,14 +33,16 @@ import com.google.common.collect.ImmutableList;
 public class FullTextConfigDescriptor implements IFullTextConfigDescriptor {
     private static final long serialVersionUID = 2L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String name;
     private final TokenizerCategory tokenizerCategory;
     private final ImmutableList<String> filterNames;
 
-    public FullTextConfigDescriptor(DataverseName dataverseName, String name, TokenizerCategory tokenizerCategory,
-            ImmutableList<String> filterNames) {
+    public FullTextConfigDescriptor(String databaseName, DataverseName dataverseName, String name,
+            TokenizerCategory tokenizerCategory, ImmutableList<String> filterNames) {
+        //TODO(DB): database name should not be null
+        this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.name = name;
         this.tokenizerCategory = tokenizerCategory;
@@ -53,7 +55,7 @@ public class FullTextConfigDescriptor implements IFullTextConfigDescriptor {
     // the metadata manager will return this default full-text config without looking into the metadata catalog
     // In this way we avoid the edge cases to insert or delete the default config in the metadata catalog
     public static FullTextConfigDescriptor getDefaultFullTextConfig() {
-        return new FullTextConfigDescriptor(null, null, TokenizerCategory.WORD, ImmutableList.of());
+        return new FullTextConfigDescriptor(null, null, null, TokenizerCategory.WORD, ImmutableList.of());
     }
 
     public String getDatabaseName() {

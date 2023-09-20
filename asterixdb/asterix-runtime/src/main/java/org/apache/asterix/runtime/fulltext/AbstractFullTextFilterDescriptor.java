@@ -19,16 +19,19 @@
 
 package org.apache.asterix.runtime.fulltext;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.metadata.DataverseName;
 
 public abstract class AbstractFullTextFilterDescriptor implements IFullTextFilterDescriptor {
     private static final long serialVersionUID = 5325972301942118022L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     protected final DataverseName dataverseName;
     protected final String name;
 
-    public AbstractFullTextFilterDescriptor(DataverseName dataverseName, String name) {
+    public AbstractFullTextFilterDescriptor(String databaseName, DataverseName dataverseName, String name) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverseName;
         this.name = name;
     }

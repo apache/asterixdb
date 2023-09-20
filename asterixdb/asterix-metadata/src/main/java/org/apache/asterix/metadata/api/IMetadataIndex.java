@@ -36,6 +36,9 @@ import org.apache.hyracks.api.io.FileReference;
  * Descriptor interface for a primary or secondary index on metadata datasets.
  */
 public interface IMetadataIndex extends Serializable {
+
+    public String getDatabaseName();
+
     public DataverseName getDataverseName();
 
     public String getNodeGroupName();

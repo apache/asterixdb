@@ -40,6 +40,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
@@ -148,8 +149,8 @@ public class DatasetDataSource extends DataSource {
                         tupleFilterFactory, outputLimit);
             case INTERNAL:
                 DataSourceId id = getId();
-                String database = null;
                 DataverseName dataverseName = id.getDataverseName();
+                String database = MetadataUtil.resolveDatabase(null, dataverseName);
                 String datasetName = id.getDatasourceName();
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                         database, dataverseName, datasetName, datasetName);

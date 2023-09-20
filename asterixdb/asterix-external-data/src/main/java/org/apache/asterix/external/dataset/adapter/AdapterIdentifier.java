@@ -30,11 +30,12 @@ public class AdapterIdentifier implements Serializable {
 
     private static final long serialVersionUID = 3L;
 
-    private final String databaseName = null;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String adapterName;
 
-    public AdapterIdentifier(DataverseName dataverse, String name) {
+    public AdapterIdentifier(String databaseName, DataverseName dataverse, String name) {
+        this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = dataverse;
         this.adapterName = name;
     }
