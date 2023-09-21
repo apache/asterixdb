@@ -72,7 +72,7 @@ public class PathInfoSerializer {
         //columnIndex
         output.writeInt(columnIndex);
         //maxLevel
-        output.writeInt(level);
+        output.writeInt(primaryKey ? 1 : level);
         //is primary key
         output.writeBoolean(primaryKey);
         //Is collection

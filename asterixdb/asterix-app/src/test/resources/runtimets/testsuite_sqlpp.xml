@@ -16152,6 +16152,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="nested-pk">
+        <output-dir compare="Text">nested-pk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="meta/meta_after_gby">
         <output-dir compare="Text">meta/meta_after_gby</output-dir>
       </compilation-unit>
