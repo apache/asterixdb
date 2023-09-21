@@ -16,20 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.cloud.bulk;
+package org.apache.asterix.cloud.lazy;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.hyracks.api.io.FileReference;
 
-public class NoOpDeleteBulkCallBack implements IBulkOperationCallBack {
-    public static final IBulkOperationCallBack INSTANCE = new NoOpDeleteBulkCallBack();
+public class NoOpParallelCacher implements IParallelCacher {
+    public static final IParallelCacher INSTANCE = new NoOpParallelCacher();
 
-    private NoOpDeleteBulkCallBack() {
+    @Override
+    public boolean isCached(FileReference indexDir) {
+        return false;
     }
 
     @Override
-    public void call(List<FileReference> fileReferences) {
+    public boolean downloadData(FileReference indexFile) {
+        return false;
+    }
+
+    @Override
+    public boolean downloadMetadata(FileReference indexFile) {
+        return false;
+    }
+
+    @Override
+    public boolean remove(Collection<FileReference> deletedFiles) {
+        return false;
+    }
+
+    @Override
+    public boolean remove(FileReference deletedFile) {
+        return false;
+    }
+
+    @Override
+    public void close() {
         // NoOp
     }
 }

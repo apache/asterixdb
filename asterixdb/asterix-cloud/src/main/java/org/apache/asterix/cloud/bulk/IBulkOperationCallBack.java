@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.cloud.bulk;
 
-import java.util.Collection;
+import java.util.List;
+
+import org.apache.hyracks.api.io.FileReference;
 
 public interface IBulkOperationCallBack {
-    void call(int numberOfAffectedLocalFiles, Collection<String> paths);
+    void call(List<FileReference> fileReferences);
 }

@@ -18,20 +18,11 @@
  */
 package org.apache.asterix.cloud.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.apache.asterix.cloud.clients.ICloudClient;
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IFileHandle;
-import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.control.nc.io.FileHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,32 +33,12 @@ public class CloudFileUtil {
     private CloudFileUtil() {
     }
 
-    public static void downloadFile(IOManager ioManager, ICloudClient cloudClient, String bucket, FileHandle fileHandle,
-            IIOManager.FileReadWriteMode rwMode, IIOManager.FileSyncMode syncMode, ByteBuffer writeBuffer)
-            throws HyracksDataException {
-        FileReference fileRef = fileHandle.getFileReference();
-        File file = fileRef.getFile();
-
-        try (InputStream inputStream = cloudClient.getObjectStream(bucket, fileRef.getRelativePath())) {
-            FileUtils.createParentDirectories(file);
-            if (!file.createNewFile()) {
-                throw new IllegalStateException("Couldn't create local file");
-            }
-
-            fileHandle.open(rwMode, syncMode);
-            writeToFile(ioManager, fileHandle, inputStream, writeBuffer);
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
-    }
-
     public static void cleanDirectoryFiles(IOManager ioManager, Set<String> cloudFiles, FileReference partitionPath)
             throws HyracksDataException {
         // First get the set of local files
         Set<FileReference> localFiles = ioManager.list(partitionPath);
         Iterator<FileReference> localFilesIter = localFiles.iterator();
-        LOGGER.info("Cleaning partition {}. Total number of unchecked cloud files {}", partitionPath.getRelativePath(),
-                cloudFiles.size());
+        LOGGER.info("Cleaning partition {}.", partitionPath.getRelativePath());
 
         // Reconcile local files and cloud files
         while (localFilesIter.hasNext()) {
@@ -96,39 +67,6 @@ public class CloudFileUtil {
             localFiles.add(new FileReference(partitionPath.getDeviceHandle(),
                     cloudFile.substring(cloudFile.indexOf(partitionPath.getRelativePath()))));
         }
-    }
-
-    private static void writeToFile(IOManager ioManager, IFileHandle fileHandle, InputStream inStream,
-            ByteBuffer writeBuffer) throws HyracksDataException {
-        writeBuffer.clear();
-        try {
-            int position = 0;
-            long offset = 0;
-            int read;
-            while ((read = inStream.read(writeBuffer.array(), position, writeBuffer.remaining())) >= 0) {
-                position += read;
-                writeBuffer.position(position);
-                if (writeBuffer.remaining() == 0) {
-                    offset += writeBufferToFile(ioManager, fileHandle, writeBuffer, offset);
-                    position = 0;
-                }
-            }
-
-            if (writeBuffer.position() > 0) {
-                writeBufferToFile(ioManager, fileHandle, writeBuffer, offset);
-                ioManager.sync(fileHandle, true);
-            }
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
-    }
-
-    private static long writeBufferToFile(IOManager ioManager, IFileHandle fileHandle, ByteBuffer writeBuffer,
-            long offset) throws HyracksDataException {
-        writeBuffer.flip();
-        long written = ioManager.doSyncWrite(fileHandle, offset, writeBuffer);
-        writeBuffer.clear();
-        return written;
     }
 
     private static void logDeleteFile(FileReference fileReference) {

@@ -18,40 +18,33 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
+import static org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig.DELETE_BATCH_SIZE;
 import static org.apache.asterix.cloud.clients.aws.s3.S3Utils.encodeURI;
 import static org.apache.asterix.cloud.clients.aws.s3.S3Utils.listS3Objects;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfiler;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.asterix.cloud.clients.profiler.NoOpRequestProfiler;
-import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.apache.hyracks.control.nc.io.IOManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +54,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.S3CrtAsyncClientBuilder;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
@@ -75,23 +66,11 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
-import software.amazon.awssdk.transfer.s3.S3TransferManager;
-import software.amazon.awssdk.transfer.s3.model.CompletedDirectoryDownload;
-import software.amazon.awssdk.transfer.s3.model.DirectoryDownload;
-import software.amazon.awssdk.transfer.s3.model.DownloadDirectoryRequest;
 
 public class S3CloudClient implements ICloudClient {
-
-    private static final Logger LOGGER = LogManager.getLogger();
-    // TODO(htowaileb): Temporary variables, can we get this from the used instance?
-    private static final double MAX_HOST_BANDWIDTH = 10.0; // in Gbps
-    // The maximum number of file that can be deleted (AWS restriction)
-    private static final int DELETE_BATCH_SIZE = 1000;
-
     private final S3ClientConfig config;
     private final S3Client s3Client;
     private final IRequestProfiler profiler;
-    private S3TransferManager s3TransferManager;
 
     public S3CloudClient(S3ClientConfig config) {
         this.config = config;
@@ -113,7 +92,7 @@ public class S3CloudClient implements ICloudClient {
     @Override
     public Set<String> listObjects(String bucket, String path, FilenameFilter filter) {
         profiler.objectsList();
-        path = config.isEncodeKeys() ? encodeURI(path) : path;
+        path = config.isLocalS3Provider() ? encodeURI(path) : path;
         return filterAndGet(listS3Objects(s3Client, bucket, path), filter);
     }
 
@@ -181,7 +160,7 @@ public class S3CloudClient implements ICloudClient {
 
     @Override
     public void copy(String bucket, String srcPath, FileReference destPath) {
-        srcPath = config.isEncodeKeys() ? encodeURI(srcPath) : srcPath;
+        srcPath = config.isLocalS3Provider() ? encodeURI(srcPath) : srcPath;
         List<S3Object> objects = listS3Objects(s3Client, bucket, srcPath);
 
         profiler.objectsList();
@@ -243,50 +222,8 @@ public class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public void syncFiles(String bucket, Map<String, String> cloudToLocalStoragePaths) throws HyracksDataException {
-        LOGGER.info("Syncing cloud storage to local storage started");
-
-        S3TransferManager s3TransferManager = getS3TransferManager();
-
-        List<CompletableFuture<CompletedDirectoryDownload>> downloads = new ArrayList<>();
-        cloudToLocalStoragePaths.forEach((cloudStoragePath, localStoragePath) -> {
-            DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder();
-            builder.bucket(bucket);
-            builder.destination(Paths.get(localStoragePath));
-            builder.listObjectsV2RequestTransformer(l -> l.prefix(cloudStoragePath));
-
-            LOGGER.info("TransferManager started downloading from cloud \"{}\" to local storage \"{}\"",
-                    cloudStoragePath, localStoragePath);
-            DirectoryDownload directoryDownload = s3TransferManager.downloadDirectory(builder.build());
-            downloads.add(directoryDownload.completionFuture());
-        });
-
-        try {
-            for (CompletableFuture<CompletedDirectoryDownload> download : downloads) {
-                // multipart download
-                profiler.objectMultipartDownload();
-                download.join();
-                CompletedDirectoryDownload completedDirectoryDownload = download.get();
-
-                // if we have failed downloads with transfer manager, try to download them with GetObject
-                if (!completedDirectoryDownload.failedTransfers().isEmpty()) {
-                    LOGGER.warn("TransferManager failed to download file(s), will retry to download each separately");
-                    completedDirectoryDownload.failedTransfers().forEach(LOGGER::warn);
-
-                    Map<String, String> failedFiles = new HashMap<>();
-                    completedDirectoryDownload.failedTransfers().forEach(failed -> {
-                        String cloudStoragePath = failed.request().getObjectRequest().key();
-                        String localStoragePath = failed.request().destination().toAbsolutePath().toString();
-                        failedFiles.put(cloudStoragePath, localStoragePath);
-                    });
-                    downloadFiles(bucket, failedFiles);
-                }
-                LOGGER.info("TransferManager finished downloading {} to local storage", completedDirectoryDownload);
-            }
-        } catch (ExecutionException | InterruptedException e) {
-            throw HyracksDataException.create(e);
-        }
-        LOGGER.info("Syncing cloud storage to local storage successful");
+    public IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager) {
+        return new S3ParallelDownloader(bucket, ioManager, config, profiler);
     }
 
     @Override
@@ -305,13 +242,7 @@ public class S3CloudClient implements ICloudClient {
 
     @Override
     public void close() {
-        if (s3Client != null) {
-            s3Client.close();
-        }
-
-        if (s3TransferManager != null) {
-            s3TransferManager.close();
-        }
+        s3Client.close();
     }
 
     private S3Client buildClient() {
@@ -333,65 +264,11 @@ public class S3CloudClient implements ICloudClient {
     private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
         Set<String> files = new HashSet<>();
         for (S3Object s3Object : contents) {
-            String path = config.isEncodeKeys() ? S3Utils.decodeURI(s3Object.key()) : s3Object.key();
+            String path = config.isLocalS3Provider() ? S3Utils.decodeURI(s3Object.key()) : s3Object.key();
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
                 files.add(path);
             }
         }
         return files;
-    }
-
-    private void downloadFiles(String bucket, Map<String, String> cloudToLocalStoragePaths)
-            throws HyracksDataException {
-        byte[] buffer = new byte[8 * 1024];
-        for (Map.Entry<String, String> entry : cloudToLocalStoragePaths.entrySet()) {
-            String cloudStoragePath = entry.getKey();
-            String localStoragePath = entry.getValue();
-
-            LOGGER.info("GetObject started downloading from cloud \"{}\" to local storage \"{}\"", cloudStoragePath,
-                    localStoragePath);
-
-            // TODO(htowaileb): add retry logic here
-            try {
-                File localFile = new File(localStoragePath);
-                FileUtils.createParentDirectories(localFile);
-                if (!localFile.createNewFile()) {
-                    // do nothing for now, a restart has the files when trying to flush, for testing
-                    //throw new IllegalStateException("Couldn't create local file");
-                }
-
-                try (InputStream inputStream = getObjectStream(bucket, cloudStoragePath);
-                        FileOutputStream outputStream = new FileOutputStream(localFile)) {
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
-                    }
-                }
-            } catch (IOException ex) {
-                throw HyracksDataException.create(ex);
-            }
-            LOGGER.info("GetObject successful downloading from cloud \"{}\" to local storage \"{}\"", cloudStoragePath,
-                    localStoragePath);
-        }
-    }
-
-    private S3TransferManager getS3TransferManager() {
-        if (s3TransferManager != null) {
-            return s3TransferManager;
-        }
-
-        S3CrtAsyncClientBuilder builder = S3AsyncClient.crtBuilder();
-        builder.credentialsProvider(config.createCredentialsProvider());
-        builder.region(Region.of(config.getRegion()));
-        builder.targetThroughputInGbps(MAX_HOST_BANDWIDTH);
-        builder.minimumPartSizeInBytes((long) 8 * 1024 * 1024);
-
-        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
-            builder.endpointOverride(URI.create(config.getEndpoint()));
-        }
-
-        S3AsyncClient client = builder.build();
-        s3TransferManager = S3TransferManager.builder().s3Client(client).build();
-        return s3TransferManager;
     }
 }

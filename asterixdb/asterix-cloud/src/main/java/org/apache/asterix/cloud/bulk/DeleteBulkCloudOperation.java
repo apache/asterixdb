@@ -50,13 +50,17 @@ public class DeleteBulkCloudOperation extends DeleteBulkOperation {
          *      Actually, is there a case where we delete multiple directories from the cloud?
          */
         List<String> paths = fileReferences.stream().map(FileReference::getRelativePath).collect(Collectors.toList());
+        if (paths.isEmpty()) {
+            return 0;
+        }
+
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Bulk deleting: local: {}, cloud: {}", fileReferences, paths);
         }
         cloudClient.deleteObjects(bucket, paths);
         // Bulk delete locally as well
-        int localDeletes = super.performOperation();
-        callBack.call(localDeletes, paths);
-        return paths.size();
+        super.performOperation();
+        callBack.call(fileReferences);
+        return fileReferences.size();
     }
 }

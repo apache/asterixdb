@@ -16,20 +16,32 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.cloud.bulk;
+package org.apache.asterix.cloud.clients;
 
-import java.util.List;
+import java.util.Collection;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
-public class NoOpDeleteBulkCallBack implements IBulkOperationCallBack {
-    public static final IBulkOperationCallBack INSTANCE = new NoOpDeleteBulkCallBack();
+public interface IParallelDownloader {
 
-    private NoOpDeleteBulkCallBack() {
-    }
+    /**
+     * Downloads files in all partitions
+     *
+     * @param toDownload all files to be downloaded
+     */
+    void downloadFiles(Collection<FileReference> toDownload) throws HyracksDataException;
 
-    @Override
-    public void call(List<FileReference> fileReferences) {
-        // NoOp
-    }
+    /**
+     * Downloads files in all partitions
+     *
+     * @param toDownload all files to be downloaded
+     * @return file that failed to download
+     */
+    Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload) throws HyracksDataException;
+
+    /**
+     * Close the downloader and release all of its resources
+     */
+    void close();
 }

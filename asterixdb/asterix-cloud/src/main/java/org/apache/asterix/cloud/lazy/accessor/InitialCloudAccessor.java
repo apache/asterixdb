@@ -20,8 +20,8 @@ package org.apache.asterix.cloud.lazy.accessor;
 
 import java.util.Collections;
 
-import org.apache.asterix.cloud.WriteBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.lazy.NoOpParallelCacher;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 /**
@@ -32,18 +32,7 @@ public class InitialCloudAccessor extends ReplaceableCloudAccessor {
     private static final ILazyAccessorReplacer NO_OP_REPLACER = () -> {
     };
 
-    public InitialCloudAccessor(ICloudClient cloudClient, String bucket, IOManager localIoManager,
-            WriteBufferProvider writeBufferProvider) {
-        super(cloudClient, bucket, localIoManager, Collections.emptySet(), 0, writeBufferProvider, NO_OP_REPLACER);
-    }
-
-    @Override
-    protected void decrementNumberOfUncachedFiles() {
-        // No Op
-    }
-
-    @Override
-    protected void decrementNumberOfUncachedFiles(int count) {
-        // No Op
+    public InitialCloudAccessor(ICloudClient cloudClient, String bucket, IOManager localIoManager) {
+        super(cloudClient, bucket, localIoManager, Collections.emptySet(), NO_OP_REPLACER, NoOpParallelCacher.INSTANCE);
     }
 }

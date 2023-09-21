@@ -25,7 +25,8 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 public class S3ClientConfig {
-
+    // The maximum number of file that can be deleted (AWS restriction)
+    static final int DELETE_BATCH_SIZE = 1000;
     private final String region;
     private final String endpoint;
     private final String prefix;
@@ -59,7 +60,7 @@ public class S3ClientConfig {
         return prefix;
     }
 
-    public boolean isEncodeKeys() {
+    public boolean isLocalS3Provider() {
         // to workaround https://github.com/findify/s3mock/issues/187 in our S3Mock, we encode/decode keys
         return isS3Mock();
     }

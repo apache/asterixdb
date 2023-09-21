@@ -22,11 +22,11 @@ import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.control.nc.io.IOManager;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -131,13 +131,13 @@ public interface ICloudClient {
     boolean exists(String bucket, String path) throws HyracksDataException;
 
     /**
-     * Syncs files by downloading them from cloud storage to local storage
+     * Create a parallel downloader
      *
-     * @param bucket                   bucket to sync from
-     * @param cloudToLocalStoragePaths map of cloud storage partition to local storage path
-     * @throws HyracksDataException HyracksDataException
+     * @param bucket    bucket
+     * @param ioManager local {@link IOManager}
+     * @return an instance of a new parallel downloader
      */
-    void syncFiles(String bucket, Map<String, String> cloudToLocalStoragePaths) throws HyracksDataException;
+    IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager);
 
     /**
      * Produces a {@link JsonNode} that contains information about the stored objects in the cloud

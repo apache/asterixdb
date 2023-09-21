@@ -21,11 +21,15 @@ package org.apache.asterix.cloud;
 import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
+import org.apache.asterix.cloud.clients.IParallelDownloader;
+import org.apache.asterix.cloud.lazy.ParallelCacher;
 import org.apache.asterix.cloud.lazy.accessor.ILazyAccessor;
 import org.apache.asterix.cloud.lazy.accessor.ILazyAccessorReplacer;
 import org.apache.asterix.cloud.lazy.accessor.InitialCloudAccessor;
@@ -54,7 +58,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
 
     public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties) throws HyracksDataException {
         super(ioManager, cloudProperties);
-        accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager, writeBufferProvider);
+        accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager);
         replacer = () -> {
             synchronized (this) {
                 if (!accessor.isLocalAccessor()) {
@@ -92,9 +96,11 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         cloudFiles.removeAll(localFiles);
         int remainingUncachedFiles = cloudFiles.size();
         if (remainingUncachedFiles > 0) {
+            List<FileReference> uncachedFiles = resolve(cloudFiles);
+            IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager);
+            ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles);
             // Local cache misses some files, cloud-based accessor is needed for read operations
-            accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions,
-                    remainingUncachedFiles, writeBufferProvider, replacer);
+            accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);
         } else {
             // Everything is cached, no need to invoke cloud-based accessor for read operations
             accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
@@ -150,6 +156,14 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     public void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
         accessor.doOverwrite(fileRef, bytes);
         log("WRITE", fileRef);
+    }
+
+    private List<FileReference> resolve(Set<String> cloudFiles) throws HyracksDataException {
+        List<FileReference> fileReferences = new ArrayList<>();
+        for (String file : cloudFiles) {
+            fileReferences.add(resolve(file));
+        }
+        return fileReferences;
     }
 
     private void log(String op, FileReference fileReference) {

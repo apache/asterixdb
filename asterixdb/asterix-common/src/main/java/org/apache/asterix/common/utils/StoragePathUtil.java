@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.common.utils;
 
+import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
+import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -43,6 +46,7 @@ public class StoragePathUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final char DATAVERSE_CONTINUATION_MARKER = '^';
+    private static String PARTITION_PATH = STORAGE_ROOT_DIR_NAME + File.separator + PARTITION_DIR_PREFIX;
 
     private StoragePathUtil() {
     }
@@ -71,8 +75,7 @@ public class StoragePathUtil {
     }
 
     public static String prepareStoragePartitionPath(int partitonId) {
-        return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, StorageConstants.PARTITION_DIR_PREFIX + partitonId)
-                .toString();
+        return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + partitonId).toString();
     }
 
     public static String prepareIngestionLogPath() {
@@ -103,8 +106,7 @@ public class StoragePathUtil {
     }
 
     public static int getPartitionNumFromRelativePath(String relativePath) {
-        int startIdx = relativePath.lastIndexOf(StorageConstants.PARTITION_DIR_PREFIX)
-                + StorageConstants.PARTITION_DIR_PREFIX.length();
+        int startIdx = relativePath.lastIndexOf(PARTITION_DIR_PREFIX) + PARTITION_DIR_PREFIX.length();
         int partitionEndIdx = relativePath.indexOf(File.separatorChar, startIdx);
         int idxEnd = partitionEndIdx != -1 ? partitionEndIdx : relativePath.length();
         String partition = relativePath.substring(startIdx, idxEnd);
@@ -182,5 +184,33 @@ public class StoragePathUtil {
      */
     public static FileReference getIndexPath(IIOManager ioManager, ResourceReference ref) throws HyracksDataException {
         return ioManager.resolve(ref.getRelativePath().toString());
+    }
+
+    /**
+     * Returns the index's path after the partition directory
+     * Example:
+     * - Input:
+     * /../storage/partition_8/dataverse_p1[/^dataverse_p2[/^dataverse_p3...]]/dataset/rebalanceCount/index/0_0_b
+     * - Output
+     * dataverse_p1[/^dataverse_p2[/^dataverse_p3...]]/dataset/rebalanceCount/index
+     *
+     * @param fileReference a file inside the index director
+     * @param isDirectory   if the provided {@link FileReference} corresponds to a directory
+     * @return index path
+     */
+    public static String getIndexSubPath(FileReference fileReference, boolean isDirectory) {
+        String relativePath = fileReference.getRelativePath();
+        if (relativePath.length() <= PARTITION_PATH.length() || !relativePath.startsWith(PARTITION_PATH)) {
+            return "";
+        }
+        String partition = PARTITION_PATH + getPartitionNumFromRelativePath(relativePath);
+        int partitionStart = relativePath.indexOf(partition);
+        int start = partitionStart + partition.length() + 1;
+        int end = isDirectory ? relativePath.length() : relativePath.lastIndexOf('/');
+        if (start >= end) {
+            // This could happen if the provided path contains only a partition path (e.g., storage/partition_0)
+            return "";
+        }
+        return relativePath.substring(start, end);
     }
 }

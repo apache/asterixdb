@@ -139,6 +139,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
                 }
             }
         } else {
+            LOGGER.info("Cleaning node partitions...");
             for (FileReference partitionPath : partitionPaths) {
                 CloudFileUtil.cleanDirectoryFiles(localIoManager, cloudFiles, partitionPath);
             }

@@ -42,18 +42,23 @@ abstract class AbstractLazyAccessor implements ILazyAccessor {
         this.localIoManager = localIoManager;
     }
 
-    int doCloudDelete(FileReference fileReference) throws HyracksDataException {
-        int numberOfCloudDeletes = 0;
+    Set<FileReference> doCloudDelete(FileReference fileReference) throws HyracksDataException {
+        Set<FileReference> deletedFiles = Collections.emptySet();
         if (!STORAGE_ROOT_DIR_NAME.equals(IoUtil.getFileNameFromPath(fileReference.getAbsolutePath()))) {
             File localFile = fileReference.getFile();
-            // if file reference exists,and it is a file, then list is not required
-            Set<String> paths =
-                    localFile.exists() && localFile.isFile() ? Collections.singleton(fileReference.getRelativePath())
-                            : doList(fileReference, IoUtil.NO_OP_FILTER).stream().map(FileReference::getRelativePath)
-                                    .collect(Collectors.toSet());
+
+            Set<String> paths;
+            if (localFile.exists() && localFile.isFile()) {
+                // If file reference exists, and it is a file, then list is not required
+                paths = Collections.singleton(fileReference.getRelativePath());
+            } else {
+                // List and delete
+                deletedFiles = doList(fileReference, IoUtil.NO_OP_FILTER);
+                paths = deletedFiles.stream().map(FileReference::getRelativePath).collect(Collectors.toSet());
+            }
+
             cloudClient.deleteObjects(bucket, paths);
-            numberOfCloudDeletes = paths.size();
         }
-        return numberOfCloudDeletes;
+        return deletedFiles;
     }
 }

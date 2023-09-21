@@ -94,7 +94,6 @@
     <dependency>
       <groupId>software.amazon.awssdk.crt</groupId>
       <artifactId>aws-crt</artifactId>
-      <version>0.21.10</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
