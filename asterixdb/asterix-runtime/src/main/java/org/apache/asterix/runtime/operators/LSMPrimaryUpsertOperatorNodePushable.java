@@ -282,7 +282,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
                 @Override
                 public void frameCompleted() throws HyracksDataException {
-                    appender.write(writer, true);
+                    if (appender.getTupleCount() > 0) {
+                        appender.write(writer, true);
+                    }
                     callback.frameCompleted();
                 }
 
@@ -404,7 +406,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
      */
     @Override
     public void flushPartialFrame() throws HyracksDataException {
-        appender.write(writer, true);
+        if (appender.getTupleCount() > 0) {
+            appender.write(writer, true);
+        }
     }
 
     protected void appendFilterToPrevTuple() throws IOException {
