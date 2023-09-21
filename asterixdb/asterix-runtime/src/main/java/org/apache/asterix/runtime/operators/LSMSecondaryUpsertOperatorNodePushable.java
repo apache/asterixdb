@@ -165,4 +165,9 @@ public class LSMSecondaryUpsertOperatorNodePushable extends LSMIndexInsertUpdate
         }
         return false;
     }
+
+    @Override
+    public void flush() throws HyracksDataException {
+        // No op since nextFrame flushes by default
+    }
 }
