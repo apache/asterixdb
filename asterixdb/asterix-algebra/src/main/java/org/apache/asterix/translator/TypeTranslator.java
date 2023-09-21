@@ -42,6 +42,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -146,7 +147,8 @@ public class TypeTranslator {
         // solve remaining top level references
         for (TypeSignature typeSignature : incompleteTopLevelTypeReferences.keySet()) {
             IAType t;
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeSignature.getDataverseName(),
+            String typeDatabase = MetadataUtil.resolveDatabase(null, typeSignature.getDataverseName());
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDatabase, typeSignature.getDataverseName(),
                     typeSignature.getName());
             if (dt == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());
@@ -160,10 +162,11 @@ public class TypeTranslator {
         // solve remaining field type references
         for (String trefName : incompleteFieldTypes.keySet()) {
             IAType t;
-            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeDataverse, trefName);
+            String typeDatabase = MetadataUtil.resolveDatabase(null, typeDataverse);
+            Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDatabase, typeDataverse, trefName);
             if (dt == null) {
-                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, MetadataConstants.METADATA_DATAVERSE_NAME,
-                        trefName);
+                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                        MetadataConstants.METADATA_DATAVERSE_NAME, trefName);
             }
             if (dt == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, trefName);
@@ -190,7 +193,8 @@ public class TypeTranslator {
             IAType t;
             Datatype dt;
             if (MetadataManager.INSTANCE != null) {
-                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, null, typeSignature.getDataverseName(),
+                String typeDatabase = MetadataUtil.resolveDatabase(null, typeSignature.getDataverseName());
+                dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, typeDatabase, typeSignature.getDataverseName(),
                         typeSignature.getName());
                 if (dt == null) {
                     throw new CompilationException(ErrorCode.UNKNOWN_TYPE, sourceLoc, typeSignature.getName());

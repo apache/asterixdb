@@ -38,6 +38,7 @@ import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.MetadataConstants;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -185,9 +186,11 @@ public class ConnectorApiServletTest {
                 .create((ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null);
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
-            ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
-                    dataset.getItemTypeName());
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
+            Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
+            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+            ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
+                    dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             // Metadata transaction commits.
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return recordType;

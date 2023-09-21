@@ -50,6 +50,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctionInfo;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.BuiltinType;
@@ -118,6 +119,7 @@ public class FunctionUtil {
         if (dataverse == null) {
             dataverse = metadataProvider.getDefaultDataverseName();
         }
+        String database = MetadataUtil.resolveDatabase(null, dataverse);
         if (searchUdfs && !isBuiltinFunctionDataverse(dataverse)) {
             // attempt to resolve to a user-defined function
             FunctionSignature fsWithDv =
@@ -151,7 +153,7 @@ public class FunctionUtil {
             if (fs.getDataverseName() != null) {
                 Dataverse dv;
                 try {
-                    dv = metadataProvider.findDataverse(dataverse);
+                    dv = metadataProvider.findDataverse(database, dataverse);
                 } catch (AlgebricksException e) {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, dataverse);
                 }

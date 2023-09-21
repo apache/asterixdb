@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
@@ -64,8 +65,9 @@ public class DataSourcePartitioningProvider implements IDataSourcePropertiesProv
                 break;
             case DataSource.Type.FEED:
                 String dsName = ((FeedDataSource) ds).getTargetDataset();
-                Dataset feedDs = ((MetadataProvider) ctx.getMetadataProvider())
-                        .findDataset(ds.getId().getDataverseName(), dsName);
+                String database = MetadataUtil.resolveDatabase(null, ds.getId().getDataverseName());
+                Dataset feedDs = ((MetadataProvider) ctx.getMetadataProvider()).findDataset(database,
+                        ds.getId().getDataverseName(), dsName);
                 PartitioningProperties partitioningProperties =
                         ((MetadataProvider) ctx.getMetadataProvider()).getPartitioningProperties(feedDs);
                 pp = getFeedDatasetPartitioningProperty(ds, domain, scanVariables,

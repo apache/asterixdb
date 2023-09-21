@@ -281,9 +281,9 @@ public class FeedOperations {
             String datasetName = feedConnections.get(iter1).getDatasetName();
             FeedConnectionId feedConnectionId = new FeedConnectionId(ingestionOp.getEntityId(), datasetName);
 
-            FeedPolicyEntity feedPolicyEntity =
-                    FeedMetadataUtil.validateIfPolicyExists(curFeedConnection.getDataverseName(),
-                            curFeedConnection.getPolicyName(), metadataProvider.getMetadataTxnContext());
+            FeedPolicyEntity feedPolicyEntity = FeedMetadataUtil.validateIfPolicyExists(
+                    curFeedConnection.getDatabaseName(), curFeedConnection.getDataverseName(),
+                    curFeedConnection.getPolicyName(), metadataProvider.getMetadataTxnContext());
 
             for (Map.Entry<OperatorDescriptorId, IOperatorDescriptor> entry : operatorsMap.entrySet()) {
                 IOperatorDescriptor opDesc = entry.getValue();
@@ -406,9 +406,8 @@ public class FeedOperations {
             for (OperatorDescriptorId root : subJob.getRoots()) {
                 jobSpec.addRoot(jobSpec.getOperatorMap().get(operatorIdMapping.get(root)));
             }
-            int datasetId = metadataProvider
-                    .findDataset(curFeedConnection.getDataverseName(), curFeedConnection.getDatasetName())
-                    .getDatasetId();
+            int datasetId = metadataProvider.findDataset(curFeedConnection.getDatabaseName(),
+                    curFeedConnection.getDataverseName(), curFeedConnection.getDatasetName()).getDatasetId();
             TxnId txnId = ((JobEventListenerFactory) subJob.getJobletEventListenerFactory()).getTxnId(datasetId);
             txnIdMap.put(datasetId, txnId);
         }

@@ -45,6 +45,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.api.util.InvokeUtil;
@@ -120,7 +121,8 @@ public class MetadataTxnTest {
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
-            sourceDataset = metadataProvider.findDataset(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+            sourceDataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } finally {
             metadataProvider.getLocks().unlock();
@@ -170,7 +172,8 @@ public class MetadataTxnTest {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset sourceDataset;
         try {
-            sourceDataset = metadataProvider.findDataset(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+            sourceDataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } finally {
             metadataProvider.getLocks().unlock();

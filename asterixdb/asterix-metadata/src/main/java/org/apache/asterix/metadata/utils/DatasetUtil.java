@@ -250,8 +250,8 @@ public class DatasetUtil {
     public static Pair<ILSMMergePolicyFactory, Map<String, String>> getMergePolicyFactory(Dataset dataset,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         String policyName = dataset.getCompactionPolicy();
-        CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx, null,
-                MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
+        CompactionPolicy compactionPolicy = MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx,
+                MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME, policyName);
         String compactionPolicyFactoryClassName = compactionPolicy.getClassName();
         ILSMMergePolicyFactory mergePolicyFactory;
         Map<String, String> properties = dataset.getCompactionPolicyProperties();
@@ -294,7 +294,8 @@ public class DatasetUtil {
     public static ARecordType getMetaType(MetadataProvider metadataProvider, Dataset dataset)
             throws AlgebricksException {
         if (dataset.hasMetaPart()) {
-            return (ARecordType) metadataProvider.findType(dataset.getMetaItemTypeDataverseName(),
+            String database = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
+            return (ARecordType) metadataProvider.findType(database, dataset.getMetaItemTypeDataverseName(),
                     dataset.getMetaItemTypeName());
         }
         return null;
@@ -363,7 +364,7 @@ public class DatasetUtil {
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
             MetadataProvider metadataProvider) throws AlgebricksException {
         DataverseName dataverseName = dataverse.getDataverseName();
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        Dataset dataset = metadataProvider.findDataset(dataverse.getDatabaseName(), dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
@@ -439,8 +440,8 @@ public class DatasetUtil {
         ARecordType metaItemType = (ARecordType) metadataProvider.findMetaType(dataset);
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
-        Index primaryIndex = metadataProvider.getIndex(dataset.getDataverseName(), dataset.getDatasetName(),
-                dataset.getDatasetName());
+        Index primaryIndex = metadataProvider.getIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
+                dataset.getDatasetName(), dataset.getDatasetName());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
 
         // prepare callback
@@ -450,8 +451,9 @@ public class DatasetUtil {
             primaryKeyFields[i] = i;
             pkFields[i] = fieldPermutation[i];
         }
-        boolean hasSecondaries =
-                metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName()).size() > 1;
+        boolean hasSecondaries = metadataProvider
+                .getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName())
+                .size() > 1;
         IStorageComponentProvider storageComponentProvider = metadataProvider.getStorageComponentProvider();
         IModificationOperationCallbackFactory modificationCallbackFactory = dataset.getModificationCallbackFactory(
                 storageComponentProvider, primaryIndex, IndexOperation.UPSERT, primaryKeyFields);
@@ -541,8 +543,8 @@ public class DatasetUtil {
         }
 
         // Column
-        List<Index> secondaryIndexes =
-                metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> secondaryIndexes = metadataProvider.getDatasetIndexes(dataset.getDatabaseName(),
+                dataset.getDataverseName(), dataset.getDatasetName());
         List<ARecordType> indexPaths = new ArrayList<>();
 
         for (Index index : secondaryIndexes) {

@@ -792,8 +792,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         LogicalVariable datasetMetaVar = null;
         if (subTree.getDataSourceType() != DataSourceType.COLLECTION_SCAN
                 && subTree.getDataSourceType() != DataSourceType.INDEXONLY_PLAN_SECONDARY_INDEX_LOOKUP) {
-            datasetIndexes = metadataProvider.getDatasetIndexes(subTree.getDataset().getDataverseName(),
-                    subTree.getDataset().getDatasetName());
+            datasetIndexes = metadataProvider.getDatasetIndexes(subTree.getDataset().getDatabaseName(),
+                    subTree.getDataset().getDataverseName(), subTree.getDataset().getDatasetName());
             List<LogicalVariable> datasetVars = subTree.getDataSourceVariables();
             if (subTree.getDataset().hasMetaPart()) {
                 datasetMetaVar = datasetVars.get(datasetVars.size() - 1);
@@ -1108,6 +1108,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
         Pair<DataverseName, String> datasetInfo =
                 AnalysisUtil.getDatasetInfo((DataSourceScanOperator) dataSourceScanOp);
-        return metadataProvider.getIndex(datasetInfo.first, datasetInfo.second, datasetInfo.second);
+        String database = MetadataUtil.resolveDatabase(null, datasetInfo.first);
+        return metadataProvider.getIndex(database, datasetInfo.first, datasetInfo.second, datasetInfo.second);
     }
 }

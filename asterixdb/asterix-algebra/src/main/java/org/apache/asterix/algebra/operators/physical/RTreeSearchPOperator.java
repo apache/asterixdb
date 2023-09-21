@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.rules.am.RTreeJobGenParams;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -89,11 +90,12 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-        Dataset dataset = mp.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
+        Dataset dataset = mp.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
         List<LogicalVariable> outputVars = unnestMap.getVariables();
         if (jobGenParams.getRetainInput()) {
-            outputVars = new ArrayList<LogicalVariable>();
+            outputVars = new ArrayList<>();
             VariableUtilities.getLiveVariables(unnestMap, outputVars);
         }
         boolean retainMissing = false;

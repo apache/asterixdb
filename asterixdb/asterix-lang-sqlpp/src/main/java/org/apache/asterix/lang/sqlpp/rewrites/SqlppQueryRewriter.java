@@ -85,6 +85,7 @@ import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -488,7 +489,9 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         if (viewDecl == null) {
             Dataset dataset;
             try {
-                dataset = metadataProvider.findDataset(viewName.getDataverseName(), viewName.getDatasetName(), true);
+                String database = MetadataUtil.resolveDatabase(null, viewName.getDataverseName());
+                dataset = metadataProvider.findDataset(database, viewName.getDataverseName(), viewName.getDatasetName(),
+                        true);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.UNKNOWN_VIEW, e, sourceLoc, viewName);
             }
@@ -499,13 +502,14 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             viewDecl = ViewUtil.parseStoredView(viewName, viewDetails, parserFactory, context.getWarningCollector(),
                     sourceLoc);
             DataverseName itemTypeDataverseName = dataset.getItemTypeDataverseName();
+            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, itemTypeDataverseName);
             String itemTypeName = dataset.getItemTypeName();
             boolean isAnyType =
                     MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName().equals(itemTypeDataverseName)
                             && MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName().equals(itemTypeName);
             if (!isAnyType) {
                 try {
-                    viewItemType = metadataProvider.findType(itemTypeDataverseName, itemTypeName);
+                    viewItemType = metadataProvider.findType(itemTypeDatabase, itemTypeDataverseName, itemTypeName);
                 } catch (AlgebricksException e) {
                     throw new CompilationException(ErrorCode.UNKNOWN_TYPE,
                             TypeUtil.getFullyQualifiedDisplayName(itemTypeDataverseName, itemTypeName));
@@ -551,11 +555,14 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             SourceLocation sourceLoc) throws CompilationException {
         Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
         Dataverse targetDataverse;
+        String database;
         if (entityDataverseName == null || entityDataverseName.equals(defaultDataverse.getDataverseName())) {
             targetDataverse = defaultDataverse;
+            database = MetadataUtil.resolveDatabase(null, targetDataverse.getDataverseName());
         } else {
             try {
-                targetDataverse = metadataProvider.findDataverse(entityDataverseName);
+                database = MetadataUtil.resolveDatabase(null, entityDataverseName);
+                targetDataverse = metadataProvider.findDataverse(database, entityDataverseName);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, entityDataverseName);
             }

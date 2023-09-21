@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -80,8 +81,9 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
             DataSourceScanOperator dataSourceScanOperator = (DataSourceScanOperator) workingOp;
             Pair<DataverseName, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScanOperator);
             DataverseName dataverseName = datasetInfo.first;
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
             String datasetName = datasetInfo.second;
-            if (metadataProvider.getDatasetIndexes(dataverseName, datasetName).stream()
+            if (metadataProvider.getDatasetIndexes(database, dataverseName, datasetName).stream()
                     .anyMatch(i -> i.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                 return true;
             }

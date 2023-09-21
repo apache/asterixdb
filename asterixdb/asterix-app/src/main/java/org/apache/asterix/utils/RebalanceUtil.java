@@ -50,6 +50,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.rebalance.IDatasetRebalanceCallback;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
@@ -96,6 +97,7 @@ public class RebalanceUtil {
     public static boolean rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IDatasetRebalanceCallback datasetRebalanceCallback, boolean forceRebalance) throws Exception {
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         Dataset sourceDataset;
         Dataset targetDataset;
         boolean success = true;
@@ -106,7 +108,7 @@ public class RebalanceUtil {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             // The source dataset.
-            sourceDataset = metadataProvider.findDataset(dataverseName, datasetName);
+            sourceDataset = metadataProvider.findDataset(database, dataverseName, datasetName);
 
             // If the source dataset doesn't exist, then it's a no-op.
             if (sourceDataset == null) {
@@ -353,8 +355,9 @@ public class RebalanceUtil {
 
     private static ITupleProjectorFactory createTupleProjectorFactory(Dataset source, MetadataProvider metadataProvider)
             throws AlgebricksException {
-        ARecordType itemType =
-                (ARecordType) metadataProvider.findType(source.getItemTypeDataverseName(), source.getItemTypeName());
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, source.getItemTypeDataverseName());
+        ARecordType itemType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
+                source.getItemTypeDataverseName(), source.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, source);
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, source);
         int numberOfPrimaryKeys = source.getPrimaryKeys().size();
@@ -396,7 +399,8 @@ public class RebalanceUtil {
             return;
         }
         List<JobSpecification> jobs = new ArrayList<>();
-        List<Index> indexes = metadataProvider.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexes = metadataProvider.getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(),
+                dataset.getDatasetName());
         for (Index index : indexes) {
             jobs.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset,
                     EnumSet.of(DropOption.IF_EXISTS, DropOption.WAIT_ON_IN_USE), null));
@@ -409,7 +413,8 @@ public class RebalanceUtil {
     // Creates and loads all secondary indexes for the rebalance target dataset.
     private static void createAndLoadSecondaryIndexesForTarget(Dataset source, Dataset target,
             MetadataProvider metadataProvider, IHyracksClientConnection hcc) throws Exception {
-        List<Index> indexes = metadataProvider.getDatasetIndexes(source.getDataverseName(), source.getDatasetName());
+        List<Index> indexes = metadataProvider.getDatasetIndexes(source.getDatabaseName(), source.getDataverseName(),
+                source.getDatasetName());
         List<Index> secondaryIndexes = indexes.stream().filter(Index::isSecondaryIndex).collect(Collectors.toList());
         List<Index> nonSampleIndexes =
                 secondaryIndexes.stream().filter(idx -> !idx.isSampleIndex()).collect(Collectors.toList());

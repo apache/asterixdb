@@ -43,9 +43,9 @@ public class FlushDatasetUtil {
     private FlushDatasetUtil() {
     }
 
-    public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider,
+    public static void flushDataset(IHyracksClientConnection hcc, MetadataProvider metadataProvider, String database,
             DataverseName dataverseName, String datasetName) throws Exception {
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         flushDataset(hcc, metadataProvider, dataset);
     }
 

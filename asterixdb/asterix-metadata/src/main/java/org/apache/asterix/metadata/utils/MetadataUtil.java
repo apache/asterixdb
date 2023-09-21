@@ -46,11 +46,17 @@ public class MetadataUtil {
     }
 
     public static String databaseFor(DataverseName dataverse) {
+        if (dataverse == null) {
+            return null;
+        }
         return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverse) ? MetadataConstants.SYSTEM_DATABASE
                 : MetadataConstants.DEFAULT_DATABASE;
     }
 
     public static String resolveDatabase(String database, DataverseName dataverse) {
+        if (dataverse == null) {
+            return null;
+        }
         if (database != null) {
             return database;
         }

@@ -32,6 +32,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.dataflow.std.sort.AbstractSorterOperatorDescriptor;
 import org.junit.AfterClass;
@@ -78,7 +79,8 @@ public class SecondaryBTreeOperationsHelperTest {
 
             // create the dataset
             TestDataUtil.createDataset(datasetName, fields, PKFieldName);
-            final Dataset dataset = metadataProvider.findDataset(null, datasetName);
+            final Dataset dataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
             Assert.assertNotNull(dataset);
 
             Index index;
@@ -86,8 +88,8 @@ public class SecondaryBTreeOperationsHelperTest {
 
             // create a secondary primary index
             TestDataUtil.createPrimaryIndex(datasetName, primaryIndexName);
-            index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
-                    primaryIndexName);
+            index = metadataProvider.getIndex(MetadataConstants.DEFAULT_DATABASE,
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName, primaryIndexName);
             Assert.assertNotNull(index);
             jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider, null);
             jobSpecification.getOperatorMap().values().forEach(iOperatorDescriptor -> {
@@ -96,8 +98,8 @@ public class SecondaryBTreeOperationsHelperTest {
 
             // create a normal BTree index
             TestDataUtil.createSecondaryBTreeIndex(datasetName, secondaryIndexName, SKFieldName);
-            index = metadataProvider.getIndex(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName,
-                    secondaryIndexName);
+            index = metadataProvider.getIndex(MetadataConstants.DEFAULT_DATABASE,
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName, secondaryIndexName);
             Assert.assertNotNull(index);
             jobSpecification = IndexUtil.buildSecondaryIndexLoadingJobSpec(dataset, index, metadataProvider, null);
             final long numOfSortOperators = jobSpecification.getOperatorMap().values().stream()

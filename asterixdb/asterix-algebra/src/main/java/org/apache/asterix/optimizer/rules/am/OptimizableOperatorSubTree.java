@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -314,13 +315,16 @@ public class OptimizableOperatorSubTree {
                 return false;
             }
             // Find the dataset corresponding to the datasource in the metadata.
-            Dataset ds = metadataProvider.findDataset(dataverseName, datasetName);
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
+            Dataset ds = metadataProvider.findDataset(database, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.NO_METADATA_FOR_DATASET, root.getSourceLocation(),
                         datasetName);
             }
             // Get the record type for that dataset.
-            IAType itemType = metadataProvider.findType(ds.getItemTypeDataverseName(), ds.getItemTypeName());
+            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, ds.getItemTypeDataverseName());
+            IAType itemType =
+                    metadataProvider.findType(itemTypeDatabase, ds.getItemTypeDataverseName(), ds.getItemTypeName());
             if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                 if (i == 0) {
                     return false;
@@ -332,8 +336,9 @@ public class OptimizableOperatorSubTree {
             ARecordType rType = (ARecordType) itemType;
 
             // Get the meta record type for that dataset.
-            ARecordType metaItemType = (ARecordType) metadataProvider.findType(ds.getMetaItemTypeDataverseName(),
-                    ds.getMetaItemTypeName());
+            String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, ds.getMetaItemTypeDataverseName());
+            ARecordType metaItemType = (ARecordType) metadataProvider.findType(metaItemTypeDatabase,
+                    ds.getMetaItemTypeDataverseName(), ds.getMetaItemTypeName());
 
             rType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(rType, metaItemType, ds);
 

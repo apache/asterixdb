@@ -40,6 +40,7 @@ import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -86,7 +87,8 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         DataSourceId asid = new DataSourceId(dataverseName, getTargetFeed);
         String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
-        FeedPolicyEntity policy = metadataProvider.findFeedPolicy(dataverseName, policyName);
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        FeedPolicyEntity policy = metadataProvider.findFeedPolicy(database, dataverseName, policyName);
         if (policy == null) {
             policy = BuiltinFeedPolicies.getFeedPolicy(policyName);
             if (policy == null) {
@@ -122,11 +124,13 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             String subscriptionLocation, MetadataProvider metadataProvider, FeedPolicyEntity feedPolicy,
             String outputType, String locations, LogicalVariable recordVar, IOptimizationContext context,
             List<LogicalVariable> pkVars) throws AlgebricksException {
-        Dataset dataset = metadataProvider.findDataset(id.getDataverseName(), targetDataset);
-        ARecordType feedOutputType = (ARecordType) metadataProvider.findType(id.getDataverseName(), outputType);
-        Feed sourceFeed = metadataProvider.findFeed(id.getDataverseName(), sourceFeedName);
+        String database = MetadataUtil.resolveDatabase(null, id.getDataverseName());
+        Dataset dataset = metadataProvider.findDataset(database, id.getDataverseName(), targetDataset);
+        ARecordType feedOutputType =
+                (ARecordType) metadataProvider.findType(database, id.getDataverseName(), outputType);
+        Feed sourceFeed = metadataProvider.findFeed(database, id.getDataverseName(), sourceFeedName);
         FeedConnection feedConnection =
-                metadataProvider.findFeedConnection(id.getDataverseName(), sourceFeedName, targetDataset);
+                metadataProvider.findFeedConnection(database, id.getDataverseName(), sourceFeedName, targetDataset);
         ARecordType metaType = null;
         // Does dataset have meta?
         if (dataset.hasMetaPart()) {
@@ -135,7 +139,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
                 throw new AlgebricksException(
                         "Feed to " + dataset(SINGULAR) + " with metadata doesn't have meta type specified");
             }
-            metaType = (ARecordType) metadataProvider.findType(id.getDataverseName(), metaTypeName);
+            metaType = (ARecordType) metadataProvider.findType(database, id.getDataverseName(), metaTypeName);
         }
         // Is a change feed?
         List<IAType> pkTypes = null;
@@ -189,7 +193,8 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             return BuiltinType.ANY;
         }
         MetadataProvider metadata = (MetadataProvider) mp;
-        IAType outputType = metadata.findType(dataverseName, outputTypeName);
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        IAType outputType = metadata.findType(database, dataverseName, outputTypeName);
         if (outputType == null) {
             throw new AlgebricksException("Unknown type " + outputTypeName);
         }

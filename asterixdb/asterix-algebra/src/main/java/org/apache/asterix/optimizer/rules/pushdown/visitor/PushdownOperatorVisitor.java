@@ -31,6 +31,7 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
@@ -212,7 +213,8 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataverseName dataverse = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
-        return mp.findDataset(dataverse, datasetName);
+        String database = MetadataUtil.resolveDatabase(null, dataverse);
+        return mp.findDataset(database, dataverse, datasetName);
     }
 
     /**

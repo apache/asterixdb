@@ -39,6 +39,7 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.IFunctionToDataSourceRewriter;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.ARecordType;
@@ -146,7 +147,9 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         AbstractFunctionCallExpression datasetFnCall = (AbstractFunctionCallExpression) expression;
         MetadataProvider metadata = (MetadataProvider) mp;
         Dataset dataset = fetchDataset(metadata, datasetFnCall);
-        IAType type = metadata.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        IAType type =
+                metadata.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         if (type == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, datasetFnCall.getSourceLocation(),
                     "No type for " + dataset() + " " + dataset.getDatasetName());
@@ -158,10 +161,11 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
             throws CompilationException {
         DatasetFullyQualifiedName datasetReference = FunctionUtil.parseDatasetFunctionArguments(datasetFnCall);
         DataverseName dataverseName = datasetReference.getDataverseName();
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = datasetReference.getDatasetName();
         Dataset dataset;
         try {
-            dataset = metadataProvider.findDataset(dataverseName, datasetName);
+            dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         } catch (CompilationException e) {
             throw e;
         } catch (AlgebricksException e) {

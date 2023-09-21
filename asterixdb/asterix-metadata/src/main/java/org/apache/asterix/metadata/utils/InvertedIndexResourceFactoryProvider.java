@@ -129,8 +129,8 @@ public class InvertedIndexResourceFactoryProvider implements IResourceFactoryPro
                 getTokenComparatorFactories(dataset, index, recordType, metaType);
         IBinaryTokenizerFactory tokenizerFactory = getTokenizerFactory(dataset, index, recordType, metaType);
         IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory =
-                FullTextUtil.fetchFilterAndCreateConfigEvaluator(mdProvider, index.getDataverseName(),
-                        indexDetails.getFullTextConfigName());
+                FullTextUtil.fetchFilterAndCreateConfigEvaluator(mdProvider, index.getDatabaseName(),
+                        index.getDataverseName(), indexDetails.getFullTextConfigName());
 
         ITypeTraitProvider typeTraitProvider = mdProvider.getDataFormat().getTypeTraitProvider();
         return new LSMInvertedIndexLocalResourceFactory(storageManager, typeTraits, cmpFactories, filterTypeTraits,

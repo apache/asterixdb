@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.utils.FullTextUtil;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
@@ -185,9 +186,12 @@ public class FullTextContainsParameterCheckAndSetRule implements IAlgebraicRewri
                 }
 
                 MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-                DataverseName dataverseName = metadataProvider.getDefaultDataverseName();
-                funcExpr.setOpaqueParameters(new Object[] { FullTextUtil
-                        .fetchFilterAndCreateConfigEvaluator(metadataProvider, dataverseName, ftConfigName) });
+                Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
+                String database = defaultDataverse.getDatabaseName();
+                DataverseName dataverseName = defaultDataverse.getDataverseName();
+                funcExpr.setOpaqueParameters(
+                        new Object[] { FullTextUtil.fetchFilterAndCreateConfigEvaluator(metadataProvider, database,
+                                dataverseName, ftConfigName) });
                 // Resets the last argument.
                 funcExpr.getArguments().clear();
                 funcExpr.getArguments().addAll(newExprs);

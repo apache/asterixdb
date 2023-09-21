@@ -24,6 +24,7 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -46,9 +47,10 @@ public class StorageComponentsRewriter extends FunctionRewriter {
             throws AlgebricksException {
         SourceLocation loc = f.getSourceLocation();
         DataverseName dataverseName = getDataverseName(loc, f.getArguments(), 0);
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = getString(loc, f.getArguments(), 1);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName, dataverseName);
         }

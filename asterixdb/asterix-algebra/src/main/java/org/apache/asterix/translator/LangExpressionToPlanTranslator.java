@@ -88,6 +88,7 @@ import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
@@ -197,15 +198,19 @@ abstract class LangExpressionToPlanTranslator
 
     public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
-        Dataset dataset = metadataProvider.findDataset(stmt.getDataverseName(), stmt.getDatasetName());
+        String database = MetadataUtil.resolveDatabase(null, stmt.getDataverseName());
+        Dataset dataset = metadataProvider.findDataset(database, stmt.getDataverseName(), stmt.getDatasetName());
         if (dataset == null) {
             // This would never happen since we check for this in AqlTranslator
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, stmt.getDatasetName(),
                     stmt.getDataverseName());
         }
-        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        IAType metaItemType =
-                metadataProvider.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
+        IAType itemType = metadataProvider.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
+                dataset.getMetaItemTypeName());
         itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
         DatasetDataSource targetDatasource =
@@ -719,7 +724,8 @@ abstract class LangExpressionToPlanTranslator
 
     protected DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, DataverseName dataverseName,
             String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
-        Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                     dataverseName);
@@ -729,10 +735,13 @@ abstract class LangExpressionToPlanTranslator
                     "Cannot write output to an external " + dataset());
         }
         DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
-        IAType itemType = metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        IAType metaItemType =
-                metadataProvider.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
-        itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
+        IAType itemType = metadataProvider.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
+                dataset.getMetaItemTypeName());
+        itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
         INodeDomain domain = metadataProvider.findNodeDomain(dataset.getNodeGroupName());
         return new DatasetDataSource(sourceId, dataset, itemType, metaItemType, DataSource.Type.INTERNAL_DATASET,

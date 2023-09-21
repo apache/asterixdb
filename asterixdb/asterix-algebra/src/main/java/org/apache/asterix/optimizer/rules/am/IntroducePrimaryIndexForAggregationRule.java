@@ -30,6 +30,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
@@ -167,8 +168,10 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 0);
             DataverseName dataverseName = DataverseName
                     .createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(functionCallExpression, 2));
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
             String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 3);
-            Index index = ((MetadataProvider) metadataProvider).getIndex(dataverseName, datasetName, indexName);
+            Index index =
+                    ((MetadataProvider) metadataProvider).getIndex(database, dataverseName, datasetName, indexName);
             if (!index.isPrimaryIndex()) {
                 return null;
             }
@@ -283,11 +286,13 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (originalBTreeParameters.isEqCondition()) {
                 return null;
             }
-            dataset = mp.findDataset(originalBTreeParameters.getDataverseName(),
+            String database = MetadataUtil.resolveDatabase(null, originalBTreeParameters.getDataverseName());
+            dataset = mp.findDataset(database, originalBTreeParameters.getDataverseName(),
                     originalBTreeParameters.getDatasetName());
         }
         // #2. get all indexes and look for the primary one
-        List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexes =
+                mp.getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         for (Index index : indexes) {
             if (index.isPrimaryKeyIndex()) {
                 return Pair.of(dataset, index);

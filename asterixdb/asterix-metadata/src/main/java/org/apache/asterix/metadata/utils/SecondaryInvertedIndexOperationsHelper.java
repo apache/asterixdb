@@ -68,7 +68,7 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
     private IBinaryComparatorFactory[] tokenComparatorFactories;
     private ITypeTraits[] tokenTypeTraits;
     private IBinaryTokenizerFactory tokenizerFactory;
-    private IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory;
+    private final IFullTextConfigEvaluatorFactory fullTextConfigEvaluatorFactory;
     // For tokenization, sorting and loading. Represents <token, primary keys>.
     private int numTokenKeyPairFields;
     private IBinaryComparatorFactory[] tokenKeyPairComparatorFactories;
@@ -82,7 +82,8 @@ public class SecondaryInvertedIndexOperationsHelper extends SecondaryTreeIndexOp
             SourceLocation sourceLoc) throws AlgebricksException {
         super(dataset, index, metadataProvider, sourceLoc);
         this.fullTextConfigEvaluatorFactory = FullTextUtil.fetchFilterAndCreateConfigEvaluator(metadataProvider,
-                index.getDataverseName(), ((Index.TextIndexDetails) index.getIndexDetails()).getFullTextConfigName());
+                index.getDatabaseName(), index.getDataverseName(),
+                ((Index.TextIndexDetails) index.getIndexDetails()).getFullTextConfigName());
     }
 
     @Override

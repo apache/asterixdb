@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
@@ -261,7 +262,8 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
             MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
             DataSourceId dataSourceId =
                     new DataSourceId(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
-            Dataset dataset = mp.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+            String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
+            Dataset dataset = mp.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
             IDataSourceIndex<String, DataSourceId> dsi =
                     mp.findDataSourceIndex(jobGenParams.getIndexName(), dataSourceId);
             INodeDomain storageDomain = mp.findNodeDomain(dataset.getNodeGroupName());

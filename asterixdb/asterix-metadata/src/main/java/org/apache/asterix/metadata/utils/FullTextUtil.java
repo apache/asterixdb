@@ -30,14 +30,14 @@ import com.google.common.collect.ImmutableList;
 
 public class FullTextUtil {
     public static IFullTextConfigEvaluatorFactory fetchFilterAndCreateConfigEvaluator(MetadataProvider metadataProvider,
-            DataverseName dataverseName, String configName) throws AlgebricksException {
+            String database, DataverseName dataverseName, String configName) throws AlgebricksException {
         FullTextConfigDescriptor configDescriptor =
-                metadataProvider.findFullTextConfig(dataverseName, configName).getFullTextConfig();
+                metadataProvider.findFullTextConfig(database, dataverseName, configName).getFullTextConfig();
 
         ImmutableList.Builder<AbstractFullTextFilterDescriptor> filterDescriptorsBuilder = ImmutableList.builder();
         for (String filterName : configDescriptor.getFilterNames()) {
             filterDescriptorsBuilder
-                    .add(metadataProvider.findFullTextFilter(dataverseName, filterName).getFullTextFilter());
+                    .add(metadataProvider.findFullTextFilter(database, dataverseName, filterName).getFullTextFilter());
         }
 
         return configDescriptor.createEvaluatorFactory(filterDescriptorsBuilder.build());

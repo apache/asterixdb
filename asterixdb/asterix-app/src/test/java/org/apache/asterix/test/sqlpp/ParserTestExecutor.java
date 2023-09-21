@@ -153,33 +153,38 @@ public class ParserTestExecutor extends TestExecutor {
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
-            when(metadataProvider.findDataverse(Mockito.<DataverseName> any())).thenAnswer(new Answer<Dataverse>() {
-                @Override
-                public Dataverse answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    final Dataverse mockDataverse = mock(Dataverse.class);
-                    when(mockDataverse.getDataverseName()).thenReturn((DataverseName) args[0]);
-                    return mockDataverse;
-                }
-            });
-            when(metadataProvider.findDataset(any(DataverseName.class), anyString())).thenAnswer(new Answer<Dataset>() {
-                @Override
-                public Dataset answer(InvocationOnMock invocation) {
-                    Object[] args = invocation.getArguments();
-                    final Dataset mockDataset = mock(Dataset.class);
-                    when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
-                    when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
-                    return mockDataset;
-                }
-            });
-            when(metadataProvider.findDataset(any(DataverseName.class), anyString(), anyBoolean()))
+            when(metadataProvider.findDataverse(anyString(), Mockito.<DataverseName> any()))
+                    .thenAnswer(new Answer<Dataverse>() {
+                        @Override
+                        public Dataverse answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            final Dataverse mockDataverse = mock(Dataverse.class);
+                            when(mockDataverse.getDatabaseName()).thenReturn((String) args[0]);
+                            when(mockDataverse.getDataverseName()).thenReturn((DataverseName) args[1]);
+                            return mockDataverse;
+                        }
+                    });
+            when(metadataProvider.findDataset(anyString(), any(DataverseName.class), anyString()))
                     .thenAnswer(new Answer<Dataset>() {
                         @Override
                         public Dataset answer(InvocationOnMock invocation) {
                             Object[] args = invocation.getArguments();
                             final Dataset mockDataset = mock(Dataset.class);
-                            when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[0]);
-                            when(mockDataset.getDatasetName()).thenReturn((String) args[1]);
+                            when(mockDataset.getDatabaseName()).thenReturn((String) args[0]);
+                            when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[1]);
+                            when(mockDataset.getDatasetName()).thenReturn((String) args[2]);
+                            return mockDataset;
+                        }
+                    });
+            when(metadataProvider.findDataset(anyString(), any(DataverseName.class), anyString(), anyBoolean()))
+                    .thenAnswer(new Answer<Dataset>() {
+                        @Override
+                        public Dataset answer(InvocationOnMock invocation) {
+                            Object[] args = invocation.getArguments();
+                            final Dataset mockDataset = mock(Dataset.class);
+                            when(mockDataset.getDatabaseName()).thenReturn((String) args[0]);
+                            when(mockDataset.getDataverseName()).thenReturn((DataverseName) args[1]);
+                            when(mockDataset.getDatasetName()).thenReturn((String) args[2]);
                             return mockDataset;
                         }
                     });

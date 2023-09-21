@@ -126,7 +126,7 @@ public class DatasetDataSource extends DataSource {
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         String itemTypeName = dataset.getItemTypeName();
-        String itemTypeDatabase = null;
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
         IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                 itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
         switch (dataset.getDatasetType()) {
@@ -158,7 +158,8 @@ public class DatasetDataSource extends DataSource {
                 ARecordType datasetType = (ARecordType) itemType;
                 ARecordType metaItemType = null;
                 if (dataset.hasMetaPart()) {
-                    String metaItemTypeDatabase = null;
+                    String metaItemTypeDatabase =
+                            MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
                     metaItemType = (ARecordType) MetadataManager.INSTANCE
                             .getDatatype(metadataProvider.getMetadataTxnContext(), metaItemTypeDatabase,
                                     dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName())

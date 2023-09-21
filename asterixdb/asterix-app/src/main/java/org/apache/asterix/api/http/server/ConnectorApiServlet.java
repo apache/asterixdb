@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.utils.FlushDatasetUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -91,6 +92,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                 return;
             }
 
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
             // Metadata transaction begins.
             MetadataManager.INSTANCE.init();
@@ -99,7 +101,7 @@ public class ConnectorApiServlet extends AbstractServlet {
             MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
             try {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName);
+                Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
                 if (dataset == null) {
                     jsonResponse.put("error", StringUtils.capitalize(dataset()) + " " + datasetName
                             + " does not exist in " + dataverse() + " " + dataverseName);
@@ -108,8 +110,9 @@ public class ConnectorApiServlet extends AbstractServlet {
                     return;
                 }
                 FileSplit[] fileSplits = metadataProvider.splitsForIndex(mdTxnCtx, dataset, datasetName);
-                ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(),
-                        dataset.getItemTypeName());
+                String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+                ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
+                        dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
                 List<List<String>> primaryKeys = dataset.getPrimaryKeys();
                 StringBuilder pkStrBuf = new StringBuilder();
                 for (List<String> keys : primaryKeys) {
@@ -123,7 +126,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                         hcc.getNodeControllerInfos());
 
                 // Flush the cached contents of the dataset to file system.
-                FlushDatasetUtil.flushDataset(hcc, metadataProvider, dataverseName, datasetName);
+                FlushDatasetUtil.flushDataset(hcc, metadataProvider, database, dataverseName, datasetName);
 
                 // Metadata transaction commits.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

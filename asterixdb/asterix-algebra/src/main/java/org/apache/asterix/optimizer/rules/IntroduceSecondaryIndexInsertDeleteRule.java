@@ -44,6 +44,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.AString;
@@ -168,8 +169,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         DataSource datasetSource = (DataSource) primaryIndexModificationOp.getDataSource();
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataverseName dataverseName = datasetSource.getId().getDataverseName();
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = datasetSource.getId().getDatasourceName();
-        Dataset dataset = mp.findDataset(dataverseName, datasetName);
+        Dataset dataset = mp.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
                     dataverseName);
@@ -180,7 +182,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         // Create operators for secondary index insert / delete.
         String itemTypeName = dataset.getItemTypeName();
-        IAType itemType = mp.findType(dataset.getItemTypeDataverseName(), itemTypeName);
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        IAType itemType = mp.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Only record types can be indexed.");
         }
@@ -188,11 +191,14 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         // meta type
         ARecordType metaType = null;
         if (dataset.hasMetaPart()) {
-            metaType = (ARecordType) mp.findType(dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+            String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
+            metaType = (ARecordType) mp.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
+                    dataset.getMetaItemTypeName());
         }
         recType = (ARecordType) mp.findTypeForDatasetWithoutType(recType, metaType, dataset);
 
-        List<Index> indexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> indexes =
+                mp.getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         Stream<Index> indexStream = indexes.stream();
         indexStream = indexStream.filter(index -> index.getIndexType() != IndexType.SAMPLE);
         if (primaryIndexModificationOp.getOperation() == Kind.INSERT && !primaryIndexModificationOp.isBulkload()) {

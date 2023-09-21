@@ -54,6 +54,7 @@ import org.apache.asterix.lang.sqlpp.visitor.CheckDatasetOnlyResolutionVisitor;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppExpressionScopingVisitor;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -266,14 +267,16 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             SourceLocation sourceLoc) throws CompilationException {
         try {
             Boolean viaSynonym = false;
-            Triple<DataverseName, String, Boolean> dsName =
-                    metadataProvider.resolveDatasetNameUsingSynonyms(dataverseName, datasetName, includingViews);
+            String database = MetadataUtil.resolveDatabase(null, dataverseName);
+            Triple<DataverseName, String, Boolean> dsName = metadataProvider.resolveDatasetNameUsingSynonyms(database,
+                    dataverseName, datasetName, includingViews);
             if (dsName != null) {
                 dataverseName = dsName.first;
+                database = MetadataUtil.resolveDatabase(null, dataverseName);
                 datasetName = dsName.second;
                 viaSynonym = dsName.third;
             }
-            Dataset dataset = metadataProvider.findDataset(dataverseName, datasetName, includingViews);
+            Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName, includingViews);
             return dataset == null ? null : new Pair<>(dataset, viaSynonym);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());

@@ -130,8 +130,9 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     @Override
     public void init() throws AlgebricksException {
-        itemType =
-                (ARecordType) metadataProvider.findType(dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        String database = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        itemType = (ARecordType) metadataProvider.findType(database, dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
         metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, dataset);
 

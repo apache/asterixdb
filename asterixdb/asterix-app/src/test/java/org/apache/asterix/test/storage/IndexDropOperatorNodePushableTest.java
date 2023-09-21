@@ -38,6 +38,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
+import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
@@ -154,7 +155,8 @@ public class IndexDropOperatorNodePushableTest {
             MetadataProvider metadataProver = MetadataProvider.create(appCtx, null);
             metadataProver.setMetadataTxnContext(mdTxn);
             final DataverseName defaultDv = MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName();
-            final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, null, defaultDv, datasetName);
+            final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, MetadataConstants.DEFAULT_DATABASE,
+                    defaultDv, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,
                     indexName, Arrays.asList("asterix_nc1"));

@@ -34,6 +34,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -128,8 +129,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataSourceId asid = ((IDataSource<DataSourceId>) scan.getDataSource()).getId();
-
-        Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
+        String database = MetadataUtil.resolveDatabase(null, asid.getDataverseName());
+        Dataset dataset = mp.findDataset(database, asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
                     asid.getDatasourceName(), asid.getDataverseName());
@@ -140,7 +141,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         final Integer pos = ConstantExpressionUtil.getIntConstant(accessFun.getArguments().get(1).getValue());
         if (pos != null) {
             String tName = dataset.getItemTypeName();
-            IAType t = mp.findType(dataset.getItemTypeDataverseName(), tName);
+            String tDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+            IAType t = mp.findType(tDatabase, dataset.getItemTypeDataverseName(), tName);
             if (t.getTypeTag() != ATypeTag.OBJECT) {
                 return false;
             }
@@ -150,7 +152,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             }
         }
 
-        List<Index> datasetIndexes = mp.getDatasetIndexes(dataset.getDataverseName(), dataset.getDatasetName());
+        List<Index> datasetIndexes =
+                mp.getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         boolean hasSecondaryIndex = false;
         for (Index index : datasetIndexes) {
             if (index.isSecondaryIndex()) {
@@ -317,7 +320,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             }
             DataSourceId asid = dataSource.getId();
             MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-            Dataset dataset = mp.findDataset(asid.getDataverseName(), asid.getDatasourceName());
+            String database = MetadataUtil.resolveDatabase(null, asid.getDataverseName());
+            Dataset dataset = mp.findDataset(database, asid.getDataverseName(), asid.getDatasourceName());
             if (dataset == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
                         asid.getDatasourceName(), asid.getDataverseName());
@@ -333,7 +337,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
 
             // data part
             String dataTypeName = dataset.getItemTypeName();
-            IAType dataType = mp.findType(dataset.getItemTypeDataverseName(), dataTypeName);
+            String dataTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+            IAType dataType = mp.findType(dataTypeDatabase, dataset.getItemTypeDataverseName(), dataTypeName);
             if (dataType.getTypeTag() != ATypeTag.OBJECT) {
                 return false;
             }

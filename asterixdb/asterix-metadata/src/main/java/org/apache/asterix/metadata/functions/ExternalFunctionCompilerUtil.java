@@ -28,6 +28,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.BuiltinType;
@@ -136,7 +137,8 @@ public class ExternalFunctionCompilerUtil {
         }
         IAType type = BuiltinTypeMap.getBuiltinType(typeName);
         if (type == null) {
-            type = metadataProvider.findType(typeSignature.getDataverseName(), typeName);
+            String database = MetadataUtil.resolveDatabase(null, typeSignature.getDataverseName());
+            type = metadataProvider.findType(database, typeSignature.getDataverseName(), typeName);
         }
         return type;
     }

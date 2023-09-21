@@ -75,6 +75,8 @@ public class DatasourceAdapterTupleTranslator extends AbstractTupleTranslator<Da
                             ((AString) adapterRecord.getValueByPos(libraryDataverseNameIdx)).getStringValue())
                     : dataverseName;
             libraryDatabase = MetadataUtil.resolveDatabase(libraryDatabase, libraryDataverseName);
+        } else {
+            libraryDatabase = MetadataUtil.resolveDatabase(libraryDatabase, dataverseName);
         }
 
         return new DatasourceAdapter(new AdapterIdentifier(databaseName, dataverseName, adapterName), adapterType,

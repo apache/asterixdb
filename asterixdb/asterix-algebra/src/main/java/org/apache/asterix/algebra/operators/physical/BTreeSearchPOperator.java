@@ -32,6 +32,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.IndexUtil;
+import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
@@ -126,7 +127,9 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        Dataset dataset = metadataProvider.findDataset(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
+        Dataset dataset =
+                metadataProvider.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         ITupleFilterFactory tupleFilterFactory = null;
         long outputLimit = -1;
@@ -240,7 +243,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
                     }
                     propsLocal.add(new LocalOrderProperty(orderColumns));
                     MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-                    Dataset dataset = mp.findDataset(searchIndex.getDataverseName(), searchIndex.getDatasetName());
+                    Dataset dataset = mp.findDataset(searchIndex.getDatabaseName(), searchIndex.getDataverseName(),
+                            searchIndex.getDatasetName());
                     PartitioningProperties partitioningProperties = mp.getPartitioningProperties(dataset);
                     pv[0] = new StructuralPropertiesVector(UnorderedPartitionedProperty.ofPartitionsMap(searchKeyVars,
                             domain, partitioningProperties.getComputeStorageMap()), propsLocal);
