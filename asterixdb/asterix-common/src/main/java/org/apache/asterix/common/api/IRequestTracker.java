@@ -75,4 +75,10 @@ public interface IRequestTracker {
      * @return the recently completed requests
      */
     Collection<IClientRequest> getCompletedRequests();
+
+    /**
+     *
+     * @return the total number of requests since cluster start/restart
+     */
+    long getTotalNumberOfRequests();
 }
