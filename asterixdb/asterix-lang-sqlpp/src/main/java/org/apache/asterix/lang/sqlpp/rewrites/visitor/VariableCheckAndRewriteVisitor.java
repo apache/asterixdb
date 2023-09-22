@@ -284,9 +284,10 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
     }
 
     private ViewDecl findDeclaredView(DataverseName dataverseName, String viewName) {
+        String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
         Map<DatasetFullyQualifiedName, ViewDecl> declaredViews = context.getDeclaredViews();
         return declaredViews.isEmpty() ? null
-                : declaredViews.get(new DatasetFullyQualifiedName(dataverseName, viewName));
+                : declaredViews.get(new DatasetFullyQualifiedName(databaseName, dataverseName, viewName));
     }
 
     @Override

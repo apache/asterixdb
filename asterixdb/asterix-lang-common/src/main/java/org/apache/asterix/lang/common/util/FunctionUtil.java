@@ -278,7 +278,8 @@ public class FunctionUtil {
         if (datasetName == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
-        return new DatasetFullyQualifiedName(dataverseName, datasetName);
+        String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
+        return new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName);
     }
 
     private static String getStringConstant(Mutable<ILogicalExpression> arg) {

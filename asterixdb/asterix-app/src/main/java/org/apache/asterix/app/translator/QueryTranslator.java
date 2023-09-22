@@ -2475,7 +2475,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            DatasetFullyQualifiedName viewQualifiedName = new DatasetFullyQualifiedName(dataverseName, viewName);
+            DatasetFullyQualifiedName viewQualifiedName =
+                    new DatasetFullyQualifiedName(database, dataverseName, viewName);
 
             Datatype itemTypeEntity = null;
             boolean itemTypeIsInline = false;
@@ -2530,7 +2531,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             }
                             ViewDetails refViewDetails = (ViewDetails) refDataset.getDatasetDetails();
                             refDatasetType = refDataset.getDatasetType();
-                            refQualifiedName = new DatasetFullyQualifiedName(refDataverseName, refDatasetName);
+                            refQualifiedName =
+                                    new DatasetFullyQualifiedName(refDatabase, refDataverseName, refDatasetName);
                             refPrimaryKeyFields = refViewDetails.getPrimaryKeyFields();
                         }
 

@@ -213,7 +213,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
         this.hints = hints;
         this.rebalanceCount = rebalanceCount;
         this.compressionScheme = compressionScheme;
-        datasetFullyQualifiedName = new DatasetFullyQualifiedName(dataverseName, datasetName);
+        this.datasetFullyQualifiedName = new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName);
         this.datasetFormatInfo = datasetFormatInfo;
     }
 

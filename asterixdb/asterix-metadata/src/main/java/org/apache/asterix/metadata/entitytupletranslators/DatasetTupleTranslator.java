@@ -352,8 +352,10 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
                         String refDatasetName =
                                 ((AString) foreignKeyRecord.getValueByPos(refDatasetNameFieldPos)).getStringValue();
 
+                        //TODO(DB):
+                        String refDatabase = MetadataUtil.resolveDatabase(null, refDataverseName);
                         foreignKeys.add(new ViewDetails.ForeignKey(foreignKeyFields,
-                                new DatasetFullyQualifiedName(refDataverseName, refDatasetName)));
+                                new DatasetFullyQualifiedName(refDatabase, refDataverseName, refDatasetName)));
                     }
                 }
 
