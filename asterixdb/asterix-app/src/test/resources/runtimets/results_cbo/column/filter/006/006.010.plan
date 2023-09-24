@@ -1,20 +1,20 @@
-distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+distribute result [$$51] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$51]) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+    project ([$$51]) [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$51] <- [{"$1": $$53}] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+      assign [$$51] <- [{"$1": $$53}] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+        aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+            aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
             -- AGGREGATE  |PARTITIONED|
-              select ($$44) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+              select ($$44) [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
               -- STREAM_SELECT  |PARTITIONED|
-                project ([$$44]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                project ([$$44]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                 -- STREAM_PROJECT  |PARTITIONED|
                   subplan {
                             aggregate [$$44] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -27,17 +27,17 @@ distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                   -- UNNEST  |LOCAL|
                                     nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                         } [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                         } [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                   -- SUBPLAN  |PARTITIONED|
-                    project ([$$54]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                    project ([$$54]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$54] <- [$$c.getField("geo").getField("coordinates")] [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                      assign [$$54] <- [$$c.getField("geo").getField("coordinates")] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$c]) [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                        project ([$$c]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 1.0]
+                          exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$52, $$c] <- test.ColumnDataset project ({geo:{coordinates:[{lon:any}]}}) [cardinality: 8.0, op-cost: 1.0, total-cost: 1.0]
+                            data-scan []<-[$$52, $$c] <- test.ColumnDataset project ({geo:{coordinates:[{lon:any}]}}) [cardinality: 8.0, op-cost: 8.0, total-cost: 8.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

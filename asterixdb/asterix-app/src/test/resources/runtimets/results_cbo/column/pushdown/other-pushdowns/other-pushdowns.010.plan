@@ -28,25 +28,25 @@ distribute result [$$68] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   select (eq(lowercase($$70), "string")) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                   -- STREAM_SELECT  |PARTITIONED|
-                    project ([$$75, $$70]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                    project ([$$75, $$70]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$75, $$70] <- [$$ht.getField("indices"), $$ht.getField("display_url")] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                      assign [$$75, $$70] <- [$$ht.getField("indices"), $$ht.getField("display_url")] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$ht]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                        project ([$$ht]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          unnest $$ht <- scan-collection($$74) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                          unnest $$ht <- scan-collection($$74) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                           -- UNNEST  |PARTITIONED|
-                            project ([$$74]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                            project ([$$74]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                             -- STREAM_PROJECT  |PARTITIONED|
-                              assign [$$74] <- [$$p1.getField("entities").getField("urls")] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                              assign [$$74] <- [$$p1.getField("entities").getField("urls")] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                               -- ASSIGN  |PARTITIONED|
-                                project ([$$p1]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                                project ([$$p1]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   select (neq($$71, "0")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |PARTITIONED|
-                                    exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.1]
+                                    exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      data-scan []<-[$$71, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any,indices:any}]}}) filter on: eq(lowercase(scan-collection($$p1.getField("entities").getField("urls")).getField("display_url")), "string") [cardinality: 2.0, op-cost: 2.1, total-cost: 2.1]
+                                      data-scan []<-[$$71, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any,indices:any}]}}) filter on: eq(lowercase(scan-collection($$p1.getField("entities").getField("urls")).getField("display_url")), "string") [cardinality: 2.1, op-cost: 2.1, total-cost: 2.1]
                                       -- DATASOURCE_SCAN  |PARTITIONED|
                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

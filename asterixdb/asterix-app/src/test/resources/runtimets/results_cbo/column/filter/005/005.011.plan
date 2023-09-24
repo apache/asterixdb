@@ -1,32 +1,32 @@
-distribute result [$$51] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+distribute result [$$51] [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+  exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$51]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+    project ([$$51]) [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$51] <- [{"$1": $$53}] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+      assign [$$51] <- [{"$1": $$53}] [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+        aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+          exchange [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$55] <- [agg-sql-count(1)] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+            aggregate [$$55] <- [agg-sql-count(1)] [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
             -- AGGREGATE  |PARTITIONED|
-              select (or(gt(numeric-add($$D, 1), 2018), eq(substring($$D, 0, 4), "2011"))) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+              select (or(gt(numeric-add($$D, 1), 2018), eq(substring($$D, 0, 4), "2011"))) [cardinality: 8.0, op-cost: 0.0, total-cost: 30.0]
               -- STREAM_SELECT  |PARTITIONED|
-                project ([$$D]) [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                project ([$$D]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  unnest $$D <- scan-collection($$54) [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                  unnest $$D <- scan-collection($$54) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                   -- UNNEST  |PARTITIONED|
-                    project ([$$54]) [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                    project ([$$54]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$54] <- [$$C.getField("dates")] [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                      assign [$$54] <- [$$C.getField("dates")] [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                        project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 8.0]
+                          exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$52, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on: or(gt(numeric-add(scan-collection($$C.getField("dates")), 1), 2018), eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2011")) [cardinality: 30.0, op-cost: 8.0, total-cost: 8.0]
+                            data-scan []<-[$$52, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on: or(gt(numeric-add(scan-collection($$C.getField("dates")), 1), 2018), eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2011")) [cardinality: 30.0, op-cost: 30.0, total-cost: 30.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

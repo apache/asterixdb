@@ -1,20 +1,20 @@
-distribute result [$$52] [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+distribute result [$$52] [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+  exchange [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$52]) [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+    project ([$$52]) [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$52] <- [{"$1": $$55}] [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+      assign [$$52] <- [{"$1": $$55}] [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$55] <- [agg-sql-sum($$58)] [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+        aggregate [$$55] <- [agg-sql-sum($$58)] [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+          exchange [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+            aggregate [$$58] <- [agg-sql-count(1)] [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
             -- AGGREGATE  |PARTITIONED|
-              select ($$45) [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
+              select ($$45) [cardinality: 11.0, op-cost: 0.0, total-cost: 30.0]
               -- STREAM_SELECT  |PARTITIONED|
-                project ([$$45]) [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                project ([$$45]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                 -- STREAM_PROJECT  |PARTITIONED|
                   subplan {
                             aggregate [$$45] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -27,17 +27,17 @@ distribute result [$$52] [cardinality: 11.0, op-cost: 0.0, total-cost: 11.0]
                                   -- UNNEST  |LOCAL|
                                     nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                         } [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                         } [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                   -- SUBPLAN  |PARTITIONED|
-                    project ([$$56]) [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                    project ([$$56]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$56] <- [$$C.getField("dates")] [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                      assign [$$56] <- [$$C.getField("dates")] [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                       -- ASSIGN  |PARTITIONED|
-                        project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                        project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 11.0]
+                          exchange [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$54, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on: or(eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2011"), eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2016")) [cardinality: 30.0, op-cost: 11.0, total-cost: 11.0]
+                            data-scan []<-[$$54, $$C] <- TestYelp.YelpCheckin project ({dates:[any]}) filter on: or(eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2011"), eq(substring(scan-collection($$C.getField("dates")), 0, 4), "2016")) [cardinality: 30.0, op-cost: 30.0, total-cost: 30.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

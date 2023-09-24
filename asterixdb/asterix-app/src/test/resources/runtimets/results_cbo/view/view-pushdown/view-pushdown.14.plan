@@ -1,30 +1,30 @@
-distribute result [$$69] [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+distribute result [$$69] [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 3 [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+    limit 3 [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$69]) [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+      project ([$$69]) [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$69] <- [{"id": $$71, "review": $$75}] [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+        assign [$$69] <- [{"id": $$71, "review": $$75}] [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
         -- ASSIGN  |PARTITIONED|
-          exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+          exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
           -- SORT_MERGE_EXCHANGE [$$71(ASC) ]  |PARTITIONED|
-            limit 3 [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+            limit 3 [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+              exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (topK: 3) (ASC, $$71) [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+                order (topK: 3) (ASC, $$71) [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
                 -- STABLE_SORT [topK: 3] [$$71(ASC)]  |PARTITIONED|
-                  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+                  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    project ([$$71, $$75]) [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+                    project ([$$71, $$75]) [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
                     -- STREAM_PROJECT  |PARTITIONED|
-                      assign [$$75] <- [$$d.getField(1)] [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+                      assign [$$75] <- [$$d.getField(1)] [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
                       -- ASSIGN  |PARTITIONED|
-                        exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 2.1]
+                        exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$71, $$d] <- test.DatasetWithKnownField [cardinality: 20.0, op-cost: 2.1, total-cost: 2.1]
+                          data-scan []<-[$$71, $$d] <- test.DatasetWithKnownField [cardinality: 20.0, op-cost: 20.0, total-cost: 20.0]
                           -- DATASOURCE_SCAN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

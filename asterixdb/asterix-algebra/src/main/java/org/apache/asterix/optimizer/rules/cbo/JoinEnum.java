@@ -680,10 +680,7 @@ public class JoinEnum {
                     jn.aliases.addAll(jnJ.aliases);
                     Collections.sort(jn.aliases);
                     jn.size = jnI.size + jnJ.size;
-                    jn.cardinality = jn.computeJoinCardinality();
-                    if (jn.cardinality < 2.1) {
-                        jn.cardinality = 2.1; // for keeping CP and HJ cost formulas happy.
-                    }
+                    jn.setCardinality(jn.computeJoinCardinality());
                 } else {
                     addPlansToThisJn = jnNewBits.jnIndex;
                 }
@@ -769,15 +766,14 @@ public class JoinEnum {
                     jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
                 }
                 // multiply by the respective predicate selectivities
-                jn.cardinality = jn.origCardinality * stats.getSelectivity(leafInput, false);
-                if (jn.cardinality < 2.1) {
-                    jn.cardinality = 2.1; // for keeping CP and HJ cost formulas happy.
-                }
+                jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInput, false));
             } else {
                 // could be unnest or assign
                 jn.datasetNames = new ArrayList<>(Collections.singleton("unnestOrAssign"));
                 jn.aliases = new ArrayList<>(Collections.singleton("unnestOrAssign"));
-                jn.origCardinality = jn.cardinality = findInListCard(leafInput);
+                double card = findInListCard(leafInput);
+                jn.setOrigCardinality(card);
+                jn.setCardinality(card);
                 // just a guess
                 jn.size = 10;
             }

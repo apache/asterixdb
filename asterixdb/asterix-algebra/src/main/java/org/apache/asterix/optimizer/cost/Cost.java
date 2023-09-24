@@ -22,6 +22,9 @@ package org.apache.asterix.optimizer.cost;
 public class Cost implements ICost {
 
     public static final double MAX_CARD = 1.0e200;
+
+    // Minimum cardinality for operators is 2.1 to prevent bad plans due to cardinality under estimation errors.
+    public static final double MIN_CARD = 2.1;
     private static final int COST_EQ = 0;
 
     private final double cost;

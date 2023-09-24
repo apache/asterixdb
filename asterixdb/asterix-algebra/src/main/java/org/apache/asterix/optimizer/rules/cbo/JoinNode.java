@@ -123,7 +123,8 @@ public class JoinNode {
     }
 
     protected void setCardinality(double card) {
-        cardinality = card;
+        // Minimum cardinality for operators is MIN_CARD to prevent bad plans due to cardinality under estimation errors.
+        cardinality = Math.max(card, Cost.MIN_CARD);
     }
 
     public double getOrigCardinality() {
@@ -131,7 +132,8 @@ public class JoinNode {
     }
 
     protected void setOrigCardinality(double card) {
-        origCardinality = card;
+        // Minimum cardinality for operators is MIN_CARD to prevent bad plans due to cardinality under estimation errors.
+        origCardinality = Math.max(card, Cost.MIN_CARD);
     }
 
     protected void setAvgDocSize(double avgDocSize) {
@@ -302,6 +304,7 @@ public class JoinNode {
         if (this.applicableJoinConditions.size() >= 3) {
             redundantSel = removeRedundantPred(this.applicableJoinConditions);
         }
+
         // By dividing by redundantSel, we are undoing the earlier multiplication of all the selectivities.
         return joinCard / redundantSel;
     }
