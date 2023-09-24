@@ -4171,6 +4171,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-4">
+        <output-dir compare="Clean-JSON">create-dataset-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
       </compilation-unit>

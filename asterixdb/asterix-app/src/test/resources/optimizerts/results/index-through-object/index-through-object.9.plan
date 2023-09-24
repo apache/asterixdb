@@ -13,7 +13,7 @@
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- BTREE_SEARCH (Test.Users.Users)  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- STABLE_SORT [$$110(ASC)]  |PARTITIONED|
+                              -- STABLE_SORT [$$111(ASC)]  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -29,7 +29,7 @@
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- BTREE_SEARCH (Test.Users.Users)  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- STABLE_SORT [$$114(ASC)]  |PARTITIONED|
+                              -- STABLE_SORT [$$115(ASC)]  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

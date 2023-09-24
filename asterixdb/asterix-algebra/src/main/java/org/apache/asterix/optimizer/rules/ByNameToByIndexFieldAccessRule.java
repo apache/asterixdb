@@ -50,6 +50,12 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
 
+    private final boolean includeNameToIndexRewrite;
+
+    public ByNameToByIndexFieldAccessRule(boolean includeNameToIndexRewrite) {
+        this.includeNameToIndexRewrite = includeNameToIndexRewrite;
+    }
+
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
@@ -86,9 +92,11 @@ public class ByNameToByIndexFieldAccessRule implements IAlgebraicRewriteRule {
             return changed;
         }
         changed |= extractFirstArg(fce, op, context);
-        IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
-        IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
-        changed |= rewriteFieldAccess(exprRef, fce, TypeComputeUtils.getActualType(t));
+        if (includeNameToIndexRewrite) {
+            IVariableTypeEnvironment env = context.getOutputTypeEnvironment(op.getInputs().get(0).getValue());
+            IAType t = (IAType) env.getType(fce.getArguments().get(0).getValue());
+            changed |= rewriteFieldAccess(exprRef, fce, TypeComputeUtils.getActualType(t));
+        }
         return changed;
     }
 

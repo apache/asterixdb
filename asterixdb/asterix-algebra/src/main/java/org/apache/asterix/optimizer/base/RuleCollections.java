@@ -271,13 +271,14 @@ public final class RuleCollections {
         return condPushDownAndJoinInference;
     }
 
-    public static List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection(ICcApplicationContext appCtx) {
+    public static List<IAlgebraicRewriteRule> buildLoadFieldsRuleCollection(ICcApplicationContext appCtx,
+            boolean includeNameToIndexRewrite) {
         List<IAlgebraicRewriteRule> fieldLoads = new LinkedList<>();
         fieldLoads.add(new LoadRecordFieldsRule());
         fieldLoads.add(new PushFieldAccessRule());
         // fieldLoads.add(new ByNameToByHandleFieldAccessRule()); -- disabled
         fieldLoads.add(new ReinferAllTypesRule());
-        fieldLoads.add(new ByNameToByIndexFieldAccessRule());
+        fieldLoads.add(new ByNameToByIndexFieldAccessRule(includeNameToIndexRewrite));
         fieldLoads.add(new RemoveRedundantVariablesRule());
         fieldLoads.add(new AsterixInlineVariablesRule());
         fieldLoads.add(new RemoveUnusedAssignAndAggregateRule());
@@ -360,7 +361,7 @@ public final class RuleCollections {
         // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
         // some rules can push a FieldAccessByName to a place where the name it tries to access is in the closed part.
         // For example, a possible scenario is that a field-access-by-name can be pushed down through UnionAllOperator.
-        planCleanupRules.add(new ByNameToByIndexFieldAccessRule());
+        planCleanupRules.add(new ByNameToByIndexFieldAccessRule(true));
         return planCleanupRules;
     }
 
