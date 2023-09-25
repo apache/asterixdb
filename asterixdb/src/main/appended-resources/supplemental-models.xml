@@ -609,8 +609,8 @@
       <groupId>software.amazon.awssdk.crt</groupId>
       <artifactId>aws-crt</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>0.21.10</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>0.21.10</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>0.27.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>0.27.1</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
