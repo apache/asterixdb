@@ -24,4 +24,4 @@ SELECT count(*) AS customers, city
 FROM Customers c
 WHERE c.age <65
 GROUP BY c.address.city
-ORDER BY sleep(city,1666);
+ORDER BY sleep(city,1667);
