@@ -103,13 +103,13 @@ public class GCSUtils {
             try {
                 builder.setCredentials(GoogleCredentials.getApplicationDefault());
             } catch (IOException ex) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         } else if (jsonCredentials != null) {
             try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
                 builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
             } catch (IOException ex) {
-                throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         } else {
             builder.setCredentials(NoCredentials.getInstance());
@@ -152,7 +152,7 @@ public class GCSUtils {
         } catch (CompilationException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -169,7 +169,7 @@ public class GCSUtils {
         try {
             items = gcs.list(container, options);
         } catch (BaseServiceException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
 
         // Collect the paths to files only

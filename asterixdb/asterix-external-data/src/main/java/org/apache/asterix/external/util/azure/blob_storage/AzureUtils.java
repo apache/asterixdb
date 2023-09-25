@@ -222,7 +222,7 @@ public class AzureUtils {
                         pemCertificate.invoke(certificate, certificateContent, clientCertificatePassword);
                     }
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex.getMessage());
+                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex, ex.getMessage());
                 }
                 builder.credential(certificate.build());
             }
@@ -242,7 +242,7 @@ public class AzureUtils {
         try {
             return builder.buildClient();
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -375,7 +375,7 @@ public class AzureUtils {
                         pemCertificate.invoke(certificate, certificateContent, clientCertificatePassword);
                     }
                 } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ex) {
-                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw new CompilationException(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
                 builder.credential(certificate.build());
             }
@@ -395,7 +395,7 @@ public class AzureUtils {
         try {
             return builder.buildClient();
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -434,7 +434,7 @@ public class AzureUtils {
                 warningCollector.warn(warning);
             }
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
 
         return filesOnly;
@@ -488,7 +488,7 @@ public class AzureUtils {
                 warningCollector.warn(warning);
             }
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
 
         return filesOnly;
@@ -554,7 +554,7 @@ public class AzureUtils {
         } catch (CompilationException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -593,7 +593,7 @@ public class AzureUtils {
         } catch (CompilationException ex) {
             throw ex;
         } catch (Exception ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 

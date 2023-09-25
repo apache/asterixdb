@@ -80,7 +80,8 @@ public abstract class AbstractMultipleInputStream extends AsterixInputStream {
             }
             return result;
         } catch (Exception e) {
-            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ExceptionUtils.getMessageOrToString(e));
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e,
+                    ExceptionUtils.getMessageOrToString(e));
         }
     }
 }

@@ -92,7 +92,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                 return false;
             } catch (S3Exception ex) {
                 if (!shouldRetry(ex.awsErrorDetails().errorCode(), retries++)) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "S3 retryable error: " + LogRedactionUtil.userData(ex.getMessage()));
 
@@ -103,7 +103,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
                     Thread.currentThread().interrupt();
                 }
             } catch (SdkException ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         }
         return true;

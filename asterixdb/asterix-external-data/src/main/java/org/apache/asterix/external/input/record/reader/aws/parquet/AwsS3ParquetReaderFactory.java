@@ -88,11 +88,11 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
             configureAwsS3HdfsJobConf(conf, configuration, numberOfPartitions);
             configureHdfsConf(conf, configuration);
         } catch (SdkException | SdkBaseException ex) {
-            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } catch (AlgebricksException ex) {
             Throwable root = ExceptionUtils.getRootCause(ex);
             if (root instanceof SdkException || root instanceof SdkBaseException) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(root));
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, root, getMessageOrToString(root));
             }
             throw ex;
         }

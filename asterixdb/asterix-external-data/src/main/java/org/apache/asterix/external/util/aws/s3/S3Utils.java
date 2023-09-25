@@ -186,10 +186,10 @@ public class S3Utils {
                 try {
                     builder.endpointOverride(uri);
                 } catch (NullPointerException ex) {
-                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
             } catch (URISyntaxException ex) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex,
                         String.format("Invalid service endpoint %s", serviceEndpoint));
             }
         }
@@ -308,10 +308,10 @@ public class S3Utils {
                     throw ex;
                 }
             } catch (SdkException ex2) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2, getMessageOrToString(ex));
             }
         } catch (SdkException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } finally {
             if (s3Client != null) {
                 CleanupUtils.close(s3Client, null);
@@ -385,10 +385,10 @@ public class S3Utils {
                     throw ex;
                 }
             } catch (SdkException ex2) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex2, getMessageOrToString(ex));
             }
         } catch (SdkException ex) {
-            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         } finally {
             if (s3Client != null) {
                 CleanupUtils.close(s3Client, null);

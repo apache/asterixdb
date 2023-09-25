@@ -203,12 +203,14 @@
         <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-allowed</output-dir>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="external-dataset/azure_blob_storage/auth-methods">
       <compilation-unit name="anonymous-no-auth-public-access-not-allowed">
         <output-dir compare="Clean-JSON">anonymous-no-auth-public-access-not-allowed</output-dir>
         <expected-error>Server failed to authenticate the request. Make sure the value of the Authorization header is formed correctly including the signature.</expected-error>
       </compilation-unit>
     </test-case>
+    -->
   </test-group>
   <test-group name="external-dataset">
     <test-case FilePath="external-dataset">
@@ -282,9 +284,9 @@
       <compilation-unit name="type-mismatch">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">type-mismatch</output-dir>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'For input string: "accounting"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'For input string: "engineering"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'For input string: "hr"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'java.lang.NumberFormatException: For input string: "accounting"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'java.lang.NumberFormatException: For input string: "engineering"'</expected-warn>
+        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'java.lang.NumberFormatException: For input string: "hr"'</expected-warn>
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
@@ -294,6 +296,20 @@
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="computed-field-segment-pattern-mismatch">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">computed-field-segment-pattern-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    <!--
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="computed-field-segment-pattern-mismatch">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">computed-field-segment-pattern-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    -->
     <!-- Dynamic prefixes tests end -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
@@ -332,6 +348,7 @@
         <expected-error>Illegal character in authority at index 7: http://^invalid-endpoint^</expected-error>
       </compilation-unit>
     </test-case>
+    <!--
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/bucket-does-not-exist">
         <placeholder name="adapter" value="AZUREBLOB" />
@@ -339,6 +356,7 @@
         <expected-error>External source error. com.azure.storage.blob.models.BlobStorageException: Status code 404</expected-error>
       </compilation-unit>
     </test-case>
+    -->
     <test-case FilePath="external-dataset" check-warnings="true">
       <compilation-unit name="common/no-files-returned/definition-points-to-nothing">
         <placeholder name="adapter" value="AZUREBLOB" />

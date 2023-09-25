@@ -96,7 +96,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
                 break;
             } catch (BaseServiceException ex) {
                 if (!ex.isRetryable() || !shouldRetry(++attempt)) {
-                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                    throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
                 }
                 LOGGER.debug(() -> "Retryable error: " + getMessageOrToString(ex));
 
@@ -107,7 +107,7 @@ public class GCSInputStream extends AbstractExternalInputStream {
                     Thread.currentThread().interrupt();
                 }
             } catch (Exception ex) {
-                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, getMessageOrToString(ex));
+                throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
             }
         }
         return true;

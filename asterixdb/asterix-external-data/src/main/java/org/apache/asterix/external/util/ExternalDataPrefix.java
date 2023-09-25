@@ -227,14 +227,17 @@ public final class ExternalDataPrefix implements Serializable {
     }
 
     public List<String> getValues(String key) {
-        return extractValues(extractPrefixSegments(key));
+        List<String> values = new ArrayList<>();
+        extractValues(extractPrefixSegments(key), values);
+
+        return values;
     }
 
     /**
      * Evaluates whether the provided key satisfies the conditions of the evaluator or not
      * TODO Check if {@link IExternalFilterEvaluator#isComputedFieldUsed(int)} is useful once we have regex extractor
      *
-     * @param key       ke
+     * @param key       key
      * @param evaluator evaluator
      * @return true if key satisfies the evaluator conditions, false otherwise
      */
@@ -243,24 +246,30 @@ public final class ExternalDataPrefix implements Serializable {
         // TODO provide the List to avoid array creation
         List<String> keySegments = extractPrefixSegments(key);
 
-        // no computed fields filter, accept path
-        if (!hasComputedFields() || evaluator.isEmpty()) {
-            return true;
-        }
-
         // segments of object key have to be larger than segments of the prefix
         if (keySegments.size() <= segments.size()) {
             return false;
         }
 
-        // no computed fields used in WHERE clause, accept object
-        if (evaluator.isEmpty()) {
+        // no computed fields filter, accept path
+        if (!hasComputedFields()) {
             return true;
+        }
+
+        // before doing any computed field evaluation, make sure the static part matches
+        for (int i = 0; i < segments.size(); i++) {
+            if (!computedFieldSegmentIndexes.contains(i) && !keySegments.get(i).equals(segments.get(i))) {
+                return false;
+            }
         }
 
         // extract values for all compute fields and set them in the evaluator
         // TODO provide the List to avoid array creation
-        List<String> values = extractValues(keySegments);
+        List<String> values = new ArrayList<>();
+        boolean success = extractValues(keySegments, values);
+        if (!success) {
+            return false;
+        }
 
         String computedFieldName = null;
         IAType computedFieldType = null;
@@ -279,7 +288,7 @@ public final class ExternalDataPrefix implements Serializable {
             if (warningCollector.shouldWarn()) {
                 warningCollector.warn(Warning.of(null, ErrorCode.FAILED_TO_EVALUATE_COMPUTED_FIELD,
                         LogRedactionUtil.userData(key), computedFieldName, computedFieldType,
-                        LogRedactionUtil.userData(computedFieldValue), LogRedactionUtil.userData(ex.getMessage())));
+                        LogRedactionUtil.userData(computedFieldValue), LogRedactionUtil.userData(ex.toString())));
             }
             return false;
         }
@@ -300,11 +309,11 @@ public final class ExternalDataPrefix implements Serializable {
      * extracts the computed fields values from the object's key
      *
      * @param keySegments object's key segments
-     * @return list of computed field values
+     * @param values list to put the values in
+     *
+     * @return true if values of computed field are extracted successfully, false otherwise
      */
-    private List<String> extractValues(List<String> keySegments) {
-        List<String> values = new ArrayList<>();
-
+    private boolean extractValues(List<String> keySegments, List<String> values) {
         for (Map.Entry<Integer, PrefixSegment> entry : indexToComputedFieldsMap.entrySet()) {
             int index = entry.getKey();
             String expression = entry.getValue().getExpression();
@@ -312,14 +321,17 @@ public final class ExternalDataPrefix implements Serializable {
             String keySegment = keySegments.get(index);
             Matcher matcher = Pattern.compile(expression).matcher(keySegment);
 
-            if (matcher.find()) {
-                for (int i = 1; i <= matcher.groupCount(); i++) {
-                    values.add(matcher.group(i));
-                }
+            // key segment not matching expected computed field segment pattern
+            if (!matcher.find()) {
+                return false;
+            }
+
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                values.add(matcher.group(i));
             }
         }
 
-        return values;
+        return true;
     }
 
     private IAType getUpdatedType(IAType type) {
