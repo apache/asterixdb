@@ -889,19 +889,23 @@ public class JoinEnum {
 
     private int findLimitValue(AbstractLogicalOperator oper) {
         ILogicalOperator op = oper;
+        int limit = -1;
         while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag() == LogicalOperatorTag.LIMIT) {
                 LimitOperator lop = (LimitOperator) op;
                 ILogicalExpression expr = lop.getMaxObjects().getValue();
                 if (expr != null) {
                     if (expr.getExpressionTag() == LogicalExpressionTag.CONSTANT) { // must be a constant
-                        return Integer.parseInt(lop.getMaxObjects().getValue().toString());
+                        limit = Integer.parseInt(lop.getMaxObjects().getValue().toString());
                     }
                 }
             }
+            if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
+                return -1; // This is because we cant reduce the selectivity of a scan operator when an order by is present.
+            }
             op = op.getInputs().get(0).getValue();
         }
-        return -1;
+        return limit;
     }
 
     private boolean isPredicateCardinalityAnnotationPresent(ILogicalExpression leExpr) {
