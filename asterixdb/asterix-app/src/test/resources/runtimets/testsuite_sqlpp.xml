@@ -4164,6 +4164,13 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-negative">
+        <output-dir compare="Clean-JSON">create-dataset-negative</output-dir>
+        <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
+        <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
       <compilation-unit name="analyze-dataset-1">
         <output-dir compare="Text">analyze-dataset-1</output-dir>
       </compilation-unit>
