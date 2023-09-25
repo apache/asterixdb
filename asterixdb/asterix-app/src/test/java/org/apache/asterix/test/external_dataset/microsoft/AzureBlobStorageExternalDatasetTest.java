@@ -85,6 +85,7 @@ public class AzureBlobStorageExternalDatasetTest {
     static String ONLY_TESTS;
     static String TEST_CONFIG_FILE_NAME;
     static Runnable PREPARE_PLAYGROUND_CONTAINER;
+    static Runnable PREPARE_DYNAMIC_PREFIX_AT_START_CONTAINER;
     static Runnable PREPARE_FIXED_DATA_CONTAINER;
     static Runnable PREPARE_INCLUDE_EXCLUDE_CONTAINER;
     static Runnable PREPARE_BOM_FILE_BUCKET;
@@ -98,6 +99,7 @@ public class AzureBlobStorageExternalDatasetTest {
 
     // Region, container and definitions
     private static final String PLAYGROUND_CONTAINER = "playground";
+    private static final String DYNAMIC_PREFIX_AT_START_CONTAINER = "dynamic-prefix-at-start-container";
     private static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     private static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";
     private static final String BOM_FILE_CONTAINER = "bom-file-container";
@@ -108,6 +110,7 @@ public class AzureBlobStorageExternalDatasetTest {
     // Create a BlobServiceClient object which will be used to create a container client
     private static BlobServiceClient blobServiceClient;
     private static BlobContainerClient playgroundContainer;
+    private static BlobContainerClient dynamicPrefixAtStartContainer;
     private static BlobContainerClient publicAccessContainer;
     private static BlobContainerClient fixedDataContainer;
     private static BlobContainerClient mixedDataContainer;
@@ -140,6 +143,7 @@ public class AzureBlobStorageExternalDatasetTest {
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
         PREPARE_PLAYGROUND_CONTAINER = ExternalDatasetTestUtils::preparePlaygroundContainer;
+        PREPARE_DYNAMIC_PREFIX_AT_START_CONTAINER = ExternalDatasetTestUtils::prepareDynamicPrefixAtStartContainer;
         PREPARE_FIXED_DATA_CONTAINER = ExternalDatasetTestUtils::prepareFixedDataContainer;
         PREPARE_INCLUDE_EXCLUDE_CONTAINER = ExternalDatasetTestUtils::prepareMixedDataContainer;
         PREPARE_BOM_FILE_BUCKET = ExternalDatasetTestUtils::prepareBomFileContainer;
@@ -177,6 +181,7 @@ public class AzureBlobStorageExternalDatasetTest {
 
         LOGGER.info("Creating containers");
         playgroundContainer = blobServiceClient.createBlobContainer(PLAYGROUND_CONTAINER);
+        dynamicPrefixAtStartContainer = blobServiceClient.createBlobContainer(DYNAMIC_PREFIX_AT_START_CONTAINER);
         fixedDataContainer = blobServiceClient.createBlobContainer(FIXED_DATA_CONTAINER);
         mixedDataContainer = blobServiceClient.createBlobContainer(INCLUDE_EXCLUDE_CONTAINER);
         bomContainer = blobServiceClient.createBlobContainer(BOM_FILE_CONTAINER);
@@ -195,9 +200,11 @@ public class AzureBlobStorageExternalDatasetTest {
         // Create the bucket and upload some json files
         setDataPaths(JSON_DATA_PATH, CSV_DATA_PATH, TSV_DATA_PATH);
         setUploaders(AzureBlobStorageExternalDatasetTest::loadPlaygroundData,
+                AzureBlobStorageExternalDatasetTest::loadDynamicPrefixAtStartData,
                 AzureBlobStorageExternalDatasetTest::loadFixedData, AzureBlobStorageExternalDatasetTest::loadMixedData,
                 AzureBlobStorageExternalDatasetTest::loadBomData);
         PREPARE_PLAYGROUND_CONTAINER.run();
+        PREPARE_DYNAMIC_PREFIX_AT_START_CONTAINER.run();
         PREPARE_FIXED_DATA_CONTAINER.run();
         PREPARE_INCLUDE_EXCLUDE_CONTAINER.run();
         PREPARE_BOM_FILE_BUCKET.run();
@@ -230,6 +237,35 @@ public class AzureBlobStorageExternalDatasetTest {
 
                     try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
                         playgroundContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+                    } catch (IOException ex) {
+                        throw new IllegalArgumentException(ex.toString());
+                    }
+                } catch (IOException ex) {
+                    throw new IllegalArgumentException(ex.toString());
+                }
+            }
+        }
+    }
+
+    private static void loadDynamicPrefixAtStartData(String key, String content, boolean fromFile, boolean gzipped) {
+        if (!fromFile) {
+            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+                dynamicPrefixAtStartContainer.getBlobClient(key).upload(inputStream, inputStream.available());
+            } catch (IOException ex) {
+                throw new IllegalArgumentException(ex.toString());
+            }
+        } else {
+            if (!gzipped) {
+                dynamicPrefixAtStartContainer.getBlobClient(key).uploadFromFile(content);
+            } else {
+                try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteArrayOutputStream)) {
+                    gzipOutputStream.write(Files.readAllBytes(Paths.get(content)));
+                    gzipOutputStream.close(); // Need to close or data will be invalid
+                    byte[] gzipBytes = byteArrayOutputStream.toByteArray();
+
+                    try (ByteArrayInputStream inputStream = new ByteArrayInputStream(gzipBytes)) {
+                        dynamicPrefixAtStartContainer.getBlobClient(key).upload(inputStream, inputStream.available());
                     } catch (IOException ex) {
                         throw new IllegalArgumentException(ex.toString());
                     }
@@ -417,6 +453,7 @@ public class AzureBlobStorageExternalDatasetTest {
 
     private static void deleteContainersSilently() {
         deleteContainerSilently(PLAYGROUND_CONTAINER);
+        deleteContainerSilently(DYNAMIC_PREFIX_AT_START_CONTAINER);
         deleteContainerSilently(FIXED_DATA_CONTAINER);
         deleteContainerSilently(PUBLIC_ACCESS_CONTAINER);
         deleteContainerSilently(INCLUDE_EXCLUDE_CONTAINER);

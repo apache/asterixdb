@@ -210,7 +210,7 @@ public final class ExternalDataPrefix implements Serializable {
 
         // remove last "/" and append it only if needed
         root = builder.toString();
-        root = root.substring(0, root.length() - 1);
+        root = root.isEmpty() ? root : root.substring(0, root.length() - 1);
         root = ExternalDataUtils.appendSlash(root, endsWithSlash);
     }
 

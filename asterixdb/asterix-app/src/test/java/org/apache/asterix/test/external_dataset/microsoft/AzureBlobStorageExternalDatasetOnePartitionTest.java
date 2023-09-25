@@ -41,6 +41,8 @@ public class AzureBlobStorageExternalDatasetOnePartitionTest extends AzureBlobSt
         ONLY_TESTS = "only_external_dataset.xml";
         TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";
         PREPARE_PLAYGROUND_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::preparePlaygroundContainer;
+        PREPARE_DYNAMIC_PREFIX_AT_START_CONTAINER =
+                AzureBlobStorageExternalDatasetOnePartitionTest::prepareDynamicPrefixAtStartContainer;
         PREPARE_FIXED_DATA_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::prepareFixedDataContainer;
         PREPARE_INCLUDE_EXCLUDE_CONTAINER = AzureBlobStorageExternalDatasetOnePartitionTest::prepareMixedDataContainer;
         PREPARE_BOM_FILE_BUCKET = AzureBlobStorageExternalDatasetOnePartitionTest::prepareBomDataContainer;
@@ -48,6 +50,9 @@ public class AzureBlobStorageExternalDatasetOnePartitionTest extends AzureBlobSt
     }
 
     private static void preparePlaygroundContainer() {
+    }
+
+    private static void prepareDynamicPrefixAtStartContainer() {
     }
 
     private static void prepareFixedDataContainer() {

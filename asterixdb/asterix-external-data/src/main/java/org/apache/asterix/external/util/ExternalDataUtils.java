@@ -762,7 +762,7 @@ public class ExternalDataUtils {
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         String subPath = configuration.get(ExternalDataConstants.SUBPATH);
 
-        boolean hasRoot = root != null && !root.isEmpty();
+        boolean hasRoot = root != null;
         boolean hasDefinition = definition != null && !definition.isEmpty();
         boolean hasSubPath = subPath != null && !subPath.isEmpty();
 
@@ -794,7 +794,7 @@ public class ExternalDataUtils {
     }
 
     public static String appendSlash(String string, boolean appendSlash) {
-        return appendSlash ? string + (!string.endsWith("/") ? "/" : "") : string;
+        return appendSlash && !string.isEmpty() ? string + (!string.endsWith("/") ? "/" : "") : string;
     }
 
     /**

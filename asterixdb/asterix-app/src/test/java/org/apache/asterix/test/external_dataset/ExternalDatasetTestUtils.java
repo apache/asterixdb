@@ -19,6 +19,7 @@
 package org.apache.asterix.test.external_dataset;
 
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BOM_FILE_CONTAINER;
+import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.DYNAMIC_PREFIX_AT_START_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
 
@@ -69,6 +70,7 @@ public class ExternalDatasetTestUtils {
     public static final int OVER_1000_OBJECTS_COUNT = 2999;
 
     private static Uploader playgroundDataLoader;
+    private static Uploader dynamicPrefixAtStartDataLoader;
     private static Uploader fixedDataLoader;
     private static Uploader mixedDataLoader;
     private static Uploader bomFileLoader;
@@ -118,9 +120,10 @@ public class ExternalDatasetTestUtils {
         TSV_DATA_PATH = tsvDataPath;
     }
 
-    public static void setUploaders(Uploader playgroundDataLoader, Uploader fixedDataLoader, Uploader mixedDataLoader,
-            Uploader bomFileLoader) {
+    public static void setUploaders(Uploader playgroundDataLoader, Uploader dynamicPrefixAtStartDataLoader,
+            Uploader fixedDataLoader, Uploader mixedDataLoader, Uploader bomFileLoader) {
         ExternalDatasetTestUtils.playgroundDataLoader = playgroundDataLoader;
+        ExternalDatasetTestUtils.dynamicPrefixAtStartDataLoader = dynamicPrefixAtStartDataLoader;
         ExternalDatasetTestUtils.fixedDataLoader = fixedDataLoader;
         ExternalDatasetTestUtils.mixedDataLoader = mixedDataLoader;
         ExternalDatasetTestUtils.bomFileLoader = bomFileLoader;
@@ -155,6 +158,23 @@ public class ExternalDatasetTestUtils {
         LOGGER.info("Parquet files added successfully");
 
         LOGGER.info("Files added successfully");
+    }
+
+    /**
+     * Special container where dynamic prefix is the first segment
+     */
+    public static void prepareDynamicPrefixAtStartContainer() {
+        LOGGER.info("Loading dynamic prefix data to " + DYNAMIC_PREFIX_AT_START_CONTAINER);
+
+        // Files data
+        String path =
+                Paths.get(JSON_DATA_PATH, "external-filter", "computed-field-at-start", "foo-2023-01-01", "data.json")
+                        .toString();
+        dynamicPrefixAtStartDataLoader.upload("foo-2023-01-01/data.json", path, true, false);
+
+        path = Paths.get(JSON_DATA_PATH, "external-filter", "computed-field-at-start", "bar-2023-01-01", "data.json")
+                .toString();
+        dynamicPrefixAtStartDataLoader.upload("bar-2023-01-01/data.json", path, true, false);
     }
 
     /**

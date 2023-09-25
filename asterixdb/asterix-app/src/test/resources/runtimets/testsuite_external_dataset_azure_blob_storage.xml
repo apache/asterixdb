@@ -302,6 +302,12 @@
         <output-dir compare="Text">computed-field-segment-pattern-mismatch</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="computed-field-at-start">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">computed-field-at-start</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="computed-field-segment-pattern-mismatch">
