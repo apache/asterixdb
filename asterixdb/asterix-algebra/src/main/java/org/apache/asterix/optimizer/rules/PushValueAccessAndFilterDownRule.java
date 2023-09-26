@@ -21,11 +21,11 @@ package org.apache.asterix.optimizer.rules;
 import java.util.Set;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownProcessorsExecutor;

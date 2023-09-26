@@ -19,8 +19,8 @@
 package org.apache.asterix.metadata.declared;
 
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
+import static org.apache.asterix.common.metadata.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
-import static org.apache.asterix.metadata.utils.MetadataConstants.METADATA_OBJECT_NAME_INVALID_CHARS;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +47,8 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
+import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
@@ -87,8 +89,6 @@ import org.apache.asterix.metadata.utils.DataPartitioningProvider;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.FullTextUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
-import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionExtensionManager;
 import org.apache.asterix.om.functions.IFunctionManager;

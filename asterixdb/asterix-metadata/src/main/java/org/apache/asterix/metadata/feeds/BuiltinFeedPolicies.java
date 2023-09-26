@@ -21,11 +21,11 @@ package org.apache.asterix.metadata.feeds;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
-import org.apache.asterix.metadata.utils.MetadataConstants;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

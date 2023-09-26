@@ -20,9 +20,9 @@
 package org.apache.asterix.metadata.entitytupletranslators;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.CompactionPolicyEntity;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;

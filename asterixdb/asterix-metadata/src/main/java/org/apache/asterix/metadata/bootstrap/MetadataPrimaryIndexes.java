@@ -19,8 +19,8 @@
 
 package org.apache.asterix.metadata.bootstrap;
 
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
-import org.apache.asterix.metadata.utils.MetadataConstants;
 
 /**
  * Contains static primary-index descriptors of all metadata datasets.

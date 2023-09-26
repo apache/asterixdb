@@ -16,9 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.metadata.utils;
-
-import org.apache.asterix.common.metadata.DataverseName;
+package org.apache.asterix.common.metadata;
 
 public class MetadataUtil {
     public static final int PENDING_NO_OP = 0;

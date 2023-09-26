@@ -23,9 +23,9 @@ import java.util.List;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.FullTextConfigEntity;
 import org.apache.asterix.metadata.entities.FullTextConfigMetadataEntity;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;

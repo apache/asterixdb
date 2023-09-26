@@ -40,6 +40,7 @@ import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.common.transactions.ITransactionContext;
 import org.apache.asterix.common.transactions.ITransactionManager.AtomicityLevel;
@@ -102,7 +103,6 @@ import org.apache.asterix.metadata.entitytupletranslators.NodeGroupTupleTranslat
 import org.apache.asterix.metadata.entitytupletranslators.NodeTupleTranslator;
 import org.apache.asterix.metadata.entitytupletranslators.SynonymTupleTranslator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.metadata.valueextractors.MetadataEntityValueExtractor;
 import org.apache.asterix.metadata.valueextractors.TupleCopyValueExtractor;

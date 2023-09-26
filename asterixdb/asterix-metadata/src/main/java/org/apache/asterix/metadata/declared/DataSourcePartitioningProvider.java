@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.entities.Dataset;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;

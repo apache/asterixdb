@@ -17,11 +17,10 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.utils;
+package org.apache.asterix.common.metadata;
 
 import java.util.regex.Pattern;
 
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.commons.lang3.SystemUtils;
 
 /**

@@ -23,11 +23,11 @@ import java.util.Calendar;
 
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.metadata.bootstrap.DatasourceAdapterEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;

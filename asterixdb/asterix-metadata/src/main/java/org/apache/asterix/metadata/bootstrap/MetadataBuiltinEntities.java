@@ -19,11 +19,11 @@
 package org.apache.asterix.metadata.bootstrap;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.utils.MetadataConstants;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 

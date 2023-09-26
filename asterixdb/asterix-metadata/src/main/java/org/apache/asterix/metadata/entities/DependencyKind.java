@@ -23,8 +23,8 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 

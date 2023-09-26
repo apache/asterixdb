@@ -22,9 +22,9 @@ package org.apache.asterix.metadata.entitytupletranslators;
 import java.util.Calendar;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.DataverseEntity;
 import org.apache.asterix.metadata.entities.Dataverse;
-import org.apache.asterix.metadata.utils.MetadataUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.ARecord;

@@ -28,6 +28,7 @@ import java.util.Set;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
