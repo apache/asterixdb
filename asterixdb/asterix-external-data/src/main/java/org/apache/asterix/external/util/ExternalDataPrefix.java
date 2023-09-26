@@ -155,6 +155,9 @@ public final class ExternalDataPrefix implements Serializable {
                     String typePart = splits[1].substring(0, splits[1].length() - 1);
 
                     IAType type = BuiltinTypeMap.getBuiltinType(typePart);
+                    if (type == null) {
+                        throw new CompilationException(ErrorCode.UNSUPPORTED_COMPUTED_FIELD_TYPE, typePart);
+                    }
                     type = getUpdatedType(type);
                     validateSupported(type.getTypeTag());
 
