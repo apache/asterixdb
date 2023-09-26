@@ -899,9 +899,10 @@ public class JoinEnum {
                         limit = Integer.parseInt(lop.getMaxObjects().getValue().toString());
                     }
                 }
-            }
-            if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
+            } else if (op.getOperatorTag() == LogicalOperatorTag.ORDER) {
                 return -1; // This is because we cant reduce the selectivity of a scan operator when an order by is present.
+            } else if (op.getOperatorTag() == LogicalOperatorTag.GROUP) {
+                return -1; // This is because we cant reduce the selectivity of a scan operator when a group by is present.
             }
             op = op.getInputs().get(0).getValue();
         }
