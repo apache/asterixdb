@@ -129,7 +129,9 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
              */
             ILogicalOperator useOperator = useDescriptor.getOperator();
             if (useDescriptor.getScope() == scanDefineDescriptor.getScope()
-                    && useOperator.getOperatorTag() == LogicalOperatorTag.SELECT && isPushdownAllowed(useOperator)) {
+                    && (useOperator.getOperatorTag() == LogicalOperatorTag.SELECT
+                            || useOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN)
+                    && isPushdownAllowed(useOperator)) {
                 inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
             } else if (useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
                 inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
