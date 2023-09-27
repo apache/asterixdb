@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -90,6 +91,10 @@ public class FunctionSignature implements Serializable {
             sb.append(')');
         }
         return sb.toString();
+    }
+
+    public String getDatabaseName() {
+        return MetadataUtil.databaseFor(dataverseName);
     }
 
     public DataverseName getDataverseName() {

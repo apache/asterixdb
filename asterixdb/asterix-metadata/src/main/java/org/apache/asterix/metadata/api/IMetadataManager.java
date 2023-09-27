@@ -90,6 +90,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
      */
     void abortTransaction(MetadataTransactionContext ctx) throws ACIDException, RemoteException;
 
+    Database getDatabase(MetadataTransactionContext ctx, String database) throws AlgebricksException;
+
     void addDatabase(MetadataTransactionContext ctx, Database database) throws AlgebricksException;
 
     void dropDatabase(MetadataTransactionContext ctx, String databaseName) throws AlgebricksException;

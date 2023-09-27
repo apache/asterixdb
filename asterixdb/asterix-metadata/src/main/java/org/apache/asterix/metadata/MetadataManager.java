@@ -171,6 +171,37 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public Database getDatabase(MetadataTransactionContext ctx, String databaseName) throws AlgebricksException {
+        Objects.requireNonNull(databaseName);
+        // first look in the context to see if this transaction created the
+        // requested database itself (but the database is still uncommitted)
+        Database database = ctx.getDatabase(databaseName);
+        if (database != null) {
+            // don't add this database to the cache, since it is still uncommitted
+            return database;
+        }
+        if (ctx.databaseIsDropped(databaseName)) {
+            // database has been dropped by this transaction but could still be in the cache
+            return null;
+        }
+        database = cache.getDatabase(databaseName);
+        if (database != null) {
+            // database is already in the cache, don't add it again
+            return database;
+        }
+        try {
+            database = metadataNode.getDatabase(ctx.getTxnId(), databaseName);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // we fetched the database from the MetadataNode. add it to the cache when this transaction commits
+        if (database != null) {
+            ctx.addDatabase(database);
+        }
+        return database;
+    }
+
+    @Override
     public void addDatabase(MetadataTransactionContext ctx, Database database) throws AlgebricksException {
         try {
             metadataNode.addDatabase(ctx.getTxnId(), database);
@@ -240,18 +271,18 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested dataverse itself (but the dataverse is still uncommitted).
-        Dataverse dataverse = ctx.getDataverse(dataverseName);
+        Dataverse dataverse = ctx.getDataverse(database, dataverseName);
         if (dataverse != null) {
             // Don't add this dataverse to the cache, since it is still
             // uncommitted.
             return dataverse;
         }
-        if (ctx.dataverseIsDropped(dataverseName)) {
+        if (ctx.dataverseIsDropped(database, dataverseName)) {
             // Dataverse has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
-        dataverse = cache.getDataverse(dataverseName);
+        dataverse = cache.getDataverse(database, dataverseName);
         if (dataverse != null) {
             // Dataverse is already in the cache, don't add it again.
             return dataverse;
@@ -316,19 +347,19 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested dataset itself (but the dataset is still uncommitted).
-        Dataset dataset = ctx.getDataset(dataverseName, datasetName);
+        Dataset dataset = ctx.getDataset(database, dataverseName, datasetName);
         if (dataset != null) {
             // Don't add this dataverse to the cache, since it is still
             // uncommitted.
             return dataset;
         }
-        if (ctx.datasetIsDropped(dataverseName, datasetName)) {
+        if (ctx.datasetIsDropped(database, dataverseName, datasetName)) {
             // Dataset has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
 
-        dataset = cache.getDataset(dataverseName, datasetName);
+        dataset = cache.getDataset(database, dataverseName, datasetName);
         if (dataset != null) {
             // Dataset is already in the cache, don't add it again.
             return dataset;
@@ -420,19 +451,19 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested datatype itself (but the datatype is still uncommitted).
-        Datatype datatype = ctx.getDatatype(dataverseName, datatypeName);
+        Datatype datatype = ctx.getDatatype(database, dataverseName, datatypeName);
         if (datatype != null) {
             // Don't add this dataverse to the cache, since it is still
             // uncommitted.
             return datatype;
         }
-        if (ctx.datatypeIsDropped(dataverseName, datatypeName)) {
+        if (ctx.datatypeIsDropped(database, dataverseName, datatypeName)) {
             // Datatype has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
 
-        datatype = cache.getDatatype(dataverseName, datatypeName);
+        datatype = cache.getDatatype(database, dataverseName, datatypeName);
         if (datatype != null) {
             // Datatype is already in the cache, don't add it again.
             return datatype;
@@ -488,20 +519,20 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested index itself (but the index is still uncommitted).
-        Index index = ctx.getIndex(dataverseName, datasetName, indexName);
+        Index index = ctx.getIndex(database, dataverseName, datasetName, indexName);
         if (index != null) {
             // Don't add this index to the cache, since it is still
             // uncommitted.
             return index;
         }
 
-        if (ctx.indexIsDropped(dataverseName, datasetName, indexName)) {
+        if (ctx.indexIsDropped(database, dataverseName, datasetName, indexName)) {
             // Index has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
 
-        index = cache.getIndex(dataverseName, datasetName, indexName);
+        index = cache.getIndex(database, dataverseName, datasetName, indexName);
         if (index != null) {
             // Index is already in the cache, don't add it again.
             return index;
@@ -632,7 +663,7 @@ public abstract class MetadataManager implements IMetadataManager {
             // in the cache.
             return null;
         }
-        if (ctx.getDataverse(functionSignature.getDataverseName()) != null) {
+        if (ctx.getDataverse(functionSignature.getDatabaseName(), functionSignature.getDataverseName()) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
@@ -695,26 +726,26 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested full-text filter itself (but the full-text filter is still uncommitted).
-        FullTextFilterMetadataEntity filter = ctx.getFullTextFilter(dataverseName, filterName);
+        FullTextFilterMetadataEntity filter = ctx.getFullTextFilter(database, dataverseName, filterName);
         if (filter != null) {
             // Don't add this filter to the cache, since it is still
             // uncommitted.
             return filter;
         }
 
-        if (ctx.fullTextFilterIsDropped(dataverseName, filterName)) {
+        if (ctx.fullTextFilterIsDropped(database, dataverseName, filterName)) {
             // Filter has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
 
-        if (ctx.getDataverse(dataverseName) != null) {
+        if (ctx.getDataverse(database, dataverseName) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
         }
 
-        filter = cache.getFullTextFilter(dataverseName, filterName);
+        filter = cache.getFullTextFilter(database, dataverseName, filterName);
         if (filter != null) {
             // filter is already in the cache, don't add it again.
             return filter;
@@ -754,26 +785,26 @@ public abstract class MetadataManager implements IMetadataManager {
         Objects.requireNonNull(database);
         // First look in the context to see if this transaction created the
         // requested full-text config itself (but the full-text config is still uncommitted).
-        FullTextConfigMetadataEntity configMetadataEntity = ctx.getFullTextConfig(dataverseName, configName);
+        FullTextConfigMetadataEntity configMetadataEntity = ctx.getFullTextConfig(database, dataverseName, configName);
         if (configMetadataEntity != null) {
             // Don't add this config to the cache, since it is still
             // uncommitted.
             return configMetadataEntity;
         }
 
-        if (ctx.fullTextConfigIsDropped(dataverseName, configName)) {
+        if (ctx.fullTextConfigIsDropped(database, dataverseName, configName)) {
             // config has been dropped by this transaction but could still be
             // in the cache.
             return null;
         }
 
-        if (ctx.getDataverse(dataverseName) != null) {
+        if (ctx.getDataverse(database, dataverseName) != null) {
             // This transaction has dropped and subsequently created the same
             // dataverse.
             return null;
         }
 
-        configMetadataEntity = cache.getFullTextConfig(dataverseName, configName);
+        configMetadataEntity = cache.getFullTextConfig(database, dataverseName, configName);
         if (configMetadataEntity != null) {
             // config is already in the cache, don't add it again.
             return configMetadataEntity;

@@ -1012,6 +1012,23 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public Database getDatabase(TxnId txnId, String databaseName) throws AlgebricksException {
+        try {
+            ITupleReference searchKey = createTuple(databaseName);
+            DatabaseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatabaseTupleTranslator(false);
+            IValueExtractor<Database> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<Database> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), searchKey, valueExtractor, results);
+            if (results.isEmpty()) {
+                return null;
+            }
+            return results.get(0);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
+    @Override
     public Dataverse getDataverse(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException {
         try {
