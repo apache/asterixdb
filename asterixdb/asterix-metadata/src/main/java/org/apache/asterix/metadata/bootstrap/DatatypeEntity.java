@@ -70,8 +70,8 @@ public final class DatatypeEntity {
         this.timestampIndex = startIndex++;
     }
 
-    public static DatatypeEntity of(boolean cloudDeployment) {
-        return DATATYPE;
+    public static DatatypeEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_DATATYPE : DATATYPE;
     }
 
     public MetadataIndex getIndex() {

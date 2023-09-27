@@ -71,8 +71,8 @@ public final class FeedEntity {
         this.timestampIndex = startIndex++;
     }
 
-    public static FeedEntity of(boolean cloudDeployment) {
-        return FEED;
+    public static FeedEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FEED : FEED;
     }
 
     public MetadataIndex getIndex() {

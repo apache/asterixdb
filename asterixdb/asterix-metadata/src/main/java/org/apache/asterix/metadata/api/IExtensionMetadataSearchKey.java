@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.api;
 
 import java.io.Serializable;
 
+import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 /**
@@ -39,5 +40,5 @@ public interface IExtensionMetadataSearchKey extends Serializable {
      *
      * @return the search key as a tuple reference
      */
-    ITupleReference getSearchKey();
+    ITupleReference getSearchKey(MetadataIndexesProvider mdIndexesProvider);
 }

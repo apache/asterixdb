@@ -64,8 +64,8 @@ public final class CompactionPolicyEntity {
         this.classNameIndex = startIndex++;
     }
 
-    public static CompactionPolicyEntity of(boolean cloudDeployment) {
-        return COMPACTION_POLICY;
+    public static CompactionPolicyEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_COMPACTION_POLICY : COMPACTION_POLICY;
     }
 
     public MetadataIndex getIndex() {

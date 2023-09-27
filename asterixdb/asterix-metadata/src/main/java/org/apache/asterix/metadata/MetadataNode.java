@@ -338,7 +338,7 @@ public class MetadataNode implements IMetadataNode {
             throws AlgebricksException {
         ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(searchKey.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(false);
-        return getEntities(txnId, searchKey.getSearchKey(), tupleTranslator, index);
+        return getEntities(txnId, searchKey.getSearchKey(mdIndexesProvider), tupleTranslator, index);
     }
 
     private <T extends IExtensionMetadataEntity> ExtensionMetadataDataset<T> getExtensionMetadataDataset(
@@ -1314,14 +1314,16 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmFunctionIsUnusedByViews(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
-        confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, null, signature.getDataverseName(),
-                signature.getName(), Integer.toString(signature.getArity()));
+        String functionDatabase = MetadataUtil.resolveDatabase(null, signature.getDataverseName());
+        confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, functionDatabase,
+                signature.getDataverseName(), signature.getName(), Integer.toString(signature.getArity()));
     }
 
     private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
             throws AlgebricksException {
-        confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, null, signature.getDataverseName(),
-                signature.getName(), Integer.toString(signature.getArity()));
+        String functionDatabase = MetadataUtil.resolveDatabase(null, signature.getDataverseName());
+        confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, functionDatabase,
+                signature.getDataverseName(), signature.getName(), Integer.toString(signature.getArity()));
     }
 
     private void confirmObjectIsUnusedByFunctions(TxnId txnId, String objectKindDisplayName,
@@ -1678,8 +1680,10 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException {
-        List<Function> functions = getFunctionsImpl(txnId, createTuple(null, functionSignature.getDataverseName(),
-                functionSignature.getName(), Integer.toString(functionSignature.getArity())));
+        String functionDatabase = MetadataUtil.resolveDatabase(null, functionSignature.getDataverseName());
+        List<Function> functions =
+                getFunctionsImpl(txnId, createTuple(functionDatabase, functionSignature.getDataverseName(),
+                        functionSignature.getName(), Integer.toString(functionSignature.getArity())));
         return functions.isEmpty() ? null : functions.get(0);
     }
 
@@ -1714,7 +1718,8 @@ public class MetadataNode implements IMetadataNode {
         }
         try {
             // Delete entry from the 'function' dataset.
-            ITupleReference searchKey = createTuple(null, functionSignature.getDataverseName(),
+            String functionDatabase = MetadataUtil.resolveDatabase(null, functionSignature.getDataverseName());
+            ITupleReference searchKey = createTuple(functionDatabase, functionSignature.getDataverseName(),
                     functionSignature.getName(), Integer.toString(functionSignature.getArity()));
             // Searches the index for the tuple to be deleted. Acquires an S lock on the 'function' dataset.
             ITupleReference functionTuple =
@@ -1940,7 +1945,7 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private static ITupleReference createDatabaseTuple(String databaseName, DataverseName dataverseName,
+    public static ITupleReference createDatabaseTuple(String databaseName, DataverseName dataverseName,
             String... rest) {
         try {
             ArrayTupleBuilder tupleBuilder = new ArrayTupleBuilder(2 + rest.length);

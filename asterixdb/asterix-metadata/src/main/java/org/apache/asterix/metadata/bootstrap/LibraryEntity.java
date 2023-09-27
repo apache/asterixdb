@@ -66,8 +66,8 @@ public final class LibraryEntity {
         this.timestampIndex = startIndex++;
     }
 
-    public static LibraryEntity of(boolean cloudDeployment) {
-        return LIBRARY;
+    public static LibraryEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_LIBRARY : LIBRARY;
     }
 
     public MetadataIndex getIndex() {

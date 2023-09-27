@@ -78,8 +78,8 @@ public final class ExternalFileEntity {
         this.pendingOpIndex = startIndex++;
     }
 
-    public static ExternalFileEntity of(boolean cloudDeployment) {
-        return EXTERNAL_FILE;
+    public static ExternalFileEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_EXTERNAL_FILE : EXTERNAL_FILE;
     }
 
     public MetadataIndex getIndex() {

@@ -70,8 +70,8 @@ public final class FeedPolicyEntity {
         this.propertiesIndex = startIndex++;
     }
 
-    public static FeedPolicyEntity of(boolean cloudDeployment) {
-        return FEED_POLICY;
+    public static FeedPolicyEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FEED_POLICY : FEED_POLICY;
     }
 
     public MetadataIndex getIndex() {

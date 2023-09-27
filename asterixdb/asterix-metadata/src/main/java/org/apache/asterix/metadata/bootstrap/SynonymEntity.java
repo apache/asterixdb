@@ -68,8 +68,8 @@ public final class SynonymEntity {
         this.objectNameIndex = startIndex++;;
     }
 
-    public static SynonymEntity of(boolean cloudDeployment) {
-        return SYNONYM;
+    public static SynonymEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_SYNONYM : SYNONYM;
     }
 
     public MetadataIndex getIndex() {

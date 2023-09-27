@@ -25,82 +25,82 @@ import org.apache.hyracks.api.application.INCServiceContext;
 
 public class MetadataIndexesProvider {
 
-    protected final boolean cloudDeployment;
+    protected final boolean usingDatabase;
 
     public MetadataIndexesProvider(INCServiceContext ncServiceCtx) {
-        cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
+        usingDatabase = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
     }
 
     public DatabaseEntity getDatabaseEntity() {
-        return DatabaseEntity.of(cloudDeployment);
+        return DatabaseEntity.of(usingDatabase);
     }
 
     public DataverseEntity getDataverseEntity() {
-        return DataverseEntity.of(cloudDeployment);
+        return DataverseEntity.of(usingDatabase);
     }
 
     public DatasetEntity getDatasetEntity() {
-        return DatasetEntity.of(cloudDeployment);
+        return DatasetEntity.of(usingDatabase);
     }
 
     public DatatypeEntity getDatatypeEntity() {
-        return DatatypeEntity.of(cloudDeployment);
+        return DatatypeEntity.of(usingDatabase);
     }
 
     public IndexEntity getIndexEntity() {
-        return IndexEntity.of(cloudDeployment);
+        return IndexEntity.of(usingDatabase);
     }
 
     public SynonymEntity getSynonymEntity() {
-        return SynonymEntity.of(cloudDeployment);
+        return SynonymEntity.of(usingDatabase);
     }
 
     public NodeEntity getNodeEntity() {
-        return NodeEntity.of(cloudDeployment);
+        return NodeEntity.of(usingDatabase);
     }
 
     public NodeGroupEntity getNodeGroupEntity() {
-        return NodeGroupEntity.of(cloudDeployment);
+        return NodeGroupEntity.of(usingDatabase);
     }
 
     public FunctionEntity getFunctionEntity() {
-        return FunctionEntity.of(cloudDeployment);
+        return FunctionEntity.of(usingDatabase);
     }
 
     public DatasourceAdapterEntity getDatasourceAdapterEntity() {
-        return DatasourceAdapterEntity.of(cloudDeployment);
+        return DatasourceAdapterEntity.of(usingDatabase);
     }
 
     public FeedEntity getFeedEntity() {
-        return FeedEntity.of(cloudDeployment);
+        return FeedEntity.of(usingDatabase);
     }
 
     public FeedPolicyEntity getFeedPolicyEntity() {
-        return FeedPolicyEntity.of(cloudDeployment);
+        return FeedPolicyEntity.of(usingDatabase);
     }
 
     public LibraryEntity getLibraryEntity() {
-        return LibraryEntity.of(cloudDeployment);
+        return LibraryEntity.of(usingDatabase);
     }
 
     public CompactionPolicyEntity getCompactionPolicyEntity() {
-        return CompactionPolicyEntity.of(cloudDeployment);
+        return CompactionPolicyEntity.of(usingDatabase);
     }
 
     public ExternalFileEntity getExternalFileEntity() {
-        return ExternalFileEntity.of(cloudDeployment);
+        return ExternalFileEntity.of(usingDatabase);
     }
 
     public FeedConnectionEntity getFeedConnectionEntity() {
-        return FeedConnectionEntity.of(cloudDeployment);
+        return FeedConnectionEntity.of(usingDatabase);
     }
 
     public FullTextConfigEntity getFullTextConfigEntity() {
-        return FullTextConfigEntity.of(cloudDeployment);
+        return FullTextConfigEntity.of(usingDatabase);
     }
 
     public FullTextFilterEntity getFullTextFilterEntity() {
-        return FullTextFilterEntity.of(cloudDeployment);
+        return FullTextFilterEntity.of(usingDatabase);
     }
 
     public IMetadataIndex[] getMetadataIndexes() {
@@ -126,6 +126,6 @@ public class MetadataIndexesProvider {
     }
 
     public boolean isUsingDatabase() {
-        return false;
+        return usingDatabase;
     }
 }

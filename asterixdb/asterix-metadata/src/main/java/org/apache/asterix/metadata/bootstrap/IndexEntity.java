@@ -82,8 +82,8 @@ public final class IndexEntity {
         this.pendingOpIndex = startIndex++;
     }
 
-    public static IndexEntity of(boolean cloudDeployment) {
-        return INDEX;
+    public static IndexEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_INDEX : INDEX;
     }
 
     public MetadataIndex getIndex() {

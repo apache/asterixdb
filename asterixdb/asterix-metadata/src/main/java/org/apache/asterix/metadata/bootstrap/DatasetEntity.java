@@ -105,8 +105,8 @@ public final class DatasetEntity {
         this.pendingOpIndex = startIndex++;
     }
 
-    public static DatasetEntity of(boolean cloudDeployment) {
-        return DATASET;
+    public static DatasetEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_DATASET : DATASET;
     }
 
     public MetadataIndex getIndex() {

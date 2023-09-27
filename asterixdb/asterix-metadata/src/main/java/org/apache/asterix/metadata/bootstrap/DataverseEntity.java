@@ -65,8 +65,8 @@ public final class DataverseEntity {
         this.pendingOpIndex = startIndex++;
     }
 
-    public static DataverseEntity of(boolean cloudDeployment) {
-        return DATAVERSE;
+    public static DataverseEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_DATAVERSE : DATAVERSE;
     }
 
     public MetadataIndex getIndex() {

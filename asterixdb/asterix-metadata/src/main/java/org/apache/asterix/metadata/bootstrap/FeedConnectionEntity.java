@@ -76,8 +76,8 @@ public final class FeedConnectionEntity {
         this.policyIndex = startIndex++;
     }
 
-    public static FeedConnectionEntity of(boolean cloudDeployment) {
-        return FEED_CONNECTION;
+    public static FeedConnectionEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FEED_CONNECTION : FEED_CONNECTION;
     }
 
     public MetadataIndex getIndex() {

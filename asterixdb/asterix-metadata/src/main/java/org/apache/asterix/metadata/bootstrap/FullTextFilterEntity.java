@@ -64,8 +64,8 @@ public final class FullTextFilterEntity {
         this.filterTypeIndex = startIndex++;
     }
 
-    public static FullTextFilterEntity of(boolean cloudDeployment) {
-        return FULL_TEXT_CONFIG;
+    public static FullTextFilterEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FULL_TEXT_CONFIG : FULL_TEXT_CONFIG;
     }
 
     public MetadataIndex getIndex() {

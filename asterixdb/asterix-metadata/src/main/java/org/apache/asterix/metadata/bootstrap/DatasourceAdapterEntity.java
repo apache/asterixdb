@@ -71,8 +71,8 @@ public final class DatasourceAdapterEntity {
         this.timestampIndex = startIndex++;
     }
 
-    public static DatasourceAdapterEntity of(boolean cloudDeployment) {
-        return DATASOURCE_ADAPTER;
+    public static DatasourceAdapterEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_DATASOURCE_ADAPTER : DATASOURCE_ADAPTER;
     }
 
     public MetadataIndex getIndex() {

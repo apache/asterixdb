@@ -81,8 +81,8 @@ public final class FunctionEntity {
         this.functionDependenciesIndex = startIndex++;
     }
 
-    public static FunctionEntity of(boolean cloudDeployment) {
-        return FUNCTION;
+    public static FunctionEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FUNCTION : FUNCTION;
     }
 
     public MetadataIndex getIndex() {

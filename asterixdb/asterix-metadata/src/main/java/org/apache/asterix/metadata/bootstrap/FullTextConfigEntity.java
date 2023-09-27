@@ -69,8 +69,8 @@ public final class FullTextConfigEntity {
         this.filterPipelineIndex = startIndex++;;
     }
 
-    public static FullTextConfigEntity of(boolean cloudDeployment) {
-        return FULL_TEXT_CONFIG;
+    public static FullTextConfigEntity of(boolean usingDatabase) {
+        return usingDatabase ? DB_FULL_TEXT_CONFIG : FULL_TEXT_CONFIG;
     }
 
     public MetadataIndex getIndex() {
