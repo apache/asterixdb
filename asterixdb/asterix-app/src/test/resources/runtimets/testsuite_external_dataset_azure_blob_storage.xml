@@ -316,6 +316,12 @@
         <expected-error>Unsupported computed field type: 'zft'</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="views">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">views</output-dir>
+      </compilation-unit>
+    </test-case>
     <!--
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="computed-field-segment-pattern-mismatch">

@@ -1,0 +1,22 @@
+distribute result [$$62] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$62]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      select (and(eq($$62.getField("customerId"), 1), eq($$94, 2001), eq($$95, 1), eq($$96, 1), eq($$97, "ford"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_SELECT  |PARTITIONED|
+        project ([$$97, $$96, $$95, $$94, $$62]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$62] <- [{"customer_id": int64-default-null($$m.getField("customer_id")), "year": $$94, "month": $$95, "day": $$96, "company": $$97}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |PARTITIONED|
+            assign [$$97, $$96, $$95, $$94] <- [string-default-null($$m.getField("company")), int64-default-null($$m.getField("day")), int64-default-null($$m.getField("month")), int64-default-null($$m.getField("year"))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ASSIGN  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$m] <- test.maintenance2 project ({month:any,year:any,company:any,customer_id:any,day:any}) prefix-filter on: and(eq(int64-default-null($$m.getField("year")), 2001), eq(int64-default-null($$m.getField("month")), 1), eq(int64-default-null($$m.getField("day")), 1), eq(string-default-null($$m.getField("company")), "ford")) embed-filter-value: true [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
