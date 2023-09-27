@@ -28,6 +28,7 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.builders.UnorderedListBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.FeedEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Feed;
@@ -59,6 +60,13 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
         String dataverseCanonicalName =
                 ((AString) feedRecord.getValueByPos(feedEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        int databaseNameIndex = feedEntity.databaseNameIndex();
+        String databaseName;
+        if (databaseNameIndex >= 0) {
+            databaseName = ((AString) feedRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
         String feedName = ((AString) feedRecord.getValueByPos(feedEntity.feedNameIndex())).getStringValue();
 
         AUnorderedList feedConfig = (AUnorderedList) feedRecord.getValueByPos(feedEntity.adapterConfigIndex());
@@ -74,7 +82,7 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
             adaptorConfiguration.put(key, value);
         }
 
-        return new Feed(dataverseName, feedName, adaptorConfiguration);
+        return new Feed(databaseName, dataverseName, feedName, adaptorConfiguration);
     }
 
     @Override
@@ -83,6 +91,12 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         // write the key in the first two fields of the tuple
         tupleBuilder.reset();
+
+        if (feedEntity.databaseNameIndex() >= 0) {
+            aString.setValue(feed.getDatabaseName());
+            stringSerde.serialize(aString, tupleBuilder.getDataOutput());
+            tupleBuilder.addFieldEndOffset();
+        }
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -93,6 +107,12 @@ public class FeedTupleTranslator extends AbstractTupleTranslator<Feed> {
 
         recordBuilder.reset(feedEntity.getRecordType());
 
+        if (feedEntity.databaseNameIndex() >= 0) {
+            fieldValue.reset();
+            aString.setValue(feed.getDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(feedEntity.databaseNameIndex(), fieldValue);
+        }
         // write dataverse name
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

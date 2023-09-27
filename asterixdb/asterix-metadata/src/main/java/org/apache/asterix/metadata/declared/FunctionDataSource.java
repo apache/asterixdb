@@ -26,6 +26,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.parser.factory.ADMDataParserFactory;
@@ -135,6 +136,7 @@ public abstract class FunctionDataSource extends DataSource {
     }
 
     protected static DataSourceId createDataSourceId(FunctionIdentifier fid, String... parameters) {
-        return new DataSourceId(FunctionSignature.getDataverseName(fid), fid.getName(), parameters);
+        return new DataSourceId(MetadataUtil.resolveDatabase(null, FunctionSignature.getDataverseName(fid)),
+                FunctionSignature.getDataverseName(fid), fid.getName(), parameters);
     }
 }

@@ -3872,7 +3872,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Map<String, String> configuration = cfs.getConfiguration();
             ExternalDataUtils.normalize(configuration);
             ExternalDataUtils.validate(configuration);
-            feed = new Feed(dataverseName, feedName, configuration);
+            feed = new Feed(database, dataverseName, feedName, configuration);
             FeedMetadataUtil.validateFeed(feed, mdTxnCtx, appCtx, warningCollector);
             MetadataManager.INSTANCE.addFeed(metadataProvider.getMetadataTxnContext(), feed);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -4060,7 +4060,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             // Runtime handler
-            EntityId entityId = new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName);
+            EntityId entityId = new EntityId(Feed.EXTENSION_NAME, database, dataverseName, feedName);
             // Feed & Feed Connections
             Feed feed = FeedMetadataUtil.validateIfFeedExists(database, dataverseName, feedName,
                     metadataProvider.getMetadataTxnContext());
@@ -4106,8 +4106,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         StopFeedStatement sfst = (StopFeedStatement) stmt;
         SourceLocation sourceLoc = sfst.getSourceLocation();
         DataverseName dataverseName = getActiveDataverseName(sfst.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String feedName = sfst.getFeedName().getValue();
-        EntityId entityId = new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName);
+        EntityId entityId = new EntityId(Feed.EXTENSION_NAME, database, dataverseName, feedName);
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         // Obtain runtime info from ActiveListener
@@ -4208,7 +4209,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
             // Check whether feed is alive
             ActiveEntityEventsListener listener = (ActiveEntityEventsListener) activeEventHandler
-                    .getListener(new EntityId(Feed.EXTENSION_NAME, dataverseName, feedName));
+                    .getListener(new EntityId(Feed.EXTENSION_NAME, database, dataverseName, feedName));
             if (listener != null && listener.isActive()) {
                 throw new CompilationException(ErrorCode.FEED_CHANGE_FEED_CONNECTIVITY_ON_ALIVE_FEED, sourceLoc,
                         feedName);

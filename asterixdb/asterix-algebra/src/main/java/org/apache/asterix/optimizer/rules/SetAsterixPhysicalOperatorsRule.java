@@ -260,9 +260,9 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
             jobGenParams.readFromFuncArgs(f.getArguments());
             MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-            DataSourceId dataSourceId =
-                    new DataSourceId(jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
             String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
+            DataSourceId dataSourceId =
+                    new DataSourceId(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
             Dataset dataset = mp.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
             IDataSourceIndex<String, DataSourceId> dsi =
                     mp.findDataSourceIndex(jobGenParams.getIndexName(), dataSourceId);

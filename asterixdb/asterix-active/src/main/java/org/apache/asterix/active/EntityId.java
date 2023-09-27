@@ -28,16 +28,22 @@ import org.apache.asterix.common.metadata.DataverseName;
  */
 public class EntityId implements Serializable {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private final String extensionName;
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String entityName;
 
-    public EntityId(String extentionName, DataverseName dataverseName, String entityName) {
-        this.extensionName = extentionName;
+    public EntityId(String extensionName, String databaseName, DataverseName dataverseName, String entityName) {
+        this.extensionName = extensionName;
+        this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.entityName = entityName;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -57,13 +63,13 @@ public class EntityId implements Serializable {
             return true;
         }
         EntityId other = (EntityId) o;
-        return Objects.equals(other.dataverseName, dataverseName) && Objects.equals(other.entityName, entityName)
-                && Objects.equals(other.extensionName, extensionName);
+        return Objects.equals(other.databaseName, databaseName) && Objects.equals(other.dataverseName, dataverseName)
+                && Objects.equals(other.entityName, entityName) && Objects.equals(other.extensionName, extensionName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverseName, entityName, extensionName);
+        return Objects.hash(databaseName, dataverseName, entityName, extensionName);
     }
 
     @Override

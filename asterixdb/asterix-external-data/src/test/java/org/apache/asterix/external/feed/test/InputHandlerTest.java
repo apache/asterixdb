@@ -34,6 +34,7 @@ import org.apache.asterix.active.EntityId;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.memory.ConcurrentFramePool;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.feed.dataflow.FeedRuntimeInputHandler;
 import org.apache.asterix.external.feed.management.FeedConnectionId;
 import org.apache.asterix.external.feed.policy.FeedPolicyAccessor;
@@ -72,8 +73,9 @@ public class InputHandlerTest {
     private FeedRuntimeInputHandler createInputHandler(IHyracksTaskContext ctx, IFrameWriter writer,
             FeedPolicyAccessor fpa, ConcurrentFramePool framePool) throws HyracksDataException, AsterixException {
         DataverseName dvName = DataverseName.createSinglePartName(DATAVERSE_NAME);
+        String dbName = MetadataUtil.databaseFor(dvName);
         FrameTupleAccessor fta = Mockito.mock(FrameTupleAccessor.class);
-        EntityId feedId = new EntityId(FeedUtils.FEED_EXTENSION_NAME, dvName, FEED);
+        EntityId feedId = new EntityId(FeedUtils.FEED_EXTENSION_NAME, dbName, dvName, FEED);
         FeedConnectionId connectionId = new FeedConnectionId(feedId, DATASET);
         ActiveRuntimeId runtimeId = new ActiveRuntimeId(feedId, FeedRuntimeType.COLLECT.toString(), 0);
         return new FeedRuntimeInputHandler(ctx, connectionId, runtimeId, writer, fpa, fta, framePool);

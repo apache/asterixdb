@@ -191,8 +191,8 @@ public class FeedDataSource extends DataSource implements IMutationDataSource {
                 throw new AlgebricksException("Feed not configured with a policy");
             }
             feedPolicy.getProperties().put(BuiltinFeedPolicies.CONFIG_FEED_POLICY_KEY, feedPolicy.getPolicyName());
-            FeedConnectionId feedConnectionId =
-                    new FeedConnectionId(getId().getDataverseName(), getId().getDatasourceName(), getTargetDataset());
+            FeedConnectionId feedConnectionId = new FeedConnectionId(getId().getDatabaseName(),
+                    getId().getDataverseName(), getId().getDatasourceName(), getTargetDataset());
             FeedCollectOperatorDescriptor feedCollector = new FeedCollectOperatorDescriptor(jobSpec, feedConnectionId,
                     feedOutputType, feedDesc, feedPolicy.getProperties(), getLocation());
 

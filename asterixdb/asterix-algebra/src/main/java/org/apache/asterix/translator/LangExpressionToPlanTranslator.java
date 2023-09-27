@@ -734,7 +734,7 @@ abstract class LangExpressionToPlanTranslator
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     "Cannot write output to an external " + dataset());
         }
-        DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
+        DataSourceId sourceId = new DataSourceId(database, dataverseName, datasetName);
         String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
         String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
         IAType itemType = metadataProvider.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),

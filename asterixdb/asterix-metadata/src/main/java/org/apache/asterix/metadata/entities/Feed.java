@@ -41,8 +41,9 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     /** Feed configurations */
     private final Map<String, String> feedConfiguration;
 
-    public Feed(DataverseName dataverseName, String feedName, Map<String, String> feedConfiguration) {
-        this.feedId = new EntityId(EXTENSION_NAME, dataverseName, feedName);
+    public Feed(String databaseName, DataverseName dataverseName, String feedName,
+            Map<String, String> feedConfiguration) {
+        this.feedId = new EntityId(EXTENSION_NAME, databaseName, dataverseName, feedName);
         this.displayName = "(" + feedId + ")";
         this.feedConfiguration = feedConfiguration;
     }
@@ -50,6 +51,11 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     @Override
     public EntityId getFeedId() {
         return feedId;
+    }
+
+    @Override
+    public String getDatabaseName() {
+        return feedId.getDatabaseName();
     }
 
     @Override

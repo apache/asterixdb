@@ -85,9 +85,9 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
         String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
         String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        DataSourceId asid = new DataSourceId(dataverseName, getTargetFeed);
-        String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
         String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        DataSourceId asid = new DataSourceId(database, dataverseName, getTargetFeed);
+        String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
         FeedPolicyEntity policy = metadataProvider.findFeedPolicy(database, dataverseName, policyName);
         if (policy == null) {
             policy = BuiltinFeedPolicies.getFeedPolicy(policyName);

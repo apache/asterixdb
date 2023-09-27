@@ -26,6 +26,8 @@ import org.apache.asterix.common.metadata.DataverseName;
 
 public final class DataSourceId {
 
+    private final String databaseName;
+
     private final DataverseName dataverseName;
 
     private final String datasourceName;
@@ -35,13 +37,15 @@ public final class DataSourceId {
     /**
      * The original constructor taking
      *
+     * @param databaseName
+     *         the database name
      * @param dataverseName
-     *            the dataverse (namespace) for this datasource
+     *         the dataverse (namespace) for this datasource
      * @param datasourceName
-     *            the name for this datasource
+     *         the name for this datasource
      */
-    public DataSourceId(DataverseName dataverseName, String datasourceName) {
-        this(dataverseName, datasourceName, null);
+    public DataSourceId(String databaseName, DataverseName dataverseName, String datasourceName) {
+        this(databaseName, dataverseName, datasourceName, null);
     }
 
     /**
@@ -50,7 +54,8 @@ public final class DataSourceId {
      * that would expose different behavior. It enables the definition of (compile-time) parameterized datasources.
      * Please note that the first 2 parameters still need to be 1) a dataverse name and 2) a datasource name.
      */
-    public DataSourceId(DataverseName dataverseName, String datasourceName, String[] parameters) {
+    public DataSourceId(String databaseName, DataverseName dataverseName, String datasourceName, String[] parameters) {
+        this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.datasourceName = datasourceName;
         this.parameters = parameters;
@@ -59,6 +64,10 @@ public final class DataSourceId {
     @Override
     public String toString() {
         return dataverseName + "." + datasourceName + (parameters != null ? "." + String.join(".", parameters) : "");
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {
@@ -78,13 +87,13 @@ public final class DataSourceId {
             return false;
         }
         DataSourceId that = (DataSourceId) o;
-        return dataverseName.equals(that.dataverseName) && datasourceName.equals(that.datasourceName)
-                && Arrays.equals(parameters, that.parameters);
+        return Objects.equals(databaseName, that.databaseName) && dataverseName.equals(that.dataverseName)
+                && datasourceName.equals(that.datasourceName) && Arrays.equals(parameters, that.parameters);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(dataverseName, datasourceName);
+        int result = Objects.hash(databaseName, dataverseName, datasourceName);
         result = 31 * result + Arrays.hashCode(parameters);
         return result;
     }

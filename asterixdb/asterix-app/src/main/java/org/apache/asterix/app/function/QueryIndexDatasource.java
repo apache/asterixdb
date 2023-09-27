@@ -135,7 +135,7 @@ public class QueryIndexDatasource extends FunctionDataSource {
     }
 
     private static DataSourceId createQueryIndexDataSourceId(Dataset dataset, String indexName) {
-        return new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName(),
+        return new DataSourceId(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(),
                 new String[] { indexName, QueryIndexRewriter.QUERY_INDEX.getName() });
     }
 }

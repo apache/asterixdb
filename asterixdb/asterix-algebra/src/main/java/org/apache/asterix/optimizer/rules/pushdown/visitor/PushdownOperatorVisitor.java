@@ -231,7 +231,9 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
             return null;
         }
 
-        DataSourceId dsid = new DataSourceId(DataverseName.createFromCanonicalForm(dataverse), dataset);
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverse);
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        DataSourceId dsid = new DataSourceId(database, dataverseName, dataset);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         return metadataProvider.findDataSource(dsid);
     }

@@ -28,6 +28,8 @@ public interface IFeed extends Serializable {
 
     public String getFeedName();
 
+    public String getDatabaseName();
+
     public DataverseName getDataverseName();
 
     public EntityId getFeedId();

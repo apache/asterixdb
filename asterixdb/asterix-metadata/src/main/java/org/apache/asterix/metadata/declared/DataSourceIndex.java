@@ -27,15 +27,17 @@ import org.apache.hyracks.algebricks.core.algebra.metadata.IDataSourceIndex;
 public class DataSourceIndex implements IDataSourceIndex<String, DataSourceId> {
 
     private final Index index;
+    private final String database;
     private final DataverseName dataverseName;
     private final String datasetName;
     private final MetadataProvider metadataProvider;
 
     // Every transactions needs to work with its own instance of an
     // MetadataProvider.
-    public DataSourceIndex(Index index, DataverseName dataverseName, String datasetName,
+    public DataSourceIndex(Index index, String database, DataverseName dataverseName, String datasetName,
             MetadataProvider metadataProvider) {
         this.index = index;
+        this.database = database;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.metadataProvider = metadataProvider;
@@ -45,7 +47,7 @@ public class DataSourceIndex implements IDataSourceIndex<String, DataSourceId> {
     @Override
     public IDataSource<DataSourceId> getDataSource() {
         try {
-            DataSourceId sourceId = new DataSourceId(dataverseName, datasetName);
+            DataSourceId sourceId = new DataSourceId(database, dataverseName, datasetName);
             return metadataProvider.lookupSourceInMetadata(sourceId);
         } catch (Exception me) {
             return null;

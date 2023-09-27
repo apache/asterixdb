@@ -42,6 +42,7 @@ import org.apache.asterix.app.nc.NCAppRuntimeContext;
 import org.apache.asterix.app.result.ResponsePrinter;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.feed.watch.WaitForStateSubscriber;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -74,8 +75,9 @@ public class ActiveStatsTest {
     @Test
     public void refreshStatsTest() throws Exception {
         // Entities to be used
-        EntityId entityId =
-                new EntityId("MockExtension", DataverseName.createSinglePartName("MockDataverse"), "MockEntity");
+        DataverseName mockDataverse = DataverseName.createSinglePartName("MockDataverse");
+        String mockDatabase = MetadataUtil.resolveDatabase(null, mockDataverse);
+        EntityId entityId = new EntityId("MockExtension", mockDatabase, mockDataverse, "MockEntity");
         ActiveRuntimeId activeRuntimeId =
                 new ActiveRuntimeId(entityId, FeedIntakeOperatorNodePushable.class.getSimpleName(), 0);
         List<Dataset> datasetList = new ArrayList<>();

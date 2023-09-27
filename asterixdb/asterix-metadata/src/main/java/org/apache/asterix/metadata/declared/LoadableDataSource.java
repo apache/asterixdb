@@ -27,6 +27,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -64,8 +65,9 @@ public class LoadableDataSource extends DataSource {
 
     public LoadableDataSource(Dataset targetDataset, IAType itemType, IAType metaItemType, String adapter,
             Map<String, String> properties) throws AlgebricksException, IOException {
-        super(new DataSourceId(DataverseName.createSinglePartName(LOADABLE_DV), LOADABLE_DS), itemType, metaItemType,
-                Type.LOADABLE, null);
+        super(new DataSourceId(MetadataUtil.databaseFor(DataverseName.createSinglePartName(LOADABLE_DV)),
+                DataverseName.createSinglePartName(LOADABLE_DV), LOADABLE_DS), itemType, metaItemType, Type.LOADABLE,
+                null);
         this.targetDataset = targetDataset;
         this.adapter = adapter;
         this.adapterProperties = properties;

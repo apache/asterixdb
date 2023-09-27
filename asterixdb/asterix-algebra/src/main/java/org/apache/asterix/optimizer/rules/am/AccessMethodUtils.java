@@ -1001,7 +1001,7 @@ public class AccessMethodUtils {
 
     /**
      * In case of a left outer join we look for a special GroupBy above the join operator
-     * (see {@link IntroduceJoinAccessMethodRule#checkAndApplyJoinTransformation(Mutable, IOptimizationContext)}.
+     * (see {@link IntroduceJoinAccessMethodRule#checkAndApplyJoinTransformation(Mutable, IOptimizationContext, boolean)}.
      * A "Special GroupBy" is a GroupBy that eliminates unjoined duplicates that might be produced by the secondary
      * index probe. We probe secondary indexes on each index partition and return a tuple with a right branch variable
      * set to MISSING (or NULL) if there's no match on that partition. Therefore if there's more than one partition
@@ -2049,7 +2049,8 @@ public class AccessMethodUtils {
         unnestOp.setExecutionMode(ExecutionMode.PARTITIONED);
 
         //set the physical operator
-        DataSourceId dataSourceId = new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName());
+        DataSourceId dataSourceId =
+                new DataSourceId(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         unnestOp.setPhysicalOperator(new ExternalDataLookupPOperator(dataSourceId, dataset, recordType, primaryKeyVars,
                 false, retainInput, retainNull));
         return unnestOp;

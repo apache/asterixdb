@@ -366,7 +366,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                             context.getOutputTypeEnvironment(currentTop),
                             index.getIndexDetails().isOverridingKeyFieldTypes());
                 }
-                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
+                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, database, dataverseName, datasetName, mp);
 
                 // Introduce the TokenizeOperator only when doing bulk-load,
                 // and index type is keyword or n-gram.
@@ -623,7 +623,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
                     beforeOpFilterExpression = createAnyUnknownFilterExpression(originalKeyVarList,
                             context.getOutputTypeEnvironment(originalAssignCoordinates), forceFilter);
                 }
-                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, dataverseName, datasetName, mp);
+                DataSourceIndex dataSourceIndex = new DataSourceIndex(index, database, dataverseName, datasetName, mp);
                 indexUpdate = new IndexInsertDeleteUpsertOperator(dataSourceIndex,
                         OperatorManipulationUtil
                                 .cloneExpressions(primaryIndexModificationOp.getPrimaryKeyExpressions()),

@@ -434,7 +434,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String database = dataset.getDatabaseName();
         String datasetName = dataset.getDatasetName();
         Index index = getIndex(database, dataverseName, datasetName, indexId);
-        return index != null ? new DataSourceIndex(index, dataverseName, datasetName, this) : null;
+        return index != null ? new DataSourceIndex(index, database, dataverseName, datasetName, this) : null;
     }
 
     public Index getIndex(String database, DataverseName dataverseName, String datasetName, String indexName)

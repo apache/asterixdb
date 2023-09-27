@@ -42,8 +42,8 @@ public class FeedConnectionId implements Serializable {
         this.hash = toString().hashCode();
     }
 
-    public FeedConnectionId(DataverseName dataverseName, String feedName, String datasetName) {
-        this(new EntityId(FEED_EXTENSION_NAME, dataverseName, feedName), datasetName);
+    public FeedConnectionId(String databaseName, DataverseName dataverseName, String feedName, String datasetName) {
+        this(new EntityId(FEED_EXTENSION_NAME, databaseName, dataverseName, feedName), datasetName);
     }
 
     public EntityId getFeedId() {

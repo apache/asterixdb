@@ -99,7 +99,8 @@ public class DatasetRewriter implements IFunctionToDataSourceRewriter, IResultTy
         }
         variables.add(unnest.getVariable());
 
-        DataSourceId dsid = new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName());
+        DataSourceId dsid =
+                new DataSourceId(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
         DataSource dataSource = metadataProvider.findDataSource(dsid);
         boolean hasMeta = dataSource.hasMeta();
         if (hasMeta) {

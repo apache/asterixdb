@@ -86,7 +86,7 @@ public class ActiveEventsListenerTest {
     static DataverseName dataverseName = MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME;
     static String database = MetadataUtil.databaseFor(dataverseName);
     static String entityName = "entityName";
-    static EntityId entityId = new EntityId(Feed.EXTENSION_NAME, dataverseName, entityName);
+    static EntityId entityId = new EntityId(Feed.EXTENSION_NAME, database, dataverseName, entityName);
     static Dataset firstDataset;
     static Dataset secondDataset;
     static List<Dataset> allDatasets;
@@ -1523,7 +1523,7 @@ public class ActiveEventsListenerTest {
         TestEventsListener[] additionalListeners = new TestEventsListener[3];
         for (int i = 0; i < additionalListeners.length; i++) {
             String entityName = "entityName" + i;
-            EntityId entityId = new EntityId(Feed.EXTENSION_NAME, dataverseName, entityName);
+            EntityId entityId = new EntityId(Feed.EXTENSION_NAME, database, dataverseName, entityName);
             ClusterControllerService ccService = Mockito.mock(ClusterControllerService.class);
             CCServiceContext ccServiceCtx = Mockito.mock(CCServiceContext.class);
             CcApplicationContext ccAppCtx = Mockito.mock(CcApplicationContext.class);
