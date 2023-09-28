@@ -578,8 +578,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         DataverseDecl dvd = (DataverseDecl) stmt;
         DataverseName dvName = dvd.getDataverseName();
+        String database = MetadataUtil.resolveDatabase(null, dvName);
         metadataProvider.validateDataverseName(dvName, dvd.getSourceLocation());
-        lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), dvName);
+        //TODO(DB): read lock on database
+        lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), database, dvName);
         try {
             return doUseDataverseStatement(metadataProvider, dvd);
         } finally {
@@ -621,11 +623,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters) throws Exception {
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
+        String database = MetadataUtil.resolveDatabase(null, dvName);
         metadataProvider.validateDataverseName(dvName, stmtCreateDataverse.getSourceLocation());
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), dvName);
+        lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), database, dvName);
         try {
             doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters);
         } finally {
@@ -733,10 +736,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName,
-                itemTypeDataverseName, itemTypeName, itemTypeAnonymous, metaItemTypeDataverseName, metaItemTypeName,
-                metaItemTypeAnonymous, nodegroupName, compactionPolicy, defaultCompactionPolicy, dd.getDatasetType(),
-                dd.getDatasetDetailsDecl());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, itemTypeDataverseName);
+        String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, metaItemTypeDataverseName);
+        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName,
+                itemTypeDatabase, itemTypeDataverseName, itemTypeName, itemTypeAnonymous, metaItemTypeDatabase,
+                metaItemTypeDataverseName, metaItemTypeName, metaItemTypeAnonymous, nodegroupName, compactionPolicy,
+                defaultCompactionPolicy, dd.getDatasetType(), dd.getDatasetDetailsDecl());
         try {
             doCreateDatasetStatement(metadataProvider, dd, dataverseName, datasetName, itemTypeDataverseName,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeDataverseName, metaItemTypeName, hcc,
@@ -1118,10 +1124,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtCreateIndex.getDataverseName(), indexName,
                 stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtCreateIndex.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName,
+        lockUtil.createIndexBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName,
                 fullTextConfigName);
         try {
             doCreateIndex(metadataProvider, stmtCreateIndex, dataverseName, datasetName, hcc, requestParameters);
@@ -1473,11 +1480,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtCreateFilter.getDataverseName(), fullTextFilterName,
                 stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtCreateFilter.getDataverseName());
-
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createFullTextFilterBegin(lockManager, metadataProvider.getLocks(), dataverseName, fullTextFilterName);
+        lockUtil.createFullTextFilterBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                fullTextFilterName);
         try {
             doCreateFullTextFilter(metadataProvider, stmtCreateFilter, dataverseName);
         } finally {
@@ -1540,13 +1548,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtCreateConfig.getDataverseName(), configName,
                 stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtCreateConfig.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         ImmutableList<String> filterNames = stmtCreateConfig.getFilterNames();
 
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createFullTextConfigBegin(lockManager, metadataProvider.getLocks(), dataverseName, configName,
-                filterNames);
+        lockUtil.createFullTextConfigBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                configName, filterNames);
         try {
             doCreateFullTextConfig(metadataProvider, stmtCreateConfig, dataverseName, configName, filterNames);
         } finally {
@@ -1788,7 +1797,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(), dataverseName, typeName);
+        lockUtil.createTypeBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, typeName);
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, database, dataverseName);
             if (dv == null) {
@@ -1834,6 +1843,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDropStatement stmtDropDataverse = (DataverseDropStatement) stmt;
         SourceLocation sourceLoc = stmtDropDataverse.getSourceLocation();
         DataverseName dataverseName = stmtDropDataverse.getDataverseName();
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         metadataProvider.validateDataverseName(dataverseName, sourceLoc);
         if (dataverseName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)
                 || dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
@@ -1843,7 +1853,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropDataverseBegin(lockManager, metadataProvider.getLocks(), dataverseName);
+        lockUtil.dropDataverseBegin(lockManager, metadataProvider.getLocks(), database, dataverseName);
         try {
             doDropDataverse(stmtDropDataverse, metadataProvider, hcc, requestParameters);
         } finally {
@@ -2029,10 +2039,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String datasetName = stmtDelete.getDatasetName().getValue();
         metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName, sourceLoc);
         DataverseName dataverseName = getActiveDataverseName(stmtDelete.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName);
         try {
             doDropDataset(dataverseName, datasetName, metadataProvider, stmtDelete.getIfExists(), hcc,
                     requestParameters, true, sourceLoc);
@@ -2138,11 +2149,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtIndexDrop.getDataverseName(),
                 stmtIndexDrop.getIndexName().getValue(), stmtIndexDrop.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtIndexDrop.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = stmtIndexDrop.getDatasetName().getValue();
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropIndexBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.dropIndexBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName);
         try {
             doDropIndex(metadataProvider, stmtIndexDrop, dataverseName, datasetName, hcc, requestParameters);
         } finally {
@@ -2243,12 +2255,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         FullTextFilterDropStatement stmtFilterDrop = (FullTextFilterDropStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(stmtFilterDrop.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String fullTextFilterName = stmtFilterDrop.getFilterName();
 
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropFullTextFilterBegin(lockManager, metadataProvider.getLocks(), dataverseName, fullTextFilterName);
+        lockUtil.dropFullTextFilterBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                fullTextFilterName);
         try {
             doDropFullTextFilter(metadataProvider, stmtFilterDrop, dataverseName, fullTextFilterName);
         } finally {
@@ -2287,12 +2301,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws AlgebricksException, RemoteException {
         FullTextConfigDropStatement stmtConfigDrop = (FullTextConfigDropStatement) stmt;
         DataverseName dataverseName = getActiveDataverseName(stmtConfigDrop.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String configName = stmtConfigDrop.getConfigName();
 
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropFullTextConfigBegin(lockManager, metadataProvider.getLocks(), dataverseName, configName);
+        lockUtil.dropFullTextConfigBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, configName);
         try {
             doDropFullTextConfig(metadataProvider, stmtConfigDrop, hcc, requestParameters);
         } finally {
@@ -2348,7 +2363,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.dropTypeBegin(lockManager, metadataProvider.getLocks(), dataverseName, typeName);
+        lockUtil.dropTypeBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, typeName);
         try {
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, database, dataverseName);
@@ -2417,6 +2432,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String viewName = cvs.getViewName();
         metadataProvider.validateDatabaseObjectName(cvs.getDataverseName(), viewName, stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cvs.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
 
         DataverseName viewItemTypeDataverseName;
         String viewItemTypeName;
@@ -2432,13 +2448,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             viewItemTypeName = MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDatatypeName();
             viewItemTypeAnonymous = false;
         }
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, viewItemTypeDataverseName);
 
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, viewName,
-                viewItemTypeDataverseName, viewItemTypeName, viewItemTypeAnonymous, null, null, false, null, null, true,
-                DatasetType.VIEW, null);
+        lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, viewName,
+                itemTypeDatabase, viewItemTypeDataverseName, viewItemTypeName, viewItemTypeAnonymous, null, null, null,
+                false, null, null, true, DatasetType.VIEW, null);
         try {
             doCreateView(metadataProvider, cvs, dataverseName, viewName, viewItemTypeDataverseName, viewItemTypeName,
                     stmtRewriter, requestParameters);
@@ -2636,10 +2653,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String viewName = stmtDrop.getViewName().getValue();
         metadataProvider.validateDatabaseObjectName(stmtDrop.getDataverseName(), viewName, sourceLoc);
         DataverseName dataverseName = getActiveDataverseName(stmtDrop.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, viewName);
+        lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, viewName);
         try {
             doDropView(metadataProvider, stmtDrop, dataverseName, viewName);
         } finally {
@@ -2712,6 +2730,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
                 stmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         signature.setDataverseName(dataverseName);
         DataverseName libraryDataverseName = null;
         String libraryName = cfs.getLibraryName();
@@ -2721,12 +2740,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 libraryDataverseName = dataverseName;
             }
         }
-
+        String libraryDatabase = MetadataUtil.resolveDatabase(null, libraryDataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName(),
-                libraryDataverseName, libraryName);
+        lockUtil.createFunctionBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                signature.getName(), libraryDatabase, libraryDataverseName, libraryName);
         try {
             doCreateFunction(metadataProvider, cfs, signature, stmtRewriter, requestParameters);
         } finally {
@@ -2832,7 +2851,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (libraryDataverseName == null) {
                     libraryDataverseName = dataverseName;
                 }
-                String libraryDatabase = MetadataUtil.resolveDatabase(null, dataverseName);
+                String libraryDatabase = MetadataUtil.resolveDatabase(null, libraryDataverseName);
                 String libraryName = cfs.getLibraryName();
                 Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, libraryDatabase, libraryDataverseName,
                         libraryName);
@@ -2983,11 +3002,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
                 stmtDropFunction.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         signature.setDataverseName(dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), dataverseName, signature.getName());
+        lockUtil.dropFunctionBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                signature.getName());
         try {
             doDropFunction(metadataProvider, stmtDropFunction, signature, requestParameters);
         } finally {
@@ -3043,16 +3064,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String adapterName = cas.getAdapterName();
         metadataProvider.validateDatabaseObjectName(cas.getDataverseName(), adapterName, cas.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cas.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         DataverseName libraryDataverseName = cas.getLibraryDataverseName();
         if (libraryDataverseName == null) {
             libraryDataverseName = dataverseName;
         }
+        String libraryDatabase = MetadataUtil.resolveDatabase(null, libraryDataverseName);
         String libraryName = cas.getLibraryName();
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createAdapterBegin(lockManager, metadataProvider.getLocks(), dataverseName, adapterName,
-                libraryDataverseName, libraryName);
+        lockUtil.createAdapterBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, adapterName,
+                libraryDatabase, libraryDataverseName, libraryName);
         try {
             doCreateAdapter(metadataProvider, cas);
         } finally {
@@ -3126,10 +3149,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String adapterName = stmtDropAdapter.getAdapterName();
         metadataProvider.validateDatabaseObjectName(stmtDropAdapter.getDataverseName(), adapterName, sourceLoc);
         DataverseName dataverseName = getActiveDataverseName(stmtDropAdapter.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropAdapterBegin(lockManager, metadataProvider.getLocks(), dataverseName, adapterName);
+        lockUtil.dropAdapterBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, adapterName);
         try {
             doDropAdapter(metadataProvider, stmtDropAdapter, dataverseName, adapterName);
         } finally {
@@ -3179,12 +3203,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(cls.getDataverseName(), cls.getLibraryName(),
                 cls.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(cls.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String libraryName = cls.getLibraryName();
         String libraryHash = cls.getHash();
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
+        lockUtil.createLibraryBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, libraryName);
         try {
             doCreateLibrary(metadataProvider, dataverseName, libraryName, libraryHash, cls, hcc, requestParameters);
         } finally {
@@ -3313,10 +3338,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtDropLibrary.getDataverseName(), libraryName,
                 stmtDropLibrary.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtDropLibrary.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropLibraryBegin(lockManager, metadataProvider.getLocks(), dataverseName, libraryName);
+        lockUtil.dropLibraryBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, libraryName);
         try {
             doDropLibrary(metadataProvider, stmtDropLibrary, dataverseName, libraryName, hcc, requestParameters);
         } finally {
@@ -3407,6 +3433,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(css.getDataverseName(), css.getSynonymName(),
                 css.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(css.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String synonymName = css.getSynonymName();
         DataverseName objectDataverseName =
                 css.getObjectDataverseName() != null ? css.getObjectDataverseName() : dataverseName;
@@ -3414,7 +3441,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
+        lockUtil.createSynonymBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, synonymName);
         try {
             doCreateSynonym(metadataProvider, css, dataverseName, synonymName, objectDataverseName, objectName);
         } finally {
@@ -3462,10 +3489,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtSynDrop.getDataverseName(), synonymName,
                 stmtSynDrop.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtSynDrop.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.dropSynonymBegin(lockManager, metadataProvider.getLocks(), dataverseName, synonymName);
+        lockUtil.dropSynonymBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, synonymName);
         try {
             doDropSynonym(metadataProvider, stmtSynDrop, dataverseName, synonymName);
         } finally {
@@ -3503,10 +3531,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(loadStmt.getDataverseName(), datasetName,
                 loadStmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(loadStmt.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.modifyDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName);
         try {
             Map<String, String> properties = loadStmt.getProperties();
             ExternalDataUtils.normalize(properties);
@@ -3549,7 +3578,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                datasetName);
         JobId jobId = null;
         boolean atomic = false;
         try {
@@ -3636,11 +3666,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(stmtInsertUpsert.getDataverseName(), datasetName,
                 stmtInsertUpsert.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(stmtInsertUpsert.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         final IMetadataLocker locker = new IMetadataLocker() {
             @Override
             public void lock() throws AlgebricksException {
                 compilationLock.readLock().lock();
-                lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+                lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                        datasetName);
             }
 
             @Override
@@ -3679,9 +3711,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (jobSpec == null) {
                     return jobSpec;
                 }
-                String database = MetadataUtil.resolveDatabase(null, ((InsertStatement) stmt).getDataverseName());
-                Dataset ds = metadataProvider.findDataset(database, ((InsertStatement) stmt).getDataverseName(),
-                        ((InsertStatement) stmt).getDatasetName());
+                String insertStmtDatabase =
+                        MetadataUtil.resolveDatabase(null, ((InsertStatement) stmt).getDataverseName());
+                Dataset ds = metadataProvider.findDataset(insertStmtDatabase,
+                        ((InsertStatement) stmt).getDataverseName(), ((InsertStatement) stmt).getDatasetName());
                 atomic = ds.isAtomic();
                 if (atomic) {
                     int numParticipatingNodes = appCtx.getNodeJobTracker()
@@ -3729,7 +3762,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.insertDeleteUpsertBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                datasetName);
         boolean atomic = false;
         JobId jobId = null;
         try {
@@ -3856,7 +3890,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.createFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
+        lockUtil.createFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, feedName);
         try {
             Feed feed = MetadataManager.INSTANCE.getFeed(metadataProvider.getMetadataTxnContext(), database,
                     dataverseName, feedName);
@@ -3897,7 +3931,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.createFeedPolicyBegin(lockManager, metadataProvider.getLocks(), dataverseName, policyName);
+        lockUtil.createFeedPolicyBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, policyName);
         try {
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -3965,7 +3999,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.dropFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
+        lockUtil.dropFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, feedName);
         try {
             Feed feed = MetadataManager.INSTANCE.getFeed(mdTxnCtx, database, dataverseName, feedName);
             if (feed == null) {
@@ -4022,7 +4056,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.dropFeedPolicyBegin(lockManager, metadataProvider.getLocks(), dataverseName, policyName);
+        lockUtil.dropFeedPolicyBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, policyName);
         try {
             FeedPolicyEntity feedPolicy =
                     MetadataManager.INSTANCE.getFeedPolicy(mdTxnCtx, database, dataverseName, policyName);
@@ -4056,7 +4090,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean committed = false;
-        lockUtil.startFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
+        lockUtil.startFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, feedName);
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             // Runtime handler
@@ -4071,8 +4105,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             for (FeedConnection feedConnection : feedConnections) {
                 // what if the dataset is in a different dataverse
-                lockManager.acquireDatasetReadLock(metadataProvider.getLocks(), feedConnection.getDataverseName(),
-                        feedConnection.getDatasetName());
+                lockManager.acquireDatasetReadLock(metadataProvider.getLocks(), feedConnection.getDatabaseName(),
+                        feedConnection.getDataverseName(), feedConnection.getDatasetName());
             }
             ActiveNotificationHandler activeEventHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -4120,7 +4154,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.stopFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, feedName);
+        lockUtil.stopFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, feedName);
         try {
             listener.stop(metadataProvider);
         } finally {
@@ -4148,7 +4182,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ActiveNotificationHandler activeEventHandler =
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         // Transaction handling
-        lockUtil.connectFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName, feedName);
+        lockUtil.connectFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName,
+                feedName);
         try {
             // validation
             Dataset dataset =
@@ -4203,7 +4238,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        lockUtil.disconnectFeedBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName, feedName);
+        lockUtil.disconnectFeedBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName,
+                feedName);
         try {
             ActiveNotificationHandler activeEventHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -4247,11 +4283,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(analyzeStatement.getDataverseName(),
                 analyzeStatement.getDatasetName(), analyzeStatement.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(analyzeStatement.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = analyzeStatement.getDatasetName();
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.analyzeDatasetBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.analyzeDatasetBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName);
         try {
             doAnalyzeDataset(metadataProvider, analyzeStatement, dataverseName, datasetName, hcc, requestParameters);
         } finally {
@@ -4471,11 +4508,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.validateDatabaseObjectName(analyzeDropStmt.getDataverseName(),
                 analyzeDropStmt.getDatasetName(), analyzeDropStmt.getSourceLocation());
         DataverseName dataverseName = getActiveDataverseName(analyzeDropStmt.getDataverseName());
+        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = analyzeDropStmt.getDatasetName();
         if (isCompileOnly()) {
             return;
         }
-        lockUtil.analyzeDatasetDropBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.analyzeDatasetDropBegin(lockManager, metadataProvider.getLocks(), database, dataverseName,
+                datasetName);
         try {
             doAnalyzeDatasetDrop(metadataProvider, analyzeDropStmt, dataverseName, datasetName, hcc, requestParams);
         } finally {
@@ -4633,7 +4672,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<JobSpecification> jobsToExecute = new ArrayList<>();
-        lockUtil.compactBegin(lockManager, metadataProvider.getLocks(), dataverseName, datasetName);
+        lockUtil.compactBegin(lockManager, metadataProvider.getLocks(), database, dataverseName, datasetName);
         try {
             Dataset ds = metadataProvider.findDataset(database, dataverseName, datasetName);
             if (ds == null) {

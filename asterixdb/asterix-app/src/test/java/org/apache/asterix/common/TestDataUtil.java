@@ -187,8 +187,8 @@ public class TestDataUtil {
      * @param targetNodes
      * @throws Exception
      */
-    public static void rebalanceDataset(AsterixHyracksIntegrationUtil integrationUtil, DataverseName dataverseName,
-            String datasetName, String[] targetNodes) throws Exception {
+    public static void rebalanceDataset(AsterixHyracksIntegrationUtil integrationUtil, String database,
+            DataverseName dataverseName, String datasetName, String[] targetNodes) throws Exception {
         ICcApplicationContext ccAppCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         MetadataProvider metadataProvider = MetadataProvider.create(ccAppCtx, null);
@@ -198,8 +198,8 @@ public class TestDataUtil {
             activeNotificationHandler.suspend(metadataProvider);
             try {
                 IMetadataLockManager lockManager = ccAppCtx.getMetadataLockManager();
-                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataverseName,
-                        datasetName);
+                lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), database,
+                        dataverseName, datasetName);
                 RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
                         metadataProvider, ccAppCtx.getHcc(), NoOpDatasetRebalanceCallback.INSTANCE, false);
             } finally {

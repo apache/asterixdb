@@ -718,7 +718,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
         DataverseName dataverseName = entityId.getDataverseName();
         String entityName = entityId.getEntityName();
-        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), dataverseName, entityName);
+        lockManager.acquireActiveEntityWriteLock(metadataProvider.getLocks(), entityId.getDatabaseName(), dataverseName,
+                entityName);
         acquireSuspendDatasetsLocks(metadataProvider, lockManager, targetDataset);
     }
 
@@ -729,8 +730,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                 // DDL operation already acquired the proper lock for the operation
                 continue;
             }
-            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataset.getDataverseName(),
-                    dataset.getDatasetName());
+            lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), dataset.getDatabaseName(),
+                    dataset.getDataverseName(), dataset.getDatasetName());
         }
     }
 

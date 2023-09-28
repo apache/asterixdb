@@ -114,7 +114,8 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         step(onStart);
         try {
             metadataProvider.getApplicationContext().getMetadataLockManager().acquireDatasetReadLock(
-                    metadataProvider.getLocks(), MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, "type");
+                    metadataProvider.getLocks(), MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDatabaseName(),
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName(), "type");
         } catch (AlgebricksException e) {
             throw HyracksDataException.create(e);
         }
@@ -208,8 +209,11 @@ public class TestEventsListener extends ActiveEntityEventsListener {
         try {
             IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
             LockList locks = metadataProvider.getLocks();
-            lockManager.acquireDataverseReadLock(locks, entityId.getDataverseName());
-            lockManager.acquireActiveEntityWriteLock(locks, entityId.getDataverseName(), entityId.getEntityName());
+            String entityDatabase = entityId.getDatabaseName();
+            lockManager.acquireDatabaseReadLock(locks, entityDatabase);
+            lockManager.acquireDataverseReadLock(locks, entityDatabase, entityId.getDataverseName());
+            lockManager.acquireActiveEntityWriteLock(locks, entityDatabase, entityId.getDataverseName(),
+                    entityId.getEntityName());
             // persist entity
         } catch (Throwable th) {
             // This failure puts the system in a bad state.

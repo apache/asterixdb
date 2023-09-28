@@ -263,8 +263,8 @@ public class RebalanceUtil {
                 (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
         IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
         LOGGER.debug("attempting to acquire dataset {} upgrade lock", source.getDatasetName());
-        lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), source.getDataverseName(),
-                source.getDatasetName());
+        lockManager.upgradeDatasetLockToWrite(metadataProvider.getLocks(), source.getDatabaseName(),
+                source.getDataverseName(), source.getDatasetName());
         LOGGER.debug("acquired dataset {} upgrade lock", source.getDatasetName());
         LOGGER.info("Updating dataset {} node group from {} to {}", source.getDatasetName(), source.getNodeGroupName(),
                 target.getNodeGroupName());
@@ -280,8 +280,8 @@ public class RebalanceUtil {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             LOGGER.info("dataset {} node group updated to {}", target.getDatasetName(), target.getNodeGroupName());
         } finally {
-            lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(), target.getDataverseName(),
-                    target.getDatasetName());
+            lockManager.downgradeDatasetLockToExclusiveModify(metadataProvider.getLocks(), target.getDatabaseName(),
+                    target.getDataverseName(), target.getDatasetName());
         }
     }
 

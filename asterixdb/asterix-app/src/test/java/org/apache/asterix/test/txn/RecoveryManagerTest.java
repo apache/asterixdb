@@ -90,8 +90,9 @@ public class RecoveryManagerTest {
         TestDataUtil.upsertData(datasetName, 10);
         final long countBeforeRebalance = TestDataUtil.getDatasetCount(datasetName);
         // rebalance dataset to single nc
-        TestDataUtil.rebalanceDataset(integrationUtil, MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName(),
-                datasetName, new String[] { "asterix_nc2" });
+        TestDataUtil.rebalanceDataset(integrationUtil, MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDatabaseName(),
+                MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName(), datasetName,
+                new String[] { "asterix_nc2" });
         // check data after rebalance
         final long countAfterRebalance = TestDataUtil.getDatasetCount(datasetName);
         Assert.assertEquals(countBeforeRebalance, countAfterRebalance);

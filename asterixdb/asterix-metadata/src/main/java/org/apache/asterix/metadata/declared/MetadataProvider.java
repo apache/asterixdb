@@ -364,8 +364,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         } else if (dbName == null || dvName == null) {
             return null;
         }
-        appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dvName);
-        appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, dvName, datasetName);
+        //TODO(DB): read lock on database
+        appCtx.getMetadataLockManager().acquireDataverseReadLock(locks, dbName, dvName);
+        appCtx.getMetadataLockManager().acquireDatasetReadLock(locks, dbName, dvName, datasetName);
         return MetadataManagerUtil.findDataset(mdTxnCtx, dbName, dvName, datasetName, includingViews);
     }
 

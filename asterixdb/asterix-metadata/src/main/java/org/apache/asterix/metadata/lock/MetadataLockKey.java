@@ -30,6 +30,7 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         ACTIVE,
         DATASET,
         DATATYPE,
+        DATABASE,
         DATAVERSE,
         EXTENSION,
         FEED_POLICY,
@@ -47,17 +48,20 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
 
     private final String entityKindExtension;
 
+    private final String database;
+
     private final DataverseName dataverseName;
 
     private final String entityName;
 
-    private MetadataLockKey(EntityKind entityKind, String entityKindExtension, DataverseName dataverseName,
-            String entityName) {
-        if (entityKind == null || (dataverseName == null && entityName == null)) {
+    private MetadataLockKey(EntityKind entityKind, String entityKindExtension, String database,
+            DataverseName dataverseName, String entityName) {
+        if (entityKind == null || (database == null && dataverseName == null && entityName == null)) {
             throw new NullPointerException();
         }
         this.entityKind = entityKind;
         this.entityKindExtension = entityKindExtension;
+        this.database = database;
         this.dataverseName = dataverseName;
         this.entityName = entityName;
     }
@@ -72,12 +76,13 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         }
         MetadataLockKey that = (MetadataLockKey) o;
         return entityKind == that.entityKind && Objects.equals(entityKindExtension, that.entityKindExtension)
-                && Objects.equals(dataverseName, that.dataverseName) && Objects.equals(entityName, that.entityName);
+                && Objects.equals(database, that.database) && Objects.equals(dataverseName, that.dataverseName)
+                && Objects.equals(entityName, that.entityName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(entityKind, entityKindExtension, dataverseName, entityName);
+        return Objects.hash(entityKind, entityKindExtension, database, dataverseName, entityName);
     }
 
     @Override
@@ -94,60 +99,67 @@ final class MetadataLockKey implements IMetadataLock.LockKey {
         return sb.toString();
     }
 
-    static MetadataLockKey createDataverseLockKey(DataverseName dataverseName) {
-        return new MetadataLockKey(EntityKind.DATAVERSE, null, dataverseName, null);
+    static MetadataLockKey createDatabaseLockKey(String database) {
+        return new MetadataLockKey(EntityKind.DATABASE, null, database, null, null);
     }
 
-    static MetadataLockKey createDatasetLockKey(DataverseName dataverseName, String datasetName) {
-        return new MetadataLockKey(EntityKind.DATASET, null, dataverseName, datasetName);
+    static MetadataLockKey createDataverseLockKey(String database, DataverseName dataverseName) {
+        return new MetadataLockKey(EntityKind.DATAVERSE, null, database, dataverseName, null);
     }
 
-    static MetadataLockKey createDataTypeLockKey(DataverseName dataverseName, String datatypeName) {
-        return new MetadataLockKey(EntityKind.DATATYPE, null, dataverseName, datatypeName);
+    static MetadataLockKey createDatasetLockKey(String database, DataverseName dataverseName, String datasetName) {
+        return new MetadataLockKey(EntityKind.DATASET, null, database, dataverseName, datasetName);
     }
 
-    static MetadataLockKey createFunctionLockKey(DataverseName dataverseName, String functionName) {
-        return new MetadataLockKey(EntityKind.FUNCTION, null, dataverseName, functionName);
+    static MetadataLockKey createDataTypeLockKey(String database, DataverseName dataverseName, String datatypeName) {
+        return new MetadataLockKey(EntityKind.DATATYPE, null, database, dataverseName, datatypeName);
     }
 
-    static MetadataLockKey createFullTextConfigLockKey(DataverseName dataverseName, String fullTextConfigName) {
-        return new MetadataLockKey(EntityKind.FULL_TEXT_CONFIG, null, dataverseName, fullTextConfigName);
+    static MetadataLockKey createFunctionLockKey(String database, DataverseName dataverseName, String functionName) {
+        return new MetadataLockKey(EntityKind.FUNCTION, null, database, dataverseName, functionName);
     }
 
-    static MetadataLockKey createFullTextFilterLockKey(DataverseName dataverseName, String fullTextFilterName) {
-        return new MetadataLockKey(EntityKind.FULL_TEXT_FILTER, null, dataverseName, fullTextFilterName);
+    static MetadataLockKey createFullTextConfigLockKey(String database, DataverseName dataverseName,
+            String fullTextConfigName) {
+        return new MetadataLockKey(EntityKind.FULL_TEXT_CONFIG, null, database, dataverseName, fullTextConfigName);
     }
 
-    static MetadataLockKey createLibraryLockKey(DataverseName dataverseName, String libraryName) {
-        return new MetadataLockKey(EntityKind.LIBRARY, null, dataverseName, libraryName);
+    static MetadataLockKey createFullTextFilterLockKey(String database, DataverseName dataverseName,
+            String fullTextFilterName) {
+        return new MetadataLockKey(EntityKind.FULL_TEXT_FILTER, null, database, dataverseName, fullTextFilterName);
     }
 
-    static MetadataLockKey createAdapterLockKey(DataverseName dataverseName, String adapterName) {
-        return new MetadataLockKey(EntityKind.ADAPTER, null, dataverseName, adapterName);
+    static MetadataLockKey createLibraryLockKey(String database, DataverseName dataverseName, String libraryName) {
+        return new MetadataLockKey(EntityKind.LIBRARY, null, database, dataverseName, libraryName);
     }
 
-    static MetadataLockKey createActiveEntityLockKey(DataverseName dataverseName, String entityName) {
-        return new MetadataLockKey(EntityKind.ACTIVE, null, dataverseName, entityName);
+    static MetadataLockKey createAdapterLockKey(String database, DataverseName dataverseName, String adapterName) {
+        return new MetadataLockKey(EntityKind.ADAPTER, null, database, dataverseName, adapterName);
     }
 
-    static MetadataLockKey createFeedPolicyLockKey(DataverseName dataverseName, String feedPolicyName) {
-        return new MetadataLockKey(EntityKind.FEED_POLICY, null, dataverseName, feedPolicyName);
+    static MetadataLockKey createActiveEntityLockKey(String database, DataverseName dataverseName, String entityName) {
+        return new MetadataLockKey(EntityKind.ACTIVE, null, database, dataverseName, entityName);
     }
 
-    static MetadataLockKey createSynonymLockKey(DataverseName dataverseName, String synonymName) {
-        return new MetadataLockKey(EntityKind.SYNONYM, null, dataverseName, synonymName);
+    static MetadataLockKey createFeedPolicyLockKey(String database, DataverseName dataverseName,
+            String feedPolicyName) {
+        return new MetadataLockKey(EntityKind.FEED_POLICY, null, database, dataverseName, feedPolicyName);
     }
 
-    static MetadataLockKey createExtensionEntityLockKey(String extension, DataverseName dataverseName,
+    static MetadataLockKey createSynonymLockKey(String database, DataverseName dataverseName, String synonymName) {
+        return new MetadataLockKey(EntityKind.SYNONYM, null, database, dataverseName, synonymName);
+    }
+
+    static MetadataLockKey createExtensionEntityLockKey(String extension, String database, DataverseName dataverseName,
             String entityName) {
-        return new MetadataLockKey(EntityKind.EXTENSION, extension, dataverseName, entityName);
+        return new MetadataLockKey(EntityKind.EXTENSION, extension, database, dataverseName, entityName);
     }
 
     static MetadataLockKey createNodeGroupLockKey(String nodeGroupName) {
-        return new MetadataLockKey(EntityKind.NODE_GROUP, null, null, nodeGroupName);
+        return new MetadataLockKey(EntityKind.NODE_GROUP, null, null, null, nodeGroupName);
     }
 
     static MetadataLockKey createMergePolicyLockKey(String mergePolicyName) {
-        return new MetadataLockKey(EntityKind.MERGE_POLICY, null, null, mergePolicyName);
+        return new MetadataLockKey(EntityKind.MERGE_POLICY, null, null, null, mergePolicyName);
     }
 }

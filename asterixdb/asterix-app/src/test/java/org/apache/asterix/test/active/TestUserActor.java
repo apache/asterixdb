@@ -52,13 +52,15 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
-                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
+                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), database, dataverseName,
+                            entityName);
                     Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
-                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
-                                dataset.getDatasetName());
+                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDatabaseName(),
+                                dataset.getDataverseName(), dataset.getDatasetName());
                     }
                     actionListener.start(mdProvider);
                 } finally {
@@ -75,13 +77,15 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
-                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
+                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), database, dataverseName,
+                            entityName);
                     Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
-                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDataverseName(),
-                                dataset.getDatasetName());
+                        lockUtil.modifyDatasetBegin(lockManager, mdProvider.getLocks(), dataset.getDatabaseName(),
+                                dataset.getDataverseName(), dataset.getDatasetName());
                     }
                     actionListener.stop(mdProvider);
                 } finally {
@@ -98,13 +102,15 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 Collection<Dataset> datasets = actionListener.getDatasets();
                 try {
-                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
+                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), database, dataverseName,
+                            entityName);
                     for (Dataset dataset : datasets) {
                         lockManager.acquireDatasetExclusiveModificationLock(mdProvider.getLocks(),
-                                dataset.getDataverseName(), dataset.getDatasetName());
+                                dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
                     }
                     actionListener.suspend(mdProvider);
                 } catch (Exception e) {
@@ -123,15 +129,17 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
-                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), dataverseName, entityName);
+                    lockManager.acquireActiveEntityWriteLock(mdProvider.getLocks(), database, dataverseName,
+                            entityName);
                     Collection<Dataset> datasets = actionListener.getDatasets();
                     for (Dataset dataset : datasets) {
-                        lockManager.upgradeDatasetLockToWrite(mdProvider.getLocks(), dataset.getDataverseName(),
-                                dataset.getDatasetName());
-                        lockManager.downgradeDatasetLockToExclusiveModify(mdProvider.getLocks(),
+                        lockManager.upgradeDatasetLockToWrite(mdProvider.getLocks(), dataset.getDatabaseName(),
                                 dataset.getDataverseName(), dataset.getDatasetName());
+                        lockManager.downgradeDatasetLockToExclusiveModify(mdProvider.getLocks(),
+                                dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
                     }
                     actionListener.resume(mdProvider);
                 } finally {
@@ -148,11 +156,13 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName entityDataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
-                    lockManager.acquireActiveEntityReadLock(mdProvider.getLocks(), entityDataverseName, entityName);
-                    lockManager.acquireDatasetWriteLock(mdProvider.getLocks(), dataset.getDataverseName(),
-                            dataset.getDatasetName());
+                    lockManager.acquireActiveEntityReadLock(mdProvider.getLocks(), database, entityDataverseName,
+                            entityName);
+                    lockManager.acquireDatasetWriteLock(mdProvider.getLocks(), dataset.getDatabaseName(),
+                            dataset.getDataverseName(), dataset.getDatasetName());
                     List<Dataset> datasets = clusterController.getAllDatasets();
                     if (datasets.contains(dataset)) {
                         throw new HyracksDataException("Dataset " + dataset + " already exists");
@@ -173,11 +183,13 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName entityDataverseName = actionListener.getEntityId().getDataverseName();
+                String database = actionListener.getEntityId().getDatabaseName();
                 String entityName = actionListener.getEntityId().getEntityName();
                 try {
-                    lockManager.acquireActiveEntityReadLock(mdProvider.getLocks(), entityDataverseName, entityName); // we have to first read lock all active entities before deleting a dataset
-                    lockManager.acquireDatasetWriteLock(mdProvider.getLocks(), dataset.getDataverseName(),
-                            dataset.getDatasetName());
+                    lockManager.acquireActiveEntityReadLock(mdProvider.getLocks(), database, entityDataverseName,
+                            entityName); // we have to first read lock all active entities before deleting a dataset
+                    lockManager.acquireDatasetWriteLock(mdProvider.getLocks(), dataset.getDatabaseName(),
+                            dataset.getDataverseName(), dataset.getDatasetName());
                     List<Dataset> datasets = clusterController.getAllDatasets();
                     if (!datasets.contains(dataset)) {
                         throw new HyracksDataException("Dataset " + dataset + " does not exist");
@@ -198,9 +210,11 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = dataset.getDataverseName();
+                String database = dataset.getDatabaseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    lockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName, null);
+                    lockUtil.createIndexBegin(lockManager, mdProvider.getLocks(), database, dataverseName, datasetName,
+                            null);
                     if (actionListener.isActive()) {
                         throw new RuntimeDataException(ErrorCode.CANNOT_ADD_INDEX_TO_DATASET_CONNECTED_TO_ACTIVE_ENTITY,
                                 DatasetUtil.getFullyQualifiedDisplayName(dataverseName, datasetName) + ".index",
@@ -220,9 +234,10 @@ public class TestUserActor extends Actor {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
                 DataverseName dataverseName = dataset.getDataverseName();
+                String database = dataset.getDatabaseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    lockUtil.dropIndexBegin(lockManager, mdProvider.getLocks(), dataverseName, datasetName);
+                    lockUtil.dropIndexBegin(lockManager, mdProvider.getLocks(), database, dataverseName, datasetName);
                     if (actionListener.isActive()) {
                         throw new RuntimeDataException(
                                 ErrorCode.CANNOT_REMOVE_INDEX_FROM_DATASET_CONNECTED_TO_ACTIVE_ENTITY,
@@ -242,11 +257,13 @@ public class TestUserActor extends Actor {
         Action action = new Action() {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
+                String database = dataset.getDatabaseName();
                 DataverseName dataverseName = dataset.getDataverseName();
                 String datasetName = dataset.getDatasetName();
                 try {
-                    lockManager.acquireDataverseReadLock(mdProvider.getLocks(), dataverseName);
-                    lockManager.acquireDatasetReadLock(mdProvider.getLocks(), dataverseName, datasetName);
+                    lockManager.acquireDatabaseReadLock(mdProvider.getLocks(), database);
+                    lockManager.acquireDataverseReadLock(mdProvider.getLocks(), database, dataverseName);
+                    lockManager.acquireDatasetReadLock(mdProvider.getLocks(), database, dataverseName, datasetName);
                     if (!semaphore.tryAcquire()) {
                         semaphore.acquire();
                     }

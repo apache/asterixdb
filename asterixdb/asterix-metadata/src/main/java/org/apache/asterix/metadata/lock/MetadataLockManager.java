@@ -40,135 +40,151 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
-    public void acquireDataverseReadLock(LockList locks, DataverseName dataverseName) throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDataverseLockKey(dataverseName);
+    public void acquireDatabaseReadLock(LockList locks, String database) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatabaseLockKey(database);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDataverseWriteLock(LockList locks, DataverseName dataverseName) throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDataverseLockKey(dataverseName);
+    public void acquireDatabaseWriteLock(LockList locks, String database) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatabaseLockKey(database);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireDatasetReadLock(LockList locks, DataverseName dataverseName, String datasetName)
+    public void acquireDataverseReadLock(LockList locks, String database, DataverseName dataverseName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+        MetadataLockKey key = MetadataLockKey.createDataverseLockKey(database, dataverseName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.READ, lock);
+    }
+
+    @Override
+    public void acquireDataverseWriteLock(LockList locks, String database, DataverseName dataverseName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDataverseLockKey(database, dataverseName);
+        IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
+        locks.add(IMetadataLock.Mode.WRITE, lock);
+    }
+
+    @Override
+    public void acquireDatasetReadLock(LockList locks, String database, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDatasetWriteLock(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void acquireDatasetWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireDatasetModifyLock(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void acquireDatasetModifyLock(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.MODIFY, lock);
     }
 
     @Override
-    public void acquireDatasetCreateIndexLock(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void acquireDatasetCreateIndexLock(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.INDEX_BUILD, lock);
     }
 
     @Override
-    public void acquireDatasetExclusiveModificationLock(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void acquireDatasetExclusiveModificationLock(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.EXCLUSIVE_MODIFY, lock);
     }
 
     @Override
-    public void acquireFunctionReadLock(LockList locks, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, synonymName);
+    public void acquireFunctionReadLock(LockList locks, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(database, dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireFunctionWriteLock(LockList locks, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(dataverseName, synonymName);
+    public void acquireFunctionWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFunctionLockKey(database, dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFullTextConfigReadLock(LockList locks, DataverseName dataverseName, String fullTextConfigName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFullTextConfigLockKey(dataverseName, fullTextConfigName);
+    public void acquireFullTextConfigReadLock(LockList locks, String database, DataverseName dataverseName,
+            String fullTextConfigName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFullTextConfigLockKey(database, dataverseName, fullTextConfigName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireFullTextConfigWriteLock(LockList locks, DataverseName dataverseName, String fullTextConfigName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFullTextConfigLockKey(dataverseName, fullTextConfigName);
+    public void acquireFullTextConfigWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String fullTextConfigName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFullTextConfigLockKey(database, dataverseName, fullTextConfigName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFullTextFilterReadLock(LockList locks, DataverseName dataverseName, String fullTextFilterName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFullTextFilterLockKey(dataverseName, fullTextFilterName);
+    public void acquireFullTextFilterReadLock(LockList locks, String database, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFullTextFilterLockKey(database, dataverseName, fullTextFilterName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireFullTextFilterWriteLock(LockList locks, DataverseName dataverseName, String fullTextFilterName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFullTextFilterLockKey(dataverseName, fullTextFilterName);
+    public void acquireFullTextFilterWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String fullTextFilterName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFullTextFilterLockKey(database, dataverseName, fullTextFilterName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireLibraryReadLock(LockList locks, DataverseName dataverseName, String libraryName)
+    public void acquireLibraryReadLock(LockList locks, String database, DataverseName dataverseName, String libraryName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(dataverseName, libraryName);
+        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(database, dataverseName, libraryName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireLibraryWriteLock(LockList locks, DataverseName dataverseName, String libraryName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(dataverseName, libraryName);
+    public void acquireLibraryWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String libraryName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createLibraryLockKey(database, dataverseName, libraryName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireAdapterReadLock(LockList locks, DataverseName dataverseName, String adapterName)
+    public void acquireAdapterReadLock(LockList locks, String database, DataverseName dataverseName, String adapterName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(dataverseName, adapterName);
+        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(database, dataverseName, adapterName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireAdapterWriteLock(LockList locks, DataverseName dataverseName, String adapterName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(dataverseName, adapterName);
+    public void acquireAdapterWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String adapterName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createAdapterLockKey(database, dataverseName, adapterName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
@@ -188,33 +204,33 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
-    public void acquireActiveEntityReadLock(LockList locks, DataverseName dataverseName, String entityName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createActiveEntityLockKey(dataverseName, entityName);
+    public void acquireActiveEntityReadLock(LockList locks, String database, DataverseName dataverseName,
+            String entityName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createActiveEntityLockKey(database, dataverseName, entityName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireActiveEntityWriteLock(LockList locks, DataverseName dataverseName, String entityName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createActiveEntityLockKey(dataverseName, entityName);
+    public void acquireActiveEntityWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String entityName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createActiveEntityLockKey(database, dataverseName, entityName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFeedPolicyWriteLock(LockList locks, DataverseName dataverseName, String feedPolicyName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFeedPolicyLockKey(dataverseName, feedPolicyName);
+    public void acquireFeedPolicyWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String feedPolicyName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFeedPolicyLockKey(database, dataverseName, feedPolicyName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireFeedPolicyReadLock(LockList locks, DataverseName dataverseName, String feedPolicyName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createFeedPolicyLockKey(dataverseName, feedPolicyName);
+    public void acquireFeedPolicyReadLock(LockList locks, String database, DataverseName dataverseName,
+            String feedPolicyName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createFeedPolicyLockKey(database, dataverseName, feedPolicyName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
@@ -234,65 +250,67 @@ public class MetadataLockManager implements IMetadataLockManager {
     }
 
     @Override
-    public void acquireDataTypeReadLock(LockList locks, DataverseName dataverseName, String datatypeName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDataTypeLockKey(dataverseName, datatypeName);
+    public void acquireDataTypeReadLock(LockList locks, String database, DataverseName dataverseName,
+            String datatypeName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDataTypeLockKey(database, dataverseName, datatypeName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireDataTypeWriteLock(LockList locks, DataverseName dataverseName, String datatypeName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDataTypeLockKey(dataverseName, datatypeName);
+    public void acquireDataTypeWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String datatypeName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDataTypeLockKey(database, dataverseName, datatypeName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireSynonymReadLock(LockList locks, DataverseName dataverseName, String synonymName)
+    public void acquireSynonymReadLock(LockList locks, String database, DataverseName dataverseName, String synonymName)
             throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(dataverseName, synonymName);
+        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(database, dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireSynonymWriteLock(LockList locks, DataverseName dataverseName, String synonymName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(dataverseName, synonymName);
+    public void acquireSynonymWriteLock(LockList locks, String database, DataverseName dataverseName,
+            String synonymName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createSynonymLockKey(database, dataverseName, synonymName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void acquireExtensionEntityReadLock(LockList locks, String extension, DataverseName dataverseName,
-            String entityName) throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createExtensionEntityLockKey(extension, dataverseName, entityName);
+    public void acquireExtensionEntityReadLock(LockList locks, String extension, String database,
+            DataverseName dataverseName, String entityName) throws AlgebricksException {
+        MetadataLockKey key =
+                MetadataLockKey.createExtensionEntityLockKey(extension, database, dataverseName, entityName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.READ, lock);
     }
 
     @Override
-    public void acquireExtensionEntityWriteLock(LockList locks, String extension, DataverseName dataverseName,
-            String entityName) throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createExtensionEntityLockKey(extension, dataverseName, entityName);
+    public void acquireExtensionEntityWriteLock(LockList locks, String extension, String database,
+            DataverseName dataverseName, String entityName) throws AlgebricksException {
+        MetadataLockKey key =
+                MetadataLockKey.createExtensionEntityLockKey(extension, database, dataverseName, entityName);
         IMetadataLock lock = mdlocks.computeIfAbsent(key, LOCK_FUNCTION);
         locks.add(IMetadataLock.Mode.WRITE, lock);
     }
 
     @Override
-    public void upgradeDatasetLockToWrite(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void upgradeDatasetLockToWrite(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.upgrade(IMetadataLock.Mode.UPGRADED_WRITE, lock);
     }
 
     @Override
-    public void downgradeDatasetLockToExclusiveModify(LockList locks, DataverseName dataverseName, String datasetName)
-            throws AlgebricksException {
-        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(dataverseName, datasetName);
+    public void downgradeDatasetLockToExclusiveModify(LockList locks, String database, DataverseName dataverseName,
+            String datasetName) throws AlgebricksException {
+        MetadataLockKey key = MetadataLockKey.createDatasetLockKey(database, dataverseName, datasetName);
         DatasetLock lock = (DatasetLock) mdlocks.computeIfAbsent(key, DATASET_LOCK_FUNCTION);
         locks.downgrade(IMetadataLock.Mode.EXCLUSIVE_MODIFY, lock);
     }
