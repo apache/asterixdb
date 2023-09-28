@@ -186,7 +186,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         cloudProperties = propertiesFactory.newCloudProperties();
         ncExtensionManager = extensionManager;
         componentProvider = new StorageComponentProvider();
-        resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext).createResourceIdFactory();
+        resourceIdFactory = new GlobalResourceIdFactoryProvider(ncServiceContext, getResourceIdBlockSize())
+                .createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
         cacheManager = new CacheManager();
     }
@@ -676,5 +677,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IPartitionBootstrapper getPartitionBootstrapper() {
         return partitionBootstrapper;
+    }
+
+    private int getResourceIdBlockSize() {
+        return isCloudDeployment() ? storageProperties.getStoragePartitionsCount()
+                : ncServiceContext.getIoManager().getIODevices().size();
     }
 }

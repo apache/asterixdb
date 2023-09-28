@@ -41,21 +41,23 @@ import it.unimi.dsi.fastutil.longs.LongPriorityQueues;
 public class GlobalResourceIdFactory implements IResourceIdFactory {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final int RESOURCE_ID_INITIAL_BLOCK_SIZE = 24;
-    private static final int MAX_BLOCK_SIZE = 35;
     private final INCServiceContext serviceCtx;
-    private final LongPriorityQueue resourceIds =
-            LongPriorityQueues.synchronize(new LongArrayFIFOQueue(RESOURCE_ID_INITIAL_BLOCK_SIZE));
+    private final LongPriorityQueue resourceIds;
     private final LinkedBlockingQueue<ResourceIdRequestResponseMessage> resourceIdResponseQ;
     private final String nodeId;
-    private volatile boolean reset = false;
+    private final int initialBlockSize;
+    private final int maxBlockSize;
     private int currentBlockSize;
+    private volatile boolean reset = false;
 
-    public GlobalResourceIdFactory(INCServiceContext serviceCtx) {
+    public GlobalResourceIdFactory(INCServiceContext serviceCtx, int initialBlockSize) {
         this.serviceCtx = serviceCtx;
         this.resourceIdResponseQ = new LinkedBlockingQueue<>();
         this.nodeId = serviceCtx.getNodeId();
-        this.currentBlockSize = RESOURCE_ID_INITIAL_BLOCK_SIZE;
+        this.initialBlockSize = initialBlockSize;
+        maxBlockSize = initialBlockSize * 2;
+        currentBlockSize = initialBlockSize;
+        resourceIds = LongPriorityQueues.synchronize(new LongArrayFIFOQueue(initialBlockSize));
     }
 
     public synchronized void addNewIds(ResourceIdRequestResponseMessage resourceIdResponse)
@@ -120,8 +122,8 @@ public class GlobalResourceIdFactory implements IResourceIdFactory {
     public synchronized void reset() {
         reset = true;
         currentBlockSize += 1;
-        if (currentBlockSize > MAX_BLOCK_SIZE) {
-            currentBlockSize = RESOURCE_ID_INITIAL_BLOCK_SIZE;
+        if (currentBlockSize > maxBlockSize) {
+            currentBlockSize = initialBlockSize;
         }
         LOGGER.debug("current resource ids block size: {}", currentBlockSize);
     }

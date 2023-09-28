@@ -23,12 +23,14 @@ import org.apache.hyracks.api.application.INCServiceContext;
 public class GlobalResourceIdFactoryProvider {
 
     private final INCServiceContext ncServiceCtx;
+    private final int initialBlockSize;
 
-    public GlobalResourceIdFactoryProvider(INCServiceContext ncServiceCtx) {
+    public GlobalResourceIdFactoryProvider(INCServiceContext ncServiceCtx, int initialBlockSize) {
         this.ncServiceCtx = ncServiceCtx;
+        this.initialBlockSize = initialBlockSize;
     }
 
     public GlobalResourceIdFactory createResourceIdFactory() {
-        return new GlobalResourceIdFactory(ncServiceCtx);
+        return new GlobalResourceIdFactory(ncServiceCtx, initialBlockSize);
     }
 }
