@@ -288,6 +288,12 @@
         <expected-error>Unsupported computed field type: 'zft'</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="using-limit">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">using-limit</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="one-field">
         <placeholder name="adapter" value="S3" />
@@ -326,6 +332,12 @@
       <compilation-unit name="computed-field-between-static-parts">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">computed-field-between-static-parts</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="using-limit">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">using-limit</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/csv">

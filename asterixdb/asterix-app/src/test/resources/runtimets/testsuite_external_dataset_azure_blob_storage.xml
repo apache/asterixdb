@@ -332,6 +332,12 @@
         <expected-error>Unsupported computed field type: 'zft'</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="using-limit">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">using-limit</output-dir>
+      </compilation-unit>
+    </test-case>
     <!-- Dynamic prefixes tests end -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
