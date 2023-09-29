@@ -109,7 +109,6 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.lang.sqlpp.util.SqlppStatementUtil;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.asterix.test.server.ITestServer;
 import org.apache.asterix.test.server.TestServerProvider;
@@ -2615,7 +2614,7 @@ public class TestExecutor {
             if (json != null) {
                 DataverseName dvName = DataverseName.createFromCanonicalForm(json.get("DataverseName").asText());
                 if (!dvName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)
-                        && !dvName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)) {
+                        && !dvName.equals(MetadataConstants.DEFAULT_DATAVERSE_NAME)) {
                     outDataverses.add(dvName);
                 }
             }

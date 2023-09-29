@@ -40,7 +40,6 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.IMetadataIndex;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.bootstrap.NodeGroupEntity;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -122,7 +121,7 @@ public class MetadataTxnTest {
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             sourceDataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
-                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+                    MetadataConstants.DEFAULT_DATAVERSE_NAME, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } finally {
             metadataProvider.getLocks().unlock();
@@ -173,7 +172,7 @@ public class MetadataTxnTest {
         Dataset sourceDataset;
         try {
             sourceDataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
-                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+                    MetadataConstants.DEFAULT_DATAVERSE_NAME, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } finally {
             metadataProvider.getLocks().unlock();

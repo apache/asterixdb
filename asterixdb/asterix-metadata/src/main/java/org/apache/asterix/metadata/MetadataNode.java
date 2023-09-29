@@ -369,11 +369,6 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
-    public void dropDatabase(TxnId txnId, String databaseName) throws AlgebricksException, RemoteException {
-        //TODO(DB): implement
-    }
-
-    @Override
     public void addDataverse(TxnId txnId, Dataverse dataverse) throws AlgebricksException {
         try {
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(true);
@@ -698,6 +693,27 @@ public class MetadataNode implements IMetadataNode {
                         metadataIndex.getResourceId(), metadataStoragePartition, ResourceType.LSM_BTREE, indexOp);
             default:
                 throw new IllegalStateException("Unknown operation type: " + indexOp);
+        }
+    }
+
+    @Override
+    public void dropDatabase(TxnId txnId, String databaseName) throws AlgebricksException, RemoteException {
+        try {
+            //TODO(DB): delete from other metadata collections
+
+            // delete the database entry from the 'Database' collection
+            // as a side effect, acquires an S lock on the 'Database' collection on behalf of txnId
+            ITupleReference searchKey = createTuple(databaseName);
+            ITupleReference tuple =
+                    getTupleToBeDeleted(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), searchKey);
+            deleteTupleFromIndex(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), tuple);
+        } catch (HyracksDataException e) {
+            if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.UNKNOWN_DATAVERSE, e,
+                        databaseName);
+            } else {
+                throw new AlgebricksException(e);
+            }
         }
     }
 
@@ -1216,12 +1232,10 @@ public class MetadataNode implements IMetadataNode {
 
     private void confirmDataverseCanBeDeleted(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException {
-        // If a dataset from a DIFFERENT dataverse
-        // uses a type from this dataverse
-        // throw an error
+        // If a dataset from a DIFFERENT dataverse uses a type from this dataverse throw an error
         List<Dataset> datasets = getAllDatasets(txnId);
         for (Dataset dataset : datasets) {
-            if (dataset.getDataverseName().equals(dataverseName)) {
+            if (dataset.getDataverseName().equals(dataverseName) && dataset.getDatabaseName().equals(database)) {
                 continue;
             }
             if (dataset.getItemTypeDataverseName().equals(dataverseName)) {
@@ -1256,8 +1270,7 @@ public class MetadataNode implements IMetadataNode {
             }
         }
 
-        // If a function from a DIFFERENT dataverse
-        // uses datasets, functions, datatypes, or synonyms from this dataverse
+        // If a function from a DIFFERENT dataverse uses datasets, functions, datatypes, or synonyms from this dataverse
         // throw an error
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
@@ -1279,8 +1292,7 @@ public class MetadataNode implements IMetadataNode {
             }
         }
 
-        // If a feed connection from a DIFFERENT dataverse applies
-        // a function from this dataverse then throw an error
+        // If a feed connection from a DIFFERENT dataverse applies a function from this dataverse then throw an error
         List<FeedConnection> feedConnections = getAllFeedConnections(txnId);
         for (FeedConnection feedConnection : feedConnections) {
             if (dataverseName.equals(feedConnection.getDataverseName())) {
@@ -1314,14 +1326,14 @@ public class MetadataNode implements IMetadataNode {
     }
 
     private void confirmFunctionIsUnusedByViews(TxnId txnId, FunctionSignature signature) throws AlgebricksException {
-        String functionDatabase = MetadataUtil.resolveDatabase(null, signature.getDataverseName());
+        String functionDatabase = signature.getDatabaseName();
         confirmObjectIsUnusedByViews(txnId, "function", DependencyKind.FUNCTION, functionDatabase,
                 signature.getDataverseName(), signature.getName(), Integer.toString(signature.getArity()));
     }
 
     private void confirmFunctionIsUnusedByFunctions(TxnId txnId, FunctionSignature signature)
             throws AlgebricksException {
-        String functionDatabase = MetadataUtil.resolveDatabase(null, signature.getDataverseName());
+        String functionDatabase = signature.getDatabaseName();
         confirmObjectIsUnusedByFunctions(txnId, "function", DependencyKind.FUNCTION, functionDatabase,
                 signature.getDataverseName(), signature.getName(), Integer.toString(signature.getArity()));
     }
@@ -1680,7 +1692,7 @@ public class MetadataNode implements IMetadataNode {
 
     @Override
     public Function getFunction(TxnId txnId, FunctionSignature functionSignature) throws AlgebricksException {
-        String functionDatabase = MetadataUtil.resolveDatabase(null, functionSignature.getDataverseName());
+        String functionDatabase = functionSignature.getDatabaseName();
         List<Function> functions =
                 getFunctionsImpl(txnId, createTuple(functionDatabase, functionSignature.getDataverseName(),
                         functionSignature.getName(), Integer.toString(functionSignature.getArity())));
@@ -1718,7 +1730,7 @@ public class MetadataNode implements IMetadataNode {
         }
         try {
             // Delete entry from the 'function' dataset.
-            String functionDatabase = MetadataUtil.resolveDatabase(null, functionSignature.getDataverseName());
+            String functionDatabase = functionSignature.getDatabaseName();
             ITupleReference searchKey = createTuple(functionDatabase, functionSignature.getDataverseName(),
                     functionSignature.getName(), Integer.toString(functionSignature.getArity()));
             // Searches the index for the tuple to be deleted. Acquires an S lock on the 'function' dataset.

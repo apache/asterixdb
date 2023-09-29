@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -56,7 +57,6 @@ import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppRewriterFactory;
 import org.apache.asterix.lang.sqlpp.util.SqlppAstPrintUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppRewriteUtil;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
@@ -271,7 +271,7 @@ public class ParserTestExecutor extends TestExecutor {
                 return dv.getDataverseName();
             }
         }
-        return MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME;
+        return MetadataConstants.DEFAULT_DATAVERSE_NAME;
     }
 
     // Rewrite queries.

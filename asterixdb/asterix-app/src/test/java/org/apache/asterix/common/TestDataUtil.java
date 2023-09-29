@@ -35,7 +35,6 @@ import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
@@ -229,7 +228,7 @@ public class TestDataUtil {
         Dataset dataset;
         try {
             dataset = metadataProvider.findDataset(MetadataConstants.DEFAULT_DATABASE,
-                    MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME, datasetName);
+                    MetadataConstants.DEFAULT_DATAVERSE_NAME, datasetName);
         } finally {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             metadataProvider.getLocks().unlock();

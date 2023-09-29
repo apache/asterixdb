@@ -44,12 +44,14 @@ import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
+import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
 import org.apache.asterix.lang.common.statement.CreateFunctionStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.CreateViewStatement;
+import org.apache.asterix.lang.common.statement.DatabaseDropStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
@@ -192,11 +194,33 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
 
+            case CREATE_DATABASE: {
+                CreateDatabaseStatement dbCreateStmt = (CreateDatabaseStatement) stmt;
+                String dbName = dbCreateStmt.getDatabaseName().getValue();
+                invalidOperation = isSystemDatabase(dbName) || isDefaultDatabase(dbName);
+                if (invalidOperation) {
+                    message = String.format("Cannot create database: %s", dbName);
+                }
+                break;
+            }
+
+            case DATABASE_DROP: {
+                DatabaseDropStatement dbDropStmt = (DatabaseDropStatement) stmt;
+                String dbName = dbDropStmt.getDatabaseName().getValue();
+                invalidOperation = isSystemDatabase(dbName) || isDefaultDatabase(dbName);
+                if (invalidOperation) {
+                    message = String.format("Cannot drop database: %s", dbName);
+                }
+                break;
+            }
+
             case CREATE_DATAVERSE:
+                //TODO(DB): check it's not System database for all cases
                 CreateDataverseStatement dvCreateStmt = (CreateDataverseStatement) stmt;
                 dataverseName = dvCreateStmt.getDataverseName();
                 invalidOperation = FunctionConstants.ASTERIX_DV.equals(dataverseName)
-                        || FunctionConstants.ALGEBRICKS_DV.equals(dataverseName);
+                        || FunctionConstants.ALGEBRICKS_DV.equals(dataverseName) || isMetadataDataverse(dataverseName)
+                        || isDefaultDataverse(dataverseName);
                 if (invalidOperation) {
                     message = String.format(BAD_DATAVERSE_DDL_MESSAGE, "create", dataverseName);
                 }
@@ -205,7 +229,7 @@ public abstract class AbstractLangTranslator {
             case DATAVERSE_DROP:
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
                 dataverseName = dvDropStmt.getDataverseName();
-                invalidOperation = isMetadataDataverse(dataverseName);
+                invalidOperation = isMetadataDataverse(dataverseName) || isDefaultDataverse(dataverseName);
                 if (invalidOperation) {
                     message = String.format(BAD_DATAVERSE_DDL_MESSAGE, "drop", dataverseName);
                 }
@@ -402,7 +426,19 @@ public abstract class AbstractLangTranslator {
         }
     }
 
+    protected static boolean isSystemDatabase(String databaseName) {
+        return MetadataConstants.SYSTEM_DATABASE.equals(databaseName);
+    }
+
+    protected static boolean isDefaultDatabase(String databaseName) {
+        return MetadataConstants.DEFAULT_DATABASE.equals(databaseName);
+    }
+
     protected static boolean isMetadataDataverse(DataverseName dataverseName) {
         return MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName);
+    }
+
+    protected static boolean isDefaultDataverse(DataverseName dataverseName) {
+        return MetadataConstants.DEFAULT_DATAVERSE_NAME.equals(dataverseName);
     }
 }

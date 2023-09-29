@@ -119,6 +119,7 @@ import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CopyStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
+import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedPolicyStatement;
 import org.apache.asterix.lang.common.statement.CreateFeedStatement;
@@ -129,6 +130,7 @@ import org.apache.asterix.lang.common.statement.CreateIndexStatement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 import org.apache.asterix.lang.common.statement.CreateSynonymStatement;
 import org.apache.asterix.lang.common.statement.CreateViewStatement;
+import org.apache.asterix.lang.common.statement.DatabaseDropStatement;
 import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.DataverseDropStatement;
@@ -173,6 +175,7 @@ import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetNodegroupCardinalityHint;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
+import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -367,6 +370,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     case DATAVERSE_DECL:
                         activeDataverse = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
+                    case CREATE_DATABASE:
+                        handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters);
+                        break;
                     case CREATE_DATAVERSE:
                         handleCreateDataverseStatement(metadataProvider, stmt, requestParameters);
                         break;
@@ -387,6 +393,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case NODEGROUP_DECL:
                         handleCreateNodeGroupStatement(metadataProvider, stmt);
+                        break;
+                    case DATABASE_DROP:
+                        handleDatabaseDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case DATAVERSE_DROP:
                         handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -613,6 +622,50 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return dv;
+        } catch (Exception e) {
+            abort(e, e, mdTxnCtx);
+            throw e;
+        }
+    }
+
+    protected void handleCreateDatabaseStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
+        CreateDatabaseStatement stmtCreateDatabase = (CreateDatabaseStatement) stmt;
+        String database = stmtCreateDatabase.getDatabaseName().getValue();
+        //TODO(DB): validate names
+        if (isCompileOnly()) {
+            return;
+        }
+        lockUtil.createDatabaseBegin(lockManager, metadataProvider.getLocks(), database);
+        try {
+            doCreateDatabaseStatement(metadataProvider, stmtCreateDatabase, requestParameters);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected boolean doCreateDatabaseStatement(MetadataProvider metadataProvider,
+            CreateDatabaseStatement stmtCreateDatabase, IRequestParameters requestParameters) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        try {
+            String databaseName = stmtCreateDatabase.getDatabaseName().getValue();
+            Database database =
+                    MetadataManager.INSTANCE.getDatabase(metadataProvider.getMetadataTxnContext(), databaseName);
+            if (database != null) {
+                if (stmtCreateDatabase.ifNotExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    //TODO(DB): change
+                    throw new CompilationException(ErrorCode.DATAVERSE_EXISTS, stmtCreateDatabase.getSourceLocation(),
+                            databaseName);
+                }
+            }
+            MetadataManager.INSTANCE.addDatabase(metadataProvider.getMetadataTxnContext(),
+                    new Database(databaseName, false, MetadataUtil.PENDING_NO_OP));
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
         } catch (Exception e) {
             abort(e, e, mdTxnCtx);
             throw e;
@@ -1838,6 +1891,137 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         return typeMap.get(typeSignature);
     }
 
+    protected void handleDatabaseDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+        DatabaseDropStatement stmtDropDatabase = (DatabaseDropStatement) stmt;
+        SourceLocation sourceLoc = stmtDropDatabase.getSourceLocation();
+        String databaseName = stmtDropDatabase.getDatabaseName().getValue();
+        //TODO(DB): validate names
+
+        if (isSystemDatabase(databaseName) || isDefaultDatabase(databaseName)) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                    databaseName + " database can't be dropped");
+        }
+        if (isCompileOnly()) {
+            return;
+        }
+        lockUtil.dropDatabaseBegin(lockManager, metadataProvider.getLocks(), databaseName);
+        try {
+            doDropDatabase(stmtDropDatabase, metadataProvider, hcc, requestParameters);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected boolean doDropDatabase(DatabaseDropStatement stmtDropDatabase, MetadataProvider metadataProvider,
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+        SourceLocation sourceLoc = stmtDropDatabase.getSourceLocation();
+        String databaseName = stmtDropDatabase.getDatabaseName().getValue();
+        ProgressState progress = ProgressState.NO_PROGRESS;
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        boolean bActiveTxn = true;
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        List<FeedEventsListener> feedsToStop = new ArrayList<>();
+        List<JobSpecification> jobsToExecute = new ArrayList<>();
+        try {
+            Database database = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, databaseName);
+            if (database == null) {
+                if (stmtDropDatabase.ifExists()) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, databaseName);
+                }
+            }
+
+            validateDatabaseStateBeforeDrop(metadataProvider, database, sourceLoc);
+
+            // #. prepare jobs which will drop corresponding feed storage
+            //TODO(DB):
+
+            // #. prepare jobs which will drop corresponding datasets with indexes
+            //TODO(DB):
+
+            // #. prepare jobs which will drop corresponding libraries
+            //TODO(DB):
+
+            // #. prepare jobs which will drop the database
+            //TODO(DB):
+
+            // #. mark PendingDropOp on the database record by
+            // first, deleting the database record from the 'Database' collection
+            // second, inserting the database record with the PendingDropOp value into the 'Database' collection
+            // Note: the delete operation fails if the database cannot be deleted due to metadata dependencies
+            MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
+            MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
+                    new Database(databaseName, database.isSystemDatabase(), MetadataUtil.PENDING_DROP_OP));
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            bActiveTxn = false;
+            progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
+
+            for (FeedEventsListener feedListener : feedsToStop) {
+                if (feedListener.getState() != ActivityState.STOPPED) {
+                    feedListener.stop(metadataProvider);
+                }
+                feedListener.unregister();
+            }
+
+            for (JobSpecification jobSpec : jobsToExecute) {
+                runJob(hcc, jobSpec);
+            }
+
+            mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+
+            // #. finally, delete the database
+            MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
+
+            // drop all node groups that no longer needed
+            //TODO(DB):
+
+            //TODO(DB): switch active database to the DEFAULT if the dropped database is the currently active one
+
+            //TODO(DB): validateDatabaseDatasetsStateAfterDrop
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+            return true;
+        } catch (Exception e) {
+            if (bActiveTxn) {
+                abort(e, e, mdTxnCtx);
+            }
+
+            if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
+                //TODO(DB): switch active database to the DEFAULT if the dropped database is the currently active one
+
+                // #. execute compensation operations
+                // remove the all artifacts in NC
+                try {
+                    for (JobSpecification jobSpec : jobsToExecute) {
+                        runJob(hcc, jobSpec);
+                    }
+                } catch (Exception e2) {
+                    // do no throw exception since still the metadata needs to be compensated.
+                    e.addSuppressed(e2);
+                }
+
+                // remove the record from the metadata.
+                mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+                try {
+                    MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                } catch (Exception e2) {
+                    e.addSuppressed(e2);
+                    abort(e, e2, mdTxnCtx);
+                    throw new IllegalStateException("System is inconsistent state: pending dataverse(" + databaseName
+                            + ") couldn't be removed from the metadata", e);
+                }
+            }
+            throw e;
+        }
+    }
+
     protected void handleDataverseDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DataverseDropStatement stmtDropDataverse = (DataverseDropStatement) stmt;
@@ -1845,7 +2029,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseName dataverseName = stmtDropDataverse.getDataverseName();
         String database = MetadataUtil.resolveDatabase(null, dataverseName);
         metadataProvider.validateDataverseName(dataverseName, sourceLoc);
-        if (dataverseName.equals(MetadataBuiltinEntities.DEFAULT_DATAVERSE_NAME)
+        if (dataverseName.equals(MetadataConstants.DEFAULT_DATAVERSE_NAME)
                 || dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     dataverseName + " " + dataverse() + " can't be dropped");
@@ -2020,6 +2204,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected boolean isDataverseNotEmpty(String database, DataverseName dataverseName,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
         return MetadataManager.INSTANCE.isDataverseNotEmpty(mdTxnCtx, database, dataverseName);
+    }
+
+    protected void validateDatabaseStateBeforeDrop(MetadataProvider metadataProvider, Database database,
+            SourceLocation sourceLoc) throws AlgebricksException {
+        // may be overridden by product extensions for additional checks before dropping the database
     }
 
     protected void validateDataverseStateBeforeDrop(MetadataProvider metadataProvider, Dataverse dataverse,
