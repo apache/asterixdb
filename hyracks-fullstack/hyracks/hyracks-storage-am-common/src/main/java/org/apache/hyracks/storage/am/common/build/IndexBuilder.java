@@ -68,49 +68,47 @@ public class IndexBuilder implements IIndexBuilder {
     @Override
     public void build() throws HyracksDataException {
         IResourceLifecycleManager<IIndex> lcManager = storageManager.getLifecycleManager(ctx);
-        synchronized (lcManager) {
-            // The previous resource Id needs to be removed since calling IIndex.create() may possibly destroy any
-            // physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource Id).
-            // Once the index has been created, a new resource Id can be generated.
-            ILocalResourceRepository localResourceRepository = storageManager.getLocalResourceRepository(ctx);
-            LocalResource lr = localResourceRepository.get(resourceRelPath);
-            long resourceId = lr == null ? -1 : lr.getId();
-            if (resourceId != -1) {
-                localResourceRepository.delete(resourceRelPath);
-            }
-            resourceId = resourceIdFactory.createId();
-            IResource resource = localResourceFactory.createResource(resourceRef);
-            lr = new LocalResource(resourceId, ITreeIndexFrame.Constants.VERSION, durable, resource);
-            IIndex index = lcManager.get(resourceRelPath);
-            if (index != null) {
-                //how is this right?????????? <needs to be fixed>
-                //The reason for this is to handle many cases such as:
-                //1. Crash while delete index is running (we don't do global cleanup on restart)
-                //2. Node leaves and then join with old data
-                LOGGER.log(Level.WARN, "Removing existing index on index create for the index: " + resourceRelPath);
-                lcManager.unregister(resourceRelPath);
-                index.destroy();
-            } else {
-                final FileReference resolvedResourceRef = ctx.getIoManager().resolve(resourceRelPath);
-                if (resolvedResourceRef.getFile().exists()) {
-                    // Index is not registered but the index file exists
-                    // This is another big problem that we need to disallow soon
-                    // We can only disallow this if we have a global cleanup after crash
-                    // on reboot
-                    LOGGER.warn(
-                            "Deleting {} on index create. The index is not registered but the file exists in the filesystem",
-                            resolvedResourceRef);
-                    ctx.getIoManager().delete(resolvedResourceRef);
-                }
-                index = resource.createInstance(ctx);
-            }
-            index.create();
-            try {
-                localResourceRepository.insert(lr);
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
-            lcManager.register(resourceRelPath, index);
+        // The previous resource Id needs to be removed since calling IIndex.create() may possibly destroy any
+        // physical artifact that the LocalResourceRepository is managing (e.g. a file containing the resource Id).
+        // Once the index has been created, a new resource Id can be generated.
+        ILocalResourceRepository localResourceRepository = storageManager.getLocalResourceRepository(ctx);
+        LocalResource lr = localResourceRepository.get(resourceRelPath);
+        long resourceId = lr == null ? -1 : lr.getId();
+        if (resourceId != -1) {
+            localResourceRepository.delete(resourceRelPath);
         }
+        resourceId = resourceIdFactory.createId();
+        IResource resource = localResourceFactory.createResource(resourceRef);
+        lr = new LocalResource(resourceId, ITreeIndexFrame.Constants.VERSION, durable, resource);
+        IIndex index = lcManager.get(resourceRelPath);
+        if (index != null) {
+            //how is this right?????????? <needs to be fixed>
+            //The reason for this is to handle many cases such as:
+            //1. Crash while delete index is running (we don't do global cleanup on restart)
+            //2. Node leaves and then join with old data
+            LOGGER.log(Level.WARN, "Removing existing index on index create for the index: " + resourceRelPath);
+            lcManager.unregister(resourceRelPath);
+            index.destroy();
+        } else {
+            final FileReference resolvedResourceRef = ctx.getIoManager().resolve(resourceRelPath);
+            if (resolvedResourceRef.getFile().exists()) {
+                // Index is not registered but the index file exists
+                // This is another big problem that we need to disallow soon
+                // We can only disallow this if we have a global cleanup after crash
+                // on reboot
+                LOGGER.warn(
+                        "Deleting {} on index create. The index is not registered but the file exists in the filesystem",
+                        resolvedResourceRef);
+                ctx.getIoManager().delete(resolvedResourceRef);
+            }
+            index = resource.createInstance(ctx);
+        }
+        index.create();
+        try {
+            localResourceRepository.insert(lr);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+        lcManager.register(resourceRelPath, index);
     }
 }
