@@ -21,6 +21,7 @@ package org.apache.hyracks.http.server;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -81,20 +82,22 @@ public class ChunkedNettyOutputStream extends OutputStream {
     @Override
     public void close() throws IOException {
         if (!closed) {
-            if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
-                try {
+            InvokeUtil.tryIoWithCleanups(() -> {
+                if (response.isHeaderSent() || response.status() != HttpResponseStatus.OK) {
                     flush();
-                } finally {
-                    if (buffer != null) {
-                        buffer.release();
-                    }
+                } else {
+                    response.fullResponse(buffer);
+                    // The responsibility of releasing the buffer is now with the netty pipeline since it is
+                    // forwarded within the http content. We must nullify buffer to avoid releasing the buffer twice.
+                    buffer = null;
                 }
-            } else {
-                response.fullResponse(buffer);
-            }
-            super.close();
+                super.close();
+            }, () -> {
+                if (buffer != null) {
+                    buffer.release();
+                }
+            }, () -> closed = true);
         }
-        closed = true;
     }
 
     @Override
