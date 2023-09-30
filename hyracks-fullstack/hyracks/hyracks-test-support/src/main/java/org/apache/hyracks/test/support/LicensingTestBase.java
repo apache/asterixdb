@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -46,7 +47,7 @@ public abstract class LicensingTestBase {
             }
             installerDir = FileUtil.joinPath(targetDir, list[0], topLevel[0]);
             Assert.assertNotNull("installerDir", list);
-            Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + list, list.length > 1);
+            Assert.assertFalse("Ambiguous install dir (" + pattern + "): " + Arrays.toString(list), list.length > 1);
             Assert.assertEquals("Can't find install dir (" + pattern + ")", 1, topLevel.length);
         }
     }
