@@ -42,10 +42,10 @@ import org.junit.runners.Parameterized.Parameters;
 public class CloudStorageTest {
 
     protected TestCaseContext tcCtx;
-    private static final TestExecutor testExecutor = new TestExecutor();
     private static final String SUITE_TESTS = "testsuite_cloud_storage.xml";
     private static final String ONLY_TESTS = "testsuite_cloud_storage_only.xml";
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage.conf";
+    private static final String DELTA_RESULT_PATH = "results_cloud";
 
     public CloudStorageTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
@@ -54,6 +54,7 @@ public class CloudStorageTest {
     @BeforeClass
     public static void setUp() throws Exception {
         LocalCloudUtil.startS3CloudEnvironment(true);
+        TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
     }

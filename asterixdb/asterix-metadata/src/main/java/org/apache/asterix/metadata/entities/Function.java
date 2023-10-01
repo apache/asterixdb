@@ -78,7 +78,7 @@ public class Function implements IMetadataEntity<Function> {
     }
 
     public String getDatabaseName() {
-        return databaseName;
+        return signature.getDatabaseName();
     }
 
     public DataverseName getDataverseName() {

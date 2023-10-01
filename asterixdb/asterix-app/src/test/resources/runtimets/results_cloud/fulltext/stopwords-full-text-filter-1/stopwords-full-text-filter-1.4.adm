@@ -1,0 +1,2 @@
+{ "DatabaseName": "Default", "DataverseName": "MyDataVerse", "FullTextConfigName": "my_first_stopword_config", "Tokenizer": "WORD", "FullTextFilterPipeline": [ "my_first_stopword_filter" ] }
+{ "DatabaseName": "Default", "DataverseName": "MyDataVerse", "FullTextConfigName": "my_second_stopword_config", "Tokenizer": "WORD", "FullTextFilterPipeline": [ "my_second_stopword_filter" ] }

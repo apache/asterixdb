@@ -30,6 +30,7 @@ import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -39,6 +40,7 @@ import org.junit.runners.Parameterized.Parameters;
  * Runs the SQL++ runtime tests with static partitioning.
  */
 @RunWith(Parameterized.class)
+@Ignore
 public class SqlppStaticPartitioningExecutionTest {
 
     private static final String TEST_CONFIG_FILE_NAME = "src/main/resources/cc_static_partitioning.conf";

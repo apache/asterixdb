@@ -479,6 +479,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 return null;
             }
             //TODO(DB): object database
+            dbName = MetadataUtil.databaseFor(synonym.getObjectDataverseName());
             dvName = synonym.getObjectDataverseName();
             datasetName = synonym.getObjectName();
         }

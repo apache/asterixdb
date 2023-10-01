@@ -1,0 +1,4 @@
+{ "DatabaseName": "Default", "DataverseName": "test", "SynonymName": "TweetMessagesSynonym", "ObjectDataverseName": "test", "ObjectName": "TweetMessages" }
+{ "DatabaseName": "Default", "DataverseName": "test", "SynonymName": "TweetMessagesSynonym2", "ObjectDataverseName": "test", "ObjectName": "TweetMessagesSynonym" }
+{ "DatabaseName": "Default", "DataverseName": "test", "SynonymName": "TwitterUsersSynonym", "ObjectDataverseName": "test", "ObjectName": "TwitterUsers" }
+{ "DatabaseName": "Default", "DataverseName": "test", "SynonymName": "TwitterUsersSynonym2", "ObjectDataverseName": "test", "ObjectName": "TwitterUsersSynonym" }

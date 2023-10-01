@@ -16,21 +16,16 @@
  ! specific language governing permissions and limitations
  ! under the License.
  !-->
-<!DOCTYPE test-suite [
-        <!ENTITY ObjectsQueries SYSTEM "queries_sqlpp/objects/ObjectsQueries.xml">
-        <!ENTITY AsyncDeferredQueries SYSTEM "queries_sqlpp/async-deferred/AsyncDeferredQueries.xml">
-        <!ENTITY GeoQueries SYSTEM "queries_sqlpp/geojson/GeoJSONQueries.xml">
-        <!ENTITY TemporalQueries SYSTEM "queries_sqlpp/temporal/TemporalQueries.xml">
-        ]>
-<test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp" SourceLocation="true">
-  &ObjectsQueries;
-  &AsyncDeferredQueries;
-  &GeoQueries;
-  &TemporalQueries;
+<test-group name="sqlpp_queries">
   <test-group name="api">
     <test-case FilePath="api">
       <compilation-unit name="compileonly">
         <output-dir compare="Text">compileonly</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
+      <compilation-unit name="compileonly-2">
+        <output-dir compare="Text">compileonly-2</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
@@ -264,7 +259,7 @@
         <output-dir compare="Text">at00</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="flwor">
+    <test-case FilePath="flwor">
       <compilation-unit name="query-ASTERIXDB-1463">
         <output-dir compare="Text">query-ASTERIXDB-1485</output-dir>
       </compilation-unit>
@@ -273,7 +268,7 @@
       <compilation-unit name="query-ASTERIXDB-1485">
         <output-dir compare="Text">query-ASTERIXDB-1485</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
   </test-group>
   <test-group name="sorting">
     <test-case FilePath="sorting">
@@ -1610,6 +1605,11 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="min_max_arrays">
         <output-dir compare="Text">min_max_arrays</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="non-pure-function">
+        <output-dir compare="Text">non-pure-function</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -3101,6 +3101,21 @@
         <expected-error>Input contains different list types (in line 25, at column 8)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_binary_search">
+        <output-dir compare="Text">array_binary_search</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_move">
+        <output-dir compare="Text">array_move</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
+      <compilation-unit name="array_swap">
+        <output-dir compare="Text">array_swap</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="bitwise">
     <test-case FilePath="bitwise">
@@ -3603,10 +3618,10 @@
     <test-case FilePath="comparison" check-warnings="true">
       <compilation-unit name="incomparable_types">
         <output-dir compare="Text">incomparable_types</output-dir>
-          <expected-warn>Incomparable input types: string and bigint (in line 26, at column 13)</expected-warn>
-          <expected-warn>Incomparable input types: array and bigint (in line 23, at column 7)</expected-warn>
-          <expected-warn>Incomparable input types: point and point (in line 24, at column 18)</expected-warn>
-          <expected-warn>Incomparable input types: bigint and string (in line 25, at column 46)</expected-warn>
+        <expected-warn>Incomparable input types: string and bigint (in line 26, at column 13)</expected-warn>
+        <expected-warn>Incomparable input types: array and bigint (in line 23, at column 7)</expected-warn>
+        <expected-warn>Incomparable input types: point and point (in line 24, at column 18)</expected-warn>
+        <expected-warn>Incomparable input types: bigint and string (in line 25, at column 46)</expected-warn>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -4120,6 +4135,46 @@
         -->
   </test-group>
   <test-group name="ddl">
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-1">
+        <output-dir compare="Clean-JSON">create-dataset-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-2">
+        <output-dir compare="Clean-JSON">create-dataset-2</output-dir>
+        <source-location>false</source-location>
+        <expected-error>Type mismatch: missing a required field my_id: string</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-3">
+        <output-dir compare="Clean-JSON">create-dataset-3</output-dir>
+        <expected-error>ASX1077: Cannot find dataset non_existent in dataverse test nor an alias with name non_existent (in line 23, at column 21)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-negative">
+        <output-dir compare="Clean-JSON">create-dataset-negative</output-dir>
+        <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
+        <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="create-dataset-4">
+        <output-dir compare="Clean-JSON">create-dataset-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-1">
+        <output-dir compare="Text">analyze-dataset-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="analyze-dataset-with-indexes">
+        <output-dir compare="Text">analyze-dataset-with-indexes</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-1">
         <output-dir compare="Text">create-index-1</output-dir>
@@ -4339,6 +4394,11 @@
         <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="drop-anonymous-nested-types">
+        <output-dir compare="Text">drop-anonymous-nested-types</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="dml">
     <test-case FilePath="dml">
@@ -4451,11 +4511,11 @@
         <output-dir compare="Text">insert-into-empty-dataset</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="dml">
+    <test-case FilePath="dml">
       <compilation-unit name="insert-into-empty-dataset-with-index">
         <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert-syntax">
         <output-dir compare="Text">insert-syntax</output-dir>
@@ -4481,16 +4541,16 @@
         <output-dir compare="Text">insert-and-scan-joined-datasets</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="dml">
+    <test-case FilePath="dml">
       <compilation-unit name="insert-into-loaded-dataset-with-index_01">
         <output-dir compare="Text">insert-into-loaded-dataset-with-index_01</output-dir>
       </compilation-unit>
-    </test-case!-->
-    <!--test-case FilePath="dml">
+    </test-case>
+    <test-case FilePath="dml">
       <compilation-unit name="insert-into-loaded-dataset-with-index_02">
         <output-dir compare="Text">insert-into-loaded-dataset-with-index_02</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="dml">
       <compilation-unit name="insert-into-loaded-dataset_01">
         <output-dir compare="Text">insert-into-loaded-dataset_01</output-dir>
@@ -4509,6 +4569,11 @@
     <test-case FilePath="dml">
       <compilation-unit name="insert">
         <output-dir compare="Text">insert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="dml">
+      <compilation-unit name="insert-closed">
+        <output-dir compare="Text">insert-closed</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dml">
@@ -6151,7 +6216,7 @@
         <output-dir compare="Text">btree-sidx-idxonly-to-sidx-idxonly-equi-join_01</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-join">
+    <test-case FilePath="index-join">
       <compilation-unit name="btree-sidx-non-idxonly-to-pidx-equi-join_01">
         <output-dir compare="Text">btree-sidx-non-idxonly-to-pidx-equi-join_01</output-dir>
       </compilation-unit>
@@ -6160,7 +6225,7 @@
       <compilation-unit name="btree-sidx-non-idxonly-to-sidx-idxonly-equi-join_01">
         <output-dir compare="Text">btree-sidx-non-idxonly-to-sidx-idxonly-equi-join_01</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-join">
       <compilation-unit name="btree-secondary-self-equi-join_01">
         <output-dir compare="Text">btree-secondary-self-equi-join_01</output-dir>
@@ -6209,6 +6274,11 @@
     </test-case>
   </test-group>
   <test-group name="index-selection">
+    <test-case FilePath="index-selection">
+      <compilation-unit name="batch-lookup">
+        <output-dir compare="Text">batch-lookup</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="btree-index-composite-key">
         <output-dir compare="Text">btree-index-composite-key</output-dir>
@@ -6289,17 +6359,17 @@
         <output-dir compare="Text">btree-sidx-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-selection">
+    <test-case FilePath="index-selection">
       <compilation-unit name="btree-sidx-non-idxonly-01">
         <output-dir compare="Text">btree-sidx-non-idxonly-01</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="cust-index-age-nullable">
         <output-dir compare="Text">cust-index-age-nullable</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-selection">
+    <test-case FilePath="index-selection">
       <compilation-unit name="intersection-misc-01">
         <output-dir compare="Text">intersection-misc-01</output-dir>
       </compilation-unit>
@@ -6308,7 +6378,7 @@
       <compilation-unit name="intersection-with-between">
         <output-dir compare="Text">intersection-with-between</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-contains">
         <output-dir compare="Text">inverted-index-ngram-contains</output-dir>
@@ -6429,7 +6499,7 @@
         <output-dir compare="Text">rtree-sidx-idxonly-01</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-selection">
+    <test-case FilePath="index-selection">
       <compilation-unit name="rtree-sidx-non-idxonly-01">
         <output-dir compare="Text">rtree-sidx-non-idxonly-01</output-dir>
       </compilation-unit>
@@ -6438,7 +6508,7 @@
       <compilation-unit name="rtree-sidx-non-idxonly-02">
         <output-dir compare="Text">rtree-sidx-non-idxonly-02</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="disjunctive-predicate-1">
         <output-dir compare="Text">disjunctive-predicate-1</output-dir>
@@ -6449,25 +6519,25 @@
         <output-dir compare="Text">dataset-with-meta</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-selection" check-warnings="true">
+    <test-case FilePath="index-selection" check-warnings="true">
       <compilation-unit name="hints-skip-index">
         <output-dir compare="Text">hints-skip-index</output-dir>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint skip-index. ASX1001: Syntax error: In line 1 >>(13, idx_1k)<< Encountered <INTEGER_LITERAL> "13" at column 2.  (in line 32, at column 19)]]></expected-warn>
       </compilation-unit>
-    </test-case!-->
-    <!--test-case FilePath="index-selection" check-warnings="true">
+    </test-case>
+    <test-case FilePath="index-selection" check-warnings="true">
       <compilation-unit name="hints-use-index">
         <output-dir compare="Text">hints-use-index</output-dir>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>(18, idx_1k_2k)<< Encountered <INTEGER_LITERAL> "18" at column 2.  (in line 33, at column 15)]]></expected-warn>
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint use-index. ASX1001: Syntax error: In line 1 >>()<< Encountered ")" at column 2.  (in line 33, at column 15)]]></expected-warn>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="inverted-index-ngram-edit-distance-with-two-ngram-index">
         <output-dir compare="Text">inverted-index-ngram-edit-distance-with-two-ngram-index</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-selection">
+    <test-case FilePath="index-selection">
       <compilation-unit name="intersection">
         <output-dir compare="Text">intersection</output-dir>
       </compilation-unit>
@@ -6481,7 +6551,7 @@
       <compilation-unit name="intersection_with_nodegroup">
         <output-dir compare="Text">intersection</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-selection">
       <compilation-unit name="verify">
         <output-dir compare="Text">verify</output-dir>
@@ -6637,6 +6707,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="hash-join-with-redundant-variable">
+        <output-dir compare="Text">hash-join-with-redundant-variable</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="hash_join_array">
         <output-dir compare="Text">hash_join_array</output-dir>
       </compilation-unit>
@@ -6654,6 +6729,16 @@
     <test-case FilePath="join">
       <compilation-unit name="join-with-empty-dataset">
         <output-dir compare="Text">join-with-empty-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="nlj_partitioning_property">
+        <output-dir compare="Text">nlj_partitioning_property</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
+      <compilation-unit name="inner_right_corr">
+        <output-dir compare="Text">inner_right_corr</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -7207,6 +7292,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="metadata_only_02">
+        <output-dir compare="Text">metadata_only_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="cast-ASTERIXDB-2458">
         <output-dir compare="Text">cast-ASTERIXDB-2458</output-dir>
       </compilation-unit>
@@ -7241,6 +7331,11 @@
     <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-865">
         <output-dir compare="Text">query-ASTERIXDB-865</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="serialized_size_fun">
+        <output-dir compare="Text">serialized_size_fun</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -7516,11 +7611,11 @@
           <output-dir compare="Text">btree-index-01</output-dir>
         </compilation-unit>
       </test-case>
-      <!--test-case FilePath="open-index-non-enforced/index-selection">
+      <test-case FilePath="open-index-non-enforced/index-selection">
         <compilation-unit name="btree-index-02">
           <output-dir compare="Text">btree-index-02</output-dir>
         </compilation-unit>
-      </test-case!-->
+      </test-case>
       <test-case FilePath="open-index-non-enforced/index-selection">
         <compilation-unit name="btree-index-03">
           <output-dir compare="Text">btree-index-03</output-dir>
@@ -7716,11 +7811,11 @@
           <output-dir compare="Text">non-enforced-01</output-dir>
         </compilation-unit>
       </test-case>
-      <!--test-case FilePath="nested-open-index/index-selection">
+      <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="non-enforced-02">
           <output-dir compare="Text">non-enforced-02</output-dir>
         </compilation-unit>
-      </test-case!-->
+      </test-case>
       <test-case FilePath="nested-open-index/index-selection">
         <compilation-unit name="non-enforced-03">
           <output-dir compare="Text">non-enforced-03</output-dir>
@@ -8004,32 +8099,32 @@
         <output-dir compare="Text">drop-index</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="nested-index-dml">
+    <test-case FilePath="nested-index-dml">
       <compilation-unit name="insert-into-empty-dataset-with-index">
         <output-dir compare="Text">insert-into-empty-dataset-with-index</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="nested-index-dml">
       <compilation-unit name="insert-into-empty-dataset-with-sec-primary-index">
         <output-dir compare="Text">insert-into-empty-dataset-with-sec-primary-index</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="nested-index-dml">
+    <test-case FilePath="nested-index-dml">
       <compilation-unit name="insert-into-loaded-dataset-with-index_01">
         <output-dir compare="Text">insert-into-loaded-dataset-with-index_01</output-dir>
       </compilation-unit>
-    </test-case!-->
-    <!--test-case FilePath="nested-index-dml">
+    </test-case>
+    <test-case FilePath="nested-index-dml">
       <compilation-unit name="insert-into-loaded-dataset-with-index_02">
         <output-dir compare="Text">insert-into-loaded-dataset-with-index_02</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="nested-index-dml">
       <compilation-unit name="insert-into-loaded-dataset-with-sec-primary-index">
         <output-dir compare="Text">insert-into-loaded-dataset-with-sec-primary-index</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="nested-index-dml">
+    <test-case FilePath="nested-index-dml">
       <compilation-unit name="load-with-index">
         <output-dir compare="Text">load-with-index</output-dir>
       </compilation-unit>
@@ -8053,7 +8148,7 @@
       <compilation-unit name="load-with-word-index">
         <output-dir compare="Text">load-with-word-index</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="nested-index-dml">
       <compilation-unit name="scan-delete-btree-secondary-index-nullable">
         <output-dir compare="Text">scan-delete-btree-secondary-index-nullable</output-dir>
@@ -8163,6 +8258,18 @@
           <output-dir compare="Text">index-with-enforced-type</output-dir>
           <expected-error>ASX1155: Incompatible index type ARRAY</expected-error>
           <source-location>false</source-location>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/error-handling">
+        <compilation-unit name="no-field-type">
+          <output-dir compare="Text">no-field-type</output-dir>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'open_array_f'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'nested_array'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of elements of field 'nested_array'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
+          <expected-error>ASX1079: Compilation error: cannot find type of field 'proj1'</expected-error>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -8549,6 +8656,11 @@
           <output-dir compare="Text">using-feed</output-dir>
         </compilation-unit>
       </test-case>
+      <test-case FilePath="array-index/select-unnest-queries/open">
+        <compilation-unit name="multiple-indexes">
+          <output-dir compare="Text">multiple-indexes</output-dir>
+        </compilation-unit>
+      </test-case>
     </test-group>
     <test-group name="array-index/select-quantified-queries">
       <test-case FilePath="array-index/select-quantified-queries">
@@ -8579,6 +8691,11 @@
       <test-case FilePath="array-index/select-quantified-queries">
         <compilation-unit name="with-open-index">
           <output-dir compare="Text">with-open-index</output-dir>
+        </compilation-unit>
+      </test-case>
+      <test-case FilePath="array-index/select-quantified-queries">
+        <compilation-unit name="multiple-indexes">
+          <output-dir compare="Text">multiple-indexes</output-dir>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -9663,6 +9780,22 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="query_index">
+    <test-case FilePath="query_index">
+      <compilation-unit name="q01">
+        <output-dir compare="Text">q01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="query_index">
+      <compilation-unit name="negative">
+        <output-dir compare="Text">negative</output-dir>
+        <expected-error>ASX1105: Operation not supported on primary index ds1</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "pk_idx") cannot utilize index</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "sample_idx_1_ds1") cannot utilize index</expected-error>
+        <expected-error>ASX1026: The given function expression query-index("test", "ds1", "ds1_array_idx") cannot utilize index</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="range-hints">
     <test-case FilePath="range-hints">
       <compilation-unit name="order-by">
@@ -9884,6 +10017,36 @@
     <test-case FilePath="select-star">
       <compilation-unit name="var_star_2">
         <output-dir compare="Text">var_star_2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="escaping/success">
+        <output-dir compare="Text">escaping</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-star">
+      <compilation-unit name="escaping/failure">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1001: Syntax error</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="select-exclude">
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="tiny-social">
+        <output-dir compare="Text">tiny-social</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="complex-exclude">
+        <output-dir compare="Text">complex-exclude</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="select-exclude">
+      <compilation-unit name="exclude-negative">
+        <output-dir compare="Text">exclude-negative</output-dir>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -10291,11 +10454,11 @@
     </test-case>
   </test-group>
   <test-group name="statement-params">
-    <!--test-case FilePath="statement-params">
+    <test-case FilePath="statement-params">
       <compilation-unit name="index_01">
         <output-dir compare="Text">index_01</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="statement-params">
       <compilation-unit name="mixed_01">
         <output-dir compare="Text">mixed_01</output-dir>
@@ -10352,6 +10515,11 @@
     <test-case FilePath="statement-params">
       <compilation-unit name="query-ASTERIXDB-2413">
         <output-dir compare="Text">query-ASTERIXDB-2413</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="statement-params">
+      <compilation-unit name="query-ASTERIXDB-3116">
+        <output-dir compare="Text">query-ASTERIXDB-3116</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -13512,6 +13680,11 @@
         <expected-error>ASX1050: Cannot find dataset with name v3 in dataverse test1 (in line 24, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="view">
+      <compilation-unit name="view-pushdown">
+        <output-dir compare="Text">view-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="load">
     <test-case FilePath="load">
@@ -14134,6 +14307,11 @@
         <output-dir compare="Text">right_branch_opt_1</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="leftouterjoin">
+      <compilation-unit name="index-only-leftouterjoin">
+        <output-dir compare="Text">index-only-leftouterjoin</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="index-leftouterjoin">
     <test-case FilePath="index-leftouterjoin">
@@ -14181,16 +14359,16 @@
         <output-dir compare="Text">probe-sidx-btree-idxonly-join-btree-sidx1-idxonly</output-dir>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="index-leftouterjoin">
+    <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-sidx-btree-non-idxonly-join-btree-pidx1">
         <output-dir compare="Text">probe-sidx-btree-non-idxonly-join-btree-pidx1</output-dir>
       </compilation-unit>
-    </test-case!-->
-    <!--test-case FilePath="index-leftouterjoin">
+    </test-case>
+    <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-sidx-btree-non-idxonly-join-btree-sidx1-idxonly">
         <output-dir compare="Text">probe-sidx-btree-non-idxonly-join-btree-sidx1-idxonly</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
     <test-case FilePath="index-leftouterjoin">
       <compilation-unit name="probe-pidx-with-join-btree-pidx1">
         <output-dir compare="Text">probe-pidx-with-join-btree-pidx1</output-dir>
@@ -14951,6 +15129,11 @@
         <output-dir compare="Text">query-ASTERIXDB-1354</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="union">
+      <compilation-unit name="union_type_cast">
+        <output-dir compare="Text">union_type_cast</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="upsert">
     <test-case FilePath="upsert">
@@ -15350,6 +15533,44 @@
   </test-group>
   <test-group name="warnings">
     <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="broadcast-join-hint-warning">
+        <output-dir compare="Text">broadcast-join-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hash-bcas. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hash-bcast. ASX1001: Syntax error: In line 1 >>()<< Encountered ")" at column 2.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply broadcast hash join hint: broadcast cn (in line 36, at column 43)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="hashjoin-hint-warning">
+        <output-dir compare="Text">hashjoin-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build<< Encountered <EOF> at column 5.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hashjon build. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>buil<< Encountered <EOF> at column 4.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply hash join hint: build with cn (in line 36, at column 47)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>probe<< Encountered <EOF> at column 5.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1107: Unexpected hint: hashjon probe. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>prob<< Encountered <EOF> at column 4.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>probe ()<< Encountered ")" at column 8.  (in line 36, at column 22)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply hash join hint: probe with cn (in line 36, at column 47)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="cardinality-hint-warning">
+        <output-dir compare="Text">cardinality-hint-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Expected selectivity value (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply selectivity hint: Selectivity specified: 0.0, has to be a decimal value greater than 0 and less than 1 (in line 33, at column 73)</expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint selectivity. Selectivity has to be a decimal value greater than 0 and less than 1 (in line 31, at column 52)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Expected productivity collection name and value (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 31, at column 23)]]></expected-warn>
+        <expected-warn>HYR10006: Could not apply productivity hint: Productivity specified: 0.0, has to be a decimal value greater than 0 (in line 33, at column 47)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
       <compilation-unit name="inapplicable-hint-warning">
         <output-dir compare="Text">inapplicable-hint-warning</output-dir>
         <expected-warn>HYR10006: Could not apply Group By hint: hash</expected-warn>
@@ -15365,6 +15586,15 @@
         <output-dir compare="Text">min-max-incompatible-types</output-dir>
         <expected-warn>ASX0003: Type incompatibility: function min/max gets incompatible input values: bigint and string</expected-warn>
         <expected-warn>ASX0004: Unsupported type: min/max cannot process input type object</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="warnings" check-warnings="true">
+      <compilation-unit name="multiple-hints-warning">
+        <output-dir compare="Text">multiple-hints-warning</output-dir>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 30, at column 20)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 30, at column 46)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint productivity. Invalid format for productivity values (in line 30, at column 45)]]></expected-warn>
+        <expected-warn><![CDATA[ASX1132: Invalid specification for hint hashjoin. ASX1001: Syntax error: In line 1 >>build ()<< Encountered ")" at column 8.  (in line 30, at column 20)]]></expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="warnings" check-warnings="true">
@@ -15385,11 +15615,11 @@
         <expected-warn>ASX1107: Unexpected hint: unknown_hint_relexpr_6. "hash-bcast", "indexnl", "hashjoin", "skip-index", "use-index", "selectivity", "productivity" expected at this location</expected-warn>
       </compilation-unit>
     </test-case>
-    <!--test-case FilePath="warnings">
+    <test-case FilePath="warnings">
       <compilation-unit name="warnings-limit">
         <output-dir compare="Clean-JSON">warnings-limit</output-dir>
       </compilation-unit>
-    </test-case!-->
+    </test-case>
   </test-group>
   <test-group name="nonpure">
     <test-case FilePath="nonpure">
@@ -15877,4 +16107,291 @@
       </compilation-unit>
     </test-case>
   </test-group>
-</test-suite>
+  <test-group name="column">
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/001">
+        <output-dir compare="Text">assembly/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/002">
+        <output-dir compare="Text">assembly/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/003">
+        <output-dir compare="Text">assembly/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/004">
+        <output-dir compare="Text">assembly/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/001">
+        <output-dir compare="Text">delete/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/002">
+        <output-dir compare="Text">delete/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/003">
+        <output-dir compare="Text">delete/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/004">
+        <output-dir compare="Text">delete/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/005">
+        <output-dir compare="Text">delete/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="nested-pk">
+        <output-dir compare="Text">nested-pk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_after_gby">
+        <output-dir compare="Text">meta/meta_after_gby</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_in_with_clause">
+        <output-dir compare="Text">meta/meta_in_with_clause</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/resolving_pk_with_meta">
+        <output-dir compare="Text">meta/resolving_pk_with_meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/001">
+        <output-dir compare="Text">missing-null-values/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/002">
+        <output-dir compare="Text">missing-null-values/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/005">
+        <output-dir compare="Text">missing-null-values/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/006">
+        <output-dir compare="Text">missing-null-values/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/001">
+        <output-dir compare="Text">empty-array/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/002">
+        <output-dir compare="Text">empty-array/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/003">
+        <output-dir compare="Text">empty-array/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/array-access-pushdown">
+        <output-dir compare="Text">pushdown/array-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/field-access-pushdown">
+        <output-dir compare="Text">pushdown/field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/heterogeneous-access-pushdown">
+        <output-dir compare="Text">pushdown/heterogeneous-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/other-pushdowns">
+        <output-dir compare="Text">pushdown/other-pushdowns</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="select-count-one-field">
+        <output-dir compare="Text">select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/001">
+        <output-dir compare="Text">upsert/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/002">
+        <output-dir compare="Text">upsert/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/001">
+        <output-dir compare="Text">filter/001</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 30, at column 23)</expected-warn>
+        <expected-warn>ASX0051: Incomparable input types: bigint and string (in line 29, at column 38)</expected-warn>
+        <expected-warn>ASX0051: Incomparable input types: array and bigint (in line 28, at column 15)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/002">
+        <output-dir compare="Text">filter/002</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 29, at column 23)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/003">
+        <output-dir compare="Text">filter/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/004">
+        <output-dir compare="Text">filter/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/005">
+        <output-dir compare="Text">filter/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/006">
+        <output-dir compare="Text">filter/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/007">
+        <output-dir compare="Text">filter/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/not-in_every">
+        <output-dir compare="Text">filter/not-in_every</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="big-object">
+        <output-dir compare="Text">big-object</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-1">
+        <output-dir compare="Text">secondary-index/array-index/use-case-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-2">
+        <output-dir compare="Text">secondary-index/array-index/use-case-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-3">
+        <output-dir compare="Text">secondary-index/array-index/use-case-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-4">
+        <output-dir compare="Text">secondary-index/array-index/use-case-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-additional-atomic-index">
+        <output-dir compare="Text">secondary-index/array-index/with-additional-atomic-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-composite-sk">
+        <output-dir compare="Text">secondary-index/array-index/with-composite-sk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/index-with-meta">
+        <output-dir compare="Text">secondary-index/index-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-bulkload">
+        <output-dir compare="Text">secondary-index/create-index/after-bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-insert">
+        <output-dir compare="Text">secondary-index/create-index/after-insert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-upsert-with-meta">
+        <output-dir compare="Text">secondary-index/create-index/after-upsert-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="analyze-dataset">
+        <output-dir compare="Text">analyze-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="copy">
+    <test-case FilePath="copy">
+      <compilation-unit name="copy-1">
+        <output-dir compare="Text">copy-1</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="atomic-statements">
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-1">
+        <output-dir compare="Clean-JSON">atomic-statements-1</output-dir>
+        <expected-error>HYR0033: Inserting duplicate keys into the primary storage</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-2">
+        <output-dir compare="Clean-JSON">atomic-statements-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-3">
+        <output-dir compare="Clean-JSON">atomic-statements-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="atomic-statements-4">
+        <output-dir compare="Clean-JSON">atomic-statements-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="atomic-statements">
+      <compilation-unit name="columnar-dataset">
+        <output-dir compare="Clean-JSON">columnar-dataset</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-group>

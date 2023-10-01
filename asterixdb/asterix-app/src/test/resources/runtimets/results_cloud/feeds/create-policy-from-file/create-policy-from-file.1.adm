@@ -1,0 +1,1 @@
+{ "DatabaseName": "Default", "DataverseName": "experiments", "PolicyName": "testPolicy", "Description": "someString", "Properties": {{ { "Name": "name", "Value": "testname" }, { "Name": "value", "Value": "testvalue" }, { "Name": "key", "Value": "testkey" } }} }

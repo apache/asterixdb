@@ -1,0 +1,3 @@
+{ "DatasetName": "ds1", "IndexName": "sample_idx_1_ds1", "IndexStructure": "SAMPLE", "SampleCardinalityTarget": 1063, "SourceCardinality": 1000, "SourceAvgItemSize": 369, "IndexStats": [ { "IndexName": "ds1_idx3", "NumPages": 16 }, { "IndexName": "ds1_idx2", "NumPages": 16 }, { "IndexName": "ds1_idx1", "NumPages": 16 } ] }
+{ "DatasetName": "ds2", "IndexName": "sample_idx_1_ds2", "IndexStructure": "SAMPLE", "SampleCardinalityTarget": 1063, "SourceCardinality": 1000, "SourceAvgItemSize": 369, "IndexStats": [ { "IndexName": "ds2_idx1", "NumPages": 16 } ] }
+{ "DatasetName": "ds3", "IndexName": "sample_idx_1_ds3", "IndexStructure": "SAMPLE", "SampleCardinalityTarget": 1063, "SourceCardinality": 1000, "SourceAvgItemSize": 369 }
