@@ -1,0 +1,9 @@
+{ "id": 1, "some": { "unrelated": { "nestedValue": 1 } }, "name": "Jones", "department": "accounting" }
+{ "id": 2, "some": { "unrelated": { "nestedValue": 1 } }, "name": "Jones", "department": "engineering" }
+{ "id": 3, "some": { "unrelated": { "nestedValue": 1 } }, "department": "hr", "name": "Jones" }
+{ "id": 4, "some": { "unrelated": { "nestedValue": 1 } }, "department": "accounting", "name": "miller" }
+{ "id": 5, "some": { "unrelated": { "nestedValue": 1 } }, "department": "engineering", "name": "miller" }
+{ "id": 6, "some": { "unrelated": { "nestedValue": 1 } }, "department": "hr", "name": "miller" }
+{ "id": 7, "some": { "unrelated": { "nestedValue": 1 } }, "department": "accounting", "name": "smith" }
+{ "id": 8, "some": { "unrelated": { "nestedValue": 1 } }, "department": "engineering", "name": "smith" }
+{ "id": 9, "some": { "unrelated": { "nestedValue": 1 } }, "department": "hr", "name": "smith" }

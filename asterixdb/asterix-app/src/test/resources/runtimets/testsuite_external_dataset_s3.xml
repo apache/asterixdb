@@ -257,6 +257,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="embed-flat">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-flat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="embed-with-nested-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-with-nested-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="not-in">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">not-in</output-dir>
@@ -332,6 +344,18 @@
       <compilation-unit name="embed-multiple-values">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">embed-multiple-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="embed-flat">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-flat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="embed-with-nested-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-with-nested-values</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">

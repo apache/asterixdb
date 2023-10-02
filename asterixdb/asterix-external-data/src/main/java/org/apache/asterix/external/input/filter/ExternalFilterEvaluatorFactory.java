@@ -69,7 +69,7 @@ public class ExternalFilterEvaluatorFactory implements IExternalFilterEvaluatorF
     @Override
     public IExternalFilterValueEmbedder createValueEmbedder(IWarningCollector warningCollector) {
         if (embedFilterValues) {
-            return new ExternalFilterValueEmbedder(allPaths, leafs, prefix, warningCollector);
+            return new ExternalFilterValueEmbedder(allPaths, leafs, prefix);
         }
         return NoOpFilterValueEmbedder.INSTANCE;
     }

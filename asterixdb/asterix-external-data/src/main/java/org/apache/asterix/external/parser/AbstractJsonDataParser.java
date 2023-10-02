@@ -217,6 +217,8 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
                 if (valueEmbedder.shouldEmbed(fieldName, currentToken().getTypeTag())) {
                     // It is an embedded value, set it
                     fieldValue = valueEmbedder.getEmbeddedValue();
+                    // This would skip the children of a nested value (if the value is nested)
+                    jsonParser.skipChildren();
                 } else {
                     fieldValue = valueBuffer;
                     parseValue(BuiltinType.ANY, valueBuffer.getDataOutput());

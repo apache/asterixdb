@@ -1,0 +1,3 @@
+{"id": 4, "some":{"unrelated": {"nestedValue": 1}}, "department": "accounting", "name": {"first": "Alex", "last": "Miller"}}
+{"id": 5, "some":{"unrelated": {"nestedValue": 1}}, "department": "engineering", "name": {}}
+{"id": 6, "some":{"unrelated": {"nestedValue": 1}}, "department": "hr"}

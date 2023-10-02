@@ -31,12 +31,10 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder {
     private final ARecordType allPaths;
-    private final IWarningCollector warningCollector;
     private final Map<IAType, BitSet> setValues;
     private final EmbeddedValueBuilder builder;
     private final Stack<ARecordType> parents;
@@ -47,9 +45,8 @@ public class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder
     private BitSet currentSetValues;
 
     public ExternalFilterValueEmbedder(ARecordType allPaths, List<ProjectionFiltrationTypeUtil.RenamedType> leafs,
-            ExternalDataPrefix prefix, IWarningCollector warningCollector) {
+            ExternalDataPrefix prefix) {
         this.allPaths = allPaths;
-        this.warningCollector = warningCollector;
         setValues = new HashMap<>();
         builder = new EmbeddedValueBuilder(allPaths, prefix, setValues);
         parents = new Stack<>();
@@ -114,7 +111,7 @@ public class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder
     @Override
     public void enterObject() {
         level++;
-        if (level != parents.size()) {
+        if (level != parents.size() && currentType != BuiltinType.AMISSING) {
             parents.push((ARecordType) currentType);
             currentType = BuiltinType.AMISSING;
         }
@@ -122,7 +119,7 @@ public class ExternalFilterValueEmbedder implements IExternalFilterValueEmbedder
 
     @Override
     public void exitObject() {
-        if (currentType != allPaths) {
+        if (currentType != allPaths && level == parents.size()) {
             currentType = parents.pop();
             currentSetValues = setValues.get(currentType);
         }
