@@ -19,6 +19,7 @@
 package org.apache.asterix.app.active;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -184,6 +185,11 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
             LOGGER.trace("getEventListeners() returning {} listeners", entityEventListeners.size());
         }
         return entityEventListeners.values().toArray(IActiveEntityEventsListener[]::new);
+    }
+
+    @Override
+    public synchronized Collection<IActiveEntityEventsListener> getEventListenersAsList() {
+        return Collections.unmodifiableCollection(entityEventListeners.values());
     }
 
     @Override

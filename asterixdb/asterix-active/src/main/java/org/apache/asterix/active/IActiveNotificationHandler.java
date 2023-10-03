@@ -19,6 +19,8 @@
  */
 package org.apache.asterix.active;
 
+import java.util.Collection;
+
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -56,6 +58,11 @@ public interface IActiveNotificationHandler {
      * @return all the registered event listeners
      */
     IActiveEntityEventsListener[] getEventListeners();
+
+    /**
+     * @return List of all the registered event listeners
+     */
+    Collection<IActiveEntityEventsListener> getEventListenersAsList();
 
     /**
      * Lookup an event listener using the entity id
