@@ -114,7 +114,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             cleanupLocalFiles();
         }
         // Has different implementations depending on the caching policy
-        downloadPartitions();
+        downloadPartitions(metadataNode, metadataPartition);
     }
 
     private void deleteUnkeptPartitionDirs(List<FileReference> currentOnDiskPartitions) throws HyracksDataException {
@@ -146,7 +146,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         }
     }
 
-    protected abstract void downloadPartitions() throws HyracksDataException;
+    protected abstract void downloadPartitions(boolean metadataNode, int metadataPartition) throws HyracksDataException;
 
     /*
      * ******************************************************************

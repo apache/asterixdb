@@ -18,10 +18,13 @@
  */
 package org.apache.asterix.cloud;
 
+import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
+import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -76,7 +79,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
      */
 
     @Override
-    protected void downloadPartitions() throws HyracksDataException {
+    protected void downloadPartitions(boolean metadataNode, int metadataPartition) throws HyracksDataException {
         // Get the files in all relevant partitions from the cloud
         Set<String> cloudFiles = cloudClient.listObjects(bucket, STORAGE_ROOT_DIR_NAME, IoUtil.NO_OP_FILTER).stream()
                 .filter(f -> partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(f)))
@@ -96,8 +99,13 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         cloudFiles.removeAll(localFiles);
         int remainingUncachedFiles = cloudFiles.size();
         if (remainingUncachedFiles > 0) {
+            // Get list of FileReferences from the list of cloud (i.e., resolve each path's string to FileReference)
             List<FileReference> uncachedFiles = resolve(cloudFiles);
+            // Create a parallel downloader using the given cloudClient
             IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager);
+            // Download metadata partition (if this node is a metadata node)
+            downloadMetadataPartition(downloader, uncachedFiles, metadataNode, metadataPartition);
+            // Create a parallel cacher which download and monitor all uncached files
             ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles);
             // Local cache misses some files, cloud-based accessor is needed for read operations
             accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);
@@ -107,6 +115,19 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         }
 
         LOGGER.info("The number of uncached files: {}. Uncached files: {}", remainingUncachedFiles, cloudFiles);
+    }
+
+    private void downloadMetadataPartition(IParallelDownloader downloader, List<FileReference> uncachedFiles,
+            boolean metadataNode, int metadataPartition) throws HyracksDataException {
+        String partitionDir = PARTITION_DIR_PREFIX + metadataPartition;
+        if (metadataNode && uncachedFiles.stream().anyMatch(f -> f.getRelativePath().contains(partitionDir))) {
+            LOGGER.info("Downloading metadata partition {}, Current uncached files: {}", metadataPartition,
+                    uncachedFiles);
+            FileReference metadataDir = resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir);
+            downloader.downloadDirectories(Collections.singleton(metadataDir));
+            uncachedFiles.removeIf(f -> f.getRelativePath().contains(partitionDir));
+            LOGGER.info("Finished downloading metadata partition. Current uncached files: {}", uncachedFiles);
+        }
     }
 
     @Override
