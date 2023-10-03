@@ -264,6 +264,11 @@ public class JobManager implements IJobManager {
     }
 
     @Override
+    public int getRunningJobsCount() {
+        return activeRunMap.size();
+    }
+
+    @Override
     public Collection<JobRun> getPendingJobs() {
         return jobQueue.jobs();
     }

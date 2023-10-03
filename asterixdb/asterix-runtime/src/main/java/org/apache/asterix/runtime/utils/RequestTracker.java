@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IRequestTracker;
@@ -37,10 +38,12 @@ public class RequestTracker implements IRequestTracker {
     private final Map<String, IClientRequest> clientIdRequests = new ConcurrentHashMap<>();
     private final CircularFifoQueue<IClientRequest> completedRequests;
     private final ICcApplicationContext ccAppCtx;
+    private final AtomicLong numRequests;
 
     public RequestTracker(ICcApplicationContext ccAppCtx) {
         this.ccAppCtx = ccAppCtx;
         completedRequests = new CircularFifoQueue<>(ccAppCtx.getExternalProperties().getRequestsArchiveSize());
+        numRequests = new AtomicLong(0);
     }
 
     @Override
@@ -57,6 +60,7 @@ public class RequestTracker implements IRequestTracker {
     @Override
     public void track(IClientRequest request) {
         runningRequests.put(request.getId(), request);
+        numRequests.incrementAndGet();
         if (request.getClientContextId() != null) {
             clientIdRequests.put(request.getClientContextId(), request);
         }
@@ -111,5 +115,9 @@ public class RequestTracker implements IRequestTracker {
 
     private synchronized void archive(IClientRequest request) {
         completedRequests.add(request);
+    }
+
+    public long getTotalNumberOfRequests() {
+        return numRequests.get();
     }
 }

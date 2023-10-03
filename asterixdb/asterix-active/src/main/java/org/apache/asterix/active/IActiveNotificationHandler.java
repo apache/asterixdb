@@ -19,6 +19,8 @@
  */
 package org.apache.asterix.active;
 
+import java.util.Collection;
+
 import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -51,6 +53,11 @@ public interface IActiveNotificationHandler {
      *             if the entity is still active or if the listener was not registered
      */
     void unregisterListener(IActiveEntityEventsListener listener) throws HyracksDataException;
+
+    /**
+     * @return List of all the registered event listeners
+     */
+    Collection<IActiveEntityEventsListener> getEventListenersAsList();
 
     /**
      * @return all the registered event listeners
