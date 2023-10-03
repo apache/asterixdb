@@ -51,9 +51,10 @@ public class TestDataset extends Dataset {
             String recordTypeName, String nodeGroupName, String compactionPolicy,
             Map<String, String> compactionPolicyProperties, IDatasetDetails datasetDetails, Map<String, String> hints,
             DatasetType datasetType, int datasetId, int pendingOp) {
-        super(MetadataUtil.databaseFor(dataverseName), dataverseName, datasetName, recordTypeDataverseName,
-                recordTypeName, nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints,
-                datasetType, datasetId, pendingOp);
+        super(MetadataUtil.databaseFor(dataverseName), dataverseName, datasetName,
+                MetadataUtil.databaseFor(recordTypeDataverseName), recordTypeDataverseName, recordTypeName,
+                nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
+                datasetId, pendingOp);
     }
 
     @Override

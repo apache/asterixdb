@@ -37,6 +37,7 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
@@ -206,7 +207,7 @@ public class FunctionUtil {
         };
     }
 
-    public static List<List<Triple<DataverseName, String, String>>> getFunctionDependencies(FunctionDecl fd,
+    public static List<List<DependencyFullyQualifiedName>> getFunctionDependencies(FunctionDecl fd,
             IQueryRewriter rewriter) throws CompilationException {
         Expression normBody = fd.getNormalizedFuncBody();
         if (normBody == null) {
@@ -215,25 +216,26 @@ public class FunctionUtil {
         }
 
         // Get the list of used functions and used datasets
-        List<Triple<DataverseName, String, String>> datasetDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> synonymDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> datasetDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> synonymDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> functionDependencies = new ArrayList<>();
         ExpressionUtils.collectDependencies(normBody, rewriter, datasetDependencies, synonymDependencies,
                 functionDependencies);
 
-        List<Triple<DataverseName, String, String>> typeDependencies = Collections.emptyList();
+        List<DependencyFullyQualifiedName> typeDependencies = Collections.emptyList();
         return Function.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
                 synonymDependencies);
     }
 
-    public static List<List<Triple<DataverseName, String, String>>> getExternalFunctionDependencies(
+    public static List<List<DependencyFullyQualifiedName>> getExternalFunctionDependencies(
             Collection<TypeSignature> dependentTypes) {
-        List<Triple<DataverseName, String, String>> datasetDependencies = Collections.emptyList();
-        List<Triple<DataverseName, String, String>> functionDependencies = Collections.emptyList();
-        List<Triple<DataverseName, String, String>> typeDependencies = new ArrayList<>(dependentTypes.size());
-        List<Triple<DataverseName, String, String>> synonymDependencies = Collections.emptyList();
+        List<DependencyFullyQualifiedName> datasetDependencies = Collections.emptyList();
+        List<DependencyFullyQualifiedName> functionDependencies = Collections.emptyList();
+        List<DependencyFullyQualifiedName> typeDependencies = new ArrayList<>(dependentTypes.size());
+        List<DependencyFullyQualifiedName> synonymDependencies = Collections.emptyList();
         for (TypeSignature t : dependentTypes) {
-            typeDependencies.add(new Triple<>(t.getDataverseName(), t.getName(), null));
+            typeDependencies.add(
+                    new DependencyFullyQualifiedName(t.getDatabaseName(), t.getDataverseName(), t.getName(), null));
         }
         return Function.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
                 synonymDependencies);

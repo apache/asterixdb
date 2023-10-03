@@ -32,7 +32,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -244,9 +244,9 @@ public class ExpressionUtils {
     }
 
     public static void collectDependencies(Expression expression, IQueryRewriter rewriter,
-            List<Triple<DataverseName, String, String>> outDatasetDependencies,
-            List<Triple<DataverseName, String, String>> outSynonymDependencies,
-            List<Triple<DataverseName, String, String>> outFunctionDependencies) throws CompilationException {
+            List<DependencyFullyQualifiedName> outDatasetDependencies,
+            List<DependencyFullyQualifiedName> outSynonymDependencies,
+            List<DependencyFullyQualifiedName> outFunctionDependencies) throws CompilationException {
         // Duplicate elimination
         Set<DatasetFullyQualifiedName> seenDatasets = new HashSet<>();
         Set<DatasetFullyQualifiedName> seenSynonyms = new HashSet<>();
@@ -266,21 +266,24 @@ public class ExpressionUtils {
                             if (synonymReference != null) {
                                 // resolved via synonym -> store synonym name as a dependency
                                 if (seenSynonyms.add(synonymReference)) {
-                                    outSynonymDependencies.add(new Triple<>(synonymReference.getDataverseName(),
+                                    outSynonymDependencies.add(new DependencyFullyQualifiedName(
+                                            synonymReference.getDatabaseName(), synonymReference.getDataverseName(),
                                             synonymReference.getDatasetName(), null));
                                 }
                             } else {
                                 // resolved directly -> store dataset (or view) name as a dependency
                                 DatasetFullyQualifiedName datasetReference = dsArgs.first;
                                 if (seenDatasets.add(datasetReference)) {
-                                    outDatasetDependencies.add(new Triple<>(datasetReference.getDataverseName(),
+                                    outDatasetDependencies.add(new DependencyFullyQualifiedName(
+                                            datasetReference.getDatabaseName(), datasetReference.getDataverseName(),
                                             datasetReference.getDatasetName(), null));
                                 }
                             }
                         }
                     } else {
                         if (seenFunctions.add(signature)) {
-                            outFunctionDependencies.add(new Triple<>(signature.getDataverseName(), signature.getName(),
+                            outFunctionDependencies.add(new DependencyFullyQualifiedName(signature.getDatabaseName(),
+                                    signature.getDataverseName(), signature.getName(),
                                     Integer.toString(signature.getArity())));
                         }
                     }

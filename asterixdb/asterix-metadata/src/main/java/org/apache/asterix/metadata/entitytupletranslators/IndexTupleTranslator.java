@@ -323,14 +323,13 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             // from the record metadata
             Dataset dataset = metadataNode.getDataset(txnId, databaseName, dataverseName, datasetName);
             String datatypeName = dataset.getItemTypeName();
-            //TODO(DB): get 'database' of item type and meta type
             DataverseName datatypeDataverseName = dataset.getItemTypeDataverseName();
-            String datatypeDatabase = MetadataUtil.databaseFor(datatypeDataverseName);
+            String datatypeDatabase = dataset.getItemTypeDatabaseName();
             ARecordType recordDt = (ARecordType) metadataNode
                     .getDatatype(txnId, datatypeDatabase, datatypeDataverseName, datatypeName).getDatatype();
             String metatypeName = dataset.getMetaItemTypeName();
             DataverseName metatypeDataverseName = dataset.getMetaItemTypeDataverseName();
-            String metaTypeDatabase = MetadataUtil.databaseFor(metatypeDataverseName);
+            String metaTypeDatabase = dataset.getMetaItemTypeDatabaseName();
             ARecordType metaDt = null;
             if (metatypeName != null && metatypeDataverseName != null) {
                 metaDt = (ARecordType) metadataNode

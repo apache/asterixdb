@@ -109,8 +109,8 @@ public class IndexDropOperatorNodePushableTest {
             String database = MetadataUtil.databaseFor(dvName);
             List<List<String>> partitioningKeys = new ArrayList<>();
             partitioningKeys.add(Collections.singletonList("key"));
-            Dataset dataset = new Dataset(database, dvName, DATASET_NAME, dvName, DATA_TYPE_NAME, NODE_GROUP_NAME,
-                    NoMergePolicyFactory.NAME, null,
+            Dataset dataset = new Dataset(database, dvName, DATASET_NAME, database, dvName, DATA_TYPE_NAME,
+                    NODE_GROUP_NAME, NoMergePolicyFactory.NAME, null,
                     new InternalDatasetDetails(null, InternalDatasetDetails.PartitioningStrategy.HASH, partitioningKeys,
                             null, null, null, false, null, null),
                     null, DatasetConfig.DatasetType.INTERNAL, DATASET_ID, 0);

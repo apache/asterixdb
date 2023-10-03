@@ -39,6 +39,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -124,7 +125,6 @@ import org.apache.asterix.transaction.management.opcallbacks.SecondaryIndexModif
 import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCallback;
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
@@ -1255,10 +1255,10 @@ public class MetadataNode implements IMetadataNode {
             if (dataset.getDatasetType() == DatasetType.VIEW) {
                 ViewDetails viewDetails = (ViewDetails) dataset.getDatasetDetails();
                 List<DependencyKind> dependenciesSchema = ViewDetails.DEPENDENCIES_SCHEMA;
-                List<List<Triple<DataverseName, String, String>>> dependencies = viewDetails.getDependencies();
+                List<List<DependencyFullyQualifiedName>> dependencies = viewDetails.getDependencies();
                 for (int i = 0, n = dependencies.size(); i < n; i++) {
-                    for (Triple<DataverseName, String, String> dependency : dependencies.get(i)) {
-                        if (dependency.first.equals(dataverseName)) {
+                    for (DependencyFullyQualifiedName dependency : dependencies.get(i)) {
+                        if (dependency.getDataverseName().equals(dataverseName)) {
                             DependencyKind dependencyKind = dependenciesSchema.get(i);
                             throw new AsterixException(
                                     org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
@@ -1278,10 +1278,10 @@ public class MetadataNode implements IMetadataNode {
                 continue;
             }
             List<DependencyKind> dependenciesSchema = Function.DEPENDENCIES_SCHEMA;
-            List<List<Triple<DataverseName, String, String>>> dependencies = function.getDependencies();
+            List<List<DependencyFullyQualifiedName>> dependencies = function.getDependencies();
             for (int i = 0, n = dependencies.size(); i < n; i++) {
-                for (Triple<DataverseName, String, String> dependency : dependencies.get(i)) {
-                    if (dependency.first.equals(dataverseName)) {
+                for (DependencyFullyQualifiedName dependency : dependencies.get(i)) {
+                    if (dependency.getDataverseName().equals(dataverseName)) {
                         DependencyKind dependencyKind = dependenciesSchema.get(i);
                         throw new AsterixException(
                                 org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_DATAVERSE_DEPENDENT_EXISTS,
@@ -1355,14 +1355,15 @@ public class MetadataNode implements IMetadataNode {
             throw new AlgebricksException(ErrorCode.ILLEGAL_STATE);
         }
         for (Function function : allFunctions) {
-            List<List<Triple<DataverseName, String, String>>> functionDependencies = function.getDependencies();
+            List<List<DependencyFullyQualifiedName>> functionDependencies = function.getDependencies();
             if (functionDependencyIdx < functionDependencies.size()) {
-                List<Triple<DataverseName, String, String>> functionObjectDependencies =
+                List<DependencyFullyQualifiedName> functionObjectDependencies =
                         functionDependencies.get(functionDependencyIdx);
                 if (functionObjectDependencies != null) {
-                    for (Triple<DataverseName, String, String> dependency : functionObjectDependencies) {
-                        if (dependency.first.equals(dataverseName) && dependency.second.equals(objectName)
-                                && (objectArg == null || objectArg.equals(dependency.third))) {
+                    for (DependencyFullyQualifiedName dependency : functionObjectDependencies) {
+                        if (dependency.getDataverseName().equals(dataverseName)
+                                && dependency.getSubName1().equals(objectName)
+                                && (objectArg == null || objectArg.equals(dependency.getSubName2()))) {
                             throw new AsterixException(
                                     org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
                                     objectKindDisplayName, dependencyKind.getDependencyDisplayName(dependency),
@@ -1393,14 +1394,14 @@ public class MetadataNode implements IMetadataNode {
         for (Dataset dataset : allDatasets) {
             if (dataset.getDatasetType() == DatasetType.VIEW) {
                 ViewDetails viewDetails = (ViewDetails) dataset.getDatasetDetails();
-                List<List<Triple<DataverseName, String, String>>> viewDependencies = viewDetails.getDependencies();
+                List<List<DependencyFullyQualifiedName>> viewDependencies = viewDetails.getDependencies();
                 if (viewDependencyIdx < viewDependencies.size()) {
-                    List<Triple<DataverseName, String, String>> viewObjectDependencies =
-                            viewDependencies.get(viewDependencyIdx);
+                    List<DependencyFullyQualifiedName> viewObjectDependencies = viewDependencies.get(viewDependencyIdx);
                     if (viewObjectDependencies != null) {
-                        for (Triple<DataverseName, String, String> dependency : viewObjectDependencies) {
-                            if (dependency.first.equals(dataverseName) && dependency.second.equals(objectName)
-                                    && (objectArg == null || objectArg.equals(dependency.third))) {
+                        for (DependencyFullyQualifiedName dependency : viewObjectDependencies) {
+                            if (dependency.getDataverseName().equals(dataverseName)
+                                    && dependency.getSubName1().equals(objectName)
+                                    && (objectArg == null || objectArg.equals(dependency.getSubName2()))) {
                                 throw new AsterixException(
                                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS,
                                         objectKindDisplayName, dependencyKind.getDependencyDisplayName(dependency),
@@ -1474,7 +1475,7 @@ public class MetadataNode implements IMetadataNode {
             String libraryName) throws AlgebricksException {
         List<Function> functions = getAllFunctions(txnId);
         for (Function function : functions) {
-            if (libraryName.equals(function.getLibraryName())
+            if (libraryName.equals(function.getLibraryName()) && database.equals(function.getLibraryDatabaseName())
                     && dataverseName.equals(function.getLibraryDataverseName())) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "library",
@@ -1488,7 +1489,7 @@ public class MetadataNode implements IMetadataNode {
             String libraryName) throws AlgebricksException {
         List<DatasourceAdapter> adapters = getAllAdapters(txnId);
         for (DatasourceAdapter adapter : adapters) {
-            if (libraryName.equals(adapter.getLibraryName())
+            if (libraryName.equals(adapter.getLibraryName()) && database.equals(adapter.getLibraryDatabaseName())
                     && dataverseName.equals(adapter.getLibraryDataverseName())) {
                 throw new AsterixException(
                         org.apache.asterix.common.exceptions.ErrorCode.CANNOT_DROP_OBJECT_DEPENDENT_EXISTS, "library",

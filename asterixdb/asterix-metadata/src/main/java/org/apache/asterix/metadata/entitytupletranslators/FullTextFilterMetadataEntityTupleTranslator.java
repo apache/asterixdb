@@ -65,19 +65,22 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
 
     @Override
     protected FullTextFilterMetadataEntity createMetadataEntityFromARecord(ARecord aRecord) throws AlgebricksException {
+        AString dataverseName = (AString) aRecord.getValueByPos(fullTextFilterEntity.dataverseNameIndex());
+        DataverseName dataverse = DataverseName.createFromCanonicalForm(dataverseName.getStringValue());
         int databaseNameIndex = fullTextFilterEntity.databaseNameIndex();
         String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) aRecord.getValueByPos(databaseNameIndex)).getStringValue();
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverse);
         }
-        AString dataverseName = (AString) aRecord.getValueByPos(fullTextFilterEntity.dataverseNameIndex());
         AString filterName = (AString) aRecord.getValueByPos(fullTextFilterEntity.filterNameIndex());
         AString filterTypeAString = (AString) aRecord.getValueByPos(fullTextFilterEntity.filterTypeIndex());
 
         FullTextFilterType filterType = FullTextFilterType.getEnumIgnoreCase(filterTypeAString.getStringValue());
         switch (filterType) {
             case STOPWORDS:
-                return createStopwordsFilterDescriptorFromARecord(dataverseName, filterName, aRecord);
+                return createStopwordsFilterDescriptorFromARecord(databaseName, dataverse, filterName, aRecord);
             case STEMMER:
             case SYNONYM:
             default:
@@ -85,9 +88,9 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
         }
     }
 
-    public FullTextFilterMetadataEntity createStopwordsFilterDescriptorFromARecord(AString dataverseName, AString name,
-            ARecord aRecord) throws AlgebricksException {
-        ImmutableList.Builder<String> stopwordsBuilder = ImmutableList.<String> builder();
+    public FullTextFilterMetadataEntity createStopwordsFilterDescriptorFromARecord(String database,
+            DataverseName dataverse, AString name, ARecord aRecord) {
+        ImmutableList.Builder<String> stopwordsBuilder = ImmutableList.builder();
         int fieldIndex = aRecord.getType().getFieldIndex(FIELD_NAME_FULL_TEXT_STOPWORD_LIST);
         if (fieldIndex >= 0) {
             IACursor stopwordsCursor = ((AOrderedList) (aRecord.getValueByPos(fieldIndex))).getCursor();
@@ -96,8 +99,6 @@ public class FullTextFilterMetadataEntityTupleTranslator extends AbstractTupleTr
             }
         }
 
-        DataverseName dataverse = DataverseName.createFromCanonicalForm(dataverseName.getStringValue());
-        String database = MetadataUtil.databaseFor(dataverse);
         StopwordsFullTextFilterDescriptor filterDescriptor = new StopwordsFullTextFilterDescriptor(database, dataverse,
                 name.getStringValue(), stopwordsBuilder.build());
         return new FullTextFilterMetadataEntity(filterDescriptor);

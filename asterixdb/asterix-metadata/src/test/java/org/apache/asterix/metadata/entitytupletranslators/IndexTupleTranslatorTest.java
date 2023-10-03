@@ -71,9 +71,12 @@ public class IndexTupleTranslatorTest {
             DataverseName dvFoo = DataverseName.createSinglePartName("foo");
             DataverseName dvCB = DataverseName.createSinglePartName("CB");
             String dvTestDatabase = MetadataUtil.databaseFor(dvTest);
-            Dataset dataset = new Dataset(dvTestDatabase, dvTest, "d1", dvFoo, "LogType", dvCB, "MetaType",
-                    "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties, details, Collections.emptyMap(),
-                    DatasetType.INTERNAL, 115, 0, CompressionManager.NONE, DatasetFormatInfo.SYSTEM_DEFAULT);
+            String itemTypeDatabase = MetadataUtil.databaseFor(dvFoo);
+            String metaTypeDatabase = MetadataUtil.databaseFor(dvCB);
+            Dataset dataset = new Dataset(dvTestDatabase, dvTest, "d1", itemTypeDatabase, dvFoo, "LogType",
+                    metaTypeDatabase, dvCB, "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties,
+                    details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
+                    DatasetFormatInfo.SYSTEM_DEFAULT);
 
             Index index = new Index(dvTestDatabase, dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),

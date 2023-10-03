@@ -26,10 +26,10 @@ import java.util.Map;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
 import org.apache.asterix.om.types.TypeSignature;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public class Function implements IMetadataEntity<Function> {
     private static final long serialVersionUID = 5L;
@@ -41,20 +41,20 @@ public class Function implements IMetadataEntity<Function> {
     private final String body;
     private final String language;
     private final String kind;
-    private final String databaseName = null;
+    private final String libraryDatabaseName;
     private final DataverseName libraryDataverseName;
     private final String libraryName;
     private final List<String> externalIdentifier;
     private final Boolean deterministic; // null for SQL++ and AQL functions
     private final Boolean nullCall; // null for SQL++ and AQL functions
     private final Map<String, String> resources;
-    private final List<List<Triple<DataverseName, String, String>>> dependencies;
+    private final List<List<DependencyFullyQualifiedName>> dependencies;
 
     public Function(FunctionSignature signature, List<String> paramNames, List<TypeSignature> paramTypes,
             TypeSignature returnType, String functionBody, String functionKind, String language,
-            DataverseName libraryDataverseName, String libraryName, List<String> externalIdentifier, Boolean nullCall,
-            Boolean deterministic, Map<String, String> resources,
-            List<List<Triple<DataverseName, String, String>>> dependencies) {
+            String libraryDatabaseName, DataverseName libraryDataverseName, String libraryName,
+            List<String> externalIdentifier, Boolean nullCall, Boolean deterministic, Map<String, String> resources,
+            List<List<DependencyFullyQualifiedName>> dependencies) {
         this.signature = signature;
         this.paramNames = paramNames;
         this.paramTypes = paramTypes;
@@ -62,6 +62,7 @@ public class Function implements IMetadataEntity<Function> {
         this.returnType = returnType;
         this.language = language;
         this.kind = functionKind;
+        this.libraryDatabaseName = libraryDatabaseName;
         this.libraryDataverseName = libraryDataverseName;
         this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
@@ -128,6 +129,10 @@ public class Function implements IMetadataEntity<Function> {
         return externalIdentifier != null;
     }
 
+    public String getLibraryDatabaseName() {
+        return libraryDatabaseName;
+    }
+
     public DataverseName getLibraryDataverseName() {
         return libraryDataverseName;
     }
@@ -152,7 +157,7 @@ public class Function implements IMetadataEntity<Function> {
         return resources;
     }
 
-    public List<List<Triple<DataverseName, String, String>>> getDependencies() {
+    public List<List<DependencyFullyQualifiedName>> getDependencies() {
         return dependencies;
     }
 
@@ -169,12 +174,12 @@ public class Function implements IMetadataEntity<Function> {
     public static List<DependencyKind> DEPENDENCIES_SCHEMA =
             Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
 
-    public static List<List<Triple<DataverseName, String, String>>> createDependencies(
-            List<Triple<DataverseName, String, String>> datasetDependencies,
-            List<Triple<DataverseName, String, String>> functionDependencies,
-            List<Triple<DataverseName, String, String>> typeDependencies,
-            List<Triple<DataverseName, String, String>> synonymDependencies) {
-        List<List<Triple<DataverseName, String, String>>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
+    public static List<List<DependencyFullyQualifiedName>> createDependencies(
+            List<DependencyFullyQualifiedName> datasetDependencies,
+            List<DependencyFullyQualifiedName> functionDependencies,
+            List<DependencyFullyQualifiedName> typeDependencies,
+            List<DependencyFullyQualifiedName> synonymDependencies) {
+        List<List<DependencyFullyQualifiedName>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
         depList.add(datasetDependencies);
         depList.add(functionDependencies);
         depList.add(typeDependencies);

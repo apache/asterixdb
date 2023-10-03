@@ -39,6 +39,7 @@ public class Feed implements IMetadataEntity<Feed>, IFeed {
     /** A string representation of the instance **/
     private final String displayName;
     /** Feed configurations */
+    //TODO(DB): check for keys in the map that are using dataverse and need to include database
     private final Map<String, String> feedConfiguration;
 
     public Feed(String databaseName, DataverseName dataverseName, String feedName,

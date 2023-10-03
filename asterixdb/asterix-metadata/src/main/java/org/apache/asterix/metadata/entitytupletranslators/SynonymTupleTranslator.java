@@ -21,6 +21,7 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.bootstrap.SynonymEntity;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.om.base.ARecord;
@@ -59,9 +60,19 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
                 ((AString) synonymRecord.getValueByPos(synonymEntity.objectDataverseNameIndex())).getStringValue();
         DataverseName objectDataverseName = DataverseName.createFromCanonicalForm(objectDataverseCanonicalName);
 
+        String objectDatabaseName;
+        int objectDatabaseIdx =
+                synonymRecord.getType().getFieldIndex(MetadataRecordTypes.FIELD_NAME_OBJECT_DATABASE_NAME);
+        if (objectDatabaseIdx >= 0) {
+            objectDatabaseName = ((AString) synonymRecord.getValueByPos(objectDatabaseIdx)).getStringValue();
+        } else {
+            objectDatabaseName = MetadataUtil.databaseFor(objectDataverseName);
+        }
+
         String objectName = ((AString) synonymRecord.getValueByPos(synonymEntity.objectNameIndex())).getStringValue();
 
-        return new Synonym(databaseName, dataverseName, synonymName, objectDataverseName, objectName);
+        return new Synonym(databaseName, dataverseName, synonymName, objectDatabaseName, objectDataverseName,
+                objectName);
     }
 
     @Override
@@ -116,11 +127,27 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
         stringSerde.serialize(aString, fieldValue.getDataOutput());
         recordBuilder.addField(synonymEntity.objectNameIndex(), fieldValue);
 
+        // write open fields
+        writeOpenFields(synonym);
+
         // write record
         recordBuilder.write(tupleBuilder.getDataOutput(), true);
         tupleBuilder.addFieldEndOffset();
 
         tuple.reset(tupleBuilder.getFieldEndOffsets(), tupleBuilder.getByteArray());
         return tuple;
+    }
+
+    private void writeOpenFields(Synonym synonym) throws HyracksDataException {
+        //TODO(DB): should use something better
+        if (synonymEntity.databaseNameIndex() >= 0) {
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_OBJECT_DATABASE_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(synonym.getObjectDatabaseName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            recordBuilder.addField(fieldName, fieldValue);
+        }
     }
 }

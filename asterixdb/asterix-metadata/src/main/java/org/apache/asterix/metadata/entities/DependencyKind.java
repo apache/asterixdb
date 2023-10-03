@@ -22,28 +22,30 @@ package org.apache.asterix.metadata.entities;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 
 public enum DependencyKind {
-    DATASET(dependency -> DatasetUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second)),
+    DATASET(
+            dependency -> DatasetUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(),
+                    dependency.getSubName1())),
     FUNCTION(
-            dependency -> new FunctionSignature(dependency.first, dependency.second, Integer.parseInt(dependency.third))
-                    .toString()),
-    TYPE(dependency -> TypeUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second)),
-    SYNONYM(dependency -> MetadataUtil.getFullyQualifiedDisplayName(dependency.first, dependency.second));
+            dependency -> new FunctionSignature(dependency.getDataverseName(), dependency.getSubName1(),
+                    Integer.parseInt(dependency.getSubName2())).toString()),
+    TYPE(dependency -> TypeUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(), dependency.getSubName1())),
+    SYNONYM(
+            dependency -> MetadataUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(),
+                    dependency.getSubName1()));
 
-    private final java.util.function.Function<Triple<DataverseName, String, String>, String> dependencyDisplayNameAccessor;
+    private final java.util.function.Function<DependencyFullyQualifiedName, String> dependencyDisplayNameAccessor;
 
-    DependencyKind(
-            java.util.function.Function<Triple<DataverseName, String, String>, String> dependencyDisplayNameAccessor) {
+    DependencyKind(java.util.function.Function<DependencyFullyQualifiedName, String> dependencyDisplayNameAccessor) {
         this.dependencyDisplayNameAccessor = dependencyDisplayNameAccessor;
     }
 
-    public String getDependencyDisplayName(Triple<DataverseName, String, String> dependency) {
+    public String getDependencyDisplayName(DependencyFullyQualifiedName dependency) {
         return dependencyDisplayNameAccessor.apply(dependency);
     }
 

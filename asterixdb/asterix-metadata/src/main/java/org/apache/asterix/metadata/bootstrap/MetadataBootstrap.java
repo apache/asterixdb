@@ -220,9 +220,9 @@ public class MetadataBootstrap {
                     indexes[i].getPartitioningExprType(), false, null, null);
             MetadataManager.INSTANCE.addDataset(mdTxnCtx,
                     new Dataset(indexes[i].getDatabaseName(), indexes[i].getDataverseName(),
-                            indexes[i].getIndexedDatasetName(), indexes[i].getDataverseName(),
-                            indexes[i].getPayloadRecordType().getTypeName(), indexes[i].getNodeGroupName(),
-                            StorageConstants.DEFAULT_COMPACTION_POLICY_NAME,
+                            indexes[i].getIndexedDatasetName(), indexes[i].getDatabaseName(),
+                            indexes[i].getDataverseName(), indexes[i].getPayloadRecordType().getTypeName(),
+                            indexes[i].getNodeGroupName(), StorageConstants.DEFAULT_COMPACTION_POLICY_NAME,
                             StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<>(),
                             DatasetType.INTERNAL, indexes[i].getDatasetId().getId(), MetadataUtil.PENDING_NO_OP));
         }

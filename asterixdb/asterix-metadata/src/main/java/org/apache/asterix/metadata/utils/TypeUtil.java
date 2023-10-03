@@ -579,13 +579,16 @@ public class TypeUtil {
         return DATASET_INLINE_TYPE_PREFIX + typeChar + TYPE_NAME_DELIMITER + datasetName;
     }
 
-    public static boolean isDatasetInlineTypeName(Dataset dataset, DataverseName typeDataverseName, String typeName) {
-        return isInlineTypeName(dataset.getDataverseName(), typeDataverseName, typeName, DATASET_INLINE_TYPE_PREFIX);
+    public static boolean isDatasetInlineTypeName(Dataset dataset, String typeDatabaseName,
+            DataverseName typeDataverseName, String typeName) {
+        return isInlineTypeName(dataset.getDatabaseName(), dataset.getDataverseName(), typeDatabaseName,
+                typeDataverseName, typeName, DATASET_INLINE_TYPE_PREFIX);
     }
 
-    private static boolean isInlineTypeName(DataverseName entityDataverseName, DataverseName typeDataverseName,
-            String typeName, String inlineTypePrefix) {
-        return entityDataverseName.equals(typeDataverseName) && typeName.startsWith(inlineTypePrefix);
+    private static boolean isInlineTypeName(String entityDatabaseName, DataverseName entityDataverseName,
+            String typeDatabaseName, DataverseName typeDataverseName, String typeName, String inlineTypePrefix) {
+        return entityDatabaseName.equals(typeDatabaseName) && entityDataverseName.equals(typeDataverseName)
+                && typeName.startsWith(inlineTypePrefix);
     }
 
     public static String createFunctionParameterTypeName(String functionName, int arity, int parameterIndex) {
@@ -600,9 +603,10 @@ public class TypeUtil {
         return sb.toString();
     }
 
-    public static boolean isFunctionInlineTypeName(Function function, DataverseName typeDataverseName,
-            String typeName) {
-        return isInlineTypeName(function.getDataverseName(), typeDataverseName, typeName, FUNCTION_INLINE_TYPE_PREFIX);
+    public static boolean isFunctionInlineTypeName(Function function, String typeDatabaseName,
+            DataverseName typeDataverseName, String typeName) {
+        return isInlineTypeName(function.getDatabaseName(), function.getDataverseName(), typeDatabaseName,
+                typeDataverseName, typeName, FUNCTION_INLINE_TYPE_PREFIX);
     }
 
     public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String typeName) {
@@ -615,16 +619,16 @@ public class TypeUtil {
     public static List<TypeSignature> getFunctionInlineTypes(Function function) {
         List<TypeSignature> inlineTypes = Collections.emptyList();
         TypeSignature returnType = function.getReturnType();
-        if (returnType != null
-                && isFunctionInlineTypeName(function, returnType.getDataverseName(), returnType.getName())) {
+        if (returnType != null && isFunctionInlineTypeName(function, returnType.getDatabaseName(),
+                returnType.getDataverseName(), returnType.getName())) {
             inlineTypes = new ArrayList<>();
             inlineTypes.add(returnType);
         }
         List<TypeSignature> parameterTypes = function.getParameterTypes();
         if (parameterTypes != null) {
             for (TypeSignature parameterType : parameterTypes) {
-                if (parameterType != null && isFunctionInlineTypeName(function, parameterType.getDataverseName(),
-                        parameterType.getName())) {
+                if (parameterType != null && isFunctionInlineTypeName(function, parameterType.getDatabaseName(),
+                        parameterType.getDataverseName(), parameterType.getName())) {
                     if (inlineTypes.isEmpty()) {
                         inlineTypes = new ArrayList<>();
                     }

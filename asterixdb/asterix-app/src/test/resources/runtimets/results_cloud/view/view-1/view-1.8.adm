@@ -1,0 +1,5 @@
+{ "Kind": "FUNCTION", "Name": "f5", "Dependencies": [ [ [ "", "Default", "test2", "v3" ] ], [  ], [  ] ] }
+{ "Kind": "FUNCTION", "Name": "f6", "Dependencies": [ [ [ "", "Default", "test2", "v4" ] ], [  ], [  ] ] }
+{ "Kind": "VIEW", "Name": "v3", "Dependencies": [ [ [ "", "Default", "test2", "ds1" ], [ "", "Default", "test2", "ds2" ] ], [  ], [  ] ] }
+{ "Kind": "VIEW", "Name": "v4", "Dependencies": [ [ [ "", "Default", "test2", "ds1" ], [ "", "Default", "test2", "ds2" ] ], [  ], [  ] ] }
+{ "Kind": "VIEW", "Name": "v9", "Dependencies": [ [ [ "", "Default", "test2", "ds1" ], [ "", "Default", "test2", "ds2" ], [ "", "Default", "test2", "v3" ], [ "", "Default", "test2", "v4" ] ], [ [ "", "Default", "test2", "f5", "0" ], [ "", "Default", "test2", "f6", "0" ] ], [  ], [ [ "", "Default", "test2", "s7" ], [ "", "Default", "test2", "s8" ] ] ] }

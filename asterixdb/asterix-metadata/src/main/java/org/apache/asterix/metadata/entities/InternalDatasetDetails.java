@@ -30,6 +30,7 @@ import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt8;
@@ -155,7 +156,7 @@ public class InternalDatasetDetails implements IDatasetDetails {
     }
 
     @Override
-    public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
+    public void writeDatasetDetailsRecordType(DataOutput out, DatasetEntity datasetEntity) throws HyracksDataException {
 
         IARecordBuilder internalRecordBuilder = new RecordBuilder();
         OrderedListBuilder listBuilder = new OrderedListBuilder();

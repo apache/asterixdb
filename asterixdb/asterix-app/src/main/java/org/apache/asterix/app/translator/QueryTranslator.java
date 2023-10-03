@@ -90,6 +90,7 @@ import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.MetadataConstants;
@@ -824,6 +825,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             DataverseName metaItemTypeDataverseName, String metaItemTypeName, IHyracksClientConnection hcc,
             IRequestParameters requestParameters) throws Exception {
         String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, itemTypeDataverseName);
+        String metaItemDatabase = MetadataUtil.resolveDatabase(null, metaItemTypeDataverseName);
         MutableObject<ProgressState> progress = new MutableObject<>(ProgressState.NO_PROGRESS);
         SourceLocation sourceLoc = dd.getSourceLocation();
         DatasetType dsType = dd.getDatasetType();
@@ -951,9 +954,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             // #. add a new dataset with PendingAddOp
-            dataset = (Dataset) createDataset(dd, database, dataverseName, datasetName, itemTypeDataverseName,
-                    itemTypeName, metaItemTypeDataverseName, metaItemTypeName, dsType, compactionPolicy,
-                    compactionPolicyProperties, compressionScheme, datasetFormatInfo, datasetDetails, ngName);
+            dataset = (Dataset) createDataset(dd, database, dataverseName, datasetName, itemTypeDatabase,
+                    itemTypeDataverseName, itemTypeName, metaItemDatabase, metaItemTypeDataverseName, metaItemTypeName,
+                    dsType, compactionPolicy, compactionPolicyProperties, compressionScheme, datasetFormatInfo,
+                    datasetDetails, ngName);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (itemTypeIsInline) {
@@ -1046,14 +1050,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected IDataset createDataset(DatasetDecl dd, String database, DataverseName dataverseName, String datasetName,
-            DataverseName itemTypeDataverseName, String itemTypeName, DataverseName metaItemTypeDataverseName,
-            String metaItemTypeName, DatasetType dsType, String compactionPolicy,
-            Map<String, String> compactionPolicyProperties, String compressionScheme,
-            DatasetFormatInfo datasetFormatInfo, IDatasetDetails datasetDetails, String ngName)
-            throws AlgebricksException {
-        return new Dataset(database, dataverseName, datasetName, itemTypeDataverseName, itemTypeName,
-                metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy, compactionPolicyProperties,
-                datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
+            String itemTypeDatabase, DataverseName itemTypeDataverseName, String itemTypeName,
+            String metaItemTypeDatabase, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
+            DatasetType dsType, String compactionPolicy, Map<String, String> compactionPolicyProperties,
+            String compressionScheme, DatasetFormatInfo datasetFormatInfo, IDatasetDetails datasetDetails,
+            String ngName) throws AlgebricksException {
+        return new Dataset(database, dataverseName, datasetName, itemTypeDatabase, itemTypeDataverseName, itemTypeName,
+                metaItemTypeDatabase, metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy,
+                compactionPolicyProperties, datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
                 MetadataUtil.PENDING_ADD_OP, compressionScheme, datasetFormatInfo);
     }
 
@@ -2658,6 +2662,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             DataverseName dataverseName, String viewName, DataverseName itemTypeDataverseName, String itemTypeName,
             IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, itemTypeDataverseName);
         SourceLocation sourceLoc = cvs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2808,14 +2813,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
                     Collections.emptyList());
 
-            List<List<Triple<DataverseName, String, String>>> dependencies =
+            List<List<DependencyFullyQualifiedName>> dependencies =
                     ViewUtil.getViewDependencies(viewDecl, foreignKeys, queryRewriter);
 
             ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(),
                     primaryKeyFields, foreignKeys, datetimeFormat, dateFormat, timeFormat);
 
-            Dataset view = new Dataset(database, dataverseName, viewName, itemTypeDataverseName, itemTypeName,
-                    MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,
+            Dataset view = new Dataset(database, dataverseName, viewName, itemTypeDatabase, itemTypeDataverseName,
+                    itemTypeName, MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(), viewDetails,
                     Collections.emptyMap(), DatasetType.VIEW, 0, MetadataUtil.PENDING_NO_OP);
             if (existingDataset == null) {
                 if (itemTypeIsInline) {
@@ -2889,11 +2894,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         DatasetUtil.getFullyQualifiedDisplayName(dataverseName, viewName));
             }
             MetadataManager.INSTANCE.dropDataset(mdTxnCtx, database, dataverseName, viewName, false);
-            if (TypeUtil.isDatasetInlineTypeName(dataset, dataset.getItemTypeDataverseName(),
+            String itemTypeDatabaseName = dataset.getItemTypeDatabaseName();
+            if (TypeUtil.isDatasetInlineTypeName(dataset, itemTypeDatabaseName, dataset.getItemTypeDataverseName(),
                     dataset.getItemTypeName())) {
-                String itemDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, itemDatabase, dataset.getItemTypeDataverseName(),
-                        dataset.getItemTypeName());
+                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, itemTypeDatabaseName,
+                        dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -3053,12 +3058,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 List<String> externalIdentifier = cfs.getExternalIdentifier();
                 ExternalFunctionCompilerUtil.validateExternalIdentifier(externalIdentifier, language,
                         cfs.getSourceLocation());
-                List<List<Triple<DataverseName, String, String>>> dependencies =
+                List<List<DependencyFullyQualifiedName>> dependencies =
                         FunctionUtil.getExternalFunctionDependencies(depTypes);
 
                 function = new Function(functionSignature, paramNames, paramTypes, returnTypeSignature, null,
-                        FunctionKind.SCALAR.toString(), library.getLanguage(), libraryDataverseName, libraryName,
-                        externalIdentifier, cfs.getNullCall(), cfs.getDeterministic(), cfs.getResources(),
+                        FunctionKind.SCALAR.toString(), library.getLanguage(), libraryDatabase, libraryDataverseName,
+                        libraryName, externalIdentifier, cfs.getNullCall(), cfs.getDeterministic(), cfs.getResources(),
                         dependencies);
             } else {
                 List<Pair<VarIdentifier, TypeExpression>> paramList = cfs.getParameters();
@@ -3091,13 +3096,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
                         Collections.emptyList());
 
-                List<List<Triple<DataverseName, String, String>>> dependencies =
+                List<List<DependencyFullyQualifiedName>> dependencies =
                         FunctionUtil.getFunctionDependencies(fd, queryRewriter);
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
                         FunctionKind.SCALAR.toString(), compilationProvider.getParserFactory().getLanguage(), null,
-                        null, null, null, null, null, dependencies);
+                        null, null, null, null, null, null, dependencies);
             }
 
             if (existingFunction == null) {
@@ -3662,7 +3667,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 throw new CompilationException(ErrorCode.SYNONYM_EXISTS, css.getSourceLocation(), synonymName);
             }
-            synonym = new Synonym(database, dataverseName, synonymName, objectDataverseName, objectName);
+            String objectDatabaseName = MetadataUtil.resolveDatabase(null, objectDataverseName);
+            synonym = new Synonym(database, dataverseName, synonymName, objectDatabaseName, objectDataverseName,
+                    objectName);
             MetadataManager.INSTANCE.addSynonym(metadataProvider.getMetadataTxnContext(), synonym);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return CreateResult.CREATED;

@@ -30,7 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -78,7 +78,7 @@ public final class ViewUtil {
         }
     }
 
-    public static List<List<Triple<DataverseName, String, String>>> getViewDependencies(ViewDecl viewDecl,
+    public static List<List<DependencyFullyQualifiedName>> getViewDependencies(ViewDecl viewDecl,
             List<ViewDetails.ForeignKey> foreignKeys, IQueryRewriter rewriter) throws CompilationException {
         Expression normBody = viewDecl.getNormalizedViewBody();
         if (normBody == null) {
@@ -87,9 +87,9 @@ public final class ViewUtil {
         }
 
         // Get the list of used functions and used datasets
-        List<Triple<DataverseName, String, String>> datasetDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> synonymDependencies = new ArrayList<>();
-        List<Triple<DataverseName, String, String>> functionDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> datasetDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> synonymDependencies = new ArrayList<>();
+        List<DependencyFullyQualifiedName> functionDependencies = new ArrayList<>();
         ExpressionUtils.collectDependencies(normBody, rewriter, datasetDependencies, synonymDependencies,
                 functionDependencies);
 
@@ -101,19 +101,22 @@ public final class ViewUtil {
                 if (isSelfReference || containsDependency(datasetDependencies, refName)) {
                     continue;
                 }
-                datasetDependencies.add(new Triple<>(refName.getDataverseName(), refName.getDatasetName(), null));
+                datasetDependencies.add(new DependencyFullyQualifiedName(refName.getDatabaseName(),
+                        refName.getDataverseName(), refName.getDatasetName(), null));
             }
         }
 
-        List<Triple<DataverseName, String, String>> typeDependencies = Collections.emptyList();
+        List<DependencyFullyQualifiedName> typeDependencies = Collections.emptyList();
         return ViewDetails.createDependencies(datasetDependencies, functionDependencies, typeDependencies,
                 synonymDependencies);
     }
 
-    private static boolean containsDependency(List<Triple<DataverseName, String, String>> inList,
+    private static boolean containsDependency(List<DependencyFullyQualifiedName> inList,
             DatasetFullyQualifiedName searchName) {
-        for (Triple<DataverseName, String, String> d : inList) {
-            if (d.first.equals(searchName.getDataverseName()) && d.second.equals(searchName.getDatasetName())) {
+        for (DependencyFullyQualifiedName d : inList) {
+            if (d.getDatabaseName().equals(searchName.getDatabaseName())
+                    && d.getDataverseName().equals(searchName.getDataverseName())
+                    && d.getSubName1().equals(searchName.getDatasetName())) {
                 return true;
             }
         }

@@ -192,8 +192,8 @@ public class DatatypeTupleTranslator extends AbstractDatatypeTupleTranslator<Dat
         IAType fieldType = dataType.getDatatype();
         if (fieldType.getTypeTag().isDerivedType()) {
             fieldValue.reset();
-            writeDerivedTypeRecord(dataType.getDataverseName(), (AbstractComplexType) fieldType,
-                    fieldValue.getDataOutput(), dataType.getIsAnonymous());
+            writeDerivedTypeRecord(dataType.getDatabaseName(), dataType.getDataverseName(),
+                    (AbstractComplexType) fieldType, fieldValue.getDataOutput(), dataType.getIsAnonymous());
             recordBuilder.addField(datatypeEntity.derivedIndex(), fieldValue);
         }
 

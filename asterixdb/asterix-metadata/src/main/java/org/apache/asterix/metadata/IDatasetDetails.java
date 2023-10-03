@@ -22,11 +22,12 @@ import java.io.DataOutput;
 import java.io.Serializable;
 
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IDatasetDetails extends Serializable {
 
     DatasetType getDatasetType();
 
-    void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException;
+    void writeDatasetDetailsRecordType(DataOutput out, DatasetEntity datasetEntity) throws HyracksDataException;
 }

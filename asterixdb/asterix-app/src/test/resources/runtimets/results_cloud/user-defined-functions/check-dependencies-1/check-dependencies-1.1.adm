@@ -1,0 +1,7 @@
+{ "DataverseName": "B", "Name": "f0", "Dependencies": [ [  ], [  ], [  ] ] }
+{ "DataverseName": "B", "Name": "f5", "Dependencies": [ [ [ "", "Default", "B", "TweetMessages2" ], [ "", "Default", "C", "TweetMessages" ] ], [ [ "", "Default", "C", "f1", "2" ], [ "", "Default", "B", "f0", "2" ] ], [  ] ] }
+{ "DataverseName": "C", "Name": "f1", "Dependencies": [ [  ], [  ], [  ] ] }
+{ "DataverseName": "C", "Name": "f2", "Dependencies": [ [ [ "", "Default", "C", "TweetMessages" ] ], [ [ "", "Default", "C", "f1", "2" ], [ "", "Default", "B", "f0", "2" ] ], [  ] ] }
+{ "DataverseName": "C", "Name": "f3", "Dependencies": [ [  ], [ [ "", "Default", "C", "f2", "2" ] ], [  ] ] }
+{ "DataverseName": "C", "Name": "f4", "Dependencies": [ [ [ "", "Default", "C", "TweetMessages" ] ], [  ], [  ] ] }
+{ "DataverseName": "C", "Name": "f5", "Dependencies": [ [  ], [  ], [  ], [ [ "", "Default", "C", "TweetMessagesSyn1" ], [ "", "Default", "C", "TweetMessagesSyn2" ] ] ] }

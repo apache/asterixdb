@@ -25,7 +25,6 @@ import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.api.IMetadataIndex;
@@ -63,8 +62,8 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
         this.metadataNode = metadataNode;
     }
 
-    protected void writeDerivedTypeRecord(DataverseName dataverseName, AbstractComplexType derivedDatatype,
-            DataOutput out, boolean isAnonymous) throws HyracksDataException {
+    protected void writeDerivedTypeRecord(String databaseName, DataverseName dataverseName,
+            AbstractComplexType derivedDatatype, DataOutput out, boolean isAnonymous) throws HyracksDataException {
         DerivedTypeTag tag;
         IARecordBuilder derivedRecordBuilder = new RecordBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
@@ -99,18 +98,18 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
         switch (tag) {
             case RECORD:
                 fieldValue.reset();
-                writeRecordType(dataverseName, derivedDatatype, fieldValue.getDataOutput());
+                writeRecordType(databaseName, dataverseName, derivedDatatype, fieldValue.getDataOutput());
                 derivedRecordBuilder.addField(MetadataRecordTypes.DERIVEDTYPE_ARECORD_RECORD_FIELD_INDEX, fieldValue);
                 break;
             case UNORDEREDLIST:
                 fieldValue.reset();
-                writeCollectionType(dataverseName, derivedDatatype, fieldValue.getDataOutput());
+                writeCollectionType(databaseName, dataverseName, derivedDatatype, fieldValue.getDataOutput());
                 derivedRecordBuilder.addField(MetadataRecordTypes.DERIVEDTYPE_ARECORD_UNORDEREDLIST_FIELD_INDEX,
                         fieldValue);
                 break;
             case ORDEREDLIST:
                 fieldValue.reset();
-                writeCollectionType(dataverseName, derivedDatatype, fieldValue.getDataOutput());
+                writeCollectionType(databaseName, dataverseName, derivedDatatype, fieldValue.getDataOutput());
                 derivedRecordBuilder.addField(MetadataRecordTypes.DERIVEDTYPE_ARECORD_ORDEREDLIST_FIELD_INDEX,
                         fieldValue);
                 break;
@@ -118,19 +117,20 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
         derivedRecordBuilder.write(out, true);
     }
 
-    private void writeCollectionType(DataverseName dataverseName, AbstractComplexType type, DataOutput out)
-            throws HyracksDataException {
+    private void writeCollectionType(String databaseName, DataverseName dataverseName, AbstractComplexType type,
+            DataOutput out) throws HyracksDataException {
         AbstractCollectionType listType = (AbstractCollectionType) type;
         IAType itemType = listType.getItemType();
         if (itemType.getTypeTag().isDerivedType()) {
-            handleNestedDerivedType(dataverseName, itemType.getTypeName(), (AbstractComplexType) itemType);
+            handleNestedDerivedType(databaseName, dataverseName, itemType.getTypeName(),
+                    (AbstractComplexType) itemType);
         }
         aString.setValue(listType.getItemType().getTypeName());
         stringSerde.serialize(aString, out);
     }
 
-    private void writeRecordType(DataverseName dataverseName, AbstractComplexType type, DataOutput out)
-            throws HyracksDataException {
+    private void writeRecordType(String databaseName, DataverseName dataverseName, AbstractComplexType type,
+            DataOutput out) throws HyracksDataException {
 
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();
         ArrayBackedValueStorage itemValue = new ArrayBackedValueStorage();
@@ -153,7 +153,8 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
                 fieldType = fieldUnionType.getActualType();
             }
             if (fieldType.getTypeTag().isDerivedType()) {
-                handleNestedDerivedType(dataverseName, fieldType.getTypeName(), (AbstractComplexType) fieldType);
+                handleNestedDerivedType(databaseName, dataverseName, fieldType.getTypeName(),
+                        (AbstractComplexType) fieldType);
             }
 
             itemValue.reset();
@@ -207,10 +208,9 @@ public abstract class AbstractDatatypeTupleTranslator<T> extends AbstractTupleTr
         recordRecordBuilder.write(out, true);
     }
 
-    protected void handleNestedDerivedType(DataverseName dataverseName, String typeName, AbstractComplexType nestedType)
-            throws HyracksDataException {
+    protected void handleNestedDerivedType(String database, DataverseName dataverseName, String typeName,
+            AbstractComplexType nestedType) throws HyracksDataException {
         try {
-            String database = MetadataUtil.databaseFor(dataverseName);
             metadataNode.addDatatype(txnId, new Datatype(database, dataverseName, typeName, nestedType, true));
         } catch (AlgebricksException e) {
             // The nested record type may have been inserted by a previous DDL statement or

@@ -20,6 +20,7 @@
 package org.apache.asterix.metadata.entities;
 
 import static org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator.writeDateTimeFormats;
+import static org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator.writeDeps;
 import static org.apache.asterix.om.types.AOrderedListType.FULL_OPEN_ORDEREDLIST_TYPE;
 
 import java.io.DataOutput;
@@ -34,32 +35,31 @@ import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
-import org.apache.asterix.metadata.entitytupletranslators.AbstractTupleTranslator;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.utils.RecordUtil;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public class ViewDetails implements IDatasetDetails {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     public static List<DependencyKind> DEPENDENCIES_SCHEMA =
             Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
 
     private final String viewBody;
 
-    private final List<List<Triple<DataverseName, String, String>>> dependencies;
+    private final List<List<DependencyFullyQualifiedName>> dependencies;
 
     // Typed view parameters
 
@@ -75,9 +75,9 @@ public class ViewDetails implements IDatasetDetails {
 
     private final List<ForeignKey> foreignKeys;
 
-    public ViewDetails(String viewBody, List<List<Triple<DataverseName, String, String>>> dependencies,
-            Boolean defaultNull, List<String> primaryKeyFields, List<ForeignKey> foreignKeys, String datetimeFormat,
-            String dateFormat, String timeFormat) {
+    public ViewDetails(String viewBody, List<List<DependencyFullyQualifiedName>> dependencies, Boolean defaultNull,
+            List<String> primaryKeyFields, List<ForeignKey> foreignKeys, String datetimeFormat, String dateFormat,
+            String timeFormat) {
         this.viewBody = Objects.requireNonNull(viewBody);
         this.dependencies = Objects.requireNonNull(dependencies);
         this.defaultNull = defaultNull;
@@ -97,7 +97,7 @@ public class ViewDetails implements IDatasetDetails {
         return viewBody;
     }
 
-    public List<List<Triple<DataverseName, String, String>>> getDependencies() {
+    public List<List<DependencyFullyQualifiedName>> getDependencies() {
         return dependencies;
     }
 
@@ -128,7 +128,7 @@ public class ViewDetails implements IDatasetDetails {
     }
 
     @Override
-    public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
+    public void writeDatasetDetailsRecordType(DataOutput out, DatasetEntity datasetEntity) throws HyracksDataException {
         IARecordBuilder viewRecordBuilder = new RecordBuilder();
         viewRecordBuilder.reset(RecordUtil.FULLY_OPEN_RECORD_TYPE);
 
@@ -162,25 +162,14 @@ public class ViewDetails implements IDatasetDetails {
             OrderedListBuilder dependenciesListBuilder = new OrderedListBuilder();
             OrderedListBuilder dependencyListBuilder = new OrderedListBuilder();
             OrderedListBuilder dependencyNameListBuilder = new OrderedListBuilder();
-            List<String> dependencySubnames = new ArrayList<>(3);
 
+            boolean writeDatabase = datasetEntity.databaseNameIndex() >= 0;
             dependenciesListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-            for (List<Triple<DataverseName, String, String>> dependenciesList : dependencies) {
+            for (List<DependencyFullyQualifiedName> dependenciesList : dependencies) {
                 dependencyListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-                for (Triple<DataverseName, String, String> dependency : dependenciesList) {
-                    dependencyNameListBuilder.reset(FULL_OPEN_ORDEREDLIST_TYPE);
-                    dependencySubnames.clear();
-                    AbstractTupleTranslator.getDependencySubNames(dependency, dependencySubnames);
-                    for (String subName : dependencySubnames) {
-                        itemValue.reset();
-                        aString.setValue(subName);
-                        stringSerde.serialize(aString, itemValue.getDataOutput());
-                        dependencyNameListBuilder.addItem(itemValue);
-                    }
-                    itemValue.reset();
-                    dependencyNameListBuilder.write(itemValue.getDataOutput(), true);
-                    dependencyListBuilder.addItem(itemValue);
-                }
+                writeDeps(dependencyListBuilder, itemValue, dependenciesList, dependencyNameListBuilder,
+                        FULL_OPEN_ORDEREDLIST_TYPE, writeDatabase, aString, stringSerde);
+
                 itemValue.reset();
                 dependencyListBuilder.write(itemValue.getDataOutput(), true);
                 dependenciesListBuilder.addItem(itemValue);
@@ -246,6 +235,17 @@ public class ViewDetails implements IDatasetDetails {
                 keyListBuilder.write(fieldValue.getDataOutput(), true);
                 foreignKeyRecordBuilder.addField(fieldName, fieldValue);
 
+                // write field 'RefDatabaseName'
+                if (datasetEntity.databaseNameIndex() >= 0) {
+                    fieldName.reset();
+                    aString.setValue(MetadataRecordTypes.FIELD_NAME_REF_DATABASE_NAME);
+                    stringSerde.serialize(aString, fieldName.getDataOutput());
+                    fieldValue.reset();
+                    aString.setValue(foreignKey.getReferencedDatasetName().getDatabaseName());
+                    stringSerde.serialize(aString, fieldValue.getDataOutput());
+                    foreignKeyRecordBuilder.addField(fieldName, fieldValue);
+                }
+
                 // write field 'RefDataverseName'
                 fieldName.reset();
                 aString.setValue(MetadataRecordTypes.FIELD_NAME_REF_DATAVERSE_NAME);
@@ -308,12 +308,12 @@ public class ViewDetails implements IDatasetDetails {
         }
     }
 
-    public static List<List<Triple<DataverseName, String, String>>> createDependencies(
-            List<Triple<DataverseName, String, String>> datasetDependencies,
-            List<Triple<DataverseName, String, String>> functionDependencies,
-            List<Triple<DataverseName, String, String>> typeDependencies,
-            List<Triple<DataverseName, String, String>> synonymDependencies) {
-        List<List<Triple<DataverseName, String, String>>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
+    public static List<List<DependencyFullyQualifiedName>> createDependencies(
+            List<DependencyFullyQualifiedName> datasetDependencies,
+            List<DependencyFullyQualifiedName> functionDependencies,
+            List<DependencyFullyQualifiedName> typeDependencies,
+            List<DependencyFullyQualifiedName> synonymDependencies) {
+        List<List<DependencyFullyQualifiedName>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
         depList.add(datasetDependencies);
         depList.add(functionDependencies);
         depList.add(typeDependencies);

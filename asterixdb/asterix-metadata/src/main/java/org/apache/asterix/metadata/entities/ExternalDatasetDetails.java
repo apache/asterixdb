@@ -32,6 +32,7 @@ import org.apache.asterix.common.config.DatasetConfig.TransactionState;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.IDatasetDetails;
+import org.apache.asterix.metadata.bootstrap.DatasetEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ADateTime;
@@ -83,7 +84,7 @@ public class ExternalDatasetDetails implements IDatasetDetails {
 
     @SuppressWarnings("unchecked")
     @Override
-    public void writeDatasetDetailsRecordType(DataOutput out) throws HyracksDataException {
+    public void writeDatasetDetailsRecordType(DataOutput out, DatasetEntity datasetEntity) throws HyracksDataException {
         IARecordBuilder externalRecordBuilder = new RecordBuilder();
         OrderedListBuilder listBuilder = new OrderedListBuilder();
         ArrayBackedValueStorage fieldValue = new ArrayBackedValueStorage();

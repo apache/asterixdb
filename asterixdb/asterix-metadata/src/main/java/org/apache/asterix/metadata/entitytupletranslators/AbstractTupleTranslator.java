@@ -25,11 +25,14 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.api.IMetadataEntityTupleTranslator;
 import org.apache.asterix.metadata.api.IMetadataIndex;
@@ -45,6 +48,7 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -129,30 +133,49 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
     protected abstract T createMetadataEntityFromARecord(ARecord aRecord)
             throws HyracksDataException, AlgebricksException;
 
-    public static void getDependencySubNames(Triple<DataverseName, String, String> dependency,
+    public static void getDependencySubNames(DependencyFullyQualifiedName dependency,
             Collection<? super String> outSubnames) {
-        outSubnames.add(dependency.first.getCanonicalForm());
-        if (dependency.second != null) {
-            outSubnames.add(dependency.second);
+        outSubnames.add(dependency.getDatabaseName());
+        outSubnames.add(dependency.getDataverseName().getCanonicalForm());
+        if (dependency.getSubName1() != null) {
+            outSubnames.add(dependency.getSubName1());
         }
-        if (dependency.third != null) {
-            outSubnames.add(dependency.third);
+        if (dependency.getSubName2() != null) {
+            outSubnames.add(dependency.getSubName2());
         }
     }
 
-    public static Triple<DataverseName, String, String> getDependency(AOrderedList dependencySubnames)
+    public static DependencyFullyQualifiedName getDependency(AOrderedList dependencySubnames)
             throws AlgebricksException {
-        String dataverseCanonicalName = ((AString) dependencySubnames.getItem(0)).getStringValue();
-        DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        // there must be at least one item (the dataverse)
+        int currentIdx = 0;
+        IAObject databaseMarker = dependencySubnames.getItem(currentIdx);
+        String databaseName;
+        DataverseName dataverseName;
+        if (((AString) databaseMarker).getStringValue().isEmpty()) {
+            // move to database value
+            currentIdx++;
+            databaseName = ((AString) dependencySubnames.getItem(currentIdx)).getStringValue();
+            // move to dataverse value
+            currentIdx++;
+            String dataverseCanonicalName = ((AString) dependencySubnames.getItem(currentIdx)).getStringValue();
+            dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+        } else {
+            String dataverseCanonicalName = ((AString) dependencySubnames.getItem(currentIdx)).getStringValue();
+            dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
+        currentIdx++;
         String second = null, third = null;
         int ln = dependencySubnames.size();
-        if (ln > 1) {
-            second = ((AString) dependencySubnames.getItem(1)).getStringValue();
-            if (ln > 2) {
-                third = ((AString) dependencySubnames.getItem(2)).getStringValue();
+        if (currentIdx < ln) {
+            second = ((AString) dependencySubnames.getItem(currentIdx)).getStringValue();
+            currentIdx++;
+            if (currentIdx < ln) {
+                third = ((AString) dependencySubnames.getItem(currentIdx)).getStringValue();
             }
         }
-        return new Triple<>(dataverseName, second, third);
+        return new DependencyFullyQualifiedName(databaseName, dataverseName, second, third);
     }
 
     protected static String getStringValue(IAObject obj) {
@@ -201,6 +224,51 @@ public abstract class AbstractTupleTranslator<T> implements IMetadataEntityTuple
             fieldValue.reset();
             formatListBuilder.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(nameValue, fieldValue);
+        }
+    }
+
+    public static void writeString(ArrayBackedValueStorage itemValue, AMutableString aString, String value,
+            ISerializerDeserializer<AString> stringSerde) throws HyracksDataException {
+        itemValue.reset();
+        aString.setValue(value);
+        stringSerde.serialize(aString, itemValue.getDataOutput());
+    }
+
+    public static void writeDeps(OrderedListBuilder dependencyListBuilder, ArrayBackedValueStorage itemValue,
+            List<DependencyFullyQualifiedName> dependencies, OrderedListBuilder dependencyNameListBuilder,
+            AOrderedListType stringList, boolean writeDatabase, AMutableString aString,
+            ISerializerDeserializer<AString> stringSerde) throws HyracksDataException {
+        for (DependencyFullyQualifiedName dependency : dependencies) {
+            dependencyNameListBuilder.reset(stringList);
+
+            if (writeDatabase) {
+                writeString(itemValue, aString, "", stringSerde);
+                dependencyNameListBuilder.addItem(itemValue);
+
+                writeString(itemValue, aString, dependency.getDatabaseName(), stringSerde);
+                dependencyNameListBuilder.addItem(itemValue);
+            }
+
+            // write dataverse
+            writeString(itemValue, aString, dependency.getDataverseName().getCanonicalForm(), stringSerde);
+            dependencyNameListBuilder.addItem(itemValue);
+
+            // write subName1
+            String subName1 = dependency.getSubName1();
+            if (subName1 != null) {
+                writeString(itemValue, aString, subName1, stringSerde);
+                dependencyNameListBuilder.addItem(itemValue);
+            }
+
+            // write subName2
+            String subName2 = dependency.getSubName2();
+            if (subName2 != null) {
+                writeString(itemValue, aString, subName2, stringSerde);
+                dependencyNameListBuilder.addItem(itemValue);
+            }
+            itemValue.reset();
+            dependencyNameListBuilder.write(itemValue.getDataOutput(), true);
+            dependencyListBuilder.addItem(itemValue);
         }
     }
 }

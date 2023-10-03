@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 
 public class TypeSignature implements Serializable {
 
@@ -45,7 +46,8 @@ public class TypeSignature implements Serializable {
             return false;
         } else {
             TypeSignature f = ((TypeSignature) o);
-            return Objects.equals(dataverseName, f.getDataverseName()) && name.equals(f.getName());
+            return Objects.equals(getDatabaseName(), f.getDatabaseName())
+                    && Objects.equals(dataverseName, f.getDataverseName()) && name.equals(f.getName());
         }
     }
 
@@ -56,7 +58,11 @@ public class TypeSignature implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverseName, name);
+        return Objects.hash(getDatabaseName(), dataverseName, name);
+    }
+
+    public String getDatabaseName() {
+        return MetadataUtil.databaseFor(dataverseName);
     }
 
     public DataverseName getDataverseName() {
