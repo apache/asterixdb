@@ -541,16 +541,6 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-handler-proxy</artifactId>
     </dependency>
-    <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
-     be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-util-ajax</artifactId>
-    </dependency>
     <!-- Manually included to avoid CVE-2023-1370 -->
     <dependency>
       <groupId>net.minidev</groupId>

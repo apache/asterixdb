@@ -70,7 +70,7 @@
     <test.includes>${global.test.includes}</test.includes>
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <hadoop.version>3.3.1</hadoop.version>
+    <hadoop.version>3.3.6</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
     <snappy.version>1.1.8.4</snappy.version>
@@ -192,15 +192,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -216,15 +207,6 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -236,28 +218,12 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-mapreduce-client-core</artifactId>
         <version>${hadoop.version}</version>
-        <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-        <exclusions>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
@@ -269,11 +235,6 @@
           <exclusion>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-          </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -468,18 +429,6 @@
         <groupId>org.xerial.snappy</groupId>
         <artifactId>snappy-java</artifactId>
         <version>${snappy.version}</version>
-      </dependency>
-      <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
-           be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util</artifactId>
-        <version>9.4.48.v20220622</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util-ajax</artifactId>
-        <version>9.4.48.v20220622</version>
       </dependency>
       <!-- Manually included to avoid CVE-2023-1370 -->
       <dependency>

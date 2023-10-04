@@ -84,7 +84,7 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.8-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.8-SNAPSHOT</hyracks.version>
-    <hadoop.version>3.3.4</hadoop.version>
+    <hadoop.version>3.3.6</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
@@ -1005,14 +1005,9 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
           <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1081,15 +1076,6 @@
             <groupId>javax.ws.rs</groupId>
             <artifactId>jsr311-api</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
-          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -1137,14 +1123,9 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
           <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1172,11 +1153,6 @@
           <exclusion>
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
-          </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1216,14 +1192,9 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
           <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1249,14 +1220,9 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
           <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1991,32 +1957,8 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-azure</artifactId>
         <version>${hadoop.version}</version>
-        <exclusions>
-          <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util-ajax</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <!-- Hadoop Azure end -->
-
-      <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
-           be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util</artifactId>
-        <version>9.4.48.v20220622</version>
-      </dependency>
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-util-ajax</artifactId>
-        <version>9.4.48.v20220622</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
