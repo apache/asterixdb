@@ -346,7 +346,8 @@
         <!-- see https://github.com/google/guava/blob/v18.0/COPYING -->
         <!-- see https://github.com/google/guava/tree/v28.[012]/COPYING -->
         <!-- see https://github.com/google/guava/blob/v31.0.1/COPYING -->
-        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre,31.0.1-jre,31.1-jre</license.ignoreMissingEmbeddedNotice>
+        <!-- see https://github.com/google/guava/blob/v32.1.2/LICENSE -->
+        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre,31.0.1-jre,31.1-jre,jre,32.1.2-jre</license.ignoreMissingEmbeddedNotice>
         <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre,31.0.1-jre,31.1-jre</license.ignoreMissingEmbeddedLicense>
       </properties>
     </project>
@@ -370,8 +371,8 @@
       <!-- see https://github.com/google/error-prone/tree/v2.3.[24]/ -->
       <!-- see https://github.com/google/error-prone/blob/v2.7.1/COPYING -->
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.3.2,2.3.4,2.7.1,2.11.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.3.2,2.3.4,2.7.1,2.11.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.3.2,2.3.4,2.7.1,2.11.0,2.18.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.3.2,2.3.4,2.7.1,2.11.0,2.18.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
