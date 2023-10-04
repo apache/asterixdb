@@ -1183,7 +1183,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<Dataset> getDatabaseDatasets(TxnId txnId, String database) throws AlgebricksException {
+    @Override
+    public List<Dataset> getDatabaseDatasets(TxnId txnId, String database) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(database);
             DatasetTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatasetTupleTranslator(false);
@@ -1239,7 +1240,8 @@ public class MetadataNode implements IMetadataNode {
         }
     }
 
-    private List<Library> getDatabaseLibraries(TxnId txnId, String database) throws AlgebricksException {
+    @Override
+    public List<Library> getDatabaseLibraries(TxnId txnId, String database) throws AlgebricksException {
         try {
             ITupleReference searchKey = createTuple(database);
             LibraryTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getLibraryTupleTranslator(false);

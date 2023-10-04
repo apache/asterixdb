@@ -45,6 +45,17 @@ public class SplitsAndConstraintsUtil {
     private SplitsAndConstraintsUtil() {
     }
 
+    private static FileSplit[] getDatabaseSplits(IClusterStateManager clusterStateManager, String databaseName) {
+        List<FileSplit> splits = new ArrayList<>();
+        // get all partitions
+        for (ClusterPartition clusterPartition : clusterStateManager.getClusterPartitons()) {
+            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition.getPartitionId()),
+                    databaseName);
+            splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition, f.getPath()));
+        }
+        return splits.toArray(new FileSplit[] {});
+    }
+
     private static FileSplit[] getDataverseSplits(IClusterStateManager clusterStateManager,
             DataverseName dataverseName) {
         List<FileSplit> splits = new ArrayList<>();
@@ -82,6 +93,12 @@ public class SplitsAndConstraintsUtil {
             splits.add(StoragePathUtil.getFileSplitForClusterPartition(partition, f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
+    }
+
+    public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDatabaseSplitProviderAndConstraints(
+            IClusterStateManager clusterStateManager, String databaseName) {
+        FileSplit[] splits = getDatabaseSplits(clusterStateManager, databaseName);
+        return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDataverseSplitProviderAndConstraints(

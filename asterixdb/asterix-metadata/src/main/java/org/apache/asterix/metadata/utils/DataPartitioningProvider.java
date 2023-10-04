@@ -68,6 +68,8 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
         }
     }
 
+    public abstract PartitioningProperties getPartitioningProperties(String databaseName);
+
     public abstract PartitioningProperties getPartitioningProperties(DataverseName dataverseName);
 
     public abstract PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,

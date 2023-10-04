@@ -1927,6 +1927,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         List<FeedEventsListener> feedsToStop = new ArrayList<>();
         List<JobSpecification> jobsToExecute = new ArrayList<>();
+        //TODO(DB): resolve database directory
         try {
             Database database = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, databaseName);
             if (database == null) {
@@ -1941,16 +1942,49 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             validateDatabaseStateBeforeDrop(metadataProvider, database, sourceLoc);
 
             // #. prepare jobs which will drop corresponding feed storage
-            //TODO(DB):
+            ActiveNotificationHandler activeEventHandler =
+                    (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
+            IActiveEntityEventsListener[] activeListeners = activeEventHandler.getEventListeners();
+            for (IActiveEntityEventsListener listener : activeListeners) {
+                EntityId activeEntityId = listener.getEntityId();
+                if (activeEntityId.getExtensionName().equals(Feed.EXTENSION_NAME)
+                        && activeEntityId.getDatabaseName().equals(databaseName)) {
+                    FeedEventsListener feedListener = (FeedEventsListener) listener;
+                    feedsToStop.add(feedListener);
+                    jobsToExecute
+                            .add(FeedOperations.buildRemoveFeedStorageJob(metadataProvider, feedListener.getFeed()));
+                }
+            }
 
             // #. prepare jobs which will drop corresponding datasets with indexes
-            //TODO(DB):
+            List<Dataset> datasets = MetadataManager.INSTANCE.getDatabaseDatasets(mdTxnCtx, databaseName);
+            for (Dataset dataset : datasets) {
+                String datasetName = dataset.getDatasetName();
+                DatasetType dsType = dataset.getDatasetType();
+                switch (dsType) {
+                    case INTERNAL:
+                        List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, databaseName,
+                                dataset.getDataverseName(), datasetName);
+                        for (Index index : indexes) {
+                            jobsToExecute
+                                    .add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
+                        }
+                        break;
+                    case EXTERNAL:
+                    case VIEW:
+                        break;
+                }
+            }
 
             // #. prepare jobs which will drop corresponding libraries
-            //TODO(DB):
+            List<Library> libraries = MetadataManager.INSTANCE.getDatabaseLibraries(mdTxnCtx, databaseName);
+            for (Library library : libraries) {
+                jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(library.getDataverseName(),
+                        library.getName(), metadataProvider));
+            }
 
             // #. prepare jobs which will drop the database
-            //TODO(DB):
+            jobsToExecute.add(DataverseUtil.dropDatabaseJobSpec(databaseName, metadataProvider));
 
             // #. mark PendingDropOp on the database record by
             // first, deleting the database record from the 'Database' collection
@@ -1983,11 +2017,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
 
             // drop all node groups that no longer needed
-            //TODO(DB):
+            for (Dataset dataset : datasets) {
+                String nodeGroup = dataset.getNodeGroupName();
+                lockManager.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+                if (MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup) != null) {
+                    MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodeGroup, true);
+                }
+            }
 
             //TODO(DB): switch active database to the DEFAULT if the dropped database is the currently active one
+            if (activeDataverse.getDatabaseName().equals(databaseName)) {
+                activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
+            }
 
-            //TODO(DB): validateDatabaseDatasetsStateAfterDrop
+            validateDatasetsStateAfterNamespaceDrop(metadataProvider, mdTxnCtx, datasets);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -1997,7 +2040,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             if (progress == ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA) {
-                //TODO(DB): switch active database to the DEFAULT if the dropped database is the currently active one
+                if (activeDataverse.getDatabaseName().equals(databaseName)) {
+                    activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
+                }
 
                 // #. execute compensation operations
                 // remove the all artifacts in NC
@@ -2018,7 +2063,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 } catch (Exception e2) {
                     e.addSuppressed(e2);
                     abort(e, e2, mdTxnCtx);
-                    throw new IllegalStateException("System is inconsistent state: pending dataverse(" + databaseName
+                    throw new IllegalStateException("System is inconsistent state: pending database(" + databaseName
                             + ") couldn't be removed from the metadata", e);
                 }
             }
@@ -2165,7 +2210,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 activeDataverse = MetadataBuiltinEntities.DEFAULT_DATAVERSE;
             }
 
-            validateDataverseDatasetsStateAfterDrop(metadataProvider, mdTxnCtx, datasets);
+            validateDatasetsStateAfterNamespaceDrop(metadataProvider, mdTxnCtx, datasets);
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2220,9 +2265,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // may be overridden by product extensions for additional checks before dropping the dataverse
     }
 
-    protected void validateDataverseDatasetsStateAfterDrop(MetadataProvider metadataProvider,
+    protected void validateDatasetsStateAfterNamespaceDrop(MetadataProvider metadataProvider,
             MetadataTransactionContext mdTxnCtx, List<Dataset> datasets) throws AlgebricksException {
-        // may be overridden by product extensions for additional checks after dropping the dataverse
+        // may be overridden by product extensions for additional checks after dropping a database/dataverse
     }
 
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,

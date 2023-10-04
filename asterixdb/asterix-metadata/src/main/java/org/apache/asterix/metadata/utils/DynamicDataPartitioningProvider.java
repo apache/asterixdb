@@ -37,6 +37,14 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
     }
 
     @Override
+    public PartitioningProperties getPartitioningProperties(String databaseName) {
+        Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
+                .getDatabaseSplitProviderAndConstraints(appCtx.getClusterStateManager(), databaseName);
+        int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
+        return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+    }
+
+    @Override
     public PartitioningProperties getPartitioningProperties(DataverseName dataverseName) {
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
                 .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), dataverseName);

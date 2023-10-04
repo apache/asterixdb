@@ -301,6 +301,21 @@ public abstract class MetadataManager implements IMetadataManager {
     }
 
     @Override
+    public List<Dataset> getDatabaseDatasets(MetadataTransactionContext ctx, String database)
+            throws AlgebricksException {
+        List<Dataset> databaseDatasets;
+        try {
+            Objects.requireNonNull(database);
+            // assuming that the transaction can read its own writes on the metadata node
+            databaseDatasets = metadataNode.getDatabaseDatasets(ctx.getTxnId(), database);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // don't update the cache to avoid checking against the transaction's uncommitted datasets
+        return databaseDatasets;
+    }
+
+    @Override
     public List<Dataset> getDataverseDatasets(MetadataTransactionContext ctx, String database,
             DataverseName dataverseName) throws AlgebricksException {
         List<Dataset> dataverseDatasets;
@@ -900,6 +915,21 @@ public abstract class MetadataManager implements IMetadataManager {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }
         ctx.dropLibrary(database, dataverseName, libraryName);
+    }
+
+    @Override
+    public List<Library> getDatabaseLibraries(MetadataTransactionContext ctx, String database)
+            throws AlgebricksException {
+        List<Library> databaseLibraries;
+        try {
+            // assuming that the transaction can read its own writes on the metadata node
+            Objects.requireNonNull(database);
+            databaseLibraries = metadataNode.getDatabaseLibraries(ctx.getTxnId(), database);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+        // don't update the cache to avoid checking against the transaction's uncommitted functions
+        return databaseLibraries;
     }
 
     @Override

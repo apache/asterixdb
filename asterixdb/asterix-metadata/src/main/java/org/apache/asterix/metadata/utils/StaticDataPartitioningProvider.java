@@ -49,6 +49,15 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
     }
 
     @Override
+    public PartitioningProperties getPartitioningProperties(String databaseName) {
+        SplitComputeLocations dataverseSplits = getSplits(databaseName);
+        StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
+        int[][] partitionsMap = partitionMap.getComputeToStorageMap(false);
+        return PartitioningProperties.of(dataverseSplits.getSplitsProvider(), dataverseSplits.getConstraints(),
+                partitionsMap);
+    }
+
+    @Override
     public PartitioningProperties getPartitioningProperties(DataverseName dataverseName) {
         SplitComputeLocations dataverseSplits = getDataverseSplits(dataverseName);
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
@@ -69,13 +78,16 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
     }
 
     private SplitComputeLocations getDataverseSplits(DataverseName dataverseName) {
+        return getSplits(StoragePathUtil.prepareDataverseName(dataverseName));
+    }
+
+    private SplitComputeLocations getSplits(String subPath) {
         List<FileSplit> splits = new ArrayList<>();
         List<String> locations = new ArrayList<>();
         Set<Integer> uniqueLocations = new HashSet<>();
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
         for (int i = 0; i < storagePartitionsCounts; i++) {
-            File f = new File(StoragePathUtil.prepareStoragePartitionPath(i),
-                    StoragePathUtil.prepareDataverseName(dataverseName));
+            File f = new File(StoragePathUtil.prepareStoragePartitionPath(i), subPath);
             ComputePartition computePartition = partitionMap.getComputePartition(i);
             splits.add(new MappedFileSplit(computePartition.getNodeId(), f.getPath(), 0));
             if (!uniqueLocations.contains(computePartition.getId())) {

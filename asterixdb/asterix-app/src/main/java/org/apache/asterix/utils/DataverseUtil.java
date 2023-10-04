@@ -41,4 +41,15 @@ public class DataverseUtil {
         jobSpec.addRoot(frod);
         return jobSpec;
     }
+
+    public static JobSpecification dropDatabaseJobSpec(String database, MetadataProvider metadata) {
+        JobSpecification jobSpec = RuntimeUtils.createJobSpecification(metadata.getApplicationContext());
+        PartitioningProperties partitioningProperties = metadata.splitAndConstraints(database);
+        FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(jobSpec,
+                partitioningProperties.getSplitsProvider(), false, partitioningProperties.getComputeStorageMap());
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod,
+                partitioningProperties.getConstraints());
+        jobSpec.addRoot(frod);
+        return jobSpec;
+    }
 }

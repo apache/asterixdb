@@ -955,6 +955,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 numKeyFields / 2);
     }
 
+    public PartitioningProperties splitAndConstraints(String databaseName) {
+        return dataPartitioningProvider.getPartitioningProperties(databaseName);
+    }
+
     public PartitioningProperties splitAndConstraints(DataverseName dataverseName) {
         return dataPartitioningProvider.getPartitioningProperties(dataverseName);
     }
