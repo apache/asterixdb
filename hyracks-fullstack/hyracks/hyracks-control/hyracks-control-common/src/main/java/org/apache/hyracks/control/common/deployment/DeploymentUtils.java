@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
@@ -37,7 +38,6 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.IJobSerializerDeserializer;
-import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.context.ServerContext;
 import org.apache.logging.log4j.LogManager;
@@ -62,9 +62,10 @@ public class DeploymentUtils {
      * @param ctx
      * @throws HyracksException
      */
-    public static void undeploy(DeploymentId deploymentId, IJobSerializerDeserializerContainer container,
-            ServerContext ctx) throws HyracksException {
-        container.removeJobSerializerDeserializer(deploymentId);
+    public static void undeploy(DeploymentId deploymentId,
+            ConcurrentMap<DeploymentId, IJobSerializerDeserializer> container, ServerContext ctx)
+            throws HyracksException {
+        container.remove(deploymentId);
         String rootDir = ctx.getBaseDir().toString();
         String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
                 : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
@@ -93,13 +94,11 @@ public class DeploymentUtils {
      *            true is NC/false is CC
      * @throws HyracksException
      */
-    public static void deploy(DeploymentId deploymentId, List<URL> urls, IJobSerializerDeserializerContainer container,
-            ServerContext ctx, boolean isNC) throws HyracksException {
-        IJobSerializerDeserializer jobSerDe = container.getJobSerializerDeserializer(deploymentId);
-        if (jobSerDe == null) {
-            jobSerDe = new ClassLoaderJobSerializerDeserializer();
-            container.addJobSerializerDeserializer(deploymentId, jobSerDe);
-        }
+    public static void deploy(DeploymentId deploymentId, List<URL> urls,
+            ConcurrentMap<DeploymentId, IJobSerializerDeserializer> container, ServerContext ctx, boolean isNC)
+            throws HyracksException {
+        IJobSerializerDeserializer jobSerDe =
+                container.computeIfAbsent(deploymentId, d -> new ClassLoaderJobSerializerDeserializer());
         String rootDir = ctx.getBaseDir().toString();
         String deploymentDir = rootDir.endsWith(File.separator) ? rootDir + DEPLOYMENT + File.separator + deploymentId
                 : rootDir + File.separator + DEPLOYMENT + File.separator + deploymentId;
@@ -120,9 +119,8 @@ public class DeploymentUtils {
     public static Object deserialize(byte[] bytes, DeploymentId deploymentId, IServiceContext serviceCtx)
             throws HyracksException {
         try {
-            IJobSerializerDeserializerContainer jobSerDeContainer = serviceCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe =
-                    deploymentId == null ? null : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
+                    deploymentId == null ? null : serviceCtx.getJobSerializerDeserializerContainer().get(deploymentId);
             return jobSerDe == null ? JavaSerializationUtils.deserialize(bytes) : jobSerDe.deserialize(bytes);
         } catch (Exception e) {
             throw HyracksException.create(e);
@@ -141,9 +139,8 @@ public class DeploymentUtils {
     public static Class<?> loadClass(String className, DeploymentId deploymentId, IServiceContext serviceCtx)
             throws HyracksException {
         try {
-            IJobSerializerDeserializerContainer jobSerDeContainer = serviceCtx.getJobSerializerDeserializerContainer();
             IJobSerializerDeserializer jobSerDe =
-                    deploymentId == null ? null : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
+                    deploymentId == null ? null : serviceCtx.getJobSerializerDeserializerContainer().get(deploymentId);
             return jobSerDe == null ? JavaSerializationUtils.loadClass(className) : jobSerDe.loadClass(className);
         } catch (ClassNotFoundException | IOException e) {
             throw HyracksException.create(e);
@@ -160,9 +157,8 @@ public class DeploymentUtils {
      */
     public static ClassLoader getClassLoader(DeploymentId deploymentId, IServiceContext appCtx)
             throws HyracksException {
-        IJobSerializerDeserializerContainer jobSerDeContainer = appCtx.getJobSerializerDeserializerContainer();
         IJobSerializerDeserializer jobSerDe =
-                deploymentId == null ? null : jobSerDeContainer.getJobSerializerDeserializer(deploymentId);
+                deploymentId == null ? null : appCtx.getJobSerializerDeserializerContainer().get(deploymentId);
         return jobSerDe == null ? DeploymentUtils.class.getClassLoader() : jobSerDe.getClassLoader();
     }
 

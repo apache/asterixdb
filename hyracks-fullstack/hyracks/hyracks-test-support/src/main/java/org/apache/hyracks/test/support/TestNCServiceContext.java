@@ -19,6 +19,7 @@
 package org.apache.hyracks.test.support;
 
 import java.io.Serializable;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadFactory;
 
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -26,8 +27,9 @@ import org.apache.hyracks.api.application.IServerContext;
 import org.apache.hyracks.api.application.IStateDumpHandler;
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.config.IApplicationConfig;
+import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.io.IIOManager;
-import org.apache.hyracks.api.job.IJobSerializerDeserializerContainer;
+import org.apache.hyracks.api.job.IJobSerializerDeserializer;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
 import org.apache.hyracks.api.messages.IMessageBroker;
@@ -102,7 +104,7 @@ public class TestNCServiceContext implements INCServiceContext {
     }
 
     @Override
-    public IJobSerializerDeserializerContainer getJobSerializerDeserializerContainer() {
+    public ConcurrentMap<DeploymentId, IJobSerializerDeserializer> getJobSerializerDeserializerContainer() {
         return null;
     }
 
