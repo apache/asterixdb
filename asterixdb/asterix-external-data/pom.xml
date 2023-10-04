@@ -546,6 +546,11 @@
       <groupId>net.minidev</groupId>
       <artifactId>json-smart</artifactId>
     </dependency>
+    <!-- Manually overridden to avoid CVE-2023-1436, CVE-2022-45693, CVE-2022-45685, CVE-2022-40150, CVE-2022-40149 -->
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+    </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->
   <repositories>

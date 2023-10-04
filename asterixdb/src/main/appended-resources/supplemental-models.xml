@@ -2104,4 +2104,15 @@
       </properties>
     </project>
   </supplement>
+
+  <!-- Contains embedded LICENSE but missing NOTICE -->
+  <supplement>
+    <project>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
+      <properties>
+        <license.ignoreMissingEmbeddedNotice>1.5.4</license.ignoreMissingEmbeddedNotice>
+      </properties>
+    </project>
+  </supplement>
 </supplementalDataModels>
