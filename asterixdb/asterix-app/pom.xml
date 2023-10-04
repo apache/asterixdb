@@ -155,6 +155,7 @@
           <usedDependencies combine.children="append">
             <usedDependency>org.apache.hadoop:hadoop-common</usedDependency>
             <usedDependency>org.apache.asterix:asterix-geo</usedDependency>
+            <usedDependency>org.apache.logging.log4j:log4j-jul</usedDependency>
           </usedDependencies>
           <ignoredUnusedDeclaredDependencies>
             <ignoredUnusedDeclaredDependency>org.apache.asterix:asterix-external-data:zip:*</ignoredUnusedDeclaredDependency>
