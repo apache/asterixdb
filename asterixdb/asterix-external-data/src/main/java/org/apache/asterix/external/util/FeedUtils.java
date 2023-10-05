@@ -32,7 +32,6 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -80,8 +79,8 @@ public class FeedUtils {
     private FeedUtils() {
     }
 
-    private static FileSplit splitsForAdapter(DataverseName dataverseName, String feedName, String nodeName) {
-        String relPathFile = StoragePathUtil.prepareDataverseComponentName(dataverseName, feedName);
+    private static FileSplit splitsForAdapter(String namespacePath, String feedName, String nodeName) {
+        String relPathFile = StoragePathUtil.prepareNamespaceComponentName(namespacePath, feedName);
         String storagePartitionPath = StoragePathUtil.prepareIngestionLogPath();
         // Note: feed adapter instances in a single node share the feed logger
         // format: 'ingestion logs dir name'/dataverse_part1[^dataverse_part2[...]]/feed/node
@@ -89,7 +88,7 @@ public class FeedUtils {
         return StoragePathUtil.getDefaultIoDeviceFileSpiltForNode(nodeName, f.getPath());
     }
 
-    public static FileSplit[] splitsForAdapter(DataverseName dataverseName, String feedName,
+    public static FileSplit[] splitsForAdapter(String namespacePath, String feedName,
             AlgebricksPartitionConstraint partitionConstraints) throws AsterixException {
         if (partitionConstraints.getPartitionConstraintType() == PartitionConstraintType.COUNT) {
             throw new AsterixException("Can't create file splits for adapter with count partitioning constraints");
@@ -97,7 +96,7 @@ public class FeedUtils {
         String[] locations = ((AlgebricksAbsolutePartitionConstraint) partitionConstraints).getLocations();
         List<FileSplit> splits = new ArrayList<>();
         for (String nd : locations) {
-            splits.add(splitsForAdapter(dataverseName, feedName, nd));
+            splits.add(splitsForAdapter(namespacePath, feedName, nd));
         }
         return splits.toArray(new FileSplit[] {});
     }

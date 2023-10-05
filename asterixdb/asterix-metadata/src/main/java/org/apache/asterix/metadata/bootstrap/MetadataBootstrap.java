@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataProperties;
@@ -392,9 +393,12 @@ public class MetadataBootstrap {
     public static void enlistMetadataDataset(INCServiceContext ncServiceCtx, IMetadataIndex index,
             MetadataIndexesProvider mdIndexesProvider) throws HyracksDataException {
         final int datasetId = index.getDatasetId().getId();
+        INamespacePathResolver namespacePathResolver =
+                ((INcApplicationContext) ncServiceCtx.getApplicationContext()).getNamespacePathResolver();
         String metadataPartitionPath =
                 StoragePathUtil.prepareStoragePartitionPath(MetadataNode.INSTANCE.getMetadataStoragePartition());
-        String resourceName = metadataPartitionPath + File.separator + index.getFileNameRelativePath();
+        String resourceName =
+                metadataPartitionPath + File.separator + index.getFileNameRelativePath(namespacePathResolver);
         FileReference file = ioManager.resolve(resourceName);
         index.setFile(file);
         ITypeTraits[] typeTraits = index.getTypeTraits();

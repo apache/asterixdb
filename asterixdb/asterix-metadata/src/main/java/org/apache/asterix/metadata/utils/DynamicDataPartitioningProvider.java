@@ -45,9 +45,10 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
     }
 
     @Override
-    public PartitioningProperties getPartitioningProperties(DataverseName dataverseName) {
+    public PartitioningProperties getPartitioningProperties(String databaseName, DataverseName dataverseName) {
+        String namespacePath = namespacePathResolver.resolve(databaseName, dataverseName);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints = SplitsAndConstraintsUtil
-                .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), dataverseName);
+                .getDataverseSplitProviderAndConstraints(appCtx.getClusterStateManager(), namespacePath);
         int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
         return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
     }
@@ -55,8 +56,9 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
     @Override
     public PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,
             String indexName) throws AlgebricksException {
-        FileSplit[] splits =
-                SplitsAndConstraintsUtil.getIndexSplits(ds, indexName, mdTxnCtx, appCtx.getClusterStateManager());
+        String namespacePath = namespacePathResolver.resolve(ds.getDatabaseName(), ds.getDataverseName());
+        FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(ds, indexName, mdTxnCtx,
+                appCtx.getClusterStateManager(), namespacePath);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraints =
                 StoragePathUtil.splitProviderAndPartitionConstraints(splits);
         int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));

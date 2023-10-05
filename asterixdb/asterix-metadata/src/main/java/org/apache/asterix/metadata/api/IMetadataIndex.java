@@ -22,6 +22,7 @@ package org.apache.asterix.metadata.api;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.DatasetId;
 import org.apache.asterix.om.types.ARecordType;
@@ -67,7 +68,7 @@ public interface IMetadataIndex extends Serializable {
 
     public int[] getFieldPermutation();
 
-    public String getFileNameRelativePath();
+    public String getFileNameRelativePath(INamespacePathResolver namespacePathResolver);
 
     public ARecordType getPayloadRecordType();
 

@@ -29,6 +29,8 @@ import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.api.INamespacePathResolver;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.INodeJobTracker;
 import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IReceptionistFactory;
@@ -55,6 +57,8 @@ import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -123,6 +127,8 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IDataPartitioningProvider dataPartitioningProvider;
     private final IGlobalTxManager globalTxManager;
     private final IOManager ioManager;
+    private final NamespacePathResolver namespacePathResolver;
+    private final NamespaceResolver namespaceResolver;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -167,9 +173,11 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
-        dataPartitioningProvider = DataPartitioningProvider.create(this);
+        this.namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
+        this.namespaceResolver = new NamespaceResolver(isCloudDeployment());
         this.globalTxManager = globalTxManager;
         this.ioManager = ioManager;
+        dataPartitioningProvider = DataPartitioningProvider.create(this);
     }
 
     @Override
@@ -377,6 +385,16 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IDataPartitioningProvider getDataPartitioningProvider() {
         return dataPartitioningProvider;
+    }
+
+    @Override
+    public INamespaceResolver getNamespaceResolver() {
+        return namespaceResolver;
+    }
+
+    @Override
+    public INamespacePathResolver getNamespacePathResolver() {
+        return namespacePathResolver;
     }
 
     @Override

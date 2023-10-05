@@ -31,24 +31,21 @@ public class DataverseUtil {
     private DataverseUtil() {
     }
 
-    public static JobSpecification dropDataverseJobSpec(Dataverse dataverse, MetadataProvider metadata) {
-        JobSpecification jobSpec = RuntimeUtils.createJobSpecification(metadata.getApplicationContext());
-        PartitioningProperties partitioningProperties = metadata.splitAndConstraints(dataverse.getDataverseName());
-        FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(jobSpec,
-                partitioningProperties.getSplitsProvider(), false, partitioningProperties.getComputeStorageMap());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod,
-                partitioningProperties.getConstraints());
-        jobSpec.addRoot(frod);
-        return jobSpec;
+    public static JobSpecification dropDataverseJobSpec(Dataverse dataverse, MetadataProvider md) {
+        PartitioningProperties pp = md.splitAndConstraints(dataverse.getDatabaseName(), dataverse.getDataverseName());
+        return dropJobSpec(md, pp);
     }
 
-    public static JobSpecification dropDatabaseJobSpec(String database, MetadataProvider metadata) {
+    public static JobSpecification dropDatabaseJobSpec(String database, MetadataProvider md) {
+        PartitioningProperties pp = md.splitAndConstraints(database);
+        return dropJobSpec(md, pp);
+    }
+
+    private static JobSpecification dropJobSpec(MetadataProvider metadata, PartitioningProperties pp) {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(metadata.getApplicationContext());
-        PartitioningProperties partitioningProperties = metadata.splitAndConstraints(database);
-        FileRemoveOperatorDescriptor frod = new FileRemoveOperatorDescriptor(jobSpec,
-                partitioningProperties.getSplitsProvider(), false, partitioningProperties.getComputeStorageMap());
-        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod,
-                partitioningProperties.getConstraints());
+        FileRemoveOperatorDescriptor frod =
+                new FileRemoveOperatorDescriptor(jobSpec, pp.getSplitsProvider(), false, pp.getComputeStorageMap());
+        AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, frod, pp.getConstraints());
         jobSpec.addRoot(frod);
         return jobSpec;
     }

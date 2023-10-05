@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -47,11 +49,15 @@ import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
 public abstract class DataPartitioningProvider implements IDataPartitioningProvider {
 
     protected final ICcApplicationContext appCtx;
+    protected final INamespacePathResolver namespacePathResolver;
+    protected final INamespaceResolver namespaceResolver;
     protected final ClusterStateManager clusterStateManager;
     protected final int storagePartitionsCounts;
 
     DataPartitioningProvider(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
+        this.namespacePathResolver = appCtx.getNamespacePathResolver();
+        this.namespaceResolver = appCtx.getNamespaceResolver();
         this.clusterStateManager = (ClusterStateManager) appCtx.getClusterStateManager();
         this.storagePartitionsCounts = clusterStateManager.getStoragePartitionsCount();
     }
@@ -70,7 +76,7 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
 
     public abstract PartitioningProperties getPartitioningProperties(String databaseName);
 
-    public abstract PartitioningProperties getPartitioningProperties(DataverseName dataverseName);
+    public abstract PartitioningProperties getPartitioningProperties(String databaseName, DataverseName dataverseName);
 
     public abstract PartitioningProperties getPartitioningProperties(MetadataTransactionContext mdTxnCtx, Dataset ds,
             String indexName) throws AlgebricksException;
@@ -81,8 +87,8 @@ public abstract class DataPartitioningProvider implements IDataPartitioningProvi
         Set<String> nodes = new TreeSet<>(Arrays.asList(allCluster.getLocations()));
         AlgebricksAbsolutePartitionConstraint locations =
                 new AlgebricksAbsolutePartitionConstraint(nodes.toArray(new String[0]));
-        FileSplit[] feedLogFileSplits =
-                FeedUtils.splitsForAdapter(feed.getDataverseName(), feed.getFeedName(), locations);
+        String namespacePath = namespacePathResolver.resolve(feed.getDatabaseName(), feed.getDataverseName());
+        FileSplit[] feedLogFileSplits = FeedUtils.splitsForAdapter(namespacePath, feed.getFeedName(), locations);
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> spC =
                 StoragePathUtil.splitProviderAndPartitionConstraints(feedLogFileSplits);
         int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(spC.second));

@@ -38,6 +38,8 @@ import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.api.IDiskWriteRateLimiterProvider;
+import org.apache.asterix.common.api.INamespacePathResolver;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionist;
@@ -59,6 +61,8 @@ import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategyFactory;
@@ -169,6 +173,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
     private final CloudProperties cloudProperties;
     private IPartitionBootstrapper partitionBootstrapper;
+    private final NamespacePathResolver namespacePathResolver;
+    private final NamespaceResolver namespaceResolver;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
             IPropertiesFactory propertiesFactory) {
@@ -190,6 +196,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 .createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
         cacheManager = new CacheManager();
+        namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
+        namespaceResolver = new NamespaceResolver(isCloudDeployment());
     }
 
     @Override
@@ -463,6 +471,16 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public ILibraryManager getLibraryManager() {
         return libraryManager;
+    }
+
+    @Override
+    public INamespaceResolver getNamespaceResolver() {
+        return namespaceResolver;
+    }
+
+    @Override
+    public INamespacePathResolver getNamespacePathResolver() {
+        return namespacePathResolver;
     }
 
     @Override

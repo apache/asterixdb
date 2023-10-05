@@ -55,6 +55,8 @@ import java.util.zip.ZipFile;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
@@ -136,17 +138,20 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     private final FileReference trashDir;
     private final FileReference distDir;
     private final Path trashDirPath;
+    //TODO(DB): change for database
     private final Map<Pair<DataverseName, String>, ILibrary> libraries = new HashMap<>();
     private IPCSystem pythonIPC;
     private final ExternalFunctionResultRouter router;
     private final IIOManager ioManager;
-    private boolean sslEnabled;
+    private final INamespacePathResolver namespacePathResolver;
+    private final boolean sslEnabled;
     private Function<ILibraryManager, CloseableHttpClient> uploadClientSupp;
 
     public ExternalLibraryManager(NodeControllerService ncs, IPersistedResourceRegistry reg, FileReference appDir,
             IIOManager ioManager) {
         this.ncs = ncs;
         this.reg = reg;
+        namespacePathResolver = ((INcApplicationContext) ncs.getApplicationContext()).getNamespacePathResolver();
         baseDir = appDir.getChild(LIBRARY_MANAGER_BASE_DIR_NAME);
         storageDir = baseDir.getChild(STORAGE_DIR_NAME);
         storageDirPath = storageDir.getFile().toPath();

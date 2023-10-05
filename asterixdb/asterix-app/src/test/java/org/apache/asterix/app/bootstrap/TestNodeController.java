@@ -37,6 +37,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.transactions.ITransactionManager;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -673,8 +674,10 @@ public class TestNodeController {
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
+            String dvPath = new NamespacePathResolver(false).resolve(primaryIndexInfo.dataset.getDatabaseName(),
+                    primaryIndexInfo.dataset.getDataverseName());
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(),
-                    primaryIndexInfo.dataset, secondaryIndex.getIndexName(), nodes);
+                    primaryIndexInfo.dataset, secondaryIndex.getIndexName(), nodes, dvPath);
             fileSplitProvider = new ConstantFileSplitProvider(splits);
             secondaryIndexTypeTraits = createSecondaryIndexTypeTraits(primaryIndexInfo.recordType,
                     primaryIndexInfo.metaType, primaryIndexInfo.primaryKeyTypes, secondaryIndexDetails
@@ -760,8 +763,10 @@ public class TestNodeController {
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
+            String dvPath =
+                    new NamespacePathResolver(false).resolve(dataset.getDatabaseName(), dataset.getDataverseName());
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,
-                    index.getIndexName(), nodes);
+                    index.getIndexName(), nodes, dvPath);
             fileSplitProvider = new ConstantFileSplitProvider(splits);
         }
 

@@ -32,6 +32,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.file.StorageComponentProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -158,8 +159,10 @@ public class IndexDropOperatorNodePushableTest {
             final Dataset dataset = MetadataManager.INSTANCE.getDataset(mdTxn, MetadataConstants.DEFAULT_DATABASE,
                     defaultDv, datasetName);
             MetadataManager.INSTANCE.commitTransaction(mdTxn);
+            String dvPath =
+                    new NamespacePathResolver(false).resolve(dataset.getDatabaseName(), dataset.getDataverseName());
             FileSplit[] splits = SplitsAndConstraintsUtil.getIndexSplits(appCtx.getClusterStateManager(), dataset,
-                    indexName, Arrays.asList("asterix_nc1"));
+                    indexName, Arrays.asList("asterix_nc1"), dvPath);
             final ConstantFileSplitProvider constantFileSplitProvider =
                     new ConstantFileSplitProvider(Arrays.copyOfRange(splits, 0, 1));
             IndexDataflowHelperFactory helperFactory =

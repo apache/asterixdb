@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.exceptions.MetadataException;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.MetadataManager;
@@ -45,47 +44,42 @@ public class SplitsAndConstraintsUtil {
     private SplitsAndConstraintsUtil() {
     }
 
-    private static FileSplit[] getDatabaseSplits(IClusterStateManager clusterStateManager, String databaseName) {
-        List<FileSplit> splits = new ArrayList<>();
-        // get all partitions
-        for (ClusterPartition clusterPartition : clusterStateManager.getClusterPartitons()) {
-            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition.getPartitionId()),
-                    databaseName);
-            splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition, f.getPath()));
-        }
-        return splits.toArray(new FileSplit[] {});
+    private static FileSplit[] getDatabaseSplits(IClusterStateManager clusterStateManager, String databasePath) {
+        return getSplits(clusterStateManager, databasePath);
     }
 
-    private static FileSplit[] getDataverseSplits(IClusterStateManager clusterStateManager,
-            DataverseName dataverseName) {
+    private static FileSplit[] getDataverseSplits(IClusterStateManager clusterStateManager, String dataversePath) {
+        return getSplits(clusterStateManager, dataversePath);
+    }
+
+    private static FileSplit[] getSplits(IClusterStateManager clusterStateManager, String path) {
         List<FileSplit> splits = new ArrayList<>();
         // get all partitions
         for (ClusterPartition clusterPartition : clusterStateManager.getClusterPartitons()) {
-            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition.getPartitionId()),
-                    StoragePathUtil.prepareDataverseName(dataverseName));
+            File f = new File(StoragePathUtil.prepareStoragePartitionPath(clusterPartition.getPartitionId()), path);
             splits.add(StoragePathUtil.getFileSplitForClusterPartition(clusterPartition, f.getPath()));
         }
         return splits.toArray(new FileSplit[] {});
     }
 
     public static FileSplit[] getIndexSplits(Dataset dataset, String indexName, MetadataTransactionContext mdTxnCtx,
-            IClusterStateManager csm) throws AlgebricksException {
+            IClusterStateManager csm, String namespacePath) throws AlgebricksException {
         try {
             NodeGroup nodeGroup = MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, dataset.getNodeGroupName());
             if (nodeGroup == null) {
                 throw new AlgebricksException("Couldn't find node group " + dataset.getNodeGroupName());
             }
             List<String> nodeList = nodeGroup.getNodeNames();
-            return getIndexSplits(csm, dataset, indexName, nodeList);
+            return getIndexSplits(csm, dataset, indexName, nodeList, namespacePath);
         } catch (MetadataException me) {
             throw new AlgebricksException(me);
         }
     }
 
     public static FileSplit[] getIndexSplits(IClusterStateManager clusterStateManager, Dataset dataset,
-            String indexName, List<String> nodes) {
-        final String relPath = StoragePathUtil.prepareDataverseIndexName(dataset.getDataverseName(),
-                dataset.getDatasetName(), indexName, dataset.getRebalanceCount());
+            String indexName, List<String> nodes, String namespacePath) {
+        final String relPath = StoragePathUtil.prepareNamespaceIndexName(dataset.getDatasetName(), indexName,
+                dataset.getRebalanceCount(), namespacePath);
         final List<ClusterPartition> datasetPartitions = getDatasetPartitions(clusterStateManager, dataset, nodes);
         final List<FileSplit> splits = new ArrayList<>();
         for (ClusterPartition partition : datasetPartitions) {
@@ -102,8 +96,8 @@ public class SplitsAndConstraintsUtil {
     }
 
     public static Pair<IFileSplitProvider, AlgebricksPartitionConstraint> getDataverseSplitProviderAndConstraints(
-            IClusterStateManager clusterStateManager, DataverseName dataverseName) {
-        FileSplit[] splits = getDataverseSplits(clusterStateManager, dataverseName);
+            IClusterStateManager clusterStateManager, String dataversePath) {
+        FileSplit[] splits = getDataverseSplits(clusterStateManager, dataversePath);
         return StoragePathUtil.splitProviderAndPartitionConstraints(splits);
     }
 

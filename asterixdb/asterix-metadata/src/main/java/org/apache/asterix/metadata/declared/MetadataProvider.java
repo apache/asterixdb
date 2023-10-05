@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -49,6 +50,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.ITxnIdFactory;
 import org.apache.asterix.common.transactions.TxnId;
@@ -189,6 +191,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private boolean blockingOperatorDisabled = false;
 
     private final DataPartitioningProvider dataPartitioningProvider;
+    private final INamespaceResolver namespaceResolver;
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
     public static MetadataProvider create(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
@@ -202,6 +205,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     protected MetadataProvider(ICcApplicationContext appCtx) {
         this.appCtx = appCtx;
         this.storageComponentProvider = appCtx.getStorageComponentProvider();
+        namespaceResolver = appCtx.getNamespaceResolver();
         storageProperties = appCtx.getStorageProperties();
         functionManager = ((IFunctionExtensionManager) appCtx.getExtensionManager()).getFunctionManager();
         dataPartitioningProvider = (DataPartitioningProvider) appCtx.getDataPartitioningProvider();
@@ -959,8 +963,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return dataPartitioningProvider.getPartitioningProperties(databaseName);
     }
 
-    public PartitioningProperties splitAndConstraints(DataverseName dataverseName) {
-        return dataPartitioningProvider.getPartitioningProperties(dataverseName);
+    public PartitioningProperties splitAndConstraints(String databaseName, DataverseName dataverseName) {
+        return dataPartitioningProvider.getPartitioningProperties(databaseName, dataverseName);
     }
 
     public FileSplit[] splitsForIndex(MetadataTransactionContext mdTxnCtx, Dataset dataset, String indexName)
@@ -1821,6 +1825,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
 
     public IStorageComponentProvider getStorageComponentProvider() {
         return storageComponentProvider;
+    }
+
+    public Namespace resolve(DataverseName dataverseName) {
+        return namespaceResolver.resolve(dataverseName);
     }
 
     public PartitioningProperties getPartitioningProperties(Index idx) throws AlgebricksException {

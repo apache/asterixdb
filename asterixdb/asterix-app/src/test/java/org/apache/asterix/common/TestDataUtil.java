@@ -32,6 +32,7 @@ import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
@@ -251,8 +252,10 @@ public class TestDataUtil {
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         try {
+            String dvPath =
+                    new NamespacePathResolver(false).resolve(dataset.getDatabaseName(), dataset.getDataverseName());
             return SplitsAndConstraintsUtil.getIndexSplits(dataset, dataset.getDatasetName(), mdTxnCtx,
-                    ccAppCtx.getClusterStateManager());
+                    ccAppCtx.getClusterStateManager(), dvPath);
         } finally {
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         }

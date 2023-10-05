@@ -24,6 +24,7 @@ import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.metadata.DataverseName;
@@ -46,7 +47,7 @@ public class StoragePathUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
     public static final char DATAVERSE_CONTINUATION_MARKER = '^';
-    private static String PARTITION_PATH = STORAGE_ROOT_DIR_NAME + File.separator + PARTITION_DIR_PREFIX;
+    private static final String PARTITION_PATH = STORAGE_ROOT_DIR_NAME + File.separator + PARTITION_DIR_PREFIX;
 
     private StoragePathUtil() {
     }
@@ -74,21 +75,25 @@ public class StoragePathUtil {
         return new DefaultIoDeviceFileSplit(nodeId, relativePath);
     }
 
-    public static String prepareStoragePartitionPath(int partitonId) {
-        return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + partitonId).toString();
+    public static String prepareStoragePartitionPath(int partitionId) {
+        return Paths.get(StorageConstants.STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + partitionId).toString();
     }
 
     public static String prepareIngestionLogPath() {
         return Paths.get(StorageConstants.INGESTION_LOGS_DIR_NAME).toString();
     }
 
-    public static String prepareDataverseIndexName(DataverseName dataverseName, String datasetName, String idxName,
-            long rebalanceCount) {
-        return prepareDataverseComponentName(dataverseName, prepareFullIndexName(datasetName, idxName, rebalanceCount));
+    public static String prepareNamespaceIndexName(String datasetName, String idxName, long rebalanceCount,
+            String namespacePath) {
+        return prepareNamespaceComponentName(namespacePath, prepareFullIndexName(datasetName, idxName, rebalanceCount));
     }
 
     public static String prepareDataverseName(DataverseName dataverseName) {
-        Iterator<String> dvParts = dataverseName.getParts().iterator();
+        List<String> parts = dataverseName.getParts();
+        if (parts.size() < 2) {
+            return parts.get(0);
+        }
+        Iterator<String> dvParts = parts.iterator();
         StringBuilder builder = new StringBuilder();
         builder.append(dvParts.next());
         while (dvParts.hasNext()) {
@@ -97,8 +102,8 @@ public class StoragePathUtil {
         return builder.toString();
     }
 
-    public static String prepareDataverseComponentName(DataverseName dataverseName, String component) {
-        return prepareDataverseName(dataverseName) + File.separatorChar + component;
+    public static String prepareNamespaceComponentName(String namespacePath, String component) {
+        return namespacePath + File.separatorChar + component;
     }
 
     private static String prepareFullIndexName(String datasetName, String idxName, long rebalanceCount) {

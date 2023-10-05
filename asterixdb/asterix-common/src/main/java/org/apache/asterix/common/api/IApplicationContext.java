@@ -102,4 +102,8 @@ public interface IApplicationContext {
      * @return the cloud properties
      */
     CloudProperties getCloudProperties();
+
+    INamespaceResolver getNamespaceResolver();
+
+    INamespacePathResolver getNamespacePathResolver();
 }

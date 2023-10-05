@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
@@ -237,10 +238,10 @@ public class MetadataIndex implements IMetadataIndex {
     }
 
     @Override
-    public String getFileNameRelativePath() {
+    public String getFileNameRelativePath(INamespacePathResolver namespacePathResolver) {
         // The rebalance count for metadata dataset is always 0.
-        return StoragePathUtil.prepareDataverseIndexName(getDataverseName(), getIndexedDatasetName(), getIndexName(),
-                0);
+        String namespacePath = namespacePathResolver.resolve(getDatabaseName(), getDataverseName());
+        return StoragePathUtil.prepareNamespaceIndexName(getIndexedDatasetName(), getIndexName(), 0, namespacePath);
     }
 
     @Override
