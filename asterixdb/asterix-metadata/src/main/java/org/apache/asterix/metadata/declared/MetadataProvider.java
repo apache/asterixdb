@@ -258,6 +258,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return defaultDataverse;
     }
 
+    public String getDefaultDatabase() {
+        return defaultDataverse.getDatabaseName();
+    }
+
     public DataverseName getDefaultDataverseName() {
         return defaultDataverse.getDataverseName();
     }

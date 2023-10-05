@@ -27,8 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class ActiveRequestsRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier ACTIVE_REQUESTS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "active-requests", 0);
+    public static final FunctionIdentifier ACTIVE_REQUESTS = FunctionConstants.newAsterix("active-requests", 0);
     public static final ActiveRequestsRewriter INSTANCE = new ActiveRequestsRewriter(ACTIVE_REQUESTS);
 
     private ActiveRequestsRewriter(FunctionIdentifier functionId) {

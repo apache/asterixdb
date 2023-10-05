@@ -128,13 +128,14 @@ public final class Scope {
      *            # of arguments
      * @return FunctionDescriptor of the function found; otherwise null
      */
-    public FunctionSignature findFunctionSignature(DataverseName dataverseName, String name, int arity) {
+    public FunctionSignature findFunctionSignature(String databaseName, DataverseName dataverseName, String name,
+            int arity) {
         FunctionSignature fd = null;
         if (functionSignatures != null) {
-            fd = functionSignatures.get(dataverseName, name, arity);
+            fd = functionSignatures.get(databaseName, dataverseName, name, arity);
         }
         if (fd == null && parent != null) {
-            fd = parent.findFunctionSignature(dataverseName, name, arity);
+            fd = parent.findFunctionSignature(databaseName, dataverseName, name, arity);
         }
         return fd;
     }

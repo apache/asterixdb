@@ -117,16 +117,17 @@ public class FunctionUtil {
             boolean searchUdfs, Map<FunctionSignature, FunctionDecl> declaredFunctionMap,
             boolean allowNonStoredUdfCalls) throws CompilationException {
         DataverseName dataverse = fs.getDataverseName();
+        String database = fs.getDatabaseName();
         if (dataverse == null) {
             dataverse = metadataProvider.getDefaultDataverseName();
+            database = metadataProvider.getDefaultDatabase();
         }
-        String database = MetadataUtil.resolveDatabase(null, dataverse);
         if (searchUdfs && !isBuiltinFunctionDataverse(dataverse)) {
             // attempt to resolve to a user-defined function
-            FunctionSignature fsWithDv =
-                    fs.getDataverseName() == null ? new FunctionSignature(dataverse, fs.getName(), fs.getArity()) : fs;
-            FunctionSignature fsWithDvVarargs =
-                    new FunctionSignature(fsWithDv.getDataverseName(), fsWithDv.getName(), FunctionIdentifier.VARARGS);
+            FunctionSignature fsWithDv = fs.getDataverseName() == null
+                    ? new FunctionSignature(database, dataverse, fs.getName(), fs.getArity()) : fs;
+            FunctionSignature fsWithDvVarargs = new FunctionSignature(fsWithDv.getDatabaseName(),
+                    fsWithDv.getDataverseName(), fsWithDv.getName(), FunctionIdentifier.VARARGS);
 
             FunctionDecl fd = declaredFunctionMap.get(fsWithDv);
             if (fd == null) {

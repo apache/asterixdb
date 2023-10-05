@@ -48,8 +48,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class PrefixLenDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "prefix-len@3", 3);
+    private final static FunctionIdentifier FID = FunctionConstants.newAsterix("prefix-len@3", 3);
     public static final IFunctionDescriptorFactory FACTORY = PrefixLenDescriptor::new;
 
     @Override

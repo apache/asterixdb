@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -131,8 +130,8 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
 
     private Expression processConcatOperator(OperatorExpr operatorExpr) {
         // All operators have to be "||"s (according to the grammar).
-        CallExpr callExpr = new CallExpr(new FunctionSignature(FunctionConstants.ASTERIX_DV, FunctionMapUtil.CONCAT, 1),
-                operatorExpr.getExprList());
+        CallExpr callExpr =
+                new CallExpr(FunctionSignature.newAsterix(FunctionMapUtil.CONCAT, 1), operatorExpr.getExprList());
         callExpr.setSourceLocation(operatorExpr.getSourceLocation());
         return callExpr;
     }

@@ -34,8 +34,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class DatasetResourcesRewriter extends FunctionRewriter {
 
     // Parameters are dataverse name, and dataset name
-    public static final FunctionIdentifier DATASET_RESOURCES =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dataset-resources", 2);
+    public static final FunctionIdentifier DATASET_RESOURCES = FunctionConstants.newAsterix("dataset-resources", 2);
     public static final DatasetResourcesRewriter INSTANCE = new DatasetResourcesRewriter(DATASET_RESOURCES);
 
     private DatasetResourcesRewriter(FunctionIdentifier functionId) {

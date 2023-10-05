@@ -27,7 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class PingRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier PING = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "ping", 0);
+    public static final FunctionIdentifier PING = FunctionConstants.newAsterix("ping", 0);
     public static final PingRewriter INSTANCE = new PingRewriter(PING);
 
     private PingRewriter(FunctionIdentifier functionId) {

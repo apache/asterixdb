@@ -34,8 +34,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class StorageComponentsRewriter extends FunctionRewriter {
 
     // Parameters are dataverse name, and dataset name
-    public static final FunctionIdentifier STORAGE_COMPONENTS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "storage-components", 2);
+    public static final FunctionIdentifier STORAGE_COMPONENTS = FunctionConstants.newAsterix("storage-components", 2);
     public static final StorageComponentsRewriter INSTANCE = new StorageComponentsRewriter(STORAGE_COMPONENTS);
 
     private StorageComponentsRewriter(FunctionIdentifier functionId) {

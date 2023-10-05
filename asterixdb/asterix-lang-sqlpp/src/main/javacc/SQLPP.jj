@@ -78,6 +78,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
@@ -279,6 +280,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private int externalVarCounter;
 
+    private String defaultDatabase;
+
     private DataverseName defaultDataverse;
 
     private SqlppGroupingSetsParser groupingSetsParser;
@@ -300,6 +303,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
     }
 
     private static class FunctionName {
+       public String database;
        public DataverseName dataverse;
        public String library;
        public String function;
@@ -463,7 +467,9 @@ class SQLPPParser extends ScopeChecker implements IParser {
             @Override
             public FunctionDecl parse() throws ParseException {
                 DataverseName dataverse = defaultDataverse;
+                String database = defaultDatabase;
                 defaultDataverse = signature.getDataverseName();
+                defaultDatabase = signature.getDatabaseName();
                 createNewScope();
                 List<VarIdentifier> paramVars = new ArrayList<VarIdentifier>(paramNames.size());
                 for (String paramName : paramNames) {
@@ -472,6 +478,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
                 Expression functionBodyExpr = SQLPPParser.this.FunctionBody();
                 removeCurrentScope();
                 defaultDataverse = dataverse;
+                defaultDatabase = database;
                 return new FunctionDecl(signature, paramVars, functionBodyExpr, isStored);
             }
         });
@@ -483,11 +490,14 @@ class SQLPPParser extends ScopeChecker implements IParser {
             @Override
             public ViewDecl parse() throws ParseException {
                 DataverseName dataverse = defaultDataverse;
+                String database = defaultDatabase;
                 defaultDataverse = viewName.getDataverseName();
+                defaultDatabase = viewName.getDatabaseName();
                 createNewScope();
                 Expression viewBodyExpr = SQLPPParser.this.ViewBody();
                 removeCurrentScope();
                 defaultDataverse = dataverse;
+                defaultDatabase = database;
                 return new ViewDecl(viewName, viewBodyExpr);
             }
         });
@@ -964,6 +974,7 @@ DataverseDecl DataverseDeclaration() throws ParseException:
   <USE> { startToken = token; } dvName = DataverseName()
     {
       defaultDataverse = dvName;
+      defaultDatabase = MetadataUtil.databaseFor(dvName);
       DataverseDecl dvDecl = new DataverseDecl(defaultDataverse);
       return addSourceLocation(dvDecl, startToken);
     }
@@ -1672,6 +1683,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   Pair<DataverseName, Identifier> refNameComponents = null;
   List<CreateViewStatement.ForeignKeyDecl> foreignKeyDecls = null;
   DataverseName currentDataverse = defaultDataverse;
+  String currentDatabase = defaultDatabase;
 }
 {
   nameComponents = QualifiedName()
@@ -1715,6 +1727,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
     createNewScope();
     if (nameComponents.first != null) {
       defaultDataverse = nameComponents.first;
+      defaultDatabase = MetadataUtil.databaseFor(nameComponents.first);
     }
   }
   viewBodyExpr = ViewBody()
@@ -1724,6 +1737,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
       endPos.endColumn + 1);
     removeCurrentScope();
     defaultDataverse = currentDataverse;
+    defaultDatabase = currentDatabase;
     if (typeExpr != null && primaryKeyFields != null) {
       DatasetDeclParametersUtil.adjustInlineTypeDecl(typeExpr, primaryKeyFields.second, primaryKeyFields.first, false);
     }
@@ -1799,17 +1813,19 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   boolean ifNotExists = false;
   CreateFunctionStatement stmt = null;
   DataverseName currentDataverse = defaultDataverse;
+  String currentDatabase = defaultDatabase;
 }
 {
   fctName = FunctionName()
   {
      defaultDataverse = fctName.dataverse;
+     defaultDatabase = fctName.database;
   }
   paramsWithArity = FunctionParameters()
   {
     arity = paramsWithArity.first;
     params = paramsWithArity.second;
-    signature = new FunctionSignature(fctName.dataverse, fctName.function, arity);
+    signature = new FunctionSignature(fctName.database, fctName.dataverse, fctName.function, arity);
   }
   ifNotExists = IfNotExists()
   {
@@ -1854,6 +1870,7 @@ CreateFunctionStatement FunctionSpecification(Token startStmtToken, boolean orRe
   )
   {
     defaultDataverse = currentDataverse;
+    defaultDatabase = currentDatabase;
     return addSourceLocation(stmt, startStmtToken);
   }
 }
@@ -2143,13 +2160,13 @@ void ApplyFunction(List<FunctionSignature> funcSigs) throws ParseException:
   <APPLY> <FUNCTION> functionName = FunctionName()
   {
      fqFunctionName = functionName.library == null ? functionName.function : functionName.library + "#" + functionName.function;
-     funcSigs.add(new FunctionSignature(functionName.dataverse, fqFunctionName, 1));
+     funcSigs.add(new FunctionSignature(functionName.database, functionName.dataverse, fqFunctionName, 1));
   }
   (
       <COMMA> functionName = FunctionName()
       {
         fqFunctionName = functionName.library == null ? functionName.function : functionName.library + "#" + functionName.function;
-        funcSigs.add(new FunctionSignature(functionName.dataverse, fqFunctionName, 1));
+        funcSigs.add(new FunctionSignature(functionName.database, functionName.dataverse, fqFunctionName, 1));
       }
   )*
 }
@@ -2180,7 +2197,7 @@ FunctionSignature FunctionSignature() throws ParseException:
   | ( <ATT> arity = FunctionArity() ) // back-compat
   )
   {
-    return new FunctionSignature(fctName.dataverse, fctName.function, arity);
+    return new FunctionSignature(fctName.database, fctName.dataverse, fctName.function, arity);
   }
 }
 
@@ -3294,6 +3311,7 @@ FunctionName FunctionName() throws ParseException:
     } else {
       result.dataverse = defaultDataverse;
     }
+    result.database = MetadataUtil.databaseFor(result.dataverse);
 
     if (result.function.equalsIgnoreCase(INT_TYPE_NAME)) {
        result.function = BuiltinType.AINT64.getTypeName();
@@ -3643,7 +3661,7 @@ FunctionDecl FunctionDeclaration() throws ParseException:
   {
     int arity = paramsWithArity.first;
     List<Pair<VarIdentifier,TypeExpression>> paramList = paramsWithArity.second;
-    FunctionSignature signature = new FunctionSignature(defaultDataverse, functionName, arity);
+    FunctionSignature signature = new FunctionSignature(defaultDatabase, defaultDataverse, functionName, arity);
     getCurrentScope().addFunctionDescriptor(signature, false);
     ensureNoTypeDeclsInFunction(functionName, paramList, null, startToken);
     List<VarIdentifier> params = new ArrayList<VarIdentifier>(paramList.size());
@@ -4533,9 +4551,9 @@ Expression FunctionCallExpr() throws ParseException:
     }
     String fqFunctionName = funcName.library == null ? name : funcName.library + "#" + name;
     int arity = argList.size();
-    FunctionSignature signature = lookupFunctionSignature(funcName.dataverse, fqFunctionName, arity);
+    FunctionSignature signature = lookupFunctionSignature(funcName.database, funcName.dataverse, fqFunctionName, arity);
     if (signature == null) {
-      signature = new FunctionSignature(funcName.dataverse, fqFunctionName, arity);
+      signature = new FunctionSignature(funcName.database, funcName.dataverse, fqFunctionName, arity);
     }
   }
 

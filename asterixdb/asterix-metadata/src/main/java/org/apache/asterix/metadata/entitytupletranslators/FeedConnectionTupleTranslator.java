@@ -88,7 +88,8 @@ public class FeedConnectionTupleTranslator extends AbstractTupleTranslator<FeedC
                 String afDataverseCanonicalName = afValue.substring(0, pos);
                 String afName = afValue.substring(pos + 1);
                 DataverseName afDataverseName = DataverseName.createFromCanonicalForm(afDataverseCanonicalName);
-                FunctionSignature functionSignature = new FunctionSignature(afDataverseName, afName, 1);
+                String afDatabaseName = MetadataUtil.databaseFor(afDataverseName);
+                FunctionSignature functionSignature = new FunctionSignature(afDatabaseName, afDataverseName, afName, 1);
                 appliedFunctions.add(functionSignature);
             }
         }

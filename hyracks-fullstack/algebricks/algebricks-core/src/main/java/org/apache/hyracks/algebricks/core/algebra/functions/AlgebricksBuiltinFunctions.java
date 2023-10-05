@@ -32,32 +32,31 @@ public class AlgebricksBuiltinFunctions {
     }
 
     public static final String ALGEBRICKS_NS = "algebricks";
+    public static final String ALGEBRICKS_DB = "algebricks";
 
     // comparisons
-    public final static FunctionIdentifier EQ = new FunctionIdentifier(ALGEBRICKS_NS, "eq", 2);
-    public final static FunctionIdentifier LE = new FunctionIdentifier(ALGEBRICKS_NS, "le", 2);
-    public final static FunctionIdentifier GE = new FunctionIdentifier(ALGEBRICKS_NS, "ge", 2);
-    public final static FunctionIdentifier LT = new FunctionIdentifier(ALGEBRICKS_NS, "lt", 2);
-    public final static FunctionIdentifier GT = new FunctionIdentifier(ALGEBRICKS_NS, "gt", 2);
-    public final static FunctionIdentifier NEQ = new FunctionIdentifier(ALGEBRICKS_NS, "neq", 2);
+    public final static FunctionIdentifier EQ = FunctionIdentifier.newAlgebricks("eq", 2);
+    public final static FunctionIdentifier LE = FunctionIdentifier.newAlgebricks("le", 2);
+    public final static FunctionIdentifier GE = FunctionIdentifier.newAlgebricks("ge", 2);
+    public final static FunctionIdentifier LT = FunctionIdentifier.newAlgebricks("lt", 2);
+    public final static FunctionIdentifier GT = FunctionIdentifier.newAlgebricks("gt", 2);
+    public final static FunctionIdentifier NEQ = FunctionIdentifier.newAlgebricks("neq", 2);
 
     // booleans
-    public final static FunctionIdentifier NOT = new FunctionIdentifier(ALGEBRICKS_NS, "not", 1);
-    public final static FunctionIdentifier AND =
-            new FunctionIdentifier(ALGEBRICKS_NS, "and", FunctionIdentifier.VARARGS);
-    public final static FunctionIdentifier OR = new FunctionIdentifier(ALGEBRICKS_NS, "or", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier NOT = FunctionIdentifier.newAlgebricks("not", 1);
+    public final static FunctionIdentifier AND = FunctionIdentifier.newAlgebricks("and", FunctionIdentifier.VARARGS);
+    public final static FunctionIdentifier OR = FunctionIdentifier.newAlgebricks("or", FunctionIdentifier.VARARGS);
 
     // numerics
-    public final static FunctionIdentifier NUMERIC_ADD = new FunctionIdentifier(ALGEBRICKS_NS, "numeric-add", 2);
+    public final static FunctionIdentifier NUMERIC_ADD = FunctionIdentifier.newAlgebricks("numeric-add", 2);
 
     // missings
-    public final static FunctionIdentifier IS_MISSING = new FunctionIdentifier(ALGEBRICKS_NS, "is-missing", 1);
+    public final static FunctionIdentifier IS_MISSING = FunctionIdentifier.newAlgebricks("is-missing", 1);
 
     // nulls
-    public final static FunctionIdentifier IS_NULL = new FunctionIdentifier(ALGEBRICKS_NS, "is-null", 1);
+    public final static FunctionIdentifier IS_NULL = FunctionIdentifier.newAlgebricks("is-null", 1);
 
-    private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions =
-            new HashMap<FunctionIdentifier, ComparisonKind>();
+    private static final Map<FunctionIdentifier, ComparisonKind> comparisonFunctions = new HashMap<>();
 
     static {
         comparisonFunctions.put(AlgebricksBuiltinFunctions.EQ, ComparisonKind.EQ);

@@ -27,8 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class JobSummariesRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier JOBSUMMARIES =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "jobs", 0);
+    public static final FunctionIdentifier JOBSUMMARIES = FunctionConstants.newAsterix("jobs", 0);
     public static final JobSummariesRewriter INSTANCE = new JobSummariesRewriter(JOBSUMMARIES);
 
     private JobSummariesRewriter(FunctionIdentifier functionId) {

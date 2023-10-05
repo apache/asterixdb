@@ -21,7 +21,6 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 import java.util.function.BiFunction;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -72,7 +71,7 @@ public class SqlppFunctionCallResolverVisitor extends AbstractSqlppSimpleExpress
         if (fs != null) {
             return fs;
         }
-        fs = new FunctionSignature(FunctionConstants.ASTERIX_DV, name, arity);
+        fs = FunctionSignature.newAsterix(name, arity);
         return isAggregateFunction(fs) || isWindowFunction(fs) ? fs : null;
     }
 

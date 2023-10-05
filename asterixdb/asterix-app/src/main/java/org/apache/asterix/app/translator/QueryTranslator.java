@@ -2956,9 +2956,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleDeclareFunctionStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         FunctionDecl fds = (FunctionDecl) stmt;
         FunctionSignature signature = fds.getSignature();
-        metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
-                stmt.getSourceLocation());
-        signature.setDataverseName(getActiveDataverseName(signature.getDataverseName()));
+        DataverseName funDataverse = signature.getDataverseName();
+        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(), stmt.getSourceLocation());
+        if (funDataverse == null) {
+            Dataverse activeDv = getActiveDataverse();
+            signature.setDataverseName(activeDv.getDatabaseName(), activeDv.getDataverseName());
+        }
         declaredFunctions.add(fds);
     }
 
@@ -2966,11 +2969,19 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
-        metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
-                stmt.getSourceLocation());
-        DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
-        signature.setDataverseName(dataverseName);
+        DataverseName funDataverse = signature.getDataverseName();
+        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(), stmt.getSourceLocation());
+        DataverseName dataverseName;
+        String database;
+        if (funDataverse == null) {
+            Dataverse activeDv = getActiveDataverse();
+            dataverseName = activeDv.getDataverseName();
+            database = activeDv.getDatabaseName();
+            signature.setDataverseName(database, dataverseName);
+        } else {
+            dataverseName = funDataverse;
+            database = signature.getDatabaseName();
+        }
         DataverseName libraryDataverseName = null;
         String libraryName = cfs.getLibraryName();
         if (libraryName != null) {
@@ -3238,11 +3249,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters) throws Exception {
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
-        metadataProvider.validateDatabaseObjectName(signature.getDataverseName(), signature.getName(),
+        DataverseName funDataverse = signature.getDataverseName();
+        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(),
                 stmtDropFunction.getSourceLocation());
-        DataverseName dataverseName = getActiveDataverseName(signature.getDataverseName());
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
-        signature.setDataverseName(dataverseName);
+        DataverseName dataverseName;
+        String database;
+        if (funDataverse == null) {
+            Dataverse activeDv = getActiveDataverse();
+            dataverseName = activeDv.getDataverseName();
+            database = activeDv.getDatabaseName();
+            signature.setDataverseName(database, dataverseName);
+        } else {
+            dataverseName = funDataverse;
+            database = signature.getDatabaseName();
+        }
         if (isCompileOnly()) {
             return;
         }
@@ -5264,6 +5284,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     @Override
     public DataverseName getActiveDataverseName(DataverseName dataverseName) {
         return dataverseName != null ? dataverseName : activeDataverse.getDataverseName();
+    }
+
+    public Dataverse getActiveDataverse() {
+        return activeDataverse;
     }
 
     @Override

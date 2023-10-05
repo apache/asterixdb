@@ -202,7 +202,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             dependencies.add(dependencyList);
         }
 
-        FunctionSignature signature = new FunctionSignature(dataverseName, functionName, arity);
+        FunctionSignature signature = new FunctionSignature(databaseName, dataverseName, functionName, arity);
 
         return new Function(signature, paramNames, paramTypes, returnType, definition, functionKind, language,
                 libraryDatabaseName, libraryDataverseName, libraryName, externalIdentifier, nullCall, deterministic,

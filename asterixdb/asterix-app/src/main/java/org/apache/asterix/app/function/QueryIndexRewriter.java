@@ -68,8 +68,7 @@ import org.apache.hyracks.util.LogRedactionUtil;
 
 public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeComputer {
 
-    public static final FunctionIdentifier QUERY_INDEX =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "query-index", 3);
+    public static final FunctionIdentifier QUERY_INDEX = FunctionConstants.newAsterix("query-index", 3);
     public static final QueryIndexRewriter INSTANCE = new QueryIndexRewriter(QUERY_INDEX);
 
     private QueryIndexRewriter(FunctionIdentifier functionId) {

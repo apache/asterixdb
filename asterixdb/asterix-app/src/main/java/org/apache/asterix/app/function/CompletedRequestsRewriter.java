@@ -27,8 +27,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class CompletedRequestsRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier COMPLETED_REQUESTS =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "completed-requests", 0);
+    public static final FunctionIdentifier COMPLETED_REQUESTS = FunctionConstants.newAsterix("completed-requests", 0);
     public static final CompletedRequestsRewriter INSTANCE = new CompletedRequestsRewriter(COMPLETED_REQUESTS);
 
     private CompletedRequestsRewriter(FunctionIdentifier functionId) {

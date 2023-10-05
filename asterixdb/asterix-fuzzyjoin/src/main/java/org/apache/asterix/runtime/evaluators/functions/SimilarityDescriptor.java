@@ -53,8 +53,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class SimilarityDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
-    private final static FunctionIdentifier FID =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "similarity@7", 7);
+    private final static FunctionIdentifier FID = FunctionConstants.newAsterix("similarity@7", 7);
     public static final IFunctionDescriptorFactory FACTORY = SimilarityDescriptor::new;
 
     @Override

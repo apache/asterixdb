@@ -638,8 +638,8 @@ public class MetadataCache {
 
     public Function addFunctionIfNotExists(Function function) {
         synchronized (functions) {
-            FunctionSignature signature =
-                    new FunctionSignature(function.getDataverseName(), function.getName(), function.getArity());
+            FunctionSignature signature = new FunctionSignature(function.getDatabaseName(), function.getDataverseName(),
+                    function.getName(), function.getArity());
             Function fun = functions.get(signature);
             if (fun == null) {
                 return functions.put(signature, function);
@@ -650,8 +650,8 @@ public class MetadataCache {
 
     public Function dropFunction(Function function) {
         synchronized (functions) {
-            FunctionSignature signature =
-                    new FunctionSignature(function.getDataverseName(), function.getName(), function.getArity());
+            FunctionSignature signature = new FunctionSignature(function.getDatabaseName(), function.getDataverseName(),
+                    function.getName(), function.getArity());
             Function fun = functions.get(signature);
             if (fun == null) {
                 return null;

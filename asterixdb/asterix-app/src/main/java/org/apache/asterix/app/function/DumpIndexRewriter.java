@@ -39,8 +39,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class DumpIndexRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier DUMP_INDEX =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "dump-index", 3);
+    public static final FunctionIdentifier DUMP_INDEX = FunctionConstants.newAsterix("dump-index", 3);
     public static final DumpIndexRewriter INSTANCE = new DumpIndexRewriter(DUMP_INDEX);
 
     private DumpIndexRewriter(FunctionIdentifier functionId) {

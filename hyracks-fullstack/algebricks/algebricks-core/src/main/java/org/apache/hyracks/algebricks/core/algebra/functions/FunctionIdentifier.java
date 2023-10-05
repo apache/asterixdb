@@ -22,18 +22,30 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class FunctionIdentifier implements Serializable {
-    private static final long serialVersionUID = 1L;
 
+    private static final long serialVersionUID = 2L;
+
+    private final String database;
     private final String namespace;
     private final String name;
     private final int arity;
 
     public static final int VARARGS = -1;
 
-    public FunctionIdentifier(String namespace, String name, int arity) {
+    public FunctionIdentifier(String database, String namespace, String name, int arity) {
+        this.database = database;
         this.namespace = namespace;
         this.name = name;
         this.arity = arity;
+    }
+
+    public static FunctionIdentifier newAlgebricks(String name, int arity) {
+        return new FunctionIdentifier(AlgebricksBuiltinFunctions.ALGEBRICKS_DB,
+                AlgebricksBuiltinFunctions.ALGEBRICKS_NS, name, arity);
+    }
+
+    public String getDatabase() {
+        return database;
     }
 
     public String getNamespace() {
@@ -55,18 +67,20 @@ public class FunctionIdentifier implements Serializable {
         }
         if (o instanceof FunctionIdentifier) {
             FunctionIdentifier ofi = (FunctionIdentifier) o;
-            return namespace.equals(ofi.namespace) && name.equals(ofi.name) && arity == ofi.arity;
+            return database.equals(ofi.database) && namespace.equals(ofi.namespace) && name.equals(ofi.name)
+                    && arity == ofi.arity;
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(namespace, name, arity);
+        return Objects.hash(database, namespace, name, arity);
     }
 
     @Override
     public String toString() {
+        //TODO(DB):
         return namespace + ':' + name + '#' + arity;
     }
 }

@@ -21,7 +21,6 @@ package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -52,7 +51,7 @@ public final class SqlppSpecialFunctionNameRewriteVisitor extends AbstractSqlppS
             throws CompilationException {
         FunctionIdentifier coreAggregate = FunctionMapUtil.findInternalCoreAggregateFunction(fs);
         if (coreAggregate != null) {
-            return new FunctionSignature(FunctionConstants.ASTERIX_DV, coreAggregate.getName(), fs.getArity());
+            return FunctionSignature.newAsterix(coreAggregate.getName(), fs.getArity());
         }
         if (FunctionMapUtil.isSql92AggregateFunction(fs)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,

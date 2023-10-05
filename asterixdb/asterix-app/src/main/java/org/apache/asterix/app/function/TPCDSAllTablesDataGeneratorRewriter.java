@@ -51,7 +51,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 public class TPCDSAllTablesDataGeneratorRewriter extends FunctionRewriter {
 
     public static final FunctionIdentifier TPCDS_ALL_TABLES_DATA_GENERATOR =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "tpcds-datagen", 1);
+            FunctionConstants.newAsterix("tpcds-datagen", 1);
     public static final TPCDSAllTablesDataGeneratorRewriter INSTANCE =
             new TPCDSAllTablesDataGeneratorRewriter(TPCDS_ALL_TABLES_DATA_GENERATOR);
 

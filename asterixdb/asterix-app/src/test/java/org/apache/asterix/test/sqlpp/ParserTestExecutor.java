@@ -42,6 +42,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -141,9 +142,11 @@ public class ParserTestExecutor extends TestExecutor {
         GlobalConfig.ASTERIX_LOGGER.info(queryFile.toString());
         try {
             List<Statement> statements = parser.parse();
+            //TODO(DB): fix this properly so that metadataProvider.getDefaultDataverse() works when actually called
             DataverseName dvName = getDefaultDataverse(statements);
-            List<FunctionDecl> functions = getDeclaredFunctions(statements, dvName);
-            List<FunctionSignature> createdFunctionsList = getCreatedFunctions(statements, dvName);
+            String dbName = MetadataUtil.databaseFor(dvName);
+            List<FunctionDecl> functions = getDeclaredFunctions(statements, dbName, dvName);
+            List<FunctionSignature> createdFunctionsList = getCreatedFunctions(statements, dbName, dvName);
             createdFunctions.addAll(createdFunctionsList);
 
             MetadataProvider metadataProvider = mock(MetadataProvider.class);
@@ -151,6 +154,7 @@ public class ParserTestExecutor extends TestExecutor {
             @SuppressWarnings("unchecked")
             Map<String, Object> config = mock(Map.class);
             when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
+            when(metadataProvider.getDefaultDatabase()).thenReturn(dbName);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
             when(metadataProvider.findDataverse(anyString(), Mockito.<DataverseName> any()))
@@ -231,14 +235,15 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Extracts declared functions.
-    private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements, DataverseName defaultDataverseName) {
+    private List<FunctionDecl> getDeclaredFunctions(List<Statement> statements, String defaultDatabaseName,
+            DataverseName defaultDataverseName) {
         List<FunctionDecl> functionDecls = new ArrayList<>();
         for (Statement st : statements) {
             if (st.getKind() == Statement.Kind.FUNCTION_DECL) {
                 FunctionDecl fds = (FunctionDecl) st;
                 FunctionSignature signature = fds.getSignature();
                 if (signature.getDataverseName() == null) {
-                    signature.setDataverseName(defaultDataverseName);
+                    signature.setDataverseName(defaultDatabaseName, defaultDataverseName);
                 }
                 functionDecls.add(fds);
             }
@@ -247,7 +252,7 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Extracts created functions.
-    private List<FunctionSignature> getCreatedFunctions(List<Statement> statements,
+    private List<FunctionSignature> getCreatedFunctions(List<Statement> statements, String defaultDatabaseName,
             DataverseName defaultDataverseName) {
         List<FunctionSignature> createdFunctions = new ArrayList<>();
         for (Statement st : statements) {
@@ -255,7 +260,8 @@ public class ParserTestExecutor extends TestExecutor {
                 CreateFunctionStatement cfs = (CreateFunctionStatement) st;
                 FunctionSignature signature = cfs.getFunctionSignature();
                 if (signature.getDataverseName() == null) {
-                    signature = new FunctionSignature(defaultDataverseName, signature.getName(), signature.getArity());
+                    signature = new FunctionSignature(defaultDatabaseName, defaultDataverseName, signature.getName(),
+                            signature.getArity());
                 }
                 createdFunctions.add(signature);
             }

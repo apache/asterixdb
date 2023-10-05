@@ -75,8 +75,7 @@ public class FunctionMapUtil {
      */
     public static boolean isSql92AggregateFunction(FunctionSignature signature) {
         String name = applySql92AggregateNameMapping(signature.getName().toLowerCase());
-        IFunctionInfo finfo = FunctionUtil
-                .getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS, name, signature.getArity()));
+        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(FunctionConstants.newAsterix(name, signature.getArity()));
         if (finfo == null) {
             return false;
         }
@@ -97,7 +96,7 @@ public class FunctionMapUtil {
         String name = applySql92AggregateNameMapping(fs.getName().toLowerCase());
         String prefix =
                 CORE_AGGREGATE_PREFIX_FUNCTIONS.contains(name) ? CORE_AGGREGATE_PREFIX : CORE_SQL_AGGREGATE_PREFIX;
-        return new FunctionSignature(FunctionConstants.ASTERIX_DV, prefix + name, fs.getArity());
+        return FunctionSignature.newAsterix(prefix + name, fs.getArity());
     }
 
     /**
@@ -124,7 +123,7 @@ public class FunctionMapUtil {
         if (internalName == null) {
             return null;
         }
-        FunctionIdentifier fi = new FunctionIdentifier(FunctionConstants.ASTERIX_NS, internalName, fs.getArity());
+        FunctionIdentifier fi = FunctionConstants.newAsterix(internalName, fs.getArity());
         IFunctionInfo finfo = FunctionUtil.getFunctionInfo(fi);
         if (finfo == null) {
             return null;
@@ -145,7 +144,7 @@ public class FunctionMapUtil {
         if (internalFuncName == null) {
             return;
         }
-        callExpr.setFunctionSignature(new FunctionSignature(FunctionConstants.ASTERIX_DV, internalFuncName, 1));
+        callExpr.setFunctionSignature(FunctionSignature.newAsterix(internalFuncName, 1));
         ListConstructor listConstr =
                 new ListConstructor(ListConstructor.Type.ORDERED_LIST_CONSTRUCTOR, callExpr.getExprList());
         listConstr.setSourceLocation(callExpr.getSourceLocation());
@@ -179,8 +178,8 @@ public class FunctionMapUtil {
      * @return said value
      */
     public static FunctionIdentifier getInternalWindowFunction(FunctionSignature signature) {
-        IFunctionInfo finfo = FunctionUtil.getFunctionInfo(new FunctionIdentifier(FunctionConstants.ASTERIX_NS,
-                signature.getName().toLowerCase(), signature.getArity()));
+        IFunctionInfo finfo = FunctionUtil
+                .getFunctionInfo(FunctionConstants.newAsterix(signature.getName().toLowerCase(), signature.getArity()));
         return finfo != null ? BuiltinFunctions.getWindowFunction(finfo.getFunctionIdentifier()) : null;
     }
 
@@ -206,7 +205,7 @@ public class FunctionMapUtil {
     }
 
     public static FunctionIdentifier createCoreAggregateFunctionIdentifier(FunctionIdentifier scalarfi) {
-        return BuiltinFunctions.getAggregateFunction(scalarfi) != null ? new FunctionIdentifier(scalarfi.getNamespace(),
-                CORE_AGGREGATE_PREFIX + scalarfi.getName(), scalarfi.getArity()) : null;
+        return BuiltinFunctions.getAggregateFunction(scalarfi) != null ? new FunctionIdentifier(scalarfi.getDatabase(),
+                scalarfi.getNamespace(), CORE_AGGREGATE_PREFIX + scalarfi.getName(), scalarfi.getArity()) : null;
     }
 }

@@ -28,7 +28,7 @@ import org.junit.runners.Parameterized;
 
 public class FormattedExceptionInstanceTest extends FormattedExceptionTestBase {
     private static final ErrorCode ASK_ERROR_CODE = random(ErrorCode.values());
-    private static final FunctionIdentifier FUNCTION_IDENTIFIER = new FunctionIdentifier("fake", "fake", 0);
+    private static final FunctionIdentifier FUNCTION_IDENTIFIER = new FunctionIdentifier("fake", "fake", "fake", 0);
     static {
         classSelector = classname -> classname.matches("^org\\.apache\\.(asterix|hyracks)\\..*");
     }

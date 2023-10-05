@@ -32,8 +32,8 @@ public enum DependencyKind {
             dependency -> DatasetUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(),
                     dependency.getSubName1())),
     FUNCTION(
-            dependency -> new FunctionSignature(dependency.getDataverseName(), dependency.getSubName1(),
-                    Integer.parseInt(dependency.getSubName2())).toString()),
+            dependency -> new FunctionSignature(dependency.getDatabaseName(), dependency.getDataverseName(),
+                    dependency.getSubName1(), Integer.parseInt(dependency.getSubName2())).toString()),
     TYPE(dependency -> TypeUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(), dependency.getSubName1())),
     SYNONYM(
             dependency -> MetadataUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(),

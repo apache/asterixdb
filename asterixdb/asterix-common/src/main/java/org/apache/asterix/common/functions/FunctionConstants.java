@@ -20,10 +20,12 @@ package org.apache.asterix.common.functions;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public final class FunctionConstants {
 
     public static final String ASTERIX_NS = "asterix";
+    public static final String ASTERIX_DB = "asterix";
 
     public static final DataverseName ASTERIX_DV = DataverseName.createBuiltinDataverseName(ASTERIX_NS);
 
@@ -31,5 +33,10 @@ public final class FunctionConstants {
             DataverseName.createBuiltinDataverseName(AlgebricksBuiltinFunctions.ALGEBRICKS_NS);
 
     private FunctionConstants() {
+    }
+
+    //TODO(DB): should be in a better place than this
+    public static FunctionIdentifier newAsterix(String name, int arity) {
+        return new FunctionIdentifier(ASTERIX_DB, ASTERIX_NS, name, arity);
     }
 }
