@@ -57,18 +57,19 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     AbstractColumnValuesReader(AbstractValueReader valueReader, int columnIndex, int maxLevel, boolean primaryKey) {
         this.valueReader = valueReader;
         this.columnIndex = columnIndex;
-        this.maxLevel = maxLevel;
+        this.maxLevel = valueReader.getTypeTag() == ATypeTag.MISSING ? Integer.MAX_VALUE : maxLevel;
         definitionLevels = new ParquetRunLengthBitPackingHybridDecoder(ColumnValuesUtil.getBitWidth(maxLevel));
         valuesStream = primaryKey ? new ByteBufferInputStream() : new MultiByteBufferInputStream();
         this.primaryKey = primaryKey;
     }
 
     final void nextLevel() throws HyracksDataException {
+        valueIndex++;
+
         if (allMissing) {
             return;
         }
 
-        valueIndex++;
         int actualLevel = definitionLevels.readInt();
         //Check whether the level is for a null value
         nullLevel = ColumnValuesUtil.isNull(nullBitMask, actualLevel);

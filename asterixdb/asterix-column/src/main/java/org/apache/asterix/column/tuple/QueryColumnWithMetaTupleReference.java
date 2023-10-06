@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.column.assembler.value.MissingValueGetter;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.column.bytes.stream.in.ByteBufferInputStream;
+import org.apache.asterix.column.bytes.stream.in.DummyBytesInputStream;
 import org.apache.asterix.column.bytes.stream.in.MultiByteBufferInputStream;
 import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
@@ -71,7 +72,10 @@ public final class QueryColumnWithMetaTupleReference extends AbstractAsterixColu
         int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
         filteredColumnStreams = new AbstractBytesInputStream[columnMetadata.getNumberOfFilteredColumns()];
         for (int i = 0; i < filteredColumnStreams.length; i++) {
-            if (filterColumnReaders.get(i).getColumnIndex() >= numberOfPrimaryKeys) {
+            int columnIndex = filterColumnReaders.get(i).getColumnIndex();
+            if (columnIndex < 0) {
+                filteredColumnStreams[i] = DummyBytesInputStream.INSTANCE;
+            } else if (columnIndex >= numberOfPrimaryKeys) {
                 filteredColumnStreams[i] = new MultiByteBufferInputStream();
             } else {
                 filteredColumnStreams[i] = new ByteBufferInputStream();

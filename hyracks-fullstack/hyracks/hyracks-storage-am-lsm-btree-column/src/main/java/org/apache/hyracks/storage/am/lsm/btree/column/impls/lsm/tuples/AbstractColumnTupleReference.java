@@ -68,7 +68,9 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         filterBufferProviders = new IColumnBufferProvider[numberOfFilteredColumns];
         for (int i = 0; i < numberOfFilteredColumns; i++) {
             int columnIndex = info.getFilteredColumnIndex(i);
-            if (columnIndex >= numberOfPrimaryKeys) {
+            if (columnIndex < 0) {
+                filterBufferProviders[i] = DummyColumnBufferProvider.INSTANCE;
+            } else if (columnIndex >= numberOfPrimaryKeys) {
                 filterBufferProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp);
             } else {
                 filterBufferProviders[i] = new ColumnSingleBufferProvider(columnIndex);

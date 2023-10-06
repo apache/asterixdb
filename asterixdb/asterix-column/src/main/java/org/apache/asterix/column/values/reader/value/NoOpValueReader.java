@@ -24,7 +24,7 @@ import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public class NoOpValueReader extends AbstractValueReader {
+public final class NoOpValueReader extends AbstractValueReader {
     public static final AbstractValueReader INSTANCE = new NoOpValueReader();
 
     private NoOpValueReader() {
@@ -42,7 +42,7 @@ public class NoOpValueReader extends AbstractValueReader {
 
     @Override
     public ATypeTag getTypeTag() {
-        throw new UnsupportedOperationException(getClass().getName());
+        return ATypeTag.MISSING;
     }
 
     @Override

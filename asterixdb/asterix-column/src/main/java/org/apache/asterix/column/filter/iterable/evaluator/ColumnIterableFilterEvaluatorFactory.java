@@ -40,8 +40,8 @@ public class ColumnIterableFilterEvaluatorFactory implements IColumnIterableFilt
     @Override
     public IColumnIterableFilterEvaluator create(FilterAccessorProvider filterAccessorProvider,
             IEvaluatorContext context) throws HyracksDataException {
-        IScalarEvaluator evaluator = evaluatorFactory.createScalarEvaluator(context);
         List<IColumnValuesReader> readers = filterAccessorProvider.getFilterColumnReaders();
+        IScalarEvaluator evaluator = evaluatorFactory.createScalarEvaluator(context);
         if (readers.stream().anyMatch(IColumnValuesReader::isRepeated)) {
             return new ColumnarRepeatedIterableFilterEvaluator(evaluator, readers);
         }

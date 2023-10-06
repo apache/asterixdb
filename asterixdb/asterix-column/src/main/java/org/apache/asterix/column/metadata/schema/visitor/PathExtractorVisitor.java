@@ -58,9 +58,7 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
         delimiters.clear();
         AbstractSchemaNode node = path.accept(this, null);
         ATypeTag typeTag = node.getTypeTag();
-        if (typeTag == ATypeTag.MISSING) {
-            return Collections.emptyList();
-        } else if (typeTag == ATypeTag.UNION) {
+        if (typeTag == ATypeTag.UNION) {
             UnionSchemaNode unionNode = (UnionSchemaNode) node;
             Collection<AbstractSchemaNode> children = unionNode.getChildren().values();
             List<IColumnValuesReader> unionReaders = new ArrayList<>();
