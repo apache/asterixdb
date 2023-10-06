@@ -35,6 +35,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.dataflow.data.common.ExpressionTypeComputer;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -46,7 +47,6 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.OptimizableOperatorSubTree.DataSourceType;
 import org.apache.asterix.optimizer.rules.util.FullTextUtil;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -1106,9 +1106,10 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         if (dataSourceScanOp.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             return null;
         }
-        Pair<DataverseName, String> datasetInfo =
-                AnalysisUtil.getDatasetInfo((DataSourceScanOperator) dataSourceScanOp);
-        String database = MetadataUtil.resolveDatabase(null, datasetInfo.first);
-        return metadataProvider.getIndex(database, datasetInfo.first, datasetInfo.second, datasetInfo.second);
+        DataSourceId srcId = (DataSourceId) ((DataSourceScanOperator) dataSourceScanOp).getDataSource().getId();
+        String database = srcId.getDatabaseName();
+        DataverseName dataverseName = srcId.getDataverseName();
+        String datasourceName = srcId.getDatasourceName();
+        return metadataProvider.getIndex(database, dataverseName, datasourceName, datasourceName);
     }
 }

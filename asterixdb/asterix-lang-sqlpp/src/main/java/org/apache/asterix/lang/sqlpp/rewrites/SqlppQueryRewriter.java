@@ -33,7 +33,6 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -489,9 +488,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         if (viewDecl == null) {
             Dataset dataset;
             try {
-                String database = MetadataUtil.resolveDatabase(null, viewName.getDataverseName());
-                dataset = metadataProvider.findDataset(database, viewName.getDataverseName(), viewName.getDatasetName(),
-                        true);
+                dataset = metadataProvider.findDataset(viewName.getDatabaseName(), viewName.getDataverseName(),
+                        viewName.getDatasetName(), true);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.UNKNOWN_VIEW, e, sourceLoc, viewName);
             }
@@ -502,7 +500,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             viewDecl = ViewUtil.parseStoredView(viewName, viewDetails, parserFactory, context.getWarningCollector(),
                     sourceLoc);
             DataverseName itemTypeDataverseName = dataset.getItemTypeDataverseName();
-            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, itemTypeDataverseName);
+            String itemTypeDatabase = dataset.getItemTypeDatabaseName();
             String itemTypeName = dataset.getItemTypeName();
             boolean isAnyType =
                     MetadataBuiltinEntities.ANY_OBJECT_DATATYPE.getDataverseName().equals(itemTypeDataverseName)
@@ -529,16 +527,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
 
     private Expression rewriteFunctionBody(FunctionDecl fnDecl) throws CompilationException {
         FunctionSignature fs = fnDecl.getSignature();
-        return rewriteFunctionOrViewBody(fs.getDataverseName(), fs, fnDecl.getFuncBody(), fnDecl.getParamList(),
-                !fnDecl.isStored(), fnDecl.getSourceLocation());
+        return rewriteFunctionOrViewBody(fs.getDatabaseName(), fs.getDataverseName(), fs, fnDecl.getFuncBody(),
+                fnDecl.getParamList(), !fnDecl.isStored(), fnDecl.getSourceLocation());
     }
 
     private Expression rewriteViewBody(ViewDecl viewDecl, IAType viewItemType, Boolean defaultNull,
             Triple<String, String, String> temporalDataFormat) throws CompilationException {
         DatasetFullyQualifiedName viewName = viewDecl.getViewName();
         SourceLocation sourceLoc = viewDecl.getSourceLocation();
-        Expression rewrittenBodyExpr = rewriteFunctionOrViewBody(viewName.getDataverseName(), viewName,
-                viewDecl.getViewBody(), Collections.emptyList(), false, sourceLoc);
+        Expression rewrittenBodyExpr =
+                rewriteFunctionOrViewBody(viewName.getDatabaseName(), viewName.getDataverseName(), viewName,
+                        viewDecl.getViewBody(), Collections.emptyList(), false, sourceLoc);
         if (viewItemType != null) {
             if (!Boolean.TRUE.equals(defaultNull)) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
@@ -550,19 +549,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         return rewrittenBodyExpr;
     }
 
-    private Expression rewriteFunctionOrViewBody(DataverseName entityDataverseName, Object entityDisplayName,
-            Expression bodyExpr, List<VarIdentifier> externalVars, boolean allowNonStoredUdfCalls,
-            SourceLocation sourceLoc) throws CompilationException {
+    private Expression rewriteFunctionOrViewBody(String entityDatabaseName, DataverseName entityDataverseName,
+            Object entityDisplayName, Expression bodyExpr, List<VarIdentifier> externalVars,
+            boolean allowNonStoredUdfCalls, SourceLocation sourceLoc) throws CompilationException {
         Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
         Dataverse targetDataverse;
-        String database;
-        if (entityDataverseName == null || entityDataverseName.equals(defaultDataverse.getDataverseName())) {
+        if (entityDataverseName == null || (entityDatabaseName.equals(defaultDataverse.getDatabaseName())
+                && entityDataverseName.equals(defaultDataverse.getDataverseName()))) {
             targetDataverse = defaultDataverse;
-            database = MetadataUtil.resolveDatabase(null, targetDataverse.getDataverseName());
         } else {
             try {
-                database = MetadataUtil.resolveDatabase(null, entityDataverseName);
-                targetDataverse = metadataProvider.findDataverse(database, entityDataverseName);
+                targetDataverse = metadataProvider.findDataverse(entityDatabaseName, entityDataverseName);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, entityDataverseName);
             }

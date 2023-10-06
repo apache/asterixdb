@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATABASE_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATASET_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATAVERSE_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.INDEX_NAME_POS;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +31,6 @@ import java.util.Set;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetFormat;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -213,7 +217,7 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataverseName dataverse = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
-        String database = MetadataUtil.resolveDatabase(null, dataverse);
+        String database = dataSource.getId().getDatabaseName();
         return mp.findDataset(database, dataverse, datasetName);
     }
 
@@ -225,14 +229,14 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      */
     private DataSource getDataSourceFromUnnestMapOperator(UnnestMapOperator unnest) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) unnest.getExpressionRef().getValue();
-        String dataverse = ConstantExpressionUtil.getStringArgument(funcExpr, 2);
-        String dataset = ConstantExpressionUtil.getStringArgument(funcExpr, 3);
-        if (!ConstantExpressionUtil.getStringArgument(funcExpr, 0).equals(dataset)) {
+        String dataverse = ConstantExpressionUtil.getStringArgument(funcExpr, DATAVERSE_NAME_POS);
+        String dataset = ConstantExpressionUtil.getStringArgument(funcExpr, DATASET_NAME_POS);
+        if (!ConstantExpressionUtil.getStringArgument(funcExpr, INDEX_NAME_POS).equals(dataset)) {
             return null;
         }
 
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverse);
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = ConstantExpressionUtil.getStringArgument(funcExpr, DATABASE_NAME_POS);
         DataSourceId dsid = new DataSourceId(database, dataverseName, dataset);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         return metadataProvider.findDataSource(dsid);

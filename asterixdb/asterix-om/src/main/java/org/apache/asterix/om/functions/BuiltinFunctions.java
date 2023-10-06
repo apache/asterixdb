@@ -396,8 +396,8 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier STRING_PARSE_JSON = FunctionConstants.newAsterix("parse-json", 1);
 
     public static final FunctionIdentifier DATASET =
-            FunctionConstants.newAsterix("dataset", FunctionIdentifier.VARARGS); // 1 or 2
-    public static final FunctionIdentifier FEED_COLLECT = FunctionConstants.newAsterix("feed-collect", 6);
+            FunctionConstants.newAsterix("dataset", FunctionIdentifier.VARARGS); // 1, 2 or 3
+    public static final FunctionIdentifier FEED_COLLECT = FunctionConstants.newAsterix("feed-collect", 7);
     public static final FunctionIdentifier FEED_INTERCEPT = FunctionConstants.newAsterix("feed-intercept", 1);
 
     public static final FunctionIdentifier INDEX_SEARCH =

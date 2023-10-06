@@ -28,7 +28,6 @@ import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -129,8 +128,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         }
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataSourceId asid = ((IDataSource<DataSourceId>) scan.getDataSource()).getId();
-        String database = MetadataUtil.resolveDatabase(null, asid.getDataverseName());
-        Dataset dataset = mp.findDataset(database, asid.getDataverseName(), asid.getDatasourceName());
+        Dataset dataset = mp.findDataset(asid.getDatabaseName(), asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
                     asid.getDatasourceName(), asid.getDataverseName());
@@ -141,8 +139,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         final Integer pos = ConstantExpressionUtil.getIntConstant(accessFun.getArguments().get(1).getValue());
         if (pos != null) {
             String tName = dataset.getItemTypeName();
-            String tDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-            IAType t = mp.findType(tDatabase, dataset.getItemTypeDataverseName(), tName);
+            IAType t = mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(), tName);
             if (t.getTypeTag() != ATypeTag.OBJECT) {
                 return false;
             }
@@ -320,8 +317,7 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             }
             DataSourceId asid = dataSource.getId();
             MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-            String database = MetadataUtil.resolveDatabase(null, asid.getDataverseName());
-            Dataset dataset = mp.findDataset(database, asid.getDataverseName(), asid.getDatasourceName());
+            Dataset dataset = mp.findDataset(asid.getDatabaseName(), asid.getDataverseName(), asid.getDatasourceName());
             if (dataset == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
                         asid.getDatasourceName(), asid.getDataverseName());
@@ -337,8 +333,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
 
             // data part
             String dataTypeName = dataset.getItemTypeName();
-            String dataTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-            IAType dataType = mp.findType(dataTypeDatabase, dataset.getItemTypeDataverseName(), dataTypeName);
+            IAType dataType =
+                    mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(), dataTypeName);
             if (dataType.getTypeTag() != ATypeTag.OBJECT) {
                 return false;
             }

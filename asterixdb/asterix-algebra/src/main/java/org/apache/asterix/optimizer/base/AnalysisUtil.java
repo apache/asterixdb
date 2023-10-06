@@ -31,7 +31,6 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
-import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.ResultSetDataSink;
 import org.apache.asterix.metadata.declared.ResultSetSinkId;
@@ -45,6 +44,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.compiler.api.ICompiler;
 import org.apache.hyracks.algebricks.compiler.api.ICompilerFactory;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -58,7 +58,6 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCa
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
-import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractDataSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistributeResultOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
@@ -161,17 +160,14 @@ public class AnalysisUtil {
         return false;
     }
 
-    public static Pair<DataverseName, String> getDatasetInfo(AbstractDataSourceOperator op) {
-        DataSourceId srcId = (DataSourceId) op.getDataSource().getId();
-        return new Pair<>(srcId.getDataverseName(), srcId.getDatasourceName());
-    }
-
-    public static Pair<DataverseName, String> getExternalDatasetInfo(UnnestMapOperator op) throws AlgebricksException {
+    public static Triple<DataverseName, String, String> getExternalDatasetInfo(UnnestMapOperator op)
+            throws AlgebricksException {
         AbstractFunctionCallExpression unnestExpr = (AbstractFunctionCallExpression) op.getExpressionRef().getValue();
+        String databaseName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(0));
         DataverseName dataverseName = DataverseName
-                .createFromCanonicalForm(AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(0)));
-        String datasetName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(1));
-        return new Pair<>(dataverseName, datasetName);
+                .createFromCanonicalForm(AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(1)));
+        String datasetName = AccessMethodUtils.getStringConstant(unnestExpr.getArguments().get(2));
+        return new Triple<>(dataverseName, datasetName, databaseName);
     }
 
     /**

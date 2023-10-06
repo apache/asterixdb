@@ -30,7 +30,6 @@ import org.apache.asterix.algebra.operators.physical.RTreeSearchPOperator;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -260,7 +259,7 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
             AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
             jobGenParams.readFromFuncArgs(f.getArguments());
             MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-            String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
+            String database = jobGenParams.getDatabaseName();
             DataSourceId dataSourceId =
                     new DataSourceId(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
             Dataset dataset = mp.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());

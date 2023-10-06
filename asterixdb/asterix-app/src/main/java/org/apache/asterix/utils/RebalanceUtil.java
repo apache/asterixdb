@@ -39,7 +39,6 @@ import org.apache.asterix.app.active.ActiveNotificationHandler;
 import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.dataflow.data.nontagged.MissingWriterFactory;
@@ -94,10 +93,9 @@ public class RebalanceUtil {
      * @return <code>false</code> if the rebalance was safely skipped
      * @throws Exception
      */
-    public static boolean rebalance(DataverseName dataverseName, String datasetName, Set<String> targetNcNames,
-            MetadataProvider metadataProvider, IHyracksClientConnection hcc,
+    public static boolean rebalance(String database, DataverseName dataverseName, String datasetName,
+            Set<String> targetNcNames, MetadataProvider metadataProvider, IHyracksClientConnection hcc,
             IDatasetRebalanceCallback datasetRebalanceCallback, boolean forceRebalance) throws Exception {
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         Dataset sourceDataset;
         Dataset targetDataset;
         boolean success = true;
@@ -355,8 +353,7 @@ public class RebalanceUtil {
 
     private static ITupleProjectorFactory createTupleProjectorFactory(Dataset source, MetadataProvider metadataProvider)
             throws AlgebricksException {
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, source.getItemTypeDataverseName());
-        ARecordType itemType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
+        ARecordType itemType = (ARecordType) metadataProvider.findType(source.getItemTypeDatabaseName(),
                 source.getItemTypeDataverseName(), source.getItemTypeName());
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, source);
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, source);

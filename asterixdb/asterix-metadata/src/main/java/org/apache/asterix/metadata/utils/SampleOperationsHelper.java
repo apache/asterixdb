@@ -28,7 +28,6 @@ import java.util.Set;
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.context.IStorageComponentProvider;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -131,9 +130,8 @@ public class SampleOperationsHelper implements ISecondaryIndexOperationsHelper {
 
     @Override
     public void init() throws AlgebricksException {
-        String database = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        itemType = (ARecordType) metadataProvider.findType(database, dataset.getItemTypeDataverseName(),
-                dataset.getItemTypeName());
+        itemType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDatabaseName(),
+                dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(itemType, metaType, dataset);
 

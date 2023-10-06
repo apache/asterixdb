@@ -629,8 +629,9 @@ public class BTreeAccessMethod implements IAccessMethod {
                 assignKeyExprList, keyVarList, context, highKeyConstantAtRuntimeExpressions,
                 highKeyConstAtRuntimeExprVars);
 
-        BTreeJobGenParams jobGenParams = new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+        BTreeJobGenParams jobGenParams =
+                new BTreeJobGenParams(chosenIndex.getIndexName(), IndexType.BTREE, dataset.getDatabaseName(),
+                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         jobGenParams
                 .setLowKeyInclusive(lowKeyInclusive[primaryIndexPostProccessingIsNeeded ? 0 : numSecondaryKeys - 1]);
         jobGenParams
@@ -766,13 +767,12 @@ public class BTreeAccessMethod implements IAccessMethod {
                 primaryIndexSearchFunc.setSourceLocation(dataSourceOp.getSourceLocation());
                 primaryIndexSearchFunc.setReturnsUniqueValues(true);
                 if (!leftOuterUnnestMapRequired) {
-                    unnestMapOp = new UnnestMapOperator(scanVariables,
-                            new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
-                            retainInput);
+                    unnestMapOp = new UnnestMapOperator(scanVariables, new MutableObject<>(primaryIndexSearchFunc),
+                            primaryIndexOutputTypes, retainInput);
                 } else {
-                    unnestMapOp = new LeftOuterUnnestMapOperator(scanVariables,
-                            new MutableObject<ILogicalExpression>(primaryIndexSearchFunc), primaryIndexOutputTypes,
-                            leftOuterMissingValue);
+                    unnestMapOp =
+                            new LeftOuterUnnestMapOperator(scanVariables, new MutableObject<>(primaryIndexSearchFunc),
+                                    primaryIndexOutputTypes, leftOuterMissingValue);
                 }
             } else {
                 if (!leftOuterUnnestMapRequired) {

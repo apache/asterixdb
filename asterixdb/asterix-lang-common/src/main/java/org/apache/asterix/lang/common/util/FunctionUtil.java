@@ -38,16 +38,20 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
+import org.apache.asterix.lang.common.expression.CallExpr;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.OrderedListTypeDefinition;
 import org.apache.asterix.lang.common.expression.TypeExpression;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnorderedListTypeDefinition;
+import org.apache.asterix.lang.common.literal.FalseLiteral;
+import org.apache.asterix.lang.common.literal.StringLiteral;
+import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataverse;
@@ -252,8 +256,8 @@ public class FunctionUtil {
         List<Expression> argList = datasetFn.getExprList();
         DatasetFullyQualifiedName datasetOrViewName = parseDatasetFunctionArguments(argList, 0,
                 datasetFn.getSourceLocation(), ExpressionUtils::getStringLiteral);
-        boolean isView = argList.size() > 2 && Boolean.TRUE.equals(ExpressionUtils.getBooleanLiteral(argList.get(2)));
-        DatasetFullyQualifiedName synonymName = argList.size() > 3 ? parseDatasetFunctionArguments(argList, 3,
+        boolean isView = argList.size() > 3 && Boolean.TRUE.equals(ExpressionUtils.getBooleanLiteral(argList.get(3)));
+        DatasetFullyQualifiedName synonymName = argList.size() > 4 ? parseDatasetFunctionArguments(argList, 4,
                 datasetFn.getSourceLocation(), ExpressionUtils::getStringLiteral) : null;
         return new Triple<>(datasetOrViewName, isView, synonymName);
     }
@@ -267,7 +271,11 @@ public class FunctionUtil {
     private static <T> DatasetFullyQualifiedName parseDatasetFunctionArguments(List<T> datasetFnArgs, int startPos,
             SourceLocation sourceLoc, java.util.function.Function<T, String> stringAccessor)
             throws CompilationException {
-        String dataverseNameArg = stringAccessor.apply(datasetFnArgs.get(startPos));
+        String databaseName = stringAccessor.apply(datasetFnArgs.get(startPos));
+        if (databaseName == null) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
+        }
+        String dataverseNameArg = stringAccessor.apply(datasetFnArgs.get(startPos + 1));
         if (dataverseNameArg == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
@@ -277,11 +285,10 @@ public class FunctionUtil {
         } catch (AsterixException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, e, "Invalid argument to dataset()");
         }
-        String datasetName = stringAccessor.apply(datasetFnArgs.get(startPos + 1));
+        String datasetName = stringAccessor.apply(datasetFnArgs.get(startPos + 2));
         if (datasetName == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Invalid argument to dataset()");
         }
-        String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
         return new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName);
     }
 
@@ -390,5 +397,34 @@ public class FunctionUtil {
         }
 
         return numberOfMatches == args1.size();
+    }
+
+    public static CallExpr makeDatasetCallExpr(String database, DataverseName dataverse, String dataset) {
+        List<Expression> arguments = new ArrayList<>();
+        addDataset(arguments, database, dataverse, dataset);
+        return new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), arguments);
+    }
+
+    public static CallExpr makeDatasetCallExpr(String database, DataverseName dataverse, String dataset, boolean view) {
+        List<Expression> argList = new ArrayList<>(4);
+        addDataset(argList, database, dataverse, dataset);
+        argList.add(new LiteralExpr(view ? TrueLiteral.INSTANCE : FalseLiteral.INSTANCE));
+        return new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
+    }
+
+    public static CallExpr makeSynonymDatasetCallExpr(String resolvedDatabaseName, DataverseName resolvedDataverseName,
+            String resolvedDatasetName, boolean isView, String databaseName, DataverseName dataverseName,
+            String datasetName) {
+        List<Expression> argList = new ArrayList<>(7);
+        addDataset(argList, resolvedDatabaseName, resolvedDataverseName, resolvedDatasetName);
+        argList.add(new LiteralExpr(isView ? TrueLiteral.INSTANCE : FalseLiteral.INSTANCE));
+        addDataset(argList, databaseName, dataverseName, datasetName);
+        return new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
+    }
+
+    private static void addDataset(List<Expression> argList, String db, DataverseName dv, String ds) {
+        argList.add(new LiteralExpr(new StringLiteral(db)));
+        argList.add(new LiteralExpr(new StringLiteral(dv.getCanonicalForm())));
+        argList.add(new LiteralExpr(new StringLiteral(ds)));
     }
 }

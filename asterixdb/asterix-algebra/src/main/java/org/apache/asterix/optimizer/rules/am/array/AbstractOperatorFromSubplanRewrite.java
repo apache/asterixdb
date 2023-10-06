@@ -27,7 +27,7 @@ import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.om.base.AInt16;
 import org.apache.asterix.om.base.AInt32;
@@ -35,7 +35,6 @@ import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AInt8;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
-import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -79,10 +78,10 @@ abstract public class AbstractOperatorFromSubplanRewrite<T> implements IIntroduc
         boolean isApplicableForRewrite = false;
         if (workingOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
             DataSourceScanOperator dataSourceScanOperator = (DataSourceScanOperator) workingOp;
-            Pair<DataverseName, String> datasetInfo = AnalysisUtil.getDatasetInfo(dataSourceScanOperator);
-            DataverseName dataverseName = datasetInfo.first;
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
-            String datasetName = datasetInfo.second;
+            DataSourceId srcId = (DataSourceId) dataSourceScanOperator.getDataSource().getId();
+            DataverseName dataverseName = srcId.getDataverseName();
+            String database = srcId.getDatabaseName();
+            String datasetName = srcId.getDatasourceName();
             if (metadataProvider.getDatasetIndexes(database, dataverseName, datasetName).stream()
                     .anyMatch(i -> i.getIndexType() == DatasetConfig.IndexType.ARRAY)) {
                 return true;

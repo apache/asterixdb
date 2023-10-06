@@ -258,8 +258,9 @@ public class RTreeAccessMethod implements IAccessMethod {
         // We made sure that the indexSubTree has a datasource scan.
         AbstractDataSourceOperator dataSourceOp =
                 (AbstractDataSourceOperator) indexSubTree.getDataSourceRef().getValue();
-        RTreeJobGenParams jobGenParams = new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+        RTreeJobGenParams jobGenParams =
+                new RTreeJobGenParams(chosenIndex.getIndexName(), IndexType.RTREE, chosenIndex.getDatabaseName(),
+                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // A spatial object is serialized in the constant of the func expr we are optimizing.
         // The R-Tree expects as input an MBR represented with 1 field per dimension.
         // Here we generate vars and funcs for extracting MBR fields from the constant into fields of a tuple

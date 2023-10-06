@@ -200,8 +200,9 @@ public class TestDataUtil {
                 IMetadataLockManager lockManager = ccAppCtx.getMetadataLockManager();
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), database,
                         dataverseName, datasetName);
-                RebalanceUtil.rebalance(dataverseName, datasetName, new LinkedHashSet<>(Arrays.asList(targetNodes)),
-                        metadataProvider, ccAppCtx.getHcc(), NoOpDatasetRebalanceCallback.INSTANCE, false);
+                RebalanceUtil.rebalance(database, dataverseName, datasetName,
+                        new LinkedHashSet<>(Arrays.asList(targetNodes)), metadataProvider, ccAppCtx.getHcc(),
+                        NoOpDatasetRebalanceCallback.INSTANCE, false);
             } finally {
                 activeNotificationHandler.resume(metadataProvider);
             }

@@ -8,7 +8,7 @@ distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          unnest-map [$$15, $$d] <- index-search("ColumnDataset", 0, "test/test", "ColumnDataset", false, false, 1, $$19, 1, $$19, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          unnest-map [$$15, $$d] <- index-search("ColumnDataset", 0, "Default", "test/test", "ColumnDataset", false, false, 1, $$19, 1, $$19, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- BTREE_SEARCH  |PARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      unnest-map [$$18, $$19] <- index-search("ageIdx", 0, "test/test", "ColumnDataset", false, false, 1, $$17, 0, true, true, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      unnest-map [$$18, $$19] <- index-search("ageIdx", 0, "Default", "test/test", "ColumnDataset", false, false, 1, $$17, 0, true, true, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- BTREE_SEARCH  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

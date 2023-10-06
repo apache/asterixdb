@@ -35,7 +35,6 @@ import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
@@ -169,7 +168,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         DataSource datasetSource = (DataSource) primaryIndexModificationOp.getDataSource();
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
         DataverseName dataverseName = datasetSource.getId().getDataverseName();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = datasetSource.getId().getDatabaseName();
         String datasetName = datasetSource.getId().getDatasourceName();
         Dataset dataset = mp.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
@@ -182,8 +181,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
         // Create operators for secondary index insert / delete.
         String itemTypeName = dataset.getItemTypeName();
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        IAType itemType = mp.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName);
+        IAType itemType =
+                mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(), itemTypeName);
         if (itemType.getTypeTag() != ATypeTag.OBJECT) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Only record types can be indexed.");
         }
@@ -191,9 +190,8 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         // meta type
         ARecordType metaType = null;
         if (dataset.hasMetaPart()) {
-            String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-            metaType = (ARecordType) mp.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
-                    dataset.getMetaItemTypeName());
+            metaType = (ARecordType) mp.findType(dataset.getMetaItemTypeDatabaseName(),
+                    dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         }
         recType = (ARecordType) mp.findTypeForDatasetWithoutType(recType, metaType, dataset);
 

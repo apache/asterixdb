@@ -34,7 +34,6 @@ import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -121,8 +120,8 @@ public class ConnectorApiServletTest {
         String primaryKey = actualResponse.get("keys").asText();
         Assert.assertEquals("DataverseName,DatasetName", primaryKey);
         ARecordType recordType = (ARecordType) JSONDeserializerForTypes.convertFromJSON(actualResponse.get("type"));
-        Assert.assertEquals(getMetadataRecordType(MetadataConstants.METADATA_DATAVERSE_NAME,
-                MetadataConstants.DATASET_DATASET_NAME), recordType);
+        Assert.assertEquals(getMetadataRecordType(MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, MetadataConstants.DATASET_DATASET_NAME), recordType);
 
         // Checks the correctness of results.
         ArrayNode splits = (ArrayNode) actualResponse.get("splits");
@@ -179,16 +178,16 @@ public class ConnectorApiServletTest {
         Assert.assertEquals(actualResponse.toString(), expectedResponse.toString());
     }
 
-    private ARecordType getMetadataRecordType(DataverseName dataverseName, String datasetName) throws Exception {
+    private ARecordType getMetadataRecordType(String database, DataverseName dataverseName, String datasetName)
+            throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
         MetadataProvider metadataProvider = MetadataProvider
                 .create((ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null);
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
             Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
-            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+            String itemTypeDatabase = dataset.getItemTypeDatabaseName();
             ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
                     dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             // Metadata transaction commits.

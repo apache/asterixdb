@@ -3173,8 +3173,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     Datatype newInlineType =
                             newInlineTypes.isEmpty() ? null : newInlineTypes.remove(existingInlineType);
                     if (newInlineType == null) {
-                        String existingInlineTypeDatabase =
-                                MetadataUtil.resolveDatabase(null, existingInlineType.getDataverseName());
+                        String existingInlineTypeDatabase = existingInlineType.getDatabaseName();
                         MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, existingInlineTypeDatabase,
                                 existingInlineType.getDataverseName(), existingInlineType.getName());
                     } else {
@@ -3306,9 +3305,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             MetadataManager.INSTANCE.dropFunction(mdTxnCtx, signature);
             for (TypeSignature inlineType : inlineTypes) {
-                String inlineTypeDatabase = MetadataUtil.resolveDatabase(null, inlineType.getDataverseName());
-                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, inlineTypeDatabase, inlineType.getDataverseName(),
-                        inlineType.getName());
+                MetadataManager.INSTANCE.dropDatatype(mdTxnCtx, inlineType.getDatabaseName(),
+                        inlineType.getDataverseName(), inlineType.getName());
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;

@@ -1106,7 +1106,7 @@ public class AccessMethodUtils {
         if (retainNull) {
             if (retainInput) {
                 LeftOuterUnnestMapOperator secondaryIndexLeftOuterUnnestOp = new LeftOuterUnnestMapOperator(
-                        secondaryIndexUnnestVars, new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc),
+                        secondaryIndexUnnestVars, new MutableObject<>(secondaryIndexSearchFunc),
                         secondaryIndexOutputTypes, leftOuterMissingValue);
                 secondaryIndexLeftOuterUnnestOp.setSourceLocation(sourceLoc);
                 secondaryIndexLeftOuterUnnestOp
@@ -1123,8 +1123,7 @@ public class AccessMethodUtils {
         } else {
             // If this is not a left-outer-join case, then we use UNNEST-MAP operator.
             UnnestMapOperator secondaryIndexUnnestOp = new UnnestMapOperator(secondaryIndexUnnestVars,
-                    new MutableObject<ILogicalExpression>(secondaryIndexSearchFunc), secondaryIndexOutputTypes,
-                    retainInput);
+                    new MutableObject<>(secondaryIndexSearchFunc), secondaryIndexOutputTypes, retainInput);
             secondaryIndexUnnestOp.setSourceLocation(sourceLoc);
             secondaryIndexUnnestOp.setGenerateCallBackProceedResultVar(generateInstantTrylockResultFromIndexSearch);
             secondaryIndexUnnestOp.getInputs().add(new MutableObject<>(inputOp));
@@ -1725,8 +1724,9 @@ public class AccessMethodUtils {
             SourceLocation sourceLoc, IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
         // The job gen parameters are transferred to the actual job gen via the UnnestMapOperator's function arguments.
         List<Mutable<ILogicalExpression>> primaryIndexFuncArgs = new ArrayList<>();
-        BTreeJobGenParams jobGenParams = new BTreeJobGenParams(dataset.getDatasetName(), IndexType.BTREE,
-                dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+        BTreeJobGenParams jobGenParams =
+                new BTreeJobGenParams(dataset.getDatasetName(), IndexType.BTREE, dataset.getDatabaseName(),
+                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
         // Set low/high inclusive to true for a point lookup.
         jobGenParams.setLowKeyInclusive(true);
         jobGenParams.setHighKeyInclusive(true);

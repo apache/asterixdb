@@ -42,7 +42,7 @@ distribute result [$$51] [cardinality: 150.0, op-cost: 0.0, total-cost: 615.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 25.0, op-cost: 25.0, total-cost: 140.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 25.0, op-cost: 65.0, total-cost: 115.0]
+                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "Default", "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 25.0, op-cost: 65.0, total-cost: 115.0]
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

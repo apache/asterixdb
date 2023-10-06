@@ -76,7 +76,7 @@ public class ActiveStatsTest {
     public void refreshStatsTest() throws Exception {
         // Entities to be used
         DataverseName mockDataverse = DataverseName.createSinglePartName("MockDataverse");
-        String mockDatabase = MetadataUtil.resolveDatabase(null, mockDataverse);
+        String mockDatabase = MetadataUtil.databaseFor(mockDataverse);
         EntityId entityId = new EntityId("MockExtension", mockDatabase, mockDataverse, "MockEntity");
         ActiveRuntimeId activeRuntimeId =
                 new ActiveRuntimeId(entityId, FeedIntakeOperatorNodePushable.class.getSimpleName(), 0);

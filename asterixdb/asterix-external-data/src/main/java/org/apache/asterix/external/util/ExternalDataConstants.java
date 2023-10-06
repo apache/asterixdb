@@ -40,6 +40,8 @@ public class ExternalDataConstants {
      */
     // used to specify the stream factory for an adapter that has a stream data source
     public static final String KEY_STREAM = "stream";
+    //TODO(DB): check adapter configuration
+    public static final String KEY_DATABASE_DATAVERSE = "dataset-database";
     // used to specify the dataverse of the adapter
     public static final String KEY_DATASET_DATAVERSE = "dataset-dataverse";
     // used to specify the socket addresses when reading data from sockets

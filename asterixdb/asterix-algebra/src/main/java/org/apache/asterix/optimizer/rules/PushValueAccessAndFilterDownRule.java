@@ -21,7 +21,6 @@ package org.apache.asterix.optimizer.rules;
 import java.util.Set;
 
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -145,7 +144,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
             throws AlgebricksException {
         DataverseName dataverse = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
-        String database = MetadataUtil.resolveDatabase(null, dataverse);
+        String database = dataSource.getId().getDatabaseName();
         Dataset dataset = metadataProvider.findDataset(database, dataverse, datasetName);
 
         return dataset != null && (DatasetUtil.isFieldAccessPushdownSupported(dataset)

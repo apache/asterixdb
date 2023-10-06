@@ -24,7 +24,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "Default", "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

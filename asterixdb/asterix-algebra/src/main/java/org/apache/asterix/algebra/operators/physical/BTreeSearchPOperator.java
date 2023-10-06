@@ -25,7 +25,6 @@ import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DataSourceIndex;
@@ -127,9 +126,8 @@ public class BTreeSearchPOperator extends IndexSearchPOperator {
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
-        Dataset dataset =
-                metadataProvider.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        Dataset dataset = metadataProvider.findDataset(jobGenParams.getDatabaseName(), jobGenParams.getDataverseName(),
+                jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(op);
         ITupleFilterFactory tupleFilterFactory = null;
         long outputLimit = -1;

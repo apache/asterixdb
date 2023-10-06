@@ -21,7 +21,6 @@ package org.apache.asterix.algebra.operators.physical;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -90,8 +89,8 @@ public class RTreeSearchPOperator extends IndexSearchPOperator {
         int[] maxFilterFieldIndexes = getKeyIndexes(unnestMap.getMaxFilterVars(), inputSchemas);
 
         MetadataProvider mp = (MetadataProvider) context.getMetadataProvider();
-        String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
-        Dataset dataset = mp.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        Dataset dataset = mp.findDataset(jobGenParams.getDatabaseName(), jobGenParams.getDataverseName(),
+                jobGenParams.getDatasetName());
         IVariableTypeEnvironment typeEnv = context.getTypeEnvironment(unnestMap);
         List<LogicalVariable> outputVars = unnestMap.getVariables();
         if (jobGenParams.getRetainInput()) {

@@ -296,9 +296,8 @@ public class DatasetUtil {
     public static ARecordType getMetaType(MetadataProvider metadataProvider, Dataset dataset)
             throws AlgebricksException {
         if (dataset.hasMetaPart()) {
-            String database = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-            return (ARecordType) metadataProvider.findType(database, dataset.getMetaItemTypeDataverseName(),
-                    dataset.getMetaItemTypeName());
+            return (ARecordType) metadataProvider.findType(dataset.getMetaItemTypeDatabaseName(),
+                    dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         }
         return null;
     }

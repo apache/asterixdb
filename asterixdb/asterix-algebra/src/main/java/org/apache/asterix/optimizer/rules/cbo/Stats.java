@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.compiler.provider.IRuleSetFactory;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -74,22 +73,12 @@ public class Stats {
         joinEnum = joinE;
     }
 
-    protected DataverseName findDataverseName(DataSourceScanOperator scanOp) {
-        if (scanOp == null) {
-            // this should rarely happen (IN lists may cause this)
-            return null;
-        }
-        DataSourceId dsid = (DataSourceId) scanOp.getDataSource().getId();
-        return dsid.getDataverseName();
-    }
-
     protected Index findSampleIndex(DataSourceScanOperator scanOp, IOptimizationContext context)
             throws AlgebricksException {
-        DataverseName dataverseName = findDataverseName(scanOp);
         DataSource ds = (DataSource) scanOp.getDataSource();
         DataSourceId dsid = ds.getId();
         MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
-        return mdp.findSampleIndex(dataverseName, dsid.getDatasourceName());
+        return mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
     }
 
     private double findJoinSelectivity(JoinProductivityAnnotation anno, AbstractFunctionCallExpression joinExpr)

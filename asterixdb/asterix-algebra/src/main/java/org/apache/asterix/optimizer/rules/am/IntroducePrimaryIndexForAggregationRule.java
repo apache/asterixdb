@@ -18,6 +18,11 @@
  */
 package org.apache.asterix.optimizer.rules.am;
 
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATABASE_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATASET_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.DATAVERSE_NAME_POS;
+import static org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams.INDEX_NAME_POS;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -25,7 +30,6 @@ import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -165,11 +169,11 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (functionCallExpression.getFunctionIdentifier() != BuiltinFunctions.INDEX_SEARCH) {
                 return null;
             }
-            String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 0);
-            DataverseName dataverseName = DataverseName
-                    .createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(functionCallExpression, 2));
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
-            String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression, 3);
+            String indexName = ConstantExpressionUtil.getStringArgument(functionCallExpression, INDEX_NAME_POS);
+            DataverseName dataverseName = DataverseName.createFromCanonicalForm(
+                    ConstantExpressionUtil.getStringArgument(functionCallExpression, DATAVERSE_NAME_POS));
+            String database = ConstantExpressionUtil.getStringArgument(functionCallExpression, DATABASE_NAME_POS);
+            String datasetName = ConstantExpressionUtil.getStringArgument(functionCallExpression, DATASET_NAME_POS);
             Index index =
                     ((MetadataProvider) metadataProvider).getIndex(database, dataverseName, datasetName, indexName);
             if (!index.isPrimaryIndex()) {
@@ -210,7 +214,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (scanOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
                 retainInput = AccessMethodUtils.retainInputs(scanOperator.getVariables(), scanOperator, parents);
                 newBTreeParameters = new BTreeJobGenParams(primaryIndex.getIndexName(), DatasetConfig.IndexType.BTREE,
-                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
+                        dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
                         scanOperator.getInputs().get(0).getValue()
                                 .getExecutionMode() == AbstractLogicalOperator.ExecutionMode.UNPARTITIONED);
                 List<LogicalVariable> empty = new ArrayList<>();
@@ -222,7 +226,7 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             } else {
                 retainInput = originalBTreeParameters.getRetainInput();
                 newBTreeParameters = new BTreeJobGenParams(primaryIndex.getIndexName(), DatasetConfig.IndexType.BTREE,
-                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
+                        dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(), retainInput,
                         originalBTreeParameters.getRequiresBroadcast());
                 newBTreeParameters.setLowKeyInclusive(originalBTreeParameters.isLowKeyInclusive());
                 newBTreeParameters.setHighKeyInclusive(originalBTreeParameters.isHighKeyInclusive());
@@ -286,9 +290,8 @@ public class IntroducePrimaryIndexForAggregationRule implements IAlgebraicRewrit
             if (originalBTreeParameters.isEqCondition()) {
                 return null;
             }
-            String database = MetadataUtil.resolveDatabase(null, originalBTreeParameters.getDataverseName());
-            dataset = mp.findDataset(database, originalBTreeParameters.getDataverseName(),
-                    originalBTreeParameters.getDatasetName());
+            dataset = mp.findDataset(originalBTreeParameters.getDatabaseName(),
+                    originalBTreeParameters.getDataverseName(), originalBTreeParameters.getDatasetName());
         }
         // #2. get all indexes and look for the primary one
         List<Index> indexes =

@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier.VARARGS;
+
+import java.util.List;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionConstants;
@@ -25,7 +29,9 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -33,8 +39,9 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class DatasetResourcesRewriter extends FunctionRewriter {
 
-    // Parameters are dataverse name, and dataset name
-    public static final FunctionIdentifier DATASET_RESOURCES = FunctionConstants.newAsterix("dataset-resources", 2);
+    // Parameters are dataverse name, dataset name, and database name
+    public static final FunctionIdentifier DATASET_RESOURCES =
+            FunctionConstants.newAsterix("dataset-resources", VARARGS);
     public static final DatasetResourcesRewriter INSTANCE = new DatasetResourcesRewriter(DATASET_RESOURCES);
 
     private DatasetResourcesRewriter(FunctionIdentifier functionId) {
@@ -48,11 +55,21 @@ public class DatasetResourcesRewriter extends FunctionRewriter {
         DataverseName dataverseName = getDataverseName(loc, f.getArguments(), 0);
         String datasetName = getString(loc, f.getArguments(), 1);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database;
+        if (f.getArguments().size() > 2) {
+            database = getString(loc, f.getArguments(), 2);
+        } else {
+            database = MetadataUtil.databaseFor(dataverseName);
+        }
         Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName, dataverseName);
         }
         return new DatasetResourcesDatasource(context.getComputationNodeDomain(), dataset.getDatasetId());
+    }
+
+    @Override
+    protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
+        return args.size() < 2;
     }
 }

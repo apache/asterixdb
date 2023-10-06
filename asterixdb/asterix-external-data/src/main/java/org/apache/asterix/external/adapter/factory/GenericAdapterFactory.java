@@ -28,7 +28,6 @@ import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.api.IDataFlowController;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
@@ -159,7 +158,7 @@ public class GenericAdapterFactory implements ITypedAdapterFactory {
         this.logIngestionEvents = ExternalDataUtils.isLogIngestionEvents(configuration);
         if (logIngestionEvents) {
             DataverseName dataverseName = ExternalDataUtils.getDatasetDataverse(configuration);
-            String databaseName = MetadataUtil.databaseFor(dataverseName);
+            String databaseName = ExternalDataUtils.getDatasetDatabase(configuration);
             String namespacePath = appCtx.getNamespacePathResolver().resolve(databaseName, dataverseName);
             //TODO(partitioning) make this code reuse DataPartitioningProvider
             feedLogFileSplits = FeedUtils.splitsForAdapter(namespacePath, ExternalDataUtils.getFeedName(configuration),

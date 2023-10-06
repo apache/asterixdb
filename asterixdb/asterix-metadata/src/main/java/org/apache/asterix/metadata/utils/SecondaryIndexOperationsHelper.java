@@ -30,7 +30,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.BinaryBooleanInspector;
@@ -135,9 +134,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         this.dataset = dataset;
         this.index = index;
         this.metadataProvider = metadataProvider;
-        String database = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        ARecordType recordType = (ARecordType) metadataProvider.findType(database, dataset.getItemTypeDataverseName(),
-                dataset.getItemTypeName());
+        ARecordType recordType = (ARecordType) metadataProvider.findType(dataset.getItemTypeDatabaseName(),
+                dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
         this.metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         this.itemType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(recordType, metaType, dataset);
 

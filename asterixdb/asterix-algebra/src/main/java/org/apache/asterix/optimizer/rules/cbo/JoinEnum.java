@@ -32,7 +32,6 @@ import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
@@ -937,15 +936,13 @@ public class JoinEnum {
     // we need to switch the datascource from the dataset source to the corresponding sample datasource.
     // Little tricky how this is done!
     protected SampleDataSource getSampleDataSource(DataSourceScanOperator scanOp) throws AlgebricksException {
-        DataverseName dataverseName = stats.findDataverseName(scanOp);
         DataSource ds = (DataSource) scanOp.getDataSource();
         DataSourceId dsid = ds.getId();
         MetadataProvider mdp = (MetadataProvider) this.optCtx.getMetadataProvider();
-        Index index = mdp.findSampleIndex(dataverseName, dsid.getDatasourceName());
+        Index index = mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
         DatasetDataSource dds = (DatasetDataSource) ds;
-        SampleDataSource sds = new SampleDataSource(dds.getDataset(), index.getIndexName(), ds.getItemType(),
-                ds.getMetaItemType(), ds.getDomain());
-        return sds;
+        return new SampleDataSource(dds.getDataset(), index.getIndexName(), ds.getItemType(), ds.getMetaItemType(),
+                ds.getDomain());
     }
 
     private ILogicalOperator findASelectOp(ILogicalOperator op) {

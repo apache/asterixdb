@@ -30,7 +30,6 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -126,7 +125,7 @@ public class DatasetDataSource extends DataSource {
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException {
         String itemTypeName = dataset.getItemTypeName();
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+        String itemTypeDatabase = dataset.getItemTypeDatabaseName();
         IAType itemType = MetadataManager.INSTANCE.getDatatype(metadataProvider.getMetadataTxnContext(),
                 itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
         switch (dataset.getDatasetType()) {
@@ -150,7 +149,7 @@ public class DatasetDataSource extends DataSource {
             case INTERNAL:
                 DataSourceId id = getId();
                 DataverseName dataverseName = id.getDataverseName();
-                String database = MetadataUtil.resolveDatabase(null, dataverseName);
+                String database = id.getDatabaseName();
                 String datasetName = id.getDatasourceName();
                 Index primaryIndex = MetadataManager.INSTANCE.getIndex(metadataProvider.getMetadataTxnContext(),
                         database, dataverseName, datasetName, datasetName);
@@ -158,8 +157,7 @@ public class DatasetDataSource extends DataSource {
                 ARecordType datasetType = (ARecordType) itemType;
                 ARecordType metaItemType = null;
                 if (dataset.hasMetaPart()) {
-                    String metaItemTypeDatabase =
-                            MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
+                    String metaItemTypeDatabase = dataset.getMetaItemTypeDatabaseName();
                     metaItemType = (ARecordType) MetadataManager.INSTANCE
                             .getDatatype(metadataProvider.getMetadataTxnContext(), metaItemTypeDatabase,
                                     dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName())

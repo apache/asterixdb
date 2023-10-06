@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier.VARARGS;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +70,7 @@ import org.apache.hyracks.util.LogRedactionUtil;
 
 public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeComputer {
 
-    public static final FunctionIdentifier QUERY_INDEX = FunctionConstants.newAsterix("query-index", 3);
+    public static final FunctionIdentifier QUERY_INDEX = FunctionConstants.newAsterix("query-index", VARARGS);
     public static final QueryIndexRewriter INSTANCE = new QueryIndexRewriter(QUERY_INDEX);
 
     private QueryIndexRewriter(FunctionIdentifier functionId) {
@@ -88,10 +90,15 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         DataverseName dvName = getDataverseName(loc, f.getArguments(), 0);
         String dsName = getString(loc, f.getArguments(), 1);
         String idName = getString(loc, f.getArguments(), 2);
+        String dbName;
+        if (f.getArguments().size() > 3) {
+            dbName = getString(loc, f.getArguments(), 3);
+        } else {
+            dbName = MetadataUtil.databaseFor(dvName);
+        }
         MetadataProvider mp = (MetadataProvider) ctx.getMetadataProvider();
-        final Dataset dataset = validateDataset(mp, dvName, dsName, loc);
-        String database = dataset.getDatabaseName();
-        Index index = validateIndex(f, mp, loc, database, dvName, dsName, idName);
+        final Dataset dataset = validateDataset(mp, dbName, dvName, dsName, loc);
+        Index index = validateIndex(f, mp, loc, dbName, dvName, dsName, idName);
         return createQueryIndexDatasource(mp, dataset, index, loc, f);
     }
 
@@ -118,6 +125,11 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         opRef.setValue(assignOp);
     }
 
+    @Override
+    protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
+        return args.size() < 3;
+    }
+
     private FunctionDataSource createQueryIndexDatasource(MetadataProvider mp, Dataset ds, Index idx,
             SourceLocation loc, AbstractFunctionCallExpression f) throws AlgebricksException {
         ISecondaryIndexOperationsHelper secIdxHelper =
@@ -137,9 +149,14 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         DataverseName dataverseName = getDataverseName(loc, f.getArguments(), 0);
         String datasetName = getString(loc, f.getArguments(), 1);
         String indexName = getString(loc, f.getArguments(), 2);
-        Dataset dataset = validateDataset(metadataProvider, dataverseName, datasetName, loc);
-        String database = dataset.getDatabaseName();
-        Index index = validateIndex(f, metadataProvider, loc, database, dataverseName, datasetName, indexName);
+        String databaseName;
+        if (f.getArguments().size() > 3) {
+            databaseName = getString(loc, f.getArguments(), 3);
+        } else {
+            databaseName = MetadataUtil.databaseFor(dataverseName);
+        }
+        Dataset dataset = validateDataset(metadataProvider, databaseName, dataverseName, datasetName, loc);
+        Index index = validateIndex(f, metadataProvider, loc, databaseName, dataverseName, datasetName, indexName);
         ARecordType dsType = (ARecordType) metadataProvider.findType(dataset);
         ARecordType metaType = DatasetUtil.getMetaType(metadataProvider, dataset);
         dsType = (ARecordType) metadataProvider.findTypeForDatasetWithoutType(dsType, metaType, dataset);
@@ -182,10 +199,9 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
         }
     }
 
-    private static Dataset validateDataset(MetadataProvider mp, DataverseName dvName, String dsName, SourceLocation loc)
-            throws AlgebricksException {
-        String database = MetadataUtil.resolveDatabase(null, dvName);
-        Dataset dataset = mp.findDataset(database, dvName, dsName);
+    private static Dataset validateDataset(MetadataProvider mp, String dbName, DataverseName dvName, String dsName,
+            SourceLocation loc) throws AlgebricksException {
+        Dataset dataset = mp.findDataset(dbName, dvName, dsName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, dsName, dvName);
         }

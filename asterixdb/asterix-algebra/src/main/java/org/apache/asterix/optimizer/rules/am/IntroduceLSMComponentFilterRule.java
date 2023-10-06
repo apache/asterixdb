@@ -29,7 +29,6 @@ import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -99,10 +98,10 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
             filterSourceIndicator = DatasetUtil.getFilterSourceIndicator(dataset);
             filterFieldName = DatasetUtil.getFilterField(dataset);
             IAType filterSourceType = filterSourceIndicator == null || filterSourceIndicator == 0
-                    ? mp.findType(MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName()),
-                            dataset.getItemTypeDataverseName(), dataset.getItemTypeName())
-                    : mp.findType(MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName()),
-                            dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+                    ? mp.findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                            dataset.getItemTypeName())
+                    : mp.findType(dataset.getMetaItemTypeDatabaseName(), dataset.getMetaItemTypeDataverseName(),
+                            dataset.getMetaItemTypeName());
 
             if (filterSourceType.getTypeTag() == ATypeTag.OBJECT) {
                 itemType = (ARecordType) filterSourceType;
@@ -435,20 +434,22 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                     FunctionIdentifier fid = f.getFunctionIdentifier();
                     DataverseName dataverseName;
                     String datasetName;
+                    String database;
                     if (BuiltinFunctions.EXTERNAL_LOOKUP.equals(fid)) {
                         dataverseName = DataverseName
                                 .createFromCanonicalForm(AccessMethodUtils.getStringConstant(f.getArguments().get(0)));
                         datasetName = AccessMethodUtils.getStringConstant(f.getArguments().get(1));
+                        database = AccessMethodUtils.getStringConstant(f.getArguments().get(2));
                     } else if (fid.equals(BuiltinFunctions.INDEX_SEARCH)) {
                         AccessMethodJobGenParams jobGenParams = new AccessMethodJobGenParams();
                         jobGenParams.readFromFuncArgs(f.getArguments());
                         dataverseName = jobGenParams.dataverseName;
                         datasetName = jobGenParams.datasetName;
+                        database = jobGenParams.databaseName;
                     } else {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
                                 "Unexpected function for Unnest Map: " + fid);
                     }
-                    String database = MetadataUtil.resolveDatabase(null, dataverseName);
                     return ((MetadataProvider) context.getMetadataProvider()).findDataset(database, dataverseName,
                             datasetName);
                 }
@@ -589,13 +590,12 @@ public class IntroduceLSMComponentFilterRule implements IAlgebraicRewriteRule {
                                 "Could not find the corresponding index for an" + " index search.");
                     }
 
-                    String metaItemDatabase =
-                            MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-                    String recordItemDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-                    IAType metaItemType = ((MetadataProvider) context.getMetadataProvider()).findType(metaItemDatabase,
-                            dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+                    IAType metaItemType = ((MetadataProvider) context.getMetadataProvider()).findType(
+                            dataset.getMetaItemTypeDatabaseName(), dataset.getMetaItemTypeDataverseName(),
+                            dataset.getMetaItemTypeName());
                     IAType recordItemType = ((MetadataProvider) context.getMetadataProvider()).findType(
-                            recordItemDatabase, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+                            dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                            dataset.getItemTypeName());
                     ARecordType recordType = (ARecordType) recordItemType;
                     ARecordType metaRecType = (ARecordType) metaItemType;
                     int numSecondaryKeys = KeyFieldTypeUtil.getNumSecondaryKeys(index, recordType, metaRecType);

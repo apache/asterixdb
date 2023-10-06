@@ -184,7 +184,7 @@ public class FeedOperations {
         VariableExpr fromTermLeftExpr = new VariableExpr(fromVarId);
         // TODO: remove target feedid from args list (xikui)
         // TODO: Get rid of this INTAKE
-        List<Expression> exprList = addArgs(feedConnection.getDataverseName(),
+        List<Expression> exprList = addArgs(feedConnection.getDatabaseName(), feedConnection.getDataverseName(),
                 feedConnection.getFeedId().getEntityName(), feedConnection.getFeedId().getEntityName(),
                 FeedRuntimeType.INTAKE.toString(), feedConnection.getDatasetName(), feedConnection.getOutputType());
         CallExpr datasrouceCallFunction = new CallExpr(new FunctionSignature(BuiltinFunctions.FEED_COLLECT), exprList);

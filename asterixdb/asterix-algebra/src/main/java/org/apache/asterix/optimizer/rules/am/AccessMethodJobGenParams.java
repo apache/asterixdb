@@ -37,9 +37,20 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
  * and from a list of function arguments, typically of an unnest-map.
  */
 public class AccessMethodJobGenParams {
-    private static final int NUM_PARAMS = 6;
+
+    public static final int INDEX_NAME_POS = 0;
+    public static final int INDEX_TYPE_POS = 1;
+    public static final int DATABASE_NAME_POS = 2;
+    public static final int DATAVERSE_NAME_POS = 3;
+    public static final int DATASET_NAME_POS = 4;
+    public static final int RETAIN_INPUT_POS = 5;
+    public static final int REQ_BROADCAST_POS = 6;
+
+    private static final int NUM_PARAMS = 7;
+
     protected String indexName;
     protected IndexType indexType;
+    protected String databaseName;
     protected DataverseName dataverseName;
     protected String datasetName;
     protected boolean retainInput;
@@ -50,10 +61,11 @@ public class AccessMethodJobGenParams {
         // Enable creation of an empty object and fill members using setters
     }
 
-    public AccessMethodJobGenParams(String indexName, IndexType indexType, DataverseName dataverseName,
-            String datasetName, boolean retainInput, boolean requiresBroadcast) {
+    public AccessMethodJobGenParams(String indexName, IndexType indexType, String databaseName,
+            DataverseName dataverseName, String datasetName, boolean retainInput, boolean requiresBroadcast) {
         this.indexName = indexName;
         this.indexType = indexType;
+        this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.datasetName = datasetName;
         this.retainInput = retainInput;
@@ -64,6 +76,7 @@ public class AccessMethodJobGenParams {
     public void writeToFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) {
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(indexName)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createInt32Constant(indexType.ordinal())));
+        funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(databaseName)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(dataverseName.getCanonicalForm())));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createStringConstant(datasetName)));
         funcArgs.add(new MutableObject<>(AccessMethodUtils.createBooleanConstant(retainInput)));
@@ -71,12 +84,14 @@ public class AccessMethodJobGenParams {
     }
 
     public void readFromFuncArgs(List<Mutable<ILogicalExpression>> funcArgs) throws AlgebricksException {
-        indexName = AccessMethodUtils.getStringConstant(funcArgs.get(0));
-        indexType = IndexType.values()[AccessMethodUtils.getInt32Constant(funcArgs.get(1))];
-        dataverseName = DataverseName.createFromCanonicalForm(AccessMethodUtils.getStringConstant(funcArgs.get(2)));
-        datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(3));
-        retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(4));
-        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(5));
+        indexName = AccessMethodUtils.getStringConstant(funcArgs.get(INDEX_NAME_POS));
+        indexType = IndexType.values()[AccessMethodUtils.getInt32Constant(funcArgs.get(INDEX_TYPE_POS))];
+        databaseName = AccessMethodUtils.getStringConstant(funcArgs.get(DATABASE_NAME_POS));
+        dataverseName = DataverseName
+                .createFromCanonicalForm(AccessMethodUtils.getStringConstant(funcArgs.get(DATAVERSE_NAME_POS)));
+        datasetName = AccessMethodUtils.getStringConstant(funcArgs.get(DATASET_NAME_POS));
+        retainInput = AccessMethodUtils.getBooleanConstant(funcArgs.get(RETAIN_INPUT_POS));
+        requiresBroadcast = AccessMethodUtils.getBooleanConstant(funcArgs.get(REQ_BROADCAST_POS));
         isPrimaryIndex = datasetName.equals(indexName);
     }
 
@@ -86,6 +101,10 @@ public class AccessMethodJobGenParams {
 
     public IndexType getIndexType() {
         return indexType;
+    }
+
+    public String getDatabaseName() {
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

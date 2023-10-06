@@ -35,7 +35,6 @@ import org.apache.asterix.common.external.IDataSourceAdapter.AdapterType;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.adapter.factory.ExternalAdapterFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.feed.api.IFeed;
@@ -116,7 +115,8 @@ public class FeedMetadataUtil {
             Map<String, String> configuration = feed.getConfiguration();
             ARecordType adapterOutputType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_TYPE_NAME));
             ARecordType metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
-            ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
+            ExternalDataUtils.prepareFeed(configuration, feed.getDatabaseName(), feed.getDataverseName(),
+                    feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
             String adapterName = configuration.get(ExternalDataConstants.KEY_ADAPTER_NAME);
             if (adapterName == null) {
@@ -126,9 +126,8 @@ public class FeedMetadataUtil {
                     MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
             // Get adapter from metadata dataset <The feed dataverse>
             if (adapterEntity == null) {
-                String feedDatabase = MetadataUtil.resolveDatabase(null, feed.getDataverseName());
-                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feedDatabase, feed.getDataverseName(),
-                        adapterName);
+                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDatabaseName(),
+                        feed.getDataverseName(), adapterName);
             }
             AdapterType adapterType;
             ITypedAdapterFactory adapterFactory;
@@ -211,15 +210,15 @@ public class FeedMetadataUtil {
             configuration.putAll(policyAccessor.getFeedPolicy());
             adapterOutputType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_TYPE_NAME));
             metaType = getOutputType(feed, configuration.get(ExternalDataConstants.KEY_META_TYPE_NAME));
-            ExternalDataUtils.prepareFeed(configuration, feed.getDataverseName(), feed.getFeedName());
+            ExternalDataUtils.prepareFeed(configuration, feed.getDatabaseName(), feed.getDataverseName(),
+                    feed.getFeedName());
             // Get adapter from metadata dataset <Metadata dataverse>
             adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
                     MetadataConstants.METADATA_DATAVERSE_NAME, adapterName);
             // Get adapter from metadata dataset <The feed dataverse>
             if (adapterEntity == null) {
-                String feedDatabase = MetadataUtil.resolveDatabase(null, feed.getDataverseName());
-                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feedDatabase, feed.getDataverseName(),
-                        adapterName);
+                adapterEntity = MetadataManager.INSTANCE.getAdapter(mdTxnCtx, feed.getDatabaseName(),
+                        feed.getDataverseName(), adapterName);
             }
             if (adapterEntity != null) {
                 adapterType = adapterEntity.getType();
@@ -312,8 +311,8 @@ public class FeedMetadataUtil {
         MetadataTransactionContext ctx = null;
         try {
             ctx = MetadataManager.INSTANCE.beginTransaction();
-            String feedDatabase = MetadataUtil.resolveDatabase(null, feed.getDataverseName());
-            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, feedDatabase, feed.getDataverseName(), fqOutputType);
+            Datatype t = MetadataManager.INSTANCE.getDatatype(ctx, feed.getDatabaseName(), feed.getDataverseName(),
+                    fqOutputType);
             if (t == null || t.getDatatype().getTypeTag() != ATypeTag.OBJECT) {
                 throw new MetadataException(ErrorCode.FEED_METADATA_UTIL_UNEXPECTED_FEED_DATATYPE, fqOutputType);
             }

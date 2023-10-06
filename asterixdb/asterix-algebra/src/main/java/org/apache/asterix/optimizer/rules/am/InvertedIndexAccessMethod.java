@@ -417,9 +417,9 @@ public class InvertedIndexAccessMethod implements IAccessMethod {
         // we made sure indexSubTree has datasource scan
         DataSourceScanOperator dataSourceScan = (DataSourceScanOperator) indexSubTree.getDataSourceRef().getValue();
 
-        InvertedIndexJobGenParams jobGenParams =
-                new InvertedIndexJobGenParams(chosenIndex.getIndexName(), chosenIndex.getIndexType(),
-                        dataset.getDataverseName(), dataset.getDatasetName(), retainInput, requiresBroadcast);
+        InvertedIndexJobGenParams jobGenParams = new InvertedIndexJobGenParams(chosenIndex.getIndexName(),
+                chosenIndex.getIndexType(), chosenIndex.getDatabaseName(), dataset.getDataverseName(),
+                dataset.getDatasetName(), retainInput, requiresBroadcast);
         // Add function-specific args such as search modifier, and possibly a similarity threshold.
         addFunctionSpecificArgs(optFuncExpr, jobGenParams);
         // Add the type of search key from the optFuncExpr.

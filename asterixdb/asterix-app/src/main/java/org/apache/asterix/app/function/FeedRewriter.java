@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.FeedUtils;
@@ -77,15 +76,15 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, unnest.getSourceLocation(),
                     "No positional variables are allowed over feeds.");
         }
+        String database = ConstantExpressionUtil.getStringArgument(f, 0);
         DataverseName dataverseName =
-                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 0));
-        String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 1);
-        String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 2);
-        String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 3);
-        String targetDataset = ConstantExpressionUtil.getStringArgument(f, 4);
-        String outputType = ConstantExpressionUtil.getStringArgument(f, 5);
+                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 1));
+        String sourceFeedName = ConstantExpressionUtil.getStringArgument(f, 2);
+        String getTargetFeed = ConstantExpressionUtil.getStringArgument(f, 3);
+        String subscriptionLocation = ConstantExpressionUtil.getStringArgument(f, 4);
+        String targetDataset = ConstantExpressionUtil.getStringArgument(f, 5);
+        String outputType = ConstantExpressionUtil.getStringArgument(f, 6);
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         DataSourceId asid = new DataSourceId(database, dataverseName, getTargetFeed);
         String policyName = (String) metadataProvider.getConfig().get(FeedActivityDetails.FEED_POLICY_NAME);
         FeedPolicyEntity policy = metadataProvider.findFeedPolicy(database, dataverseName, policyName);
@@ -124,7 +123,7 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
             String subscriptionLocation, MetadataProvider metadataProvider, FeedPolicyEntity feedPolicy,
             String outputType, String locations, LogicalVariable recordVar, IOptimizationContext context,
             List<LogicalVariable> pkVars) throws AlgebricksException {
-        String database = MetadataUtil.resolveDatabase(null, id.getDataverseName());
+        String database = id.getDatabaseName();
         Dataset dataset = metadataProvider.findDataset(database, id.getDataverseName(), targetDataset);
         ARecordType feedOutputType =
                 (ARecordType) metadataProvider.findType(database, id.getDataverseName(), outputType);
@@ -187,13 +186,13 @@ public class FeedRewriter implements IFunctionToDataSourceRewriter, IResultTypeC
                     + BuiltinFunctions.FEED_COLLECT.getArity() + ", not " + f.getArguments().size());
         }
         DataverseName dataverseName =
-                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 0));
-        String outputTypeName = ConstantExpressionUtil.getStringArgument(f, 5);
+                DataverseName.createFromCanonicalForm(ConstantExpressionUtil.getStringArgument(f, 1));
+        String outputTypeName = ConstantExpressionUtil.getStringArgument(f, 6);
         if (outputTypeName == null) {
             return BuiltinType.ANY;
         }
         MetadataProvider metadata = (MetadataProvider) mp;
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = ConstantExpressionUtil.getStringArgument(f, 0);
         IAType outputType = metadata.findType(database, dataverseName, outputTypeName);
         if (outputType == null) {
             throw new AlgebricksException("Unknown type " + outputTypeName);

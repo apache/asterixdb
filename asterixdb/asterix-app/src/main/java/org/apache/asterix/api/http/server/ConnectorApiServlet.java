@@ -110,7 +110,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                     return;
                 }
                 FileSplit[] fileSplits = metadataProvider.splitsForIndex(mdTxnCtx, dataset, datasetName);
-                String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
+                String itemTypeDatabase = dataset.getItemTypeDatabaseName();
                 ARecordType recordType = (ARecordType) metadataProvider.findType(itemTypeDatabase,
                         dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
                 List<List<String>> primaryKeys = dataset.getPrimaryKeys();

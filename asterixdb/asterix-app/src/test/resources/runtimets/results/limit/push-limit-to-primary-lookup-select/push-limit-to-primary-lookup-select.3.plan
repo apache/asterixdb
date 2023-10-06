@@ -12,7 +12,7 @@ distribute result [$$c] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_PROJECT  |PARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              unnest-map [$$18, $$19, $$c] <- index-search("LineItem", 0, "test", "LineItem", false, false, 2, $$24, $$25, 2, $$24, $$25, true, true, true) condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              unnest-map [$$18, $$19, $$c] <- index-search("LineItem", 0, "Default", "test", "LineItem", false, false, 2, $$24, $$25, 2, $$24, $$25, true, true, true) condition (and(lt($$c.getField(2), 150), lt($$c.getField(5), 10000))) limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- BTREE_SEARCH  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -24,7 +24,7 @@ distribute result [$$c] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$23, $$24, $$25] <- index-search("idx_LineItem_suppkey", 0, "test", "LineItem", false, false, 0, 1, $$22, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          unnest-map [$$23, $$24, $$25] <- index-search("idx_LineItem_suppkey", 0, "Default", "test", "LineItem", false, false, 0, 1, $$22, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

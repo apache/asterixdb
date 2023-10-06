@@ -272,7 +272,7 @@ public class RebalanceApiServlet extends AbstractServlet {
                 IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), database,
                         dataverseName, datasetName);
-                RebalanceUtil.rebalance(dataverseName, datasetName, targetNodes, metadataProvider, hcc,
+                RebalanceUtil.rebalance(database, dataverseName, datasetName, targetNodes, metadataProvider, hcc,
                         NoOpDatasetRebalanceCallback.INSTANCE, force);
             } finally {
                 activeNotificationHandler.resume(metadataProvider);

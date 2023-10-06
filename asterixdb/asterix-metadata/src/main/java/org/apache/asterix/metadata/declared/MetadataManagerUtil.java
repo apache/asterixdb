@@ -30,7 +30,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -228,8 +227,7 @@ public class MetadataManagerUtil {
 
     public static DataSource lookupSourceInMetadata(IClusterStateManager clusterStateManager,
             MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
-        Dataset dataset = findDataset(mdTxnCtx, MetadataUtil.resolveDatabase(null, id.getDataverseName()),
-                id.getDataverseName(), id.getDatasourceName());
+        Dataset dataset = findDataset(mdTxnCtx, id.getDatabaseName(), id.getDataverseName(), id.getDatasourceName());
         if (dataset == null) {
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
                     id.getDataverseName());
@@ -247,11 +245,10 @@ public class MetadataManagerUtil {
                         id.getDataverseName());
         }
 
-        IAType itemType = findType(mdTxnCtx, MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName()),
-                dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
-        IAType metaItemType =
-                findType(mdTxnCtx, MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName()),
-                        dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        IAType itemType = findType(mdTxnCtx, dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
+        IAType metaItemType = findType(mdTxnCtx, dataset.getMetaItemTypeDatabaseName(),
+                dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         itemType = findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
         INodeDomain domain = findNodeDomain(clusterStateManager, mdTxnCtx, dataset.getNodeGroupName());

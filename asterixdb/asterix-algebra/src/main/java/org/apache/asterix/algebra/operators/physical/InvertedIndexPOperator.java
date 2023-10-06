@@ -22,7 +22,6 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.OptimizationConfUtil;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -117,9 +116,8 @@ public class InvertedIndexPOperator extends IndexSearchPOperator {
         jobGenParams.readFromFuncArgs(unnestFuncExpr.getArguments());
 
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
-        String database = MetadataUtil.resolveDatabase(null, jobGenParams.getDataverseName());
-        Dataset dataset =
-                metadataProvider.findDataset(database, jobGenParams.getDataverseName(), jobGenParams.getDatasetName());
+        Dataset dataset = metadataProvider.findDataset(jobGenParams.getDatabaseName(), jobGenParams.getDataverseName(),
+                jobGenParams.getDatasetName());
         int[] keyIndexes = getKeyIndexes(jobGenParams.getKeyVarList(), inputSchemas);
 
         boolean propagateIndexFilter = unnestMapOp.propagateIndexFilter();

@@ -110,6 +110,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.Counter;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
@@ -401,13 +402,13 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public IAType findType(Dataset dataset) throws AlgebricksException {
-        String typeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        return findType(typeDatabase, dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        return findType(dataset.getItemTypeDatabaseName(), dataset.getItemTypeDataverseName(),
+                dataset.getItemTypeName());
     }
 
     public IAType findMetaType(Dataset dataset) throws AlgebricksException {
-        String metaTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-        return findType(metaTypeDatabase, dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
+        return findType(dataset.getMetaItemTypeDatabaseName(), dataset.getMetaItemTypeDataverseName(),
+                dataset.getMetaItemTypeName());
     }
 
     public Feed findFeed(String database, DataverseName dataverseName, String feedName) throws AlgebricksException {
@@ -456,9 +457,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return MetadataManagerUtil.getDatasetIndexes(mdTxnCtx, database, dataverseName, datasetName);
     }
 
-    public Index findSampleIndex(DataverseName dataverseName, String datasetName) throws AlgebricksException {
+    public Index findSampleIndex(String database, DataverseName dataverseName, String datasetName)
+            throws AlgebricksException {
         Pair<String, String> sampleIndexNames = IndexUtil.getSampleIndexNames(datasetName);
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         Index sampleIndex = getIndex(database, dataverseName, datasetName, sampleIndexNames.first);
         if (sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP) {
             return sampleIndex;
@@ -467,9 +468,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return sampleIndex != null && sampleIndex.getPendingOp() == MetadataUtil.PENDING_NO_OP ? sampleIndex : null;
     }
 
-    public Triple<DataverseName, String, Boolean> resolveDatasetNameUsingSynonyms(String database,
+    public Quadruple<DataverseName, String, Boolean, String> resolveDatasetNameUsingSynonyms(String databaseName,
             DataverseName dataverseName, String datasetName, boolean includingViews) throws AlgebricksException {
-        String dbName = database;
+        String dbName = databaseName;
         DataverseName dvName = dataverseName;
         if (dbName == null && dvName == null) {
             if (defaultDataverse == null) {
@@ -486,12 +487,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             if (synonym == null) {
                 return null;
             }
-            //TODO(DB): object database
-            dbName = MetadataUtil.databaseFor(synonym.getObjectDataverseName());
+            dbName = synonym.getObjectDatabaseName();
             dvName = synonym.getObjectDataverseName();
             datasetName = synonym.getObjectName();
         }
-        return new Triple<>(dvName, datasetName, synonym != null);
+        return new Quadruple<>(dvName, datasetName, synonym != null, dbName);
     }
 
     public Synonym findSynonym(String database, DataverseName dataverseName, String synonymName)
@@ -697,9 +697,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         byte[] successValueForIndexOnlyPlan = null;
         byte[] failValueForIndexOnlyPlan = null;
         if (isIndexOnlyPlan) {
-            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-            ARecordType recType = (ARecordType) findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),
-                    dataset.getItemTypeName());
+            ARecordType recType = (ARecordType) findType(dataset.getItemTypeDatabaseName(),
+                    dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
             List<List<String>> secondaryKeyFields = secondaryIndexDetails.getKeyFieldNames();
             List<IAType> secondaryKeyTypes = secondaryIndexDetails.getKeyFieldTypes();
             Pair<IAType, Boolean> keyTypePair = Index.getNonNullableOpenFieldType(secondaryIndex,
@@ -801,7 +800,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             JobSpecification spec) throws AlgebricksException {
         DataverseName dataverseName = dataSource.getId().getDataverseName();
         String datasetName = dataSource.getId().getDatasourceName();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = dataSource.getId().getDatabaseName();
         Dataset dataset = findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
@@ -892,7 +891,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String indexName = dataSourceIndex.getId();
         DataverseName dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = dataSourceIndex.getDataSource().getId().getDatabaseName();
 
         IOperatorSchema inputSchema;
         if (inputSchemas.length > 0) {
@@ -944,6 +943,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             Map<String, String> configuration, ARecordType itemType, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
         try {
+            configuration.put(ExternalDataConstants.KEY_DATABASE_DATAVERSE, dataset.getDatabaseName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
             return AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
@@ -1042,8 +1042,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             List<LogicalVariable> additionalNonFilteringFields) throws AlgebricksException {
 
         String datasetName = dataSource.getId().getDatasourceName();
-        String database = MetadataUtil.resolveDatabase(null, dataSource.getId().getDataverseName());
-        Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, database,
+        Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, dataSource.getId().getDatabaseName(),
                 dataSource.getId().getDataverseName(), datasetName);
         int numKeys = keys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;
@@ -1160,7 +1159,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         String indexName = dataSourceIndex.getId();
         DataverseName dataverseName = dataSourceIndex.getDataSource().getId().getDataverseName();
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+        String database = dataSourceIndex.getDataSource().getId().getDatabaseName();
         String datasetName = dataSourceIndex.getDataSource().getId().getDatasourceName();
 
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, database, dataverseName, datasetName);
@@ -1396,10 +1395,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             throws AlgebricksException {
         Dataset dataset = MetadataManagerUtil.findExistingDataset(mdTxnCtx, database, dataverseName, datasetName);
         String itemTypeName = dataset.getItemTypeName();
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        IAType itemType = MetadataManager.INSTANCE
-                .getDatatype(mdTxnCtx, itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName)
-                .getDatatype();
+        IAType itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDatabaseName(),
+                dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
         validateRecordType(itemType);
         ARecordType recType = (ARecordType) itemType;
         Index secondaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
@@ -1706,10 +1703,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String itemTypeName = dataset.getItemTypeName();
         IAType itemType;
         try {
-            String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-            itemType = MetadataManager.INSTANCE
-                    .getDatatype(mdTxnCtx, itemTypeDatabase, dataset.getItemTypeDataverseName(), itemTypeName)
-                    .getDatatype();
+            itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDatabaseName(),
+                    dataset.getItemTypeDataverseName(), itemTypeName).getDatatype();
 
             if (itemType.getTypeTag() != ATypeTag.OBJECT) {
                 throw new AlgebricksException("Only record types can be tokenized.");

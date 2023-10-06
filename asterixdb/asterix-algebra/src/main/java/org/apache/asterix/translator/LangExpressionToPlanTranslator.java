@@ -205,16 +205,14 @@ abstract class LangExpressionToPlanTranslator
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, stmt.getDatasetName(),
                     stmt.getDataverseName());
         }
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-        IAType itemType = metadataProvider.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),
-                dataset.getItemTypeName());
-        IAType metaItemType = metadataProvider.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
-                dataset.getMetaItemTypeName());
+        IAType itemType = metadataProvider.findType(dataset.getItemTypeDatabaseName(),
+                dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDatabaseName(),
+                dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
-        DatasetDataSource targetDatasource =
-                validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
+        DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, database, stmt.getDataverseName(),
+                stmt.getDatasetName(), sourceLoc);
         List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
             throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, dataset.getDatasetName(),
@@ -417,8 +415,9 @@ abstract class LangExpressionToPlanTranslator
             ProjectOperator projectOperator = (ProjectOperator) topOp;
             projectOperator.getVariables().set(0, seqVar);
 
-            DatasetDataSource targetDatasource =
-                    validateDatasetInfo(metadataProvider, stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
+            String databaseName = MetadataUtil.resolveDatabase(null, stmt.getDataverseName());
+            DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, databaseName,
+                    stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
             List<Integer> keySourceIndicator =
                     ((InternalDatasetDetails) targetDatasource.getDataset().getDatasetDetails())
                             .getKeySourceIndicator();
@@ -722,9 +721,8 @@ abstract class LangExpressionToPlanTranslator
         return distResultOperator;
     }
 
-    protected DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, DataverseName dataverseName,
-            String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
+    protected DatasetDataSource validateDatasetInfo(MetadataProvider metadataProvider, String database,
+            DataverseName dataverseName, String datasetName, SourceLocation sourceLoc) throws AlgebricksException {
         Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
@@ -735,12 +733,10 @@ abstract class LangExpressionToPlanTranslator
                     "Cannot write output to an external " + dataset());
         }
         DataSourceId sourceId = new DataSourceId(database, dataverseName, datasetName);
-        String itemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getItemTypeDataverseName());
-        String metaItemTypeDatabase = MetadataUtil.resolveDatabase(null, dataset.getMetaItemTypeDataverseName());
-        IAType itemType = metadataProvider.findType(itemTypeDatabase, dataset.getItemTypeDataverseName(),
-                dataset.getItemTypeName());
-        IAType metaItemType = metadataProvider.findType(metaItemTypeDatabase, dataset.getMetaItemTypeDataverseName(),
-                dataset.getMetaItemTypeName());
+        IAType itemType = metadataProvider.findType(dataset.getItemTypeDatabaseName(),
+                dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
+        IAType metaItemType = metadataProvider.findType(dataset.getMetaItemTypeDatabaseName(),
+                dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
         INodeDomain domain = metadataProvider.findNodeDomain(dataset.getNodeGroupName());

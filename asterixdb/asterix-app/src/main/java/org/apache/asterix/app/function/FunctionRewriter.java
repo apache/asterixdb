@@ -61,7 +61,7 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
             throws AlgebricksException {
         AbstractFunctionCallExpression f = UnnestToDataScanRule.getFunctionCall(opRef);
         List<Mutable<ILogicalExpression>> args = f.getArguments();
-        if (args.size() != functionId.getArity()) {
+        if (invalidArgs(args)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, f.getSourceLocation(),
                     "Function " + functionId.getNamespace() + "." + functionId.getName() + " expects "
                             + functionId.getArity() + " arguments");
@@ -82,6 +82,10 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
         }
         createDataScanOp(opRef, unnest, context, f);
         return true;
+    }
+
+    protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
+        return args.size() != functionId.getArity();
     }
 
     protected void createDataScanOp(Mutable<ILogicalOperator> opRef, UnnestOperator unnest,

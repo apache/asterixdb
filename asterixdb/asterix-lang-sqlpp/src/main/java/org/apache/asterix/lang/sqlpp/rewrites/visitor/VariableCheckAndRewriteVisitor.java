@@ -39,15 +39,12 @@ import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.context.Scope;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
-import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
-import org.apache.asterix.lang.common.literal.FalseLiteral;
-import org.apache.asterix.lang.common.literal.StringLiteral;
-import org.apache.asterix.lang.common.literal.TrueLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.lang.sqlpp.expression.WindowExpression;
 import org.apache.asterix.lang.sqlpp.util.FunctionMapUtil;
 import org.apache.asterix.lang.sqlpp.util.SqlppVariableUtil;
@@ -58,7 +55,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.common.utils.Quadruple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -82,8 +79,9 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
             return varExpr;
         }
         DataverseName dataverseName = metadataProvider.getDefaultDataverseName();
+        String databaseName = metadataProvider.getDefaultDatabase();
         String datasetName = SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue();
-        CallExpr datasetExpr = resolveAsDataset(dataverseName, datasetName, parent, varExpr);
+        CallExpr datasetExpr = resolveAsDataset(databaseName, dataverseName, datasetName, parent, varExpr);
         return datasetExpr != null ? datasetExpr : resolveAsFieldAccessOverContextVar(varExpr);
     }
 
@@ -105,8 +103,11 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                     throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, fa.getSourceLocation(),
                             dataverseNamePart);
                 }
+                //TODO(DB): decide
+                String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
                 String datasetName = fa.getIdent().getValue();
-                CallExpr datasetExpr = resolveAsDataset(dataverseName, datasetName, parent, leadingVarExpr);
+                CallExpr datasetExpr =
+                        resolveAsDataset(databaseName, dataverseName, datasetName, parent, leadingVarExpr);
                 if (datasetExpr != null) {
                     return datasetExpr;
                 } else {
@@ -130,8 +131,11 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                         throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, fa.getSourceLocation(),
                                 dataverseNameParts.toString());
                     }
+                    //TODO(DB): decide
+                    String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
                     String datasetName = fa.getIdent().getValue();
-                    CallExpr datasetExpr = resolveAsDataset(dataverseName, datasetName, parent, topVarExpr);
+                    CallExpr datasetExpr =
+                            resolveAsDataset(databaseName, dataverseName, datasetName, parent, topVarExpr);
                     if (datasetExpr != null) {
                         return datasetExpr;
                     }
@@ -169,41 +173,43 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     // try resolving the undefined identifier reference as a dataset access.
     // for a From/Join/UNNEST/Quantifiers binding expression
-    private CallExpr resolveAsDataset(DataverseName dataverseName, String datasetName, ILangExpression parent,
-            VariableExpr varExpr) throws CompilationException {
+    private CallExpr resolveAsDataset(String databaseName, DataverseName dataverseName, String datasetName,
+            ILangExpression parent, VariableExpr varExpr) throws CompilationException {
         if (!parent.accept(CheckDatasetOnlyResolutionVisitor.INSTANCE, varExpr)) {
             return null;
         }
         SourceLocation sourceLoc = varExpr.getSourceLocation();
+        String resolvedDatabaseName;
         DataverseName resolvedDataverseName;
         String resolvedDatasetName;
         boolean viaSynonym, isView;
-        ViewDecl viewDecl = findDeclaredView(dataverseName, datasetName);
+        ViewDecl viewDecl = findDeclaredView(databaseName, dataverseName, datasetName);
         if (viewDecl != null) {
+            resolvedDatabaseName = viewDecl.getViewName().getDatabaseName();
             resolvedDataverseName = viewDecl.getViewName().getDataverseName();
             resolvedDatasetName = viewDecl.getViewName().getDatasetName();
             viaSynonym = false;
             isView = true;
         } else {
-            Pair<Dataset, Boolean> p = findDataset(dataverseName, datasetName, true, sourceLoc);
+            Pair<Dataset, Boolean> p = findDataset(databaseName, dataverseName, datasetName, true, sourceLoc);
             if (p == null) {
                 throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
             }
             Dataset resolvedDataset = p.first;
+            resolvedDatabaseName = resolvedDataset.getDatabaseName();
             resolvedDataverseName = resolvedDataset.getDataverseName();
             resolvedDatasetName = resolvedDataset.getDatasetName();
             viaSynonym = p.second;
             isView = resolvedDataset.getDatasetType() == DatasetConfig.DatasetType.VIEW;
         }
-        List<Expression> argList = new ArrayList<>(3 + (viaSynonym ? 2 : 0));
-        argList.add(new LiteralExpr(new StringLiteral(resolvedDataverseName.getCanonicalForm())));
-        argList.add(new LiteralExpr(new StringLiteral(resolvedDatasetName)));
-        argList.add(new LiteralExpr(isView ? TrueLiteral.INSTANCE : FalseLiteral.INSTANCE));
+        CallExpr callExpr;
         if (viaSynonym) {
-            argList.add(new LiteralExpr(new StringLiteral(dataverseName.getCanonicalForm())));
-            argList.add(new LiteralExpr(new StringLiteral(datasetName)));
+            callExpr = FunctionUtil.makeSynonymDatasetCallExpr(resolvedDatabaseName, resolvedDataverseName,
+                    resolvedDatasetName, isView, databaseName, dataverseName, datasetName);
+        } else {
+            callExpr = FunctionUtil.makeDatasetCallExpr(resolvedDatabaseName, resolvedDataverseName,
+                    resolvedDatasetName, isView);
         }
-        CallExpr callExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.DATASET), argList);
         callExpr.addHints(varExpr.getHints());
         callExpr.setSourceLocation(sourceLoc);
         return callExpr;
@@ -219,7 +225,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         return generateFieldAccess(contextVar, varExpr.getVar(), varExpr.getSourceLocation());
     }
 
-    // Rewrites for an field access by name
+    // Rewrites for a field access by name
     static FieldAccessor generateFieldAccess(Expression sourceExpr, VarIdentifier fieldVar, SourceLocation sourceLoc) {
         VarIdentifier fieldName = SqlppVariableUtil.toUserDefinedVariableName(fieldVar.getValue());
         FieldAccessor fa = new FieldAccessor(sourceExpr, fieldName);
@@ -263,28 +269,26 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 dataverseName == null ? defaultDataverseName : dataverseName);
     }
 
-    private Pair<Dataset, Boolean> findDataset(DataverseName dataverseName, String datasetName, boolean includingViews,
-            SourceLocation sourceLoc) throws CompilationException {
+    private Pair<Dataset, Boolean> findDataset(String databaseName, DataverseName dataverseName, String datasetName,
+            boolean includingViews, SourceLocation sourceLoc) throws CompilationException {
         try {
             Boolean viaSynonym = false;
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
-            Triple<DataverseName, String, Boolean> dsName = metadataProvider.resolveDatasetNameUsingSynonyms(database,
-                    dataverseName, datasetName, includingViews);
+            Quadruple<DataverseName, String, Boolean, String> dsName = metadataProvider
+                    .resolveDatasetNameUsingSynonyms(databaseName, dataverseName, datasetName, includingViews);
             if (dsName != null) {
-                dataverseName = dsName.first;
-                database = MetadataUtil.resolveDatabase(null, dataverseName);
-                datasetName = dsName.second;
-                viaSynonym = dsName.third;
+                dataverseName = dsName.getFirst();
+                databaseName = dsName.getFourth();
+                datasetName = dsName.getSecond();
+                viaSynonym = dsName.getThird();
             }
-            Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName, includingViews);
+            Dataset dataset = metadataProvider.findDataset(databaseName, dataverseName, datasetName, includingViews);
             return dataset == null ? null : new Pair<>(dataset, viaSynonym);
         } catch (AlgebricksException e) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, e, sourceLoc, e.getMessage());
         }
     }
 
-    private ViewDecl findDeclaredView(DataverseName dataverseName, String viewName) {
-        String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
+    private ViewDecl findDeclaredView(String databaseName, DataverseName dataverseName, String viewName) {
         Map<DatasetFullyQualifiedName, ViewDecl> declaredViews = context.getDeclaredViews();
         return declaredViews.isEmpty() ? null
                 : declaredViews.get(new DatasetFullyQualifiedName(databaseName, dataverseName, viewName));

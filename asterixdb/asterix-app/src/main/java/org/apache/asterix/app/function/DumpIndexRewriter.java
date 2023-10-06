@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.app.function;
 
+import static org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier.VARARGS;
+
+import java.util.List;
+
 import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -29,8 +33,10 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ISecondaryIndexOperationsHelper;
 import org.apache.asterix.metadata.utils.SecondaryIndexOperationsHelper;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
@@ -39,7 +45,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 
 public class DumpIndexRewriter extends FunctionRewriter {
 
-    public static final FunctionIdentifier DUMP_INDEX = FunctionConstants.newAsterix("dump-index", 3);
+    public static final FunctionIdentifier DUMP_INDEX = FunctionConstants.newAsterix("dump-index", VARARGS);
     public static final DumpIndexRewriter INSTANCE = new DumpIndexRewriter(DUMP_INDEX);
 
     private DumpIndexRewriter(FunctionIdentifier functionId) {
@@ -51,9 +57,14 @@ public class DumpIndexRewriter extends FunctionRewriter {
             throws AlgebricksException {
         final SourceLocation loc = f.getSourceLocation();
         DataverseName dataverseName = getDataverseName(loc, f.getArguments(), 0);
-        String database = MetadataUtil.resolveDatabase(null, dataverseName);
         String datasetName = getString(loc, f.getArguments(), 1);
         String indexName = getString(loc, f.getArguments(), 2);
+        String database;
+        if (f.getArguments().size() > 3) {
+            database = getString(loc, f.getArguments(), 3);
+        } else {
+            database = MetadataUtil.databaseFor(dataverseName);
+        }
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         final Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
@@ -78,5 +89,10 @@ public class DumpIndexRewriter extends FunctionRewriter {
         return new DumpIndexDatasource(context.getComputationNodeDomain(), indexDataflowHelperFactory,
                 secondaryIndexHelper.getSecondaryRecDesc(), secondaryIndexHelper.getSecondaryComparatorFactories(),
                 secondaryPartitionConstraint, partitioningProperties.getComputeStorageMap());
+    }
+
+    @Override
+    protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
+        return args.size() < 3;
     }
 }
