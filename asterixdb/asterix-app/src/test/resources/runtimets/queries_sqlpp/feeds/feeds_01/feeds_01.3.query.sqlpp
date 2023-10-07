@@ -21,8 +21,12 @@
  * Expected Res : Success
  * Date         : 24th Dec 2012
  */
+-- compareunorderedarray=true
 
-select element x
+select element y
 from  `Metadata`.`Feed` as x
+let y = OBJECT_CONCAT( { "AdapterConfiguration" : to_array(x.AdapterConfiguration)},
+                       OBJECT_REMOVE(x, "AdapterConfiguration")
+                     )
 where ((x.DataverseName = 'feeds') and (x.FeedName = 'TweetFeed'))
 ;

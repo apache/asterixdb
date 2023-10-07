@@ -18,11 +18,15 @@
  */
 package org.apache.asterix.common.api;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import java.util.List;
+
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.Namespace;
 
 public interface INamespaceResolver {
 
-    Namespace resolve(DataverseName dataverseName);
+    Namespace resolve(List<String> multiIdentifier) throws AsterixException;
+
+    Namespace resolve(String namespace) throws AsterixException;
 
 }

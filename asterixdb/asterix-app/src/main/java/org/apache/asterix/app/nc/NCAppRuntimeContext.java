@@ -62,7 +62,6 @@ import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.NamespacePathResolver;
-import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategyFactory;
@@ -174,10 +173,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final CloudProperties cloudProperties;
     private IPartitionBootstrapper partitionBootstrapper;
     private final NamespacePathResolver namespacePathResolver;
-    private final NamespaceResolver namespaceResolver;
+    private final INamespaceResolver namespaceResolver;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
-            IPropertiesFactory propertiesFactory) {
+            IPropertiesFactory propertiesFactory, INamespaceResolver namespaceResolver) {
         this.ncServiceContext = ncServiceContext;
         compilerProperties = propertiesFactory.newCompilerProperties();
         externalProperties = propertiesFactory.newExternalProperties();
@@ -197,7 +196,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
         cacheManager = new CacheManager();
         namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
-        namespaceResolver = new NamespaceResolver(isCloudDeployment());
+        this.namespaceResolver = namespaceResolver;
     }
 
     @Override

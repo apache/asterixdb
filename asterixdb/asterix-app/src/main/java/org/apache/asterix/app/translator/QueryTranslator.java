@@ -67,6 +67,7 @@ import org.apache.asterix.app.result.fields.StatusPrinter;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IMetadataLockManager;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.cluster.IClusterStateManager;
@@ -95,6 +96,7 @@ import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.common.utils.JobUtils.ProgressState;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -300,6 +302,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final WarningCollector warningCollector;
     protected final ReentrantReadWriteLock compilationLock;
     protected final IGlobalTxManager globalTxManager;
+    protected final INamespaceResolver namespaceResolver;
 
     public QueryTranslator(ICcApplicationContext appCtx, List<Statement> statements, SessionOutput output,
             ILangCompilationProvider compilationProvider, ExecutorService executorService,
@@ -323,6 +326,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             this.jobFlags.add(JobFlag.ENFORCE_CONTRACT);
         }
         this.globalTxManager = appCtx.getGlobalTxManager();
+        this.namespaceResolver = appCtx.getNamespaceResolver();
     }
 
     public SessionOutput getSessionOutput() {
@@ -563,8 +567,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (requestDataverseName == null) {
             return null;
         }
-        DataverseName dvName = DataverseName.createFromCanonicalForm(requestDataverseName);
-        return new DataverseDecl(dvName, true);
+        Namespace requestNamespace = namespaceResolver.resolve(requestDataverseName);
+        return new DataverseDecl(requestNamespace, true);
     }
 
     protected void handleSetStatement(Statement stmt, Map<String, String> config) throws CompilationException {
@@ -588,7 +592,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         DataverseDecl dvd = (DataverseDecl) stmt;
         DataverseName dvName = dvd.getDataverseName();
-        String database = MetadataUtil.resolveDatabase(null, dvName);
+        String database = dvd.getDatabaseName();
         metadataProvider.validateDataverseName(dvName, dvd.getSourceLocation());
         //TODO(DB): read lock on database
         lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), database, dvName);
@@ -605,7 +609,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             DataverseName dvName = stmtUseDataverse.getDataverseName();
-            String database = MetadataUtil.resolveDatabase(null, dvName);
+            String database = stmtUseDataverse.getDatabaseName();
             Dataverse dv =
                     MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), database, dvName);
             if (dv == null) {

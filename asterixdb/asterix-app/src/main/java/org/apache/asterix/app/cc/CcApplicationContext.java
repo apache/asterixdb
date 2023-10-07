@@ -58,7 +58,6 @@ import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.NamespacePathResolver;
-import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -128,7 +127,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IGlobalTxManager globalTxManager;
     private final IOManager ioManager;
     private final NamespacePathResolver namespacePathResolver;
-    private final NamespaceResolver namespaceResolver;
+    private final INamespaceResolver namespaceResolver;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -137,7 +136,8 @@ public class CcApplicationContext implements ICcApplicationContext {
             IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
             IConfigValidatorFactory configValidatorFactory, Object extensionManager,
             IAdapterFactoryService adapterFactoryService, IGlobalTxManager globalTxManager, IOManager ioManager,
-            CloudProperties cloudProperties) throws AlgebricksException, IOException {
+            CloudProperties cloudProperties, INamespaceResolver namespaceResolver)
+            throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.activeLifeCycleListener = activeLifeCycleListener;
@@ -174,7 +174,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
         this.namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
-        this.namespaceResolver = new NamespaceResolver(isCloudDeployment());
+        this.namespaceResolver = namespaceResolver;
         this.globalTxManager = globalTxManager;
         this.ioManager = ioManager;
         dataPartitioningProvider = DataPartitioningProvider.create(this);

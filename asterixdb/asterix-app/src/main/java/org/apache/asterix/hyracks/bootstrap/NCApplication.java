@@ -25,6 +25,7 @@ import static org.apache.asterix.common.utils.Servlets.QUERY_SERVICE;
 import static org.apache.asterix.common.utils.Servlets.QUERY_STATUS;
 import static org.apache.asterix.common.utils.Servlets.UDF;
 import static org.apache.asterix.common.utils.Servlets.UDF_RECOVERY;
+import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,6 +55,7 @@ import org.apache.asterix.app.nc.RecoveryManager;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionistFactory;
@@ -68,6 +70,7 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.PropertiesFactory;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.IReplicationStrategyFactory;
 import org.apache.asterix.common.replication.ReplicationStrategyFactory;
 import org.apache.asterix.common.transactions.Checkpoint;
@@ -154,8 +157,12 @@ public class NCApplication extends BaseNCApplication {
         }
         MetadataBuiltinFunctions.init();
 
-        ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()), ncServiceCtx);
-        runtimeContext = createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory());
+        boolean cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
+        NamespaceResolver namespaceResolver = new NamespaceResolver(cloudDeployment);
+        ncExtensionManager =
+                new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment, namespaceResolver);
+        runtimeContext =
+                createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory(), namespaceResolver);
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isInfoEnabled()) {
@@ -188,9 +195,9 @@ public class NCApplication extends BaseNCApplication {
     }
 
     protected INcApplicationContext createNCApplicationContext(INCServiceContext ncServiceCtx,
-            NCExtensionManager ncExtensionManager, IPropertiesFactory propertiesFactory)
-            throws IOException, AsterixException {
-        return new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, propertiesFactory);
+            NCExtensionManager ncExtensionManager, IPropertiesFactory propertiesFactory,
+            INamespaceResolver namespaceResolver) throws IOException, AsterixException {
+        return new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, propertiesFactory, namespaceResolver);
     }
 
     protected IRecoveryManagerFactory getRecoveryManagerFactory() {

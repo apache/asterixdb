@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.base.IParser;
@@ -219,7 +220,7 @@ public class SqlppGroupingSetsParserTest {
 
     @Test
     public void test() throws Exception {
-        SqlppParserFactory parserFactory = new SqlppParserFactory();
+        SqlppParserFactory parserFactory = new SqlppParserFactory(new NamespaceResolver(false));
         String groupbyClause = "GROUP BY " + groupbyInput;
         String query = "SELECT COUNT(*) FROM test " + groupbyClause + ";";
         // parse 2 queries so we can test calling rewrite() multiple times on the same instance

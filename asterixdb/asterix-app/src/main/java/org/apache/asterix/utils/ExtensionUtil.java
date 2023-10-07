@@ -22,6 +22,7 @@ import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.algebra.base.ILangExtension.Language;
 import org.apache.asterix.app.cc.IStatementExecutorExtension;
 import org.apache.asterix.common.api.ExtensionId;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -53,8 +54,9 @@ public class ExtensionUtil {
      *             if there was a conflict between two extensions
      */
     public static Pair<ExtensionId, ILangCompilationProvider> extendLangCompilationProvider(Language lang,
-            Pair<ExtensionId, ILangCompilationProvider> cp, ILangExtension le) throws RuntimeDataException {
-        ILangCompilationProvider lecp = le.getLangCompilationProvider(lang);
+            Pair<ExtensionId, ILangCompilationProvider> cp, ILangExtension le, INamespaceResolver namespaceResolver)
+            throws RuntimeDataException {
+        ILangCompilationProvider lecp = le.getLangCompilationProvider(lang, namespaceResolver);
         if (cp != null && lecp != null) {
             throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, le.getId(), cp.first,
                     lang.toString());

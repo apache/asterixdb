@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DataverseNameTest;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.sqlpp.parser.SqlppParserFactory;
@@ -30,7 +31,7 @@ import org.junit.Assert;
 
 public class DataverseNameParserTest extends DataverseNameTest {
 
-    private final IParserFactory parserFactory = new SqlppParserFactory();
+    private final IParserFactory parserFactory = new SqlppParserFactory(new NamespaceResolver(false));
 
     @Override
     protected void testDataverseNameImpl(DataverseName dataverseName, List<String> parts, String expectedCanonicalForm,

@@ -19,7 +19,10 @@
 
 package org.apache.asterix.common.metadata;
 
+import java.util.List;
+
 import org.apache.asterix.common.api.INamespaceResolver;
+import org.apache.asterix.common.exceptions.AsterixException;
 
 public class NamespaceResolver implements INamespaceResolver {
 
@@ -30,10 +33,17 @@ public class NamespaceResolver implements INamespaceResolver {
     }
 
     @Override
-    public Namespace resolve(DataverseName dataverseName) {
-        if (dataverseName == null) {
+    public Namespace resolve(List<String> multiIdentifier) throws AsterixException {
+        if (multiIdentifier == null) {
             return null;
         }
+        DataverseName dataverseName = DataverseName.create(multiIdentifier);
+        return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
+    }
+
+    @Override
+    public Namespace resolve(String namespace) throws AsterixException {
+        DataverseName dataverseName = DataverseName.createFromCanonicalForm(namespace);
         return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
     }
 }

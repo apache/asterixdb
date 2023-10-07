@@ -18,17 +18,14 @@
  */
 package org.apache.asterix.metadata.bootstrap;
 
-import static org.apache.hyracks.control.common.controllers.ControllerConfig.Option.CLOUD_DEPLOYMENT;
-
 import org.apache.asterix.metadata.api.IMetadataIndex;
-import org.apache.hyracks.api.application.INCServiceContext;
 
 public class MetadataIndexesProvider {
 
     protected final boolean usingDatabase;
 
-    public MetadataIndexesProvider(INCServiceContext ncServiceCtx) {
-        usingDatabase = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
+    public MetadataIndexesProvider(boolean usingDatabase) {
+        this.usingDatabase = usingDatabase;
     }
 
     public DatabaseEntity getDatabaseEntity() {

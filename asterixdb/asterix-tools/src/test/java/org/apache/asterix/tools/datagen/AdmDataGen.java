@@ -46,6 +46,7 @@ import org.apache.asterix.common.annotations.RecordDataGenAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
 import org.apache.asterix.common.exceptions.ACIDException;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -927,7 +928,7 @@ public class AdmDataGen {
     private Map<TypeSignature, IAType> typeMap;
     private Map<TypeSignature, TypeDataGen> typeAnnotMap;
     private DataGeneratorContext dgCtx;
-    private final IParserFactory parserFactory = new SqlppParserFactory();
+    private final IParserFactory parserFactory = new SqlppParserFactory(new NamespaceResolver(false));
 
     public AdmDataGen(File schemaFile, File outputDir) {
         this.schemaFile = schemaFile;

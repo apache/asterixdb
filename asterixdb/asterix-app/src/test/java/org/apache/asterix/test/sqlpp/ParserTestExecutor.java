@@ -43,6 +43,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
@@ -79,7 +80,7 @@ import junit.extensions.PA;
 
 public class ParserTestExecutor extends TestExecutor {
 
-    private IParserFactory sqlppParserFactory = new SqlppParserFactory();
+    private IParserFactory sqlppParserFactory = new SqlppParserFactory(new NamespaceResolver(false));
     private IRewriterFactory sqlppRewriterFactory = new SqlppRewriterFactory(sqlppParserFactory);
     private Set<FunctionSignature> createdFunctions = new HashSet<>();
 

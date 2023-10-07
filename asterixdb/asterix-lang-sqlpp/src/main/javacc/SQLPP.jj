@@ -67,6 +67,7 @@ import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionA
 import org.apache.asterix.common.annotations.SpatialJoinAnnotation;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.annotations.UndeclaredFieldsDataGen;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -79,6 +80,8 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.lang.common.base.AbstractClause;
 import org.apache.asterix.lang.common.base.AbstractLangExpression;
@@ -290,6 +293,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
 
     private final Map<SourceLocation, String> hintCollector = new HashMap<SourceLocation, String>();
 
+    private INamespaceResolver namespaceResolver;
+
     private static class IndexParams {
       public IndexType type;
       public int gramLength;
@@ -361,15 +366,22 @@ class SQLPPParser extends ScopeChecker implements IParser {
       }
     }
 
-    public SQLPPParser(String s) {
+    public SQLPPParser(String s, INamespaceResolver namespaceResolver) {
         this(new StringReader(s));
         super.setInput(s);
+        this.namespaceResolver = namespaceResolver;
+    }
+
+    public SQLPPParser(Reader is, INamespaceResolver namespaceResolver) {
+        this(is);
+        this.namespaceResolver = namespaceResolver;
     }
 
     public static void main(String[] args) throws ParseException, TokenMgrError, IOException, FileNotFoundException, CompilationException {
         File file = new File(args[0]);
         Reader fis = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
         SQLPPParser parser = new SQLPPParser(fis);
+        parser.namespaceResolver = new NamespaceResolver(false);
         List<Statement> st = parser.parse();
         //st.accept(new SQLPPPrintVisitor(), 0);
     }
@@ -394,8 +406,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
-    private static Expression parseExpression(String text) throws CompilationException {
-        return new SQLPPParser(text).parseExpression();
+    private static Expression parseExpression(String text, INamespaceResolver nsr) throws CompilationException {
+        return new SQLPPParser(text, nsr).parseExpression();
     }
 
     @Override
@@ -417,8 +429,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
-    private static List<String> parseParenthesizedIdentifierList(String text) throws CompilationException {
-        return new SQLPPParser(text).parseParenthesizedIdentifierList();
+    private static List<String> parseParenthesizedIdentifierList(String text, INamespaceResolver nsr) throws CompilationException {
+        return new SQLPPParser(text, nsr).parseParenthesizedIdentifierList();
     }
 
     private Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parseHashJoinParams() throws CompilationException {
@@ -430,8 +442,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
-    private static Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parseHashJoinParams(String text) throws CompilationException {
-        return new SQLPPParser(text).parseHashJoinParams();
+    private static Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> parseHashJoinParams(String text, INamespaceResolver nsr) throws CompilationException {
+        return new SQLPPParser(text, nsr).parseHashJoinParams();
     }
 
     private String parseBroadcastJoinParams() throws CompilationException {
@@ -443,8 +455,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
             });
         }
 
-    private static String parseBroadcastJoinParams(String text) throws CompilationException {
-        return new SQLPPParser(text).parseBroadcastJoinParams();
+    private static String parseBroadcastJoinParams(String text, INamespaceResolver nsr) throws CompilationException {
+        return new SQLPPParser(text, nsr).parseBroadcastJoinParams();
     }
 
     private List<Literal> parseParenthesizedLiteralList() throws CompilationException {
@@ -456,8 +468,8 @@ class SQLPPParser extends ScopeChecker implements IParser {
         });
     }
 
-    private static List<Literal> parseParenthesizedLiteralList(String text) throws CompilationException {
-        return new SQLPPParser(text).parseParenthesizedLiteralList();
+    private static List<Literal> parseParenthesizedLiteralList(String text, INamespaceResolver nsr) throws CompilationException {
+        return new SQLPPParser(text, nsr).parseParenthesizedLiteralList();
     }
 
     @Override
@@ -754,7 +766,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
             }
             else {
               // if parameter parsing fails then ignore this hint.
-              String name = parseBroadcastJoinParams(hintToken.hintParams);
+              String name = parseBroadcastJoinParams(hintToken.hintParams, this.namespaceResolver);
               return new BroadcastExpressionAnnotation(name);
             }
           case HASH_JOIN_HINT:
@@ -763,7 +775,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
             }
             else {
               // if parameter parsing fails then ignore this hint.
-              Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> pair = parseHashJoinParams(hintToken.hintParams);
+              Pair<HashJoinExpressionAnnotation.BuildOrProbe, String> pair = parseHashJoinParams(hintToken.hintParams, this.namespaceResolver);
               return new HashJoinExpressionAnnotation(pair);
             }
           case INDEXED_NESTED_LOOP_JOIN_HINT:
@@ -772,11 +784,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
             } else {
               // if parameter parsing fails then return hint annotation without parameters
               onParseErrorReturn = IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX;
-              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams, this.namespaceResolver);
               return IndexedNLJoinExpressionAnnotation.newInstance(indexNames);
             }
           case RANGE_HINT:
-            Expression rangeExpr = parseExpression(hintToken.hintParams);
+            Expression rangeExpr = parseExpression(hintToken.hintParams, this.namespaceResolver);
             RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
             return new RangeAnnotation(rangeMap);
           case SKIP_SECONDARY_INDEX_SEARCH_HINT:
@@ -784,11 +796,11 @@ class SQLPPParser extends ScopeChecker implements IParser {
               return SkipSecondaryIndexSearchExpressionAnnotation.INSTANCE_ANY_INDEX;
             } else {
               // if parameter parsing fails then ignore this hint
-              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams, this.namespaceResolver);
               return SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames);
             }
           case SPATIAL_JOIN_HINT:
-            List<Literal> hintValues = parseParenthesizedLiteralList(hintToken.hintParams);
+            List<Literal> hintValues = parseParenthesizedLiteralList(hintToken.hintParams, this.namespaceResolver);
 
             // Handle exceptions
             if (hintValues.size() != 6) {
@@ -833,7 +845,7 @@ class SQLPPParser extends ScopeChecker implements IParser {
               throw new SqlppParseException(getSourceLocation(hintToken), "Expected index name(s)");
             } else {
               // if parameter parsing fails then ignore this hint
-              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams);
+              List<String> indexNames = parseParenthesizedIdentifierList(hintToken.hintParams, this.namespaceResolver);
               return SecondaryIndexSearchPreferenceAnnotation.newInstance(indexNames);
             }
           default:
@@ -880,6 +892,16 @@ class SQLPPParser extends ScopeChecker implements IParser {
       throws SqlppParseException {
       try {
         return DataverseName.create(parts, fromIndex, toIndex);
+      } catch (AsterixException e) {
+        SqlppParseException pe = new SqlppParseException(getSourceLocation(startToken), e.getMessage());
+        pe.initCause(e);
+        throw pe;
+      }
+    }
+
+    private Namespace createNamespace(List<String> parts, Token startToken) throws SqlppParseException {
+      try {
+        return namespaceResolver.resolve(parts);
       } catch (AsterixException e) {
         SqlppParseException pe = new SqlppParseException(getSourceLocation(startToken), e.getMessage());
         pe.initCause(e);
@@ -968,14 +990,16 @@ Statement SingleStatement() throws ParseException:
 DataverseDecl DataverseDeclaration() throws ParseException:
 {
   Token startToken = null;
-  DataverseName dvName = null;
+  Namespace ns = null;
+  Triple<List<String>, Token, Token> ident = null;
 }
 {
-  <USE> { startToken = token; } dvName = DataverseName()
+  <USE> { startToken = token; } ident = MultipartIdentifier()
     {
-      defaultDataverse = dvName;
-      defaultDatabase = MetadataUtil.databaseFor(dvName);
-      DataverseDecl dvDecl = new DataverseDecl(defaultDataverse);
+      ns = createNamespace(ident.first, ident.second);
+      defaultDataverse = ns.getDataverseName();
+      defaultDatabase = ns.getDatabaseName();
+      DataverseDecl dvDecl = new DataverseDecl(ns);
       return addSourceLocation(dvDecl, startToken);
     }
 }
@@ -5337,7 +5361,7 @@ OrderbyClause OrderbyClause() throws ParseException :
           break;
         case RANGE_HINT:
           try {
-            Expression rangeExpr = parseExpression(hintToken.hintParams);
+            Expression rangeExpr = parseExpression(hintToken.hintParams, this.namespaceResolver);
             RangeMap rangeMap = RangeMapBuilder.parseHint(rangeExpr);
             oc.setRangeMap(rangeMap);
           } catch (CompilationException e) {

@@ -31,6 +31,7 @@ import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.compiler.provider.SqlppCompilationProvider;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -71,7 +72,8 @@ public abstract class AbstractOptimizerTest {
     protected static final ArrayList<String> ignore = AsterixTestHelper.readTestListFile(FILENAME_IGNORE, PATH_BASE);
     protected static final ArrayList<String> only = AsterixTestHelper.readTestListFile(FILENAME_ONLY, PATH_BASE);
     protected static String TEST_CONFIG_FILE_NAME = "src/main/resources/cc.conf";
-    protected static final ILangCompilationProvider sqlppCompilationProvider = new SqlppCompilationProvider();
+    protected static final ILangCompilationProvider sqlppCompilationProvider =
+            new SqlppCompilationProvider(new NamespaceResolver(false));
     protected static ILangCompilationProvider extensionLangCompilationProvider = null;
     protected static IStatementExecutorFactory statementExecutorFactory = new DefaultStatementExecutorFactory();
     protected static IStorageComponentProvider storageComponentProvider = new StorageComponentProvider();

@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.asterix.algebra.base.ILangExtension;
 import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
@@ -54,7 +55,6 @@ public class NCExtensionManager implements INCExtensionManager {
      *
      * @param list
      *         list of user configured extensions
-     * @param ncServiceCtx
      * @throws InstantiationException
      *         if an extension couldn't be created
      * @throws IllegalAccessException
@@ -64,12 +64,12 @@ public class NCExtensionManager implements INCExtensionManager {
      * @throws HyracksDataException
      *         if two extensions conlict with each other
      */
-    public NCExtensionManager(List<AsterixExtension> list, INCServiceContext ncServiceCtx)
+    public NCExtensionManager(List<AsterixExtension> list, boolean usingDatabase, INamespaceResolver namespaceResolver)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         IMetadataExtension tupleTranslatorProviderExtension = null;
         mdExtensions = new ArrayList<>();
-        MetadataIndexesProvider mdIndexesProvider = new MetadataIndexesProvider(ncServiceCtx);
+        MetadataIndexesProvider mdIndexesProvider = new MetadataIndexesProvider(usingDatabase);
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
@@ -77,8 +77,8 @@ public class NCExtensionManager implements INCExtensionManager {
                 switch (extension.getExtensionKind()) {
                     case LANG:
                         ILangExtension le = (ILangExtension) extension;
-                        sqlppcp =
-                                ExtensionUtil.extendLangCompilationProvider(ILangExtension.Language.SQLPP, sqlppcp, le);
+                        sqlppcp = ExtensionUtil.extendLangCompilationProvider(ILangExtension.Language.SQLPP, sqlppcp,
+                                le, namespaceResolver);
                         break;
                     case METADATA:
                         IMetadataExtension mde = (IMetadataExtension) extension;
@@ -92,12 +92,13 @@ public class NCExtensionManager implements INCExtensionManager {
                 }
             }
         }
-        this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
+        this.sqlppCompilationProvider =
+                sqlppcp == null ? new SqlppCompilationProvider(namespaceResolver) : sqlppcp.second;
         if (tupleTranslatorProviderExtension == null) {
             this.metadataIndexesProvider = mdIndexesProvider;
             this.tupleTranslatorProvider = new MetadataTupleTranslatorProvider(metadataIndexesProvider);
         } else {
-            this.metadataIndexesProvider = tupleTranslatorProviderExtension.getMetadataIndexesProvider(ncServiceCtx);
+            this.metadataIndexesProvider = tupleTranslatorProviderExtension.getMetadataIndexesProvider(usingDatabase);
             this.tupleTranslatorProvider =
                     tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider(metadataIndexesProvider);
         }

@@ -20,6 +20,7 @@
 package org.apache.asterix.algebra.base;
 
 import org.apache.asterix.common.api.IExtension;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.om.functions.IFunctionManager;
 
@@ -37,7 +38,7 @@ public interface ILangExtension extends IExtension {
         return ExtensionKind.LANG;
     }
 
-    ILangCompilationProvider getLangCompilationProvider(Language lang);
+    ILangCompilationProvider getLangCompilationProvider(Language lang, INamespaceResolver namespaceResolver);
 
     default IFunctionManager getFunctionManager() {
         return null;

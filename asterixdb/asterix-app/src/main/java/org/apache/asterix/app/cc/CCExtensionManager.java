@@ -29,6 +29,7 @@ import org.apache.asterix.algebra.base.ILangExtension.Language;
 import org.apache.asterix.app.translator.DefaultStatementExecutorFactory;
 import org.apache.asterix.common.api.ExtensionId;
 import org.apache.asterix.common.api.IExtension;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.cluster.IGlobalRecoveryManager;
 import org.apache.asterix.common.config.AsterixExtension;
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -68,13 +69,14 @@ public class CCExtensionManager implements ICCExtensionManager {
      * Initialize {@link org.apache.asterix.app.cc.CCExtensionManager} from configuration
      *
      * @param list
-     *            a list of extensions
+     *         a list of extensions
+     * @param namespaceResolver
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
      * @throws HyracksDataException
      */
-    public CCExtensionManager(List<AsterixExtension> list)
+    public CCExtensionManager(List<AsterixExtension> list, INamespaceResolver namespaceResolver)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         Pair<ExtensionId, IFunctionManager> fm = null;
@@ -95,7 +97,8 @@ public class CCExtensionManager implements ICCExtensionManager {
                         break;
                     case LANG:
                         ILangExtension le = (ILangExtension) extension;
-                        sqlppcp = ExtensionUtil.extendLangCompilationProvider(Language.SQLPP, sqlppcp, le);
+                        sqlppcp = ExtensionUtil.extendLangCompilationProvider(Language.SQLPP, sqlppcp, le,
+                                namespaceResolver);
                         fm = ExtensionUtil.extendFunctionManager(fm, le);
                         break;
                     case RECOVERY:
@@ -109,7 +112,8 @@ public class CCExtensionManager implements ICCExtensionManager {
             }
         }
         this.statementExecutorExtension = see;
-        this.sqlppCompilationProvider = sqlppcp == null ? new SqlppCompilationProvider() : sqlppcp.second;
+        this.sqlppCompilationProvider =
+                sqlppcp == null ? new SqlppCompilationProvider(namespaceResolver) : sqlppcp.second;
         this.functionManager =
                 fm == null ? new FunctionManager(FunctionCollection.createDefaultFunctionCollection()) : fm.second;
         this.globalRecoveryExtension = gre;

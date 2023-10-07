@@ -336,6 +336,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.dataFormat = dataFormat;
     }
 
+    public INamespaceResolver getNamespaceResolver() {
+        return namespaceResolver;
+    }
+
     public StorageProperties getStorageProperties() {
         return storageProperties;
     }
@@ -1826,8 +1830,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return storageComponentProvider;
     }
 
-    public Namespace resolve(DataverseName dataverseName) {
-        return namespaceResolver.resolve(dataverseName);
+    public Namespace resolve(List<String> multiIdent) throws AsterixException {
+        return namespaceResolver.resolve(multiIdent);
     }
 
     public PartitioningProperties getPartitioningProperties(Index idx) throws AlgebricksException {

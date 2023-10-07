@@ -1,0 +1,57 @@
+{
+    "DatabaseName": "Default",
+    "DataverseName": "feeds",
+    "FeedName": "TweetFeed",
+    "AdapterConfiguration":
+    [
+        {
+            "Name": "dataset-dataverse",
+            "Value": "feeds"
+        },
+        {
+            "Name": "path",
+            "Value": "asterix_nc1://data/twitter/obamatweets.adm"
+        },
+        {
+            "Name": "feed",
+            "Value": "TweetFeed"
+        },
+        {
+            "Name": "log-ingestion-events",
+            "Value": "true"
+        },
+        {
+            "Name": "dataset-database",
+            "Value": "Default"
+        },
+        {
+            "Name": "adapter-name",
+            "Value": "localfs"
+        },
+        {
+            "Name": "is-feed",
+            "Value": "true"
+        },
+        {
+            "Name": "parser",
+            "Value": "adm"
+        },
+        {
+            "Name": "reader",
+            "Value": "localfs"
+        },
+        {
+            "Name": "format",
+            "Value": "adm"
+        },
+        {
+            "Name": "tuple-interval",
+            "Value": "10"
+        },
+        {
+            "Name": "type-name",
+            "Value": "TweetType"
+        }
+    ],
+    "Timestamp": "R{.*}"
+}

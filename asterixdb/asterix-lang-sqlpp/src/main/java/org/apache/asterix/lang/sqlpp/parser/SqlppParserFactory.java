@@ -20,6 +20,7 @@ package org.apache.asterix.lang.sqlpp.parser;
 
 import java.io.Reader;
 
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
 
@@ -28,14 +29,20 @@ public class SqlppParserFactory implements IParserFactory {
     // WARNING: This value is stored in function metadata. Do not modify.
     public static final String SQLPP = "SQLPP";
 
+    protected final INamespaceResolver namespaceResolver;
+
+    public SqlppParserFactory(INamespaceResolver namespaceResolver) {
+        this.namespaceResolver = namespaceResolver;
+    }
+
     @Override
     public IParser createParser(String query) {
-        return new SQLPPParser(query);
+        return new SQLPPParser(query, namespaceResolver);
     }
 
     @Override
     public IParser createParser(Reader reader) {
-        return new SQLPPParser(reader);
+        return new SQLPPParser(reader, namespaceResolver);
     }
 
     @Override

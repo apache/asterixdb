@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslatorFactory;
 import org.apache.asterix.algebra.base.ILangExtension;
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.external.feed.watch.FeedActivityDetails;
 import org.apache.asterix.lang.common.base.IAstPrintVisitorFactory;
@@ -44,6 +45,12 @@ import org.apache.asterix.translator.SqlppExpressionToPlanTranslatorFactory;
 
 public class SqlppCompilationProvider implements ILangCompilationProvider {
 
+    protected final INamespaceResolver namespaceResolver;
+
+    public SqlppCompilationProvider(INamespaceResolver namespaceResolver) {
+        this.namespaceResolver = namespaceResolver;
+    }
+
     @Override
     public ILangExtension.Language getLanguage() {
         return ILangExtension.Language.SQLPP;
@@ -51,7 +58,7 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
 
     @Override
     public IParserFactory getParserFactory() {
-        return new SqlppParserFactory();
+        return new SqlppParserFactory(namespaceResolver);
     }
 
     @Override

@@ -48,7 +48,7 @@ public interface IMetadataExtension extends IExtension {
      */
     MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider(MetadataIndexesProvider metadataIndexesProvider);
 
-    MetadataIndexesProvider getMetadataIndexesProvider(INCServiceContext ncServiceCtx);
+    MetadataIndexesProvider getMetadataIndexesProvider(boolean usingDatabase);
 
     /**
      * @return A list of additional extension instances of {@code IMetadataIndex} that are introduced by the extension

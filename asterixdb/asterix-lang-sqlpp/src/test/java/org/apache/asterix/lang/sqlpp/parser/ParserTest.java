@@ -19,6 +19,7 @@
 package org.apache.asterix.lang.sqlpp.parser;
 
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -30,7 +31,7 @@ import org.junit.Test;
 public class ParserTest {
 
     protected void assertParseError(String query, int expectedErrorLine) throws Exception {
-        IParserFactory factory = new SqlppParserFactory();
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
         IParser parser = factory.createParser(query);
         try {
             parser.parse();
@@ -64,7 +65,7 @@ public class ParserTest {
     @Test
     public void testMultipleStatements() throws Exception {
         String query = "use x;\nselect 1;";
-        IParserFactory factory = new SqlppParserFactory();
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
         IParser parser = factory.createParser(query);
         parser.parse();
         query = "use x;\n use x;;;;\n use x;\n select 1;";
@@ -85,7 +86,7 @@ public class ParserTest {
     @Test
     public void testEmptyStatement() throws Exception {
         String query = "";
-        IParserFactory factory = new SqlppParserFactory();
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
         IParser parser = factory.createParser(query);
         parser.parse();
 
@@ -117,7 +118,7 @@ public class ParserTest {
         String[] prefixes = new String[] { "", "E" };
         String[] quotes = new String[] { "'", "\"" };
 
-        IParserFactory factory = new SqlppParserFactory();
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
         StringBuilder qb = new StringBuilder();
 
         for (String p : prefixes) {
@@ -142,7 +143,7 @@ public class ParserTest {
         String[] prefixesRest = new String[] { "", "E", " ", "\n" };
         String[] quotes = new String[] { "'", "\"" };
 
-        IParserFactory factory = new SqlppParserFactory();
+        IParserFactory factory = new SqlppParserFactory(new NamespaceResolver(false));
         StringBuilder qb = new StringBuilder();
         for (String p1 : prefixesStart) {
             for (String q1 : quotes) {
