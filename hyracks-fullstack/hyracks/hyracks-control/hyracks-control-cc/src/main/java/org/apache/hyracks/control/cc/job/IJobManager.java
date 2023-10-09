@@ -112,6 +112,11 @@ public interface IJobManager {
     Collection<JobRun> getRunningJobs();
 
     /**
+     * @return number of jobs that are currently running.
+     */
+    int getRunningJobsCount();
+
+    /**
      * @return all jobs that are currently waiting in the job queue.
      */
     Collection<JobRun> getPendingJobs();

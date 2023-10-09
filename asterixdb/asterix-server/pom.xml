@@ -540,13 +540,6 @@
               <gav>com.google.api:gax-grpc:2.7.1</gav>
               <url>https://raw.githubusercontent.com/googleapis/gax-java/v2.7.1/LICENSE</url>
             </override>
-            <override>
-              <gavs>
-                <gav>org.bouncycastle:bcprov-jdk15on:1.60</gav>
-                <gav>org.bouncycastle:bcpkix-jdk15on:1.60</gav>
-              </gavs>
-              <url>https://raw.githubusercontent.com/bcgit/bc-java/r1rv60/LICENSE.html</url>
-            </override>
           </overrides>
           <licenses>
             <license>
@@ -582,6 +575,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
+                <aliasUrl>https://opensource.org/licenses/Apache-2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</aliasUrl>
