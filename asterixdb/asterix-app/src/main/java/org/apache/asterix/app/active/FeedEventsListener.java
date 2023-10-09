@@ -67,7 +67,8 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
     @Override
     public synchronized boolean remove(Dataset dataset) throws HyracksDataException {
         super.remove(dataset);
-        feedConnections.removeIf(o -> o.getDataverseName().equals(dataset.getDataverseName())
+        feedConnections.removeIf(o -> o.getDatabaseName().equals(dataset.getDatabaseName())
+                && o.getDataverseName().equals(dataset.getDataverseName())
                 && o.getDatasetName().equals(dataset.getDatasetName()));
         return false;
     }

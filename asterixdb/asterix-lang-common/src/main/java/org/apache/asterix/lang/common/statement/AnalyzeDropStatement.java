@@ -20,16 +20,17 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class AnalyzeDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String datasetName;
 
-    public AnalyzeDropStatement(DataverseName dataverseName, String datasetName) {
-        this.dataverseName = dataverseName;
+    public AnalyzeDropStatement(Namespace namespace, String datasetName) {
+        this.namespace = namespace;
         this.datasetName = datasetName;
     }
 
@@ -38,8 +39,12 @@ public class AnalyzeDropStatement extends AbstractStatement {
         return Kind.ANALYZE_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getDatasetName() {

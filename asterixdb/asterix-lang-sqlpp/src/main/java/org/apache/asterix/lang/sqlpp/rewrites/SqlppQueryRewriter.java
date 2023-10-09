@@ -33,6 +33,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -552,20 +553,23 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     private Expression rewriteFunctionOrViewBody(String entityDatabaseName, DataverseName entityDataverseName,
             Object entityDisplayName, Expression bodyExpr, List<VarIdentifier> externalVars,
             boolean allowNonStoredUdfCalls, SourceLocation sourceLoc) throws CompilationException {
-        Dataverse defaultDataverse = metadataProvider.getDefaultDataverse();
-        Dataverse targetDataverse;
-        if (entityDataverseName == null || (entityDatabaseName.equals(defaultDataverse.getDatabaseName())
-                && entityDataverseName.equals(defaultDataverse.getDataverseName()))) {
-            targetDataverse = defaultDataverse;
+        Namespace defaultNamespace = metadataProvider.getDefaultNamespace();
+        Namespace targetNamespace = null;
+        if (entityDataverseName == null || (entityDatabaseName.equals(defaultNamespace.getDatabaseName())
+                && entityDataverseName.equals(defaultNamespace.getDataverseName()))) {
+            targetNamespace = defaultNamespace;
         } else {
             try {
-                targetDataverse = metadataProvider.findDataverse(entityDatabaseName, entityDataverseName);
+                Dataverse dv = metadataProvider.findDataverse(entityDatabaseName, entityDataverseName);
+                if (dv != null) {
+                    targetNamespace = new Namespace(dv.getDatabaseName(), dv.getDataverseName());
+                }
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, entityDataverseName);
             }
         }
 
-        metadataProvider.setDefaultDataverse(targetDataverse);
+        metadataProvider.setDefaultNamespace(targetNamespace);
         try {
             Query wrappedQuery = ExpressionUtils.createWrappedQuery(bodyExpr, sourceLoc);
             getFunctionAndViewBodyRewriter().rewrite(context, wrappedQuery, allowNonStoredUdfCalls, false,
@@ -575,7 +579,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             throw new CompilationException(ErrorCode.COMPILATION_BAD_FUNCTION_DEFINITION, e,
                     entityDisplayName.toString(), e.getMessage());
         } finally {
-            metadataProvider.setDefaultDataverse(defaultDataverse);
+            metadataProvider.setDefaultNamespace(defaultNamespace);
         }
     }
 

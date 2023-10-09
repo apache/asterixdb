@@ -266,7 +266,7 @@ public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Fun
             }
         }
 
-        return new TypeSignature(typeDataverseName, typeName);
+        return new TypeSignature(typeDatabaseName, typeDataverseName, typeName);
     }
 
     private Map<String, String> getResources(ARecord functionRecord, String resourcesFieldName) {

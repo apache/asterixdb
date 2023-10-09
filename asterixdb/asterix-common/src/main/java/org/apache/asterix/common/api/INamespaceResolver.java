@@ -27,6 +27,8 @@ public interface INamespaceResolver {
 
     Namespace resolve(List<String> multiIdentifier) throws AsterixException;
 
+    Namespace resolve(List<String> multiIdentifier, int fromIndex, int toIndex) throws AsterixException;
+
     Namespace resolve(String namespace) throws AsterixException;
 
 }

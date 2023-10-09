@@ -26,8 +26,8 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class NodeGroupDropStatement extends AbstractStatement {
 
-    private Identifier nodeGroupName;
-    private boolean ifExists;
+    private final Identifier nodeGroupName;
+    private final boolean ifExists;
 
     public NodeGroupDropStatement(Identifier nodeGroupName, boolean ifExists) {
         this.nodeGroupName = nodeGroupName;

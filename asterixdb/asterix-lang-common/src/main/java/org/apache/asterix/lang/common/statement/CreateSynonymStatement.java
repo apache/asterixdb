@@ -21,40 +21,49 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CreateSynonymStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final String synonymName;
 
-    private final DataverseName objectDataverseName;
+    private final Namespace objectNamespace;
 
     private final String objectName;
 
     private final boolean ifNotExists;
 
-    public CreateSynonymStatement(DataverseName dataverseName, String synonymName, DataverseName objectDataverseName,
-            String objectName, boolean ifNotExists) {
-        this.dataverseName = dataverseName;
+    public CreateSynonymStatement(Namespace namespace, String synonymName, Namespace objectNamespace, String objectName,
+            boolean ifNotExists) {
+        this.namespace = namespace;
         this.synonymName = synonymName;
-        this.objectDataverseName = objectDataverseName;
+        this.objectNamespace = objectNamespace;
         this.objectName = objectName;
         this.ifNotExists = ifNotExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getSynonymName() {
         return synonymName;
     }
 
+    public Namespace getObjectNamespace() {
+        return objectNamespace;
+    }
+
     public DataverseName getObjectDataverseName() {
-        return objectDataverseName;
+        return objectNamespace == null ? null : objectNamespace.getDataverseName();
     }
 
     public String getObjectName() {

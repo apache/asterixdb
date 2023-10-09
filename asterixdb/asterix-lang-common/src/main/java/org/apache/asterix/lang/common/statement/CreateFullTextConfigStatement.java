@@ -18,10 +18,9 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.Iterator;
-
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.util.FullTextUtil;
@@ -37,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CreateFullTextConfigStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String configName;
     private final boolean ifNotExists;
     private final AdmObjectNode configNode;
@@ -45,16 +44,20 @@ public class CreateFullTextConfigStatement extends AbstractStatement {
     public static final String FIELD_NAME_TOKENIZER = "tokenizer";
     public static final String FIELD_NAME_FILTER_PIPELINE = "filterPipeline";
 
-    public CreateFullTextConfigStatement(DataverseName dataverseName, String configName, boolean ifNotExists,
+    public CreateFullTextConfigStatement(Namespace namespace, String configName, boolean ifNotExists,
             RecordConstructor expr) throws CompilationException {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.configName = configName;
         this.ifNotExists = ifNotExists;
         this.configNode = FullTextUtil.validateAndGetConfigNode(expr);
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getConfigName() {
@@ -82,18 +85,15 @@ public class CreateFullTextConfigStatement extends AbstractStatement {
 
     public TokenizerCategory getTokenizerCategory() throws HyracksDataException {
         String tokenizerCategoryStr = configNode.getString(FIELD_NAME_TOKENIZER);
-        TokenizerCategory tokenizerCategory = TokenizerCategory.getEnumIgnoreCase(tokenizerCategoryStr);
-
-        return tokenizerCategory;
+        return TokenizerCategory.getEnumIgnoreCase(tokenizerCategoryStr);
     }
 
     public ImmutableList<String> getFilterNames() {
         AdmArrayNode arrayNode = (AdmArrayNode) configNode.get(FIELD_NAME_FILTER_PIPELINE);
         ImmutableList.Builder<String> filterNamesBuilder = ImmutableList.builder();
 
-        Iterator<IAdmNode> iterator = arrayNode.iterator();
-        while (iterator.hasNext()) {
-            filterNamesBuilder.add(((AdmStringNode) iterator.next()).get());
+        for (IAdmNode iAdmNode : arrayNode) {
+            filterNamesBuilder.add(((AdmStringNode) iAdmNode).get());
         }
 
         return filterNamesBuilder.build();

@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.statement;
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.TypeExpression;
@@ -29,31 +30,31 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class TypeDecl extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier ident;
     private final TypeExpression typeDef;
     private final TypeDataGen datagenAnnotation;
     private final boolean ifNotExists;
 
-    public TypeDecl(DataverseName dataverseName, Identifier ident, TypeExpression typeDef, TypeDataGen datagen,
+    public TypeDecl(Namespace namespace, Identifier ident, TypeExpression typeDef, TypeDataGen datagen,
             boolean ifNotExists) {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.ident = ident;
         this.typeDef = typeDef;
         this.datagenAnnotation = datagen;
         this.ifNotExists = ifNotExists;
     }
 
-    public TypeDecl(DataverseName dataverse, Identifier ident, TypeExpression typeDef) {
-        this(dataverse, ident, typeDef, null, false);
-    }
-
     public Identifier getIdent() {
         return ident;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public TypeExpression getTypeDef() {

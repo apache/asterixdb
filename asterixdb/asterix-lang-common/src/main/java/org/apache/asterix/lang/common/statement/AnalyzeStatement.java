@@ -25,6 +25,7 @@ import java.util.Locale;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.expression.FieldBinding;
@@ -53,13 +54,13 @@ public class AnalyzeStatement extends AbstractStatement {
 
     private static final String SAMPLE_SEED_FIELD_NAME = "sample-seed";
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String datasetName;
     private final AdmObjectNode options;
 
-    public AnalyzeStatement(DataverseName dataverseName, String datasetName, RecordConstructor options)
+    public AnalyzeStatement(Namespace namespace, String datasetName, RecordConstructor options)
             throws CompilationException {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.datasetName = datasetName;
         this.options = options == null ? null : validateOptions(options);
     }
@@ -94,8 +95,12 @@ public class AnalyzeStatement extends AbstractStatement {
         return Kind.ANALYZE;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getDatasetName() {

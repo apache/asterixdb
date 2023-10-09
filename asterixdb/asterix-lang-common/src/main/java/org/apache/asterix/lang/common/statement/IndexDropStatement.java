@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -27,14 +28,13 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class IndexDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier datasetName;
     private final Identifier indexName;
     private final boolean ifExists;
 
-    public IndexDropStatement(DataverseName dataverseName, Identifier datasetName, Identifier indexName,
-            boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public IndexDropStatement(Namespace namespace, Identifier datasetName, Identifier indexName, boolean ifExists) {
+        this.namespace = namespace;
         this.datasetName = datasetName;
         this.indexName = indexName;
         this.ifExists = ifExists;
@@ -45,8 +45,12 @@ public class IndexDropStatement extends AbstractStatement {
         return Statement.Kind.INDEX_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getDatasetName() {

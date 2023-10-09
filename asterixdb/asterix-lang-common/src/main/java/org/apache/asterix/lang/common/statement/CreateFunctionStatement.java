@@ -25,6 +25,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
@@ -55,7 +56,7 @@ public class CreateFunctionStatement extends AbstractStatement {
     private final List<Pair<VarIdentifier, TypeExpression>> paramList;
     private final TypeExpression returnType;
 
-    private final DataverseName libraryDataverseName;
+    private final Namespace libraryNamespace;
     private final String libraryName;
     private final List<String> externalIdentifier;
     private final AdmObjectNode options;
@@ -70,7 +71,7 @@ public class CreateFunctionStatement extends AbstractStatement {
         this.functionBodyExpression = functionBodyExpression;
         this.paramList = requireNullTypes(paramList); // parameter type specification is not allowed for inline functions
         this.returnType = null; // return type specification is not allowed for inline functions
-        this.libraryDataverseName = null;
+        this.libraryNamespace = null;
         this.libraryName = null;
         this.externalIdentifier = null;
         this.options = null;
@@ -79,13 +80,12 @@ public class CreateFunctionStatement extends AbstractStatement {
     }
 
     public CreateFunctionStatement(FunctionSignature signature, List<Pair<VarIdentifier, TypeExpression>> paramList,
-            TypeExpression returnType, DataverseName libraryDataverseName, String libraryName,
-            List<String> externalIdentifier, RecordConstructor options, boolean replaceIfExists, boolean ifNotExists)
-            throws CompilationException {
+            TypeExpression returnType, Namespace libraryNamespace, String libraryName, List<String> externalIdentifier,
+            RecordConstructor options, boolean replaceIfExists, boolean ifNotExists) throws CompilationException {
         this.signature = signature;
         this.paramList = paramList;
         this.returnType = returnType;
-        this.libraryDataverseName = libraryDataverseName;
+        this.libraryNamespace = libraryNamespace;
         this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
         this.options = options == null ? null : ExpressionUtils.toNode(options);
@@ -136,8 +136,12 @@ public class CreateFunctionStatement extends AbstractStatement {
         return externalIdentifier;
     }
 
+    public String getLibraryDatabaseName() {
+        return libraryNamespace == null ? null : libraryNamespace.getDatabaseName();
+    }
+
     public DataverseName getLibraryDataverseName() {
-        return libraryDataverseName;
+        return libraryNamespace == null ? null : libraryNamespace.getDataverseName();
     }
 
     public String getLibraryName() {

@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -29,11 +30,11 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 public class StartFeedStatement extends AbstractStatement {
 
     public static final String WAIT_FOR_COMPLETION = "wait-for-completion-feed";
-    private DataverseName dataverseName;
-    private Identifier feedName;
+    private final Namespace namespace;
+    private final Identifier feedName;
 
-    public StartFeedStatement(Pair<DataverseName, Identifier> feedNameComp) {
-        dataverseName = feedNameComp.first;
+    public StartFeedStatement(Pair<Namespace, Identifier> feedNameComp) {
+        namespace = feedNameComp.first;
         feedName = feedNameComp.second;
     }
 
@@ -52,8 +53,12 @@ public class StartFeedStatement extends AbstractStatement {
         return Category.UPDATE;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getFeedName() {

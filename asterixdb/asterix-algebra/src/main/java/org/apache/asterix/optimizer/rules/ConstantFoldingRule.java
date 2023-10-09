@@ -148,7 +148,7 @@ public class ConstantFoldingRule implements IAlgebraicRewriteRule {
     private static final IOperatorSchema[] _emptySchemas = new IOperatorSchema[] {};
 
     public ConstantFoldingRule(ICcApplicationContext appCtx) {
-        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         jobGenCtx = new JobGenContext(null, metadataProvider, appCtx, SerializerDeserializerProvider.INSTANCE,
                 BinaryHashFunctionFactoryProvider.INSTANCE, BinaryHashFunctionFamilyProvider.INSTANCE,
                 BinaryComparatorFactoryProvider.INSTANCE, TypeTraitProvider.INSTANCE, BinaryBooleanInspector.FACTORY,

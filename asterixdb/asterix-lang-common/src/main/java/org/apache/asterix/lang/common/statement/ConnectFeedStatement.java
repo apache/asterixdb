@@ -23,6 +23,7 @@ import java.util.List;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -32,22 +33,21 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class ConnectFeedStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier datasetName;
     private final String feedName;
     private final String policy;
     private final String whereClauseBody;
-    private int varCounter;
+    private final int varCounter;
     private final List<FunctionSignature> appliedFunctions;
 
-    public ConnectFeedStatement(Pair<DataverseName, Identifier> feedNameCmp,
-            Pair<DataverseName, Identifier> datasetNameCmp, List<FunctionSignature> appliedFunctions, String policy,
-            String whereClauseBody, int varCounter) {
+    public ConnectFeedStatement(Pair<Namespace, Identifier> feedNameCmp, Pair<Namespace, Identifier> datasetNameCmp,
+            List<FunctionSignature> appliedFunctions, String policy, String whereClauseBody, int varCounter) {
         if (feedNameCmp.first != null && datasetNameCmp.first != null
                 && !feedNameCmp.first.equals(datasetNameCmp.first)) {
             throw new IllegalArgumentException("Dataverse for source feed and target dataset do not match");
         }
-        this.dataverseName = feedNameCmp.first != null ? feedNameCmp.first : datasetNameCmp.first;
+        this.namespace = feedNameCmp.first != null ? feedNameCmp.first : datasetNameCmp.first;
         this.datasetName = datasetNameCmp.second;
         this.feedName = feedNameCmp.second.getValue();
         this.policy = policy != null ? policy : BuiltinFeedPolicies.DEFAULT_POLICY.getPolicyName();
@@ -56,8 +56,12 @@ public class ConnectFeedStatement extends AbstractStatement {
         this.appliedFunctions = appliedFunctions;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getDatasetName() {

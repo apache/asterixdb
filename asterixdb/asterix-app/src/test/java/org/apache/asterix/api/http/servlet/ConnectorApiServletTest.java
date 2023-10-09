@@ -182,8 +182,8 @@ public class ConnectorApiServletTest {
             throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         // Retrieves file splits of the dataset.
-        MetadataProvider metadataProvider = MetadataProvider
-                .create((ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(
+                (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext());
         try {
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);

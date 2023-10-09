@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -27,12 +28,12 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class TypeDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
-    private Identifier typeName;
-    private boolean ifExists;
+    private final Namespace namespace;
+    private final Identifier typeName;
+    private final boolean ifExists;
 
-    public TypeDropStatement(DataverseName dataverseName, Identifier typeName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public TypeDropStatement(Namespace namespace, Identifier typeName, boolean ifExists) {
+        this.namespace = namespace;
         this.typeName = typeName;
         this.ifExists = ifExists;
     }
@@ -42,8 +43,12 @@ public class TypeDropStatement extends AbstractStatement {
         return Statement.Kind.TYPE_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getTypeName() {

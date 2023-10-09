@@ -23,26 +23,26 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.CreateLibraryStatement;
 
 public final class CreateLibraryRequestMessage extends AbstractInternalRequestMessage {
 
-    final DataverseName dataverseName;
+    final Namespace namespace;
     final String libraryName;
     final ExternalFunctionLanguage lang;
     final String hash;
     final URI location;
     final boolean replaceIfExists;
     final String authToken;
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    public CreateLibraryRequestMessage(String nodeRequestId, long requestMessageId, DataverseName dataverseName,
+    public CreateLibraryRequestMessage(String nodeRequestId, long requestMessageId, Namespace namespace,
             String libraryName, ExternalFunctionLanguage lang, String hash, URI location, boolean replaceIfExists,
             String authToken, IRequestReference requestReference, Map<String, String> additionalParams) {
         super(nodeRequestId, requestMessageId, requestReference, additionalParams);
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.libraryName = libraryName;
         this.lang = lang;
         this.hash = hash;
@@ -52,6 +52,6 @@ public final class CreateLibraryRequestMessage extends AbstractInternalRequestMe
     }
 
     protected Statement produceStatement() {
-        return new CreateLibraryStatement(dataverseName, libraryName, lang, hash, location, replaceIfExists, authToken);
+        return new CreateLibraryStatement(namespace, libraryName, lang, hash, location, replaceIfExists, authToken);
     }
 }

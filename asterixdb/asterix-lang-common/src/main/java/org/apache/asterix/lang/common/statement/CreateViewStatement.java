@@ -25,6 +25,7 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
@@ -34,7 +35,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public final class CreateViewStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final String viewName;
 
@@ -56,10 +57,10 @@ public final class CreateViewStatement extends AbstractStatement {
 
     private final boolean ifNotExists;
 
-    public CreateViewStatement(DataverseName dataverseName, String viewName, TypeExpression itemType, String viewBody,
+    public CreateViewStatement(Namespace namespace, String viewName, TypeExpression itemType, String viewBody,
             Expression viewBodyExpression, Boolean defaultNull, Map<String, String> viewConfig, KeyDecl primaryKeyDecl,
             List<ForeignKeyDecl> foreignKeyDecls, boolean replaceIfExists, boolean ifNotExists) {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.viewName = Objects.requireNonNull(viewName);
         this.itemType = itemType;
         this.viewBody = Objects.requireNonNull(viewBody);
@@ -82,8 +83,12 @@ public final class CreateViewStatement extends AbstractStatement {
         return Category.DDL;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getViewName() {
@@ -159,19 +164,23 @@ public final class CreateViewStatement extends AbstractStatement {
 
     public static class ForeignKeyDecl extends KeyDecl {
 
-        private final DataverseName referencedDataverseName;
+        private final Namespace referencedNamespace;
 
         private final Identifier referencedDatasetName;
 
-        public ForeignKeyDecl(List<List<String>> fields, List<Integer> sourceIndicators,
-                DataverseName referencedDataverseName, Identifier referencedDatasetName) {
+        public ForeignKeyDecl(List<List<String>> fields, List<Integer> sourceIndicators, Namespace referencedNamespace,
+                Identifier referencedDatasetName) {
             super(fields, sourceIndicators);
-            this.referencedDataverseName = referencedDataverseName;
+            this.referencedNamespace = referencedNamespace;
             this.referencedDatasetName = referencedDatasetName;
         }
 
+        public String getReferencedDatabaseName() {
+            return referencedNamespace == null ? null : referencedNamespace.getDatabaseName();
+        }
+
         public DataverseName getReferencedDataverseName() {
-            return referencedDataverseName;
+            return referencedNamespace == null ? null : referencedNamespace.getDataverseName();
         }
 
         public Identifier getReferencedDatasetName() {

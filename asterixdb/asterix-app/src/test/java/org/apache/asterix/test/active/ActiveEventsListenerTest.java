@@ -144,7 +144,7 @@ public class ActiveEventsListenerTest {
         Mockito.when(ccExtensionManager.getFunctionManager())
                 .thenReturn(new FunctionManager(FunctionCollection.createDefaultFunctionCollection()));
         Mockito.when(appCtx.getExtensionManager()).thenReturn(ccExtensionManager);
-        metadataProvider = MetadataProvider.create(appCtx, null);
+        metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         clusterController = new TestClusterControllerActor("CC", handler, allDatasets);
         nodeControllers = new TestNodeControllerActor[2];
         nodeControllers[0] = new TestNodeControllerActor(nodes[0], clusterController);
@@ -159,7 +159,7 @@ public class ActiveEventsListenerTest {
     }
 
     TestUserActor newUser(String name, CcApplicationContext appCtx) {
-        MetadataProvider actorMdProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider actorMdProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         return new TestUserActor("User: " + name, actorMdProvider, clusterController);
     }
 

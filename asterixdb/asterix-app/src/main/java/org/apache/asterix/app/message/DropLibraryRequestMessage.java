@@ -21,28 +21,28 @@ package org.apache.asterix.app.message;
 import java.util.Map;
 
 import org.apache.asterix.common.api.IRequestReference;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.LibraryDropStatement;
 
 public final class DropLibraryRequestMessage extends AbstractInternalRequestMessage {
 
-    final DataverseName dataverseName;
+    final Namespace namespace;
     final String libraryName;
     final boolean ifExists;
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    public DropLibraryRequestMessage(String nodeRequestId, long requestMessageId, DataverseName dataverseName,
+    public DropLibraryRequestMessage(String nodeRequestId, long requestMessageId, Namespace namespace,
             String libraryName, boolean ifExists, IRequestReference requestReference,
             Map<String, String> additionalParams) {
         super(nodeRequestId, requestMessageId, requestReference, additionalParams);
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.libraryName = libraryName;
         this.ifExists = ifExists;
     }
 
     @Override
     protected Statement produceStatement() {
-        return new LibraryDropStatement(dataverseName, libraryName, ifExists);
+        return new LibraryDropStatement(namespace, libraryName, ifExists);
     }
 }

@@ -21,25 +21,30 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class SynonymDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final String synonymName;
 
     private final boolean ifExists;
 
-    public SynonymDropStatement(DataverseName dataverseName, String synonymName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public SynonymDropStatement(Namespace namespace, String synonymName, boolean ifExists) {
+        this.namespace = namespace;
         this.synonymName = synonymName;
         this.ifExists = ifExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getSynonymName() {

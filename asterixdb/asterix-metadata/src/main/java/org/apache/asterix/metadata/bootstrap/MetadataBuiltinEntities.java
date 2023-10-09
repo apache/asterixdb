@@ -20,6 +20,7 @@ package org.apache.asterix.metadata.bootstrap;
 
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.entities.Database;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
@@ -47,6 +48,10 @@ public class MetadataBuiltinEntities {
     public static final Datatype ANY_OBJECT_DATATYPE =
             new Datatype(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
                     RecordUtil.FULLY_OPEN_RECORD_TYPE.getTypeName(), RecordUtil.FULLY_OPEN_RECORD_TYPE, false);
+
+    public static final Namespace DEFAULT_NAMESPACE =
+            new Namespace(MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDatabaseName(),
+                    MetadataBuiltinEntities.DEFAULT_DATAVERSE.getDataverseName());
 
     private MetadataBuiltinEntities() {
     }

@@ -22,16 +22,17 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CreateAdapterStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final String adapterName;
 
-    private final DataverseName libraryDataverseName;
+    private final Namespace libraryNamespace;
 
     private final String libraryName;
 
@@ -39,11 +40,11 @@ public class CreateAdapterStatement extends AbstractStatement {
 
     private final boolean ifNotExists;
 
-    public CreateAdapterStatement(DataverseName dataverseName, String adapterName, DataverseName libraryDataverseName,
+    public CreateAdapterStatement(Namespace namespace, String adapterName, Namespace libraryNamespace,
             String libraryName, List<String> externalIdentifier, boolean ifNotExists) {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.adapterName = adapterName;
-        this.libraryDataverseName = libraryDataverseName;
+        this.libraryNamespace = libraryNamespace;
         this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
         this.ifNotExists = ifNotExists;
@@ -54,16 +55,24 @@ public class CreateAdapterStatement extends AbstractStatement {
         return Kind.CREATE_ADAPTER;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getAdapterName() {
         return adapterName;
     }
 
+    public String getLibraryDatabaseName() {
+        return libraryNamespace == null ? null : libraryNamespace.getDatabaseName();
+    }
+
     public DataverseName getLibraryDataverseName() {
-        return libraryDataverseName;
+        return libraryNamespace == null ? null : libraryNamespace.getDataverseName();
     }
 
     public String getLibraryName() {

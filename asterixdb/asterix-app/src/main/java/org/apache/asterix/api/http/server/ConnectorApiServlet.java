@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -63,7 +63,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
  */
 public class ConnectorApiServlet extends AbstractServlet {
     private static final Logger LOGGER = LogManager.getLogger();
-    private ICcApplicationContext appCtx;
+    private final ICcApplicationContext appCtx;
 
     public ConnectorApiServlet(ConcurrentMap<String, Object> ctx, String[] paths, ICcApplicationContext appCtx) {
         super(ctx, paths);
@@ -84,24 +84,25 @@ public class ConnectorApiServlet extends AbstractServlet {
         PrintWriter out = response.writer();
         try {
             ObjectNode jsonResponse = OBJECT_MAPPER.createObjectNode();
-            DataverseName dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
+            Namespace namespace = ServletUtil.getNamespace(appCtx, request, "dataverseName");
             String datasetName = request.getParameter("datasetName");
-            if (dataverseName == null || datasetName == null) {
+            if (namespace == null || datasetName == null) {
                 jsonResponse.put("error", "Parameter dataverseName or datasetName is null,");
                 out.write(jsonResponse.toString());
                 return;
             }
 
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
+            String databaseName = namespace.getDatabaseName();
+            DataverseName dataverseName = namespace.getDataverseName();
             IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
             // Metadata transaction begins.
             MetadataManager.INSTANCE.init();
             MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             // Retrieves file splits of the dataset.
-            MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+            MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
             try {
                 metadataProvider.setMetadataTxnContext(mdTxnCtx);
-                Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
+                Dataset dataset = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
                 if (dataset == null) {
                     jsonResponse.put("error", StringUtils.capitalize(dataset()) + " " + datasetName
                             + " does not exist in " + dataverse() + " " + dataverseName);
@@ -126,7 +127,7 @@ public class ConnectorApiServlet extends AbstractServlet {
                         hcc.getNodeControllerInfos());
 
                 // Flush the cached contents of the dataset to file system.
-                FlushDatasetUtil.flushDataset(hcc, metadataProvider, database, dataverseName, datasetName);
+                FlushDatasetUtil.flushDataset(hcc, metadataProvider, databaseName, dataverseName, datasetName);
 
                 // Metadata transaction commits.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

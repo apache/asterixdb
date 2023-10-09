@@ -22,7 +22,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
@@ -44,11 +44,11 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(LoadStatement loadStmt, MetadataProvider metadataProvider) throws CompilationException {
-        String database = MetadataUtil.resolveDatabase(null, loadStmt.getDataverseName());
-        Quadruple<DataverseName, String, Boolean, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
-                database, loadStmt.getDataverseName(), loadStmt.getDatasetName(), false, loadStmt.getSourceLocation());
+        Quadruple<DataverseName, String, Boolean, String> dsName =
+                resolveDatasetNameUsingSynonyms(metadataProvider, loadStmt.getDatabaseName(),
+                        loadStmt.getDataverseName(), loadStmt.getDatasetName(), false, loadStmt.getSourceLocation());
         if (dsName != null) {
-            loadStmt.setDataverseName(dsName.getFirst());
+            loadStmt.setNamespace(new Namespace(dsName.getFourth(), dsName.getFirst()));
             loadStmt.setDatasetName(dsName.getSecond());
         }
         return null;
@@ -56,12 +56,11 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(InsertStatement insertStmt, MetadataProvider metadataProvider) throws CompilationException {
-        String database = MetadataUtil.resolveDatabase(null, insertStmt.getDataverseName());
-        Quadruple<DataverseName, String, Boolean, String> dsName =
-                resolveDatasetNameUsingSynonyms(metadataProvider, database, insertStmt.getDataverseName(),
-                        insertStmt.getDatasetName(), false, insertStmt.getSourceLocation());
+        Quadruple<DataverseName, String, Boolean, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
+                insertStmt.getDatabaseName(), insertStmt.getDataverseName(), insertStmt.getDatasetName(), false,
+                insertStmt.getSourceLocation());
         if (dsName != null) {
-            insertStmt.setDataverseName(dsName.getFirst());
+            insertStmt.setNamespace(new Namespace(dsName.getFourth(), dsName.getFirst()));
             insertStmt.setDatasetName(dsName.getSecond());
         }
         return null;
@@ -69,12 +68,11 @@ public class SqlppSynonymRewriteVisitor extends AbstractSqlppAstVisitor<Void, Me
 
     @Override
     public Void visit(DeleteStatement deleteStmt, MetadataProvider metadataProvider) throws CompilationException {
-        String database = MetadataUtil.resolveDatabase(null, deleteStmt.getDataverseName());
-        Quadruple<DataverseName, String, Boolean, String> dsName =
-                resolveDatasetNameUsingSynonyms(metadataProvider, database, deleteStmt.getDataverseName(),
-                        deleteStmt.getDatasetName(), false, deleteStmt.getSourceLocation());
+        Quadruple<DataverseName, String, Boolean, String> dsName = resolveDatasetNameUsingSynonyms(metadataProvider,
+                deleteStmt.getDatabaseName(), deleteStmt.getDataverseName(), deleteStmt.getDatasetName(), false,
+                deleteStmt.getSourceLocation());
         if (dsName != null) {
-            deleteStmt.setDataverseName(dsName.getFirst());
+            deleteStmt.setNamespace(new Namespace(dsName.getFourth(), dsName.getFirst()));
             deleteStmt.setDatasetName(dsName.getSecond());
         }
         return null;

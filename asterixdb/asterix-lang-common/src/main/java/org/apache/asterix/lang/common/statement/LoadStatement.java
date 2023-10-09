@@ -22,24 +22,25 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class LoadStatement extends AbstractStatement {
 
-    private DataverseName dataverseName;
+    private Namespace namespace;
     private String datasetName;
     private String adapter;
     private Map<String, String> properties;
-    private boolean dataIsLocallySorted;
+    private final boolean dataIsLocallySorted;
 
-    public LoadStatement(DataverseName dataverseName, String datasetName, String adapter,
-            Map<String, String> propertiees, boolean dataIsLocallySorted) {
-        this.dataverseName = dataverseName;
+    public LoadStatement(Namespace namespace, String datasetName, String adapter, Map<String, String> properties,
+            boolean dataIsLocallySorted) {
+        this.namespace = namespace;
         this.datasetName = datasetName;
         this.adapter = adapter;
-        this.properties = propertiees;
+        this.properties = properties;
         this.dataIsLocallySorted = dataIsLocallySorted;
     }
 
@@ -59,12 +60,20 @@ public class LoadStatement extends AbstractStatement {
         this.properties = properties;
     }
 
-    public DataverseName getDataverseName() {
-        return dataverseName;
+    public Namespace getNamespace() {
+        return namespace;
     }
 
-    public void setDataverseName(DataverseName dataverseName) {
-        this.dataverseName = dataverseName;
+    public DataverseName getDataverseName() {
+        return namespace == null ? null : namespace.getDataverseName();
+    }
+
+    public String getDatabaseName() {
+        return namespace == null ? null : namespace.getDatabaseName();
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
     }
 
     @Override

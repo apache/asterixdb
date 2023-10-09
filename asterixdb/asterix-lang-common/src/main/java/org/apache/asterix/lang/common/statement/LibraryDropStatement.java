@@ -21,24 +21,29 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public final class LibraryDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String libraryName;
 
     private final boolean ifExists;
 
-    public LibraryDropStatement(DataverseName dataverseName, String libraryName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public LibraryDropStatement(Namespace namespace, String libraryName, boolean ifExists) {
+        this.namespace = namespace;
         this.libraryName = libraryName;
         this.ifExists = ifExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getLibraryName() {

@@ -21,7 +21,7 @@ package org.apache.asterix.lang.sqlpp.visitor;
 import java.util.Collections;
 
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.clause.WhereClause;
 import org.apache.asterix.lang.common.expression.CallExpr;
@@ -54,10 +54,11 @@ public class SqlppDeleteRewriteVisitor extends AbstractSqlppAstVisitor<Void, Met
     @Override
     public Void visit(DeleteStatement deleteStmt, MetadataProvider metadataProvider) {
         DataverseName dataverseName = deleteStmt.getDataverseName();
-        String databaseName = MetadataUtil.resolveDatabase(null, deleteStmt.getDataverseName());
+        String databaseName = deleteStmt.getDatabaseName();
         if (dataverseName == null) {
-            dataverseName = metadataProvider.getDefaultDataverseName();
-            databaseName = metadataProvider.getDefaultDatabase();
+            Namespace defaultNamespace = metadataProvider.getDefaultNamespace();
+            dataverseName = defaultNamespace.getDataverseName();
+            databaseName = defaultNamespace.getDatabaseName();
         }
         String datasetName = deleteStmt.getDatasetName();
         CallExpr callExpression = FunctionUtil.makeDatasetCallExpr(databaseName, dataverseName, datasetName);

@@ -18,24 +18,27 @@
  */
 package org.apache.asterix.lang.common.statement;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class DataverseDropStatement extends AbstractStatement {
 
-    private DataverseName dataverseName;
-    private boolean ifExists;
-    private boolean ifEmpty;
+    private final Namespace namespace;
+    private final boolean ifExists;
+    private final boolean ifEmpty;
 
-    public DataverseDropStatement(DataverseName dataverseName, boolean ifExists) {
-        this(dataverseName, ifExists, false);
+    public DataverseDropStatement(Namespace namespace, boolean ifExists) {
+        this(namespace, ifExists, false);
     }
 
-    public DataverseDropStatement(DataverseName dataverseName, boolean ifExists, boolean ifEmpty) {
-        this.dataverseName = dataverseName;
+    public DataverseDropStatement(Namespace namespace, boolean ifExists, boolean ifEmpty) {
+        this.namespace = Objects.requireNonNull(namespace);
         this.ifExists = ifExists;
         this.ifEmpty = ifEmpty;
     }
@@ -45,8 +48,12 @@ public class DataverseDropStatement extends AbstractStatement {
         return Statement.Kind.DATAVERSE_DROP;
     }
 
+    public String getDatabaseName() {
+        return namespace.getDatabaseName();
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public boolean getIfExists() {

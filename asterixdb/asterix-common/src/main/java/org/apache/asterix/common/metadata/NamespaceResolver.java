@@ -34,10 +34,15 @@ public class NamespaceResolver implements INamespaceResolver {
 
     @Override
     public Namespace resolve(List<String> multiIdentifier) throws AsterixException {
+        return resolve(multiIdentifier, 0, multiIdentifier.size());
+    }
+
+    @Override
+    public Namespace resolve(List<String> multiIdentifier, int fromIndex, int toIndex) throws AsterixException {
         if (multiIdentifier == null) {
             return null;
         }
-        DataverseName dataverseName = DataverseName.create(multiIdentifier);
+        DataverseName dataverseName = DataverseName.create(multiIdentifier, fromIndex, toIndex);
         return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
     }
 

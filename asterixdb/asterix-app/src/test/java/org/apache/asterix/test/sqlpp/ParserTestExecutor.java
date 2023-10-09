@@ -42,7 +42,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -144,8 +144,9 @@ public class ParserTestExecutor extends TestExecutor {
         try {
             List<Statement> statements = parser.parse();
             //TODO(DB): fix this properly so that metadataProvider.getDefaultDataverse() works when actually called
-            DataverseName dvName = getDefaultDataverse(statements);
-            String dbName = MetadataUtil.databaseFor(dvName);
+            Namespace namespace = getDefaultDataverse(statements);
+            DataverseName dvName = namespace.getDataverseName();
+            String dbName = namespace.getDatabaseName();
             List<FunctionDecl> functions = getDeclaredFunctions(statements, dbName, dvName);
             List<FunctionSignature> createdFunctionsList = getCreatedFunctions(statements, dbName, dvName);
             createdFunctions.addAll(createdFunctionsList);
@@ -154,8 +155,7 @@ public class ParserTestExecutor extends TestExecutor {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> config = mock(Map.class);
-            when(metadataProvider.getDefaultDataverseName()).thenReturn(dvName);
-            when(metadataProvider.getDefaultDatabase()).thenReturn(dbName);
+            when(metadataProvider.getDefaultNamespace()).thenReturn(namespace);
             when(metadataProvider.getConfig()).thenReturn(config);
             when(config.get(FunctionUtil.IMPORT_PRIVATE_FUNCTIONS)).thenReturn("true");
             when(metadataProvider.findDataverse(anyString(), Mockito.<DataverseName> any()))
@@ -271,14 +271,14 @@ public class ParserTestExecutor extends TestExecutor {
     }
 
     // Gets the default dataverse for the input statements.
-    private DataverseName getDefaultDataverse(List<Statement> statements) {
+    private Namespace getDefaultDataverse(List<Statement> statements) {
         for (Statement st : statements) {
             if (st.getKind() == Statement.Kind.DATAVERSE_DECL) {
                 DataverseDecl dv = (DataverseDecl) st;
-                return dv.getDataverseName();
+                return dv.getNamespace();
             }
         }
-        return MetadataConstants.DEFAULT_DATAVERSE_NAME;
+        return MetadataConstants.DEFAULT_NAMESPACE;
     }
 
     // Rewrite queries.

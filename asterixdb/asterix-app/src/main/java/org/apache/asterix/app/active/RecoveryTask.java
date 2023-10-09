@@ -55,7 +55,7 @@ public class RecoveryTask {
             IRetryPolicyFactory retryPolicyFactory) {
         this.listener = listener;
         this.retryPolicyFactory = retryPolicyFactory;
-        this.metadataProvider = MetadataProvider.create(appCtx, null);
+        this.metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         this.clusterStateManager = appCtx.getClusterStateManager();
     }
 

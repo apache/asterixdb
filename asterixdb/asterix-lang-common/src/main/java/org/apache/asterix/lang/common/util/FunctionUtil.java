@@ -38,6 +38,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
 import org.apache.asterix.lang.common.base.IParserFactory;
@@ -90,15 +91,17 @@ public class FunctionUtil {
         return BuiltinFunctions.getBuiltinFunctionInfo(fi);
     }
 
-    public static TypeSignature getTypeDependencyFromFunctionParameter(TypeExpression typeExpr,
+    public static TypeSignature getTypeDependencyFromFunctionParameter(TypeExpression typeExpr, String defaultDatabase,
             DataverseName defaultDataverse) {
         switch (typeExpr.getTypeKind()) {
             case ORDEREDLIST:
                 return getTypeDependencyFromFunctionParameter(
-                        ((OrderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDataverse);
+                        ((OrderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDatabase,
+                        defaultDataverse);
             case UNORDEREDLIST:
                 return getTypeDependencyFromFunctionParameter(
-                        ((UnorderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDataverse);
+                        ((UnorderedListTypeDefinition) typeExpr).getItemTypeExpression(), defaultDatabase,
+                        defaultDataverse);
             case TYPEREFERENCE:
                 TypeReferenceExpression typeRef = ((TypeReferenceExpression) typeExpr);
                 String typeName = typeRef.getIdent().getSecond().toString();
@@ -106,9 +109,17 @@ public class FunctionUtil {
                 if (builtinType != null) {
                     return null;
                 }
-                DataverseName typeDataverseName =
-                        typeRef.getIdent().getFirst() != null ? typeRef.getIdent().getFirst() : defaultDataverse;
-                return new TypeSignature(typeDataverseName, typeName);
+                Namespace typeRefNamespace = typeRef.getIdent().getFirst();
+                DataverseName typeDataverseName;
+                String typeDatabaseName;
+                if (typeRefNamespace == null) {
+                    typeDataverseName = defaultDataverse;
+                    typeDatabaseName = defaultDatabase;
+                } else {
+                    typeDataverseName = typeRefNamespace.getDataverseName();
+                    typeDatabaseName = typeRefNamespace.getDatabaseName();
+                }
+                return new TypeSignature(typeDatabaseName, typeDataverseName, typeName);
             case RECORD:
                 throw new IllegalArgumentException();
             default:
@@ -123,8 +134,9 @@ public class FunctionUtil {
         DataverseName dataverse = fs.getDataverseName();
         String database = fs.getDatabaseName();
         if (dataverse == null) {
-            dataverse = metadataProvider.getDefaultDataverseName();
-            database = metadataProvider.getDefaultDatabase();
+            Namespace defaultNamespace = metadataProvider.getDefaultNamespace();
+            dataverse = defaultNamespace.getDataverseName();
+            database = defaultNamespace.getDatabaseName();
         }
         if (searchUdfs && !isBuiltinFunctionDataverse(dataverse)) {
             // attempt to resolve to a user-defined function

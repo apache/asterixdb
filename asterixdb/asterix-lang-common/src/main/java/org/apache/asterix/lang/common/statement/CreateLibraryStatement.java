@@ -24,12 +24,13 @@ import java.net.URI;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public final class CreateLibraryStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String libraryName;
     private final ExternalFunctionLanguage lang;
     private final String hash;
@@ -37,9 +38,9 @@ public final class CreateLibraryStatement extends AbstractStatement {
     private final boolean replaceIfExists;
     private final String authToken;
 
-    public CreateLibraryStatement(DataverseName dataverseName, String libraryName, ExternalFunctionLanguage lang,
-            String hash, URI location, boolean replaceIfExists, String authToken) {
-        this.dataverseName = dataverseName;
+    public CreateLibraryStatement(Namespace namespace, String libraryName, ExternalFunctionLanguage lang, String hash,
+            URI location, boolean replaceIfExists, String authToken) {
+        this.namespace = namespace;
         this.libraryName = libraryName;
         this.lang = lang;
         this.location = location;
@@ -48,8 +49,12 @@ public final class CreateLibraryStatement extends AbstractStatement {
         this.hash = hash;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getLibraryName() {

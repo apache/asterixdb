@@ -107,7 +107,7 @@ public class ActiveStatsTest {
                 .create(appCtx, Collections.emptyList(), sessionOutput,
                         extensionManager.getCompilationProvider(Language.SQLPP), appCtx.getStorageComponentProvider(),
                         new ResponsePrinter(sessionOutput));
-        MetadataProvider mdProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider mdProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         // Add event listener
         ActiveEntityEventsListener eventsListener = new DummyFeedEventsListener(statementExecutor, appCtx, null,
                 entityId, datasetList, partitionConstraint, FeedIntakeOperatorNodePushable.class.getSimpleName(),

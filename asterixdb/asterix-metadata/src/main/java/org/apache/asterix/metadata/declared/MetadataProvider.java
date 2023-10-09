@@ -72,7 +72,6 @@ import org.apache.asterix.formats.nontagged.TypeTraitProvider;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.api.ICCExtensionManager;
-import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints.DatasetCardinalityHint;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
@@ -180,7 +179,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final LockList locks;
     private final Map<String, Object> config;
 
-    private Dataverse defaultDataverse;
+    private Namespace defaultNamespace;
     private MetadataTransactionContext mdTxnCtx;
     private boolean isWriteTransaction;
     private FileSplit outputFile;
@@ -195,11 +194,19 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final INamespaceResolver namespaceResolver;
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
-    public static MetadataProvider create(ICcApplicationContext appCtx, Dataverse defaultDataverse) {
+    public static MetadataProvider createWithDefaultNamespace(ICcApplicationContext appCtx) {
         java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
                 ((ICCExtensionManager) appCtx.getExtensionManager()).getMetadataProviderFactory();
         MetadataProvider mp = factory != null ? (MetadataProvider) factory.apply(appCtx) : new MetadataProvider(appCtx);
-        mp.setDefaultDataverse(defaultDataverse);
+        mp.setDefaultNamespace(MetadataConstants.DEFAULT_NAMESPACE);
+        return mp;
+    }
+
+    public static MetadataProvider create(ICcApplicationContext appCtx, Namespace defaultNamespace) {
+        java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
+                ((ICCExtensionManager) appCtx.getExtensionManager()).getMetadataProviderFactory();
+        MetadataProvider mp = factory != null ? (MetadataProvider) factory.apply(appCtx) : new MetadataProvider(appCtx);
+        mp.setDefaultNamespace(defaultNamespace);
         return mp;
     }
 
@@ -212,6 +219,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         dataPartitioningProvider = (DataPartitioningProvider) appCtx.getDataPartitioningProvider();
         locks = new LockList();
         config = new HashMap<>();
+        setDefaultNamespace(MetadataConstants.DEFAULT_NAMESPACE);
     }
 
     @SuppressWarnings("unchecked")
@@ -251,20 +259,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         this.txnId = txnId;
     }
 
-    public void setDefaultDataverse(Dataverse defaultDataverse) {
-        this.defaultDataverse = defaultDataverse == null ? MetadataBuiltinEntities.DEFAULT_DATAVERSE : defaultDataverse;
+    public void setDefaultNamespace(Namespace namespace) {
+        this.defaultNamespace = namespace == null ? MetadataConstants.DEFAULT_NAMESPACE : namespace;
     }
 
-    public Dataverse getDefaultDataverse() {
-        return defaultDataverse;
-    }
-
-    public String getDefaultDatabase() {
-        return defaultDataverse.getDatabaseName();
-    }
-
-    public DataverseName getDefaultDataverseName() {
-        return defaultDataverse.getDataverseName();
+    public Namespace getDefaultNamespace() {
+        return defaultNamespace;
     }
 
     public void setWriteTransaction(boolean writeTransaction) {
@@ -344,17 +344,16 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return storageProperties;
     }
 
-    private DataverseName getActiveDataverseName(DataverseName dataverseName) {
-        return dataverseName != null ? dataverseName
-                : defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
-    }
-
     /**
      * Retrieve the Output RecordType, as defined by "set output-record-type".
      */
     public ARecordType findOutputRecordType() throws AlgebricksException {
-        String database = defaultDataverse == null ? null : defaultDataverse.getDatabaseName();
-        DataverseName dataverseName = defaultDataverse == null ? null : defaultDataverse.getDataverseName();
+        String database = null;
+        DataverseName dataverseName = null;
+        if (defaultNamespace != null) {
+            database = defaultNamespace.getDatabaseName();
+            dataverseName = defaultNamespace.getDataverseName();
+        }
         return MetadataManagerUtil.findOutputRecordType(mdTxnCtx, database, dataverseName,
                 getProperty("output-record-type"));
     }
@@ -369,11 +368,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String dbName = database;
         DataverseName dvName = dataverseName;
         if (dbName == null && dvName == null) {
-            if (defaultDataverse == null) {
+            if (defaultNamespace == null) {
                 return null;
             }
-            dbName = defaultDataverse.getDatabaseName();
-            dvName = defaultDataverse.getDataverseName();
+            dbName = defaultNamespace.getDatabaseName();
+            dvName = defaultNamespace.getDataverseName();
         } else if (dbName == null || dvName == null) {
             return null;
         }
@@ -477,11 +476,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String dbName = databaseName;
         DataverseName dvName = dataverseName;
         if (dbName == null && dvName == null) {
-            if (defaultDataverse == null) {
+            if (defaultNamespace == null) {
                 return null;
             }
-            dbName = defaultDataverse.getDatabaseName();
-            dvName = defaultDataverse.getDataverseName();
+            dbName = defaultNamespace.getDatabaseName();
+            dvName = defaultNamespace.getDataverseName();
         } else if (dbName == null || dvName == null) {
             return null;
         }

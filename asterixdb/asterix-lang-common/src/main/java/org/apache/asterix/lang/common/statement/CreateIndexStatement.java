@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.IndexedTypeExpression;
@@ -39,7 +40,7 @@ import org.apache.hyracks.util.OptionalBoolean;
 
 public class CreateIndexStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier datasetName;
     private final Identifier indexName;
     private final IndexType indexType;
@@ -54,11 +55,10 @@ public class CreateIndexStatement extends AbstractStatement {
     private final OptionalBoolean castDefaultNull;
     private final Map<String, String> castConfig;
 
-    public CreateIndexStatement(DataverseName dataverseName, Identifier datasetName, Identifier indexName,
-            IndexType indexType, List<IndexedElement> indexedElements, boolean enforced, int gramLength,
-            String fullTextConfigName, boolean ifNotExists, Boolean excludeUnknownKey, Boolean castDefaultNull,
-            Map<String, String> castConfig) {
-        this.dataverseName = dataverseName;
+    public CreateIndexStatement(Namespace namespace, Identifier datasetName, Identifier indexName, IndexType indexType,
+            List<IndexedElement> indexedElements, boolean enforced, int gramLength, String fullTextConfigName,
+            boolean ifNotExists, Boolean excludeUnknownKey, Boolean castDefaultNull, Map<String, String> castConfig) {
+        this.namespace = namespace;
         this.datasetName = Objects.requireNonNull(datasetName);
         this.indexName = Objects.requireNonNull(indexName);
         this.indexType = Objects.requireNonNull(indexType);
@@ -76,8 +76,12 @@ public class CreateIndexStatement extends AbstractStatement {
         return fullTextConfigName;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getDatasetName() {

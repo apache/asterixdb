@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -51,6 +52,12 @@ public class ServletUtil {
             throws AlgebricksException {
         List<String> values = request.getParameterValues(dataverseParameterName);
         return !values.isEmpty() ? DataverseName.create(values) : null;
+    }
+
+    public static Namespace getNamespace(IApplicationContext appCtx, IServletRequest request,
+            String dataverseParameterName) throws AlgebricksException {
+        List<String> values = request.getParameterValues(dataverseParameterName);
+        return !values.isEmpty() ? appCtx.getNamespaceResolver().resolve(values) : null;
     }
 
     public static String decodeUriSegment(String uriSegment) {

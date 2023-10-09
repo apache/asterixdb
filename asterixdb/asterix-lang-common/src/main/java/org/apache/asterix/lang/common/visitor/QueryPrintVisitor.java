@@ -336,7 +336,8 @@ public abstract class QueryPrintVisitor extends AbstractQueryExpressionVisitor<V
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
         if (t.getIdent().first != null && t.getIdent().first != null) {
-            out.print(t.getIdent().first);
+            //TODO(DB): include database
+            out.print(t.getIdent().first.getDataverseName());
             out.print('.');
         }
         out.print(t.getIdent().second.getValue());

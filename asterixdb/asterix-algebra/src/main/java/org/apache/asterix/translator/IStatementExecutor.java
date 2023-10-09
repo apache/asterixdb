@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.api.IResponsePrinter;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -290,15 +290,7 @@ public interface IStatementExecutor {
             Query query, ICompiledDmlStatement dmlStatement, Map<String, IAObject> statementParameters,
             IRequestParameters requestParameters) throws RemoteException, AlgebricksException, ACIDException;
 
-    /**
-     * returns the active dataverse for an entity or a statement
-     *
-     * @param dataverseName:
-     *            the entity or statement dataverse
-     * @return
-     *         returns the passed dataverse if not null, the active dataverse otherwise
-     */
-    DataverseName getActiveDataverseName(DataverseName dataverseName);
+    Namespace getActiveNamespace(Namespace namespace);
 
     /**
      * Gets the execution plans that are generated during query compilation

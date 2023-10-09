@@ -18,16 +18,16 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 
 public class UpsertStatement extends InsertStatement {
 
-    public UpsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
-            VariableExpr var, Expression returnExpression) {
-        super(dataverseName, datasetName, query, varCounter, var, returnExpression);
+    public UpsertStatement(Namespace namespace, String datasetName, Query query, int varCounter, VariableExpr var,
+            Expression returnExpression) {
+        super(namespace, datasetName, query, varCounter, var, returnExpression);
     }
 
     @Override

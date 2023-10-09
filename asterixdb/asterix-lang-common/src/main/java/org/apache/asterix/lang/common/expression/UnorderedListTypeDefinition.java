@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class UnorderedListTypeDefinition extends AbstractTypeExpression {
 
-    private TypeExpression itemTypeExpression;
+    private final TypeExpression itemTypeExpression;
 
     public UnorderedListTypeDefinition(TypeExpression itemTypeExpression) {
         this.itemTypeExpression = itemTypeExpression;

@@ -22,22 +22,23 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 
 public class TypeSignature implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
+    private final String databaseName;
     private final DataverseName dataverseName;
     private final String name;
 
-    public TypeSignature(DataverseName dataverseName, String name) {
+    public TypeSignature(String databaseName, DataverseName dataverseName, String name) {
+        this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.name = name;
     }
 
     public TypeSignature(BuiltinType builtinType) {
-        this(null, builtinType.getTypeName());
+        this(null, null, builtinType.getTypeName());
     }
 
     @Override
@@ -46,8 +47,8 @@ public class TypeSignature implements Serializable {
             return false;
         } else {
             TypeSignature f = ((TypeSignature) o);
-            return Objects.equals(getDatabaseName(), f.getDatabaseName())
-                    && Objects.equals(dataverseName, f.getDataverseName()) && name.equals(f.getName());
+            return Objects.equals(databaseName, f.databaseName) && Objects.equals(dataverseName, f.getDataverseName())
+                    && name.equals(f.getName());
         }
     }
 
@@ -58,11 +59,11 @@ public class TypeSignature implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDatabaseName(), dataverseName, name);
+        return Objects.hash(databaseName, dataverseName, name);
     }
 
     public String getDatabaseName() {
-        return MetadataUtil.databaseFor(dataverseName);
+        return databaseName;
     }
 
     public DataverseName getDataverseName() {

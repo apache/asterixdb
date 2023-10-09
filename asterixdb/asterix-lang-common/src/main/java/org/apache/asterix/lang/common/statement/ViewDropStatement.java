@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -28,20 +29,24 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class ViewDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final Identifier viewName;
 
     private final boolean ifExists;
 
-    public ViewDropStatement(DataverseName dataverseName, Identifier viewName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public ViewDropStatement(Namespace namespace, Identifier viewName, boolean ifExists) {
+        this.namespace = namespace;
         this.viewName = viewName;
         this.ifExists = ifExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getViewName() {

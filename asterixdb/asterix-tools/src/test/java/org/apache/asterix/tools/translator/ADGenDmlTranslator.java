@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.TypeDataGen;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.DataverseDecl;
 import org.apache.asterix.lang.common.statement.TypeDecl;
@@ -47,19 +48,27 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
     }
 
     public void translate() throws AlgebricksException {
-        DataverseName defaultDataverse = getDefaultDataverse();
+        Namespace defaultNs = getDefaultDataverse();
+        DataverseName defaultDv = null;
+        String defaultDb = null;
+        if (defaultNs != null) {
+            defaultDv = defaultNs.getDataverseName();
+            defaultDb = defaultNs.getDatabaseName();
+        }
         types = new HashMap<>();
         typeDataGenMap = new HashMap<>();
 
         for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.TYPE_DECL) {
                 TypeDecl td = (TypeDecl) stmt;
-                DataverseName typeDataverse = td.getDataverseName() == null ? defaultDataverse : td.getDataverseName();
+                DataverseName typeDataverse =
+                        td.getNamespace() == null ? defaultDv : td.getNamespace().getDataverseName();
+                String typeDatabaseName = td.getNamespace() == null ? defaultDb : td.getNamespace().getDatabaseName();
 
-                TypeTranslator.computeTypes(typeDataverse, td.getIdent().getValue(), td.getTypeDef(), defaultDataverse,
-                        mdTxnCtx, types);
+                TypeTranslator.computeTypes(typeDatabaseName, typeDataverse, td.getIdent().getValue(), td.getTypeDef(),
+                        defaultDb, defaultDv, mdTxnCtx, types);
 
-                TypeSignature signature = new TypeSignature(typeDataverse, td.getIdent().getValue());
+                TypeSignature signature = new TypeSignature(typeDatabaseName, typeDataverse, td.getIdent().getValue());
                 TypeDataGen tdg = td.getDatagenAnnotation();
                 if (tdg != null) {
                     typeDataGenMap.put(signature, tdg);
@@ -68,10 +77,10 @@ public class ADGenDmlTranslator extends AbstractLangTranslator {
         }
     }
 
-    private DataverseName getDefaultDataverse() {
+    private Namespace getDefaultDataverse() {
         for (Statement stmt : statements) {
             if (stmt.getKind() == Statement.Kind.DATAVERSE_DECL) {
-                return ((DataverseDecl) stmt).getDataverseName();
+                return ((DataverseDecl) stmt).getNamespace();
             }
         }
         return null;

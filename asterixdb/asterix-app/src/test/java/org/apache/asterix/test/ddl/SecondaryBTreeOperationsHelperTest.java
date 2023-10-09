@@ -63,7 +63,7 @@ public class SecondaryBTreeOperationsHelperTest {
     public void createPrimaryIndex() throws Exception {
         ICcApplicationContext appCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        final MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        final MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
         try {

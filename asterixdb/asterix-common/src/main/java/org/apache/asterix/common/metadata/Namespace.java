@@ -19,9 +19,12 @@
 
 package org.apache.asterix.common.metadata;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public final class Namespace {
+public final class Namespace implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final String databaseName;
     private final DataverseName dataverseName;

@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
@@ -27,11 +28,11 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class StopFeedStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier feedName;
 
-    public StopFeedStatement(Pair<DataverseName, Identifier> feedNameComp) {
-        this.dataverseName = feedNameComp.first;
+    public StopFeedStatement(Pair<Namespace, Identifier> feedNameComp) {
+        this.namespace = feedNameComp.first;
         this.feedName = feedNameComp.second;
     }
 
@@ -50,8 +51,12 @@ public class StopFeedStatement extends AbstractStatement {
         return visitor.visit(this, arg);
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getFeedName() {

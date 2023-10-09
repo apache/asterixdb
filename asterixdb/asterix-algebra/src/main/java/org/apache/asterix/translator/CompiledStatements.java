@@ -191,6 +191,8 @@ public class CompiledStatements {
 
     public interface ICompiledDmlStatement extends ICompiledStatement {
 
+        String getDatabaseName();
+
         DataverseName getDataverseName();
 
         String getDatasetName();
@@ -218,6 +220,11 @@ public class CompiledStatements {
             return index.getDataverseName();
         }
 
+        @Override
+        public String getDatabaseName() {
+            return index.getDatabaseName();
+        }
+
         public Index getIndex() {
             return index;
         }
@@ -239,19 +246,27 @@ public class CompiledStatements {
 
     public static class CompiledLoadFromFileStatement extends AbstractCompiledStatement
             implements ICompiledDmlStatement {
+
+        private final String databaseName;
         private final DataverseName dataverseName;
         private final String datasetName;
         private final boolean alreadySorted;
         private final String adapter;
         private final Map<String, String> properties;
 
-        public CompiledLoadFromFileStatement(DataverseName dataverseName, String datasetName, String adapter,
-                Map<String, String> properties, boolean alreadySorted) {
+        public CompiledLoadFromFileStatement(String databaseName, DataverseName dataverseName, String datasetName,
+                String adapter, Map<String, String> properties, boolean alreadySorted) {
+            this.databaseName = databaseName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.alreadySorted = alreadySorted;
             this.adapter = adapter;
             this.properties = properties;
+        }
+
+        @Override
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         @Override
@@ -289,19 +304,27 @@ public class CompiledStatements {
 
     public static class CompiledCopyFromFileStatement extends AbstractCompiledStatement
             implements ICompiledDmlStatement {
+
+        private final String databaseName;
         private final DataverseName dataverseName;
         private final String datasetName;
         private final Datatype itemType;
         private final String adapter;
         private final Map<String, String> properties;
 
-        public CompiledCopyFromFileStatement(DataverseName dataverseName, String datasetName, Datatype itemType,
-                String adapter, Map<String, String> properties) {
+        public CompiledCopyFromFileStatement(String databaseName, DataverseName dataverseName, String datasetName,
+                Datatype itemType, String adapter, Map<String, String> properties) {
+            this.databaseName = databaseName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.itemType = itemType;
             this.adapter = adapter;
             this.properties = properties;
+        }
+
+        @Override
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         @Override
@@ -338,6 +361,8 @@ public class CompiledStatements {
     }
 
     public static class CompiledInsertStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
+
+        private final String databaseName;
         private final DataverseName dataverseName;
         private final String datasetName;
         private final Query query;
@@ -345,14 +370,20 @@ public class CompiledStatements {
         private final VariableExpr var;
         private final Expression returnExpression;
 
-        public CompiledInsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
-                VariableExpr var, Expression returnExpression) {
+        public CompiledInsertStatement(String databaseName, DataverseName dataverseName, String datasetName,
+                Query query, int varCounter, VariableExpr var, Expression returnExpression) {
+            this.databaseName = databaseName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.query = query;
             this.varCounter = varCounter;
             this.var = var;
             this.returnExpression = returnExpression;
+        }
+
+        @Override
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         @Override
@@ -394,9 +425,9 @@ public class CompiledStatements {
 
     public static class CompiledUpsertStatement extends CompiledInsertStatement {
 
-        public CompiledUpsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
-                VariableExpr var, Expression returnExpression) {
-            super(dataverseName, datasetName, query, varCounter, var, returnExpression);
+        public CompiledUpsertStatement(String databaseName, DataverseName dataverseName, String datasetName,
+                Query query, int varCounter, VariableExpr var, Expression returnExpression) {
+            super(databaseName, dataverseName, datasetName, query, varCounter, var, returnExpression);
         }
 
         @Override
@@ -408,12 +439,17 @@ public class CompiledStatements {
     public static class CompiledSubscribeFeedStatement extends AbstractCompiledStatement
             implements ICompiledDmlStatement {
 
-        private FeedConnectionRequest request;
+        private final FeedConnectionRequest request;
         private final int varCounter;
 
         public CompiledSubscribeFeedStatement(FeedConnectionRequest request, int varCounter) {
             this.request = request;
             this.varCounter = varCounter;
+        }
+
+        @Override
+        public String getDatabaseName() {
+            return request.getReceivingFeedId().getDatabaseName();
         }
 
         @Override
@@ -446,19 +482,27 @@ public class CompiledStatements {
     }
 
     public static class CompiledDeleteStatement extends AbstractCompiledStatement implements ICompiledDmlStatement {
+
+        private final String databaseName;
         private final DataverseName dataverseName;
         private final String datasetName;
         private final Expression condition;
         private final int varCounter;
         private final Query query;
 
-        public CompiledDeleteStatement(VariableExpr var, DataverseName dataverseName, String datasetName,
-                Expression condition, int varCounter, Query query) {
+        public CompiledDeleteStatement(VariableExpr var, String databaseName, DataverseName dataverseName,
+                String datasetName, Expression condition, int varCounter, Query query) {
+            this.databaseName = databaseName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
             this.condition = condition;
             this.varCounter = varCounter;
             this.query = query;
+        }
+
+        @Override
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         @Override
@@ -495,12 +539,19 @@ public class CompiledStatements {
     }
 
     public static class CompiledCompactStatement extends AbstractCompiledStatement {
+
+        private final String databaseName;
         private final DataverseName dataverseName;
         private final String datasetName;
 
-        public CompiledCompactStatement(DataverseName dataverseName, String datasetName) {
+        public CompiledCompactStatement(String databaseName, DataverseName dataverseName, String datasetName) {
+            this.databaseName = databaseName;
             this.dataverseName = dataverseName;
             this.datasetName = datasetName;
+        }
+
+        public String getDatabaseName() {
+            return databaseName;
         }
 
         public DataverseName getDataverseName() {
@@ -518,11 +569,11 @@ public class CompiledStatements {
     }
 
     public static class CompiledIndexCompactStatement extends CompiledCompactStatement {
-        private Dataset dataset;
-        private Index index;
+        private final Dataset dataset;
+        private final Index index;
 
         public CompiledIndexCompactStatement(Dataset dataset, Index index) {
-            super(dataset.getDataverseName(), dataset.getDatasetName());
+            super(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName());
             this.dataset = dataset;
             this.index = index;
         }

@@ -20,17 +20,18 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class FullTextFilterDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String filterName;
     private final boolean ifExists;
 
-    public FullTextFilterDropStatement(DataverseName dataverseName, String filterName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public FullTextFilterDropStatement(Namespace namespace, String filterName, boolean ifExists) {
+        this.namespace = namespace;
         this.filterName = filterName;
         this.ifExists = ifExists;
     }
@@ -40,8 +41,12 @@ public class FullTextFilterDropStatement extends AbstractStatement {
         return Kind.FULL_TEXT_FILTER_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getFilterName() {

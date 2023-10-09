@@ -21,20 +21,20 @@ package org.apache.asterix.lang.common.expression;
 import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
 public class TypeReferenceExpression extends AbstractTypeExpression {
 
-    private final Pair<DataverseName, Identifier> ident;
+    private final Pair<Namespace, Identifier> ident;
 
-    public TypeReferenceExpression(Pair<DataverseName, Identifier> ident) {
+    public TypeReferenceExpression(Pair<Namespace, Identifier> ident) {
         this.ident = ident;
     }
 
-    public Pair<DataverseName, Identifier> getIdent() {
+    public Pair<Namespace, Identifier> getIdent() {
         return ident;
     }
 

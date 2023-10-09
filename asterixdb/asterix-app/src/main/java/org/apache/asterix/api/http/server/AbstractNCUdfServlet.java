@@ -34,7 +34,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -142,16 +142,17 @@ public abstract class AbstractNCUdfServlet extends AbstractServlet {
         return field == null || !field.getHttpDataType().equals(InterfaceHttpData.HttpDataType.Attribute);
     }
 
-    protected Pair<DataverseName, String> decodeDvAndLibFromLocalPath(String localPath)
+    protected Pair<Namespace, String> decodeDvAndLibFromLocalPath(String localPath)
             throws RuntimeDataException, AlgebricksException {
         String[] pathSegments = StringUtils.split(localPath, '/');
         if (pathSegments.length != 2) {
             throw RuntimeDataException.create(ErrorCode.PARAMETERS_REQUIRED,
                     "The URL-encoded " + getDataverseKey() + " name and library name in the request path");
         }
-        DataverseName dvName = DataverseName.createFromCanonicalForm(ServletUtil.decodeUriSegment(pathSegments[0]));
+        String namespaceStr = ServletUtil.decodeUriSegment(pathSegments[0]);
+        Namespace namespace = plainAppCtx.getNamespaceResolver().resolve(namespaceStr);
         String libName = ServletUtil.decodeUriSegment(pathSegments[1]);
-        return new Pair<>(dvName, libName);
+        return new Pair<>(namespace, libName);
     }
 
     protected LibraryUploadData decodeMultiPartLibraryOptions(HttpPostRequestDecoder requestDecoder)

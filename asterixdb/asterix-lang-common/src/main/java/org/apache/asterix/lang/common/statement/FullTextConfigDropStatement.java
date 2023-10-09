@@ -20,17 +20,18 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class FullTextConfigDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String configName;
     private final boolean ifExists;
 
-    public FullTextConfigDropStatement(DataverseName dataverseName, String configName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public FullTextConfigDropStatement(Namespace namespace, String configName, boolean ifExists) {
+        this.namespace = namespace;
         this.configName = configName;
         this.ifExists = ifExists;
     }
@@ -44,8 +45,12 @@ public class FullTextConfigDropStatement extends AbstractStatement {
         return ifExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getConfigName() {

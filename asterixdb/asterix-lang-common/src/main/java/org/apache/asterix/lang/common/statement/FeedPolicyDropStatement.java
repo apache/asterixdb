@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -27,12 +28,12 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class FeedPolicyDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier policyName;
-    private boolean ifExists;
+    private final boolean ifExists;
 
-    public FeedPolicyDropStatement(DataverseName dataverseName, Identifier policyName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public FeedPolicyDropStatement(Namespace namespace, Identifier policyName, boolean ifExists) {
+        this.namespace = namespace;
         this.policyName = policyName;
         this.ifExists = ifExists;
     }
@@ -42,8 +43,12 @@ public class FeedPolicyDropStatement extends AbstractStatement {
         return Statement.Kind.DROP_FEED_POLICY;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getPolicyName() {

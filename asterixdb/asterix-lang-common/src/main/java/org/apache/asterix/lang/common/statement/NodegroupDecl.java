@@ -28,9 +28,9 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class NodegroupDecl extends AbstractStatement {
 
-    private Identifier nodegroupName;
-    private List<Identifier> nodeControllerNames;
-    private boolean ifNotExists;
+    private final Identifier nodegroupName;
+    private final List<Identifier> nodeControllerNames;
+    private final boolean ifNotExists;
 
     public NodegroupDecl(Identifier nodegroupName, List<Identifier> nodeControllerNames, boolean ifNotExists) {
         this.nodegroupName = nodegroupName;
@@ -44,10 +44,6 @@ public class NodegroupDecl extends AbstractStatement {
 
     public List<Identifier> getNodeControllerNames() {
         return nodeControllerNames;
-    }
-
-    public void setNodeControllerNames(List<Identifier> nodeControllerNames) {
-        this.nodeControllerNames = nodeControllerNames;
     }
 
     public boolean getIfNotExists() {

@@ -41,7 +41,7 @@ import org.apache.asterix.common.api.IMetadataLockManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.MetadataManager;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -110,9 +110,9 @@ public class RebalanceApiServlet extends AbstractServlet {
     protected void post(IServletRequest request, IServletResponse response) {
         try {
             // Gets dataverse, dataset, and target nodes for rebalance.
-            DataverseName dataverseName;
+            Namespace namespace;
             try {
-                dataverseName = ServletUtil.getDataverseName(request, "dataverseName");
+                namespace = ServletUtil.getNamespace(appCtx, request, "dataverseName");
             } catch (AlgebricksException e) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, e.getMessage());
                 return;
@@ -131,21 +131,27 @@ public class RebalanceApiServlet extends AbstractServlet {
             }
 
             // If a user gives parameter datasetName, she should give dataverseName as well.
-            if (dataverseName == null && datasetName != null) {
+            if (namespace == null && datasetName != null) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST,
                         "to rebalance a particular " + dataset() + ", the parameter dataverseName must be given");
                 return;
             }
 
+            DataverseName dataverseName = null;
+            String databaseName = null;
+            if (namespace != null) {
+                dataverseName = namespace.getDataverseName();
+                databaseName = namespace.getDatabaseName();
+            }
+            //TODO(DB): also check System database
             // Does not allow rebalancing a metadata dataset.
             if (MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName)) {
                 sendResponse(response, HttpResponseStatus.BAD_REQUEST, "cannot rebalance a metadata " + dataset());
                 return;
             }
             // Schedules a rebalance task and wait for its completion.
-            String database = MetadataUtil.resolveDatabase(null, dataverseName);
             CountDownLatch terminated =
-                    scheduleRebalance(database, dataverseName, datasetName, targetNodes, response, forceRebalance);
+                    scheduleRebalance(databaseName, dataverseName, datasetName, targetNodes, response, forceRebalance);
             terminated.await();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -263,7 +269,7 @@ public class RebalanceApiServlet extends AbstractServlet {
     private void rebalanceDataset(String database, DataverseName dataverseName, String datasetName,
             Set<String> targetNodes, boolean force) throws Exception {
         IHyracksClientConnection hcc = (IHyracksClientConnection) ctx.get(HYRACKS_CONNECTION_ATTR);
-        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         try {
             ActiveNotificationHandler activeNotificationHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();

@@ -54,6 +54,7 @@ import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.util.ExternalLibraryUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -131,24 +132,23 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         return Collections.emptyMap();
     }
 
-    private void doCreate(DataverseName dataverseName, String libraryName, ExternalFunctionLanguage language,
-            String hash, URI downloadURI, boolean replaceIfExists, String sysAuthHeader,
-            IRequestReference requestReference, IServletRequest request) throws Exception {
+    private void doCreate(Namespace libNamespace, String libraryName, ExternalFunctionLanguage language, String hash,
+            URI downloadURI, boolean replaceIfExists, String sysAuthHeader, IRequestReference requestReference,
+            IServletRequest request) throws Exception {
         INCMessageBroker ncMb = (INCMessageBroker) srvCtx.getMessageBroker();
         MessageFuture responseFuture = ncMb.registerMessageFuture();
         CreateLibraryRequestMessage req = new CreateLibraryRequestMessage(srvCtx.getNodeId(),
-                responseFuture.getFutureId(), dataverseName, libraryName, language, hash, downloadURI, replaceIfExists,
+                responseFuture.getFutureId(), libNamespace, libraryName, language, hash, downloadURI, replaceIfExists,
                 sysAuthHeader, requestReference, additionalHttpHeadersFromRequest(request));
         sendMessage(req, responseFuture);
     }
 
-    private void doDrop(DataverseName dataverseName, String libraryName, boolean replaceIfExists,
+    private void doDrop(Namespace namespace, String libraryName, boolean replaceIfExists,
             IRequestReference requestReference, IServletRequest request) throws Exception {
         INCMessageBroker ncMb = (INCMessageBroker) srvCtx.getMessageBroker();
         MessageFuture responseFuture = ncMb.registerMessageFuture();
-        DropLibraryRequestMessage req =
-                new DropLibraryRequestMessage(srvCtx.getNodeId(), responseFuture.getFutureId(), dataverseName,
-                        libraryName, replaceIfExists, requestReference, additionalHttpHeadersFromRequest(request));
+        DropLibraryRequestMessage req = new DropLibraryRequestMessage(srvCtx.getNodeId(), responseFuture.getFutureId(),
+                namespace, libraryName, replaceIfExists, requestReference, additionalHttpHeadersFromRequest(request));
         sendMessage(req, responseFuture);
     }
 
@@ -230,7 +230,10 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         HttpPostRequestDecoder requestDecoder = null;
         String localPath = localPath(request);
         try {
-            Pair<DataverseName, String> dvAndName = decodeDvAndLibFromLocalPath(localPath);
+            Pair<Namespace, String> namespaceAndName = decodeDvAndLibFromLocalPath(localPath);
+            String libName = namespaceAndName.second;
+            Namespace libNamespace = namespaceAndName.first;
+            DataverseName libDv = libNamespace.getDataverseName();
             IRequestReference requestReference = receptionist.welcome(request);
             if (op == LibraryOperation.UPSERT) {
                 requestDecoder = new HttpPostRequestDecoder(httpRequest);
@@ -240,7 +243,7 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
                 libraryTempFile = Files.createTempFile(workingDir, "lib_", '.' + fileExt);
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("Created temporary file " + libraryTempFile + " for library "
-                            + dvAndName.getFirst().getCanonicalForm() + "." + dvAndName.getSecond());
+                            + libDv.getCanonicalForm() + "." + libName);
                 }
                 MessageDigest digest = MessageDigest.getInstance("MD5");
                 libTmpOut = new FileOutputStream(libraryTempFile.toFile());
@@ -249,12 +252,11 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
                     IOUtils.copyLarge(ui, os);
                 }
                 URI downloadURI = createDownloadURI(libraryTempFile);
-                doCreate(dvAndName.getFirst(), dvAndName.getSecond(), language,
-                        ExternalLibraryUtils.digestToHexString(digest), downloadURI, true, getSysAuthHeader(),
-                        requestReference, request);
+                doCreate(libNamespace, libName, language, ExternalLibraryUtils.digestToHexString(digest), downloadURI,
+                        true, getSysAuthHeader(), requestReference, request);
             } else if (op == LibraryOperation.DELETE) {
                 //DELETE semantics imply ifExists
-                doDrop(dvAndName.getFirst(), dvAndName.getSecond(), false, requestReference, request);
+                doDrop(libNamespace, libName, false, requestReference, request);
             }
             response.setStatus(HttpResponseStatus.OK);
             PrintWriter responseWriter = response.writer();

@@ -33,6 +33,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -78,8 +79,9 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         if (resolveAsVariableReference(varExpr)) {
             return varExpr;
         }
-        DataverseName dataverseName = metadataProvider.getDefaultDataverseName();
-        String databaseName = metadataProvider.getDefaultDatabase();
+        Namespace defaultNamespace = metadataProvider.getDefaultNamespace();
+        DataverseName dataverseName = defaultNamespace.getDataverseName();
+        String databaseName = defaultNamespace.getDatabaseName();
         String datasetName = SqlppVariableUtil.toUserDefinedVariableName(varExpr.getVar().getValue()).getValue();
         CallExpr datasetExpr = resolveAsDataset(databaseName, dataverseName, datasetName, parent, varExpr);
         return datasetExpr != null ? datasetExpr : resolveAsFieldAccessOverContextVar(varExpr);
@@ -260,7 +262,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
 
     private CompilationException createUnresolvableError(DataverseName dataverseName, String datasetName,
             SourceLocation sourceLoc) {
-        DataverseName defaultDataverseName = metadataProvider.getDefaultDataverseName();
+        DataverseName defaultDataverseName = metadataProvider.getDefaultNamespace().getDataverseName();
         if (dataverseName == null && defaultDataverseName == null) {
             return new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET, sourceLoc, datasetName);
         }

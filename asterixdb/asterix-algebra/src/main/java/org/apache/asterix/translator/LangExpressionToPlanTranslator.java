@@ -40,7 +40,6 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -198,8 +197,8 @@ abstract class LangExpressionToPlanTranslator
 
     public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
-        String database = MetadataUtil.resolveDatabase(null, stmt.getDataverseName());
-        Dataset dataset = metadataProvider.findDataset(database, stmt.getDataverseName(), stmt.getDatasetName());
+        Dataset dataset =
+                metadataProvider.findDataset(stmt.getDatabaseName(), stmt.getDataverseName(), stmt.getDatasetName());
         if (dataset == null) {
             // This would never happen since we check for this in AqlTranslator
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, stmt.getDatasetName(),
@@ -211,8 +210,8 @@ abstract class LangExpressionToPlanTranslator
                 dataset.getMetaItemTypeDataverseName(), dataset.getMetaItemTypeName());
         itemType = metadataProvider.findTypeForDatasetWithoutType(itemType, metaItemType, dataset);
 
-        DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, database, stmt.getDataverseName(),
-                stmt.getDatasetName(), sourceLoc);
+        DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDatabaseName(),
+                stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
         List<List<String>> partitionKeys = targetDatasource.getDataset().getPrimaryKeys();
         if (dataset.hasMetaPart()) {
             throw new CompilationException(ErrorCode.ILLEGAL_DML_OPERATION, sourceLoc, dataset.getDatasetName(),
@@ -415,8 +414,7 @@ abstract class LangExpressionToPlanTranslator
             ProjectOperator projectOperator = (ProjectOperator) topOp;
             projectOperator.getVariables().set(0, seqVar);
 
-            String databaseName = MetadataUtil.resolveDatabase(null, stmt.getDataverseName());
-            DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, databaseName,
+            DatasetDataSource targetDatasource = validateDatasetInfo(metadataProvider, stmt.getDatabaseName(),
                     stmt.getDataverseName(), stmt.getDatasetName(), sourceLoc);
             List<Integer> keySourceIndicator =
                     ((InternalDatasetDetails) targetDatasource.getDataset().getDatasetDetails())

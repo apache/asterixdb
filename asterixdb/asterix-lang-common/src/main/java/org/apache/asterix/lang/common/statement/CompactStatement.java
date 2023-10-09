@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -27,11 +28,11 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CompactStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final Identifier datasetName;
 
-    public CompactStatement(DataverseName dataverseName, Identifier datasetName) {
-        this.dataverseName = dataverseName;
+    public CompactStatement(Namespace namespace, Identifier datasetName) {
+        this.namespace = namespace;
         this.datasetName = datasetName;
     }
 
@@ -40,8 +41,12 @@ public class CompactStatement extends AbstractStatement {
         return Statement.Kind.COMPACT;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public Identifier getDatasetName() {

@@ -24,6 +24,7 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
@@ -33,16 +34,16 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class InsertStatement extends AbstractStatement implements IReturningStatement {
 
-    private DataverseName dataverseName;
+    private Namespace namespace;
     private String datasetName;
     private final Query query;
     private final VariableExpr var;
     private Expression returnExpression;
     private int varCounter;
 
-    public InsertStatement(DataverseName dataverseName, String datasetName, Query query, int varCounter,
-            VariableExpr var, Expression returnExpression) {
-        this.dataverseName = dataverseName;
+    public InsertStatement(Namespace namespace, String datasetName, Query query, int varCounter, VariableExpr var,
+            Expression returnExpression) {
+        this.namespace = namespace;
         this.datasetName = datasetName;
         this.query = query;
         this.varCounter = varCounter;
@@ -55,12 +56,20 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
         return Statement.Kind.INSERT;
     }
 
-    public DataverseName getDataverseName() {
-        return dataverseName;
+    public Namespace getNamespace() {
+        return namespace;
     }
 
-    public void setDataverseName(DataverseName dataverseName) {
-        this.dataverseName = dataverseName;
+    public DataverseName getDataverseName() {
+        return namespace == null ? null : namespace.getDataverseName();
+    }
+
+    public String getDatabaseName() {
+        return namespace == null ? null : namespace.getDatabaseName();
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
     }
 
     public String getDatasetName() {
@@ -129,7 +138,7 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
 
     @Override
     public int hashCode() {
-        return Objects.hash(datasetName, dataverseName, query, varCounter, var, returnExpression);
+        return Objects.hash(datasetName, namespace, query, varCounter, var, returnExpression);
     }
 
     @Override
@@ -142,7 +151,7 @@ public class InsertStatement extends AbstractStatement implements IReturningStat
             return false;
         }
         InsertStatement target = (InsertStatement) object;
-        return Objects.equals(datasetName, target.datasetName) && Objects.equals(dataverseName, target.dataverseName)
+        return Objects.equals(datasetName, target.datasetName) && Objects.equals(namespace, target.namespace)
                 && Objects.equals(query, target.query) && Objects.equals(returnExpression, target.returnExpression)
                 && varCounter == target.varCounter && Objects.equals(var, target.var);
     }

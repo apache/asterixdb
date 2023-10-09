@@ -20,19 +20,20 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class AdapterDropStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
 
     private final String adapterName;
 
     private final boolean ifExists;
 
-    public AdapterDropStatement(DataverseName dataverseName, String adapterName, boolean ifExists) {
-        this.dataverseName = dataverseName;
+    public AdapterDropStatement(Namespace namespace, String adapterName, boolean ifExists) {
+        this.namespace = namespace;
         this.adapterName = adapterName;
         this.ifExists = ifExists;
     }
@@ -42,8 +43,12 @@ public class AdapterDropStatement extends AbstractStatement {
         return Kind.ADAPTER_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getAdapterName() {

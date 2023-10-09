@@ -25,8 +25,8 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class SetStatement extends AbstractStatement {
 
-    private String propName;
-    private String propValue;
+    private final String propName;
+    private final String propValue;
 
     public SetStatement(String propName, String propValue) {
         this.propName = propName;

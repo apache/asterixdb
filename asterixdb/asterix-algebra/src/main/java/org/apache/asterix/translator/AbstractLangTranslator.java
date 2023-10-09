@@ -40,6 +40,7 @@ import org.apache.asterix.common.functions.FunctionConstants;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
@@ -64,7 +65,6 @@ import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
 import org.apache.asterix.metadata.dataset.hints.DatasetHints;
-import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -89,7 +89,7 @@ public abstract class AbstractLangTranslator {
     protected static final String BAD_DATAVERSE_OBJECT_DDL_MESSAGE =
             "Cannot %s a %s belonging to the " + dataverse() + ": %s";
 
-    public void validateOperation(ICcApplicationContext appCtx, Dataverse defaultDataverse, Statement stmt)
+    public void validateOperation(ICcApplicationContext appCtx, Namespace namespace, Statement stmt)
             throws AlgebricksException {
 
         final IClusterStateManager clusterStateManager = appCtx.getClusterStateManager();
@@ -148,7 +148,7 @@ public abstract class AbstractLangTranslator {
 
         boolean invalidOperation = false;
         String message = null;
-        DataverseName dataverseName = defaultDataverse != null ? defaultDataverse.getDataverseName() : null;
+        DataverseName dataverseName = namespace != null ? namespace.getDataverseName() : null;
         switch (stmt.getKind()) {
             case LOAD:
                 LoadStatement loadStmt = (LoadStatement) stmt;
@@ -227,6 +227,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case DATAVERSE_DROP:
+                //TODO(DB): check it's not System database for all cases
                 DataverseDropStatement dvDropStmt = (DataverseDropStatement) stmt;
                 dataverseName = dvDropStmt.getDataverseName();
                 invalidOperation = isMetadataDataverse(dataverseName) || isDefaultDataverse(dataverseName);
@@ -236,6 +237,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case DATASET_DECL:
+                //TODO(DB): check it's not System database for all cases
                 DatasetDecl dsCreateStmt = (DatasetDecl) stmt;
                 if (dsCreateStmt.getDataverse() != null) {
                     dataverseName = dsCreateStmt.getDataverse();
@@ -268,6 +270,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case DATASET_DROP:
+                //TODO(DB): check it's not System database for all cases
                 DropDatasetStatement dsDropStmt = (DropDatasetStatement) stmt;
                 if (dsDropStmt.getDataverseName() != null) {
                     dataverseName = dsDropStmt.getDataverseName();
@@ -279,6 +282,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case INDEX_DROP:
+                //TODO(DB): check it's not System database for all cases
                 IndexDropStatement idxDropStmt = (IndexDropStatement) stmt;
                 if (idxDropStmt.getDataverseName() != null) {
                     dataverseName = idxDropStmt.getDataverseName();
@@ -290,6 +294,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case TYPE_DECL:
+                //TODO(DB): check it's not System database for all cases
                 TypeDecl typeCreateStmt = (TypeDecl) stmt;
                 if (typeCreateStmt.getDataverseName() != null) {
                     dataverseName = typeCreateStmt.getDataverseName();
@@ -301,6 +306,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case TYPE_DROP:
+                //TODO(DB): check it's not System database for all cases
                 TypeDropStatement typeDropStmt = (TypeDropStatement) stmt;
                 if (typeDropStmt.getDataverseName() != null) {
                     dataverseName = typeDropStmt.getDataverseName();
@@ -312,6 +318,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_SYNONYM:
+                //TODO(DB): check it's not System database for all cases
                 CreateSynonymStatement synCreateStmt = (CreateSynonymStatement) stmt;
                 if (synCreateStmt.getDataverseName() != null) {
                     dataverseName = synCreateStmt.getDataverseName();
@@ -323,6 +330,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case FUNCTION_DECL:
+                //TODO(DB): check it's not System database for all cases
                 FunctionDecl fnDeclStmt = (FunctionDecl) stmt;
                 FunctionSignature fnDeclSignature = fnDeclStmt.getSignature();
                 if (fnDeclSignature.getDataverseName() != null) {
@@ -335,6 +343,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_FUNCTION:
+                //TODO(DB): check it's not System database for all cases
                 CreateFunctionStatement fnCreateStmt = (CreateFunctionStatement) stmt;
                 FunctionSignature fnCreateSignature = fnCreateStmt.getFunctionSignature();
                 if (fnCreateSignature.getDataverseName() != null) {
@@ -347,6 +356,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_LIBRARY:
+                //TODO(DB): check it's not System database for all cases
                 CreateLibraryStatement libCreateStmt = (CreateLibraryStatement) stmt;
                 if (libCreateStmt.getDataverseName() != null) {
                     dataverseName = libCreateStmt.getDataverseName();
@@ -358,6 +368,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_ADAPTER:
+                //TODO(DB): check it's not System database for all cases
                 CreateAdapterStatement adCreateStmt = (CreateAdapterStatement) stmt;
                 if (adCreateStmt.getDataverseName() != null) {
                     dataverseName = adCreateStmt.getDataverseName();
@@ -369,6 +380,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_VIEW:
+                //TODO(DB): check it's not System database for all cases
                 CreateViewStatement viewCreateStmt = (CreateViewStatement) stmt;
                 if (viewCreateStmt.getDataverseName() != null) {
                     dataverseName = viewCreateStmt.getDataverseName();
@@ -380,6 +392,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_FEED:
+                //TODO(DB): check it's not System database for all cases
                 CreateFeedStatement feedCreateStmt = (CreateFeedStatement) stmt;
                 if (feedCreateStmt.getDataverseName() != null) {
                     dataverseName = feedCreateStmt.getDataverseName();
@@ -391,6 +404,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case CREATE_FEED_POLICY:
+                //TODO(DB): check it's not System database for all cases
                 invalidOperation = isMetadataDataverse(dataverseName);
                 if (invalidOperation) {
                     message = String.format(BAD_DATAVERSE_OBJECT_DDL_MESSAGE, "create", "ingestion policy",
@@ -399,6 +413,7 @@ public abstract class AbstractLangTranslator {
                 break;
 
             case ANALYZE:
+                //TODO(DB): check it's not System database for all cases
                 AnalyzeStatement analyzeStmt = (AnalyzeStatement) stmt;
                 if (analyzeStmt.getDataverseName() != null) {
                     dataverseName = analyzeStmt.getDataverseName();
@@ -409,6 +424,7 @@ public abstract class AbstractLangTranslator {
                 }
                 break;
             case ANALYZE_DROP:
+                //TODO(DB): check it's not System database for all cases
                 AnalyzeDropStatement analyzeDropStmt = (AnalyzeDropStatement) stmt;
                 if (analyzeDropStmt.getDataverseName() != null) {
                     dataverseName = analyzeDropStmt.getDataverseName();

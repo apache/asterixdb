@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -38,19 +39,23 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
  */
 public class CreateFeedStatement extends AbstractStatement {
 
-    private final Pair<DataverseName, Identifier> qName;
+    private final Pair<Namespace, Identifier> qName;
     private final boolean ifNotExists;
     private final AdmObjectNode withObjectNode;
 
-    public CreateFeedStatement(Pair<DataverseName, Identifier> qName, RecordConstructor withRecord, boolean ifNotExists)
+    public CreateFeedStatement(Pair<Namespace, Identifier> qName, RecordConstructor withRecord, boolean ifNotExists)
             throws AlgebricksException {
         this.qName = qName;
         this.ifNotExists = ifNotExists;
         this.withObjectNode = withRecord == null ? null : ExpressionUtils.toNode(withRecord);
     }
 
-    public DataverseName getDataverseName() {
+    public Namespace getNamespace() {
         return qName.first;
+    }
+
+    public DataverseName getDataverseName() {
+        return qName.first == null ? null : qName.first.getDataverseName();
     }
 
     public Identifier getFeedName() {

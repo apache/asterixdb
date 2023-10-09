@@ -25,7 +25,7 @@ import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class OrderedListTypeDefinition extends AbstractTypeExpression {
 
-    private TypeExpression itemTypeExpression;
+    private final TypeExpression itemTypeExpression;
 
     public OrderedListTypeDefinition(TypeExpression itemTypeExpression) {
         this.itemTypeExpression = itemTypeExpression;

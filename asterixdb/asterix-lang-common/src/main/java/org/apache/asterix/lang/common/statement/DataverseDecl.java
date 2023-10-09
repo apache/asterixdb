@@ -42,6 +42,10 @@ public class DataverseDecl extends AbstractStatement {
         this.ifExists = ifExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
         return namespace.getDataverseName();
     }

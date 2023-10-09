@@ -20,6 +20,7 @@ package org.apache.asterix.lang.common.statement;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeExpression;
@@ -29,27 +30,27 @@ import org.apache.asterix.object.base.AdmObjectNode;
 
 public class CopyStatement extends AbstractStatement {
 
-    private DataverseName dataverseName;
-    private String datasetName;
-    private TypeExpression typeExpr;
-    private ExternalDetailsDecl externalDetails;
-    private AdmObjectNode withObjectNode;
+    private final Namespace namespace;
+    private final String datasetName;
+    private final TypeExpression typeExpr;
+    private final ExternalDetailsDecl externalDetails;
+    private final AdmObjectNode withObjectNode;
 
-    public CopyStatement(DataverseName dataverseName, String datasetName, TypeExpression typeExpr,
+    public CopyStatement(Namespace namespace, String datasetName, TypeExpression typeExpr,
             ExternalDetailsDecl externalDetails, RecordConstructor withRecord) throws CompilationException {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.datasetName = datasetName;
         this.typeExpr = typeExpr;
         this.externalDetails = externalDetails;
         this.withObjectNode = withRecord == null ? new AdmObjectNode() : ExpressionUtils.toNode(withRecord);
     }
 
-    public DataverseName getDataverseName() {
-        return dataverseName;
+    public Namespace getNamespace() {
+        return namespace;
     }
 
-    public void setDataverseName(DataverseName dataverseName) {
-        this.dataverseName = dataverseName;
+    public DataverseName getDataverseName() {
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     @Override
@@ -61,10 +62,6 @@ public class CopyStatement extends AbstractStatement {
         return datasetName;
     }
 
-    public void setDatasetName(String datasetName) {
-        this.datasetName = datasetName;
-    }
-
     @Override
     public <R, T> R accept(ILangVisitor<R, T> visitor, T arg) throws CompilationException {
         return visitor.visit(this, arg);
@@ -74,16 +71,8 @@ public class CopyStatement extends AbstractStatement {
         return externalDetails;
     }
 
-    public void setExternalDetails(ExternalDetailsDecl externalDetails) {
-        this.externalDetails = externalDetails;
-    }
-
     public AdmObjectNode getWithObjectNode() {
         return withObjectNode;
-    }
-
-    public void setWithObjectNode(AdmObjectNode withObjectNode) {
-        this.withObjectNode = withObjectNode;
     }
 
     @Override

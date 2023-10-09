@@ -408,7 +408,8 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     @Override
     public Void visit(TypeReferenceExpression t, Integer arg) throws CompilationException {
         if (t.getIdent().first != null && t.getIdent().first != null) {
-            out.print(generateDataverseName(t.getIdent().first));
+            //TODO(DB): include database
+            out.print(generateDataverseName(t.getIdent().first.getDataverseName()));
             out.print('.');
         }
         out.print(normalize(t.getIdent().second.getValue()));

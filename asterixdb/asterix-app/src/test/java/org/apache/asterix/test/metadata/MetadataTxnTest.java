@@ -77,7 +77,7 @@ public class MetadataTxnTest {
     public void abortMetadataTxn() throws Exception {
         ICcApplicationContext appCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        final MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        final MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
         final String nodeGroupName = "ng";
@@ -116,7 +116,7 @@ public class MetadataTxnTest {
                 + "(KeyType) PRIMARY KEY id WITH {\"node-group\":{\"name\":\"" + nodeGroup + "\"}};", format);
         // find source dataset
         Dataset sourceDataset;
-        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -128,7 +128,7 @@ public class MetadataTxnTest {
         }
 
         // create rebalance metadata provider and metadata txn
-        metadataProvider = MetadataProvider.create(appCtx, null);
+        metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext rebalanceTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(rebalanceTxn);
         try {
@@ -166,7 +166,7 @@ public class MetadataTxnTest {
         // get created dataset
         ICcApplicationContext appCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         Dataset sourceDataset;
@@ -226,7 +226,7 @@ public class MetadataTxnTest {
     public void surviveInterruptOnMetadataTxnCommit() throws Exception {
         ICcApplicationContext appCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        final MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        final MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
         final String nodeGroupName = "ng";
@@ -258,7 +258,7 @@ public class MetadataTxnTest {
     public void failedFlushOnUncommittedMetadataTxn() throws Exception {
         ICcApplicationContext ccAppCtx =
                 (ICcApplicationContext) integrationUtil.getClusterControllerService().getApplicationContext();
-        final MetadataProvider metadataProvider = MetadataProvider.create(ccAppCtx, null);
+        final MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(ccAppCtx);
         final MetadataTransactionContext mdTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxn);
         final String nodeGroupName = "ng";
@@ -325,7 +325,7 @@ public class MetadataTxnTest {
                 source.getDatabaseName(), source.getDataverseName(), source.getDatasetType().name(),
                 source.getNodeGroupName(), NoMergePolicyFactory.NAME, null, source.getDatasetDetails(),
                 source.getHints(), DatasetConfig.DatasetType.INTERNAL, datasetPostfix, 0);
-        MetadataProvider metadataProvider = MetadataProvider.create(appCtx, null);
+        MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext writeTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(writeTxn);
         try {

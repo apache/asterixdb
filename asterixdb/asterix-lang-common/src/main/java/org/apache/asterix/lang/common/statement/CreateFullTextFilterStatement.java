@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.lang.common.statement;
 
-import java.util.Iterator;
-
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.util.FullTextUtil;
@@ -37,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CreateFullTextFilterStatement extends AbstractStatement {
 
-    private final DataverseName dataverseName;
+    private final Namespace namespace;
     private final String filterName;
     private final boolean ifNotExists;
     private final AdmObjectNode filterNode;
@@ -46,16 +45,20 @@ public class CreateFullTextFilterStatement extends AbstractStatement {
     public static final String FIELD_NAME_STOPWORDS_LIST = "stopwordsList";
     public static final String FIELD_TYPE_STOPWORDS = "stopwords";
 
-    public CreateFullTextFilterStatement(DataverseName dataverseName, String filterName, boolean ifNotExists,
+    public CreateFullTextFilterStatement(Namespace namespace, String filterName, boolean ifNotExists,
             RecordConstructor expr) throws CompilationException {
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.filterName = filterName;
         this.ifNotExists = ifNotExists;
         this.filterNode = FullTextUtil.getFilterNode(expr);
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public DataverseName getDataverseName() {
-        return dataverseName;
+        return namespace == null ? null : namespace.getDataverseName();
     }
 
     public String getFilterName() {
@@ -71,21 +74,19 @@ public class CreateFullTextFilterStatement extends AbstractStatement {
     }
 
     public ImmutableList<String> getStopwordsList() throws CompilationException {
-        ImmutableList.Builder listBuiler = ImmutableList.<String> builder();
+        ImmutableList.Builder<String> listBuilder = ImmutableList.builder();
         AdmArrayNode arrayNode = (AdmArrayNode) filterNode.get(FIELD_NAME_STOPWORDS_LIST);
 
-        Iterator<IAdmNode> iterator = arrayNode.iterator();
-        while (iterator.hasNext()) {
-            IAdmNode node = iterator.next();
+        for (IAdmNode node : arrayNode) {
             if (!(node instanceof AdmStringNode)) {
                 throw new CompilationException(ErrorCode.PARSE_ERROR, getSourceLocation(),
                         "error when parsing stopwords list");
             }
 
-            listBuiler.add(((AdmStringNode) node).get());
+            listBuilder.add(((AdmStringNode) node).get());
         }
 
-        return listBuiler.build();
+        return listBuilder.build();
     }
 
     @Override

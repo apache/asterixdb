@@ -43,6 +43,8 @@ public class MetadataConstants {
     // Name of the pre-defined default dataverse
     public static final DataverseName DEFAULT_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Default");
 
+    public static final Namespace DEFAULT_NAMESPACE = new Namespace(DEFAULT_DATABASE, DEFAULT_DATAVERSE_NAME);
+
     // Name of the node group where metadata is stored on.
     public static final String METADATA_NODEGROUP_NAME = "MetadataGroup";
 
