@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -41,12 +42,11 @@ import org.apache.logging.log4j.Logger;
  * @see org.apache.asterix.cloud.lazy.accessor.ReplaceableCloudAccessor
  */
 public final class ParallelCacher implements IParallelCacher {
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final FilenameFilter METADATA_FILTER =
+
+    public static final FilenameFilter METADATA_FILTER =
             ((dir, name) -> name.startsWith(StorageConstants.INDEX_NON_DATA_FILES_PREFIX));
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private final IParallelDownloader downloader;
-
     /**
      * Uncached Indexes subpaths
      */
@@ -83,6 +83,19 @@ public final class ParallelCacher implements IParallelCacher {
     }
 
     @Override
+    public Set<FileReference> getUncachedFiles(FileReference dir, FilenameFilter filter) {
+        if (dir.getRelativePath().endsWith(StorageConstants.STORAGE_ROOT_DIR_NAME)) {
+            return uncachedDataFiles.stream()
+                    .filter(f -> StoragePathUtil.hasSameStorageRoot(dir, f) && filter.accept(null, f.getName()))
+                    .collect(Collectors.toSet());
+        }
+        return uncachedDataFiles
+                .stream().filter(f -> StoragePathUtil.hasSameStorageRoot(dir, f)
+                        && StoragePathUtil.isRelativeParent(dir, f) && filter.accept(null, f.getName()))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
     public synchronized boolean downloadData(FileReference indexFile) throws HyracksDataException {
         String indexSubPath = StoragePathUtil.getIndexSubPath(indexFile, false);
         Set<FileReference> toDownload = new HashSet<>();
@@ -92,13 +105,13 @@ public final class ParallelCacher implements IParallelCacher {
             }
         }
 
-        LOGGER.info("Downloading data files for {} in all partitions: {}", indexSubPath, toDownload);
+        LOGGER.debug("Downloading data files for {} in all partitions: {}", indexSubPath, toDownload);
         Collection<FileReference> failed = downloader.downloadDirectories(toDownload);
         if (!failed.isEmpty()) {
             LOGGER.warn("Failed to download data files {}. Re-downloading: {}", indexSubPath, failed);
             downloader.downloadFiles(failed);
         }
-        LOGGER.info("Finished downloading data files for {}", indexSubPath);
+        LOGGER.debug("Finished downloading data files for {}", indexSubPath);
         uncachedIndexes.remove(indexSubPath);
         uncachedDataFiles.removeIf(f -> f.getRelativePath().contains(indexSubPath));
         return isEmpty();
@@ -114,9 +127,9 @@ public final class ParallelCacher implements IParallelCacher {
             }
         }
 
-        LOGGER.info("Downloading metadata files for {} in all partitions: {}", indexSubPath, toDownload);
+        LOGGER.debug("Downloading metadata files for {} in all partitions: {}", indexSubPath, toDownload);
         downloader.downloadFiles(toDownload);
-        LOGGER.info("Finished downloading metadata files for {}", indexSubPath);
+        LOGGER.debug("Finished downloading metadata files for {}", indexSubPath);
         uncachedMetadataFiles.removeAll(toDownload);
         return isEmpty();
     }
@@ -149,7 +162,7 @@ public final class ParallelCacher implements IParallelCacher {
         LOGGER.info("Parallel cacher was closed");
     }
 
-    private Set<FileReference> getFiles(List<FileReference> uncachedFiles, FilenameFilter filter) {
+    public static Set<FileReference> getFiles(List<FileReference> uncachedFiles, FilenameFilter filter) {
         Set<FileReference> fileReferences = ConcurrentHashMap.newKeySet();
         for (FileReference fileReference : uncachedFiles) {
             if (filter.accept(null, fileReference.getName())) {

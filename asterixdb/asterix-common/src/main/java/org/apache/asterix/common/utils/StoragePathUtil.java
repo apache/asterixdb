@@ -218,4 +218,12 @@ public class StoragePathUtil {
         }
         return relativePath.substring(start, end);
     }
+
+    public static boolean hasSameStorageRoot(FileReference file1, FileReference file2) {
+        return file1.getDeviceHandle().equals(file2.getDeviceHandle());
+    }
+
+    public static boolean isRelativeParent(FileReference parent, FileReference child) {
+        return child.getRelativePath().startsWith(parent.getRelativePath());
+    }
 }

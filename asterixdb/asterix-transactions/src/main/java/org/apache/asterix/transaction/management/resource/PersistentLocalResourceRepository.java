@@ -566,6 +566,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
                 throw HyracksDataException.create(e);
             }
         } finally {
+            clearResourcesCache();
             afterReadAccess();
         }
     }

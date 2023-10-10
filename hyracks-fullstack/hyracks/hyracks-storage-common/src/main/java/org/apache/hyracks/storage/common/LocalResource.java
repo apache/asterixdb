@@ -106,7 +106,7 @@ public class LocalResource implements Serializable, IJsonSerializable {
     @Override
     public String toString() {
         return new StringBuilder("{\"").append(LocalResource.class.getSimpleName()).append("\" : ").append("{\"id\" = ")
-                .append(id).append(", \"resource\" : ").append(resource).append(", \"version\" : ").append(version)
+                .append(id).append(", \"resource\" : ").append(getPath()).append(", \"version\" : ").append(version)
                 .append(" } ").toString();
     }
 

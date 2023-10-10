@@ -18,7 +18,9 @@
  */
 package org.apache.asterix.cloud.lazy;
 
+import java.io.FilenameFilter;
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -31,6 +33,8 @@ public interface IParallelCacher {
      * @return true if the index is already cached, false otherwise
      */
     boolean isCached(FileReference indexDir);
+
+    Set<FileReference> getUncachedFiles(FileReference dir, FilenameFilter filter);
 
     /**
      * Downloads all index's data files for all partitions.

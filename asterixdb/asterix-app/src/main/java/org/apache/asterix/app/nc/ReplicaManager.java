@@ -129,9 +129,8 @@ public class ReplicaManager implements IReplicaManager {
         LOGGER.warn("promoting partition {}", partition);
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
-        localResourceRepository.cleanup(partition);
-        localResourceRepository.clearResourcesCache();
         if (!appCtx.isCloudDeployment()) {
+            localResourceRepository.cleanup(partition);
             final IRecoveryManager recoveryManager = appCtx.getTransactionSubsystem().getRecoveryManager();
             recoveryManager.replayReplicaPartitionLogs(Stream.of(partition).collect(Collectors.toSet()), true);
         }

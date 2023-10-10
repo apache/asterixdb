@@ -18,7 +18,10 @@
  */
 package org.apache.asterix.cloud.lazy;
 
+import java.io.FilenameFilter;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 import org.apache.hyracks.api.io.FileReference;
 
@@ -28,6 +31,11 @@ public class NoOpParallelCacher implements IParallelCacher {
     @Override
     public boolean isCached(FileReference indexDir) {
         return false;
+    }
+
+    @Override
+    public Set<FileReference> getUncachedFiles(FileReference dir, FilenameFilter filter) {
+        return Collections.emptySet();
     }
 
     @Override

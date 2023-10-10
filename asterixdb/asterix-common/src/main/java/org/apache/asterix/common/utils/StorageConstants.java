@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.ConcurrentMergePolicyFacto
 public class StorageConstants {
 
     public static final String METADATA_TXN_NOWAL_DIR_NAME = "mtd-txn-logs";
+    public static final String GLOBAL_TXN_DIR_NAME = ".";
     public static final String STORAGE_ROOT_DIR_NAME = "storage";
     public static final String INGESTION_LOGS_DIR_NAME = "ingestion_logs";
     public static final String PARTITION_DIR_PREFIX = "partition_";

@@ -219,7 +219,7 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
     protected List<INCLifecycleTask> buildIdleNcRegTasks(String newNodeId, boolean metadataNode, SystemState state,
             Set<Integer> activePartitions) {
         final List<INCLifecycleTask> tasks = new ArrayList<>();
-        Set<Integer> nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode);
+        Set<Integer> nodeActivePartitions = getNodeActivePartitions(newNodeId, activePartitions, metadataNode, state);
         tasks.add(new UpdateNodeStatusTask(NodeStatus.BOOTING, nodeActivePartitions));
         int metadataPartitionId = clusterManager.getMetadataPartition().getPartitionId();
         // Add any cloud-related tasks
@@ -322,7 +322,8 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
         return true;
     }
 
-    protected Set<Integer> getNodeActivePartitions(String nodeId, Set<Integer> nodePartitions, boolean metadataNode) {
+    protected Set<Integer> getNodeActivePartitions(String nodeId, Set<Integer> nodePartitions, boolean metadataNode,
+            SystemState state) {
         if (metadataNode) {
             nodePartitions.add(clusterManager.getMetadataPartition().getPartitionId());
         }
