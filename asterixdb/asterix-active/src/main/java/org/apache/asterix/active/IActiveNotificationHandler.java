@@ -55,14 +55,14 @@ public interface IActiveNotificationHandler {
     void unregisterListener(IActiveEntityEventsListener listener) throws HyracksDataException;
 
     /**
-     * @return all the registered event listeners
-     */
-    IActiveEntityEventsListener[] getEventListeners();
-
-    /**
      * @return List of all the registered event listeners
      */
     Collection<IActiveEntityEventsListener> getEventListenersAsList();
+
+    /**
+     * @return all the registered event listeners
+     */
+    IActiveEntityEventsListener[] getEventListeners();
 
     /**
      * Lookup an event listener using the entity id

@@ -212,7 +212,11 @@
               <usedDependency>io.netty:netty-codec-http2</usedDependency>
               <usedDependency>io.netty:netty-transport-native-unix-common</usedDependency>
               <usedDependency>io.netty:netty-handler-proxy</usedDependency>
+              <usedDependency>io.netty:netty-handler-proxy</usedDependency>
             </usedDependencies>
+            <ignoredUnusedDeclaredDependencies>
+              <unusedDeclaredDependency>io.grpc:grpc-census:*</unusedDeclaredDependency>
+            </ignoredUnusedDeclaredDependencies>
           </configuration>
         </plugin>
       </plugins>
@@ -518,6 +522,11 @@
       <groupId>com.google.cloud.bigdataoss</groupId>
       <artifactId>gcs-connector</artifactId>
     </dependency>
+    <!-- explicitly include grpc-census, to ensure the correct version -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-census</artifactId>
+    </dependency>
     <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
@@ -546,20 +555,15 @@
       <groupId>io.netty</groupId>
       <artifactId>netty-handler-proxy</artifactId>
     </dependency>
-    <!-- TODO(htowaileb): removed from hadoop transitively and added separately to avoid CVEs, can
-     be removed once upgraded to hadoop 3.3.4 as it addresses the CVEs -->
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-util</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-util-ajax</artifactId>
-    </dependency>
     <!-- Manually included to avoid CVE-2023-1370 -->
     <dependency>
       <groupId>net.minidev</groupId>
       <artifactId>json-smart</artifactId>
+    </dependency>
+    <!-- Manually overridden to avoid CVE-2023-1436, CVE-2022-45693, CVE-2022-45685, CVE-2022-40150, CVE-2022-40149 -->
+    <dependency>
+      <groupId>org.codehaus.jettison</groupId>
+      <artifactId>jettison</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.iceberg</groupId>

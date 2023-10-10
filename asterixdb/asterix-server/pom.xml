@@ -546,13 +546,6 @@
             </override>
             <override>
               <gavs>
-                <gav>org.bouncycastle:bcprov-jdk15on:1.60</gav>
-                <gav>org.bouncycastle:bcpkix-jdk15on:1.60</gav>
-              </gavs>
-              <url>https://raw.githubusercontent.com/bcgit/bc-java/r1rv60/LICENSE.html</url>
-            </override>
-            <override>
-              <gavs>
                 <gav>org.jetbrains:annotations:17.0.0</gav>
               </gavs>
               <url>https://raw.githubusercontent.com/JetBrains/java-annotations/master/LICENSE.txt</url>
@@ -625,6 +618,7 @@
                 <aliasUrl>http://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://www.apache.org/licenses/LICENSE-2.0.html</aliasUrl>
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
+                <aliasUrl>https://opensource.org/licenses/Apache-2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</aliasUrl>

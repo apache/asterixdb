@@ -167,15 +167,6 @@
           <groupId>ch.qos.reload4j</groupId>
           <artifactId>reload4j</artifactId>
         </exclusion>
-        <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-util</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-util-ajax</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -197,11 +188,6 @@
         <exclusion>
           <groupId>ch.qos.reload4j</groupId>
           <artifactId>reload4j</artifactId>
-        </exclusion>
-        <!-- TODO(htowaileb): Remove after updating to hadoop 3.3.4 -->
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-util</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
