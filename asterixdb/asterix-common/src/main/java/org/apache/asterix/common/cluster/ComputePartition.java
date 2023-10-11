@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.cluster;
 
+import java.util.Objects;
+
 public class ComputePartition {
     private final String nodeId;
     private final int id;
@@ -33,5 +35,19 @@ public class ComputePartition {
 
     public int getId() {
         return id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nodeId, id);
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (!(object instanceof ComputePartition)) {
+            return false;
+        }
+        ComputePartition target = (ComputePartition) object;
+        return Objects.equals(id, target.getId()) && Objects.equals(nodeId, target.getNodeId());
     }
 }
