@@ -26,11 +26,30 @@
     <artifactId>hyracks-control</artifactId>
     <version>0.3.9-SNAPSHOT</version>
   </parent>
-
   <properties>
     <root.dir>${basedir}/../../..</root.dir>
     <sonar.sources>pom.xml,src/main/java,src/main/resources</sonar.sources>
   </properties>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <ignoredUsedUndeclaredDependencies combine.children="append">
+            <ignoredUsedUndeclaredDependency>io.netty:netty-transport:*</ignoredUsedUndeclaredDependency>
+          </ignoredUsedUndeclaredDependencies>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>process-test-classes</phase>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>  </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
