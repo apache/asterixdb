@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.cloud;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.config.CloudProperties;
@@ -29,14 +30,14 @@ public class CloudManagerProvider {
     private CloudManagerProvider() {
     }
 
-    public static IIOManager createIOManager(CloudProperties cloudProperties, IIOManager ioManager)
-            throws HyracksDataException {
+    public static IIOManager createIOManager(CloudProperties cloudProperties, IIOManager ioManager,
+            INamespacePathResolver nsPathResolver) throws HyracksDataException {
         IOManager localIoManager = (IOManager) ioManager;
         if (cloudProperties.getCloudCachePolicy() == CloudCachePolicy.LAZY) {
-            return new LazyCloudIOManager(localIoManager, cloudProperties);
+            return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver);
         }
 
-        return new EagerCloudIOManager(localIoManager, cloudProperties);
+        return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver);
     }
 
     public static IPartitionBootstrapper getCloudPartitionBootstrapper(IIOManager ioManager) {

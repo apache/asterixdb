@@ -39,6 +39,7 @@ import org.apache.asterix.cloud.lazy.accessor.ILazyAccessorReplacer;
 import org.apache.asterix.cloud.lazy.accessor.InitialCloudAccessor;
 import org.apache.asterix.cloud.lazy.accessor.LocalAccessor;
 import org.apache.asterix.cloud.lazy.accessor.ReplaceableCloudAccessor;
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -60,8 +61,9 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     private final ILazyAccessorReplacer replacer;
     private ILazyAccessor accessor;
 
-    public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties) throws HyracksDataException {
-        super(ioManager, cloudProperties);
+    public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
+            INamespacePathResolver nsPathResolver) throws HyracksDataException {
+        super(ioManager, cloudProperties, nsPathResolver);
         accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager);
         replacer = () -> {
             synchronized (this) {

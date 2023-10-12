@@ -31,4 +31,5 @@ public interface INamespaceResolver {
 
     Namespace resolve(String namespace) throws AsterixException;
 
+    boolean isUsingDatabase();
 }

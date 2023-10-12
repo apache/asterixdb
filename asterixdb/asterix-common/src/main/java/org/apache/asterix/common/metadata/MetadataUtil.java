@@ -46,6 +46,11 @@ public class MetadataUtil {
         return dataverseName + "." + objectName;
     }
 
+    public static String getFullyQualifiedDisplayName(String databaseName, DataverseName dataverseName,
+            String objectName) {
+        return databaseName + "." + dataverseName + "." + objectName;
+    }
+
     public static String databaseFor(DataverseName dataverse) {
         if (dataverse == null) {
             return null;

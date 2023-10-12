@@ -35,8 +35,10 @@ import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.util.CloudFileUtil;
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -54,8 +56,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String DATAVERSE_PATH =
-            FileUtil.joinPath(STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + METADATA_PARTITION, "Metadata");
+    //TODO(DB): change
+    private final String metadataNamespacePath;
     protected final ICloudClient cloudClient;
     protected final WriteBufferProvider writeBufferProvider;
     protected final String bucket;
@@ -63,9 +65,12 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     protected final List<FileReference> partitionPaths;
     protected final IOManager localIoManager;
 
-    public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties) throws HyracksDataException {
+    public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
+            INamespacePathResolver nsPathResolver) throws HyracksDataException {
         super(ioManager.getIODevices(), ioManager.getDeviceComputer(), ioManager.getIOParallelism(),
                 ioManager.getQueueSize());
+        this.metadataNamespacePath = FileUtil.joinPath(STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + METADATA_PARTITION,
+                nsPathResolver.resolve(MetadataConstants.METADATA_NAMESPACE));
         this.bucket = cloudProperties.getStorageBucket();
         cloudClient = CloudClientProvider.getClient(cloudProperties);
         int numOfThreads = getIODevices().size() * getIOParallelism();
@@ -83,7 +88,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public IRecoveryManager.SystemState getSystemStateOnMissingCheckpoint() {
-        if (cloudClient.listObjects(bucket, DATAVERSE_PATH, IoUtil.NO_OP_FILTER).isEmpty()) {
+        if (cloudClient.listObjects(bucket, metadataNamespacePath, IoUtil.NO_OP_FILTER).isEmpty()) {
             LOGGER.info("First time to initialize this cluster: systemState = PERMANENT_DATA_LOSS");
             return IRecoveryManager.SystemState.PERMANENT_DATA_LOSS;
         } else {

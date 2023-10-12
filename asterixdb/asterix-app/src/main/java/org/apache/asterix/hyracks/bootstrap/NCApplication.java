@@ -55,11 +55,13 @@ import org.apache.asterix.app.nc.RecoveryManager;
 import org.apache.asterix.app.replication.message.RegistrationTasksRequestMessage;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.config.AsterixExtension;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -70,6 +72,7 @@ import org.apache.asterix.common.config.PropertiesAccessor;
 import org.apache.asterix.common.config.PropertiesFactory;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.IReplicationStrategyFactory;
 import org.apache.asterix.common.replication.ReplicationStrategyFactory;
@@ -157,12 +160,16 @@ public class NCApplication extends BaseNCApplication {
         }
         MetadataBuiltinFunctions.init();
 
+        boolean isDbResolutionEnabled =
+                ncServiceCtx.getAppConfig().getBoolean(CompilerProperties.Option.COMPILER_ENABLE_DB_RESOLUTION);
         boolean cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
-        NamespaceResolver namespaceResolver = new NamespaceResolver(cloudDeployment);
+        boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
+        NamespaceResolver namespaceResolver = new NamespaceResolver(useDatabaseResolution);
+        NamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
         ncExtensionManager =
                 new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment, namespaceResolver);
-        runtimeContext =
-                createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory(), namespaceResolver);
+        runtimeContext = createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory(),
+                namespaceResolver, namespacePathResolver);
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();
         if (!metadataProperties.getNodeNames().contains(this.ncServiceCtx.getNodeId())) {
             if (LOGGER.isInfoEnabled()) {
@@ -196,8 +203,10 @@ public class NCApplication extends BaseNCApplication {
 
     protected INcApplicationContext createNCApplicationContext(INCServiceContext ncServiceCtx,
             NCExtensionManager ncExtensionManager, IPropertiesFactory propertiesFactory,
-            INamespaceResolver namespaceResolver) throws IOException, AsterixException {
-        return new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, propertiesFactory, namespaceResolver);
+            INamespaceResolver namespaceResolver, INamespacePathResolver namespacePathResolver)
+            throws IOException, AsterixException {
+        return new NCAppRuntimeContext(ncServiceCtx, ncExtensionManager, propertiesFactory, namespaceResolver,
+                namespacePathResolver);
     }
 
     protected IRecoveryManagerFactory getRecoveryManagerFactory() {

@@ -19,6 +19,8 @@
 
 package org.apache.asterix.common.metadata;
 
+import java.io.File;
+
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.utils.StoragePathUtil;
 
@@ -27,16 +29,32 @@ public class NamespacePathResolver implements INamespacePathResolver {
     private final boolean usingDatabase;
 
     public NamespacePathResolver(boolean usingDatabase) {
-        this.usingDatabase = false;
+        this.usingDatabase = usingDatabase;
     }
 
     @Override
     public String resolve(Namespace namespace) {
-        return StoragePathUtil.prepareDataverseName(namespace.getDataverseName());
+        DataverseName dataverseName = namespace.getDataverseName();
+        if (usingDatabase) {
+            if (MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName)) {
+                return StoragePathUtil.prepareDataverseName(dataverseName);
+            }
+            return namespace.getDatabaseName() + File.separatorChar
+                    + StoragePathUtil.prepareDataverseName(dataverseName);
+        } else {
+            return StoragePathUtil.prepareDataverseName(dataverseName);
+        }
     }
 
     @Override
     public String resolve(String databaseName, DataverseName dataverseName) {
-        return StoragePathUtil.prepareDataverseName(dataverseName);
+        if (usingDatabase) {
+            if (MetadataConstants.METADATA_DATAVERSE_NAME.equals(dataverseName)) {
+                return StoragePathUtil.prepareDataverseName(dataverseName);
+            }
+            return databaseName + File.separatorChar + StoragePathUtil.prepareDataverseName(dataverseName);
+        } else {
+            return StoragePathUtil.prepareDataverseName(dataverseName);
+        }
     }
 }

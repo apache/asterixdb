@@ -18,3 +18,4 @@
  */
 
 DROP DATAVERSE `part1`.`p%r t2` IF EXISTS;
+DROP DATABASE `part1`;

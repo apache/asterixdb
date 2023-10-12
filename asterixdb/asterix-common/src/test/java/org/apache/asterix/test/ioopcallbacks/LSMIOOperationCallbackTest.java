@@ -21,6 +21,7 @@ package org.apache.asterix.test.ioopcallbacks;
 
 import static org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId.MIN_VALID_COMPONENT_ID;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,7 +92,9 @@ public class LSMIOOperationCallbackTest extends TestCase {
         flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
         ILSMIndexAccessor firstAccessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
         firstAccessor.getOpContext().setParameters(flushMap);
-        FileReference firstTarget = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
+        IODeviceHandle mockIoDevice = Mockito.mock(IODeviceHandle.class);
+        Mockito.when(mockIoDevice.getMount()).thenReturn(new File(getIndexPath()));
+        FileReference firstTarget = new FileReference(mockIoDevice, getComponentFileName());
         LSMComponentFileReferences firstFiles = new LSMComponentFileReferences(firstTarget, firstTarget, firstTarget);
         FlushOperation firstFlush = new TestFlushOperation(firstAccessor, firstTarget, callback, indexId, firstFiles,
                 new LSMComponentId(0, 0));
@@ -107,7 +110,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, nextComponentId);
         ILSMIndexAccessor secondAccessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
         secondAccessor.getOpContext().setParameters(flushMap);
-        FileReference secondTarget = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
+        FileReference secondTarget = new FileReference(mockIoDevice, getComponentFileName());
         LSMComponentFileReferences secondFiles =
                 new LSMComponentFileReferences(secondTarget, secondTarget, secondTarget);
         FlushOperation secondFlush = new TestFlushOperation(secondAccessor, secondTarget, callback, indexId,
@@ -173,6 +176,8 @@ public class LSMIOOperationCallbackTest extends TestCase {
         callback.recycled(mockComponent);
         checkMemoryComponent(id, mockComponent);
 
+        IODeviceHandle mockIoDevice = Mockito.mock(IODeviceHandle.class);
+        Mockito.when(mockIoDevice.getMount()).thenReturn(new File(getIndexPath()));
         Mockito.when(mockIndex.isMemoryComponentsAllocated()).thenReturn(true);
         for (int i = 0; i < 100; i++) {
             // schedule a flush
@@ -184,7 +189,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
             flushMap.put(LSMIOOperationCallback.KEY_NEXT_COMPONENT_ID, expectedId);
             ILSMIndexAccessor accessor = new TestLSMIndexAccessor(new TestLSMIndexOperationContext(mockIndex));
             accessor.getOpContext().setParameters(flushMap);
-            FileReference target = new FileReference(Mockito.mock(IODeviceHandle.class), getComponentFileName());
+            FileReference target = new FileReference(mockIoDevice, getComponentFileName());
             LSMComponentFileReferences files = new LSMComponentFileReferences(target, target, target);
             FlushOperation flush =
                     new TestFlushOperation(accessor, target, callback, indexId, files, new LSMComponentId(0, 0));

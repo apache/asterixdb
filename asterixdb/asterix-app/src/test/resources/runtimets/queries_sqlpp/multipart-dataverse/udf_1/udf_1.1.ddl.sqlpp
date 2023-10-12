@@ -20,6 +20,8 @@
  * Description: user-defined function in a dataverse with a multipart name
  */
 
+//DB: drop database x if exists;
+//DB: create database x;
 drop  dataverse x.y if exists;
 create  dataverse x.y;
 

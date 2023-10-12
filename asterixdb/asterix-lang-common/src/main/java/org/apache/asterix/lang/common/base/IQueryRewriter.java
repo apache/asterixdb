@@ -21,6 +21,7 @@ package org.apache.asterix.lang.common.base;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
@@ -64,5 +65,5 @@ public interface IQueryRewriter {
 
     Query createFunctionAccessorQuery(FunctionDecl functionDecl);
 
-    Query createViewAccessorQuery(ViewDecl viewDecl);
+    Query createViewAccessorQuery(ViewDecl viewDecl, INamespaceResolver namespaceResolver);
 }

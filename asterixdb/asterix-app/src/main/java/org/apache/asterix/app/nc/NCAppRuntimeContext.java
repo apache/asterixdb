@@ -61,7 +61,6 @@ import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategyFactory;
@@ -172,11 +171,12 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
     private final CloudProperties cloudProperties;
     private IPartitionBootstrapper partitionBootstrapper;
-    private final NamespacePathResolver namespacePathResolver;
+    private final INamespacePathResolver namespacePathResolver;
     private final INamespaceResolver namespaceResolver;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
-            IPropertiesFactory propertiesFactory, INamespaceResolver namespaceResolver) {
+            IPropertiesFactory propertiesFactory, INamespaceResolver namespaceResolver,
+            INamespacePathResolver namespacePathResolver) {
         this.ncServiceContext = ncServiceContext;
         compilerProperties = propertiesFactory.newCompilerProperties();
         externalProperties = propertiesFactory.newExternalProperties();
@@ -195,7 +195,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
                 .createResourceIdFactory();
         persistedResourceRegistry = ncServiceContext.getPersistedResourceRegistry();
         cacheManager = new CacheManager();
-        namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
+        this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
     }
 
@@ -205,7 +205,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         if (isCloudDeployment()) {
-            persistenceIOManager = CloudManagerProvider.createIOManager(cloudProperties, ioManager);
+            persistenceIOManager =
+                    CloudManagerProvider.createIOManager(cloudProperties, ioManager, namespacePathResolver);
             partitionBootstrapper = CloudManagerProvider.getCloudPartitionBootstrapper(persistenceIOManager);
         } else {
             persistenceIOManager = ioManager;

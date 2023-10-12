@@ -57,7 +57,6 @@ import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
-import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
 import org.apache.asterix.common.storage.ICompressionManager;
 import org.apache.asterix.common.transactions.IResourceIdManager;
@@ -126,7 +125,7 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IDataPartitioningProvider dataPartitioningProvider;
     private final IGlobalTxManager globalTxManager;
     private final IOManager ioManager;
-    private final NamespacePathResolver namespacePathResolver;
+    private final INamespacePathResolver namespacePathResolver;
     private final INamespaceResolver namespaceResolver;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
@@ -136,8 +135,8 @@ public class CcApplicationContext implements ICcApplicationContext {
             IMetadataLockUtil mdLockUtil, IReceptionistFactory receptionistFactory,
             IConfigValidatorFactory configValidatorFactory, Object extensionManager,
             IAdapterFactoryService adapterFactoryService, IGlobalTxManager globalTxManager, IOManager ioManager,
-            CloudProperties cloudProperties, INamespaceResolver namespaceResolver)
-            throws AlgebricksException, IOException {
+            CloudProperties cloudProperties, INamespaceResolver namespaceResolver,
+            INamespacePathResolver namespacePathResolver) throws AlgebricksException, IOException {
         this.ccServiceCtx = ccServiceCtx;
         this.hcc = hcc;
         this.activeLifeCycleListener = activeLifeCycleListener;
@@ -173,7 +172,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         requestTracker = new RequestTracker(this);
         configValidator = configValidatorFactory.create();
         this.adapterFactoryService = adapterFactoryService;
-        this.namespacePathResolver = new NamespacePathResolver(isCloudDeployment());
+        this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
         this.globalTxManager = globalTxManager;
         this.ioManager = ioManager;

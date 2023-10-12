@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.commons.lang3.ArrayUtils;
@@ -40,6 +41,7 @@ public class ResourceReference {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final String root;
     protected final String partition;
+    protected final String database;
     protected final DataverseName dataverse;
     protected final String dataset;
     protected final String rebalance;
@@ -68,12 +70,19 @@ public class ResourceReference {
         String probablyPartition = tokens[--offset];
         if (dvParts.isEmpty()) {
             // root/partition/dataverse/dataset/rebalanceCount/index/fileName
+            // root/partition/database?/dataverse/dataset/rebalanceCount/index/fileName
             try {
                 dataverse = DataverseName.createSinglePartName(dvPart);
             } catch (AsterixException e) {
                 throw new IllegalArgumentException("unable to parse path: '" + path + "'!", e);
             }
-            partition = probablyPartition;
+            if (!probablyPartition.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
+                database = probablyPartition;
+                partition = tokens[--offset];
+            } else {
+                database = MetadataUtil.databaseFor(dataverse);
+                partition = probablyPartition;
+            }
             root = tokens[--offset];
         } else if (probablyPartition.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
             // root/partition/dataverse_p1/^dataverse_p2/.../^dataverse_pn/dataset/rebalanceCount/index/fileName
@@ -84,6 +93,7 @@ public class ResourceReference {
             } catch (AsterixException e) {
                 throw new IllegalArgumentException("unable to parse path: '" + path + "'!", e);
             }
+            database = MetadataUtil.databaseFor(dataverse);
             partition = probablyPartition;
             root = tokens[--offset];
         } else if (dvPart.startsWith(StorageConstants.PARTITION_DIR_PREFIX)) {
@@ -99,6 +109,7 @@ public class ResourceReference {
             }
             LOGGER.info("legacy dataverse starting with ^ found: '{}'; this is not supported for new dataverses",
                     dataverse);
+            database = MetadataUtil.databaseFor(dataverse);
             partition = dvPart;
             root = probablyPartition;
         } else {
@@ -117,6 +128,10 @@ public class ResourceReference {
 
     public String getPartition() {
         return partition;
+    }
+
+    public String getDatabase() {
+        return database;
     }
 
     public DataverseName getDataverse() {

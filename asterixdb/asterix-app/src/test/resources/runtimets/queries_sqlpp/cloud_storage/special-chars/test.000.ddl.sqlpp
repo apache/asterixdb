@@ -17,6 +17,8 @@
  * under the License.
  */
 
+DROP DATABASE `part1` IF EXISTS;
+CREATE DATABASE `part1`;
 DROP DATAVERSE `part1`.`p%r t2` IF EXISTS;
 CREATE DATAVERSE `part1`.`p%r t2`;
 

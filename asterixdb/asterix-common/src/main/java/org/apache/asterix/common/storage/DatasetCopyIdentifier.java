@@ -25,19 +25,22 @@ import org.apache.asterix.common.metadata.DataverseName;
 
 public class DatasetCopyIdentifier implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private final String database;
     private final DataverseName dataverse;
     private final String dataset;
     private final String rebalance;
 
-    private DatasetCopyIdentifier(DataverseName dataverse, String datasetName, String rebalance) {
+    private DatasetCopyIdentifier(String database, DataverseName dataverse, String datasetName, String rebalance) {
+        this.database = database;
         this.dataverse = dataverse;
         this.dataset = datasetName;
         this.rebalance = rebalance;
     }
 
-    public static DatasetCopyIdentifier of(DataverseName dataverse, String datasetName, String rebalance) {
-        return new DatasetCopyIdentifier(dataverse, datasetName, rebalance);
+    public static DatasetCopyIdentifier of(String database, DataverseName dataverse, String datasetName,
+            String rebalance) {
+        return new DatasetCopyIdentifier(database, dataverse, datasetName, rebalance);
     }
 
     public String getDataset() {
@@ -57,13 +60,13 @@ public class DatasetCopyIdentifier implements Serializable {
             return false;
         }
         DatasetCopyIdentifier that = (DatasetCopyIdentifier) o;
-        return Objects.equals(dataverse, that.dataverse) && Objects.equals(dataset, that.dataset)
-                && Objects.equals(rebalance, that.rebalance);
+        return Objects.equals(database, that.database) && Objects.equals(dataverse, that.dataverse)
+                && Objects.equals(dataset, that.dataset) && Objects.equals(rebalance, that.rebalance);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataverse, dataset, rebalance);
+        return Objects.hash(database, dataverse, dataset, rebalance);
     }
 
     public DataverseName getDataverse() {
@@ -71,8 +74,8 @@ public class DatasetCopyIdentifier implements Serializable {
     }
 
     public boolean isMatch(ResourceReference resourceReference) {
-        return resourceReference.getDataverse().equals(dataverse) && resourceReference.getDataset().equals(dataset)
-                && resourceReference.getRebalance().equals(rebalance);
+        return resourceReference.getDatabase().equals(database) && resourceReference.getDataverse().equals(dataverse)
+                && resourceReference.getDataset().equals(dataset) && resourceReference.getRebalance().equals(rebalance);
     }
 
     @Override

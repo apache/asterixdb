@@ -628,6 +628,11 @@ public class DatasetUtil {
         return MetadataUtil.getFullyQualifiedDisplayName(dataverseName, datasetName);
     }
 
+    public static String getFullyQualifiedDisplayName(String databaseName, DataverseName dataverseName,
+            String datasetName) {
+        return MetadataUtil.getFullyQualifiedDisplayName(databaseName, dataverseName, datasetName);
+    }
+
     /***
      * Creates a node group that is associated with a new dataset.
      *

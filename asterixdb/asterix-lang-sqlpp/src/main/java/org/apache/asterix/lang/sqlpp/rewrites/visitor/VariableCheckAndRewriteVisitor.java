@@ -126,15 +126,16 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                 if (resolveAsVariableReference(topVarExpr)) {
                     return fa;
                 } else {
-                    DataverseName dataverseName;
+                    Namespace namespace;
                     try {
-                        dataverseName = DataverseName.create(dataverseNameParts);
+                        namespace = metadataProvider.resolve(dataverseNameParts);
                     } catch (AsterixException e) {
                         throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, fa.getSourceLocation(),
                                 dataverseNameParts.toString());
                     }
                     //TODO(DB): decide
-                    String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
+                    String databaseName = namespace.getDatabaseName();
+                    DataverseName dataverseName = namespace.getDataverseName();
                     String datasetName = fa.getIdent().getValue();
                     CallExpr datasetExpr =
                             resolveAsDataset(databaseName, dataverseName, datasetName, parent, topVarExpr);

@@ -7352,11 +7352,13 @@
     </test-case>
     <test-case FilePath="multipart-dataverse">
       <compilation-unit name="special_chars_1">
+        <description>MP</description>
         <output-dir compare="Text">special_chars_1</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="multipart-dataverse">
       <compilation-unit name="special_chars_2">
+        <description>MP</description>
         <output-dir compare="Text">special_chars_2</output-dir>
       </compilation-unit>
     </test-case>

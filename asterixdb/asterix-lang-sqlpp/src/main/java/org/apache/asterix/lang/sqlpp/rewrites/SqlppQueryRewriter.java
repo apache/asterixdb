@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -603,22 +604,34 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     }
 
     @Override
-    public Query createViewAccessorQuery(ViewDecl viewDecl) {
+    public Query createViewAccessorQuery(ViewDecl viewDecl, INamespaceResolver namespaceResolver) {
+        boolean usingDatabase = namespaceResolver.isUsingDatabase();
         // dataverse_name.view_name
+        String databaseName = viewDecl.getViewName().getDatabaseName();
         DataverseName dataverseName = viewDecl.getViewName().getDataverseName();
         String viewName = viewDecl.getViewName().getDatasetName();
-        Expression vAccessExpr = createDatasetAccessExpression(dataverseName, viewName, viewDecl.getSourceLocation());
+        Expression vAccessExpr = createDatasetAccessExpression(databaseName, dataverseName, viewName,
+                viewDecl.getSourceLocation(), usingDatabase);
         return ExpressionUtils.createWrappedQuery(vAccessExpr, viewDecl.getSourceLocation());
     }
 
-    private static Expression createDatasetAccessExpression(DataverseName dataverseName, String datasetName,
-            SourceLocation sourceLoc) {
-        AbstractExpression resultExpr = null;
+    private static Expression createDatasetAccessExpression(String databaseName, DataverseName dataverseName,
+            String datasetName, SourceLocation sourceLoc, boolean usingDatabase) {
+        AbstractExpression resultExpr;
         List<String> dataverseNameParts = dataverseName.getParts();
-        for (int i = 0, n = dataverseNameParts.size(); i < n; i++) {
+        int startIdx;
+        if (usingDatabase) {
+            resultExpr = new VariableExpr(new VarIdentifier(SqlppVariableUtil.toInternalVariableName(databaseName)));
+            startIdx = 0;
+        } else {
+            resultExpr = new VariableExpr(
+                    new VarIdentifier(SqlppVariableUtil.toInternalVariableName(dataverseNameParts.get(0))));
+            startIdx = 1;
+        }
+        resultExpr.setSourceLocation(sourceLoc);
+        for (int i = startIdx, n = dataverseNameParts.size(); i < n; i++) {
             String part = dataverseNameParts.get(i);
-            resultExpr = i == 0 ? new VariableExpr(new VarIdentifier(SqlppVariableUtil.toInternalVariableName(part)))
-                    : new FieldAccessor(resultExpr, new Identifier(part));
+            resultExpr = new FieldAccessor(resultExpr, new Identifier(part));
             resultExpr.setSourceLocation(sourceLoc);
         }
         resultExpr = new FieldAccessor(resultExpr, new Identifier(datasetName));

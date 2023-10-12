@@ -663,8 +663,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    //TODO(DB): change
-                    throw new CompilationException(ErrorCode.DATAVERSE_EXISTS, stmtCreateDatabase.getSourceLocation(),
+                    throw new CompilationException(ErrorCode.DATABASE_EXISTS, stmtCreateDatabase.getSourceLocation(),
                             databaseName);
                 }
             }
@@ -703,6 +702,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             DataverseName dvName = stmtCreateDataverse.getDataverseName();
             String dbName = stmtCreateDataverse.getDatabaseName();
+            Database db = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, dbName);
+            if (db == null) {
+                throw new CompilationException(ErrorCode.UNKNOWN_DATABASE, stmtCreateDataverse.getSourceLocation(),
+                        dbName);
+            }
+
             Dataverse dv =
                     MetadataManager.INSTANCE.getDataverse(metadataProvider.getMetadataTxnContext(), dbName, dvName);
             if (dv != null) {
@@ -872,6 +877,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DatasetFormatInfo datasetFormatInfo = dd.getDatasetFormatInfo(storageProperties.getStorageFormat(),
                 storageProperties.getColumnMaxTupleCount(), storageProperties.getColumnFreeSpaceTolerance());
         try {
+            //TODO(DB): also check for database existence?
+
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
@@ -2137,6 +2144,18 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         List<FeedEventsListener> feedsToStop = new ArrayList<>();
         List<JobSpecification> jobsToExecute = new ArrayList<>();
         try {
+            Database db = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, databaseName);
+            if (db == null) {
+                if (stmtDropDataverse.getIfExists()) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATABASE, databaseName));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return false;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATABASE, sourceLoc, databaseName);
+                }
+            }
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
                 if (stmtDropDataverse.getIfExists()) {
@@ -2338,6 +2357,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         List<JobSpecification> jobsToExecute = new ArrayList<>();
         Dataset ds = null;
         try {
+            //TODO(DB): also check for database existence?
+
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx.getValue(), databaseName, dataverseName);
             if (dv == null) {
@@ -2896,7 +2917,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ViewDecl viewDecl = new ViewDecl(viewQualifiedName, cvs.getViewBodyExpression());
             viewDecl.setSourceLocation(sourceLoc);
             IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
-            Query wrappedQuery = queryRewriter.createViewAccessorQuery(viewDecl);
+            Query wrappedQuery =
+                    queryRewriter.createViewAccessorQuery(viewDecl, metadataProvider.getNamespaceResolver());
             metadataProvider.setDefaultNamespace(ns);
             LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
                     Collections.singletonList(viewDecl), warningCollector, wrappedQuery.getVarCounter());

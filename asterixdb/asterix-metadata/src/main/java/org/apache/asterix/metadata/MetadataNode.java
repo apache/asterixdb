@@ -40,6 +40,7 @@ import org.apache.asterix.common.exceptions.MetadataException;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -63,6 +64,7 @@ import org.apache.asterix.metadata.api.IMetadataExtension;
 import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.api.IValueExtractor;
+import org.apache.asterix.metadata.bootstrap.MetadataBuiltinEntities;
 import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
 import org.apache.asterix.metadata.entities.Database;
@@ -354,13 +356,15 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void addDatabase(TxnId txnId, Database database) throws AlgebricksException, RemoteException {
         try {
+            if (!mdIndexesProvider.isUsingDatabase()) {
+                return;
+            }
             DatabaseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatabaseTupleTranslator(true);
             ITupleReference tuple = tupleReaderWriter.getTupleFromMetadataEntity(database);
             insertTupleIntoIndex(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), tuple);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.DUPLICATE_KEY)) {
-                //TODO(DB): change to database
-                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.DATAVERSE_EXISTS, e,
+                throw new AsterixException(org.apache.asterix.common.exceptions.ErrorCode.DATABASE_EXISTS, e,
                         database.getDatabaseName());
             } else {
                 throw new AlgebricksException(e);
@@ -699,6 +703,9 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public void dropDatabase(TxnId txnId, String databaseName) throws AlgebricksException, RemoteException {
         try {
+            if (!mdIndexesProvider.isUsingDatabase()) {
+                return;
+            }
             //TODO(DB): review
             confirmDatabaseCanBeDeleted(txnId, databaseName);
 
@@ -1123,6 +1130,9 @@ public class MetadataNode implements IMetadataNode {
     @Override
     public Database getDatabase(TxnId txnId, String databaseName) throws AlgebricksException {
         try {
+            if (!mdIndexesProvider.isUsingDatabase()) {
+                return defaultDatabase(databaseName);
+            }
             ITupleReference searchKey = createTuple(databaseName);
             DatabaseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatabaseTupleTranslator(false);
             IValueExtractor<Database> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
@@ -2994,5 +3004,14 @@ public class MetadataNode implements IMetadataNode {
 
     public ITxnIdFactory getTxnIdFactory() {
         return txnIdFactory;
+    }
+
+    private Database defaultDatabase(String databaseName) {
+        //TODO(DB): review
+        if (MetadataConstants.SYSTEM_DATABASE.equals(databaseName)) {
+            return MetadataBuiltinEntities.SYSTEM_DATABASE;
+        } else {
+            return MetadataBuiltinEntities.DEFAULT_DATABASE;
+        }
     }
 }

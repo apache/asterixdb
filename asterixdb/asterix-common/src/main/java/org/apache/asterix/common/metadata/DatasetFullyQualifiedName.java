@@ -48,7 +48,8 @@ public class DatasetFullyQualifiedName implements Serializable {
 
     @Override
     public String toString() {
-        return dataverseName + "." + datasetName;
+        return (MetadataConstants.DEFAULT_DATABASE.equals(databaseName) ? "" : datasetName + ".") + dataverseName + "."
+                + datasetName;
     }
 
     @Override

@@ -20,6 +20,8 @@
  * Description: name resolution for a dataverse with a multipart name
  */
 
+//DB: drop database sales if exists;
+//DB: create database sales;
 drop dataverse sales.east if exists;
 create dataverse sales.east;
 

@@ -20,6 +20,8 @@
 drop dataverse test1 if exists;
 create dataverse test1;
 
+//DB: drop database test2 if exists;
+//DB: create database test2;
 drop dataverse test2.test3 if exists;
 create dataverse test2.test3;
 

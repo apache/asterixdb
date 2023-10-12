@@ -29,7 +29,7 @@ public class NamespaceResolver implements INamespaceResolver {
     private final boolean usingDatabase;
 
     public NamespaceResolver(boolean usingDatabase) {
-        this.usingDatabase = false;
+        this.usingDatabase = usingDatabase;
     }
 
     @Override
@@ -42,13 +42,49 @@ public class NamespaceResolver implements INamespaceResolver {
         if (multiIdentifier == null) {
             return null;
         }
-        DataverseName dataverseName = DataverseName.create(multiIdentifier, fromIndex, toIndex);
-        return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
+        if (usingDatabase) {
+            int partsNum = toIndex - fromIndex;
+            if (partsNum > 1) {
+                String databaseName = multiIdentifier.get(fromIndex);
+                return ofDatabase(databaseName, multiIdentifier, fromIndex + 1, toIndex);
+            } else {
+                return ofDataverse(multiIdentifier, fromIndex, toIndex);
+            }
+        } else {
+            return ofDataverse(multiIdentifier, fromIndex, toIndex);
+        }
     }
 
     @Override
     public Namespace resolve(String namespace) throws AsterixException {
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(namespace);
+        if (usingDatabase) {
+            List<String> parts = dataverseName.getParts();
+            if (parts.size() > 1) {
+                String databaseName = parts.get(0);
+                return ofDatabase(databaseName, parts, 1, parts.size());
+            } else {
+                return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
+            }
+        } else {
+            return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
+        }
+    }
+
+    @Override
+    public boolean isUsingDatabase() {
+        return usingDatabase;
+    }
+
+    private static Namespace ofDatabase(String databaseName, List<String> multiIdentifier, int fromIndex, int toIndex)
+            throws AsterixException {
+        DataverseName dataverseName = DataverseName.create(multiIdentifier, fromIndex, toIndex);
+        return new Namespace(databaseName, dataverseName);
+    }
+
+    private static Namespace ofDataverse(List<String> multiIdentifier, int fromIndex, int toIndex)
+            throws AsterixException {
+        DataverseName dataverseName = DataverseName.create(multiIdentifier, fromIndex, toIndex);
         return new Namespace(MetadataUtil.databaseFor(dataverseName), dataverseName);
     }
 }
