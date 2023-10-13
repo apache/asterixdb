@@ -70,7 +70,7 @@
     <test.includes>${global.test.includes}</test.includes>
     <test.excludes>${global.test.excludes}</test.excludes>
     <!-- Versions under dependencymanagement or used in many projects via properties -->
-    <hadoop.version>3.3.1</hadoop.version>
+    <hadoop.version>3.3.3</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
     <snappy.version>1.1.10.1</snappy.version>
