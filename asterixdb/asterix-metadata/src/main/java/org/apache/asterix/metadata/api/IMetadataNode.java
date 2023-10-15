@@ -130,6 +130,8 @@ public interface IMetadataNode extends Remote, Serializable {
     Dataverse getDataverse(TxnId txnId, String database, DataverseName dataverseName)
             throws AlgebricksException, RemoteException;
 
+    List<Database> getDatabases(TxnId txnId) throws AlgebricksException, RemoteException;
+
     /**
      * Retrieves all dataverses, acquiring local locks on behalf of the given
      * transaction id.

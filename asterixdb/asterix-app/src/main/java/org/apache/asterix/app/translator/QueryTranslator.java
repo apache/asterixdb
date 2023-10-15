@@ -2015,6 +2015,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             // #. prepare jobs which will drop corresponding libraries
+            //TODO(DB): library database
             List<Library> libraries = MetadataManager.INSTANCE.getDatabaseLibraries(mdTxnCtx, databaseName);
             for (Library library : libraries) {
                 jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(library.getDataverseName(),
@@ -2214,7 +2215,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<Library> libraries =
                     MetadataManager.INSTANCE.getDataverseLibraries(mdTxnCtx, databaseName, dataverseName);
             for (Library library : libraries) {
-                //TODO(DB):
+                //TODO(DB): library database
                 jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(dataverseName, library.getName(),
                         metadataProvider));
             }
@@ -2310,12 +2311,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void validateDatabaseStateBeforeDrop(MetadataProvider metadataProvider, Database database,
-            SourceLocation sourceLoc) throws AlgebricksException {
+            SourceLocation sourceLoc) throws AlgebricksException, HyracksDataException {
         // may be overridden by product extensions for additional checks before dropping the database
     }
 
     protected void validateDataverseStateBeforeDrop(MetadataProvider metadataProvider, Dataverse dataverse,
-            SourceLocation sourceLoc) throws AlgebricksException {
+            SourceLocation sourceLoc) throws AlgebricksException, HyracksDataException {
         // may be overridden by product extensions for additional checks before dropping the dataverse
     }
 

@@ -1115,6 +1115,19 @@ public class MetadataNode implements IMetadataNode {
     }
 
     @Override
+    public List<Database> getDatabases(TxnId txnId) throws AlgebricksException, RemoteException {
+        try {
+            DatabaseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDatabaseTupleTranslator(false);
+            IValueExtractor<Database> valueExtractor = new MetadataEntityValueExtractor<>(tupleReaderWriter);
+            List<Database> results = new ArrayList<>();
+            searchIndex(txnId, mdIndexesProvider.getDatabaseEntity().getIndex(), null, valueExtractor, results);
+            return results;
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
+    }
+
+    @Override
     public List<Dataverse> getDataverses(TxnId txnId) throws AlgebricksException {
         try {
             DataverseTupleTranslator tupleReaderWriter = tupleTranslatorProvider.getDataverseTupleTranslator(false);

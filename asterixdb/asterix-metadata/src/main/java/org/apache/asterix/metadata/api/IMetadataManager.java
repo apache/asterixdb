@@ -108,6 +108,8 @@ public interface IMetadataManager extends IMetadataBootstrap {
      */
     void addDataverse(MetadataTransactionContext ctx, Dataverse dataverse) throws AlgebricksException;
 
+    List<Database> getDatabases(MetadataTransactionContext ctx) throws AlgebricksException;
+
     /**
      * Retrieves all dataverses
      *
