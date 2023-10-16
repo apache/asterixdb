@@ -17,14 +17,22 @@
  * under the License.
  */
 
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
-DROP DATASET A_Customers_Default_Open;
-DROP DATASET A_Customers_Closed;
-DROP DATASET A_Customers_Open;
-DROP DATASET B_Orders_Default_Open;
-DROP DATASET B_Orders_Closed;
-DROP DATASET B_Orders_Open;
-DROP DATASET C_Customers_Meta_Default_Open;
-DROP DATASET C_Customers_Meta_Closed;
-DROP DATASET C_Customers_Meta_Open;
+CREATE TYPE TestType AS CLOSED {
+    tail_num: STRING,
+    code: INT,
+    description: INT,
+    state: STRING
+};
+
+CREATE EXTERNAL DATASET Sales(TestType) USING %adapter% (
+    %template%,
+    ("container"="playground"),
+    ("definition"="external-filter/embed-csv/sales/{day:int}-{month:int}-{year:int}"),
+    ("embed-filter-values" = "true"),
+    ("header"="true"),
+    ("format"="csv")
+);

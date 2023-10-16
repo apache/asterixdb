@@ -223,6 +223,13 @@
     <!-- Parquet Tests End -->
     <!-- Dynamic prefixes tests start -->
     <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="embed-with-closed-type">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-with-closed-type</output-dir>
+        <expected-error>Compilation error: A closed type cannot be used when 'embed-filter-values' is enabled</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="one-field">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">one-field</output-dir>
@@ -386,6 +393,12 @@
       <compilation-unit name="embed-multiple-values">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">embed-multiple-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/csv">
+      <compilation-unit name="embed-multiple-missing-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-multiple-missing-values</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">

@@ -37,7 +37,7 @@ CREATE FUNCTION listMetadata() {
 
 /* Internal datasets */
 
-CREATE DATASET A_Customers_Default_Closed(
+CREATE DATASET A_Customers_Default_Open(
   c_custkey integer not unknown,
   c_name string not unknown,
   c_phone string,
@@ -60,7 +60,7 @@ CREATE DATASET A_Customers_Open(
 
 /* External datasets */
 
-CREATE EXTERNAL DATASET B_Orders_Default_Closed(
+CREATE EXTERNAL DATASET B_Orders_Default_Open(
     o_orderkey integer not unknown,
     o_custkey integer not unknown,
     o_orderstatus string not unknown,
@@ -107,7 +107,7 @@ USING `localfs`
 
 /* Internal datasets with inline META type */
 
-CREATE DATASET C_Customers_Meta_Default_Closed(
+CREATE DATASET C_Customers_Meta_Default_Open(
   c_custkey integer not unknown,
   c_name string not unknown,
   c_phone string,

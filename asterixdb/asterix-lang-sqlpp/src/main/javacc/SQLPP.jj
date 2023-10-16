@@ -1188,7 +1188,7 @@ DatasetDecl DatasetSpecification(Token startStmtToken) throws ParseException:
 }
 {
   nameComponents = QualifiedName()
-  (typeExpr = DatasetTypeSpecification())?
+  (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN))?
   (
     { String name; }
     <WITH>
@@ -1199,7 +1199,7 @@ DatasetDecl DatasetSpecification(Token startStmtToken) throws ParseException:
                 "We can only support one additional associated field called \"meta\".");
         }
     }
-    metaTypeExpr = DatasetTypeSpecification()
+    metaTypeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN)
   )?
   ifNotExists = IfNotExists()
   (LOOKAHEAD(3) primaryKeyFieldsWithTypes = PrimaryKeyWithType()
@@ -1261,7 +1261,7 @@ DatasetDecl ExternalDatasetSpecification(Token startStmtToken) throws ParseExcep
 }
 {
   nameComponents = QualifiedName()
-  typeExpr = DatasetTypeSpecification()
+  typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN)
   ifNotExists = IfNotExists()
   <USING> adapterName = AdapterName() properties = Configuration()
   ( <HINTS> hints = Properties() )?
@@ -1280,13 +1280,13 @@ DatasetDecl ExternalDatasetSpecification(Token startStmtToken) throws ParseExcep
   }
 }
 
-TypeExpression DatasetTypeSpecification() throws ParseException:
+TypeExpression DatasetTypeSpecification(RecordTypeDefinition.RecordKind defaultRecordKind) throws ParseException:
 {
   TypeExpression typeExpr = null;
 }
 {
   (
-    LOOKAHEAD(3) typeExpr = DatasetRecordTypeSpecification(true)
+    LOOKAHEAD(3) typeExpr = DatasetRecordTypeSpecification(true, defaultRecordKind)
     | typeExpr = DatasetReferenceTypeSpecification()
   )
   {
@@ -1305,7 +1305,7 @@ TypeExpression DatasetReferenceTypeSpecification() throws ParseException:
   }
 }
 
-RecordTypeDefinition DatasetRecordTypeSpecification(boolean allowRecordKindModifier) throws ParseException:
+RecordTypeDefinition DatasetRecordTypeSpecification(boolean allowRecordKindModifier, RecordTypeDefinition.RecordKind defaultRecordKind) throws ParseException:
 {
   RecordTypeDefinition recordTypeDef = null;
   RecordTypeDefinition.RecordKind recordKind = null;
@@ -1316,7 +1316,7 @@ RecordTypeDefinition DatasetRecordTypeSpecification(boolean allowRecordKindModif
    ( recordKind = RecordTypeKind() { recordKindToken = token; } <TYPE> )?
    {
      if (recordKind == null) {
-       recordKind = RecordTypeDefinition.RecordKind.CLOSED;
+       recordKind = defaultRecordKind;
      } else if (!allowRecordKindModifier) {
        throw createUnexpectedTokenError(recordKindToken);
      }
@@ -1730,7 +1730,7 @@ CreateViewStatement ViewSpecification(Token startStmtToken, boolean orReplace) t
   nameComponents = QualifiedName()
   (
       (
-        typeExpr = DatasetTypeSpecification()
+        typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.CLOSED)
         ifNotExists = IfNotExists()
         viewConfigDefaultNull = CastDefaultNull()
         {
@@ -2865,7 +2865,7 @@ CopyStatement CopyStatement() throws ParseException:
       namespace = nameComponents.first;
       datasetName = nameComponents.second;
     }
-  (<AS> typeExpr = DatasetTypeSpecification())?
+  (<AS> typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN))?
   <USING> adapterName = AdapterName() properties = Configuration()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();

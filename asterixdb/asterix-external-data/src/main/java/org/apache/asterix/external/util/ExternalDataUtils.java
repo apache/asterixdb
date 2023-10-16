@@ -1048,4 +1048,13 @@ public class ExternalDataUtils {
 
         return protocol + "://" + container + "/";
     }
+
+    public static void validateType(Map<String, String> properties, ARecordType itemType) throws CompilationException {
+        boolean embedValues = Boolean.parseBoolean(
+                properties.getOrDefault(ExternalDataConstants.KEY_EMBED_FILTER_VALUES, ExternalDataConstants.FALSE));
+        if (ExternalDataPrefix.containsComputedFields(properties) && embedValues && !itemType.isOpen()) {
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, "A closed type cannot be used when '"
+                    + ExternalDataConstants.KEY_EMBED_FILTER_VALUES + "' is enabled");
+        }
+    }
 }

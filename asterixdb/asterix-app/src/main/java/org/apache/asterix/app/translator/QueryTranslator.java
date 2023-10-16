@@ -971,6 +971,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             itemTypeEntity, metadataProvider, mdTxnCtx);
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
+                    ExternalDataUtils.validateType(properties, (ARecordType) itemType);
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
                             appCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),

@@ -19,12 +19,9 @@
 
 USE test;
 
-DROP DATASET A_Customers_Default_Open;
-DROP DATASET A_Customers_Closed;
-DROP DATASET A_Customers_Open;
-DROP DATASET B_Orders_Default_Open;
-DROP DATASET B_Orders_Closed;
-DROP DATASET B_Orders_Open;
-DROP DATASET C_Customers_Meta_Default_Open;
-DROP DATASET C_Customers_Meta_Closed;
-DROP DATASET C_Customers_Meta_Open;
+SELECT VALUE s
+FROM Sales s
+ORDER BY s.tail_num,
+         s.year,
+         s.month,
+         s.day;
