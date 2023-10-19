@@ -96,7 +96,9 @@ class RemoteLogsNotifier implements Runnable {
         for (DatasetResourceReference replicaIndexRef : replicaIndexesRef) {
             final IIndexCheckpointManager indexCheckpointManager = indexCheckpointManagerProvider.get(replicaIndexRef);
             synchronized (indexCheckpointManager) {
-                indexCheckpointManager.masterFlush(remoteLogMapping.getMasterLsn(), remoteLogMapping.getLSN());
+                if (indexCheckpointManager.isValidIndex()) {
+                    indexCheckpointManager.masterFlush(remoteLogMapping.getMasterLsn(), remoteLogMapping.getLSN());
+                }
             }
         }
     }

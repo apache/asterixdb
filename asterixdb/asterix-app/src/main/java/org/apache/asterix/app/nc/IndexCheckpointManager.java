@@ -128,6 +128,11 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
+    public synchronized boolean isValidIndex() throws HyracksDataException {
+        return getCheckpointCount() > 0;
+    }
+
+    @Override
     public long getValidComponentSequence() throws HyracksDataException {
         if (getCheckpointCount() > 0) {
             return getLatest().getValidComponentSequence();
