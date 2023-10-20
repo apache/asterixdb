@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.TypeUtil;
 
 public enum DependencyKind {
+    //TODO(DB): fix display to include the database conditionally
     DATASET(
             dependency -> DatasetUtil.getFullyQualifiedDisplayName(dependency.getDataverseName(),
                     dependency.getSubName1())),

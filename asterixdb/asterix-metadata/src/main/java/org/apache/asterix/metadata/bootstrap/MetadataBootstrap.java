@@ -472,6 +472,8 @@ public class MetadataBootstrap {
      * Perform recovery of DDL operations metadata records
      */
     public static void startDDLRecovery() throws AlgebricksException {
+        //TODO(DB): include database in recovery
+
         // #. clean up any record which has pendingAdd/DelOp flag
         // as traversing all records from DATAVERSE_DATASET to DATASET_DATASET, and then
         // to INDEX_DATASET.

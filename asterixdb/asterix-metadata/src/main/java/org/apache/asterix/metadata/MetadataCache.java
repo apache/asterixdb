@@ -161,11 +161,21 @@ public class MetadataCache {
 
     public Database addDatabaseIfNotExists(Database database) {
         synchronized (databases) {
-            String databaseName = database.getDatabaseName();
-            if (!databases.containsKey(databaseName)) {
-                return databases.put(databaseName, database);
+            synchronized (dataverses) {
+                synchronized (datasets) {
+                    synchronized (datatypes) {
+                        String databaseName = database.getDatabaseName();
+                        if (!databases.containsKey(databaseName)) {
+                            dataverses.put(databaseName, new HashMap<>());
+                            datasets.put(databaseName, new HashMap<>());
+                            datatypes.put(databaseName, new HashMap<>());
+                            adapters.put(databaseName, new HashMap<>());
+                            return databases.put(databaseName, database);
+                        }
+                        return null;
+                    }
+                }
             }
-            return null;
         }
     }
 
@@ -254,21 +264,6 @@ public class MetadataCache {
                     databaseDataverses.computeIfAbsent(compactionPolicy.getDataverseName(), k -> new HashMap<>());
             if (!dataverseCompactionPolicies.containsKey(compactionPolicy.getPolicyName())) {
                 return dataverseCompactionPolicies.put(compactionPolicy.getPolicyName(), compactionPolicy);
-            }
-            return null;
-        }
-    }
-
-    public CompactionPolicy dropCompactionPolicy(CompactionPolicy compactionPolicy) {
-        synchronized (compactionPolicies) {
-            Map<DataverseName, Map<String, CompactionPolicy>> databaseDataverses =
-                    compactionPolicies.get(compactionPolicy.getDatabaseName());
-            if (databaseDataverses == null) {
-                return null;
-            }
-            Map<String, CompactionPolicy> p = databaseDataverses.get(compactionPolicy.getDataverseName());
-            if (p != null && p.get(compactionPolicy.getPolicyName()) != null) {
-                return p.remove(compactionPolicy.getPolicyName());
             }
             return null;
         }
@@ -484,6 +479,21 @@ public class MetadataCache {
         }
     }
 
+    public CompactionPolicy dropCompactionPolicy(CompactionPolicy compactionPolicy) {
+        synchronized (compactionPolicies) {
+            Map<DataverseName, Map<String, CompactionPolicy>> databaseDataverses =
+                    compactionPolicies.get(compactionPolicy.getDatabaseName());
+            if (databaseDataverses == null) {
+                return null;
+            }
+            Map<String, CompactionPolicy> p = databaseDataverses.get(compactionPolicy.getDataverseName());
+            if (p != null && p.get(compactionPolicy.getPolicyName()) != null) {
+                return p.remove(compactionPolicy.getPolicyName());
+            }
+            return null;
+        }
+    }
+
     public NodeGroup dropNodeGroup(NodeGroup nodeGroup) {
         synchronized (nodeGroups) {
             return nodeGroups.remove(nodeGroup.getNodeGroupName());
@@ -617,22 +627,6 @@ public class MetadataCache {
                 return Collections.emptyList();
             }
             return new ArrayList<>(map.values());
-        }
-    }
-
-    protected void doOperation(MetadataLogicalOperation op) {
-        if (op.isAdd) {
-            op.entity.addToCache(this);
-        } else {
-            op.entity.dropFromCache(this);
-        }
-    }
-
-    protected void undoOperation(MetadataLogicalOperation op) {
-        if (!op.isAdd) {
-            op.entity.addToCache(this);
-        } else {
-            op.entity.dropFromCache(this);
         }
     }
 
@@ -936,6 +930,22 @@ public class MetadataCache {
             return indexMap.put(index.getIndexName(), index);
         }
         return null;
+    }
+
+    protected void doOperation(MetadataLogicalOperation op) {
+        if (op.isAdd) {
+            op.entity.addToCache(this);
+        } else {
+            op.entity.dropFromCache(this);
+        }
+    }
+
+    protected void undoOperation(MetadataLogicalOperation op) {
+        if (!op.isAdd) {
+            op.entity.addToCache(this);
+        } else {
+            op.entity.dropFromCache(this);
+        }
     }
 
     /**

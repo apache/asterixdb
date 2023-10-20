@@ -650,14 +650,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected boolean doCreateDatabaseStatement(MetadataProvider metadataProvider,
-            CreateDatabaseStatement stmtCreateDatabase, IRequestParameters requestParameters) throws Exception {
+    protected boolean doCreateDatabaseStatement(MetadataProvider mdProvider, CreateDatabaseStatement stmtCreateDatabase,
+            IRequestParameters requestParameters) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        mdProvider.setMetadataTxnContext(mdTxnCtx);
         try {
             String databaseName = stmtCreateDatabase.getDatabaseName().getValue();
-            Database database =
-                    MetadataManager.INSTANCE.getDatabase(metadataProvider.getMetadataTxnContext(), databaseName);
+            Database database = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, databaseName);
             if (database != null) {
                 if (stmtCreateDatabase.ifNotExists()) {
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -667,7 +666,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             databaseName);
                 }
             }
-            MetadataManager.INSTANCE.addDatabase(metadataProvider.getMetadataTxnContext(),
+            MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
                     new Database(databaseName, false, MetadataUtil.PENDING_NO_OP));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -1956,17 +1955,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected boolean doDropDatabase(DatabaseDropStatement stmtDropDatabase, MetadataProvider metadataProvider,
+    protected boolean doDropDatabase(DatabaseDropStatement stmtDropDatabase, MetadataProvider mdProvider,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-        SourceLocation sourceLoc = stmtDropDatabase.getSourceLocation();
+        SourceLocation srcLoc = stmtDropDatabase.getSourceLocation();
         String databaseName = stmtDropDatabase.getDatabaseName().getValue();
         ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
-        metadataProvider.setMetadataTxnContext(mdTxnCtx);
-        List<FeedEventsListener> feedsToStop = new ArrayList<>();
-        List<JobSpecification> jobsToExecute = new ArrayList<>();
-        //TODO(DB): resolve database directory
+        mdProvider.setMetadataTxnContext(mdTxnCtx);
+        List<FeedEventsListener> stopFeeds = new ArrayList<>();
+        List<JobSpecification> dropJobs = new ArrayList<>();
         try {
             Database database = MetadataManager.INSTANCE.getDatabase(mdTxnCtx, databaseName);
             if (database == null) {
@@ -1974,57 +1972,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, databaseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATABASE, srcLoc, databaseName);
                 }
             }
 
-            validateDatabaseStateBeforeDrop(metadataProvider, database, sourceLoc);
+            validateDatabaseStateBeforeDrop(mdProvider, database, srcLoc);
 
-            // #. prepare jobs which will drop corresponding feed storage
-            ActiveNotificationHandler activeEventHandler =
-                    (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
-            IActiveEntityEventsListener[] activeListeners = activeEventHandler.getEventListeners();
-            for (IActiveEntityEventsListener listener : activeListeners) {
-                EntityId activeEntityId = listener.getEntityId();
-                if (activeEntityId.getExtensionName().equals(Feed.EXTENSION_NAME)
-                        && activeEntityId.getDatabaseName().equals(databaseName)) {
-                    FeedEventsListener feedListener = (FeedEventsListener) listener;
-                    feedsToStop.add(feedListener);
-                    jobsToExecute
-                            .add(FeedOperations.buildRemoveFeedStorageJob(metadataProvider, feedListener.getFeed()));
-                }
-            }
-
-            // #. prepare jobs which will drop corresponding datasets with indexes
-            List<Dataset> datasets = MetadataManager.INSTANCE.getDatabaseDatasets(mdTxnCtx, databaseName);
-            for (Dataset dataset : datasets) {
-                String datasetName = dataset.getDatasetName();
-                DatasetType dsType = dataset.getDatasetType();
-                switch (dsType) {
-                    case INTERNAL:
-                        List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, databaseName,
-                                dataset.getDataverseName(), datasetName);
-                        for (Index index : indexes) {
-                            jobsToExecute
-                                    .add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
-                        }
-                        break;
-                    case EXTERNAL:
-                    case VIEW:
-                        break;
-                }
-            }
-
-            // #. prepare jobs which will drop corresponding libraries
-            //TODO(DB): library database
-            List<Library> libraries = MetadataManager.INSTANCE.getDatabaseLibraries(mdTxnCtx, databaseName);
-            for (Library library : libraries) {
-                jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(library.getDataverseName(),
-                        library.getName(), metadataProvider));
-            }
-
-            // #. prepare jobs which will drop the database
-            jobsToExecute.add(DataverseUtil.dropDatabaseJobSpec(databaseName, metadataProvider));
+            List<Dataset> datasets =
+                    prepareDatabaseDropJobs(mdProvider, srcLoc, databaseName, mdTxnCtx, stopFeeds, dropJobs);
 
             // #. mark PendingDropOp on the database record by
             // first, deleting the database record from the 'Database' collection
@@ -2038,20 +1993,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
-            for (FeedEventsListener feedListener : feedsToStop) {
-                if (feedListener.getState() != ActivityState.STOPPED) {
-                    feedListener.stop(metadataProvider);
-                }
-                feedListener.unregister();
-            }
-
-            for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
-            }
+            runDropJobs(mdProvider, hcc, stopFeeds, dropJobs);
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
-            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            mdProvider.setMetadataTxnContext(mdTxnCtx);
 
             // #. finally, delete the database
             MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
@@ -2059,18 +2005,17 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // drop all node groups that no longer needed
             for (Dataset dataset : datasets) {
                 String nodeGroup = dataset.getNodeGroupName();
-                lockManager.acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);
+                lockManager.acquireNodeGroupWriteLock(mdProvider.getLocks(), nodeGroup);
                 if (MetadataManager.INSTANCE.getNodegroup(mdTxnCtx, nodeGroup) != null) {
                     MetadataManager.INSTANCE.dropNodegroup(mdTxnCtx, nodeGroup, true);
                 }
             }
 
-            //TODO(DB): switch active database to the DEFAULT if the dropped database is the currently active one
             if (activeNamespace.getDatabaseName().equals(databaseName)) {
                 activeNamespace = MetadataBuiltinEntities.DEFAULT_NAMESPACE;
             }
 
-            validateDatasetsStateAfterNamespaceDrop(metadataProvider, mdTxnCtx, datasets);
+            validateDatasetsStateAfterNamespaceDrop(mdProvider, mdTxnCtx, datasets);
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
@@ -2087,7 +2032,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 // #. execute compensation operations
                 // remove the all artifacts in NC
                 try {
-                    for (JobSpecification jobSpec : jobsToExecute) {
+                    for (JobSpecification jobSpec : dropJobs) {
                         runJob(hcc, jobSpec);
                     }
                 } catch (Exception e2) {
@@ -2235,16 +2180,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
 
-            for (FeedEventsListener feedListener : feedsToStop) {
-                if (feedListener.getState() != ActivityState.STOPPED) {
-                    feedListener.stop(metadataProvider);
-                }
-                feedListener.unregister();
-            }
-
-            for (JobSpecification jobSpec : jobsToExecute) {
-                runJob(hcc, jobSpec);
-            }
+            runDropJobs(metadataProvider, hcc, feedsToStop, jobsToExecute);
 
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
             bActiveTxn = true;
@@ -5569,6 +5505,82 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void validateAdapterSpecificProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IApplicationContext appCtx) throws CompilationException {
         ExternalDataUtils.validateAdapterSpecificProperties(configuration, srcLoc, warningCollector, appCtx);
+    }
+
+    private List<Dataset> prepareDatabaseDropJobs(MetadataProvider metadataProvider, SourceLocation sourceLoc,
+            String databaseName, MetadataTransactionContext mdTxnCtx, List<FeedEventsListener> feedsToStop,
+            List<JobSpecification> jobsToExecute) throws AlgebricksException {
+        // #. prepare jobs which will drop corresponding feed storage
+        addFeedDropJob(metadataProvider, databaseName, feedsToStop, jobsToExecute);
+
+        // #. prepare jobs which will drop corresponding datasets with indexes
+        List<Dataset> datasets = addDatasetDropJob(metadataProvider, sourceLoc, databaseName, mdTxnCtx, jobsToExecute);
+
+        // #. prepare jobs which will drop corresponding libraries
+        //TODO(DB): library database
+        List<Library> libraries = MetadataManager.INSTANCE.getDatabaseLibraries(mdTxnCtx, databaseName);
+        for (Library library : libraries) {
+            jobsToExecute.add(ExternalLibraryJobUtils.buildDropLibraryJobSpec(library.getDataverseName(),
+                    library.getName(), metadataProvider));
+        }
+
+        // #. prepare jobs which will drop the database
+        jobsToExecute.add(DataverseUtil.dropDatabaseJobSpec(databaseName, metadataProvider));
+
+        return datasets;
+    }
+
+    private static List<Dataset> addDatasetDropJob(MetadataProvider metadataProvider, SourceLocation sourceLoc,
+            String databaseName, MetadataTransactionContext mdTxnCtx, List<JobSpecification> jobsToExecute)
+            throws AlgebricksException {
+        List<Dataset> datasets = MetadataManager.INSTANCE.getDatabaseDatasets(mdTxnCtx, databaseName);
+        for (Dataset dataset : datasets) {
+            String datasetName = dataset.getDatasetName();
+            DatasetType dsType = dataset.getDatasetType();
+            switch (dsType) {
+                case INTERNAL:
+                    List<Index> indexes = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx, databaseName,
+                            dataset.getDataverseName(), datasetName);
+                    for (Index index : indexes) {
+                        jobsToExecute.add(IndexUtil.buildDropIndexJobSpec(index, metadataProvider, dataset, sourceLoc));
+                    }
+                    break;
+                case EXTERNAL:
+                case VIEW:
+                    break;
+            }
+        }
+        return datasets;
+    }
+
+    private void addFeedDropJob(MetadataProvider metadataProvider, String databaseName,
+            List<FeedEventsListener> feedsToStop, List<JobSpecification> jobsToExecute) throws AlgebricksException {
+        ActiveNotificationHandler activeEventHandler =
+                (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
+        IActiveEntityEventsListener[] activeListeners = activeEventHandler.getEventListeners();
+        for (IActiveEntityEventsListener listener : activeListeners) {
+            EntityId activeEntityId = listener.getEntityId();
+            if (activeEntityId.getExtensionName().equals(Feed.EXTENSION_NAME)
+                    && activeEntityId.getDatabaseName().equals(databaseName)) {
+                FeedEventsListener feedListener = (FeedEventsListener) listener;
+                feedsToStop.add(feedListener);
+                jobsToExecute.add(FeedOperations.buildRemoveFeedStorageJob(metadataProvider, feedListener.getFeed()));
+            }
+        }
+    }
+
+    private void runDropJobs(MetadataProvider mdProvider, IHyracksClientConnection hcc,
+            List<FeedEventsListener> feedsToStop, List<JobSpecification> jobsToExecute) throws Exception {
+        for (FeedEventsListener feedListener : feedsToStop) {
+            if (feedListener.getState() != ActivityState.STOPPED) {
+                feedListener.stop(mdProvider);
+            }
+            feedListener.unregister();
+        }
+
+        for (JobSpecification jobSpec : jobsToExecute) {
+            runJob(hcc, jobSpec);
+        }
     }
 
     protected enum CreateResult {
