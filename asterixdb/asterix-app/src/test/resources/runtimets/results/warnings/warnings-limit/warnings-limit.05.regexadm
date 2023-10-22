@@ -25,6 +25,7 @@
 \s*\Q"elapsedTime": "\E[^"]+\Q",\E
 \s*\Q"executionTime": "\E[^"]+\Q",\E
 \s*\Q"compileTime": "\E[^"]+\Q",\E
+\s*\Q"queueWaitTime": "\E[^"]+\Q",\E
 \s*\Q"resultCount": \E[0-9]+\Q,\E
 \s*\Q"resultSize": \E[0-9]+\Q,\E
 \s*\Q"processedObjects": \E[0-9]+\Q,\E

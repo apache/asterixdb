@@ -133,6 +133,7 @@ public interface IStatementExecutor {
         private long count;
         private long size;
         private long processedObjects;
+        private long queueWaitTime;
         private Profile profile;
         private ProfileType profileType;
         private long totalWarningsCount;
@@ -154,6 +155,10 @@ public interface IStatementExecutor {
             this.size = size;
         }
 
+        public long getQueueWaitTime() {
+            return queueWaitTime;
+        }
+
         public long getProcessedObjects() {
             return processedObjects;
         }
@@ -170,6 +175,10 @@ public interface IStatementExecutor {
             if (delta <= Long.MAX_VALUE - totalWarningsCount) {
                 totalWarningsCount += delta;
             }
+        }
+
+        public void setQueueWaitTime(long queueWaitTime) {
+            this.queueWaitTime = queueWaitTime;
         }
 
         public void setJobProfile(ObjectNode profile) {
