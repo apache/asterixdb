@@ -28,6 +28,7 @@ import org.apache.commons.lang3.SystemUtils;
  */
 public class MetadataConstants {
 
+    public static final int DB_SCOPE_PARTS_COUNT = 1;
     public static final int METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 = 251;
     public static final int DATAVERSE_NAME_TOTAL_LENGTH_LIMIT_UTF8 = METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8 * 4;
     public static final Pattern METADATA_OBJECT_NAME_INVALID_CHARS =

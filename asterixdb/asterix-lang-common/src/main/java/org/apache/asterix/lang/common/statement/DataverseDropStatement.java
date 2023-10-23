@@ -48,6 +48,10 @@ public class DataverseDropStatement extends AbstractStatement {
         return Statement.Kind.DATAVERSE_DROP;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public String getDatabaseName() {
         return namespace.getDatabaseName();
     }

@@ -20,6 +20,7 @@ package org.apache.asterix.translator;
 
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataverse;
+import static org.apache.hyracks.api.exceptions.ErrorCode.TIMEOUT;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.Namespace;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.lang.common.base.Statement;
 import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
@@ -68,6 +70,7 @@ import org.apache.asterix.metadata.dataset.hints.DatasetHints;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -100,7 +103,7 @@ public abstract class AbstractLangTranslator {
             try {
                 clusterStateManager.waitForState(ClusterState.ACTIVE, maxWaitCycles, TimeUnit.SECONDS);
             } catch (HyracksDataException e) {
-                throw new AsterixException(e);
+                throw new AlgebricksException(e, TIMEOUT);
             } catch (InterruptedException e) {
                 if (LOGGER.isWarnEnabled()) {
                     LOGGER.warn("Thread interrupted while waiting for cluster to be " + ClusterState.ACTIVE);
@@ -197,7 +200,7 @@ public abstract class AbstractLangTranslator {
             case CREATE_DATABASE: {
                 CreateDatabaseStatement dbCreateStmt = (CreateDatabaseStatement) stmt;
                 String dbName = dbCreateStmt.getDatabaseName().getValue();
-                invalidOperation = isSystemDatabase(dbName) || isDefaultDatabase(dbName);
+                invalidOperation = isSystemDatabase(dbName) || isDefaultDatabase(dbName) || isReservedDatabase(dbName);
                 if (invalidOperation) {
                     message = String.format("Cannot create database: %s", dbName);
                 }
@@ -456,5 +459,12 @@ public abstract class AbstractLangTranslator {
 
     protected static boolean isDefaultDataverse(DataverseName dataverseName) {
         return MetadataConstants.DEFAULT_DATAVERSE_NAME.equals(dataverseName);
+    }
+
+    protected static boolean isReservedDatabase(String databaseName) {
+        return FunctionConstants.ASTERIX_DB.equals(databaseName)
+                || AlgebricksBuiltinFunctions.ALGEBRICKS_DB.equals(databaseName)
+                || MetadataConstants.METADATA_DATAVERSE_NAME.getCanonicalForm().equals(databaseName)
+                || databaseName.startsWith(StorageConstants.PARTITION_DIR_PREFIX);
     }
 }

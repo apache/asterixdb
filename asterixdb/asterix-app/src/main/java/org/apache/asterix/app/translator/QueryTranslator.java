@@ -593,7 +593,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DataverseDecl dvd = (DataverseDecl) stmt;
         DataverseName dvName = dvd.getDataverseName();
         String database = dvd.getDatabaseName();
-        metadataProvider.validateDataverseName(dvName, dvd.getSourceLocation());
+        metadataProvider.validateNamespaceName(dvd.getNamespace(), dvd.getSourceLocation());
         //TODO(DB): read lock on database
         lockManager.acquireDataverseReadLock(metadataProvider.getLocks(), database, dvName);
         try {
@@ -638,7 +638,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IRequestParameters requestParameters) throws Exception {
         CreateDatabaseStatement stmtCreateDatabase = (CreateDatabaseStatement) stmt;
         String database = stmtCreateDatabase.getDatabaseName().getValue();
-        //TODO(DB): validate names
+        metadataProvider.validateDatabaseName(database, stmt.getSourceLocation());
         if (isCompileOnly()) {
             return;
         }
@@ -681,7 +681,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
         String dbName = stmtCreateDataverse.getDatabaseName();
-        metadataProvider.validateDataverseName(dvName, stmtCreateDataverse.getSourceLocation());
+        Namespace stmtNamespace = stmtCreateDataverse.getNamespace();
+        metadataProvider.validateNamespaceName(stmtNamespace, stmtCreateDataverse.getSourceLocation());
         if (isCompileOnly()) {
             return;
         }
@@ -769,7 +770,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DatasetDecl dd = (DatasetDecl) stmt;
         String datasetName = dd.getName().getValue();
-        metadataProvider.validateDatabaseObjectName(dd.getDataverse(), datasetName, stmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(dd.getNamespace(), datasetName, stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(dd.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -1212,7 +1213,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
         String indexName = stmtCreateIndex.getIndexName().getValue();
         String fullTextConfigName = stmtCreateIndex.getFullTextConfigName();
-        metadataProvider.validateDatabaseObjectName(stmtCreateIndex.getDataverseName(), indexName,
+        metadataProvider.validateDatabaseObjectName(stmtCreateIndex.getNamespace(), indexName,
                 stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtCreateIndex.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -1568,7 +1569,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         CreateFullTextFilterStatement stmtCreateFilter = (CreateFullTextFilterStatement) stmt;
         String fullTextFilterName = stmtCreateFilter.getFilterName();
-        metadataProvider.validateDatabaseObjectName(stmtCreateFilter.getDataverseName(), fullTextFilterName,
+        metadataProvider.validateDatabaseObjectName(stmtCreateFilter.getNamespace(), fullTextFilterName,
                 stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtCreateFilter.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -1637,7 +1638,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         CreateFullTextConfigStatement stmtCreateConfig = (CreateFullTextConfigStatement) stmt;
         String configName = stmtCreateConfig.getConfigName();
-        metadataProvider.validateDatabaseObjectName(stmtCreateConfig.getDataverseName(), configName,
+        metadataProvider.validateDatabaseObjectName(stmtCreateConfig.getNamespace(), configName,
                 stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtCreateConfig.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -1882,7 +1883,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         TypeDecl stmtCreateType = (TypeDecl) stmt;
         SourceLocation sourceLoc = stmtCreateType.getSourceLocation();
         String typeName = stmtCreateType.getIdent().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtCreateType.getDataverseName(), typeName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtCreateType.getNamespace(), typeName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtCreateType.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -1938,7 +1939,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DatabaseDropStatement stmtDropDatabase = (DatabaseDropStatement) stmt;
         SourceLocation sourceLoc = stmtDropDatabase.getSourceLocation();
         String databaseName = stmtDropDatabase.getDatabaseName().getValue();
-        //TODO(DB): validate names
+        metadataProvider.validateDatabaseName(databaseName, sourceLoc);
 
         if (isSystemDatabase(databaseName) || isDefaultDatabase(databaseName)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
@@ -2062,9 +2063,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         SourceLocation sourceLoc = stmtDropDataverse.getSourceLocation();
         DataverseName dataverseName = stmtDropDataverse.getDataverseName();
         String databaseName = stmtDropDataverse.getDatabaseName();
-        metadataProvider.validateDataverseName(dataverseName, sourceLoc);
-        if (dataverseName.equals(MetadataConstants.DEFAULT_DATAVERSE_NAME)
-                || dataverseName.equals(MetadataConstants.METADATA_DATAVERSE_NAME)) {
+        metadataProvider.validateNamespaceName(stmtDropDataverse.getNamespace(), sourceLoc);
+        if (isDefaultDataverse(dataverseName) || isMetadataDataverse(dataverseName)) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
                     dataverseName + " " + dataverse() + " can't be dropped");
         }
@@ -2267,7 +2267,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
         SourceLocation sourceLoc = stmtDelete.getSourceLocation();
         String datasetName = stmtDelete.getDatasetName().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtDelete.getNamespace(), datasetName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtDelete.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -2379,7 +2379,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         IndexDropStatement stmtIndexDrop = (IndexDropStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(stmtIndexDrop.getDataverseName(),
+        metadataProvider.validateDatabaseObjectName(stmtIndexDrop.getNamespace(),
                 stmtIndexDrop.getIndexName().getValue(), stmtIndexDrop.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtIndexDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -2590,7 +2590,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         TypeDropStatement stmtTypeDrop = (TypeDropStatement) stmt;
         SourceLocation sourceLoc = stmtTypeDrop.getSourceLocation();
         String typeName = stmtTypeDrop.getTypeName().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtTypeDrop.getDataverseName(), typeName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtTypeDrop.getNamespace(), typeName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtTypeDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -2666,7 +2666,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
         CreateViewStatement cvs = (CreateViewStatement) stmt;
         String viewName = cvs.getViewName();
-        metadataProvider.validateDatabaseObjectName(cvs.getDataverseName(), viewName, stmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(cvs.getNamespace(), viewName, stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(cvs.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -2896,7 +2896,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ViewDropStatement stmtDrop = (ViewDropStatement) stmt;
         SourceLocation sourceLoc = stmtDrop.getSourceLocation();
         String viewName = stmtDrop.getViewName().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtDrop.getDataverseName(), viewName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtDrop.getNamespace(), viewName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -2963,7 +2963,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FunctionDecl fds = (FunctionDecl) stmt;
         FunctionSignature signature = fds.getSignature();
         DataverseName funDataverse = signature.getDataverseName();
-        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(), stmt.getSourceLocation());
+        Namespace funNamespace = signature.getNamespace();
+        metadataProvider.validateDatabaseObjectName(funNamespace, signature.getName(), stmt.getSourceLocation());
         if (funDataverse == null) {
             signature.setDataverseName(activeNamespace.getDatabaseName(), activeNamespace.getDataverseName());
         }
@@ -2975,7 +2976,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateFunctionStatement cfs = (CreateFunctionStatement) stmt;
         FunctionSignature signature = cfs.getFunctionSignature();
         DataverseName funDataverse = signature.getDataverseName();
-        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(), stmt.getSourceLocation());
+        Namespace funNamespace = signature.getNamespace();
+        metadataProvider.validateDatabaseObjectName(funNamespace, signature.getName(), stmt.getSourceLocation());
         DataverseName dataverseName;
         String databaseName;
         if (funDataverse == null) {
@@ -3265,7 +3267,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FunctionDropStatement stmtDropFunction = (FunctionDropStatement) stmt;
         FunctionSignature signature = stmtDropFunction.getFunctionSignature();
         DataverseName funDataverse = signature.getDataverseName();
-        metadataProvider.validateDatabaseObjectName(funDataverse, signature.getName(),
+        Namespace funNamespace = signature.getNamespace();
+        metadataProvider.validateDatabaseObjectName(funNamespace, signature.getName(),
                 stmtDropFunction.getSourceLocation());
         DataverseName dataverseName;
         String databaseName;
@@ -3334,7 +3337,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleCreateAdapterStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateAdapterStatement cas = (CreateAdapterStatement) stmt;
         String adapterName = cas.getAdapterName();
-        metadataProvider.validateDatabaseObjectName(cas.getDataverseName(), adapterName, cas.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(cas.getNamespace(), adapterName, cas.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(cas.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3421,7 +3424,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         AdapterDropStatement stmtDropAdapter = (AdapterDropStatement) stmt;
         SourceLocation sourceLoc = stmtDropAdapter.getSourceLocation();
         String adapterName = stmtDropAdapter.getAdapterName();
-        metadataProvider.validateDatabaseObjectName(stmtDropAdapter.getDataverseName(), adapterName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtDropAdapter.getNamespace(), adapterName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtDropAdapter.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3474,8 +3477,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleCreateLibraryStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CreateLibraryStatement cls = (CreateLibraryStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(cls.getDataverseName(), cls.getLibraryName(),
-                cls.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(cls.getNamespace(), cls.getLibraryName(), cls.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(cls.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3612,7 +3614,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         LibraryDropStatement stmtDropLibrary = (LibraryDropStatement) stmt;
         String libraryName = stmtDropLibrary.getLibraryName();
-        metadataProvider.validateDatabaseObjectName(stmtDropLibrary.getDataverseName(), libraryName,
+        metadataProvider.validateDatabaseObjectName(stmtDropLibrary.getNamespace(), libraryName,
                 stmtDropLibrary.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtDropLibrary.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -3709,8 +3711,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(css.getDataverseName(), css.getSynonymName(),
-                css.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(css.getNamespace(), css.getSynonymName(), css.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(css.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3766,7 +3767,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
         SynonymDropStatement stmtSynDrop = (SynonymDropStatement) stmt;
         String synonymName = stmtSynDrop.getSynonymName();
-        metadataProvider.validateDatabaseObjectName(stmtSynDrop.getDataverseName(), synonymName,
+        metadataProvider.validateDatabaseObjectName(stmtSynDrop.getNamespace(), synonymName,
                 stmtSynDrop.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtSynDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -3808,8 +3809,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         LoadStatement loadStmt = (LoadStatement) stmt;
         String datasetName = loadStmt.getDatasetName();
-        metadataProvider.validateDatabaseObjectName(loadStmt.getDataverseName(), datasetName,
-                loadStmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(loadStmt.getNamespace(), datasetName, loadStmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(loadStmt.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3852,8 +3852,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         CopyStatement copyStmt = (CopyStatement) stmt;
         String datasetName = copyStmt.getDatasetName();
-        metadataProvider.validateDatabaseObjectName(copyStmt.getDataverseName(), datasetName,
-                copyStmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(copyStmt.getNamespace(), datasetName, copyStmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(copyStmt.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -3947,7 +3946,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String datasetName = stmtInsertUpsert.getDatasetName();
-        metadataProvider.validateDatabaseObjectName(stmtInsertUpsert.getDataverseName(), datasetName,
+        metadataProvider.validateDatabaseObjectName(stmtInsertUpsert.getNamespace(), datasetName,
                 stmtInsertUpsert.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtInsertUpsert.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
@@ -4037,8 +4036,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throws Exception {
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String datasetName = stmtDelete.getDatasetName();
-        metadataProvider.validateDatabaseObjectName(stmtDelete.getDataverseName(), datasetName,
-                stmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(stmtDelete.getNamespace(), datasetName, stmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(stmtDelete.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -4168,7 +4166,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         CreateFeedStatement cfs = (CreateFeedStatement) stmt;
         SourceLocation sourceLoc = cfs.getSourceLocation();
         String feedName = cfs.getFeedName().getValue();
-        metadataProvider.validateDatabaseObjectName(cfs.getDataverseName(), feedName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(cfs.getNamespace(), feedName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(cfs.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -4282,7 +4280,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FeedDropStatement stmtFeedDrop = (FeedDropStatement) stmt;
         SourceLocation sourceLoc = stmtFeedDrop.getSourceLocation();
         String feedName = stmtFeedDrop.getFeedName().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtFeedDrop.getDataverseName(), feedName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtFeedDrop.getNamespace(), feedName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtFeedDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -4340,7 +4338,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         FeedPolicyDropStatement stmtFeedPolicyDrop = (FeedPolicyDropStatement) stmt;
         SourceLocation sourceLoc = stmtFeedPolicyDrop.getSourceLocation();
         String policyName = stmtFeedPolicyDrop.getPolicyName().getValue();
-        metadataProvider.validateDatabaseObjectName(stmtFeedPolicyDrop.getDataverseName(), policyName, sourceLoc);
+        metadataProvider.validateDatabaseObjectName(stmtFeedPolicyDrop.getNamespace(), policyName, sourceLoc);
         Namespace stmtActiveNamespace = getActiveNamespace(stmtFeedPolicyDrop.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -4577,8 +4575,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleAnalyzeStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         AnalyzeStatement analyzeStatement = (AnalyzeStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(analyzeStatement.getDataverseName(),
-                analyzeStatement.getDatasetName(), analyzeStatement.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(analyzeStatement.getNamespace(), analyzeStatement.getDatasetName(),
+                analyzeStatement.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(analyzeStatement.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();
@@ -4804,8 +4802,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected void handleAnalyzeDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParams) throws Exception {
         AnalyzeDropStatement analyzeDropStmt = (AnalyzeDropStatement) stmt;
-        metadataProvider.validateDatabaseObjectName(analyzeDropStmt.getDataverseName(),
-                analyzeDropStmt.getDatasetName(), analyzeDropStmt.getSourceLocation());
+        metadataProvider.validateDatabaseObjectName(analyzeDropStmt.getNamespace(), analyzeDropStmt.getDatasetName(),
+                analyzeDropStmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(analyzeDropStmt.getNamespace());
         DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
         String databaseName = stmtActiveNamespace.getDatabaseName();

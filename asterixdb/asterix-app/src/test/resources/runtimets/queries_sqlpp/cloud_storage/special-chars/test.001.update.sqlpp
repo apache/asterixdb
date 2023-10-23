@@ -17,6 +17,6 @@
  * under the License.
  */
 
-USE `part1`.`p%r t2`;
+USE `part_1-`.`p_r-t2`;
 
 UPSERT INTO `some@dataset` {"id": 1};

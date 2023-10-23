@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
@@ -106,6 +107,11 @@ public class FunctionSignature implements Serializable {
 
     public DataverseName getDataverseName() {
         return dataverseName;
+    }
+
+    public Namespace getNamespace() {
+        //TODO(DB): the dataverse name is the driver here. change so that it's similar to other statement
+        return dataverseName == null ? null : new Namespace(databaseName, dataverseName);
     }
 
     public String getName() {

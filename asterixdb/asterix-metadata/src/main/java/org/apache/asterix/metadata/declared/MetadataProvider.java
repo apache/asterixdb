@@ -1871,13 +1871,28 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return appCtx.getCompressionManager();
     }
 
+    public void validateNamespaceName(Namespace namespace, SourceLocation srcLoc) throws AlgebricksException {
+        validateDatabaseName(namespace.getDatabaseName(), srcLoc);
+        validateDataverseName(namespace.getDataverseName(), srcLoc);
+    }
+
+    public void validateDatabaseName(String databaseName, SourceLocation srcLoc) throws AlgebricksException {
+        validateDatabaseObjectNameImpl(databaseName, srcLoc);
+        validateChars(databaseName, srcLoc);
+    }
+
     public void validateDataverseName(DataverseName dataverseName, SourceLocation sourceLoc)
             throws AlgebricksException {
+        List<String> dvParts = dataverseName.getParts();
+        validatePartsLimit(dataverseName, dvParts, sourceLoc);
         int totalLengthUTF8 = 0;
-        for (String dvNamePart : dataverseName.getParts()) {
+        for (String dvNamePart : dvParts) {
             validateDatabaseObjectNameImpl(dvNamePart, sourceLoc);
             if (totalLengthUTF8 == 0 && StoragePathUtil.DATAVERSE_CONTINUATION_MARKER == dvNamePart.codePointAt(0)) {
                 throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, dvNamePart);
+            }
+            if (namespaceResolver.isUsingDatabase()) {
+                validateChars(dvNamePart, sourceLoc);
             }
             totalLengthUTF8 += dvNamePart.getBytes(StandardCharsets.UTF_8).length;
         }
@@ -1892,10 +1907,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return IndexUtil.createExternalFilterEvaluatorFactory(context, typeEnv, projectionFiltrationInfo, properties);
     }
 
-    public void validateDatabaseObjectName(DataverseName dataverseName, String objectName, SourceLocation sourceLoc)
+    public void validateDatabaseObjectName(Namespace namespace, String objectName, SourceLocation sourceLoc)
             throws AlgebricksException {
-        if (dataverseName != null) {
-            validateDataverseName(dataverseName, sourceLoc);
+        if (namespace != null) {
+            validateNamespaceName(namespace, sourceLoc);
         }
         validateDatabaseObjectNameImpl(objectName, sourceLoc);
     }
@@ -1910,6 +1925,25 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         int lengthUTF8 = name.getBytes(StandardCharsets.UTF_8).length;
         if (lengthUTF8 > MetadataConstants.METADATA_OBJECT_NAME_LENGTH_LIMIT_UTF8) {
             throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, sourceLoc, name);
+        }
+    }
+
+    private void validatePartsLimit(DataverseName dvName, List<String> parts, SourceLocation srcLoc)
+            throws AsterixException {
+        if (namespaceResolver.isUsingDatabase() && parts.size() != MetadataConstants.DB_SCOPE_PARTS_COUNT) {
+            throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, srcLoc, dvName);
+        }
+    }
+
+    private static void validateChars(String name, SourceLocation srcLoc) throws AsterixException {
+        for (int off = 0, len = name.length(); off < len;) {
+            int codePointChar = name.codePointAt(off);
+            if (!Character.isLetterOrDigit(codePointChar)) {
+                if (codePointChar != '_' && codePointChar != '-') {
+                    throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, srcLoc, name);
+                }
+            }
+            off += Character.charCount(codePointChar);
         }
     }
 }

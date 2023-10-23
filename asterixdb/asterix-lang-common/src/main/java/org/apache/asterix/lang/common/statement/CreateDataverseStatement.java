@@ -40,6 +40,10 @@ public class CreateDataverseStatement extends AbstractStatement {
         this.ifNotExists = ifNotExists;
     }
 
+    public Namespace getNamespace() {
+        return namespace;
+    }
+
     public String getDatabaseName() {
         return namespace.getDatabaseName();
     }
