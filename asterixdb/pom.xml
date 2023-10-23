@@ -1312,7 +1312,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks-server</artifactId>
+        <artifactId>hyracks-server-test</artifactId>
         <version>${hyracks.version}</version>
         <type>test-jar</type>
       </dependency>

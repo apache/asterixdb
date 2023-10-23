@@ -544,8 +544,8 @@
           <licenses>
             <license>
                 <displayName>Various 3rd party</displayName>
-                <url>file://${basedir}}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</url>
-                <contentFile>${basedir}}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</contentFile>
+                <url>file://${basedir}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</url>
+                <contentFile>${basedir}/../asterix-dashboard/src/main/resources/dashboard/static/3rdpartylicenses.txt</contentFile>
             </license>
             <license>
               <displayName>a BSD 3-clause license</displayName>
@@ -1147,7 +1147,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
-      <artifactId>hyracks-server</artifactId>
+      <artifactId>hyracks-server-test</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

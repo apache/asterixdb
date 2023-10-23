@@ -43,6 +43,11 @@
             <usedDependency>org.apache.hyracks:hyracks-control-nc</usedDependency>
             <usedDependency>org.apache.hyracks:hyracks-control-cc</usedDependency>
           </usedDependencies>
+          <ignoredNonTestScopedDependencies>
+            <ignoredNonTestScopedDependency>org.apache.hyracks:hyracks-ipc:*</ignoredNonTestScopedDependency>
+            <ignoredNonTestScopedDependency>org.apache.hyracks:hyracks-api:*</ignoredNonTestScopedDependency>
+            <ignoredNonTestScopedDependency>org.apache.logging.log4j:log4j-api:*</ignoredNonTestScopedDependency>
+          </ignoredNonTestScopedDependencies>
         </configuration>
         <executions>
           <execution>
@@ -191,31 +196,26 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-ipc</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-api</artifactId>
       <version>${project.version}</version>
       <type>jar</type>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
