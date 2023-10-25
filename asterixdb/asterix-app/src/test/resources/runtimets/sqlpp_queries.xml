@@ -16161,6 +16161,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="composite-pks">
+        <output-dir compare="Text">composite-pks</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="meta/meta_after_gby">
         <output-dir compare="Text">meta/meta_after_gby</output-dir>
       </compilation-unit>
