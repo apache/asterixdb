@@ -30,7 +30,7 @@ public class CloudFileHandle extends FileHandle {
     private final CloudResettableInputStream inputStream;
 
     public CloudFileHandle(ICloudClient cloudClient, String bucket, FileReference fileRef,
-            WriteBufferProvider bufferProvider) {
+            IWriteBufferProvider bufferProvider) {
         super(fileRef);
         ICloudBufferedWriter bufferedWriter = cloudClient.createBufferedWriter(bucket, fileRef.getRelativePath());
         inputStream = new CloudResettableInputStream(bufferedWriter, bufferProvider);

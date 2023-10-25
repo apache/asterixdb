@@ -62,6 +62,7 @@ public class PointableHelper {
     private final UTF8StringWriter utf8Writer;
 
     public static final IPointable NULL_REF = new VoidPointable();
+
     static {
         NULL_REF.set(NULL_BYTES, 0, NULL_BYTES.length);
     }
@@ -139,12 +140,9 @@ public class PointableHelper {
     }
 
     /**
-     * @param str
-     *            The input string
-     * @param vs
-     *            The storage buffer
-     * @param writeTag
-     *            Specifying whether a tag for the string should also be written
+     * @param str      The input string
+     * @param vs       The storage buffer
+     * @param writeTag Specifying whether a tag for the string should also be written
      */
     public void serializeString(String str, IMutableValueStorage vs, boolean writeTag) throws HyracksDataException {
         vs.reset();
@@ -219,22 +217,21 @@ public class PointableHelper {
      * This method takes multiple pointables, the first pointable being the pointable to write the result to, and
      * checks their ATypeTag value. If a missing or null ATypeTag is encountered, the method will set the result
      * pointable to missing or null accordingly, and will return {@code true}.
-     *
+     * <p>
      * As the missing encounter has a higher priority than the null, the method will keep checking if any missing has
      * been encountered first, if not, it will do a null check at the end.
-     *
+     * <p>
      * If the listAccessor is passed, this method will also go through any list pointable elements and search for
      * a missing value to give it a higher priority over null values. If {@code null} is passed for the listAccessor,
      * the list element check will be skipped.
      *
-     * @param result the result pointable that will hold the data
+     * @param result       the result pointable that will hold the data
      * @param listAccessor list accessor to use for check list elements.
-     * @param pointable1 the first pointable to be checked
-     * @param pointable2 the second pointable to be checked
-     * @param pointable3 the third pointable to be checked
-     * @param pointable4 the fourth pointable to be checked
-     * @param pointable5 the fourth pointable to be checked
-     *
+     * @param pointable1   the first pointable to be checked
+     * @param pointable2   the second pointable to be checked
+     * @param pointable3   the third pointable to be checked
+     * @param pointable4   the fourth pointable to be checked
+     * @param pointable5   the fourth pointable to be checked
      * @return {@code true} if the pointable value is missing or null, {@code false} otherwise.
      */
     public static boolean checkAndSetMissingOrNull(IPointable result, ListAccessor listAccessor, IPointable pointable1,
@@ -311,9 +308,8 @@ public class PointableHelper {
      * Checks whether the pointable {@param pointable1} is null or missing, and if true, assigns null to the
      * {@param result}.
      *
-     * @param result the result pointable that will hold the null value
+     * @param result     the result pointable that will hold the null value
      * @param pointable1 the pointable to be checked
-     *
      * @return {@code true} if the {@param pointable1} value is missing or null, {@code false} otherwise.
      */
     public static boolean checkAndSetNull(IPointable result, IPointable pointable1) throws HyracksDataException {
@@ -331,10 +327,9 @@ public class PointableHelper {
      * Checks whether any pointable argument is null or missing, and if true, assigns null to the
      * {@param result}.
      *
-     * @param result the result pointable that will hold the null value
+     * @param result     the result pointable that will hold the null value
      * @param pointable1 the pointable to be checked
      * @param pointable2 the pointable to be checked
-     *
      * @return {@code true} if any pointable is missing or null, {@code false} otherwise.
      */
     public static boolean checkAndSetNull(IPointable result, IPointable pointable1, IPointable pointable2)
@@ -344,14 +339,13 @@ public class PointableHelper {
 
     /**
      * This method checks and returns the pointable value state.
-     *
+     * <p>
      * If a ListAccessor is passed to this function, it will check if the passed pointable is a list, and if so, it
      * will search for a missing value inside the list before checking for null values. If the listAccessor value is
      * null, no list elements check will be performed.
      *
-     * @param pointable the pointable to be checked
+     * @param pointable    the pointable to be checked
      * @param listAccessor list accessor used to check the list elements.
-     *
      * @return the pointable value state for the passed pointable
      */
     private static PointableValueState getPointableValueState(IPointable pointable, ListAccessor listAccessor)
@@ -400,10 +394,9 @@ public class PointableHelper {
      * Check if the provided bytes are of valid long type. In case floats and doubles are accepted, the accepted
      * values will be 1.0 and 2.0, but not 2.5. (only zero decimals)
      *
-     * @param bytes data bytes
-     * @param startOffset start offset
+     * @param bytes                data bytes
+     * @param startOffset          start offset
      * @param acceptFloatAndDouble flag to accept float and double values or not
-     *
      * @return true if provided value is a valid long, false otherwise
      */
     public static boolean isValidLongValue(byte[] bytes, int startOffset, boolean acceptFloatAndDouble) {
@@ -442,5 +435,10 @@ public class PointableHelper {
         }
 
         return true;
+    }
+
+    public static boolean isNullOrMissing(IValueReference value) {
+        byte typeTag = value.getByteArray()[0];
+        return ATypeTag.MISSING.serialize() == typeTag || ATypeTag.NULL.serialize() == typeTag;
     }
 }

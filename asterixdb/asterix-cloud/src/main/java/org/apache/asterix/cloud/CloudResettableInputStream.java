@@ -24,16 +24,19 @@ import java.nio.ByteBuffer;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CloudResettableInputStream extends InputStream {
+    private static final Logger LOGGER = LogManager.getLogger();
     // TODO: make configurable
     public static final int MIN_BUFFER_SIZE = 5 * 1024 * 1024;
-    private final WriteBufferProvider bufferProvider;
+    private final IWriteBufferProvider bufferProvider;
     private ByteBuffer writeBuffer;
 
     private final ICloudBufferedWriter bufferedWriter;
 
-    public CloudResettableInputStream(ICloudBufferedWriter bufferedWriter, WriteBufferProvider bufferProvider) {
+    public CloudResettableInputStream(ICloudBufferedWriter bufferedWriter, IWriteBufferProvider bufferProvider) {
         this.bufferedWriter = bufferedWriter;
         this.bufferProvider = bufferProvider;
     }
@@ -61,16 +64,24 @@ public class CloudResettableInputStream extends InputStream {
     }
 
     public void write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
-        open();
         write(header);
         write(page);
     }
 
     public int write(ByteBuffer page) throws HyracksDataException {
         open();
+        return write(page.array(), 0, page.limit());
+    }
 
-        // amount to write
-        int size = page.limit();
+    public void write(int b) throws HyracksDataException {
+        if (writeBuffer.remaining() == 0) {
+            uploadAndWait();
+        }
+        writeBuffer.put((byte) b);
+    }
+
+    public int write(byte[] b, int off, int len) throws HyracksDataException {
+        open();
 
         // full buffer = upload -> write all
         if (writeBuffer.remaining() == 0) {
@@ -78,23 +89,23 @@ public class CloudResettableInputStream extends InputStream {
         }
 
         // write partial -> upload -> write -> upload -> ...
-        int offset = 0;
-        int pageRemaining = size;
+        int offset = off;
+        int pageRemaining = len;
         while (pageRemaining > 0) {
             // enough to write all
             if (writeBuffer.remaining() > pageRemaining) {
-                writeBuffer.put(page.array(), offset, pageRemaining);
-                return size;
+                writeBuffer.put(b, offset, pageRemaining);
+                return len;
             }
 
             int remaining = writeBuffer.remaining();
-            writeBuffer.put(page.array(), offset, remaining);
+            writeBuffer.put(b, offset, remaining);
             pageRemaining -= remaining;
             offset += remaining;
             uploadAndWait();
         }
 
-        return size;
+        return len;
     }
 
     public void finish() throws HyracksDataException {
@@ -128,6 +139,7 @@ public class CloudResettableInputStream extends InputStream {
         try {
             bufferedWriter.upload(this, writeBuffer.limit());
         } catch (Exception e) {
+            LOGGER.fatal(e);
             throw HyracksDataException.create(e);
         }
 

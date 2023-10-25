@@ -31,9 +31,9 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class S3Utils {
+public class S3CloudClientUtils {
 
-    private S3Utils() {
+    private S3CloudClientUtils() {
         throw new AssertionError("do not instantiate");
     }
 
@@ -78,7 +78,7 @@ public class S3Utils {
         return URLDecoder.decode(path, Charset.defaultCharset());
     }
 
-    public static String toCloudPrefix(String path) {
+    private static String toCloudPrefix(String path) {
         return path.startsWith(File.separator) ? path.substring(1) : path;
     }
 }

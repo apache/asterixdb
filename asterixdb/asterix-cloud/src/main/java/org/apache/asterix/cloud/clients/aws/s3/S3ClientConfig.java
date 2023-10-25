@@ -18,13 +18,18 @@
  */
 package org.apache.asterix.cloud.clients.aws.s3;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.external.util.aws.s3.S3Constants;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
-public class S3ClientConfig {
+public final class S3ClientConfig implements Serializable {
+    private static final long serialVersionUID = 548292720313565948L;
     // The maximum number of file that can be deleted (AWS restriction)
     static final int DELETE_BATCH_SIZE = 1000;
     private final String region;
@@ -46,6 +51,21 @@ public class S3ClientConfig {
         return new S3ClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
                 cloudProperties.getProfilerLogInterval());
+    }
+
+    public static S3ClientConfig of(Map<String, String> configuration) {
+        // Used to determine local vs. actual S3
+        String endPoint = configuration.get(S3Constants.SERVICE_END_POINT_FIELD_NAME);
+        // Disabled
+        long profilerLogInterval = 0;
+
+        // Dummy values;
+        String region = "";
+        String prefix = null;
+        boolean anonymousAuth = false;
+
+        return new S3ClientConfig(region, configuration.get(S3Constants.SERVICE_END_POINT_FIELD_NAME), "",
+                anonymousAuth, profilerLogInterval);
     }
 
     public String getRegion() {

@@ -59,7 +59,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     //TODO(DB): change
     private final String metadataNamespacePath;
     protected final ICloudClient cloudClient;
-    protected final WriteBufferProvider writeBufferProvider;
+    protected final IWriteBufferProvider writeBufferProvider;
     protected final String bucket;
     protected final Set<Integer> partitions;
     protected final List<FileReference> partitionPaths;

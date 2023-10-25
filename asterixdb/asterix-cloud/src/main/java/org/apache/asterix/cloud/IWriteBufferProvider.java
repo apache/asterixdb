@@ -18,33 +18,10 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.cloud.CloudResettableInputStream.MIN_BUFFER_SIZE;
-
 import java.nio.ByteBuffer;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
-import org.apache.hyracks.util.annotations.ThreadSafe;
+public interface IWriteBufferProvider {
+    ByteBuffer getBuffer();
 
-@ThreadSafe
-public class WriteBufferProvider implements IWriteBufferProvider {
-    private final BlockingQueue<ByteBuffer> writeBuffers;
-
-    public WriteBufferProvider(int ioParallelism) {
-        writeBuffers = new ArrayBlockingQueue<>(ioParallelism);
-    }
-
-    @Override
-    public void recycle(ByteBuffer buffer) {
-        writeBuffers.offer(buffer);
-    }
-
-    @Override
-    public ByteBuffer getBuffer() {
-        ByteBuffer writeBuffer = writeBuffers.poll();
-        if (writeBuffer == null) {
-            return ByteBuffer.allocate(MIN_BUFFER_SIZE);
-        }
-        return writeBuffer;
-    }
+    void recycle(ByteBuffer buffer);
 }

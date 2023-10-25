@@ -18,33 +18,32 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.cloud.CloudResettableInputStream.MIN_BUFFER_SIZE;
+import java.io.IOException;
+import java.io.OutputStream;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+public class CloudOutputStream extends OutputStream {
+    private final CloudResettableInputStream inputStream;
 
-import org.apache.hyracks.util.annotations.ThreadSafe;
-
-@ThreadSafe
-public class WriteBufferProvider implements IWriteBufferProvider {
-    private final BlockingQueue<ByteBuffer> writeBuffers;
-
-    public WriteBufferProvider(int ioParallelism) {
-        writeBuffers = new ArrayBlockingQueue<>(ioParallelism);
+    public CloudOutputStream(CloudResettableInputStream inputStream) {
+        this.inputStream = inputStream;
     }
 
     @Override
-    public void recycle(ByteBuffer buffer) {
-        writeBuffers.offer(buffer);
+    public void write(byte[] b, int off, int len) throws IOException {
+        inputStream.write(b, off, len);
     }
 
     @Override
-    public ByteBuffer getBuffer() {
-        ByteBuffer writeBuffer = writeBuffers.poll();
-        if (writeBuffer == null) {
-            return ByteBuffer.allocate(MIN_BUFFER_SIZE);
-        }
-        return writeBuffer;
+    public void write(int b) throws IOException {
+        inputStream.write(b);
+    }
+
+    @Override
+    public void close() throws IOException {
+        inputStream.finish();
+    }
+
+    public void abort() throws IOException {
+        inputStream.abort();
     }
 }

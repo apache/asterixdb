@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UTFDataFormatException;
 import java.lang.ref.SoftReference;
+import java.util.Objects;
 
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
@@ -535,14 +536,29 @@ public class UTF8StringUtil {
             chararr = reader.chararr;
         }
 
+        in.readFully(bytearr, 0, utflen);
+
+        int chararr_count = readUTF8(bytearr, 0, utflen, chararr);
+
+        // The number of chars produced may be less than utflen
+        return new String(chararr, 0, chararr_count);
+    }
+
+    public static void readUTF8(byte[] bytearr, int start, UTF8CharBuffer buffer) throws UTFDataFormatException {
+        Objects.requireNonNull(buffer);
+        int utflen = VarLenIntEncoderDecoder.decode(bytearr, start);
+        int lengthIntSize = VarLenIntEncoderDecoder.getBytesRequired(utflen);
+        char[] chararr = buffer.getBuffer(utflen);
+        buffer.setFilledLength(readUTF8(bytearr, start + lengthIntSize, utflen, chararr));
+    }
+
+    private static int readUTF8(byte[] bytearr, int start, int utflen, char[] chararr) throws UTFDataFormatException {
         int c, char2, char3;
         int count = 0;
         int chararr_count = 0;
 
-        in.readFully(bytearr, 0, utflen);
-
         while (count < utflen) {
-            c = bytearr[count] & 0xff;
+            c = bytearr[start + count] & 0xff;
             if (c > 127) {
                 break;
             }
@@ -596,8 +612,7 @@ public class UTF8StringUtil {
                     throw new UTFDataFormatException("malformed input around byte " + count);
             }
         }
-        // The number of chars produced may be less than utflen
-        return new String(chararr, 0, chararr_count);
+        return chararr_count;
     }
 
     /**

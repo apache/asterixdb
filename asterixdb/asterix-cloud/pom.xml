@@ -70,6 +70,11 @@
       <artifactId>asterix-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.asterix</groupId>
+      <artifactId>asterix-external-data</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <!-- aws s3 start -->
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
