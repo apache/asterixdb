@@ -27,8 +27,6 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
  **/
 public class MurmurHash128Bit {
 
-    private final static int DUMMY_FIELD = 0;
-
     public static long rotl64(long v, int n) {
         return ((v << n) | (v >>> (64 - n)));
     }
@@ -65,8 +63,9 @@ public class MurmurHash128Bit {
 
             long k1 = 0L;
             for (int j = 0; j < 8; ++j) {
-                k1 += (((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos] & 0xff) << (j << 3));
+                k1 += (((long) tuple.getFieldData(
+                        keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex]) + bytePos]
+                        & 0xff) << (j << 3));
                 ++bytePos;
                 if (tuple.getFieldLength(keyFields[currentFieldIndex]) == bytePos) {
                     ++currentFieldIndex;
@@ -75,8 +74,9 @@ public class MurmurHash128Bit {
             }
             long k2 = 0L;
             for (int j = 0; j < 8; ++j) {
-                k2 += (((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos] & 0xff) << (j << 3));
+                k2 += (((long) tuple.getFieldData(
+                        keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex]) + bytePos]
+                        & 0xff) << (j << 3));
                 ++bytePos;
                 if (tuple.getFieldLength(keyFields[currentFieldIndex]) == bytePos) {
                     ++currentFieldIndex;
@@ -113,56 +113,62 @@ public class MurmurHash128Bit {
         bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
         switch (length & 15) {
             case 15:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 48;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 48;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 14:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 40;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 40;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 13:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 32;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 32;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 12:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 24;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 24;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 11:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 16;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 16;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 10:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 8;
+                k2 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 8;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 9:
-                k2 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]);
+                k2 ^= ((long) tuple.getFieldData(
+                        keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex]) + bytePos]);
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
@@ -174,64 +180,71 @@ public class MurmurHash128Bit {
                 h2 ^= k2;
 
             case 8:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 56;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 56;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 7:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 48;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 48;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 6:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 40;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 40;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 5:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 32;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 32;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 4:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 24;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 24;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 3:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 16;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 16;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 2:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]) << 8;
+                k1 ^= ((long) tuple
+                        .getFieldData(keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex])
+                                + bytePos]) << 8;
                 --bytePos;
                 if (bytePos == -1) {
                     --currentFieldIndex;
                     bytePos = tuple.getFieldLength(keyFields[currentFieldIndex]) - 1;
                 }
             case 1:
-                k1 ^= ((long) tuple.getFieldData(DUMMY_FIELD)[tuple.getFieldStart(keyFields[currentFieldIndex])
-                        + bytePos]);
+                k1 ^= ((long) tuple.getFieldData(
+                        keyFields[currentFieldIndex])[tuple.getFieldStart(keyFields[currentFieldIndex]) + bytePos]);
                 k1 *= c1;
                 k1 = rotl64(k1, 31);
                 k1 *= c2;
