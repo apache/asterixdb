@@ -18,6 +18,9 @@
  */
 use test;
 
-copy orders
-using localfs
-(("path"="asterix_nc1://data/nontagged/orderData.json"),("format"="adm"));
+COPY orders
+FROM localfs
+PATH("asterix_nc1://data/nontagged/orderData.json")
+WITH {
+   "format": "adm"
+};

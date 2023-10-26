@@ -120,7 +120,7 @@ import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
-import org.apache.asterix.lang.common.statement.CopyStatement;
+import org.apache.asterix.lang.common.statement.CopyFromStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -459,11 +459,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         }
                         handleLoadStatement(metadataProvider, stmt, hcc);
                         break;
-                    case COPY:
+                    case COPY_FROM:
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
-                        handleCopyStatement(metadataProvider, stmt, hcc);
+                        handleCopyFromStatement(metadataProvider, stmt, hcc);
                         break;
                     case INSERT:
                     case UPSERT:
@@ -3842,15 +3842,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected Map<String, String> createExternalDataPropertiesForCopyStmt(String databaseName,
-            DataverseName dataverseName, CopyStatement copyStatement, Datatype itemType,
+    protected Map<String, String> createExternalDataPropertiesForCopyFromStmt(String databaseName,
+            DataverseName dataverseName, CopyFromStatement copyFromStatement, Datatype itemType,
             MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
-        return copyStatement.getExternalDetails().getProperties();
+        ExternalDetailsDecl edd = copyFromStatement.getExternalDetails();
+        Map<String, String> properties = copyFromStatement.getExternalDetails().getProperties();
+        String path = copyFromStatement.getPath();
+        String pathKey = ExternalDataUtils.getPathKey(edd.getAdapter());
+        properties.put(pathKey, path);
+        return properties;
     }
 
-    protected void handleCopyStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
-            throws Exception {
-        CopyStatement copyStmt = (CopyStatement) stmt;
+    protected void handleCopyFromStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc) throws Exception {
+        CopyFromStatement copyStmt = (CopyFromStatement) stmt;
         String datasetName = copyStmt.getDatasetName();
         metadataProvider.validateDatabaseObjectName(copyStmt.getNamespace(), datasetName, copyStmt.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(copyStmt.getNamespace());
@@ -3887,8 +3892,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         new Datatype(itemTypeDatabaseName, itemTypeDataverseName, itemTypeName, itemTypeEntity, true);
             }
             ExternalDetailsDecl externalDetails = copyStmt.getExternalDetails();
-            Map<String, String> properties =
-                    createExternalDataPropertiesForCopyStmt(databaseName, dataverseName, copyStmt, itemType, mdTxnCtx);
+            Map<String, String> properties = createExternalDataPropertiesForCopyFromStmt(databaseName, dataverseName,
+                    copyStmt, itemType, mdTxnCtx);
             ExternalDataUtils.normalize(properties);
             ExternalDataUtils.validate(properties);
             validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,

@@ -39,6 +39,7 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
@@ -103,6 +104,11 @@ public final class CheckDatasetOnlyResolutionVisitor
             }
         }
         return false;
+    }
+
+    @Override
+    public Boolean visit(CopyToStatement stmtCopy, VariableExpr arg) throws CompilationException {
+        return contains(stmtCopy.getQuery(), arg);
     }
 
     @Override

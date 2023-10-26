@@ -1057,4 +1057,17 @@ public class ExternalDataUtils {
                     + ExternalDataConstants.KEY_EMBED_FILTER_VALUES + "' is enabled");
         }
     }
+
+    public static String getPathKey(String adapter) {
+        String normalizedAdapter = adapter.toUpperCase();
+        switch (normalizedAdapter) {
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_DATA_LAKE:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
+                return ExternalDataConstants.DEFINITION_FIELD_NAME;
+            default:
+                return ExternalDataConstants.KEY_PATH;
+        }
+    }
 }

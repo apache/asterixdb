@@ -351,7 +351,7 @@ public class CompiledStatements {
 
         @Override
         public Statement.Kind getKind() {
-            return Statement.Kind.COPY;
+            return Statement.Kind.COPY_FROM;
         }
 
         @Override

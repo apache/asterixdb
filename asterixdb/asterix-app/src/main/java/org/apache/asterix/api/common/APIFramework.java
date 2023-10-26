@@ -210,7 +210,7 @@ public class APIFramework {
         // establish facts
         final boolean isQuery = query != null;
         final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
-        final boolean isCopy = statement != null && statement.getKind() == Statement.Kind.COPY;
+        final boolean isCopy = statement != null && statement.getKind() == Statement.Kind.COPY_FROM;
         final SourceLocation sourceLoc =
                 query != null ? query.getSourceLocation() : statement != null ? statement.getSourceLocation() : null;
         final boolean isExplainOnly = isQuery && query.isExplain();

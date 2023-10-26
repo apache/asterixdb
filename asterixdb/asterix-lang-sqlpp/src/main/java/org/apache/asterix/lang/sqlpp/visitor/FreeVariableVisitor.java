@@ -47,6 +47,7 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -512,6 +513,15 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         return null;
     }
 
+    @Override
+    public Void visit(CopyToStatement stmtCopy, Collection<VariableExpr> freeVars) throws CompilationException {
+        stmtCopy.getBody().accept(this, freeVars);
+        stmtCopy.getPathExpression().accept(this, freeVars);
+        visit(stmtCopy.getPartitionExpressions(), freeVars);
+        visit(stmtCopy.getOrderbyList(), freeVars);
+        return null;
+    }
+
     private void visitLetWhereClauses(List<? extends AbstractClause> clauseList, Collection<VariableExpr> freeVars)
             throws CompilationException {
         if (clauseList == null || clauseList.isEmpty()) {
@@ -541,16 +551,12 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     /**
      * Removes all binding variables defined in the select block for a free variable collection.
-     *  @param selectFreeVars,
-     *            free variables.
-     * @param fromBindingVars,
-     *            binding variables defined in the from clause of a select block.
-     * @param letsBindingVars,
-     *            binding variables defined in the let clauses of the select block.
-     * @param gbyBindingVars
-     *            binding variables defined in the groupby clauses of the select block
-     * @param gbyLetsBindingVars
-     *            binding variables defined in the let clauses after groupby of the select block.
+     *
+     * @param selectFreeVars,    free variables.
+     * @param fromBindingVars,   binding variables defined in the from clause of a select block.
+     * @param letsBindingVars,   binding variables defined in the let clauses of the select block.
+     * @param gbyBindingVars     binding variables defined in the groupby clauses of the select block
+     * @param gbyLetsBindingVars binding variables defined in the let clauses after groupby of the select block.
      */
     private void removeAllBindingVarsInSelectBlock(Collection<VariableExpr> selectFreeVars,
             Collection<VariableExpr> fromBindingVars, Collection<VariableExpr> letsBindingVars,

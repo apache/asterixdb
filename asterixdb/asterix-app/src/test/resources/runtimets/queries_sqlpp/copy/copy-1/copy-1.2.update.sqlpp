@@ -33,9 +33,12 @@ upsert into Customers([
     }
 ]);
 
-copy Customers
-using localfs
-(("path"="asterix_nc1://data/nontagged/customerData.json"),("format"="adm"));
+COPY Customers
+FROM localfs
+PATH ("asterix_nc1://data/nontagged/customerData.json")
+WITH {
+   "format": "adm"
+};
 
 upsert into Customers([
     {

@@ -28,18 +28,30 @@ import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 import org.apache.asterix.object.base.AdmObjectNode;
 
-public class CopyStatement extends AbstractStatement {
+public class CopyFromStatement extends AbstractStatement {
 
     private final Namespace namespace;
     private final String datasetName;
+    private final String path;
     private final TypeExpression typeExpr;
     private final ExternalDetailsDecl externalDetails;
     private final AdmObjectNode withObjectNode;
 
-    public CopyStatement(Namespace namespace, String datasetName, TypeExpression typeExpr,
+    public CopyFromStatement(Namespace namespace, String datasetName, TypeExpression typeExpr,
+            ExternalDetailsDecl externalDetails, RecordConstructor withRecord) throws CompilationException {
+        this(namespace, datasetName, null, typeExpr, externalDetails, withRecord);
+    }
+
+    public CopyFromStatement(Namespace namespace, String datasetName, String path, TypeExpression typeExpr,
+            ExternalDetailsDecl externalDetails) throws CompilationException {
+        this(namespace, datasetName, path, typeExpr, externalDetails, null);
+    }
+
+    private CopyFromStatement(Namespace namespace, String datasetName, String path, TypeExpression typeExpr,
             ExternalDetailsDecl externalDetails, RecordConstructor withRecord) throws CompilationException {
         this.namespace = namespace;
         this.datasetName = datasetName;
+        this.path = path;
         this.typeExpr = typeExpr;
         this.externalDetails = externalDetails;
         this.withObjectNode = withRecord == null ? new AdmObjectNode() : ExpressionUtils.toNode(withRecord);
@@ -55,7 +67,7 @@ public class CopyStatement extends AbstractStatement {
 
     @Override
     public Kind getKind() {
-        return Kind.COPY;
+        return Kind.COPY_FROM;
     }
 
     public String getDatasetName() {
@@ -73,6 +85,10 @@ public class CopyStatement extends AbstractStatement {
 
     public AdmObjectNode getWithObjectNode() {
         return withObjectNode;
+    }
+
+    public String getPath() {
+        return path;
     }
 
     @Override

@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.TypeReferenceExpression;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -246,5 +247,20 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
             returnExpression.accept(this, arg);
         }
         return null;
+    }
+
+    @Override
+    public Void visit(CopyToStatement stmtCopy, Void arg) throws CompilationException {
+        stmtCopy.getQuery().accept(this, arg);
+        stmtCopy.getPathExpression().accept(this, arg);
+        acceptList(stmtCopy.getPartitionExpressions(), arg);
+        acceptList(stmtCopy.getOrderbyList(), arg);
+        return null;
+    }
+
+    private void acceptList(List<Expression> expressions, Void arg) throws CompilationException {
+        for (Expression expression : expressions) {
+            expression.accept(this, arg);
+        }
     }
 }

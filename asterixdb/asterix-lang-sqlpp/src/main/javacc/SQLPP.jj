@@ -166,7 +166,8 @@ import org.apache.asterix.lang.common.statement.FullTextConfigDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.InternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.LoadStatement;
-import org.apache.asterix.lang.common.statement.CopyStatement;
+import org.apache.asterix.lang.common.statement.CopyFromStatement;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.NodeGroupDropStatement;
 import org.apache.asterix.lang.common.statement.NodegroupDecl;
 import org.apache.asterix.lang.common.statement.Query;
@@ -182,6 +183,7 @@ import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.OperatorType;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.lang.common.util.ConfigurationUtil;
 import org.apache.asterix.lang.common.util.DatasetDeclParametersUtil;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.common.util.RangeMapBuilder;
@@ -926,6 +928,14 @@ class SQLPPParser extends ScopeChecker implements IParser {
     private void validatePKFields(Object primaryKeyFields, Token startToken) throws SqlppParseException {
       if (primaryKeyFields == null) {
         throw new SqlppParseException(getSourceLocation(startToken), "Invalid primary key specification.");
+      }
+    }
+
+    private Map<String, String> getConfiguration(RecordConstructor withRecord) throws SqlppParseException {
+      try {
+        return ConfigurationUtil.toProperties(withRecord);
+      } catch(AlgebricksException e) {
+          throw new SqlppParseException(withRecord.getSourceLocation(), e.getMessage());
       }
     }
 }
@@ -2848,37 +2858,123 @@ Statement SetStatement() throws ParseException:
     }
 }
 
-CopyStatement CopyStatement() throws ParseException:
+Statement CopyStatement() throws ParseException:
 {
-  Token startToken = null;
-  Namespace namespace = null;
-  Identifier datasetName = null;
-  TypeExpression typeExpr = null;
-  boolean alreadySorted = false;
-  String adapterName;
-  Map<String,String> properties;
-  Pair<Namespace,Identifier> nameComponents = null;
+ Token startToken = null;
+ Pair<Namespace,Identifier> nameComponents = null;
+ Query query = null;
+ Statement stmt = null;
+ TypeExpression typeExpr = null;
+ VariableExpr alias = null;
 }
 {
-  <COPY> (<INTO>)? { startToken = token; } nameComponents = QualifiedName()
-    {
-      namespace = nameComponents.first;
-      datasetName = nameComponents.second;
-    }
-  (<AS> typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN))?
-  <USING> adapterName = AdapterName() properties = Configuration()
+   <COPY>
+   ( LOOKAHEAD(1) <INTO> { startToken = token; } nameComponents = QualifiedName() stmt = CopyFromStatement(startToken, nameComponents, typeExpr)
+     | LOOKAHEAD(1) <LEFTPAREN> { startToken = token; } query = Query() <RIGHTPAREN> (<AS>)? alias = Variable()  stmt = CopyToStatement(startToken, nameComponents, query, alias)
+     | { startToken = token; } nameComponents = QualifiedName()
+       (<AS>)? (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN) | alias = Variable())?
+       (stmt = CopyFromStatement(startToken, nameComponents, typeExpr) | stmt = CopyToStatement(startToken, nameComponents, query, alias))
+   )
+   {
+      return stmt;
+   }
+}
+
+CopyFromStatement CopyFromStatement(Token startToken, Pair<Namespace, Identifier> nameComponents, TypeExpression typeExpr) throws ParseException:
+{
+  Namespace namespace = nameComponents.first;
+  Identifier datasetName = nameComponents.second;
+  String adapterName;
+  RecordConstructor withRecord;
+  String sourcePath;
+}
+{
+  <FROM> adapterName = AdapterName()
+  <PATH> <LEFTPAREN> sourcePath = ConcatenatedStrings() <RIGHTPAREN>
+  <WITH> withRecord = RecordConstructor()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();
        edd.setAdapter(adapterName);
-       edd.setProperties(properties);
+       edd.setProperties(getConfiguration(withRecord));
+
        try {
-         CopyStatement stmt = new CopyStatement(namespace, datasetName.getValue(), typeExpr, edd, null);
+         CopyFromStatement stmt = new CopyFromStatement(namespace, datasetName.getValue(), sourcePath, typeExpr, edd);
          return addSourceLocation(stmt, startToken);
        } catch (CompilationException e){
            throw new SqlppParseException(getSourceLocation(startToken), e.getMessage());
        }
     }
 }
+
+CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> nameComponents, Query query, VariableExpr alias) throws ParseException:
+{
+  VariableExpr usedAlias = alias;
+  String adapterName;
+  RecordConstructor withRecord;
+  Namespace namespace = nameComponents == null ? null : nameComponents.first;
+  String datasetName = nameComponents == null ? null : nameComponents.second.getValue();
+  Expression pathExpr = null;
+
+  List<Expression> partitionExprs = new ArrayList<Expression>();
+  Map<Integer, VariableExpr> partitionVarExprs = new HashMap<Integer, VariableExpr>();
+  List<Expression> orderbyList = new ArrayList<Expression>();
+  List<OrderbyClause.OrderModifier> orderbyModifierList = new ArrayList<OrderbyClause.OrderModifier>();
+  List<OrderbyClause.NullOrderModifier> orderbyNullModifierList = new ArrayList<OrderbyClause.NullOrderModifier>();
+}
+{
+  <TO> adapterName = AdapterName()
+  <PATH> <LEFTPAREN> pathExpr = Expression() <RIGHTPAREN>
+  (CopyToOverClause(partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList))?
+  <WITH> withRecord = RecordConstructor()
+    {
+       ExternalDetailsDecl edd = new ExternalDetailsDecl();
+       edd.setAdapter(adapterName);
+       edd.setProperties(getConfiguration(withRecord));
+
+       if(namespace == null) {
+          namespace = defaultNamespace;
+       }
+
+       if(usedAlias == null) {
+          usedAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(datasetName));
+       }
+
+       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExpr,
+            partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter());
+       return addSourceLocation(stmt, startToken);
+    }
+}
+
+ void CopyToOverClause(List<Expression> partitionExprs,
+                       Map<Integer, VariableExpr> partitionVarExprs,
+                       List<Expression> orderbyList,
+                       List<OrderbyClause.OrderModifier> orderbyModifierList,
+                       List<OrderbyClause.NullOrderModifier> orderbyNullModifierList) throws ParseException:
+{
+  Expression partitionExpr = null;
+  VariableExpr partitionVar = null;
+  OrderbyClause orderByClause = null;
+}
+{
+   <OVER> <LEFTPAREN> <IDENTIFIER> {expectToken(PARTITION);} <BY>
+   partitionExpr = Expression() { partitionExprs.add(partitionExpr);}
+   ((<AS>)? partitionVar = Variable() { partitionVarExprs.put(0, partitionVar); })?
+   (
+     <COMMA> partitionExpr = Expression() { partitionExprs.add(partitionExpr); }
+     ((<AS>)? partitionVar = Variable() { partitionVarExprs.put(partitionExprs.size() - 1, partitionVar); })?
+   )*
+   (
+      orderByClause = OrderbyClause()
+      {
+        orderbyList.addAll(orderByClause.getOrderbyList());
+        orderbyModifierList.addAll(orderByClause.getModifierList());
+        orderbyNullModifierList.addAll(orderByClause.getNullModifierList());
+      }
+   )?
+   <RIGHTPAREN>
+}
+
+
 
 LoadStatement LoadStatement() throws ParseException:
 {
@@ -3118,6 +3214,19 @@ Pair<String, String> KeyValuePair() throws ParseException:
     {
       return new Pair<String, String>(key, value);
     }
+}
+
+String ConcatenatedStrings() throws ParseException:
+{
+  String stringVal;
+  StringBuilder stringBuilder = new StringBuilder();
+}
+{
+  stringVal = StringLiteral() { stringBuilder.append(stringVal); }
+  (<COMMA> stringVal = StringLiteral() { stringBuilder.append(',').append(stringVal); })*
+  {
+    return stringBuilder.toString();
+  }
 }
 
 Map<String,String> Properties() throws ParseException:

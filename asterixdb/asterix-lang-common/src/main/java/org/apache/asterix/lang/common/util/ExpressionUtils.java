@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.lang.common.util;
 
-import static org.apache.asterix.lang.common.base.Literal.Type.DOUBLE;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

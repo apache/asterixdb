@@ -52,6 +52,7 @@ import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
 import org.apache.asterix.lang.common.rewrites.VariableSubstitutionEnvironment;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
@@ -86,10 +87,8 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     }
 
     /**
-     * @param letClauses
-     *            , a list of let-binding clauses
-     * @param returnExpr
-     *            , a return expression
+     * @param letClauses , a list of let-binding clauses
+     * @param returnExpr , a return expression
      * @return a query expression which is upto a specific langauge, e.g., FLWOGR in AQL and expression query in SQL++.
      */
     protected abstract Expression generateQueryExpression(List<LetClause> letClauses, Expression returnExpr)
@@ -281,6 +280,29 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         Pair<Boolean, Expression> rewrittenBodyExpression = inlineUdfsAndViewsInExpr(insert.getBody());
         insert.setBody(rewrittenBodyExpression.second);
         return changed || rewrittenBodyExpression.first;
+    }
+
+    @Override
+    public Boolean visit(CopyToStatement stmtCopy, Void arg) throws CompilationException {
+        boolean changed = false;
+
+        Pair<Boolean, Expression> queryBody = inlineUdfsAndViewsInExpr(stmtCopy.getBody());
+        changed |= queryBody.first;
+        stmtCopy.setBody(queryBody.second);
+
+        Pair<Boolean, Expression> path = inlineUdfsAndViewsInExpr(stmtCopy.getPathExpression());
+        changed |= path.first;
+        stmtCopy.setPathExpression(path.second);
+
+        Pair<Boolean, List<Expression>> part = inlineUdfsInExprList(stmtCopy.getPartitionExpressions());
+        changed |= part.first;
+        stmtCopy.setPartitionExpressions(part.second);
+
+        Pair<Boolean, List<Expression>> order = inlineUdfsInExprList(stmtCopy.getOrderbyList());
+        changed |= order.first;
+        stmtCopy.setOrderbyList(order.second);
+
+        return changed;
     }
 
     protected Pair<Boolean, Expression> inlineUdfsAndViewsInExpr(Expression expr) throws CompilationException {

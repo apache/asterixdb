@@ -224,7 +224,7 @@ abstract class LangExpressionToPlanTranslator
                 lds = new LoadableDataSource(dataset, itemType, metaItemType,
                         ((CompiledLoadFromFileStatement) stmt).getAdapter(),
                         ((CompiledLoadFromFileStatement) stmt).getProperties());
-            } else if (stmt.getKind() == Statement.Kind.COPY) {
+            } else if (stmt.getKind() == Statement.Kind.COPY_FROM) {
                 CompiledCopyFromFileStatement copyStmt = (CompiledCopyFromFileStatement) stmt;
                 lds = new LoadableDataSource(dataset, copyStmt.getItemType().getDatatype(), metaItemType,
                         copyStmt.getAdapter(), copyStmt.getProperties());
@@ -316,7 +316,7 @@ abstract class LangExpressionToPlanTranslator
             leafOperator.getInputs().add(new MutableObject<>(insertOp));
             leafOperator.setSourceLocation(sourceLoc);
             return new ALogicalPlanImpl(new MutableObject<>(leafOperator));
-        } else if (stmt.getKind() == Statement.Kind.COPY) {
+        } else if (stmt.getKind() == Statement.Kind.COPY_FROM) {
             InsertDeleteUpsertOperator upsertOp = new InsertDeleteUpsertOperator(targetDatasource, payloadRef,
                     varRefsForLoading, InsertDeleteUpsertOperator.Kind.UPSERT, false);
             upsertOp.setAdditionalFilteringExpressions(additionalFilteringExpressions);

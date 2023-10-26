@@ -28,13 +28,15 @@ upsert into test1([
     }
 ]);
 
-copy test1 USING S3 (
-("region"="us-west-2"),
-("serviceEndpoint"="http://127.0.0.1:8001"),
-("container"="playground"),
-("definition"="data_dir"),
-("format"="json")
-);
+COPY test1
+FROM S3
+PATH ("data_dir")
+WITH {
+   "format": "json",
+   "container": "playground",
+   "serviceEndpoint": "http://127.0.0.1:8001",
+   "region": "us-west-2"
+};
 
 upsert into test1([
     {

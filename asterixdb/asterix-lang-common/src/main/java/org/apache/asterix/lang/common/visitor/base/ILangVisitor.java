@@ -47,7 +47,8 @@ import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
-import org.apache.asterix.lang.common.statement.CopyStatement;
+import org.apache.asterix.lang.common.statement.CopyFromStatement;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -104,7 +105,9 @@ public interface ILangVisitor<R, T> {
 
     R visit(LoadStatement stmtLoad, T arg) throws CompilationException;
 
-    R visit(CopyStatement stmtCopy, T arg) throws CompilationException;
+    R visit(CopyFromStatement stmtCopy, T arg) throws CompilationException;
+
+    R visit(CopyToStatement cto, T arg) throws CompilationException;
 
     R visit(DropDatasetStatement del, T arg) throws CompilationException;
 

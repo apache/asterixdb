@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.parser.ScopeChecker;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.Query;
@@ -75,10 +76,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     /**
-     * @param context,
-     *            manages ids of variables and guarantees uniqueness of variables.
-     * @param externalVars
-     *            pre-defined (external) variables that must be added to the initial scope
+     * @param context,     manages ids of variables and guarantees uniqueness of variables.
+     * @param externalVars pre-defined (external) variables that must be added to the initial scope
      */
     public AbstractSqlppExpressionScopingVisitor(LangRewritingContext context, Collection<VarIdentifier> externalVars) {
         this.context = context;
@@ -415,6 +414,33 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
     }
 
     @Override
+    public Expression visit(CopyToStatement stmtCopy, ILangExpression arg) throws CompilationException {
+        stmtCopy.setBody(stmtCopy.getBody().accept(this, stmtCopy));
+
+        // Scope that only contains the source variable
+        Scope currentNewScope = scopeChecker.createNewScope();
+        VariableExpr sourceVarExpr = stmtCopy.getSourceVariable();
+        addNewVarSymbolToScope(currentNewScope, sourceVarExpr.getVar(), stmtCopy.getSourceLocation());
+
+        // Visit partition exprs
+        stmtCopy.setPartitionExpressions(visit(stmtCopy.getPartitionExpressions(), stmtCopy));
+
+        // Add partition variables to the current scope
+        Collection<VariableExpr> partitionVars = stmtCopy.getPartitionsVariables().values();
+        for (VariableExpr partVarExpr : partitionVars) {
+            addNewVarSymbolToScope(currentNewScope, partVarExpr.getVar(), partVarExpr.getSourceLocation());
+        }
+
+        // Visit order by
+        stmtCopy.setOrderbyList(visit(stmtCopy.getOrderbyList(), stmtCopy));
+
+        // Visit path expr
+        stmtCopy.setPathExpression(stmtCopy.getPathExpression().accept(this, stmtCopy));
+
+        return null;
+    }
+
+    @Override
     public Expression visit(IVisitorExtension ve, ILangExpression arg) throws CompilationException {
         return ve.variableScopeDispatch(this, arg, scopeChecker);
     }
@@ -455,7 +481,7 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
          * A single name identifier is first attempted to be resolved as a variable reference. If that fails
          * because there's no variable with such name then (second stage) it's resolved as a field access on a context
          * variable (if there's only one context variable defined in the local scope).
-         *
+         * <p>
          * See {@link org.apache.asterix.lang.sqlpp.rewrites.visitor.VariableCheckAndRewriteVisitor}
          */
         CONTEXT_VARIABLE

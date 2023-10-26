@@ -70,7 +70,8 @@ import org.apache.asterix.lang.common.statement.AnalyzeDropStatement;
 import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
-import org.apache.asterix.lang.common.statement.CopyStatement;
+import org.apache.asterix.lang.common.statement.CopyFromStatement;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -549,12 +550,62 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
     }
 
     @Override
-    public Void visit(CopyStatement stmtCopy, Integer step) throws CompilationException {
+    public Void visit(CopyFromStatement stmtCopy, Integer step) throws CompilationException {
         out.print(skip(step) + "copy " + datasetSymbol
-                + generateFullName(stmtCopy.getDataverseName(), stmtCopy.getDatasetName()) + " using "
-                + revertStringToQuoted(stmtCopy.getExternalDetails().getAdapter()) + " ");
+                + generateFullName(stmtCopy.getDataverseName(), stmtCopy.getDatasetName()) + " from "
+                + revertStringToQuoted(stmtCopy.getExternalDetails().getAdapter()) + " with ");
         printConfiguration(stmtCopy.getExternalDetails().getProperties());
         out.println();
+        return null;
+    }
+
+    @Override
+    public Void visit(CopyToStatement cto, Integer step) throws CompilationException {
+        out.println(skip(step) + "copy ");
+        if (cto.getQuery() != null) {
+            out.print("(");
+            cto.getQuery().accept(this, step + 2);
+            out.print(")");
+        } else {
+            out.print(datasetSymbol + generateFullName(cto.getNamespace().getDataverseName(), cto.getDatasetName()));
+        }
+        out.print(" as ");
+        cto.getSourceVariable().accept(this, step);
+        out.println();
+
+        out.print("path (");
+        cto.getPathExpression().accept(this, step + 1);
+        out.print(")");
+
+        out.println();
+
+        if (cto.hasOverClause()) {
+            out.print("over (");
+            List<Expression> partitionExprs = cto.getPartitionExpressions();
+            Map<Integer, VariableExpr> partitionVars = cto.getPartitionsVariables();
+            out.print(skip(step + 1) + "partition ");
+            for (int i = 0; i < partitionExprs.size(); i++) {
+                if (i > 0) {
+                    out.print(COMMA + " ");
+                }
+                partitionExprs.get(i).accept(this, step + 2);
+                VariableExpr partVar = partitionVars.get(i);
+                if (partVar != null) {
+                    out.print(" as ");
+                    partVar.accept(this, step);
+                }
+            }
+            out.println();
+            if (cto.hasOrderClause()) {
+                out.print(skip(step + 1) + "order ");
+                printDelimitedObyExpressions(cto.getOrderbyList(), cto.getOrderbyModifiers(),
+                        cto.getOrderbyNullModifierList(), step + 1);
+                out.println();
+            }
+        }
+
+        out.println("with ");
+        printConfiguration(cto.getExternalDetailsDecl().getProperties());
         return null;
     }
 

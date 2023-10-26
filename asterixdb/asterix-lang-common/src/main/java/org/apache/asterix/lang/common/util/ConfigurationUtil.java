@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.AdmStringNode;
 import org.apache.asterix.object.base.IAdmNode;
@@ -33,12 +34,15 @@ public class ConfigurationUtil {
     private ConfigurationUtil() {
     }
 
+    public static Map<String, String> toProperties(RecordConstructor recordConstructor) throws CompilationException {
+        return toProperties(ExpressionUtils.toNode(recordConstructor));
+    }
+
     /**
      * Convert the parameters object to a Map<String,String>
      * This method should go away once we store the with object as it is in storage
      *
-     * @param parameters
-     *            the parameters passed for the merge policy in the with clause
+     * @param parameters the parameters passed for the merge policy in the with clause
      * @return the parameters as a map
      */
     public static Map<String, String> toProperties(AdmObjectNode parameters) throws CompilationException {
@@ -53,10 +57,8 @@ public class ConfigurationUtil {
     /**
      * Get string value of {@link IAdmNode}
      *
-     * @param value
-     *            IAdmNode value should be of type integer or string
-     * @return
-     *         string value of <code>value</code>
+     * @param value IAdmNode value should be of type integer or string
+     * @return string value of <code>value</code>
      * @throws CompilationException
      */
     public static String getStringValue(IAdmNode value) throws CompilationException {

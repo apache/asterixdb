@@ -43,6 +43,7 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.QuantifiedPair;
 import org.apache.asterix.lang.sqlpp.clause.AbstractBinaryCorrelateClause;
@@ -305,6 +306,13 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
     public Boolean visit(CallExpr callExpr, T arg) throws CompilationException {
         return visitExprList(callExpr.getExprList(), arg)
                 || (callExpr.hasAggregateFilterExpr() && visit(callExpr.getAggregateFilterExpr(), arg));
+    }
+
+    @Override
+    public Boolean visit(CopyToStatement stmtCopy, T arg) throws CompilationException {
+        return stmtCopy.getQuery().accept(this, arg) || stmtCopy.getPathExpression().accept(this, arg)
+                || visitExprList(stmtCopy.getPartitionExpressions(), arg)
+                || visitExprList(stmtCopy.getOrderbyList(), arg);
     }
 
     private boolean visit(ILangExpression expr, T arg) throws CompilationException {

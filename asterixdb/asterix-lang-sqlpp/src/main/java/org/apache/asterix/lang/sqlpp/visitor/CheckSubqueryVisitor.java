@@ -44,6 +44,7 @@ import org.apache.asterix.lang.common.expression.QuantifiedExpression;
 import org.apache.asterix.lang.common.expression.RecordConstructor;
 import org.apache.asterix.lang.common.expression.UnaryExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.struct.Identifier;
@@ -310,6 +311,13 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
                 || (winExpr.hasWindowFieldList() && visitFieldList(winExpr.getWindowFieldList(), arg))
                 || (winExpr.hasAggregateFilterExpr() && winExpr.getAggregateFilterExpr().accept(this, arg))
                 || visitExprList(winExpr.getExprList(), arg);
+    }
+
+    @Override
+    public Boolean visit(CopyToStatement stmtCopy, ILangExpression arg) throws CompilationException {
+        return stmtCopy.getQuery().accept(this, arg) || stmtCopy.getPathExpression().accept(this, arg)
+                || visitExprList(stmtCopy.getPartitionExpressions(), arg)
+                || visitExprList(stmtCopy.getOrderbyList(), arg);
     }
 
     @Override
