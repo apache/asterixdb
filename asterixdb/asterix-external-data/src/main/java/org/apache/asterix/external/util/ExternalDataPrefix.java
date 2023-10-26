@@ -277,12 +277,14 @@ public final class ExternalDataPrefix implements Serializable {
         String computedFieldName = null;
         IAType computedFieldType = null;
         String computedFieldValue = null;
+
         try {
             for (int i = 0; i < computedFieldNames.size(); i++) {
                 computedFieldName = computedFieldNames.get(i);
                 computedFieldType = computedFieldTypes.get(i);
                 computedFieldValue = values.get(i);
 
+                ensureParsable(computedFieldType, computedFieldValue);
                 if (evaluator.isComputedFieldUsed(i)) {
                     evaluator.setValue(i, computedFieldValue);
                 }
@@ -297,6 +299,26 @@ public final class ExternalDataPrefix implements Serializable {
         }
 
         return evaluator.evaluate();
+    }
+
+    /**
+     * Ensures that the computed field value is of the expected computed field type before setting any values
+     *
+     * @param computedFieldType computed field type
+     * @param computedFieldValue computed field value
+     */
+    private static void ensureParsable(IAType computedFieldType, String computedFieldValue) {
+        switch (computedFieldType.getTypeTag()) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+            case BIGINT:
+                Long.parseLong(computedFieldValue);
+                break;
+            case DOUBLE:
+                Double.parseDouble(computedFieldValue);
+                break;
+        }
     }
 
     public String removeProtocolContainerPair(String path) {
