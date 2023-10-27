@@ -93,6 +93,7 @@ public class JobResultCallback implements IJobResultCallback {
                     }
                 }
             }
+            metadata.setQueueWaitTimeInNanos(run.getJobProfile().getQueueWaitTimeInNanos());
         }
         metadata.setProcessedObjects(processedObjects);
         metadata.setWarnings(AggregateWarnings);

@@ -628,8 +628,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.572</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.572</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -639,8 +639,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>jmespath-java</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.572</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.572</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -650,8 +650,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.572</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.572</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -661,8 +661,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-kms</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.572</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.572</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -672,8 +672,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-dynamodb</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.572</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.572</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>

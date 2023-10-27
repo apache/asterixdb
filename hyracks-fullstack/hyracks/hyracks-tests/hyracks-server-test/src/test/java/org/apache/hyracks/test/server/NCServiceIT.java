@@ -47,7 +47,7 @@ public class NCServiceIT {
     private static final String TARGET_DIR = FileUtil.joinPath(".", "target");
     private static final String LOG_DIR = FileUtil.joinPath(TARGET_DIR, "failsafe-reports");
     private static final String RESOURCE_DIR = FileUtil.joinPath(TARGET_DIR, "test-classes", "NCServiceIT");
-    private static final String APP_HOME = FileUtil.joinPath(TARGET_DIR, "appassembler");
+    private static final String APP_HOME = FileUtil.joinPath("..", "..", "hyracks-server", "target", "appassembler");
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static HyracksVirtualCluster cluster = null;

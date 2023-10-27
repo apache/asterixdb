@@ -90,11 +90,11 @@
     <hyracks.version>0.3.9-SNAPSHOT</hyracks.version>
     <hadoop.version>3.3.6</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
-    <log4j.version>2.19.0</log4j.version>
+    <log4j.version>2.21.1</log4j.version>
     <awsjavasdk.version>2.20.135</awsjavasdk.version>
     <awsjavasdk.crt.version>0.27.1</awsjavasdk.crt.version>
     <parquet.version>1.12.3</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
+    <hadoop-awsjavasdk.version>1.12.572</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
     <azureidentity.version>1.9.0</azureidentity.version>
@@ -984,7 +984,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-simple</artifactId>
-        <version>1.7.33</version>
+        <version>1.7.36</version>
       </dependency>
       <dependency>
         <groupId>org.apache.maven</groupId>
@@ -1338,7 +1338,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
-        <artifactId>hyracks-server</artifactId>
+        <artifactId>hyracks-server-test</artifactId>
         <version>${hyracks.version}</version>
         <type>test-jar</type>
       </dependency>
@@ -1874,7 +1874,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.9.0</version>
+        <version>1.10.0</version>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
@@ -1889,7 +1889,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
-        <version>4.5.11</version>
+        <version>4.5.14</version>
       </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>

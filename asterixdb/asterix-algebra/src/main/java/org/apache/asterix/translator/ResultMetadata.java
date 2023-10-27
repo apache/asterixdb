@@ -37,6 +37,7 @@ public class ResultMetadata implements IResultMetadata {
     private Set<Warning> warnings;
     private long totalWarningsCount;
     private transient List<Object> outputTypes;
+    private long queueWaitTimeInNanos;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -102,6 +103,14 @@ public class ResultMetadata implements IResultMetadata {
 
     public List<Object> getOutputTypes() {
         return outputTypes;
+    }
+
+    public long getQueueWaitTimeInNanos() {
+        return queueWaitTimeInNanos;
+    }
+
+    public void setQueueWaitTimeInNanos(long queueWaitTimeInNanos) {
+        this.queueWaitTimeInNanos = queueWaitTimeInNanos;
     }
 
     @Override

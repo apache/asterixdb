@@ -52,5 +52,6 @@
     <module>hyracks-storage-am-lsm-invertedindex-test</module>
     <module>hyracks-storage-am-bloomfilter-test</module>
     <module>hyracks-dataflow-common-test</module>
+    <module>hyracks-server-test</module>
   </modules>
 </project>

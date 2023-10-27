@@ -19,11 +19,11 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>hyracks-server</artifactId>
-  <name>hyracks-server</name>
+  <artifactId>hyracks-server-test</artifactId>
+  <name>hyracks-server-test</name>
   <parent>
     <groupId>org.apache.hyracks</groupId>
-    <artifactId>hyracks</artifactId>
+    <artifactId>hyracks-tests</artifactId>
     <version>0.3.9-SNAPSHOT</version>
   </parent>
 
@@ -37,19 +37,28 @@
   </licenses>
 
   <properties>
-    <root.dir>${basedir}/../..</root.dir>
+    <root.dir>${basedir}/../../..</root.dir>
   </properties>
 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <configuration>
           <usedDependencies combine.children="append">
-            <usedDependency>org.apache.hyracks:hyracks-control-nc</usedDependency>
-            <usedDependency>org.apache.hyracks:hyracks-control-cc</usedDependency>
-            <usedDependency>org.apache.hyracks:hyracks-nc-service</usedDependency>
+            <usedDependency>org.apache.hyracks:hyracks-server</usedDependency>
           </usedDependencies>
         </configuration>
         <executions>
@@ -62,55 +71,17 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>appassembler-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <configuration>
-              <programs>
-                <program>
-                  <mainClass>org.apache.hyracks.control.cc.CCDriver</mainClass>
-                  <name>hyrackscc</name>
-                </program>
-                <program>
-                  <mainClass>org.apache.hyracks.control.nc.NCDriver</mainClass>
-                  <name>hyracksnc</name>
-                </program>
-                <program>
-                  <mainClass>org.apache.hyracks.control.nc.service.NCService</mainClass>
-                  <name>hyracksncservice</name>
-                </program>
-              </programs>
-              <repositoryLayout>flat</repositoryLayout>
-              <repositoryName>lib</repositoryName>
-            </configuration>
-            <phase>package</phase>
-            <goals>
-              <goal>assemble</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
+        <artifactId>maven-failsafe-plugin</artifactId>
         <configuration>
-          <skip>true</skip>
+          <runOrder>alphabetical</runOrder>
+          <forkMode>pertest</forkMode>
         </configuration>
-      </plugin>
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
         <executions>
           <execution>
-            <id>process-test-classes</id>
-            <phase>package</phase>
-            <configuration>
-              <target>
-                <chmod file="target/appassembler/bin/*" perm="755" />
-              </target>
-            </configuration>
             <goals>
-              <goal>run</goal>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
             </goals>
           </execution>
         </executions>
@@ -122,16 +93,58 @@
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-cc</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-nc-service</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-server</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+<!--
     <dependency>
       <groupId>org.apache.hyracks</groupId>
       <artifactId>hyracks-control-nc</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+-->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-util</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>
