@@ -142,4 +142,12 @@ public interface IIndexCheckpointManager {
      * @throws HyracksDataException
      */
     void setLastComponentId(long componentId) throws HyracksDataException;
+
+    /**
+     * Indicates that the index has at least one valid checkpoint
+     *
+     * @return true if the index has at least one valid checkpoint. Otherwise false
+     * @throws HyracksDataException
+     */
+    boolean isValidIndex() throws HyracksDataException;
 }
