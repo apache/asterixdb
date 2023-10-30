@@ -26,6 +26,7 @@ import org.apache.hyracks.algebricks.runtime.writers.IExternalWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalWriterFactory implements IExternalWriterFactory {
     private static final long serialVersionUID = 1412969574113419638L;
@@ -34,35 +35,34 @@ public class ExternalWriterFactory implements IExternalWriterFactory {
     private final String fileExtension;
     private final int maxResult;
     private final IScalarEvaluatorFactory pathEvalFactory;
-    private final String inappropriatePartitionPath;
     private final String staticPath;
+    private final SourceLocation pathSourceLocation;
 
     public ExternalWriterFactory(IExternalFileWriterFactory writerFactory, IExternalFilePrinterFactory printerFactory,
-            String fileExtension, int maxResult, IScalarEvaluatorFactory pathEvalFactory,
-            String inappropriatePartitionPath, String staticPath) {
+            String fileExtension, int maxResult, IScalarEvaluatorFactory pathEvalFactory, String staticPath,
+            SourceLocation pathSourceLocation) {
         this.writerFactory = writerFactory;
         this.printerFactory = printerFactory;
         this.fileExtension = fileExtension;
         this.maxResult = maxResult;
         this.pathEvalFactory = pathEvalFactory;
-        this.inappropriatePartitionPath = inappropriatePartitionPath;
         this.staticPath = staticPath;
+        this.pathSourceLocation = pathSourceLocation;
     }
 
     @Override
     public IExternalWriter createWriter(IHyracksTaskContext context) throws HyracksDataException {
         int partition = context.getTaskAttemptId().getTaskId().getPartition();
-        long jobId = context.getJobletContext().getJobId().getId();
-        char fileSeparator = writerFactory.getFileSeparator();
+        char fileSeparator = writerFactory.getSeparator();
         IPathResolver resolver;
         if (staticPath == null) {
             EvaluatorContext evaluatorContext = new EvaluatorContext(context);
             IScalarEvaluator pathEval = pathEvalFactory.createScalarEvaluator(evaluatorContext);
             IWarningCollector warningCollector = context.getWarningCollector();
-            resolver = new DynamicPathResolver(fileExtension, fileSeparator, partition, jobId, pathEval,
-                    inappropriatePartitionPath, warningCollector);
+            resolver = new DynamicPathResolver(fileExtension, fileSeparator, partition, pathEval, warningCollector,
+                    pathSourceLocation);
         } else {
-            resolver = new StaticPathResolver(fileExtension, fileSeparator, partition, jobId, staticPath);
+            resolver = new StaticPathResolver(fileExtension, fileSeparator, partition, staticPath);
         }
         IExternalFileWriter writer = writerFactory.createWriter(context, printerFactory);
         return new ExternalWriter(resolver, writer, maxResult);

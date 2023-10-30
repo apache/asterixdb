@@ -19,8 +19,8 @@
 package org.apache.asterix.cloud.clients.aws.s3;
 
 import static org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig.DELETE_BATCH_SIZE;
-import static org.apache.asterix.cloud.clients.aws.s3.S3CloudClientUtils.encodeURI;
-import static org.apache.asterix.cloud.clients.aws.s3.S3CloudClientUtils.listS3Objects;
+import static org.apache.asterix.cloud.clients.aws.s3.S3ClientUtils.encodeURI;
+import static org.apache.asterix.cloud.clients.aws.s3.S3ClientUtils.listS3Objects;
 
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -227,6 +227,12 @@ public class S3CloudClient implements ICloudClient {
     }
 
     @Override
+    public boolean isEmptyPrefix(String bucket, String path) throws HyracksDataException {
+        profiler.objectsList();
+        return S3ClientUtils.isEmptyPrefix(s3Client, bucket, path);
+    }
+
+    @Override
     public IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager) {
         return new S3ParallelDownloader(bucket, ioManager, config, profiler);
     }
@@ -269,7 +275,7 @@ public class S3CloudClient implements ICloudClient {
     private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
         Set<String> files = new HashSet<>();
         for (S3Object s3Object : contents) {
-            String path = config.isLocalS3Provider() ? S3CloudClientUtils.decodeURI(s3Object.key()) : s3Object.key();
+            String path = config.isLocalS3Provider() ? S3ClientUtils.decodeURI(s3Object.key()) : s3Object.key();
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
                 files.add(path);
             }

@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputSinkPushRuntime;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
+import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -46,6 +47,7 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
     private FrameTupleAccessor tupleAccessor;
     private FrameTupleReference tupleRef;
     private boolean first;
+    private IFrameWriter frameWriter;
 
     SinkExternalWriterRuntime(int sourceColumn, int[] partitionColumns, IBinaryComparator[] partitionComparators,
             RecordDescriptor inputRecordDesc, IExternalWriter writer) {
@@ -68,6 +70,7 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
             tupleAccessor = new FrameTupleAccessor(inputRecordDesc);
             tupleRef = new FrameTupleReference();
         }
+        this.frameWriter.open();
     }
 
     @Override
@@ -88,11 +91,18 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
     @Override
     public void fail() throws HyracksDataException {
         writer.abort();
+        frameWriter.fail();
     }
 
     @Override
     public void close() throws HyracksDataException {
         writer.close();
+        frameWriter.close();
+    }
+
+    @Override
+    public void setOutputFrameWriter(int index, IFrameWriter frameWriter, RecordDescriptor recordDesc) {
+        this.frameWriter = frameWriter;
     }
 
     private boolean isNewPartition(int index) throws HyracksDataException {

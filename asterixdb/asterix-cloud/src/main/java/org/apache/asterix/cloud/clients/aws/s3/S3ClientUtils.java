@@ -31,9 +31,9 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
-public class S3CloudClientUtils {
+public class S3ClientUtils {
 
-    private S3CloudClientUtils() {
+    private S3ClientUtils() {
         throw new AssertionError("do not instantiate");
     }
 
@@ -61,6 +61,13 @@ public class S3CloudClientUtils {
             }
         }
         return files;
+    }
+
+    public static boolean isEmptyPrefix(S3Client s3Client, String bucket, String path) {
+        ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(bucket);
+        listObjectsBuilder.prefix(toCloudPrefix(path));
+
+        return s3Client.listObjectsV2(listObjectsBuilder.build()).contents().isEmpty();
     }
 
     public static String encodeURI(String path) {

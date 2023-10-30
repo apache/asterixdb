@@ -42,7 +42,7 @@ public interface IExternalFileWriterFactory extends Serializable {
     /**
      * @return file (or path) separator
      */
-    char getFileSeparator();
+    char getSeparator();
 
     /**
      * Validate the writer by running a test write routine to ensure the writer has the appropriate permissions

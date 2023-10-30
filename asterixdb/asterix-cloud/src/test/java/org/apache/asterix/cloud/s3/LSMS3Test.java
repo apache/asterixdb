@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apach.asterix.cloud.s3;
+package org.apache.asterix.cloud.s3;
 
 import java.net.URI;
 
-import org.apach.asterix.cloud.LSMTest;
+import org.apache.asterix.cloud.LSMTest;
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.junit.AfterClass;

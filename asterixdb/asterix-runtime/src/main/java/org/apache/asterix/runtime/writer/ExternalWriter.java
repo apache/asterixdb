@@ -24,9 +24,11 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 final class ExternalWriter implements IExternalWriter {
+    static final String UNRESOLVABLE_PATH = "UNRESOLVABLE_PATH";
     private final IPathResolver pathResolver;
     private final IExternalFileWriter writer;
     private final int maxResultPerFile;
+    private String partitionPath;
     private int tupleCounter;
 
     public ExternalWriter(IPathResolver pathResolver, IExternalFileWriter writer, int maxResultPerFile) {
@@ -42,17 +44,23 @@ final class ExternalWriter implements IExternalWriter {
 
     @Override
     public void initNewPartition(IFrameTupleReference tuple) throws HyracksDataException {
-        tupleCounter = 0;
-        writer.newFile(pathResolver.getPartitionPath(tuple));
+        partitionPath = pathResolver.getPartitionDirectory(tuple);
+        if (UNRESOLVABLE_PATH != partitionPath) {
+            writer.validate(partitionPath);
+            newFile();
+        }
     }
 
     @Override
     public void write(IValueReference value) throws HyracksDataException {
+        if (UNRESOLVABLE_PATH == partitionPath) {
+            // Ignore writing values for unresolvable partition paths
+            return;
+        }
         writer.write(value);
         tupleCounter++;
         if (tupleCounter >= maxResultPerFile) {
-            tupleCounter = 0;
-            writer.newFile(pathResolver.getNextPath());
+            newFile();
         }
     }
 
@@ -64,5 +72,13 @@ final class ExternalWriter implements IExternalWriter {
     @Override
     public void close() throws HyracksDataException {
         writer.close();
+    }
+
+    private void newFile() throws HyracksDataException {
+        tupleCounter = 0;
+        if (!writer.newFile(partitionPath, pathResolver.getNextFileName())) {
+            // the partitionPath could contain illegal chars or the length of the total path is too long
+            partitionPath = UNRESOLVABLE_PATH;
+        }
     }
 }

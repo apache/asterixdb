@@ -18,9 +18,8 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import java.util.Map;
-
-@FunctionalInterface
 public interface IExternalFileFilterWriterFactoryProvider {
-    IExternalFileWriterFactory create(Map<String, String> configuration);
+    IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration);
+
+    char getSeparator();
 }

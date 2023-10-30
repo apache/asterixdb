@@ -16,34 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.cloud;
+package org.apache.asterix.external.writer;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public final class CloudOutputStream extends OutputStream {
-    private final CloudResettableInputStream inputStream;
-
-    public CloudOutputStream(CloudResettableInputStream inputStream) {
-        this.inputStream = inputStream;
-    }
-
-    @Override
-    public void write(byte[] b, int off, int len) throws IOException {
-        inputStream.write(b, off, len);
-    }
-
-    @Override
-    public void write(int b) throws IOException {
-        inputStream.write(b);
-    }
-
-    @Override
-    public void close() throws IOException {
-        inputStream.finish();
-    }
-
-    public void abort() throws IOException {
-        inputStream.abort();
-    }
+interface ILocalFSValidator {
+    void validate(String directory, SourceLocation sourceLocation) throws HyracksDataException;
 }

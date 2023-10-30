@@ -139,7 +139,7 @@ public class CloudResettableInputStream extends InputStream {
         try {
             bufferedWriter.upload(this, writeBuffer.limit());
         } catch (Exception e) {
-            LOGGER.fatal(e);
+            LOGGER.error(e);
             throw HyracksDataException.create(e);
         }
 

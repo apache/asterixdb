@@ -32,11 +32,20 @@ public interface IExternalFileWriter {
     void open() throws HyracksDataException;
 
     /**
+     * Validate the writing directory
+     *
+     * @param directory to write
+     */
+    void validate(String directory) throws HyracksDataException;
+
+    /**
      * Initialize the writer to write to a new path
      *
-     * @param path of the file to writer (including the file name)
+     * @param directory of where to write the file
+     * @param fileName  of the file name to create
+     * @return true if a new file can be created, false otherwise
      */
-    void newFile(String path) throws HyracksDataException;
+    boolean newFile(String directory, String fileName) throws HyracksDataException;
 
     /**
      * Writer the provided value

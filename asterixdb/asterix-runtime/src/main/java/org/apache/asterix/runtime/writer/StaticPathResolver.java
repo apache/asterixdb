@@ -18,19 +18,23 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 final class StaticPathResolver extends AbstractPathResolver {
-    private final String prefix;
+    private final String directoryPath;
 
-    StaticPathResolver(String fileExtension, char fileSeparator, int partition, long jobId, String prefix) {
-        super(fileExtension, fileSeparator, partition, jobId);
-        this.prefix = prefix;
+    StaticPathResolver(String fileExtension, char fileSeparator, int partition, String directoryPath) {
+        super(fileExtension, fileSeparator, partition);
+
+        if (directoryPath.charAt(directoryPath.length() - 1) != fileSeparator) {
+            this.directoryPath = directoryPath + fileSeparator;
+        } else {
+            this.directoryPath = directoryPath;
+        }
     }
 
     @Override
-    void appendPrefix(StringBuilder pathStringBuilder, IFrameTupleReference tuple) throws HyracksDataException {
-        pathStringBuilder.append(prefix);
+    public String getPartitionDirectory(IFrameTupleReference tuple) {
+        return directoryPath;
     }
 }

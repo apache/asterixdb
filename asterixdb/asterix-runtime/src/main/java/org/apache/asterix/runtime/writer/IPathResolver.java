@@ -32,10 +32,11 @@ interface IPathResolver {
      * @param tuple contains the partitioning values
      * @return the final path which includes the partitioning values
      */
-    String getPartitionPath(IFrameTupleReference tuple) throws HyracksDataException;
+    String getPartitionDirectory(IFrameTupleReference tuple) throws HyracksDataException;
 
     /**
      * @return the path of the next file to be written for the same partition
      */
-    String getNextPath();
+    String getNextFileName();
+
 }

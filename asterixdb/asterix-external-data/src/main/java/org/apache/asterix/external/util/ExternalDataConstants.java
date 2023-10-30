@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.external.util;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.LongSupplier;
@@ -207,23 +205,13 @@ public class ExternalDataConstants {
     public static final String FORMAT_PARQUET = "parquet";
     public static final String FORMAT_APACHE_ICEBERG = "apache-iceberg";
     public static final Set<String> ALL_FORMATS;
+    public static final Set<String> TEXTUAL_FORMATS;
 
     static {
-        Set<String> formats = new HashSet<>(14);
-        formats.add(FORMAT_BINARY);
-        formats.add(FORMAT_ADM);
-        formats.add(FORMAT_JSON_LOWER_CASE);
-        formats.add(FORMAT_DELIMITED_TEXT);
-        formats.add(FORMAT_TWEET);
-        formats.add(FORMAT_RSS);
-        formats.add(FORMAT_SEMISTRUCTURED);
-        formats.add(FORMAT_LINE_SEPARATED);
-        formats.add(FORMAT_HDFS_WRITABLE);
-        formats.add(FORMAT_KV);
-        formats.add(FORMAT_CSV);
-        formats.add(FORMAT_TSV);
-        formats.add(FORMAT_PARQUET);
-        ALL_FORMATS = Collections.unmodifiableSet(formats);
+        ALL_FORMATS = Set.of(FORMAT_BINARY, FORMAT_ADM, FORMAT_JSON_LOWER_CASE, FORMAT_DELIMITED_TEXT, FORMAT_TWEET,
+                FORMAT_RSS, FORMAT_SEMISTRUCTURED, FORMAT_LINE_SEPARATED, FORMAT_HDFS_WRITABLE, FORMAT_KV, FORMAT_CSV,
+                FORMAT_TSV, FORMAT_PARQUET);
+        TEXTUAL_FORMATS = Set.of(FORMAT_ADM, FORMAT_JSON_LOWER_CASE, FORMAT_CSV, FORMAT_TSV);
     }
 
     /**
@@ -310,6 +298,27 @@ public class ExternalDataConstants {
     public static final String SUBPATH = "subpath";
     public static final String PREFIX_DEFAULT_DELIMITER = "/";
     public static final Pattern COMPUTED_FIELD_PATTERN = Pattern.compile("\\{[^{}:]+:[^{}:]+}");
+
+    /**
+     * Compression constants
+     */
+    public static final String KEY_COMPRESSION_GZIP = "gzip";
+
+    /**
+     * Writer Constants
+     */
+    public static final String KEY_WRITER_MAX_RESULT = "max-objects-per-file";
+    public static final String KEY_WRITER_COMPRESSION = "compression";
+    public static final int WRITER_MAX_RESULT_DEFAULT = 1000;
+    public static final Set<String> WRITER_SUPPORTED_FORMATS;
+    public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
+    public static final Set<String> WRITER_SUPPORTED_COMPRESSION;
+
+    static {
+        WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE);
+        WRITER_SUPPORTED_ADAPTERS = Set.of(ALIAS_LOCALFS_ADAPTER.toLowerCase(), KEY_ADAPTER_NAME_AWS_S3.toLowerCase());
+        WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
+    }
 
     public static class ParquetOptions {
         private ParquetOptions() {

@@ -16,15 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apach.asterix.cloud;
+package org.apache.asterix.cloud;
 
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 
-import org.apache.asterix.cloud.CloudResettableInputStream;
-import org.apache.asterix.cloud.WriteBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.logging.log4j.LogManager;

@@ -33,13 +33,17 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
+import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileFilterWriterFactoryProvider;
+import org.apache.asterix.runtime.writer.IExternalFilePrinter;
 import org.apache.asterix.runtime.writer.IExternalFilePrinterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.logging.log4j.LogManager;
@@ -48,16 +52,30 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
 public final class S3ExternalFileWriterFactory implements IExternalFileWriterFactory {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 4551318140901866805L;
-    public static final IExternalFileFilterWriterFactoryProvider PROVIDER = S3ExternalFileWriterFactory::new;
-    private final S3ClientConfig config;
+    private static final Logger LOGGER = LogManager.getLogger();
+    static final char SEPARATOR = '/';
+    public static final IExternalFileFilterWriterFactoryProvider PROVIDER =
+            new IExternalFileFilterWriterFactoryProvider() {
+                @Override
+                public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
+                    return new S3ExternalFileWriterFactory(configuration);
+                }
+
+                @Override
+                public char getSeparator() {
+                    return SEPARATOR;
+                }
+            };
     private final Map<String, String> configuration;
+    private final SourceLocation pathSourceLocation;
+    private final String staticPath;
     private transient S3CloudClient cloudClient;
 
-    private S3ExternalFileWriterFactory(Map<String, String> configuration) {
-        this.config = S3ClientConfig.of(configuration);
-        this.configuration = configuration;
+    private S3ExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
+        configuration = externalConfig.getConfiguration();
+        pathSourceLocation = externalConfig.getPathSourceLocation();
+        staticPath = externalConfig.getStaticPath();
         cloudClient = null;
     }
 
@@ -66,14 +84,18 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
             throws HyracksDataException {
         buildClient();
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        return new CloudExternalFileWriter(printerFactory.createPrinter(), cloudClient, bucket);
+        IExternalFilePrinter printer = printerFactory.createPrinter();
+        IWarningCollector warningCollector = context.getWarningCollector();
+        return new S3ExternalFileWriter(printer, cloudClient, bucket, staticPath == null, warningCollector,
+                pathSourceLocation);
     }
 
     private void buildClient() throws HyracksDataException {
         try {
             synchronized (this) {
                 if (cloudClient == null) {
-                    // only a single client should be build
+                    // only a single client should be built
+                    S3ClientConfig config = S3ClientConfig.of(configuration);
                     cloudClient = new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration));
                 }
             }
@@ -83,32 +105,40 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     }
 
     @Override
-    public char getFileSeparator() {
-        return '/';
+    public char getSeparator() {
+        return SEPARATOR;
     }
 
     @Override
     public void validate() throws AlgebricksException {
+        S3ClientConfig config = S3ClientConfig.of(configuration);
         ICloudClient testClient = new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration));
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+
         if (bucket == null || bucket.isEmpty()) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED,
                     ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         }
+
         try {
             doValidate(testClient, bucket);
         } catch (IOException e) {
             if (e.getCause() instanceof NoSuchBucketException) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, bucket);
             } else {
-                LOGGER.fatal(e);
+                LOGGER.error(e);
                 throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
                         ExceptionUtils.getMessageOrToString(e));
             }
         }
     }
 
-    private static void doValidate(ICloudClient testClient, String bucket) throws IOException {
+    private void doValidate(ICloudClient testClient, String bucket) throws IOException, AlgebricksException {
+        if (staticPath != null && !testClient.isEmptyPrefix(bucket, staticPath)) {
+            // Ensure that the static path is empty
+            throw new CompilationException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
+        }
+
         Random random = new Random();
         String pathPrefix = "testFile";
         String path = pathPrefix + random.nextInt();
@@ -127,6 +157,7 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
             stream.write(data, 0, data.length);
         } catch (HyracksDataException e) {
             stream.abort();
+            aborted = true;
         } finally {
             if (stream != null && !aborted) {
                 stream.finish();

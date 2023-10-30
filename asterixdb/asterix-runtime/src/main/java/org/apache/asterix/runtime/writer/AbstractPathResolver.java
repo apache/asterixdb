@@ -18,66 +18,52 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
 abstract class AbstractPathResolver implements IPathResolver {
-    // TODO is 4-digits enough?
-    // TODO do we need jobId?
     //4-digit format for the partition number, jobId, and file counter
-    private static final int NUMBER_OF_DIGITS = 4;
-    private static final String FILE_FORMAT = "%0" + NUMBER_OF_DIGITS + "d";
+    private static final int PREFIX_NUMBER_OF_DIGITS = 4;
+    private static final String PREFIX_FILE_FORMAT = "%0" + PREFIX_NUMBER_OF_DIGITS + "d";
+    private static final String FILE_COUNTER_FORMAT = "%0" + getMaxNumberOfDigits() + "d";
 
     private final String fileExtension;
-    private final char fileSeparator;
-    private final int partition;
-    private final long jobId;
-    private final StringBuilder pathStringBuilder;
-    private int fileCounter;
+    private final int fileCounterOffset;
+    private final StringBuilder fileStringBuilder;
+    protected final char fileSeparator;
+    private long fileCounter;
 
-    AbstractPathResolver(String fileExtension, char fileSeparator, int partition, long jobId) {
+    AbstractPathResolver(String fileExtension, char fileSeparator, int partition) {
         this.fileExtension = fileExtension;
         this.fileSeparator = fileSeparator;
-        this.partition = partition;
-        this.jobId = jobId;
-        pathStringBuilder = new StringBuilder();
+        fileStringBuilder = new StringBuilder();
+        fileCounterOffset = initFileBuilder(fileStringBuilder, partition, fileExtension);
         fileCounter = 0;
     }
 
     @Override
-    public final String getPartitionPath(IFrameTupleReference tuple) throws HyracksDataException {
-        fileCounter = 0;
-        pathStringBuilder.setLength(0);
-        appendPrefix(pathStringBuilder, tuple);
-        if (pathStringBuilder.charAt(pathStringBuilder.length() - 1) != fileSeparator) {
-            pathStringBuilder.append(fileSeparator);
-        }
-        pathStringBuilder.append(String.format(FILE_FORMAT, partition));
-        pathStringBuilder.append('-');
-        pathStringBuilder.append(String.format(FILE_FORMAT, jobId));
-        pathStringBuilder.append('-');
-        pathStringBuilder.append(String.format(FILE_FORMAT, fileCounter++));
+    public final String getNextFileName() {
+        fileStringBuilder.setLength(fileCounterOffset);
+        fileStringBuilder.append(String.format(FILE_COUNTER_FORMAT, fileCounter++));
         if (fileExtension != null && !fileExtension.isEmpty()) {
-            pathStringBuilder.append('.');
-            pathStringBuilder.append(fileExtension);
+            fileStringBuilder.append('.');
+            fileStringBuilder.append(fileExtension);
         }
-        return pathStringBuilder.toString();
+        return fileStringBuilder.toString();
     }
 
-    @Override
-    public final String getNextPath() {
-        int numOfCharToRemove = NUMBER_OF_DIGITS;
+    private static int initFileBuilder(StringBuilder fileStringBuilder, int partition, String fileExtension) {
+        fileStringBuilder.append(String.format(PREFIX_FILE_FORMAT, partition));
+        fileStringBuilder.append('-');
+        int offset = fileStringBuilder.length();
+        // dummy
+        fileStringBuilder.append(String.format(FILE_COUNTER_FORMAT, 0));
         if (fileExtension != null && !fileExtension.isEmpty()) {
-            numOfCharToRemove += 1 + fileExtension.length();
+            fileStringBuilder.append('.');
+            fileStringBuilder.append(fileExtension);
         }
-        pathStringBuilder.setLength(pathStringBuilder.length() - numOfCharToRemove);
-        pathStringBuilder.append(String.format(FILE_FORMAT, fileCounter++));
-        if (fileExtension != null && !fileExtension.isEmpty()) {
-            pathStringBuilder.append('.');
-            pathStringBuilder.append(fileExtension);
-        }
-        return pathStringBuilder.toString();
+        return offset;
     }
 
-    abstract void appendPrefix(StringBuilder pathStringBuilder, IFrameTupleReference tuple) throws HyracksDataException;
+    private static int getMaxNumberOfDigits() {
+        return Long.toString(Long.MAX_VALUE).length();
+    }
+
 }

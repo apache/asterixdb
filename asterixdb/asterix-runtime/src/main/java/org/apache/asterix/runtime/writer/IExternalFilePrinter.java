@@ -50,5 +50,5 @@ public interface IExternalFilePrinter {
     /**
      * Flush and close the printer
      */
-    void close();
+    void close() throws HyracksDataException;
 }

@@ -23,17 +23,25 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.runtime.writer.IExternalFilePrinter;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 final class LocalFSExternalFileWriter implements IExternalFileWriter {
     private final IExternalFilePrinter printer;
+    private final ILocalFSValidator validator;
+    private final SourceLocation pathSourceLocation;
 
-    LocalFSExternalFileWriter(IExternalFilePrinter printer) {
+    LocalFSExternalFileWriter(IExternalFilePrinter printer, ILocalFSValidator validator,
+            SourceLocation pathSourceLocation) {
         this.printer = printer;
+        this.validator = validator;
+        this.pathSourceLocation = pathSourceLocation;
     }
 
     @Override
@@ -42,18 +50,24 @@ final class LocalFSExternalFileWriter implements IExternalFileWriter {
     }
 
     @Override
-    public void newFile(String path) throws HyracksDataException {
+    public void validate(String directory) throws HyracksDataException {
+        validator.validate(directory, pathSourceLocation);
+    }
+
+    @Override
+    public boolean newFile(String directory, String fileName) throws HyracksDataException {
         try {
-            File currentFile = new File(path);
-            if (currentFile.exists()) {
-                currentFile.delete();
-            }
+            File parentDirectory = new File(directory);
+            File currentFile = new File(parentDirectory, fileName);
             FileUtils.createParentDirectories(currentFile);
-            currentFile.createNewFile();
+            if (!currentFile.createNewFile()) {
+                throw RuntimeDataException.create(ErrorCode.COULD_NOT_CREATE_FILE, currentFile.getAbsolutePath());
+            }
             printer.newStream(new BufferedOutputStream(new FileOutputStream(currentFile)));
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+        return true;
     }
 
     @Override
@@ -62,12 +76,12 @@ final class LocalFSExternalFileWriter implements IExternalFileWriter {
     }
 
     @Override
-    public void abort() {
+    public void abort() throws HyracksDataException {
         printer.close();
     }
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
         printer.close();
     }
 }

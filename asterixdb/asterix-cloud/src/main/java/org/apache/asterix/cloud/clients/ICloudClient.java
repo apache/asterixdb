@@ -130,6 +130,8 @@ public interface ICloudClient {
      */
     boolean exists(String bucket, String path) throws HyracksDataException;
 
+    boolean isEmptyPrefix(String bucket, String path) throws HyracksDataException;
+
     /**
      * Create a parallel downloader
      *

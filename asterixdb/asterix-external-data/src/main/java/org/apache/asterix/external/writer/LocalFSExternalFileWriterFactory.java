@@ -20,31 +20,106 @@ package org.apache.asterix.external.writer;
 
 import java.io.File;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileFilterWriterFactoryProvider;
 import org.apache.asterix.runtime.writer.IExternalFilePrinterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public final class LocalFSExternalFileWriterFactory implements IExternalFileWriterFactory {
     private static final long serialVersionUID = 871685327574547749L;
-    public static final IExternalFileFilterWriterFactoryProvider PROVIDER = c -> new LocalFSExternalFileWriterFactory();
+    private static final char SEPARATOR = File.separatorChar;
+    public static final IExternalFileFilterWriterFactoryProvider PROVIDER =
+            new IExternalFileFilterWriterFactoryProvider() {
+                @Override
+                public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
+                    return new LocalFSExternalFileWriterFactory(configuration);
+                }
 
-    private LocalFSExternalFileWriterFactory() {
+                @Override
+                public char getSeparator() {
+                    return SEPARATOR;
+                }
+            };
+    private static final ILocalFSValidator NO_OP_VALIDATOR = LocalFSExternalFileWriterFactory::noOpValidation;
+    private static final ILocalFSValidator VALIDATOR = LocalFSExternalFileWriterFactory::validate;
+    private final SourceLocation pathSourceLocation;
+    private final boolean singleNodeCluster;
+    private final String staticPath;
+    private boolean validated;
+
+    private LocalFSExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
+        pathSourceLocation = externalConfig.getPathSourceLocation();
+        singleNodeCluster = externalConfig.isSingleNodeCluster();
+        staticPath = externalConfig.getStaticPath();
+        validated = false;
     }
 
     @Override
-    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalFilePrinterFactory printerFactory) {
-        return new LocalFSExternalFileWriter(printerFactory.createPrinter());
+    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalFilePrinterFactory printerFactory)
+            throws HyracksDataException {
+        ILocalFSValidator validator = VALIDATOR;
+        if (staticPath != null) {
+            synchronized (this) {
+                validateStaticPath();
+            }
+            validator = NO_OP_VALIDATOR;
+        }
+        return new LocalFSExternalFileWriter(printerFactory.createPrinter(), validator, pathSourceLocation);
     }
 
     @Override
-    public char getFileSeparator() {
-        return File.separatorChar;
+    public char getSeparator() {
+        return SEPARATOR;
     }
 
     @Override
-    public void validate() {
+    public void validate() throws AlgebricksException {
+        // A special case validation for a single node cluster
+        if (singleNodeCluster && staticPath != null) {
+            if (isNonEmptyDirectory(new File(staticPath))) {
+                throw new CompilationException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
+            }
+
+            // Ensure that it is not validated again in a single node cluster
+            validated = true;
+        }
+    }
+
+    private void validateStaticPath() throws HyracksDataException {
+        if (validated) {
+            return;
+        }
+
+        if (isNonEmptyDirectory(new File(staticPath))) {
+            throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
+        }
+        validated = true;
+    }
+
+    static boolean isNonEmptyDirectory(File parentDirectory) {
+        if (parentDirectory.exists()) {
+            String[] files = parentDirectory.list();
+            return files != null && files.length != 0;
+        }
+
+        return false;
+    }
+
+    private static void noOpValidation(String directory, SourceLocation sourceLocation) {
         // NoOp
+    }
+
+    private static void validate(String directory, SourceLocation sourceLocation) throws HyracksDataException {
+        if (isNonEmptyDirectory(new File(directory))) {
+            throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, sourceLocation, directory);
+        }
     }
 }

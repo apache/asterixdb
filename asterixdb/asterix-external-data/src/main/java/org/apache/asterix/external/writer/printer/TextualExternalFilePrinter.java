@@ -30,6 +30,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 final class TextualExternalFilePrinter implements IExternalFilePrinter {
     private final IPrinter printer;
     private final IExternalFileCompressStreamFactory compressStreamFactory;
+    private TextualOutputStreamDelegate delegate;
     private PrintStream printStream;
 
     TextualExternalFilePrinter(IPrinter printer, IExternalFileCompressStreamFactory compressStreamFactory) {
@@ -45,22 +46,26 @@ final class TextualExternalFilePrinter implements IExternalFilePrinter {
     @Override
     public void newStream(OutputStream outputStream) throws HyracksDataException {
         if (printStream != null) {
-            printStream.close();
+            close();
         }
-        printStream = new PrintStream(compressStreamFactory.createStream(outputStream));
+        delegate = new TextualOutputStreamDelegate(compressStreamFactory.createStream(outputStream));
+        printStream = new PrintStream(delegate);
     }
 
     @Override
     public void print(IValueReference value) throws HyracksDataException {
         printer.print(value.getByteArray(), value.getStartOffset(), value.getLength(), printStream);
         printStream.println();
+        delegate.checkError();
     }
 
     @Override
-    public void close() {
-        printStream.close();
-        if (printStream.checkError()) {
-            throw new IllegalStateException("Print error. Check the logs for more information");
+    public void close() throws HyracksDataException {
+        if (printStream != null) {
+            printStream.close();
+            printStream = null;
+            delegate.checkError();
+            delegate = null;
         }
     }
 }
