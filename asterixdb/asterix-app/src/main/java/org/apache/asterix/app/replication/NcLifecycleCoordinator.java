@@ -332,6 +332,9 @@ public class NcLifecycleCoordinator implements INcLifecycleCoordinator {
 
     private void notifyFailedReplica(IClusterStateManager clusterManager, String nodeID,
             InetSocketAddress replicaAddress) {
+        if (!replicationEnabled) {
+            return;
+        }
         LOGGER.info("notify replica failure of nodeId {} at {}", nodeID, replicaAddress);
         Set<String> ncs = clusterManager.getParticipantNodes(true);
         ReplicaFailedMessage message =
