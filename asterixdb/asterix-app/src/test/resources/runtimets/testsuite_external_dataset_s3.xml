@@ -323,6 +323,17 @@
         <output-dir compare="Text">views</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="duplicate-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">duplicate-field</output-dir>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'a.b.c.d'</expected-error>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
       <compilation-unit name="one-field">
         <placeholder name="adapter" value="S3" />
@@ -385,6 +396,17 @@
       <compilation-unit name="views">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">views</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/parquet">
+      <compilation-unit name="duplicate-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">duplicate-field</output-dir>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'a.b.c.d'</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset/common/dynamic-prefixes/csv">

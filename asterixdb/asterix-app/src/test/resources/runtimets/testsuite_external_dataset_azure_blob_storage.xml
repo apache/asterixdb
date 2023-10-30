@@ -348,6 +348,17 @@
         <output-dir compare="Text">using-limit</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="duplicate-field">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">duplicate-field</output-dir>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'year'</expected-error>
+        <expected-error>Duplicate field name 'a.b.c.d'</expected-error>
+      </compilation-unit>
+    </test-case>
     <!-- Dynamic prefixes tests end -->
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/empty-string-definition">
