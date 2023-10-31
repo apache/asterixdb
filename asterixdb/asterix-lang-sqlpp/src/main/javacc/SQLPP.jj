@@ -2860,24 +2860,24 @@ Statement SetStatement() throws ParseException:
 
 Statement CopyStatement() throws ParseException:
 {
- Token startToken = null;
- Pair<Namespace,Identifier> nameComponents = null;
- Query query = null;
- Statement stmt = null;
- TypeExpression typeExpr = null;
- VariableExpr alias = null;
+  Token startToken = null;
+  Pair<Namespace,Identifier> nameComponents = null;
+  Query query = null;
+  Statement stmt = null;
+  TypeExpression typeExpr = null;
+  VariableExpr alias = null;
 }
 {
-   <COPY>
-   ( LOOKAHEAD(1) <INTO> { startToken = token; } nameComponents = QualifiedName() stmt = CopyFromStatement(startToken, nameComponents, typeExpr)
-     | LOOKAHEAD(1) <LEFTPAREN> { startToken = token; } query = Query() <RIGHTPAREN> (<AS>)? alias = Variable()  stmt = CopyToStatement(startToken, nameComponents, query, alias)
-     | { startToken = token; } nameComponents = QualifiedName()
-       (<AS>)? (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN) | alias = Variable())?
-       (stmt = CopyFromStatement(startToken, nameComponents, typeExpr) | stmt = CopyToStatement(startToken, nameComponents, query, alias))
-   )
-   {
-      return stmt;
-   }
+  <COPY>
+  ( LOOKAHEAD(1) <INTO> { startToken = token; } nameComponents = QualifiedName() stmt = CopyFromStatement(startToken, nameComponents, typeExpr)
+    | LOOKAHEAD(1) <LEFTPAREN> { startToken = token; } query = Query() <RIGHTPAREN> (<AS>)? alias = Variable()  stmt = CopyToStatement(startToken, nameComponents, query, alias)
+    | { startToken = token; } nameComponents = QualifiedName()
+      (<AS>)? (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN) | alias = Variable())?
+      (stmt = CopyFromStatement(startToken, nameComponents, typeExpr) | stmt = CopyToStatement(startToken, nameComponents, query, alias))
+  )
+  {
+    return stmt;
+  }
 }
 
 CopyFromStatement CopyFromStatement(Token startToken, Pair<Namespace, Identifier> nameComponents, TypeExpression typeExpr) throws ParseException:
@@ -2913,7 +2913,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   RecordConstructor withRecord;
   Namespace namespace = nameComponents == null ? null : nameComponents.first;
   String datasetName = nameComponents == null ? null : nameComponents.second.getValue();
-  Expression pathExpr = null;
+  List<Expression> pathExprs;
 
   List<Expression> partitionExprs = new ArrayList<Expression>();
   Map<Integer, VariableExpr> partitionVarExprs = new HashMap<Integer, VariableExpr>();
@@ -2923,7 +2923,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
 }
 {
   <TO> adapterName = AdapterName()
-  <PATH> <LEFTPAREN> pathExpr = Expression() <RIGHTPAREN>
+  <PATH> <LEFTPAREN> pathExprs = ExpressionList() <RIGHTPAREN>
   (CopyToOverClause(partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList))?
   <WITH> withRecord = RecordConstructor()
     {
@@ -2939,7 +2939,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
           usedAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(datasetName));
        }
 
-       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExpr,
+       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs,
             partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter());
        return addSourceLocation(stmt, startToken);
     }

@@ -252,7 +252,7 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
     @Override
     public Void visit(CopyToStatement stmtCopy, Void arg) throws CompilationException {
         stmtCopy.getQuery().accept(this, arg);
-        stmtCopy.getPathExpression().accept(this, arg);
+        acceptList(stmtCopy.getPathExpressions(), arg);
         acceptList(stmtCopy.getPartitionExpressions(), arg);
         acceptList(stmtCopy.getOrderbyList(), arg);
         return null;

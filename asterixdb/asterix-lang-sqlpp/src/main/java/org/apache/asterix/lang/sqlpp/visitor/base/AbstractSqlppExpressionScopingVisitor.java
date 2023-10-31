@@ -434,8 +434,8 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Visit order by
         stmtCopy.setOrderbyList(visit(stmtCopy.getOrderbyList(), stmtCopy));
 
-        // Visit path expr
-        stmtCopy.setPathExpression(stmtCopy.getPathExpression().accept(this, stmtCopy));
+        // Visit path exprs
+        stmtCopy.setPathExpressions(visit(stmtCopy.getPathExpressions(), stmtCopy));
 
         return null;
     }

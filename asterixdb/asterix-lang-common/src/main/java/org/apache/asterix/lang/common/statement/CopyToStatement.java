@@ -30,7 +30,9 @@ import org.apache.asterix.lang.common.base.AbstractStatement;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.clause.OrderbyClause;
+import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CopyToStatement extends AbstractStatement implements IReturningStatement {
@@ -43,29 +45,34 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
     private final List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
 
     private Query query;
-    private Expression pathExpression;
+    private List<Expression> pathExpressions;
 
     private List<Expression> partitionExpressions;
     private List<Expression> orderbyList;
     private int varCounter;
 
     public CopyToStatement(Namespace namespace, String datasetName, Query query, VariableExpr sourceVariable,
-            ExternalDetailsDecl externalDetailsDecl, Expression pathExpression, List<Expression> partitionExpressions,
-            Map<Integer, VariableExpr> partitionsVariables, List<Expression> orderbyList,
-            List<OrderbyClause.OrderModifier> orderbyModifiers,
+            ExternalDetailsDecl externalDetailsDecl, List<Expression> pathExpressions,
+            List<Expression> partitionExpressions, Map<Integer, VariableExpr> partitionsVariables,
+            List<Expression> orderbyList, List<OrderbyClause.OrderModifier> orderbyModifiers,
             List<OrderbyClause.NullOrderModifier> orderbyNullModifierList, int varCounter) {
         this.namespace = namespace;
         this.datasetName = datasetName;
         this.query = query;
         this.sourceVariable = sourceVariable;
         this.externalDetailsDecl = externalDetailsDecl;
-        this.pathExpression = pathExpression;
+        this.pathExpressions = pathExpressions;
         this.partitionExpressions = partitionExpressions;
         this.partitionsVariables = partitionsVariables;
         this.orderbyList = orderbyList;
         this.orderbyModifiers = orderbyModifiers;
         this.orderbyNullModifierList = orderbyNullModifierList;
         this.varCounter = varCounter;
+
+        if (pathExpressions.isEmpty()) {
+            // Ensure path expressions to have at least an empty string
+            pathExpressions.add(new LiteralExpr(new StringLiteral("")));
+        }
     }
 
     @Override
@@ -107,12 +114,15 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
         return externalDetailsDecl;
     }
 
-    public Expression getPathExpression() {
-        return pathExpression;
+    public List<Expression> getPathExpressions() {
+        return pathExpressions;
     }
 
-    public void setPathExpression(Expression pathExpression) {
-        this.pathExpression = pathExpression;
+    public void setPathExpressions(List<Expression> pathExpressions) {
+        if (pathExpressions.isEmpty()) {
+            pathExpressions.add(new LiteralExpr(new StringLiteral("")));
+        }
+        this.pathExpressions = pathExpressions;
     }
 
     public List<Expression> getPartitionExpressions() {
@@ -170,7 +180,7 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
     public List<Expression> getDirectlyEnclosedExpressions() {
         List<Expression> topLevelExpressions = new ArrayList<>();
         topLevelExpressions.add(query.getBody());
-        topLevelExpressions.add(pathExpression);
+        topLevelExpressions.addAll(pathExpressions);
         topLevelExpressions.addAll(partitionExpressions);
         topLevelExpressions.addAll(orderbyList);
         return topLevelExpressions;

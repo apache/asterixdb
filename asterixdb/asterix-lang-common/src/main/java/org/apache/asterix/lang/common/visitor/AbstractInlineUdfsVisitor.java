@@ -290,9 +290,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         changed |= queryBody.first;
         stmtCopy.setBody(queryBody.second);
 
-        Pair<Boolean, Expression> path = inlineUdfsAndViewsInExpr(stmtCopy.getPathExpression());
+        Pair<Boolean, List<Expression>> path = inlineUdfsInExprList(stmtCopy.getPathExpressions());
         changed |= path.first;
-        stmtCopy.setPathExpression(path.second);
+        stmtCopy.setPathExpressions(path.second);
 
         Pair<Boolean, List<Expression>> part = inlineUdfsInExprList(stmtCopy.getPartitionExpressions());
         changed |= part.first;

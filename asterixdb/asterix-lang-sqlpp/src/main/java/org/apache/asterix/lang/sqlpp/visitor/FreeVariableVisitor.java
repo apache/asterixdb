@@ -516,7 +516,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
     @Override
     public Void visit(CopyToStatement stmtCopy, Collection<VariableExpr> freeVars) throws CompilationException {
         stmtCopy.getBody().accept(this, freeVars);
-        stmtCopy.getPathExpression().accept(this, freeVars);
+        visit(stmtCopy.getPathExpressions(), freeVars);
         visit(stmtCopy.getPartitionExpressions(), freeVars);
         visit(stmtCopy.getOrderbyList(), freeVars);
         return null;

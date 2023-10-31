@@ -574,7 +574,7 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.println();
 
         out.print("path (");
-        cto.getPathExpression().accept(this, step + 1);
+        printDelimitedExpressions(cto.getPathExpressions(), COMMA, step + 1);
         out.print(")");
 
         out.println();

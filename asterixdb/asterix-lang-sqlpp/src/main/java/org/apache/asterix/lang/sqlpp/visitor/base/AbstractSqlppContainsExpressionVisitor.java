@@ -310,7 +310,7 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
 
     @Override
     public Boolean visit(CopyToStatement stmtCopy, T arg) throws CompilationException {
-        return stmtCopy.getQuery().accept(this, arg) || stmtCopy.getPathExpression().accept(this, arg)
+        return stmtCopy.accept(this, arg) || visitExprList(stmtCopy.getPathExpressions(), arg)
                 || visitExprList(stmtCopy.getPartitionExpressions(), arg)
                 || visitExprList(stmtCopy.getOrderbyList(), arg);
     }

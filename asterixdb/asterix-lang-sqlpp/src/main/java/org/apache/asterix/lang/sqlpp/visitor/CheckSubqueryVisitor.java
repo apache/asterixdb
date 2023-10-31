@@ -315,7 +315,7 @@ public class CheckSubqueryVisitor extends AbstractSqlppQueryExpressionVisitor<Bo
 
     @Override
     public Boolean visit(CopyToStatement stmtCopy, ILangExpression arg) throws CompilationException {
-        return stmtCopy.getQuery().accept(this, arg) || stmtCopy.getPathExpression().accept(this, arg)
+        return stmtCopy.getQuery().accept(this, arg) || visitExprList(stmtCopy.getPathExpressions(), arg)
                 || visitExprList(stmtCopy.getPartitionExpressions(), arg)
                 || visitExprList(stmtCopy.getOrderbyList(), arg);
     }

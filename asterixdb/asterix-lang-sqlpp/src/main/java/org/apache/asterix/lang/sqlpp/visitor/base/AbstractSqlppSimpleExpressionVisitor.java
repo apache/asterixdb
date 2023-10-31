@@ -361,7 +361,7 @@ public class AbstractSqlppSimpleExpressionVisitor
     @Override
     public Expression visit(CopyToStatement stmtCopy, ILangExpression arg) throws CompilationException {
         stmtCopy.setBody(stmtCopy.getBody().accept(this, arg));
-        stmtCopy.setPathExpression(stmtCopy.getPathExpression().accept(this, arg));
+        stmtCopy.setPathExpressions(visit(stmtCopy.getPathExpressions(), arg));
         stmtCopy.setPartitionExpressions(visit(stmtCopy.getPartitionExpressions(), arg));
         stmtCopy.setOrderbyList(visit(stmtCopy.getOrderbyList(), arg));
         return null;
