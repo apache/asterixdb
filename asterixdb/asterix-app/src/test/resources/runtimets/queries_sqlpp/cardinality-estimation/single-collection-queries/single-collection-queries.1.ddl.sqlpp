@@ -1,0 +1,134 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+
+DROP DATAVERSE tpch IF EXISTS;
+CREATE DATAVERSE tpch;
+
+USE tpch;
+
+
+CREATE TYPE tpch.LineItemType AS
+ CLOSED {
+  l_orderkey : integer,
+  l_partkey : integer,
+  l_suppkey : integer,
+  l_linenumber : integer,
+  l_quantity : integer,
+  l_extendedprice : double,
+  l_discount : double,
+  l_tax : double,
+  l_returnflag : string,
+  l_linestatus : string,
+  l_shipdate : string,
+  l_commitdate : string,
+  l_receiptdate : string,
+  l_shipinstruct : string,
+  l_shipmode : string,
+  l_comment : string
+};
+
+CREATE TYPE tpch.OrderType AS
+ CLOSED {
+  o_orderkey : integer,
+  o_custkey : integer,
+  o_orderstatus : string,
+  o_totalprice : double,
+  o_orderdate : string,
+  o_orderpriority : string,
+  o_clerk : string,
+  o_shippriority : integer,
+  o_comment : string
+};
+
+CREATE TYPE tpch.CustomerType AS
+ CLOSED {
+  c_custkey : integer,
+  c_name : string,
+  c_address : string,
+  c_nationkey : integer,
+  c_phone : string,
+  c_acctbal : double,
+  c_mktsegment : string,
+  c_comment : string
+};
+
+CREATE TYPE tpch.SupplierType AS
+ CLOSED {
+  s_suppkey : integer,
+  s_name : string,
+  s_address : string,
+  s_nationkey : integer,
+  s_phone : string,
+  s_acctbal : double,
+  s_comment : string
+};
+
+CREATE TYPE tpch.NationType AS
+ CLOSED {
+  n_nationkey : integer,
+  n_name : string,
+  n_regionkey : integer,
+  n_comment : string
+};
+
+CREATE TYPE tpch.RegionType AS
+ CLOSED {
+  r_regionkey : integer,
+  r_name : string,
+  r_comment : string
+};
+
+CREATE TYPE tpch.PartType AS
+ CLOSED {
+  p_partkey : integer,
+  p_name : string,
+  p_mfgr : string,
+  p_brand : string,
+  p_type : string,
+  p_size : integer,
+  p_container : string,
+  p_retailprice : double,
+  p_comment : string
+};
+
+CREATE TYPE tpch.PartSuppType AS
+ CLOSED {
+  ps_partkey : integer,
+  ps_suppkey : integer,
+  ps_availqty : integer,
+  ps_supplycost : double,
+  ps_comment : string
+};
+
+CREATE DATASET LineItem(LineItemType) PRIMARY KEY l_orderkey,l_linenumber;
+
+CREATE DATASET Orders(OrderType) PRIMARY KEY o_orderkey;
+
+CREATE DATASET Supplier(SupplierType) PRIMARY KEY s_suppkey;
+
+CREATE DATASET Region(RegionType) PRIMARY KEY r_regionkey;
+
+CREATE DATASET Nation(NationType) PRIMARY KEY n_nationkey;
+
+CREATE DATASET Part(PartType) PRIMARY KEY p_partkey;
+
+CREATE DATASET Partsupp(PartSuppType) PRIMARY KEY ps_partkey,ps_suppkey;
+
+CREATE DATASET Customer(CustomerType) PRIMARY KEY c_custkey;

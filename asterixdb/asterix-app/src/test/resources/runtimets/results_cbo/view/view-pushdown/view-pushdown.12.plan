@@ -1,14 +1,14 @@
-distribute result [$$94] [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+distribute result [$$94] [cardinality: 20.0, op-cost: 0.0, total-cost: 22.25]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+  exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 22.25]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$94]) [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+    project ([$$94]) [cardinality: 20.0, op-cost: 0.0, total-cost: 22.25]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$94] <- [{"id": $$97, "review": $$101}] [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+      assign [$$94] <- [{"id": $$97, "review": $$101}] [cardinality: 20.0, op-cost: 0.0, total-cost: 22.25]
       -- ASSIGN  |UNPARTITIONED|
-        exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+        exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 22.25]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-          order (ASC, $$97) [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
+          order (ASC, $$97) [cardinality: 20.0, op-cost: 2.25, total-cost: 22.25]
           -- STABLE_SORT [$$97(ASC)]  |UNPARTITIONED|
             exchange [cardinality: 20.0, op-cost: 0.0, total-cost: 20.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

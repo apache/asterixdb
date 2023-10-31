@@ -1,85 +1,85 @@
-distribute result [$$94] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$94]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      project ([$$101]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$94] <- [{"uname": $$uname, "cnt": $$96}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$101] <- [{"uname": $$uname, "cnt": $$103}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- SORT_MERGE_EXCHANGE [$$96(DESC) ]  |PARTITIONED|
+          -- SORT_MERGE_EXCHANGE [$$103(DESC) ]  |PARTITIONED|
             limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                order (topK: 10) (DESC, $$96) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- STABLE_SORT [topK: 10] [$$96(DESC)]  |PARTITIONED|
+                order (topK: 10) (DESC, $$103) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STABLE_SORT [topK: 10] [$$103(DESC)]  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    group by ([$$uname := $$107]) decor ([]) {
-                              aggregate [$$96] <- [agg-sql-sum($$106)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    group by ([$$uname := $$114]) decor ([]) {
+                              aggregate [$$103] <- [agg-sql-sum($$113)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- AGGREGATE  |LOCAL|
                                 nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                            } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- SORT_GROUP_BY[$$107]  |PARTITIONED|
+                    -- SORT_GROUP_BY[$$114]  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- HASH_PARTITION_EXCHANGE [$$107]  |PARTITIONED|
-                        group by ([$$107 := $$95]) decor ([]) {
-                                  aggregate [$$106] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- HASH_PARTITION_EXCHANGE [$$114]  |PARTITIONED|
+                        group by ([$$114 := $$102]) decor ([]) {
+                                  aggregate [$$113] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- AGGREGATE  |LOCAL|
                                     nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                                } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- SORT_GROUP_BY[$$95]  |PARTITIONED|
+                        -- SORT_GROUP_BY[$$102]  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            project ([$$95]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            project ([$$102]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_PROJECT  |PARTITIONED|
-                              select ($$85) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              select ($$92) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_SELECT  |PARTITIONED|
-                                project ([$$85, $$95]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                project ([$$92, $$102]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    group by ([$$105 := $$103]) decor ([$$95]) {
-                                              aggregate [$$85] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    group by ([$$112 := $$110]) decor ([$$102]) {
+                                              aggregate [$$92] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- AGGREGATE  |LOCAL|
-                                                select (not(is-missing($$104))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                select (not(is-missing($$111))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- STREAM_SELECT  |LOCAL|
                                                   nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                                            } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- PRE_CLUSTERED_GROUP_BY[$$103]  |PARTITIONED|
+                                    -- PRE_CLUSTERED_GROUP_BY[$$110]  |PARTITIONED|
                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        order (ASC, $$103) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- STABLE_SORT [$$103(ASC)]  |PARTITIONED|
+                                        order (ASC, $$110) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STABLE_SORT [$$110(ASC)]  |PARTITIONED|
                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- HASH_PARTITION_EXCHANGE [$$103]  |PARTITIONED|
-                                            project ([$$95, $$104, $$103]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- HASH_PARTITION_EXCHANGE [$$110]  |PARTITIONED|
+                                            project ([$$102, $$111, $$110]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                left outer join (eq($$97, $$81)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HYBRID_HASH_JOIN [$$97][$$81]  |PARTITIONED|
+                                                left outer join (eq($$104, $$88)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- HYBRID_HASH_JOIN [$$104][$$88]  |PARTITIONED|
                                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- HASH_PARTITION_EXCHANGE [$$97]  |PARTITIONED|
-                                                    running-aggregate [$$103] <- [create-query-uid()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- HASH_PARTITION_EXCHANGE [$$104]  |PARTITIONED|
+                                                    running-aggregate [$$110] <- [create-query-uid()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- RUNNING_AGGREGATE  |PARTITIONED|
-                                                      project ([$$95, $$97]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      project ([$$102, $$104]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- STREAM_PROJECT  |PARTITIONED|
-                                                        assign [$$97] <- [$$ht1.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        assign [$$104] <- [$$ht1.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- ASSIGN  |PARTITIONED|
-                                                          project ([$$95, $$ht1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          project ([$$102, $$ht1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- STREAM_PROJECT  |PARTITIONED|
-                                                            unnest $$ht1 <- scan-collection($$98) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            unnest $$ht1 <- scan-collection($$105) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- UNNEST  |PARTITIONED|
-                                                              project ([$$98, $$95]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              project ([$$105, $$102]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- STREAM_PROJECT  |PARTITIONED|
-                                                                assign [$$98, $$95] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                assign [$$105, $$102] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                 -- ASSIGN  |PARTITIONED|
                                                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -90,18 +90,18 @@ distribute result [$$94] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
-                                                    project ([$$104, $$81]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
+                                                    project ([$$111, $$88]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- STREAM_PROJECT  |PARTITIONED|
-                                                      assign [$$104, $$81] <- [true, $$ht2.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      assign [$$111, $$88] <- [true, $$ht2.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- ASSIGN  |PARTITIONED|
                                                         project ([$$ht2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- STREAM_PROJECT  |PARTITIONED|
-                                                          unnest $$ht2 <- scan-collection($$99) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          unnest $$ht2 <- scan-collection($$106) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- UNNEST  |PARTITIONED|
-                                                            project ([$$99]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            project ([$$106]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- STREAM_PROJECT  |PARTITIONED|
-                                                              assign [$$99] <- [$$p2.getField("entities").getField("hashtags")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              assign [$$106] <- [$$p2.getField("entities").getField("hashtags")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ASSIGN  |PARTITIONED|
                                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

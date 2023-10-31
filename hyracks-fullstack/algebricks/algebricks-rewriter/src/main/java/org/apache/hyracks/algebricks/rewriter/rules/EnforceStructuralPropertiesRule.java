@@ -527,6 +527,7 @@ public class EnforceStructuralPropertiesRule implements IAlgebraicRewriteRule {
         }
         if (!oList.isEmpty()) {
             topOp = enforceOrderProperties(oList, topOp, nestedPlan, context);
+            OperatorManipulationUtil.copyCardCostAnnotations(op, topOp.getValue());
         }
 
         op.getInputs().set(i, topOp);

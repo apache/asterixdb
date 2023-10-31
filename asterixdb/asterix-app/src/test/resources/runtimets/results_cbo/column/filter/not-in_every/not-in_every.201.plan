@@ -1,16 +1,16 @@
-distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$d]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+    project ([$$d]) [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
       -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-        project ([$$d, $$24]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+        project ([$$d, $$24]) [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
         -- STREAM_PROJECT  |PARTITIONED|
           select ($$18) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_SELECT  |PARTITIONED|
-            exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+            exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 41.94]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               group by ([$$24 := $$20]) decor ([$$d]) {
                         aggregate [$$18] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -19,11 +19,11 @@ distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                           -- STREAM_SELECT  |LOCAL|
                             nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                     } [cardinality: 6.0, op-cost: 17.97, total-cost: 41.94]
               -- PRE_CLUSTERED_GROUP_BY[$$20]  |PARTITIONED|
-                exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 23.97]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  order (ASC, $$20) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                  order (ASC, $$20) [cardinality: 6.0, op-cost: 17.97, total-cost: 23.97]
                   -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
                     exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                     -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|

@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.optimizer.base.RuleCollections;
+import org.apache.asterix.optimizer.cost.CostMethods;
+import org.apache.asterix.optimizer.rules.SetAsterixPhysicalOperatorsRule;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFirstRuleCheckFixpointRuleController;
 import org.apache.hyracks.algebricks.compiler.rewriter.rulecontrollers.SequentialFixpointRuleController;
@@ -52,7 +54,7 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
     @Override
     public List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> getPhysicalRewrites(
             ICcApplicationContext appCtx) {
-        return buildPhysical(appCtx);
+        return buildPhysical(appCtx, CostMethods::new);
     }
 
     public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildLogical(
@@ -98,15 +100,15 @@ public class DefaultRuleSetFactory implements IRuleSetFactory {
     }
 
     public static List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> buildPhysical(
-            ICcApplicationContext appCtx) {
+            ICcApplicationContext appCtx, SetAsterixPhysicalOperatorsRule.CostMethodsFactory cmf) {
         List<Pair<AbstractRuleController, List<IAlgebraicRewriteRule>>> defaultPhysicalRewrites = new ArrayList<>();
         SequentialOnceRuleController seqOnceCtrl = new SequentialOnceRuleController(true);
         SequentialOnceRuleController seqOnceTopLevel = new SequentialOnceRuleController(false);
         defaultPhysicalRewrites
-                .add(new Pair<>(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection()));
-        defaultPhysicalRewrites
-                .add(new Pair<>(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection(appCtx)));
-        defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection()));
+                .add(new Pair<>(seqOnceCtrl, RuleCollections.buildPhysicalRewritesAllLevelsRuleCollection(cmf)));
+        defaultPhysicalRewrites.add(
+                new Pair<>(seqOnceTopLevel, RuleCollections.buildPhysicalRewritesTopLevelRuleCollection(appCtx, cmf)));
+        defaultPhysicalRewrites.add(new Pair<>(seqOnceCtrl, RuleCollections.prepareForJobGenRuleCollection(cmf)));
         return defaultPhysicalRewrites;
     }
 }

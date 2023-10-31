@@ -1,14 +1,14 @@
-distribute result [$$36] [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+distribute result [$$36] [cardinality: 6005.0, op-cost: 0.0, total-cost: 97889.45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+  exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 97889.45]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$36]) [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+    project ([$$36]) [cardinality: 6005.0, op-cost: 0.0, total-cost: 97889.45]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+      assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] [cardinality: 6005.0, op-cost: 0.0, total-cost: 97889.45]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+        exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 97889.45]
         -- SORT_MERGE_EXCHANGE [$$43(ASC), $$44(ASC), $$42(ASC) ]  |PARTITIONED|
-          order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
+          order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6005.0, op-cost: 75374.45, total-cost: 97889.45]
           -- STABLE_SORT [$$43(ASC), $$44(ASC), $$42(ASC)]  |PARTITIONED|
             exchange [cardinality: 6005.0, op-cost: 0.0, total-cost: 22515.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

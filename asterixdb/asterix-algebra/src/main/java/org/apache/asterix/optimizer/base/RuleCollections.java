@@ -383,13 +383,14 @@ public final class RuleCollections {
         return cbo;
     }
 
-    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection() {
+    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesAllLevelsRuleCollection(
+            SetAsterixPhysicalOperatorsRule.CostMethodsFactory cmf) {
         List<IAlgebraicRewriteRule> physicalRewritesAllLevels = new LinkedList<>();
         physicalRewritesAllLevels.add(new PullSelectOutOfEqJoin());
         physicalRewritesAllLevels.add(new ExtractBatchableExternalFunctionCallsRule());
         //Turned off the following rule for now not to change OptimizerTest results.
         physicalRewritesAllLevels.add(new SetupCommitExtensionOpRule());
-        physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule(cmf));
         physicalRewritesAllLevels.add(new SetAsterixMemoryRequirementsRule());
         // must run after SetMemoryRequirementsRule
         physicalRewritesAllLevels.add(new HybridToInMemoryHashJoinRule());
@@ -405,14 +406,14 @@ public final class RuleCollections {
         physicalRewritesAllLevels.add(new RemoveUnusedAssignAndAggregateRule());
         physicalRewritesAllLevels.add(new ConsolidateAssignsRule(true));
         // After adding projects, we may need to set physical operators again.
-        physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule());
+        physicalRewritesAllLevels.add(new SetAsterixPhysicalOperatorsRule(cmf));
         // Optimized spatial join's query plan produces more join conditions, so we need to pull out these conditions
         physicalRewritesAllLevels.add(new PullSelectOutOfSpatialJoin());
         return physicalRewritesAllLevels;
     }
 
-    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection(
-            ICcApplicationContext appCtx) {
+    public static List<IAlgebraicRewriteRule> buildPhysicalRewritesTopLevelRuleCollection(ICcApplicationContext appCtx,
+            SetAsterixPhysicalOperatorsRule.CostMethodsFactory cmf) {
         List<IAlgebraicRewriteRule> physicalRewritesTopLevel = new LinkedList<>();
         physicalRewritesTopLevel.add(new PushNestedOrderByUnderPreSortedGroupByRule());
         physicalRewritesTopLevel.add(new CopyLimitDownRule());
@@ -431,17 +432,18 @@ public final class RuleCollections {
          * returned if they are projected out
          */
         physicalRewritesTopLevel.add(new PushValueAccessAndFilterDownRule());
-        physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule());
+        physicalRewritesTopLevel.add(new SetAsterixPhysicalOperatorsRule(cmf));
         physicalRewritesTopLevel.add(new IntroduceRapidFrameFlushProjectAssignRule());
         physicalRewritesTopLevel.add(new SetExecutionModeRule());
         physicalRewritesTopLevel.add(new IntroduceRandomPartitioningFeedComputationRule());
         return physicalRewritesTopLevel;
     }
 
-    public static List<IAlgebraicRewriteRule> prepareForJobGenRuleCollection() {
+    public static List<IAlgebraicRewriteRule> prepareForJobGenRuleCollection(
+            SetAsterixPhysicalOperatorsRule.CostMethodsFactory cmf) {
         List<IAlgebraicRewriteRule> prepareForJobGenRewrites = new LinkedList<>();
         prepareForJobGenRewrites.add(new InsertProjectBeforeUnionRule());
-        prepareForJobGenRewrites.add(new SetAsterixPhysicalOperatorsRule());
+        prepareForJobGenRewrites.add(new SetAsterixPhysicalOperatorsRule(cmf));
         prepareForJobGenRewrites
                 .add(new IsolateHyracksOperatorsRule(HeuristicOptimizer.hyraxOperatorsBelowWhichJobGenIsDisabled));
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());

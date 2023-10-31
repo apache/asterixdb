@@ -1,12 +1,12 @@
-distribute result [$$d] [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
+distribute result [$$d] [cardinality: 4.0, op-cost: 0.0, total-cost: 14.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
+  exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 14.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$d]) [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
+    project ([$$d]) [cardinality: 4.0, op-cost: 0.0, total-cost: 14.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
+      exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 14.0]
       -- SORT_MERGE_EXCHANGE [$$28(ASC) ]  |PARTITIONED|
-        order (ASC, $$28) [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
+        order (ASC, $$28) [cardinality: 4.0, op-cost: 8.0, total-cost: 14.0]
         -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
           exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 6.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,16 +1,16 @@
-distribute result [$$19] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+distribute result [$$19] [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$19]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    project ([$$19]) [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$19] <- [get-item(get-item(get-item($$25.getField("coordinates"), 0), 0), 0)] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      assign [$$19] <- [get-item(get-item(get-item($$25.getField("coordinates"), 0), 0), 0)] [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
       -- ASSIGN  |PARTITIONED|
-        project ([$$25]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        project ([$$25]) [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
           -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
-            order (ASC, $$21) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+            order (ASC, $$21) [cardinality: 2.1, op-cost: 2.25, total-cost: 4.35]
             -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
               exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

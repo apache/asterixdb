@@ -59,6 +59,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
@@ -103,6 +104,15 @@ public class JoinEnum {
     protected JoinNode[] jnArray; // array of all join nodes
     protected int jnArraySize;
     protected List<ILogicalOperator> leafInputs;
+
+    // The Distinct operators for each DataScan operator (if applicable)
+    protected HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
+
+    // The Distinct/GroupBy operator at root of the query tree (if exists)
+    protected ILogicalOperator rootGroupByDistinctOp;
+
+    // The OrderBy operator at root of the query tree (if exists)
+    protected ILogicalOperator rootOrderByOp;
     protected List<ILogicalExpression> singleDatasetPreds;
     protected List<AssignOperator> assignOps;
     List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
@@ -135,7 +145,9 @@ public class JoinEnum {
             List<ILogicalOperator> leafInputs, List<JoinOperator> allJoinOps, List<AssignOperator> assignOps,
             List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
             List<Triple<Integer, Integer, Boolean>> buildSets, HashMap<LogicalVariable, Integer> varLeafInputIds,
-            IOptimizationContext context) throws AsterixException {
+            HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps,
+            ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, IOptimizationContext context)
+            throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -154,6 +166,9 @@ public class JoinEnum {
         this.allJoinOps = allJoinOps;
         this.buildSets = buildSets;
         this.varLeafInputIds = varLeafInputIds;
+        this.dataScanAndGroupByDistinctOps = dataScanAndGroupByDistinctOps;
+        this.rootGroupByDistinctOp = grpByDistinctOp;
+        this.rootOrderByOp = orderByOp;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
@@ -718,6 +733,26 @@ public class JoinEnum {
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN 5");
         }
+
+        double grpInputCard = (double) Math.round(jnArray[jnNumber].getCardinality() * 100) / 100;
+        double grpOutputCard = (double) Math.round(jnArray[jnNumber].distinctCardinality * 100) / 100;
+
+        // set the root group-by/distinct operator's cardinality annotations (if exists)
+        if (!cboTestMode && this.rootGroupByDistinctOp != null) {
+            this.rootGroupByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpInputCard);
+            this.rootGroupByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpOutputCard);
+        }
+
+        // set the root order by operator's cardinality annotations (if exists)
+        if (this.rootOrderByOp != null) {
+            if (this.rootGroupByDistinctOp != null) {
+                this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpOutputCard);
+                this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpOutputCard);
+            } else {
+                this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpInputCard);
+                this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpInputCard);
+            }
+        }
         return jnNumber;
     }
 
@@ -836,8 +871,17 @@ public class JoinEnum {
                 if (scanOp == null) {
                     continue; // what happens to the cards and sizes then? this may happen in case of in lists
                 }
-
                 finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
+
+                ILogicalOperator grpByDistinctOp = this.dataScanAndGroupByDistinctOps.get(scanOp);
+                if (grpByDistinctOp != null) {
+                    long distinctCardinality = stats.findDistinctCardinality(grpByDistinctOp);
+                    jn.distinctCardinality = (double) distinctCardinality;
+                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY,
+                            (double) Math.round(finalDatasetCard * 100) / 100);
+                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
+                            (double) Math.round(distinctCardinality * 100) / 100);
+                }
 
                 List<List<IAObject>> result;
                 SelectOperator selop = (SelectOperator) findASelectOp(leafInput);

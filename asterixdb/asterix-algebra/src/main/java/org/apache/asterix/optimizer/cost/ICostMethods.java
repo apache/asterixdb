@@ -20,8 +20,14 @@
 package org.apache.asterix.optimizer.cost;
 
 import org.apache.asterix.optimizer.rules.cbo.JoinNode;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 
 public interface ICostMethods {
+    void setContext(IOptimizationContext context);
+
     Cost costFullScan(JoinNode jn);
 
     Cost costIndexScan(JoinNode jn, double indexSel);
@@ -33,4 +39,12 @@ public interface ICostMethods {
     Cost costIndexNLJoin(JoinNode currentJn);
 
     Cost costCartesianProductJoin(JoinNode currentJn);
+
+    Cost costHashGroupBy(GroupByOperator groupByOperator);
+
+    Cost costSortGroupBy(GroupByOperator groupByOperator);
+
+    Cost costDistinct(DistinctOperator distinctOperator);
+
+    Cost costOrderBy(OrderOperator orderOp);
 }

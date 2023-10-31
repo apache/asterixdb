@@ -1,16 +1,16 @@
-distribute result [$$16] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+distribute result [$$16] [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+  exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit offset 98 [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+    limit offset 98 [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      project ([$$16]) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+      project ([$$16]) [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
       -- STREAM_PROJECT  |PARTITIONED|
-        assign [$$16] <- [{"id": $$18, "dblpid": $$paper.getField(1)}] [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+        assign [$$16] <- [{"id": $$18, "dblpid": $$paper.getField(1)}] [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
         -- ASSIGN  |PARTITIONED|
-          exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+          exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
           -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|
-            order (ASC, $$18) [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
+            order (ASC, $$18) [cardinality: 100.0, op-cost: 664.39, total-cost: 764.39]
             -- STABLE_SORT [$$18(ASC)]  |PARTITIONED|
               exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

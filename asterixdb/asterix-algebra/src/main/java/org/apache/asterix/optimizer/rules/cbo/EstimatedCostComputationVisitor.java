@@ -91,8 +91,27 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
     @Override
     public Pair<Double, Double> visitGroupByOperator(GroupByOperator op, Double arg) throws AlgebricksException {
-        // Needs more work in the cardinality estimation code to estimate group by cardinality and cost.
-        return annotate(this, op, arg);
+
+        return annotateGroupByDistinct(op, arg);
+    }
+
+    private Pair<Double, Double> annotateGroupByDistinct(ILogicalOperator op, Double arg) throws AlgebricksException {
+        double groupByDistinctCost = 0.0;
+        Pair<Double, Double> cardCost = op.getInputs().get(0).getValue().accept(this, arg);
+
+        for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
+            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
+                cardCost.setFirst((Double) anno.getValue());
+            }
+            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_LOCAL)) {
+                groupByDistinctCost = (double) anno.getValue();
+            }
+        }
+        double totalCost = cardCost.getSecond() + groupByDistinctCost;
+        op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, (double) Math.round(totalCost * 100) / 100);
+        cardCost.setSecond(totalCost);
+
+        return cardCost;
     }
 
     @Override
@@ -121,7 +140,21 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
     @Override
     public Pair<Double, Double> visitOrderOperator(OrderOperator op, Double arg) throws AlgebricksException {
-        return annotate(this, op, arg);
+        double orderCost = 0.0;
+        Pair<Double, Double> cardCost = op.getInputs().get(0).getValue().accept(this, arg);
+
+        for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
+            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_LOCAL)) {
+                orderCost = (double) anno.getValue();
+            }
+        }
+        double totalCost = cardCost.getSecond() + orderCost;
+        op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, (double) Math.round(totalCost * 100) / 100);
+        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
+                (double) Math.round(cardCost.getFirst() * 100) / 100);
+        cardCost.setSecond(totalCost);
+
+        return cardCost;
     }
 
     @Override
@@ -250,7 +283,8 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
     @Override
     public Pair<Double, Double> visitDistinctOperator(DistinctOperator op, Double arg) throws AlgebricksException {
-        return annotate(this, op, arg);
+
+        return annotateGroupByDistinct(op, arg);
     }
 
     @Override
@@ -262,13 +296,16 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
 
         Pair<Double, Double> cardCost = op.getInputs().get(0).getValue().accept(this, arg);
         if (exchCost != 0) {
-            op.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, exchCost);
-            op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, exchCost + cardCost.getSecond());
+            op.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, (double) Math.round(exchCost * 100) / 100);
+            op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL,
+                    (double) Math.round((exchCost + cardCost.getSecond()) * 100) / 100);
         } else {
             op.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, 0.0);
-            op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, cardCost.getSecond());
+            op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL,
+                    (double) Math.round(cardCost.getSecond() * 100) / 100);
         }
-        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, cardCost.getFirst());
+        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
+                (double) Math.round(cardCost.getFirst() * 100) / 100);
         return cardCost;
     }
 
@@ -317,8 +354,10 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
             return new Pair<>(0.0, 0.0);
         }
         Pair<Double, Double> cardCost = op.getInputs().get(0).getValue().accept(visitor, arg);
-        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, cardCost.getFirst());
-        op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL, cardCost.getSecond());
+        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
+                (double) Math.round(cardCost.getFirst() * 100) / 100);
+        op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL,
+                (double) Math.round(cardCost.getSecond() * 100) / 100);
         op.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, 0.0);
         return cardCost;
     }

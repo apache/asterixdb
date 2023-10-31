@@ -74,18 +74,31 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private final JoinEnum joinEnum;
     private int leafInputNumber;
-    List<ILogicalOperator> newJoinOps;
-    List<JoinOperator> allJoinOps; // can be inner join or left outer join
+    private List<ILogicalOperator> newJoinOps;
+    private List<JoinOperator> allJoinOps; // can be inner join or left outer join
     // Will be in the order of the from clause. Important for position ordering when assigning bits to join expressions.
-    List<ILogicalOperator> leafInputs;
-    HashMap<LogicalVariable, Integer> varLeafInputIds;
-    List<Triple<Integer, Integer, Boolean>> buildSets; // the first is the bits and the second is the number of tables.
-    List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
-    List<AssignOperator> assignOps;
-    List<ILogicalExpression> assignJoinExprs; // These are the join expressions below the assign operator.
+    private List<ILogicalOperator> leafInputs;
+    private HashMap<LogicalVariable, Integer> varLeafInputIds;
+    private List<Triple<Integer, Integer, Boolean>> buildSets; // the first is the bits and the second is the number of tables.
+    private List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
+    private List<AssignOperator> assignOps;
+    private List<ILogicalExpression> assignJoinExprs; // These are the join expressions below the assign operator.
+
+    // The Distinct operators for each Select or DataSourceScan operator (if applicable)
+    // The Distinct operators for each DataSourceScan operator (if applicable)
+    private HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
+
+    // The Distinct/GroupBy operator at root of the query tree (if exists)
+    private ILogicalOperator rootGroupByDistinctOp;
+
+    // The OrderBy operator at root of the query tree (if exists)
+    private ILogicalOperator rootOrderByOp;
 
     public EnumerateJoinsRule(JoinEnum joinEnum) {
         this.joinEnum = joinEnum;
+        dataScanAndGroupByDistinctOps = new HashMap<>(); // initialized only once at the beginning of the rule
+        rootGroupByDistinctOp = null;
+        rootOrderByOp = null;
     }
 
     @Override
@@ -118,6 +131,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
+        // If cboMode or cboTestMode is true, identify each DistinctOp or GroupByOp for the corresponding DataScanOp
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            // If cboMode or cboTestMode is true, identify each DistinctOp or GroupByOp for the corresponding DataScanOp
+            getDistinctOpsForJoinNodes(op, context);
+
+            // Find the order by op, so we can annotate cost/cards
+            findOrderByOp(op);
+        }
+
         // if this join has already been seen before, no need to apply the rule again
         if (context.checkIfInDontApplySet(this, op)) {
             return false;
@@ -132,7 +154,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         assignOps = new ArrayList<>();
         assignJoinExprs = new ArrayList<>();
         buildSets = new ArrayList<>();
-
         IPlanPrettyPrinter pp = context.getPrettyPrinter();
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan1");
         leafInputNumber = 0;
@@ -158,7 +179,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // we need to build the smaller sets first. So we need to find these first.
         }
         joinEnum.initEnum((AbstractLogicalOperator) op, cboMode, cboTestMode, numberOfFromTerms, leafInputs, allJoinOps,
-                assignOps, outerJoinsDependencyList, buildSets, varLeafInputIds, context);
+                assignOps, outerJoinsDependencyList, buildSets, varLeafInputIds, dataScanAndGroupByDistinctOps,
+                rootGroupByDistinctOp, rootOrderByOp, context);
 
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
@@ -372,19 +394,75 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private ILogicalOperator findSelectOrDataScan(ILogicalOperator op) {
         LogicalOperatorTag tag;
+        ILogicalOperator currentOp = op;
         while (true) {
-            if (op.getInputs().size() > 1) {
+            if (currentOp.getInputs().size() > 1) {
                 return null; // Assuming only a linear plan for single table queries (as leafInputs are linear).
             }
-            tag = op.getOperatorTag();
+            tag = currentOp.getOperatorTag();
             if (tag == LogicalOperatorTag.EMPTYTUPLESOURCE) {
                 return null; // if this happens, there is nothing we can do in CBO code since there is no datasourcescan
             }
             if ((tag == LogicalOperatorTag.SELECT) || (tag == LogicalOperatorTag.DATASOURCESCAN)) {
-                return op;
+                return currentOp;
             }
 
-            op = op.getInputs().get(0).getValue();
+            currentOp = currentOp.getInputs().get(0).getValue();
+        }
+    }
+
+    private void getDistinctOpsForJoinNodes(ILogicalOperator op, IOptimizationContext context) {
+        if (op.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            return;
+        }
+        ILogicalOperator grpByDistinctOp = null; // null indicates no DistinctOp or GroupByOp
+        DataSourceScanOperator scanOp;
+        ILogicalOperator currentOp = op;
+        while (true) {
+            LogicalOperatorTag tag = currentOp.getOperatorTag();
+            if (tag == LogicalOperatorTag.DISTINCT || tag == LogicalOperatorTag.GROUP) {
+                grpByDistinctOp = currentOp; // GroupByOp Variable expressions (if any) take over DistinctOp ones
+                this.rootGroupByDistinctOp = grpByDistinctOp;
+            } else if (tag == LogicalOperatorTag.INNERJOIN || tag == LogicalOperatorTag.LEFTOUTERJOIN) {
+                if (grpByDistinctOp != null) {
+                    for (int i = 0; i < currentOp.getInputs().size(); i++) {
+                        ILogicalOperator nextOp = currentOp.getInputs().get(i).getValue();
+                        OperatorUtils.createDistinctOpsForJoinNodes(nextOp, grpByDistinctOp, context,
+                                dataScanAndGroupByDistinctOps);
+                    }
+                }
+                return;
+            } else if (tag == LogicalOperatorTag.DATASOURCESCAN) { // single table queries
+                scanOp = (DataSourceScanOperator) currentOp;
+                // will work for any attributes present in GroupByOp or DistinctOp
+                if (grpByDistinctOp != null) {
+                    dataScanAndGroupByDistinctOps.put(scanOp, grpByDistinctOp);
+                }
+                return;
+            }
+            currentOp = currentOp.getInputs().get(0).getValue();
+            if (currentOp.getOperatorTag() == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                return; // if this happens, there is nothing we can do in CBO code since there is no DataSourceScan
+            }
+        }
+    }
+
+    private void findOrderByOp(ILogicalOperator op) {
+        ILogicalOperator currentOp = op;
+        if (currentOp.getOperatorTag() != LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            return;
+        }
+
+        while (currentOp != null) {
+            LogicalOperatorTag tag = currentOp.getOperatorTag();
+            if (tag == LogicalOperatorTag.ORDER) {
+                this.rootOrderByOp = currentOp;
+                return;
+            }
+            if (tag == LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                return;
+            }
+            currentOp = currentOp.getInputs().get(0).getValue();
         }
     }
 

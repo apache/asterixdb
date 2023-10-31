@@ -80,6 +80,7 @@ public class JoinNode {
     protected double origCardinality; // without any selections
     protected double cardinality;
     protected double size;
+    protected double distinctCardinality; // estimated distinct cardinality for this joinNode
     protected List<Integer> planIndexesArray; // indexes into the PlanNode array in enumerateJoins
     protected int jnIndex;
     protected int level;
@@ -1052,6 +1053,24 @@ public class JoinNode {
         double current_card = this.cardinality;
         if (current_card >= Cost.MAX_CARD) {
             return; // no card available, so do not add this plan
+        }
+
+        if (leftJn.distinctCardinality == 0.0) { // no group-by/distinct attribute(s) from the left node
+            this.distinctCardinality = rightJn.distinctCardinality;
+        } else if (rightJn.distinctCardinality == 0.0) { // no group-by/distinct attributes(s) from the right node
+            this.distinctCardinality = leftJn.distinctCardinality;
+        } else {
+            // Heuristic used to propagate distinct cardinalities to join nodes.
+            // D_est_jn = (D_est_l > D_est_r) ? (D_est_l * join productivity of leftJn) : (D_est_r * join productivity of rightJn)
+            double leftJnCard, rightJnCard;
+            leftJnCard = (leftJn.IsBaseLevelJoinNode()) ? leftJn.getOrigCardinality() : leftJn.getCardinality();
+            rightJnCard = (rightJn.IsBaseLevelJoinNode()) ? rightJn.getOrigCardinality() : rightJn.getCardinality();
+            if (leftJn.distinctCardinality > rightJn.distinctCardinality) {
+                this.distinctCardinality = leftJn.distinctCardinality * this.cardinality / leftJnCard;
+            } else {
+                this.distinctCardinality = rightJn.distinctCardinality * this.cardinality / rightJnCard;
+            }
+            this.distinctCardinality = (double) Math.round(this.distinctCardinality * 100) / 100;
         }
 
         int hjPlan, commutativeHjPlan, bcastHjPlan, commutativeBcastHjPlan, nljPlan, commutativeNljPlan, cpPlan,

@@ -1,20 +1,20 @@
-distribute result [$$21] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+distribute result [$$21] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$21]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+    project ([$$21]) [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+      assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
       -- ASSIGN  |PARTITIONED|
-        project ([$$23]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+        project ([$$23]) [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$23] <- [$$p.getField("arrayOrObject")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+          assign [$$23] <- [$$p.getField("arrayOrObject")] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
           -- ASSIGN  |PARTITIONED|
-            project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+            project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+              exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
               -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-                order (ASC, $$24) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                order (ASC, $$24) [cardinality: 6.0, op-cost: 15.51, total-cost: 21.51]
                 -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
                   exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

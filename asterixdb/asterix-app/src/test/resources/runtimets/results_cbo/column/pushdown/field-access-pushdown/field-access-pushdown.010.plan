@@ -1,20 +1,20 @@
-distribute result [$$18] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+distribute result [$$18] [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$18]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    project ([$$18]) [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$18] <- [{"id": $$20.getField("id"), "name": $$20.getField("name")}] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      assign [$$18] <- [{"id": $$20.getField("id"), "name": $$20.getField("name")}] [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
       -- ASSIGN  |PARTITIONED|
-        project ([$$20]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        project ([$$20]) [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
         -- STREAM_PROJECT  |PARTITIONED|
-          assign [$$20] <- [$$p.getField("user")] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          assign [$$20] <- [$$p.getField("user")] [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
           -- ASSIGN  |PARTITIONED|
-            project ([$$p]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+            project ([$$p]) [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+              exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
               -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
-                order (ASC, $$21) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                order (ASC, $$21) [cardinality: 2.1, op-cost: 2.25, total-cost: 4.35]
                 -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
                   exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

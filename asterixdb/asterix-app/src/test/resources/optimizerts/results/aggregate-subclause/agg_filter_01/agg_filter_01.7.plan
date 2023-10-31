@@ -23,13 +23,13 @@
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                           }
                     -- SORT_MERGE_EXCHANGE [$$twenty(ASC) ]  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$198]  |PARTITIONED|
+                      -- SORT_GROUP_BY[$$201]  |PARTITIONED|
                               {
                                 -- AGGREGATE  |LOCAL|
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                               }
-                        -- HASH_PARTITION_EXCHANGE [$$198]  |PARTITIONED|
-                          -- SORT_GROUP_BY[$$180]  |PARTITIONED|
+                        -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
+                          -- SORT_GROUP_BY[$$183]  |PARTITIONED|
                                   {
                                     -- AGGREGATE  |LOCAL|
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|

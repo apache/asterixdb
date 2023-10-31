@@ -1,14 +1,14 @@
-distribute result [$$52] [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+distribute result [$$52] [cardinality: 3.0, op-cost: 0.0, total-cost: 26.65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+  exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 26.65]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$52]) [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+    project ([$$52]) [cardinality: 3.0, op-cost: 0.0, total-cost: 26.65]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$52] <- [{"t1_id": $$53, "t2_id": $$54}] [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+      assign [$$52] <- [{"t1_id": $$53, "t2_id": $$54}] [cardinality: 3.0, op-cost: 0.0, total-cost: 26.65]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+        exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 26.65]
         -- SORT_MERGE_EXCHANGE [$$53(ASC), $$54(ASC) ]  |PARTITIONED|
-          order (ASC, $$53) (ASC, $$54) [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
+          order (ASC, $$53) (ASC, $$54) [cardinality: 3.0, op-cost: 4.75, total-cost: 26.65]
           -- STABLE_SORT [$$53(ASC), $$54(ASC)]  |PARTITIONED|
             exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 21.9]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

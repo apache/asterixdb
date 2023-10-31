@@ -22,6 +22,7 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.algebra.operators.physical.AssignBatchPOperator;
 import org.apache.asterix.algebra.operators.physical.BTreeSearchPOperator;
@@ -36,6 +37,9 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
+import org.apache.asterix.optimizer.cost.CostMethods;
+import org.apache.asterix.optimizer.cost.ICost;
+import org.apache.asterix.optimizer.cost.ICostMethods;
 import org.apache.asterix.optimizer.rules.am.AccessMethodJobGenParams;
 import org.apache.asterix.optimizer.rules.am.BTreeJobGenParams;
 import org.apache.asterix.optimizer.rules.util.AsterixJoinUtils;
@@ -50,6 +54,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IPhysicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.OperatorAnnotations;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IMergeAggregationExpressionFactory;
@@ -59,10 +64,12 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.InnerJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterUnnestMapOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.OrderOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractWindowPOperator;
@@ -73,16 +80,27 @@ import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 import org.apache.hyracks.algebricks.rewriter.rules.SetAlgebricksPhysicalOperatorsRule;
 
-public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysicalOperatorsRule {
+public class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysicalOperatorsRule {
 
     // Disable ASSIGN_BATCH physical operator if this option is set to 'false'
     public static final String REWRITE_ATTEMPT_BATCH_ASSIGN = "rewrite_attempt_batch_assign";
     static final boolean REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT = true;
 
+    private final CostMethodsFactory costMethodsFactory;
+
     @Override
     protected ILogicalOperatorVisitor<IPhysicalOperator, Boolean> createPhysicalOperatorFactoryVisitor(
             IOptimizationContext context) {
-        return new AsterixPhysicalOperatorFactoryVisitor(context);
+        return new AsterixPhysicalOperatorFactoryVisitor(context, costMethodsFactory.createCostMethods(context));
+    }
+
+    @FunctionalInterface
+    public interface CostMethodsFactory {
+        CostMethods createCostMethods(IOptimizationContext ctx);
+    }
+
+    public SetAsterixPhysicalOperatorsRule(CostMethodsFactory costMethodsFactory) {
+        this.costMethodsFactory = costMethodsFactory;
     }
 
     static boolean isBatchAssignEnabled(IOptimizationContext context) {
@@ -90,13 +108,79 @@ public final class SetAsterixPhysicalOperatorsRule extends SetAlgebricksPhysical
         return metadataProvider.getBooleanProperty(REWRITE_ATTEMPT_BATCH_ASSIGN, REWRITE_ATTEMPT_BATCH_ASSIGN_DEFAULT);
     }
 
-    private static class AsterixPhysicalOperatorFactoryVisitor extends AlgebricksPhysicalOperatorFactoryVisitor {
+    protected static class AsterixPhysicalOperatorFactoryVisitor extends AlgebricksPhysicalOperatorFactoryVisitor {
 
         private final boolean isBatchAssignEnabled;
+        protected ICostMethods costMethods;
+        protected boolean cboMode;
+        protected boolean cboTestMode;
 
-        private AsterixPhysicalOperatorFactoryVisitor(IOptimizationContext context) {
+        protected AsterixPhysicalOperatorFactoryVisitor(IOptimizationContext context, ICostMethods cm) {
             super(context);
+            costMethods = cm;
             isBatchAssignEnabled = isBatchAssignEnabled(context);
+            cboMode = physConfig.getCBOMode();
+            cboTestMode = physConfig.getCBOTestMode();
+        }
+
+        protected Enum groupByAlgorithm(GroupByOperator gby, Boolean topLevelOp) {
+            boolean hashGroupPossible = hashGroupPossible(gby, topLevelOp);
+            boolean hashGroupHint = hashGroupHint(gby);
+
+            if (hashGroupPossible && hashGroupHint) {
+                return GroupByAlgorithm.HASH_GROUP_BY;
+            }
+
+            if (!(cboMode || cboTestMode)) {
+                return GroupByAlgorithm.SORT_GROUP_BY;
+            }
+
+            Map<String, Object> annotations = gby.getAnnotations();
+            if (annotations != null && annotations.containsKey(OperatorAnnotations.OP_INPUT_CARDINALITY)
+                    && annotations.containsKey(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
+                // We should make costing decisions between hash and sort group by
+                // only if the input and output cardinalities of the group by operator
+                // were computed earlier during CBO. Otherwise, default to sort group by.
+                ICost costHashGroupBy = costMethods.costHashGroupBy(gby);
+                ICost costSortGroupBy = costMethods.costSortGroupBy(gby);
+
+                if (hashGroupPossible && costHashGroupBy.costLE(costSortGroupBy)) {
+                    addAnnotations(gby, (double) Math.round(costHashGroupBy.computeTotalCost() * 100) / 100);
+                    return GroupByAlgorithm.HASH_GROUP_BY;
+                }
+
+                addAnnotations(gby, (double) Math.round(costSortGroupBy.computeTotalCost() * 100) / 100);
+                return GroupByAlgorithm.SORT_GROUP_BY;
+            }
+
+            addAnnotations(gby, 0.0);
+            return GroupByAlgorithm.SORT_GROUP_BY;
+        }
+
+        private void addAnnotations(GroupByOperator gby, double cost) {
+            gby.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL, cost);
+        }
+
+        public IPhysicalOperator visitDistinctOperator(DistinctOperator distinct, Boolean topLevelOp) {
+            addAnnotations(distinct);
+            return super.visitDistinctOperator(distinct, topLevelOp);
+        }
+
+        protected void addAnnotations(DistinctOperator distinct) {
+            ICost costDistinct = costMethods.costDistinct(distinct);
+            distinct.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL,
+                    (double) Math.round(costDistinct.computeTotalCost() * 100) / 100);
+        }
+
+        public IPhysicalOperator visitOrderOperator(OrderOperator oo, Boolean topLevelOp) throws AlgebricksException {
+            addAnnotations(oo);
+            return super.visitOrderOperator(oo, topLevelOp);
+        }
+
+        protected void addAnnotations(OrderOperator order) {
+            ICost costOrder = costMethods.costOrderBy(order);
+            order.getAnnotations().put(OperatorAnnotations.OP_COST_LOCAL,
+                    (double) Math.round(costOrder.computeTotalCost() * 100) / 100);
         }
 
         @Override

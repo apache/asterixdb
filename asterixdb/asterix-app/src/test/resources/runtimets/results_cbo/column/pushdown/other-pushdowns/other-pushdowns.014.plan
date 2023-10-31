@@ -1,42 +1,42 @@
-distribute result [$$101] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$101]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    project ([$$101]) [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$101] <- [{"uname": $$uname, "cnt": $$105}] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      assign [$$101] <- [{"uname": $$uname, "cnt": $$105}] [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
         -- SORT_MERGE_EXCHANGE [$$105(DESC), $$uname(ASC) ]  |PARTITIONED|
-          order (DESC, $$105) (ASC, $$uname) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          order (DESC, $$105) (ASC, $$uname) [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
           -- STABLE_SORT [$$105(DESC), $$uname(ASC)]  |PARTITIONED|
-            exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               group by ([$$uname := $$116]) decor ([]) {
                         aggregate [$$105] <- [agg-sql-sum($$115)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |LOCAL|
                           nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
               -- SORT_GROUP_BY[$$116]  |PARTITIONED|
-                exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                 -- HASH_PARTITION_EXCHANGE [$$116]  |PARTITIONED|
                   group by ([$$116 := $$102]) decor ([]) {
                             aggregate [$$115] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- AGGREGATE  |LOCAL|
                               nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                         } [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                         } [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                   -- SORT_GROUP_BY[$$102]  |PARTITIONED|
-                    exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      project ([$$102]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                      project ([$$102]) [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                       -- STREAM_PROJECT  |PARTITIONED|
                         select ($$92) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_SELECT  |PARTITIONED|
-                          project ([$$92, $$102]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                          project ([$$92, $$102]) [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 6.6]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               group by ([$$114 := $$112]) decor ([$$102]) {
                                         aggregate [$$92] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -45,11 +45,11 @@ distribute result [$$101] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                                           -- STREAM_SELECT  |LOCAL|
                                             nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                     } [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                                     } [cardinality: 0.0, op-cost: 2.25, total-cost: 6.6]
                               -- PRE_CLUSTERED_GROUP_BY[$$112]  |PARTITIONED|
-                                exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                                exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 4.35]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  order (ASC, $$112) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+                                  order (ASC, $$112) [cardinality: 2.1, op-cost: 2.25, total-cost: 4.35]
                                   -- STABLE_SORT [$$112(ASC)]  |PARTITIONED|
                                     exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
                                     -- HASH_PARTITION_EXCHANGE [$$112]  |PARTITIONED|

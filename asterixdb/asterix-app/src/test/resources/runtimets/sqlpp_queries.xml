@@ -3319,6 +3319,18 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="cardinality-estimation">
+    <test-case FilePath="cardinality-estimation">
+      <compilation-unit name="join-queries">
+        <output-dir compare="Text">join-queries</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cardinality-estimation">
+      <compilation-unit name="single-collection-queries">
+        <output-dir compare="Text">single-collection-queries</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   <test-group name="comparison">
     <test-case FilePath="comparison">
       <compilation-unit name="secondary_idx_lookup">

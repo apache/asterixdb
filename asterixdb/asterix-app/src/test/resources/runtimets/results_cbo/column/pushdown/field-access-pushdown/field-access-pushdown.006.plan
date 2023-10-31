@@ -1,14 +1,14 @@
-distribute result [$$30] [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+distribute result [$$30] [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+  exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$30]) [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+    project ([$$30]) [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$30] <- [{"p1": $$p1, "id": $$34}] [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+      assign [$$30] <- [{"p1": $$p1, "id": $$34}] [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+        exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 61.65]
         -- SORT_MERGE_EXCHANGE [$$34(ASC) ]  |PARTITIONED|
-          order (ASC, $$34) [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
+          order (ASC, $$34) [cardinality: 7.0, op-cost: 19.65, total-cost: 61.65]
           -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
             exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 42.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
