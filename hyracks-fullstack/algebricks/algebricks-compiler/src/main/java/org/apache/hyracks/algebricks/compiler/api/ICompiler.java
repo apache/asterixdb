@@ -27,4 +27,6 @@ public interface ICompiler {
 
     public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory)
             throws AlgebricksException;
+
+    boolean skipJobCapacityAssignment();
 }

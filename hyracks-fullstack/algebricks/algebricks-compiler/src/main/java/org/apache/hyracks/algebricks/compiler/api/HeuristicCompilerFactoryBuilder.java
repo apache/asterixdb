@@ -170,5 +170,10 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
             PlanCompiler pc = factory.createPlanCompiler(oc, appContext, writerFactory);
             return pc.compilePlan(plan, jobEventListenerFactory);
         }
+
+        @Override
+        public boolean skipJobCapacityAssignment() {
+            return oc.skipJobCapacityAssignment();
+        }
     }
 }
