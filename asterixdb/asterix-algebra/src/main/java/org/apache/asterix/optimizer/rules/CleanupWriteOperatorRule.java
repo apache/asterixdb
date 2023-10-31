@@ -16,39 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.asterix.optimizer.rules.visitor.ConstantFoldingVisitor;
+import java.util.List;
+
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 
-public class ConstantFoldingRule implements IAlgebraicRewriteRule {
-
-    private final ConstantFoldingVisitor cfv;
-
-    public ConstantFoldingRule(ICcApplicationContext appCtx) {
-        cfv = new ConstantFoldingVisitor(appCtx);
-    }
-
+public class CleanupWriteOperatorRule implements IAlgebraicRewriteRule {
     @Override
     public boolean rewritePre(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
             throws AlgebricksException {
-        return false;
-    }
-
-    @Override
-    public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
-            throws AlgebricksException {
         ILogicalOperator op = opRef.getValue();
-        if (context.checkIfInDontApplySet(this, op)) {
+        if (op.getOperatorTag() != LogicalOperatorTag.WRITE) {
             return false;
         }
-        cfv.reset(context);
-        return op.acceptExpressionTransform(cfv);
+
+        WriteOperator writeOp = (WriteOperator) op;
+        ILogicalExpression pathExpr = writeOp.getPathExpression().getValue();
+        if (pathExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+            return false;
+        }
+
+        boolean changed = false;
+        List<Mutable<ILogicalExpression>> partitionExprs = writeOp.getPartitionExpressions();
+        if (!partitionExprs.isEmpty()) {
+            // Useless partition expressions due to having a constant path expression
+            partitionExprs.clear();
+            writeOp.getOrderExpressions().clear();
+            changed = true;
+        }
+
+        return changed;
     }
 }

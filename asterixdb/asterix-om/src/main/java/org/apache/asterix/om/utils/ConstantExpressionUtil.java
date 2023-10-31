@@ -19,6 +19,7 @@
 package org.apache.asterix.om.utils;
 
 import org.apache.asterix.om.base.ABoolean;
+import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AOrderedList;
@@ -32,6 +33,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ConstantExpressionUtil {
 
@@ -114,5 +116,23 @@ public class ConstantExpressionUtil {
     public static String getStringArgument(ILogicalExpression expr, int index) {
         return expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL
                 ? getStringArgument((AbstractFunctionCallExpression) expr, index) : null;
+    }
+
+    public static ConstantExpression create(String value, SourceLocation sourceLocation) {
+        return createExpression(new AString(value), sourceLocation);
+    }
+
+    public static ConstantExpression create(long value, SourceLocation sourceLocation) {
+        return createExpression(new AInt64(value), sourceLocation);
+    }
+
+    public static ConstantExpression create(double value, SourceLocation sourceLocation) {
+        return createExpression(new ADouble(value), sourceLocation);
+    }
+
+    private static ConstantExpression createExpression(IAObject value, SourceLocation sourceLocation) {
+        ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
+        constExpr.setSourceLocation(sourceLocation);
+        return constExpr;
     }
 }

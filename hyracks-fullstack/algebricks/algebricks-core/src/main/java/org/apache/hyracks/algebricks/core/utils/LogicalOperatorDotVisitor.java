@@ -230,8 +230,23 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     @Override
     public String visitWriteOperator(WriteOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
-        stringBuilder.append("write ");
-        printExprList(op.getExpressions());
+        stringBuilder.append("write (");
+        stringBuilder.append(op.getSourceExpression());
+        stringBuilder.append(") to [");
+        stringBuilder.append(op.getPathExpression());
+        stringBuilder.append(']');
+        List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
+        if (!partitionExpressions.isEmpty()) {
+            stringBuilder.append(" partition by ");
+            printExprList(partitionExpressions);
+
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
+            if (!orderExpressions.isEmpty()) {
+                stringBuilder.append(" order ");
+                printOrderExprList(orderExpressions);
+            }
+        }
+
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

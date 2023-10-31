@@ -380,7 +380,12 @@ public class SubstituteVariableVisitor
     @Override
     public Void visitWriteOperator(WriteOperator op, Pair<LogicalVariable, LogicalVariable> pair)
             throws AlgebricksException {
-        substUsedVariablesInExpr(op.getExpressions(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getSourceExpression(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getPathExpression(), pair.first, pair.second);
+        substUsedVariablesInExpr(op.getPartitionExpressions(), pair.first, pair.second);
+        for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : op.getOrderExpressions()) {
+            substUsedVariablesInExpr(orderExpr.second, pair.first, pair.second);
+        }
         return null;
     }
 

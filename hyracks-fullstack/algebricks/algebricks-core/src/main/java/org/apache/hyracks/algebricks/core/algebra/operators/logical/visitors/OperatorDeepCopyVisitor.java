@@ -35,6 +35,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -289,9 +290,15 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
 
     @Override
     public ILogicalOperator visitWriteOperator(WriteOperator op, Void arg) throws AlgebricksException {
-        ArrayList<Mutable<ILogicalExpression>> newExpressions = new ArrayList<>();
-        deepCopyExpressionRefs(newExpressions, op.getExpressions());
-        return new WriteOperator(newExpressions, op.getDataSink());
+        Mutable<ILogicalExpression> newSourceExpression = deepCopyExpressionRef(op.getSourceExpression());
+        Mutable<ILogicalExpression> newPathExpression = deepCopyExpressionRef(op.getPathExpression());
+        List<Mutable<ILogicalExpression>> newPartitionExpressions =
+                deepCopyExpressionRefs(new ArrayList<>(), op.getPartitionExpressions());
+        List<Pair<IOrder, Mutable<ILogicalExpression>>> newOrderPairExpressions =
+                deepCopyOrderAndExpression(op.getOrderExpressions());
+        IWriteDataSink writeDataSink = op.getWriteDataSink().createCopy();
+        return new WriteOperator(newSourceExpression, newPathExpression, newPartitionExpressions,
+                newOrderPairExpressions, writeDataSink);
     }
 
     @Override
@@ -369,11 +376,12 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
         return new SinkOperator();
     }
 
-    private void deepCopyExpressionRefs(List<Mutable<ILogicalExpression>> newExprs,
+    private List<Mutable<ILogicalExpression>> deepCopyExpressionRefs(List<Mutable<ILogicalExpression>> newExprs,
             List<Mutable<ILogicalExpression>> oldExprs) {
         for (Mutable<ILogicalExpression> oldExpr : oldExprs) {
             newExprs.add(new MutableObject<>(oldExpr.getValue().cloneExpression()));
         }
+        return newExprs;
     }
 
     private Mutable<ILogicalExpression> deepCopyExpressionRef(Mutable<ILogicalExpression> oldExprRef) {

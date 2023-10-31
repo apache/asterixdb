@@ -353,8 +353,14 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
 
     @Override
     public Void visitWriteOperator(WriteOperator op, Void arg) {
-        for (Mutable<ILogicalExpression> expr : op.getExpressions()) {
+        op.getSourceExpression().getValue().getUsedVariables(usedVariables);
+        op.getPathExpression().getValue().getUsedVariables(usedVariables);
+        for (Mutable<ILogicalExpression> expr : op.getPartitionExpressions()) {
             expr.getValue().getUsedVariables(usedVariables);
+        }
+
+        for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : op.getOrderExpressions()) {
+            orderExpr.second.getValue().getUsedVariables(usedVariables);
         }
         return null;
     }

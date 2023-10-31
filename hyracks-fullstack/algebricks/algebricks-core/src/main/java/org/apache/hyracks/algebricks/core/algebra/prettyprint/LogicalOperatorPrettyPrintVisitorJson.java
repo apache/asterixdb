@@ -482,9 +482,20 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     public Void visitWriteOperator(WriteOperator op, Void indent) throws AlgebricksException {
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "write");
-            List<Mutable<ILogicalExpression>> expressions = op.getExpressions();
-            if (!expressions.isEmpty()) {
-                writeArrayFieldOfExpressions(EXPRESSIONS_FIELD, expressions, indent);
+
+            writeStringFieldExpression("value", op.getSourceExpression(), indent);
+            writeStringFieldExpression("path", op.getPathExpression(), indent);
+
+            List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
+            if (!partitionExpressions.isEmpty()) {
+                writeObjectFieldWithExpressions("partition-by", partitionExpressions, indent);
+
+                List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions =
+                        op.getOrderExpressions();
+                if (!orderExpressions.isEmpty()) {
+                    writeArrayFieldOfOrderExprList("order-by", orderExpressions, indent);
+                }
+
             }
             return null;
         } catch (IOException e) {

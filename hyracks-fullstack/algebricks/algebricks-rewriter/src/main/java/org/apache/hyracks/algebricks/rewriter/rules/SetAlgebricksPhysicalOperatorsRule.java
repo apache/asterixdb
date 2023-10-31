@@ -369,8 +369,14 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
         }
 
         @Override
-        public IPhysicalOperator visitWriteOperator(WriteOperator op, Boolean topLevelOp) {
-            return new SinkWritePOperator();
+        public IPhysicalOperator visitWriteOperator(WriteOperator op, Boolean topLevelOp) throws AlgebricksException {
+            ILogicalExpression sourceExpr = op.getSourceExpression().getValue();
+            if (sourceExpr.getExpressionTag() != LogicalExpressionTag.VARIABLE) {
+                throw AlgebricksException.create(ErrorCode.EXPR_NOT_NORMALIZED, sourceExpr.getSourceLocation());
+            }
+            ensureAllVariables(op.getPartitionExpressions(), v -> v);
+            ensureAllVariables(op.getOrderExpressions(), Pair::getSecond);
+            return new SinkWritePOperator(op.getSourceVariable(), op.getPartitionVariables(), op.getOrderColumns());
         }
 
         @Override

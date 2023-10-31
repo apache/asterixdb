@@ -38,6 +38,7 @@ import org.apache.asterix.optimizer.rules.CancelUnnestWithNestedListifyRule;
 import org.apache.asterix.optimizer.rules.CheckFilterExpressionTypeRule;
 import org.apache.asterix.optimizer.rules.CheckFullParallelSortRule;
 import org.apache.asterix.optimizer.rules.CheckInsertUpsertReturningRule;
+import org.apache.asterix.optimizer.rules.CleanupWriteOperatorRule;
 import org.apache.asterix.optimizer.rules.ConstantFoldingRule;
 import org.apache.asterix.optimizer.rules.CountVarToCountOneRule;
 import org.apache.asterix.optimizer.rules.DisjunctivePredicateToJoinRule;
@@ -357,6 +358,7 @@ public final class RuleCollections {
         // RemoveRedundantBooleanExpressionsInJoinRule has to run first to probably eliminate the need for
         // introducing an assign operator in ExtractSimilarVariablesInJoinRule
         planCleanupRules.add(new ExtractRedundantVariablesInJoinRule());
+        planCleanupRules.add(new CleanupWriteOperatorRule());
 
         // Needs to invoke ByNameToByIndexFieldAccessRule as the last logical optimization rule because
         // some rules can push a FieldAccessByName to a place where the name it tries to access is in the closed part.

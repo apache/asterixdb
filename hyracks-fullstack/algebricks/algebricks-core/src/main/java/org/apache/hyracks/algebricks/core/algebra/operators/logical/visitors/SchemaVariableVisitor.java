@@ -254,7 +254,7 @@ public class SchemaVariableVisitor implements ILogicalOperatorVisitor<Void, Void
 
     @Override
     public Void visitWriteOperator(WriteOperator op, Void arg) throws AlgebricksException {
-        standardLayout(op);
+        // Write is akin to project empty
         return null;
     }
 

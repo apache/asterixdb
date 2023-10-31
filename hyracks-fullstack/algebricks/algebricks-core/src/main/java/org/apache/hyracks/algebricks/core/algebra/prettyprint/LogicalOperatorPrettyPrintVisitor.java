@@ -266,8 +266,22 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     @Override
     public Void visitWriteOperator(WriteOperator op, Integer indent) throws AlgebricksException {
-        addIndent(indent).append("write ");
-        pprintExprList(op.getExpressions(), indent);
+        AlgebricksStringBuilderWriter writer = addIndent(indent);
+        writer.append("write (");
+        writer.append(op.getSourceExpression().getValue().accept(exprVisitor, indent));
+        writer.append(") to path [");
+        writer.append(op.getPathExpression().getValue().accept(exprVisitor, indent));
+        writer.append("] ");
+        List<Mutable<ILogicalExpression>> partitionExpressions = op.getPartitionExpressions();
+        if (!partitionExpressions.isEmpty()) {
+            writer.append(" partition ");
+            pprintExprList(op.getPartitionExpressions(), indent);
+            List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExpressions = op.getOrderExpressions();
+            if (!orderExpressions.isEmpty()) {
+                writer.append(" order ");
+                pprintOrderList(orderExpressions, indent);
+            }
+        }
         return null;
     }
 

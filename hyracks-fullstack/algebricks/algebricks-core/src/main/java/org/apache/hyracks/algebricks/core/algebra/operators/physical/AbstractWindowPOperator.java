@@ -92,25 +92,8 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
                 throw new IllegalStateException(op.getExecutionMode().name());
         }
 
-        // require local order property [pc1, ... pcN, oc1, ... ocN]
-        // accounting for cases where there's an overlap between order and partition columns
-        // TODO replace with required local grouping on partition columns + local order on order columns
-        List<OrderColumn> lopColumns = new ArrayList<>();
-        ListSet<LogicalVariable> pcVars = new ListSet<>();
-        pcVars.addAll(partitionColumns);
-        for (int oIdx = 0, ln = orderColumns.size(); oIdx < ln; oIdx++) {
-            OrderColumn oc = orderColumns.get(oIdx);
-            LogicalVariable ocVar = oc.getColumn();
-            if (!pcVars.remove(ocVar) && containsAny(orderColumns, oIdx + 1, pcVars)) {
-                throw AlgebricksException.create(ErrorCode.UNSUPPORTED_WINDOW_SPEC, op.getSourceLocation(),
-                        String.valueOf(partitionColumns), String.valueOf(orderColumns));
-            }
-            lopColumns.add(new OrderColumn(oc.getColumn(), oc.getOrder()));
-        }
-        int pIdx = 0;
-        for (LogicalVariable pColumn : pcVars) {
-            lopColumns.add(pIdx++, new OrderColumn(pColumn, OrderOperator.IOrder.OrderKind.ASC));
-        }
+        List<OrderColumn> lopColumns =
+                getOrderRequirement(op, ErrorCode.UNSUPPORTED_WINDOW_SPEC, partitionColumns, orderColumns);
         List<ILocalStructuralProperty> localProps =
                 lopColumns.isEmpty() ? null : Collections.singletonList(new LocalOrderProperty(lopColumns));
 
@@ -295,4 +278,30 @@ public abstract class AbstractWindowPOperator extends AbstractPhysicalOperator {
         }
         return false;
     }
+
+    static List<OrderColumn> getOrderRequirement(ILogicalOperator op, ErrorCode errorCode,
+            List<LogicalVariable> partitionColumns, List<OrderColumn> orderColumns) throws AlgebricksException {
+        // require local order property [pc1, ... pcN, oc1, ... ocN]
+        // accounting for cases where there's an overlap between order and partition columns
+        // TODO replace with required local grouping on partition columns + local order on order columns
+        List<OrderColumn> lopColumns = new ArrayList<>();
+        ListSet<LogicalVariable> pcVars = new ListSet<>();
+        pcVars.addAll(partitionColumns);
+        for (int oIdx = 0, ln = orderColumns.size(); oIdx < ln; oIdx++) {
+            OrderColumn oc = orderColumns.get(oIdx);
+            LogicalVariable ocVar = oc.getColumn();
+            if (!pcVars.remove(ocVar) && containsAny(orderColumns, oIdx + 1, pcVars)) {
+                throw AlgebricksException.create(errorCode, op.getSourceLocation(), String.valueOf(partitionColumns),
+                        String.valueOf(orderColumns));
+            }
+            lopColumns.add(new OrderColumn(oc.getColumn(), oc.getOrder()));
+        }
+        int pIdx = 0;
+        for (LogicalVariable pColumn : pcVars) {
+            lopColumns.add(pIdx++, new OrderColumn(pColumn, OrderOperator.IOrder.OrderKind.ASC));
+        }
+
+        return lopColumns;
+    }
+
 }
