@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.writer;
 
+import static org.apache.asterix.cloud.writer.AbstractCloudExternalFileWriter.isExceedingMaxLength;
+
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
@@ -134,9 +136,17 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     }
 
     private void doValidate(ICloudClient testClient, String bucket) throws IOException, AlgebricksException {
-        if (staticPath != null && !testClient.isEmptyPrefix(bucket, staticPath)) {
-            // Ensure that the static path is empty
-            throw new CompilationException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
+        if (staticPath != null) {
+            if (isExceedingMaxLength(staticPath, S3ExternalFileWriter.MAX_LENGTH_IN_BYTES)) {
+                throw new CompilationException(ErrorCode.WRITE_PATH_LENGTH_EXCEEDS_MAX_LENGTH, pathSourceLocation,
+                        staticPath, S3ExternalFileWriter.MAX_LENGTH_IN_BYTES,
+                        ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3);
+            }
+
+            if (!testClient.isEmptyPrefix(bucket, staticPath)) {
+                // Ensure that the static path is empty
+                throw new CompilationException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, staticPath);
+            }
         }
 
         Random random = new Random();

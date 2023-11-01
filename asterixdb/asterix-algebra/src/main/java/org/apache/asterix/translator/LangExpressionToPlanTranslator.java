@@ -83,10 +83,12 @@ import org.apache.asterix.metadata.declared.LoadableDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.ResultSetDataSink;
 import org.apache.asterix.metadata.declared.ResultSetSinkId;
+import org.apache.asterix.metadata.declared.WriteDataSink;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
+import org.apache.asterix.metadata.provider.ExternalWriterProvider;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.AInt32;
@@ -99,6 +101,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledLoadFromFileStatement;
@@ -148,6 +151,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.SinkOperator
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.LogicalOperatorDeepCopyWithNewVariablesVisitor;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
@@ -195,6 +199,7 @@ abstract class LangExpressionToPlanTranslator
         return context.getVarCounter();
     }
 
+    @Override
     public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException {
         SourceLocation sourceLoc = stmt.getSourceLocation();
         Dataset dataset =
@@ -345,9 +350,111 @@ abstract class LangExpressionToPlanTranslator
     }
 
     @Override
-    public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,
+    public ILogicalPlan translate(Query expr, String outputDatasetName, CompiledStatements.ICompiledStatement stmt,
             IResultMetadata resultMetadata) throws AlgebricksException {
-        return translate(expr, outputDatasetName, stmt, null, resultMetadata);
+        if (stmt != null && stmt.getKind() == Statement.Kind.COPY_TO) {
+            return translateCopyTo(expr, stmt, resultMetadata);
+        }
+        return translate(expr, outputDatasetName, (ICompiledDmlStatement) stmt, null, resultMetadata);
+    }
+
+    private ILogicalPlan translateCopyTo(Query expr, CompiledStatements.ICompiledStatement stmt,
+            IResultMetadata resultMetadata) throws AlgebricksException {
+        CompiledStatements.CompiledCopyToStatement copyTo = (CompiledStatements.CompiledCopyToStatement) stmt;
+        MutableObject<ILogicalOperator> base = new MutableObject<>(new EmptyTupleSourceOperator());
+        Pair<ILogicalOperator, LogicalVariable> p = expr.accept(this, base);
+        ArrayList<Mutable<ILogicalOperator>> globalPlanRoots = new ArrayList<>();
+        ILogicalOperator topOp = p.first;
+        List<LogicalVariable> liveVars = new ArrayList<>();
+        VariableUtilities.getLiveVariables(topOp, liveVars);
+        LogicalVariable resVar = liveVars.get(0);
+        Mutable<ILogicalOperator> topOpRef = new MutableObject<>(topOp);
+
+        // First, set source variable so the following operations has the source variable visible
+        context.setVar(copyTo.getSourceVariable(), resVar);
+        VariableReferenceExpression sourceExpr = new VariableReferenceExpression(resVar);
+        Mutable<ILogicalExpression> sourceExprRef = new MutableObject<>(sourceExpr);
+
+        // Set partition expression(s) if any. Prepare partition variables to be visible to path expression
+        List<Mutable<ILogicalExpression>> partitionExpressionRefs = new ArrayList<>();
+        if (copyTo.isPartitioned()) {
+            List<Expression> astPartitionExpressions = copyTo.getPartitionExpressions();
+            for (int i = 0; i < astPartitionExpressions.size(); i++) {
+                Expression expression = astPartitionExpressions.get(i);
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> partExprPair =
+                        langExprToAlgExpression(expression, topOpRef);
+                LogicalVariable partVar = getVariable(copyTo.getPartitionsVariables(i));
+                Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> wrappedPair =
+                        wrapInAssign(partVar, partExprPair.first, topOpRef);
+                partitionExpressionRefs.add(wrappedPair.first);
+                topOpRef = wrappedPair.second;
+            }
+        }
+
+        // Set order expression(s) if any. We do order first to prevent partition variables to be used
+        List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut = new ArrayList<>();
+        List<Expression> orderExprList = copyTo.getOrderbyExpressions();
+        List<OrderbyClause.OrderModifier> orderModifierList = copyTo.getOrderbyModifiers();
+        List<OrderbyClause.NullOrderModifier> nullOrderModifierList = copyTo.getOrderbyNullModifiers();
+        for (int i = 0; i < orderExprList.size(); i++) {
+            Expression orderExpr = orderExprList.get(i);
+            OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
+            OrderbyClause.NullOrderModifier nullOrderModifier = nullOrderModifierList.get(i);
+            Pair<ILogicalExpression, Mutable<ILogicalOperator>> orderExprResult =
+                    langExprToAlgExpression(orderExpr, topOpRef);
+            Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> wrappedPair =
+                    wrapInAssign(context.newVar(), orderExprResult.first, orderExprResult.second);
+            addOrderByExpression(orderExprListOut, wrappedPair.first.getValue(), orderModifier, nullOrderModifier);
+            topOpRef = wrappedPair.second;
+        }
+
+        // Set Path
+        // astPathExpressions has at least one expression see CopyToStatement constructor
+        List<Expression> astPathExpressions = copyTo.getPathExpressions();
+        ILogicalExpression fullPathExpr = null;
+        WriteDataSink writeDataSink;
+        String separator = String.valueOf(ExternalWriterProvider.getSeparator(copyTo.getAdapter()));
+        List<Mutable<ILogicalExpression>> pathExprs = new ArrayList<>(astPathExpressions.size());
+        Pair<ILogicalExpression, Mutable<ILogicalOperator>> pathExprPair;
+        for (int i = 0; i < astPathExpressions.size(); i++) {
+            Expression pathExpr = astPathExpressions.get(i);
+            if (i > 0) {
+                // Add separator
+                ILogicalExpression algExpr = ConstantExpressionUtil.create(separator, pathExpr.getSourceLocation());
+                pathExprs.add(new MutableObject<>(algExpr));
+            }
+            pathExprPair = langExprToAlgExpression(pathExpr, topOpRef);
+            pathExprs.add(new MutableObject<>(pathExprPair.first));
+            topOpRef = pathExprPair.second;
+            SourceLocation srcLoc = astPathExpressions.get(0).getSourceLocation();
+
+            // concat arg
+            IFunctionInfo arrayConInfo = metadataProvider.lookupFunction(BuiltinFunctions.ORDERED_LIST_CONSTRUCTOR);
+            ScalarFunctionCallExpression arrayCon = new ScalarFunctionCallExpression(arrayConInfo, pathExprs);
+            arrayCon.setSourceLocation(srcLoc);
+            Mutable<ILogicalExpression> arrayContRef = new MutableObject<>(arrayCon);
+
+            // concat
+            IFunctionInfo concatInfo = metadataProvider.lookupFunction(BuiltinFunctions.STRING_CONCAT);
+            ScalarFunctionCallExpression concat = new ScalarFunctionCallExpression(concatInfo, arrayContRef);
+            concat.setSourceLocation(srcLoc);
+
+            fullPathExpr = concat;
+        }
+
+        writeDataSink = new WriteDataSink(copyTo.getAdapter(), copyTo.getProperties());
+        // writeOperator
+        WriteOperator writeOperator = new WriteOperator(sourceExprRef, new MutableObject<>(fullPathExpr),
+                partitionExpressionRefs, orderExprListOut, writeDataSink);
+        writeOperator.getInputs().add(topOpRef);
+
+        ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
+        ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
+        DistributeResultOperator newTop = new DistributeResultOperator(new ArrayList<>(), sink, resultMetadata);
+        newTop.getInputs().add(new MutableObject<>(writeOperator));
+
+        globalPlanRoots.add(new MutableObject<>(newTop));
+        return new ALogicalPlanImpl(globalPlanRoots);
     }
 
     public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,
@@ -2233,5 +2340,30 @@ abstract class LangExpressionToPlanTranslator
         ConstantExpression constExpr = new ConstantExpression(new AsterixConstantValue(value));
         constExpr.setSourceLocation(sourceLoc);
         return constExpr;
+    }
+
+    private LogicalVariable getVariable(VariableExpr variableExpr) {
+        LogicalVariable variable;
+        if (variableExpr != null) {
+            variable = context.newVar(variableExpr.getVar().getValue());
+            context.setVar(variableExpr, variable);
+        } else {
+            variable = context.newVar();
+        }
+
+        return variable;
+    }
+
+    private Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> wrapInAssign(LogicalVariable variable,
+            ILogicalExpression expression, Mutable<ILogicalOperator> topOpRef) {
+        AssignOperator assignOperator = new AssignOperator(variable, new MutableObject<>(expression));
+        assignOperator.getInputs().add(topOpRef);
+
+        Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> pair = new Pair<>(null, null);
+        VariableReferenceExpression partitionExpr = new VariableReferenceExpression(variable);
+
+        pair.first = new MutableObject<>(partitionExpr);
+        pair.second = new MutableObject<>(assignOperator);
+        return pair;
     }
 }

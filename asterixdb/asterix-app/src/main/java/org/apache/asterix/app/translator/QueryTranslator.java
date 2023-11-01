@@ -105,6 +105,7 @@ import org.apache.asterix.external.dataset.adapter.AdapterIdentifier;
 import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.util.WriterValidationUtil;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
@@ -121,6 +122,7 @@ import org.apache.asterix.lang.common.statement.AnalyzeStatement;
 import org.apache.asterix.lang.common.statement.CompactStatement;
 import org.apache.asterix.lang.common.statement.ConnectFeedStatement;
 import org.apache.asterix.lang.common.statement.CopyFromStatement;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
 import org.apache.asterix.lang.common.statement.CreateAdapterStatement;
 import org.apache.asterix.lang.common.statement.CreateDatabaseStatement;
 import org.apache.asterix.lang.common.statement.CreateDataverseStatement;
@@ -220,6 +222,7 @@ import org.apache.asterix.transaction.management.service.transaction.DatasetIdFa
 import org.apache.asterix.transaction.management.service.transaction.GlobalTxInfo;
 import org.apache.asterix.translator.AbstractLangTranslator;
 import org.apache.asterix.translator.ClientRequest;
+import org.apache.asterix.translator.CompiledStatements;
 import org.apache.asterix.translator.CompiledStatements.CompiledCopyFromFileStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledDeleteStatement;
 import org.apache.asterix.translator.CompiledStatements.CompiledInsertStatement;
@@ -464,6 +467,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
                         handleCopyFromStatement(metadataProvider, stmt, hcc);
+                        break;
+                    case COPY_TO:
+                        metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
+                        // The result should to be read just once
+                        metadataProvider.setMaxResultReads(1);
+                        if (stats.getProfileType() == Stats.ProfileType.FULL) {
+                            this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
+                        }
+                        handleCopyToStatement(metadataProvider, stmt, hcc, resultSet, resultDelivery, outMetadata,
+                                requestParameters, stmtParams, stats);
                         break;
                     case INSERT:
                     case UPSERT:
@@ -3945,6 +3958,76 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    protected void handleCopyToStatement(MetadataProvider metadataProvider, Statement stmt,
+            IHyracksClientConnection hcc, IResultSet resultSet, ResultDelivery resultDelivery,
+            ResultMetadata outMetadata, IRequestParameters requestParameters, Map<String, IAObject> stmtParams,
+            Stats stats) throws Exception {
+        CopyToStatement copyTo = (CopyToStatement) stmt;
+        final IRequestTracker requestTracker = appCtx.getRequestTracker();
+        final ClientRequest clientRequest =
+                (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+        final IMetadataLocker locker = new IMetadataLocker() {
+            @Override
+            public void lock() throws RuntimeDataException, InterruptedException {
+                try {
+                    compilationLock.readLock().lockInterruptibly();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    ensureNotCancelled(clientRequest);
+                    throw e;
+                }
+            }
+
+            @Override
+            public void unlock() {
+                metadataProvider.getLocks().unlock();
+                compilationLock.readLock().unlock();
+            }
+        };
+        final IStatementCompiler compiler = () -> {
+            long compileStart = System.nanoTime();
+            MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+            boolean bActiveTxn = true;
+            metadataProvider.setMetadataTxnContext(mdTxnCtx);
+            try {
+                ExternalDetailsDecl edd = copyTo.getExternalDetailsDecl();
+                edd.setProperties(createAndValidateAdapterConfigurationForCopyToStmt(edd,
+                        ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx));
+
+                Map<VarIdentifier, IAObject> externalVars = createExternalVariables(copyTo, stmtParams);
+                // Query Rewriting (happens under the same ongoing metadata transaction)
+                LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider,
+                        declaredFunctions, null, warningCollector, copyTo.getVarCounter());
+                Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext,
+                        copyTo, sessionOutput, true, true, externalVars.keySet());
+
+                CompiledStatements.CompiledCopyToStatement compiledCopyToStatement =
+                        new CompiledStatements.CompiledCopyToStatement(copyTo);
+
+                // Query Compilation (happens under the same ongoing metadata transaction)
+                final JobSpecification jobSpec = apiFramework.compileQuery(hcc, metadataProvider, copyTo.getQuery(),
+                        rewrittenResult.second, null, sessionOutput, compiledCopyToStatement, externalVars,
+                        responsePrinter, warningCollector, requestParameters);
+                // update stats with count of compile-time warnings. needs to be adapted for multi-statement.
+                stats.updateTotalWarningsCount(warningCollector.getTotalWarningsCount());
+                afterCompile();
+                MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                stats.setCompileTime(System.nanoTime() - compileStart);
+                bActiveTxn = false;
+                return isCompileOnly() ? null : jobSpec;
+            } catch (Exception e) {
+                LOGGER.log(Level.INFO, e.getMessage(), e);
+                if (bActiveTxn) {
+                    abort(e, e, mdTxnCtx);
+                }
+                throw e;
+            }
+        };
+
+        deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
+                requestParameters, true, null);
+    }
+
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IResultSet resultSet, ResultDelivery resultDelivery,
             ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters,
@@ -5499,6 +5582,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
         validateAdapterSpecificProperties(details, srcLoc, appCtx);
+    }
+
+    protected Map<String, String> createAndValidateAdapterConfigurationForCopyToStmt(
+            ExternalDetailsDecl externalDetailsDecl, Set<String> supportedAdapters, SourceLocation sourceLocation,
+            MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+        String adapterName = externalDetailsDecl.getAdapter();
+        Map<String, String> properties = externalDetailsDecl.getProperties();
+        WriterValidationUtil.validateWriterConfiguration(adapterName, supportedAdapters, properties, sourceLocation);
+        return properties;
     }
 
     /**

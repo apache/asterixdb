@@ -20,6 +20,7 @@ package org.apache.asterix.algebra.base;
 
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.CompiledStatements.ICompiledStatement;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.api.result.IResultMetadata;
@@ -32,32 +33,25 @@ public interface ILangExpressionToPlanTranslator {
     /**
      * Translate a query.
      *
-     * @param query,
-     *            the AST of a query.
-     * @param outputDatasetName,
-     *            the output dataset name (only for insert/delete).
-     * @param stmt,
-     *            the compiled dml statement (only for insert/delete).
-     * @param resultMetadata,
-     *            some result metadata that can be retrieved with the result
+     * @param query,             the AST of a query.
+     * @param outputDatasetName, the output dataset name (only for insert/delete).
+     * @param stmt,              the compiled statement (only for insert, delete, and copy to).
+     * @param resultMetadata,    some result metadata that can be retrieved with the result
      * @return a logical query plan for the query.
-     * @throws AlgebricksException
      */
-    public ILogicalPlan translate(Query query, String outputDatasetName, ICompiledDmlStatement stmt,
+    ILogicalPlan translate(Query query, String outputDatasetName, ICompiledStatement stmt,
             IResultMetadata resultMetadata) throws AlgebricksException;
 
     /**
      * Translates a load statement.
      *
-     * @param stmt,
-     *            the compiled load statement.
+     * @param stmt, the compiled load statement.
      * @return a logical query plan for the Copy/Load statement.
-     * @throws AlgebricksException
      */
-    public ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException;
+    ILogicalPlan translateCopyOrLoad(ICompiledDmlStatement stmt) throws AlgebricksException;
 
     /**
      * @return the current minimum available variable id.
      */
-    public int getVarCounter();
+    int getVarCounter();
 }

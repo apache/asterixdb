@@ -64,6 +64,10 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public void validate(String directory) throws HyracksDataException {
+        if (checkAndWarnExceedingMaxLength(directory)) {
+            return;
+        }
+
         if (partitionedPath && !cloudClient.isEmptyPrefix(bucket, directory)) {
             throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, directory);
         }
@@ -72,11 +76,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     @Override
     public final boolean newFile(String directory, String fileName) throws HyracksDataException {
         String fullPath = directory + fileName;
-        if (isExceedingMaxLength(fullPath)) {
-            if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.of(pathSourceLocation, ErrorCode.WRITE_PATH_LENGTH_EXCEEDS_MAX_LENGTH,
-                        fullPath, getPathMaxLengthInBytes(), getAdapterName()));
-            }
+        if (checkAndWarnExceedingMaxLength(fullPath)) {
             return false;
         }
 
@@ -96,7 +96,9 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public final void abort() throws HyracksDataException {
-        bufferedWriter.abort();
+        if (bufferedWriter != null) {
+            bufferedWriter.abort();
+        }
         printer.close();
     }
 
@@ -109,7 +111,16 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
 
     abstract int getPathMaxLengthInBytes();
 
-    private boolean isExceedingMaxLength(String path) {
-        return Utf8.encodedLength(path) >= getPathMaxLengthInBytes();
+    private boolean checkAndWarnExceedingMaxLength(String fullPath) {
+        boolean exceeding = isExceedingMaxLength(fullPath, getPathMaxLengthInBytes());
+        if (exceeding && warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(pathSourceLocation, ErrorCode.WRITE_PATH_LENGTH_EXCEEDS_MAX_LENGTH,
+                    fullPath, getPathMaxLengthInBytes(), getAdapterName()));
+        }
+        return exceeding;
+    }
+
+    static boolean isExceedingMaxLength(String path, int maxLength) {
+        return Utf8.encodedLength(path) >= maxLength;
     }
 }

@@ -18,13 +18,17 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.external.feed.management.FeedConnectionRequest;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Statement;
+import org.apache.asterix.lang.common.clause.OrderbyClause;
 import org.apache.asterix.lang.common.expression.VariableExpr;
+import org.apache.asterix.lang.common.statement.CopyToStatement;
+import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
@@ -586,4 +590,85 @@ public class CompiledStatements {
             return index;
         }
     }
+
+    public static class CompiledCopyToStatement extends AbstractCompiledStatement {
+        private final Query query;
+        private final VariableExpr sourceVariable;
+        private final String adapter;
+        private final Map<String, String> properties;
+        private final List<Expression> pathExpressions;
+        private final List<Expression> partitionExpressions;
+        private final Map<Integer, VariableExpr> partitionsVariables;
+        private final List<Expression> orderbyList;
+        private final List<OrderbyClause.OrderModifier> orderbyModifiers;
+        private final List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
+
+        public CompiledCopyToStatement(CopyToStatement copyToStatement) {
+            this.query = copyToStatement.getQuery();
+            this.sourceVariable = copyToStatement.getSourceVariable();
+            ExternalDetailsDecl eddDecl = copyToStatement.getExternalDetailsDecl();
+            this.adapter = eddDecl.getAdapter();
+            this.properties = eddDecl.getProperties();
+            this.pathExpressions = copyToStatement.getPathExpressions();
+            this.partitionExpressions = copyToStatement.getPartitionExpressions();
+            this.partitionsVariables = copyToStatement.getPartitionsVariables();
+            this.orderbyList = copyToStatement.getOrderbyList();
+            this.orderbyModifiers = copyToStatement.getOrderbyModifiers();
+            this.orderbyNullModifierList = copyToStatement.getOrderbyNullModifierList();
+        }
+
+        @Override
+        public Statement.Kind getKind() {
+            return Statement.Kind.COPY_TO;
+        }
+
+        public Query getQuery() {
+            return query;
+        }
+
+        public VariableExpr getSourceVariable() {
+            return sourceVariable;
+        }
+
+        public String getAdapter() {
+            return adapter;
+        }
+
+        public Map<String, String> getProperties() {
+            return properties;
+        }
+
+        public List<Expression> getPathExpressions() {
+            return pathExpressions;
+        }
+
+        public boolean isPartitioned() {
+            return !partitionExpressions.isEmpty();
+        }
+
+        public boolean isOrdered() {
+            return !orderbyList.isEmpty();
+        }
+
+        public List<Expression> getPartitionExpressions() {
+            return partitionExpressions;
+        }
+
+        public VariableExpr getPartitionsVariables(int index) {
+            return partitionsVariables.get(index);
+        }
+
+        public List<Expression> getOrderbyExpressions() {
+            return orderbyList;
+        }
+
+        public List<OrderbyClause.OrderModifier> getOrderbyModifiers() {
+            return orderbyModifiers;
+        }
+
+        public List<OrderbyClause.NullOrderModifier> getOrderbyNullModifiers() {
+            return orderbyNullModifierList;
+        }
+    }
+
 }

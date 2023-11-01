@@ -18,8 +18,10 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -85,7 +87,8 @@ public class WriterValidationUtil {
 
         String normalizedValue = value.toLowerCase();
         if (!supportedSet.contains(normalizedValue)) {
-            throw CompilationException.create(errorCode, sourceLocation, value, supportedSet.toString());
+            List<String> sorted = supportedSet.stream().sorted().collect(Collectors.toList());
+            throw CompilationException.create(errorCode, sourceLocation, value, sorted.toString());
         }
     }
 

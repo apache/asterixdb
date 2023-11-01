@@ -25,6 +25,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 final class S3ExternalFileWriter extends AbstractCloudExternalFileWriter {
+    static int MAX_LENGTH_IN_BYTES = 1024;
 
     S3ExternalFileWriter(IExternalFilePrinter printer, ICloudClient cloudClient, String bucket, boolean partitionedPath,
             IWarningCollector warningCollector, SourceLocation pathSourceLocation) {
@@ -38,6 +39,6 @@ final class S3ExternalFileWriter extends AbstractCloudExternalFileWriter {
 
     @Override
     int getPathMaxLengthInBytes() {
-        return 1024;
+        return MAX_LENGTH_IN_BYTES;
     }
 }

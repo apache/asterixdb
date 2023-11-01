@@ -71,6 +71,7 @@ import org.apache.asterix.optimizer.rules.ListifyUnnestingFunctionRule;
 import org.apache.asterix.optimizer.rules.LoadRecordFieldsRule;
 import org.apache.asterix.optimizer.rules.MetaFunctionToMetaVariableRule;
 import org.apache.asterix.optimizer.rules.NestGroupByRule;
+import org.apache.asterix.optimizer.rules.NormalizeWritingPathRule;
 import org.apache.asterix.optimizer.rules.PullSelectOutOfSpatialJoin;
 import org.apache.asterix.optimizer.rules.PushAggFuncIntoStandaloneAggregateRule;
 import org.apache.asterix.optimizer.rules.PushAggregateIntoNestedSubplanRule;
@@ -194,6 +195,7 @@ public final class RuleCollections {
     public static List<IAlgebraicRewriteRule> buildNormalizationRuleCollection(ICcApplicationContext appCtx) {
         List<IAlgebraicRewriteRule> normalization = new LinkedList<>();
         normalization.add(new CheckInsertUpsertReturningRule());
+        normalization.add(new NormalizeWritingPathRule(appCtx));
         normalization.add(new IntroduceUnnestForCollectionToSequenceRule());
         normalization.add(new EliminateSubplanRule());
         // The following rule must run before PushAggregateIntoNestedSubplanRule

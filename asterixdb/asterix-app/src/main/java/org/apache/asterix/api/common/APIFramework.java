@@ -70,6 +70,7 @@ import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.optimizer.base.AsterixOptimizationContext;
 import org.apache.asterix.runtime.job.listener.JobEventListenerFactory;
 import org.apache.asterix.translator.CompiledStatements.ICompiledDmlStatement;
+import org.apache.asterix.translator.CompiledStatements.ICompiledStatement;
 import org.apache.asterix.translator.ExecutionPlans;
 import org.apache.asterix.translator.IRequestParameters;
 import org.apache.asterix.translator.ResultMetadata;
@@ -202,10 +203,9 @@ public class APIFramework {
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
-            Query query, int varCounter, String outputDatasetName, SessionOutput output,
-            ICompiledDmlStatement statement, Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer,
-            IWarningCollector warningCollector, IRequestParameters requestParameters)
-            throws AlgebricksException, ACIDException {
+            Query query, int varCounter, String outputDatasetName, SessionOutput output, ICompiledStatement statement,
+            Map<VarIdentifier, IAObject> externalVars, IResponsePrinter printer, IWarningCollector warningCollector,
+            IRequestParameters requestParameters) throws AlgebricksException, ACIDException {
 
         // establish facts
         final boolean isQuery = query != null;
@@ -226,7 +226,7 @@ public class APIFramework {
         ILangExpressionToPlanTranslator t =
                 translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
         ResultMetadata resultMetadata = new ResultMetadata(output.config().fmt());
-        ILogicalPlan plan = isLoad || isCopy ? t.translateCopyOrLoad(statement)
+        ILogicalPlan plan = isLoad || isCopy ? t.translateCopyOrLoad((ICompiledDmlStatement) statement)
                 : t.translate(query, outputDatasetName, statement, resultMetadata);
 
         ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
@@ -401,8 +401,9 @@ public class APIFramework {
                 : PlanPrettyPrinter.createStringPlanPrettyPrinter();
     }
 
-    private byte getStatementCategory(Query query, ICompiledDmlStatement statement) {
-        return statement != null ? statement.getCategory()
+    private byte getStatementCategory(Query query, ICompiledStatement statement) {
+        return statement != null && statement.getKind() != Statement.Kind.COPY_TO
+                ? ((ICompiledDmlStatement) statement).getCategory()
                 : query != null ? Statement.Category.QUERY : Statement.Category.DDL;
     }
 
