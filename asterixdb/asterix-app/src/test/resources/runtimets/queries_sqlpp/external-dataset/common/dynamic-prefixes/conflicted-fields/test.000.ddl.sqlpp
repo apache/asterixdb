@@ -17,13 +17,9 @@
  * under the License.
  */
 
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
 USE test;
 
-CREATE EXTERNAL DATASET test1(test) USING %adapter% (
-    %template%,
-    ("container"="dynamic-prefix-at-start-container"),
-    ("definition"="{a.b:int}/foo/{a.b:string}"),
-    ("embed-filter-values" = "true"),
-    ("format"="parquet")
-);
-
+CREATE TYPE test AS {
+};

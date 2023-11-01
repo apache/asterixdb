@@ -284,13 +284,13 @@
       <compilation-unit name="type-mismatch">
         <placeholder name="adapter" value="AZUREBLOB" />
         <output-dir compare="Text">type-mismatch</output-dir>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'java.lang.NumberFormatException: For input string: "accounting"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'java.lang.NumberFormatException: For input string: "engineering"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'java.lang.NumberFormatException: For input string: "hr"'</expected-warn>
+        <expected-warn>In the file 'external-filter/department/accounting/0.json' the expected type for the 'name' field is 'bigint' but the value 'accounting' was found instead.</expected-warn>
+        <expected-warn>In the file 'external-filter/department/engineering/0.json' the expected type for the 'name' field is 'bigint' but the value 'engineering' was found instead.</expected-warn>
+        <expected-warn>In the file 'external-filter/department/hr/0.json' the expected type for the 'name' field is 'bigint' but the value 'hr' was found instead.</expected-warn>
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/accounting/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'accounting'. Reason: 'java.lang.NumberFormatException: For input string: "accounting"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/engineering/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'engineering'. Reason: 'java.lang.NumberFormatException: For input string: "engineering"'</expected-warn>
-        <expected-warn>Failed to evaluate computed field. File: 'external-filter/department/hr/0.json'. Computed Field Name: 'name'. Computed Field Type: 'bigint'. Computed Field Value: 'hr'. Reason: 'java.lang.NumberFormatException: For input string: "hr"'</expected-warn>
+        <expected-warn>In the file 'external-filter/department/accounting/0.json' the expected type for the 'name' field is 'bigint' but the value 'accounting' was found instead.</expected-warn>
+        <expected-warn>In the file 'external-filter/department/engineering/0.json' the expected type for the 'name' field is 'bigint' but the value 'engineering' was found instead.</expected-warn>
+        <expected-warn>In the file 'external-filter/department/hr/0.json' the expected type for the 'name' field is 'bigint' but the value 'hr' was found instead.</expected-warn>
         <expected-warn>The provided external dataset configuration returned no files from the external source</expected-warn>
       </compilation-unit>
     </test-case>
@@ -356,7 +356,15 @@
         <expected-error>Duplicate field name 'year'</expected-error>
         <expected-error>Duplicate field name 'year'</expected-error>
         <expected-error>Duplicate field name 'year'</expected-error>
-        <expected-error>Duplicate field name 'a.b.c.d'</expected-error>
+        <expected-error>Duplicate field name 'a.b'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes">
+      <compilation-unit name="conflicted-fields">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">conflicted-fields</output-dir>
+        <expected-error>A computed field cannot have more than one type. 'person.name' is both 'string' and 'object'.</expected-error>
+        <expected-error>A computed field cannot have more than one type. 'person.name' is both 'string' and 'object'.</expected-error>
       </compilation-unit>
     </test-case>
     <!-- Dynamic prefixes tests end -->
