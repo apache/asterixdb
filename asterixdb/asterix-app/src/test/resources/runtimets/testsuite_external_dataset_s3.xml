@@ -34,6 +34,11 @@
         <output-dir compare="Text">query</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="default-namespace">
+        <output-dir compare="Text">default-namespace</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="early-missing">
         <output-dir compare="Text">early-missing</output-dir>
@@ -805,8 +810,8 @@
           </compilation-unit>
       </test-case>
   </test-group>
-  <test-group name="copy">
-    <test-case FilePath="copy">
+  <test-group name="copy-from">
+    <test-case FilePath="copy-from">
       <compilation-unit name="copy-2">
         <output-dir compare="Text">copy-2</output-dir>
       </compilation-unit>

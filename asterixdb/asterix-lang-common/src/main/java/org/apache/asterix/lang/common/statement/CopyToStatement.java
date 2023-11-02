@@ -36,7 +36,6 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.visitor.base.ILangVisitor;
 
 public class CopyToStatement extends AbstractStatement implements IReturningStatement {
-    private final Namespace namespace;
     private final String datasetName;
     private final VariableExpr sourceVariable;
     private final ExternalDetailsDecl externalDetailsDecl;
@@ -44,6 +43,7 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
     private final List<OrderbyClause.OrderModifier> orderbyModifiers;
     private final List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
 
+    private Namespace namespace;
     private Query query;
     private List<Expression> pathExpressions;
 
@@ -88,6 +88,10 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
     @Override
     public byte getCategory() {
         return QUERY;
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
     }
 
     public Namespace getNamespace() {

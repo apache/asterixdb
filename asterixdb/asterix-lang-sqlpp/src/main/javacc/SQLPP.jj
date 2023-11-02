@@ -2869,7 +2869,10 @@ Statement CopyStatement() throws ParseException:
 }
 {
   <COPY>
-  ( LOOKAHEAD(1) <INTO> { startToken = token; } nameComponents = QualifiedName() stmt = CopyFromStatement(startToken, nameComponents, typeExpr)
+  ( LOOKAHEAD(1) <INTO> { startToken = token; }
+    nameComponents = QualifiedName()
+    ((<AS>)? (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN)))?
+    stmt = CopyFromStatement(startToken, nameComponents, typeExpr)
     | LOOKAHEAD(1) <LEFTPAREN> { startToken = token; } query = Query() <RIGHTPAREN> (<AS>)? alias = Variable()  stmt = CopyToStatement(startToken, nameComponents, query, alias)
     | { startToken = token; } nameComponents = QualifiedName()
       (<AS>)? (typeExpr = DatasetTypeSpecification(RecordTypeDefinition.RecordKind.OPEN) | alias = Variable())?

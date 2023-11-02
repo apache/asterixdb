@@ -16377,10 +16377,15 @@
       </compilation-unit>
     </test-case>
   </test-group>
-  <test-group name="copy">
-    <test-case FilePath="copy">
+  <test-group name="copy-from">
+    <test-case FilePath="copy-from">
       <compilation-unit name="copy-1">
         <output-dir compare="Text">copy-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-from">
+      <compilation-unit name="copy-syntax">
+        <output-dir compare="Text">copy-syntax</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

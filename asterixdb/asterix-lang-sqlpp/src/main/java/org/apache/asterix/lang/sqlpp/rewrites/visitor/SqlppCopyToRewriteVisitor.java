@@ -43,6 +43,9 @@ public class SqlppCopyToRewriteVisitor extends AbstractSqlppAstVisitor<Void, Met
 
     @Override
     public Void visit(CopyToStatement stmtCopy, MetadataProvider metadataProvider) throws CompilationException {
+        if (stmtCopy.getNamespace() == null) {
+            stmtCopy.setNamespace(metadataProvider.getDefaultNamespace());
+        }
         if (stmtCopy.getQuery() == null) {
             setQuery(stmtCopy);
         }
