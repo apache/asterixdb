@@ -66,8 +66,9 @@ public class S3ClientUtils {
     public static boolean isEmptyPrefix(S3Client s3Client, String bucket, String path) {
         ListObjectsV2Request.Builder listObjectsBuilder = ListObjectsV2Request.builder().bucket(bucket);
         listObjectsBuilder.prefix(toCloudPrefix(path));
+        List<S3Object> files = s3Client.listObjectsV2(listObjectsBuilder.build()).contents();
 
-        return s3Client.listObjectsV2(listObjectsBuilder.build()).contents().isEmpty();
+        return isEmptyFolder(files, path);
     }
 
     public static String encodeURI(String path) {
@@ -87,5 +88,17 @@ public class S3ClientUtils {
 
     private static String toCloudPrefix(String path) {
         return path.startsWith(File.separator) ? path.substring(1) : path;
+    }
+
+    private static boolean isEmptyFolder(List<S3Object> files, String path) {
+        if (files.size() > 1) {
+            return false;
+        } else if (files.isEmpty()) {
+            return true;
+        }
+
+        S3Object s3Object = files.get(0);
+        String key = s3Object.key();
+        return s3Object.size() == 0 && key.charAt(key.length() - 1) == '/' && key.startsWith(path);
     }
 }
