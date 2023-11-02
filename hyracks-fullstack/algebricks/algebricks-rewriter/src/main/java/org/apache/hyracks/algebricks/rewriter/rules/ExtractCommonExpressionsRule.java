@@ -97,6 +97,7 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
         ignoreOps.add(LogicalOperatorTag.AGGREGATE);
         ignoreOps.add(LogicalOperatorTag.RUNNINGAGGREGATE);
         ignoreOps.add(LogicalOperatorTag.WINDOW); //TODO: can extract from partition/order/frame expressions
+        ignoreOps.add(LogicalOperatorTag.INSERT_DELETE_UPSERT);
     }
 
     @Override
@@ -120,6 +121,12 @@ public class ExtractCommonExpressionsRule implements IAlgebraicRewriteRule {
                 && op.getOperatorTag() != LogicalOperatorTag.SINK
                 && op.getOperatorTag() != LogicalOperatorTag.DELEGATE_OPERATOR) {
             return false;
+        }
+        if (!op.getInputs().isEmpty()) {
+            AbstractLogicalOperator childOp = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+            if (childOp.getOperatorTag() == LogicalOperatorTag.INSERT_DELETE_UPSERT) {
+                return false;
+            }
         }
         exprEqClassMap.clear();
         substVisitor.setContext(context);
