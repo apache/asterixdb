@@ -16311,6 +16311,12 @@
         <output-dir compare="Text">filter/007</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/boolean">
+        <output-dir compare="Text">filter/boolean</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: array and boolean (in line 27, at column 8)</expected-warn>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="column">
       <compilation-unit name="filter/not-in_every">
         <output-dir compare="Text">filter/not-in_every</output-dir>

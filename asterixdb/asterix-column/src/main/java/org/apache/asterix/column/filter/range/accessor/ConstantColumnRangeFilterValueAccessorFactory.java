@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.column.filter.range.accessor;
 
+import java.util.Set;
+
 import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ADouble;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AString;
@@ -30,9 +33,14 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ConstantColumnRangeFilterValueAccessorFactory implements IColumnRangeFilterValueAccessorFactory {
     private static final long serialVersionUID = -4835407779342615453L;
+    public static final Set<ATypeTag> SUPPORTED_CONSTANT_TYPES;
     private final long normalizedValue;
     private final ATypeTag typeTag;
     private final String stringValue;
+
+    static {
+        SUPPORTED_CONSTANT_TYPES = Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.DOUBLE, ATypeTag.STRING);
+    }
 
     private ConstantColumnRangeFilterValueAccessorFactory(String stringValue, long normalizedValue, ATypeTag typeTag) {
         this.stringValue = stringValue;
@@ -40,11 +48,22 @@ public class ConstantColumnRangeFilterValueAccessorFactory implements IColumnRan
         this.typeTag = typeTag;
     }
 
+    /**
+     * Create a constant accessor
+     *
+     * @param value constant value
+     * @return constant accessor factory if supported, null otherwise
+     */
     public static ConstantColumnRangeFilterValueAccessorFactory createFactory(IAObject value) {
         String stringValue;
         long normalizedValue;
         ATypeTag typeTag = value.getType().getTypeTag();
         switch (typeTag) {
+            case BOOLEAN:
+                boolean booleanVal = ((ABoolean) value).getBoolean();
+                stringValue = Boolean.toString(booleanVal);
+                normalizedValue = booleanVal ? 1 : 0;
+                break;
             case BIGINT:
                 long longVal = ((AInt64) value).getLongValue();
                 stringValue = Long.toString(longVal);

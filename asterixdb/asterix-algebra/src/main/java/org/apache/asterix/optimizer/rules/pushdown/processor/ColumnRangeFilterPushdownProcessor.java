@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.processor;
 
+import static org.apache.asterix.column.filter.range.accessor.ConstantColumnRangeFilterValueAccessorFactory.SUPPORTED_CONSTANT_TYPES;
 import static org.apache.asterix.metadata.utils.PushdownUtil.RANGE_FILTER_PUSHABLE_FUNCTIONS;
 import static org.apache.asterix.metadata.utils.PushdownUtil.isConstant;
 import static org.apache.asterix.metadata.utils.PushdownUtil.isFilterPath;
@@ -29,6 +30,7 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.types.ARecordType;
@@ -99,10 +101,18 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     }
 
     @Override
-    protected boolean handlePath(AbstractFunctionCallExpression expression) {
+    protected boolean handlePath(AbstractFunctionCallExpression expression) throws AlgebricksException {
         // This means we got something like WHERE $r.getField("isVerified") -- where isVerified is a boolean field.
-        // Boolean range filters are not supported currently
-        return false;
+        AnyExpectedSchemaNode node = getNode(expression);
+        IAObject constantValue = ABoolean.TRUE;
+        String functionName = expression.getFunctionIdentifier().getName();
+        SourceLocation sourceLocation = expression.getSourceLocation();
+        FunctionCallInformation functionCallInfo = new FunctionCallInformation(functionName, sourceLocation,
+                ProjectionFiltrationWarningFactoryProvider.getIncomparableTypesFactory(false));
+        ARecordType path =
+                pathBuilderVisitor.buildPath(node, constantValue.getType(), sourceInformationMap, functionCallInfo);
+        paths.put(expression, path);
+        return true;
     }
 
     @Override
@@ -116,14 +126,13 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
         }
         scanDefineDescriptor.getFilterPaths().putAll(paths);
         scanDefineDescriptor.getPathLocations().putAll(sourceInformationMap);
-
     }
 
     private boolean pushdownRangeFilter(ILogicalExpression pathExpr, ILogicalExpression constExpr,
             AbstractFunctionCallExpression funcExpr, boolean leftConstant) throws AlgebricksException {
         AnyExpectedSchemaNode node = getNode(pathExpr);
         IAObject constantValue = ((AsterixConstantValue) ((ConstantExpression) constExpr).getValue()).getObject();
-        if (node == null || constantValue.getType().getTypeTag().isDerivedType()) {
+        if (node == null || !SUPPORTED_CONSTANT_TYPES.contains(constantValue.getType().getTypeTag())) {
             return false;
         }
         String functionName = funcExpr.getFunctionIdentifier().getName();

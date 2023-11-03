@@ -1,0 +1,20 @@
+distribute result [$$17] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- SORT_MERGE_EXCHANGE [$$17(ASC) ]  |PARTITIONED|
+    order (ASC, $$17) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STABLE_SORT [$$17(ASC)]  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$17]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          select ($$d.getField("myBoolean")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STREAM_SELECT  |PARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              data-scan []<-[$$17, $$d] <- test.ColumnDataset project ({myBoolean:any}) filter on: $$d.getField("myBoolean") range-filter on: $$d.getField("myBoolean") [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

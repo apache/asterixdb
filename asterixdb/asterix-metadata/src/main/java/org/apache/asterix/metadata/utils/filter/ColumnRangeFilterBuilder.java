@@ -20,6 +20,8 @@ package org.apache.asterix.metadata.utils.filter;
 
 import static org.apache.asterix.metadata.utils.PushdownUtil.isCompare;
 import static org.apache.asterix.metadata.utils.PushdownUtil.isConstant;
+import static org.apache.asterix.metadata.utils.PushdownUtil.isFilterPath;
+import static org.apache.asterix.metadata.utils.PushdownUtil.isNot;
 import static org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions.ComparisonKind;
 
 import java.util.List;
@@ -36,6 +38,7 @@ import org.apache.asterix.column.filter.range.compartor.LEColumnFilterEvaluatorF
 import org.apache.asterix.column.filter.range.compartor.LTColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.evaluator.ANDColumnFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.evaluator.ORColumnFilterEvaluatorFactory;
+import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -71,26 +74,40 @@ public class ColumnRangeFilterBuilder {
             ILogicalExpression filterExpression) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) filterExpression;
 
-        if (isCompare(funcExpr)) {
+        if (isFilterPath(funcExpr) || isNot(funcExpr)) {
+            return createBooleanEvaluator(funcExpr, filterPaths);
+        } else if (isCompare(funcExpr)) {
             return createComparator(funcExpr.getFunctionIdentifier(), funcExpr.getArguments(), filterPaths);
         }
         return createEvaluatorsForArgs(funcExpr, filterPaths);
+    }
+
+    private IColumnRangeFilterEvaluatorFactory createBooleanEvaluator(AbstractFunctionCallExpression funcExpr,
+            Map<ILogicalExpression, ARecordType> filterPaths) {
+        boolean not = isNot(funcExpr);
+        IAObject constVal = not ? ABoolean.FALSE : ABoolean.TRUE;
+        ILogicalExpression pathExpr = not ? funcExpr.getArguments().get(0).getValue() : funcExpr;
+        ARecordType path = filterPaths.get(pathExpr);
+
+        return createComparator(BuiltinFunctions.EQ, path, constVal, true);
     }
 
     private IColumnRangeFilterEvaluatorFactory createComparator(FunctionIdentifier fid,
             List<Mutable<ILogicalExpression>> arguments, Map<ILogicalExpression, ARecordType> filterPaths) {
         ILogicalExpression left = arguments.get(0).getValue();
         ILogicalExpression right = arguments.get(1).getValue();
-
-        if (isConstant(right)) {
-            ARecordType path = filterPaths.get(left);
-            IAObject constant = getConstant(right);
-            return createComparator(fid, path, constant, true);
+        boolean rightConstant = isConstant(right);
+        ARecordType path;
+        IAObject constant;
+        if (rightConstant) {
+            path = filterPaths.get(left);
+            constant = getConstant(right);
         } else {
-            ARecordType path = filterPaths.get(right);
-            IAObject constant = getConstant(left);
-            return createComparator(fid, path, constant, false);
+            path = filterPaths.get(right);
+            constant = getConstant(left);
         }
+
+        return createComparator(fid, path, constant, rightConstant);
     }
 
     private IColumnRangeFilterEvaluatorFactory createEvaluatorsForArgs(AbstractFunctionCallExpression funcExpr,
@@ -112,8 +129,10 @@ public class ColumnRangeFilterBuilder {
 
     private IColumnRangeFilterEvaluatorFactory createComparator(FunctionIdentifier fid, ARecordType path,
             IAObject constant, boolean rightConstant) {
-        if (path == null) {
-            // skipped path
+        IColumnRangeFilterValueAccessorFactory constValue =
+                ConstantColumnRangeFilterValueAccessorFactory.createFactory(constant);
+        if (path == null || constValue == null) {
+            // Skipped paths or unsupported constants.
             return NoOpColumnFilterEvaluatorFactory.INSTANCE;
         }
 
@@ -123,8 +142,6 @@ public class ColumnRangeFilterBuilder {
             return NoOpColumnFilterEvaluatorFactory.INSTANCE;
         }
 
-        IColumnRangeFilterValueAccessorFactory constValue =
-                ConstantColumnRangeFilterValueAccessorFactory.createFactory(constant);
         IColumnRangeFilterValueAccessorFactory min = new ColumnRangeFilterValueAccessorFactory(path, true);
         IColumnRangeFilterValueAccessorFactory max = new ColumnRangeFilterValueAccessorFactory(path, false);
 

@@ -92,6 +92,11 @@ public class PushdownUtil {
         return BuiltinFunctions.OR.equals(fid);
     }
 
+    public static boolean isNot(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        return BuiltinFunctions.NOT.equals(fid);
+    }
+
     public static AOrderedList getArrayConstantFromScanCollection(ILogicalExpression expression) {
         FunctionIdentifier fid = getFunctionIdentifier(expression);
         if (!BuiltinFunctions.SCAN_COLLECTION.equals(fid)) {
@@ -192,6 +197,7 @@ public class PushdownUtil {
         Set<FunctionIdentifier> pushableFunctions = new HashSet<>(COMPARE_FUNCTIONS);
         pushableFunctions.add(AlgebricksBuiltinFunctions.AND);
         pushableFunctions.add(AlgebricksBuiltinFunctions.OR);
+        pushableFunctions.add(AlgebricksBuiltinFunctions.NOT);
         return pushableFunctions;
     }
 }
