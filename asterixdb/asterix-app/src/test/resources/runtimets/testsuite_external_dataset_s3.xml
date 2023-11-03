@@ -39,6 +39,11 @@
         <output-dir compare="Text">default-namespace</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="empty-path">
+        <output-dir compare="Text">empty-path</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="early-missing">
         <output-dir compare="Text">early-missing</output-dir>

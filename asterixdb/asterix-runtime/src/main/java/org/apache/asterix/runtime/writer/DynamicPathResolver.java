@@ -57,7 +57,7 @@ final class DynamicPathResolver extends AbstractPathResolver {
             return ExternalWriter.UNRESOLVABLE_PATH;
         }
 
-        if (dirStringBuilder.charAt(dirStringBuilder.length() - 1) != fileSeparator) {
+        if (dirStringBuilder.length() > 0 && dirStringBuilder.charAt(dirStringBuilder.length() - 1) != fileSeparator) {
             dirStringBuilder.append(fileSeparator);
         }
         return dirStringBuilder.toString();

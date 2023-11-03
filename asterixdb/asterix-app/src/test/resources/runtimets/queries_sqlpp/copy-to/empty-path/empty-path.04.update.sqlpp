@@ -16,25 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.writer;
+USE test;
 
-import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+COPY Customer c
+TO S3
+PATH ()
+WITH {
+    "accessKeyId":"dummyAccessKey",
+    "secretAccessKey":"dummySecretKey",
+    "region":"us-west-2",
+    "serviceEndpoint":"http://127.0.0.1:8001",
+    "container":"empty-bucket1",
+    "format":"json"
+};
 
-final class StaticPathResolver extends AbstractPathResolver {
-    private final String directoryPath;
+COPY Customer c
+TO S3
+PATH ("")
+WITH {
+    "accessKeyId":"dummyAccessKey",
+    "secretAccessKey":"dummySecretKey",
+    "region":"us-west-2",
+    "serviceEndpoint":"http://127.0.0.1:8001",
+    "container":"empty-bucket2",
+    "format":"json"
+};
 
-    StaticPathResolver(String fileExtension, char fileSeparator, int partition, String directoryPath) {
-        super(fileExtension, fileSeparator, partition);
 
-        if (!directoryPath.isEmpty() && directoryPath.charAt(directoryPath.length() - 1) != fileSeparator) {
-            this.directoryPath = directoryPath + fileSeparator;
-        } else {
-            this.directoryPath = directoryPath;
-        }
-    }
 
-    @Override
-    public String getPartitionDirectory(IFrameTupleReference tuple) {
-        return directoryPath;
-    }
-}

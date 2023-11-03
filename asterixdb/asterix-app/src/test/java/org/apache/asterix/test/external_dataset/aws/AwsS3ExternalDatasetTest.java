@@ -481,10 +481,13 @@ public class AwsS3ExternalDatasetTest {
                     String lastLine = lines[lines.length - 1];
                     String[] command = lastLine.trim().split(" ");
                     int length = command.length;
-                    if (length != 3) {
+                    if (length == 1) {
+                        createBucket(command[0]);
+                    } else if (length == 3) {
+                        dropRecreateBucket(command[0], command[1], command[2]);
+                    } else {
                         throw new Exception("invalid create bucket format");
                     }
-                    dropRecreateBucket(command[0], command[1], command[2]);
                     break;
                 default:
                     super.executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
@@ -493,10 +496,7 @@ public class AwsS3ExternalDatasetTest {
         }
     }
 
-    private static void dropRecreateBucket(String bucketName, String definition, String files) {
-        String definitionPath = definition + (definition.endsWith("/") ? "" : "/");
-        String[] fileSplits = files.split(",");
-
+    private static void createBucket(String bucketName) {
         LOGGER.info("Dropping bucket " + bucketName);
         try {
             client.deleteBucket(DELETE_BUCKET_BUILDER.bucket(bucketName).build());
@@ -505,6 +505,12 @@ public class AwsS3ExternalDatasetTest {
         }
         LOGGER.info("Creating bucket " + bucketName);
         client.createBucket(CREATE_BUCKET_BUILDER.bucket(bucketName).build());
+    }
+
+    private static void dropRecreateBucket(String bucketName, String definition, String files) {
+        String definitionPath = definition + (definition.endsWith("/") ? "" : "/");
+        String[] fileSplits = files.split(",");
+        createBucket(bucketName);
         LOGGER.info("Uploading to bucket " + bucketName + " definition " + definitionPath);
         fileNames.clear();
         for (int i = 0; i < fileSplits.length; i++) {
