@@ -61,7 +61,7 @@ public class LangRecordParseUtil {
     private LangRecordParseUtil() {
     }
 
-    private static IAdmNode parseExpression(Expression expr) throws HyracksDataException, CompilationException {
+    public static IAdmNode parseExpression(Expression expr) throws HyracksDataException, CompilationException {
         switch (expr.getKind()) {
             case LITERAL_EXPRESSION:
                 return parseLiteral((LiteralExpr) expr);
