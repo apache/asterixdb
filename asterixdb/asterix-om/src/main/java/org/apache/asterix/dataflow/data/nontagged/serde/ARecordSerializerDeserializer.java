@@ -73,8 +73,11 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 IAType t = recordType.getFieldTypes()[i];
                 IAType t2 = (t.getTypeTag() == ATypeTag.UNION) ? ((AUnionType) t).getActualType() : t;
-                serializers[i] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2);
-                deserializers[i] = SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
+                ISerializerDeserializer nonTaggedSerelaizerDeserializer =
+                        SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(t2);
+                serializers[i] = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(t2,
+                        nonTaggedSerelaizerDeserializer);
+                deserializers[i] = nonTaggedSerelaizerDeserializer;
             }
         } else {
             this.recordType = null;

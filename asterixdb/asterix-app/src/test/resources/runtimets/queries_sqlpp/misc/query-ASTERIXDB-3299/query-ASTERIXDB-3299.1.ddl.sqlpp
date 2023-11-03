@@ -16,17 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.data;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-public interface ISerializerDeserializerProvider {
-    @SuppressWarnings("unchecked")
-    ISerializerDeserializer getSerializerDeserializer(Object type) throws AlgebricksException;
-
-    @SuppressWarnings("unchecked")
-    ISerializerDeserializer getSerializerDeserializer(Object type,
-            ISerializerDeserializer nonTaggedSerializerDeserializer) throws AlgebricksException;
-
-}
+create dataset ds primary key (_id:string);

@@ -60,10 +60,16 @@ public class AUnorderedListSerializerDeserializer implements ISerializerDeserial
     public AUnorderedListSerializerDeserializer(AUnorderedListType unorderedlistType) {
         this.unorderedlistType = unorderedlistType;
         this.itemType = unorderedlistType.getItemType();
-        serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
-        deserializer = itemType.getTypeTag() == ATypeTag.ANY
-                ? SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
-                : SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+        if (itemType.getTypeTag() == ATypeTag.ANY) {
+            serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+            deserializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        } else {
+            ISerializerDeserializer nonTaggedSerializerDeserializer =
+                    SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+            serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType,
+                    nonTaggedSerializerDeserializer);
+            deserializer = nonTaggedSerializerDeserializer;
+        }
     }
 
     @Override

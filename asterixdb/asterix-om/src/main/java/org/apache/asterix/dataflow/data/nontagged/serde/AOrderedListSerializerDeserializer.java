@@ -59,10 +59,16 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
     public AOrderedListSerializerDeserializer(AOrderedListType orderedlistType) {
         this.orderedlistType = orderedlistType;
         this.itemType = orderedlistType.getItemType();
-        serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
-        deserializer = itemType.getTypeTag() == ATypeTag.ANY
-                ? SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType)
-                : SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+        if (itemType.getTypeTag() == ATypeTag.ANY) {
+            serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+            deserializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType);
+        } else {
+            ISerializerDeserializer nonTaggedSerializerDeserializer =
+                    SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(itemType);
+            serializer = SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(itemType,
+                    nonTaggedSerializerDeserializer);
+            deserializer = nonTaggedSerializerDeserializer;
+        }
     }
 
     @Override
