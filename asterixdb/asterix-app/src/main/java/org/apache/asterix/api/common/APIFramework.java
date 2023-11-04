@@ -329,16 +329,18 @@ public class APIFramework {
         JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory);
 
         if (isQuery) {
-            if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
-                // Sets a required capacity, only for read-only queries.
-                // DDLs and DMLs are considered not that frequent.
-                // limit the computation locations to the locations that will be used in the query
-                final INodeJobTracker nodeJobTracker = ccAppContext.getNodeJobTracker();
-                final AlgebricksAbsolutePartitionConstraint jobLocations =
-                        getJobLocations(spec, nodeJobTracker, computationLocations);
-                final IClusterCapacity jobRequiredCapacity =
-                        ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
-                spec.setRequiredClusterCapacity(jobRequiredCapacity);
+            if (!compiler.skipJobCapacityAssignment()) {
+                if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
+                    // Sets a required capacity, only for read-only queries.
+                    // DDLs and DMLs are considered not that frequent.
+                    // limit the computation locations to the locations that will be used in the query
+                    final INodeJobTracker nodeJobTracker = ccAppContext.getNodeJobTracker();
+                    final AlgebricksAbsolutePartitionConstraint jobLocations =
+                            getJobLocations(spec, nodeJobTracker, computationLocations);
+                    final IClusterCapacity jobRequiredCapacity =
+                            ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
+                    spec.setRequiredClusterCapacity(jobRequiredCapacity);
+                }
             }
         }
 

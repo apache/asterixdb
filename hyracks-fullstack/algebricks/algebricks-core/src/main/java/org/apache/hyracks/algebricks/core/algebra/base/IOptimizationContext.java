@@ -100,4 +100,8 @@ public interface IOptimizationContext extends ITypingContext, IVariableContext {
     Object getCompilerFactory();
 
     IOptimizationContextFactory getOptimizationContextFactory();
+
+    default boolean skipJobCapacityAssignment() {
+        return false;
+    }
 }

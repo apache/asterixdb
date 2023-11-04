@@ -63,9 +63,6 @@ public final class SetAsterixMemoryRequirementsRule extends SetMemoryRequirement
             int dataSourceType = me.getIntKey();
             Predicate<DataSource> dataSourceTest;
             switch (dataSourceType) {
-                case DataSource.Type.INTERNAL_DATASET:
-                    dataSourceTest = SetAsterixMemoryRequirementsRule::isMinMemoryBudgetDataset;
-                    break;
                 case DataSource.Type.FUNCTION:
                     dataSourceTest = SetAsterixMemoryRequirementsRule::isMinMemoryBudgetFunction;
                     break;
