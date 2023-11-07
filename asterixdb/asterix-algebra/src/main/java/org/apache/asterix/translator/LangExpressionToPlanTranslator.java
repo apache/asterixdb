@@ -1776,7 +1776,7 @@ abstract class LangExpressionToPlanTranslator
 
     protected Pair<ILogicalOperator, LogicalVariable> aggListifyForSubquery(LogicalVariable var,
             Mutable<ILogicalOperator> opRef, boolean bProject) {
-        SourceLocation sourceLoc = opRef.getValue().getSourceLocation();
+        SourceLocation sourceLoc = opRef.getValue() != null ? opRef.getValue().getSourceLocation() : null;
         AggregateFunctionCallExpression funAgg =
                 BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.LISTIFY, new ArrayList<>());
         funAgg.getArguments().add(new MutableObject<>(new VariableReferenceExpression(var)));

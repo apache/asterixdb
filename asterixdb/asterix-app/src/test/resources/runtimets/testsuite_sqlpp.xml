@@ -11327,6 +11327,11 @@
   </test-group>
   <test-group name="subquery">
     <test-case FilePath="subquery">
+      <compilation-unit name="select_element">
+        <output-dir compare="Text">select_element</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="subquery">
       <compilation-unit name="aggregate_join">
         <output-dir compare="Text">aggregate_join</output-dir>
       </compilation-unit>
