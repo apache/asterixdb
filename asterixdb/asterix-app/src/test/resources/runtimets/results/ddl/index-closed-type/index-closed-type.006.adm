@@ -1,0 +1,1 @@
+{ "r1": [ { "id": 1, "name": "John", "phone": "982819" }, { "id": 2, "name": "Jason", "phone": "982819" } ], "r2": [ { "id": 1, "name": "John", "phone": 982819 }, { "id": 2, "name": "Jason", "phone": "982819" } ] }

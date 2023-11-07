@@ -1409,18 +1409,30 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         fieldTypeMissable = projectTypeMissable;
                     } else {
                         // the type of the indexed field is explicitly specified in the DDL
+                        Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(databaseName, dataverseName,
+                                indexName, projectTypeExpr.getType(), databaseName, dataverseName, mdTxnCtx);
+                        TypeSignature typeSignature = new TypeSignature(databaseName, dataverseName, indexName);
+                        fieldTypePrime = typeMap.get(typeSignature);
+                        // BACK-COMPAT: keep prime type only if we're overriding field types
+                        fieldTypeNullable = fieldTypeMissable = false;
+                        overridesFieldTypes = true;
+
                         if (stmtCreateIndex.isEnforced()) {
                             if (!projectTypeExpr.isUnknownable()) {
                                 throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_NON_OPTIONAL,
                                         indexedElement.getSourceLocation(),
                                         LogRedactionUtil.userData(String.valueOf(projectPath)));
                             }
-                            // don't allow creating an enforced index on a closed-type field, fields that
-                            // are part of schema get the field type, if it's not null, then the field is closed-type
+                            // don't allow creating an enforced index on a closed-type field having field type different
+                            // from the closed-type
                             if (isFieldFromSchema) {
-                                throw new CompilationException(ErrorCode.INDEX_ILLEGAL_ENFORCED_ON_CLOSED_FIELD,
-                                        indexedElement.getSourceLocation(),
-                                        LogRedactionUtil.userData(String.valueOf(projectPath)));
+                                if (fieldTypePrime == null) {
+                                    throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                            indexedElement.getSourceLocation(), "cannot find type of field");
+                                } else if (!projectTypePrime.deepEqual(fieldTypePrime)) {
+                                    throw new CompilationException(ErrorCode.TYPE_MISMATCH_GENERIC, sourceLoc,
+                                            projectTypePrime.getTypeTag(), fieldTypePrime.getTypeTag());
+                                }
                             }
                         } else {
                             if (indexType != IndexType.BTREE && indexType != IndexType.ARRAY) {
@@ -1430,23 +1442,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             if (isFieldFromSchema) {
                                 // allow overriding the type of the closed-field only if CAST modifier is used
                                 if (!stmtCreateIndex.hasCastDefaultNull()) {
-                                    throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                            indexedElement.getSourceLocation(),
-                                            "Typed index on '"
-                                                    + LogRedactionUtil
-                                                            .userData(RecordUtil.toFullyQualifiedName(projectPath))
-                                                    + "' field could be created only for open datatype");
+                                    if (fieldTypePrime == null) {
+                                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
+                                                indexedElement.getSourceLocation(), "cannot find type of field");
+                                    } else if (!projectTypePrime.deepEqual(fieldTypePrime)) {
+                                        throw new CompilationException(ErrorCode.TYPE_MISMATCH_GENERIC, sourceLoc,
+                                                projectTypePrime.getTypeTag(), fieldTypePrime.getTypeTag());
+                                    }
                                 }
                             }
                         }
-
-                        Map<TypeSignature, IAType> typeMap = TypeTranslator.computeTypes(databaseName, dataverseName,
-                                indexName, projectTypeExpr.getType(), databaseName, dataverseName, mdTxnCtx);
-                        TypeSignature typeSignature = new TypeSignature(databaseName, dataverseName, indexName);
-                        fieldTypePrime = typeMap.get(typeSignature);
-                        // BACK-COMPAT: keep prime type only if we're overriding field types
-                        fieldTypeNullable = fieldTypeMissable = false;
-                        overridesFieldTypes = true;
                     }
 
                     if (fieldTypePrime == null) {

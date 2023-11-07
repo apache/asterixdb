@@ -4402,13 +4402,20 @@
         <expected-error>CAST modifier is only allowed for B-Tree indexes</expected-error>
         <expected-error>CAST modifier cannot be specified together with ENFORCED</expected-error>
         <expected-error>CAST modifier is used without specifying the type of the indexed field</expected-error>
-        <expected-error>Typed index on 'typed_f2' field could be created only for open datatype</expected-error>
         <expected-error>Parameter invalid_date cannot be set</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
       <compilation-unit name="drop-anonymous-nested-types">
         <output-dir compare="Text">drop-anonymous-nested-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="ddl">
+      <compilation-unit name="index-closed-type">
+        <output-dir compare="Text">index-closed-type</output-dir>
+        <expected-error>ASX0037: Type mismatch: expected value of type string, but got the value of type bigint</expected-error>
+        <expected-error>ASX0037: Type mismatch: expected value of type string, but got the value of type bigint</expected-error>
+        <expected-error>ASX0037: Type mismatch: expected value of type string, but got the value of type bigint</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -7410,13 +7417,12 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="enforced-field-name-collision">
           <output-dir compare="Text">enforced-field-name-collision</output-dir>
-          <expected-error>Cannot create enforced index on '[value]' field. The field is closed type.</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="enforced-field-type-collision">
           <output-dir compare="Text">enforced-field-type-collision</output-dir>
-          <expected-error>Cannot create enforced index on '[value]' field. The field is closed type.</expected-error>
+          <expected-error>ASX0037: Type mismatch: expected value of type string, but got the value of type integer</expected-error>
         </compilation-unit>
       </test-case>
       <test-case FilePath="open-index-enforced/error-checking">
@@ -7452,7 +7458,7 @@
       <test-case FilePath="open-index-enforced/error-checking">
         <compilation-unit name="object-type-collision">
           <output-dir compare="Text">object-type-collision</output-dir>
-          <expected-error>ASX1051: Cannot create enforced index on '[value]' field. The field is closed type.</expected-error>
+          <expected-error>ASX0037: Type mismatch: expected value of type string, but got the value of type integer</expected-error>
         </compilation-unit>
       </test-case>
     </test-group>
