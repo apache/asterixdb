@@ -50,8 +50,10 @@ public class LocalCloudUtil {
     }
 
     public static void main(String[] args) {
+        String cleanStartString = System.getProperty("cleanup.start", "true");
+        boolean cleanStart = Boolean.parseBoolean(cleanStartString);
         // Change to 'true' if you want to delete "s3mock" folder on start
-        startS3CloudEnvironment(true);
+        startS3CloudEnvironment(cleanStart);
     }
 
     public static S3Mock startS3CloudEnvironment(boolean cleanStart) {

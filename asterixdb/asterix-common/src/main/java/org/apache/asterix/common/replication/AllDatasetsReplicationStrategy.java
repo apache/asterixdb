@@ -19,6 +19,7 @@
 package org.apache.asterix.common.replication;
 
 public class AllDatasetsReplicationStrategy implements IReplicationStrategy {
+    public static final IReplicationStrategy INSTANCE = new AllDatasetsReplicationStrategy();
 
     @Override
     public boolean isMatch(int datasetId) {

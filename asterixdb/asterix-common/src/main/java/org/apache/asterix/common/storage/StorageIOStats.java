@@ -47,4 +47,8 @@ public class StorageIOStats {
     public int getPendingReplications() {
         return pendingReplications;
     }
+
+    public int getTotalPendingOperations() {
+        return pendingFlushes + pendingMerges + pendingReplications;
+    }
 }
