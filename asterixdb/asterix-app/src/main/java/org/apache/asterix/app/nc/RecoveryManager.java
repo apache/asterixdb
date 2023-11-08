@@ -520,6 +520,31 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     }
 
     @Override
+    public long getPartitionsMaxLSN(Set<Integer> partitions) throws HyracksDataException {
+        final IIndexCheckpointManagerProvider idxCheckpointMgrProvider = appCtx.getIndexCheckpointManagerProvider();
+        long maxLSN = 0;
+        for (Integer partition : partitions) {
+            final List<DatasetResourceReference> partitionResources = localResourceRepository.getResources(resource -> {
+                DatasetLocalResource dsResource = (DatasetLocalResource) resource.getResource();
+                return dsResource.getPartition() == partition;
+            }, Collections.singleton(partition)).values().stream().map(DatasetResourceReference::of)
+                    .collect(Collectors.toList());
+            for (DatasetResourceReference indexRef : partitionResources) {
+                try {
+                    final IIndexCheckpointManager idxCheckpointMgr = idxCheckpointMgrProvider.get(indexRef);
+                    if (idxCheckpointMgr.isValidIndex()) {
+                        long indexMaxLsn = idxCheckpointMgrProvider.get(indexRef).getLowWatermark();
+                        maxLSN = Math.max(maxLSN, indexMaxLsn);
+                    }
+                } catch (Exception e) {
+                    LOGGER.warn("Failed to get max LSN of resource {}", indexRef, e);
+                }
+            }
+        }
+        return maxLSN;
+    }
+
+    @Override
     public synchronized void replayReplicaPartitionLogs(Set<Integer> partitions, boolean flush)
             throws HyracksDataException {
         //replay logs > minLSN that belong to these partitions

@@ -99,7 +99,13 @@ public interface ILogManager {
     public void closeLogFile(TxnLogFile logFileRef, FileChannel fileChannel) throws IOException;
 
     /**
-     * Deletes all current log files and start the next log file partition
+     * Deletes all current log files and start the next log file partition after {@code minLSN}
      */
-    void renewLogFiles();
+    void renewLogFiles(long minLSN);
+
+    /**
+     * Ensures the next lsn of this log manager is greater than {@code lsn}
+     * @param lsn
+     */
+    void ensureMinLSN(long lsn);
 }

@@ -110,6 +110,15 @@ public interface IRecoveryManager {
     void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException;
 
     /**
+     * Gets the LSN used in {@code partitions} or 0 if no LSNs are found
+     *
+     * @param partitions
+     * @return the maximum used LSN
+     * @throws HyracksDataException
+     */
+    long getPartitionsMaxLSN(Set<Integer> partitions) throws HyracksDataException;
+
+    /**
      * Replay the commited transactions' logs belonging to {@code partitions}. if {@code flush} is true,
      * all datasets are flushed after the logs are replayed.
      *

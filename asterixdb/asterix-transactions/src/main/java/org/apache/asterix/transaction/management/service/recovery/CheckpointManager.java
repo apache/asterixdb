@@ -65,7 +65,8 @@ public class CheckpointManager extends AbstractCheckpointManager {
                 txnSubsystem.getApplicationContext().getDatasetLifecycleManager();
         datasetLifecycleManager.flushAllDatasets();
         capture(SHARP_CHECKPOINT_LSN, true);
-        txnSubsystem.getLogManager().renewLogFiles();
+        long currentAppendLNS = txnSubsystem.getLogManager().getAppendLSN();
+        txnSubsystem.getLogManager().renewLogFiles(currentAppendLNS);
         LOGGER.info("Completed sharp checkpoint.");
     }
 

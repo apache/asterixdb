@@ -377,14 +377,24 @@ public class LogManager implements ILogManager, ILifeCycleComponent {
     }
 
     @Override
-    public void renewLogFiles() {
+    public void renewLogFiles(long minLSN) {
         terminateLogFlusher();
         closeCurrentLogFile();
-        long nextLogFileId = getNextLogFileId();
+        long nextLogFileId = getLogFileId(minLSN) + 1;
+        LOGGER.info("renewing txn log files; next file id {}", nextLogFileId);
         createFileIfNotExists(getLogFilePath(nextLogFileId));
         final long logFileFirstLsn = getLogFileFirstLsn(nextLogFileId);
         deleteOldLogFiles(logFileFirstLsn);
         initializeLogManager(nextLogFileId);
+    }
+
+    @Override
+    public void ensureMinLSN(long lsn) {
+        if (appendLSN.get() > lsn) {
+            LOGGER.info("current append lsn {} > target min LSN {}; not renewing log files", appendLSN.get(), lsn);
+            return;
+        }
+        renewLogFiles(lsn);
     }
 
     @Override
