@@ -203,7 +203,8 @@ public class QueryIndexRewriter extends FunctionRewriter implements IResultTypeC
             SourceLocation loc) throws AlgebricksException {
         Dataset dataset = mp.findDataset(dbName, dvName, dsName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, dsName, dvName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, dsName,
+                    MetadataUtil.dataverseName(dbName, dvName, mp.isUsingDatabase()));
         }
         return dataset;
     }

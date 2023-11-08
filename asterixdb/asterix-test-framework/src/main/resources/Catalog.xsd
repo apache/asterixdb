@@ -166,22 +166,36 @@
 
                   <!-- Zero or more expected errors for this query -->
 
-                  <xs:element name="expected-error" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="expected-error" minOccurs="0" maxOccurs="unbounded">
                      <xs:annotation>
                         <xs:documentation>
                            Zero or more expected errors for this query.
                         </xs:documentation>
                      </xs:annotation>
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="xs:string">
+                              <xs:attribute name="replacers" type="test:str-list"/>
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
                   </xs:element>
 
                   <!-- Zero or more expected warnings for this test -->
 
-                  <xs:element name="expected-warn" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+                  <xs:element name="expected-warn" minOccurs="0" maxOccurs="unbounded">
                      <xs:annotation>
                         <xs:documentation>
                            Zero or more expected warnings for this query.
                         </xs:documentation>
                      </xs:annotation>
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="xs:string">
+                              <xs:attribute name="replacers" type="test:str-list"/>
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
                   </xs:element>
 
                   <!-- Whether the source location is expected in the error message -->
@@ -302,6 +316,10 @@
          <xs:enumeration value="multipart_text"/>
          <xs:enumeration value="multipart_binary"/>
       </xs:restriction>
+   </xs:simpleType>
+
+   <xs:simpleType name="str-list">
+      <xs:list itemType="xs:string" />
    </xs:simpleType>
 
 </xs:schema>

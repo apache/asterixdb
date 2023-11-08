@@ -121,9 +121,9 @@ public class RebalanceUtil {
 
             if (!targetNcNames.isEmpty()) {
                 // Creates a node group for rebalance.
-                String nodeGroupName = DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDataverseName(),
-                        sourceDataset.getDatasetName(), sourceDataset.getRebalanceCount() + 1, targetNcNames,
-                        metadataProvider);
+                String nodeGroupName = DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDatabaseName(),
+                        sourceDataset.getDataverseName(), sourceDataset.getDatasetName(),
+                        sourceDataset.getRebalanceCount() + 1, targetNcNames, metadataProvider);
                 // The target dataset for rebalance.
                 targetDataset = sourceDataset.getTargetDatasetForRebalance(nodeGroupName);
 

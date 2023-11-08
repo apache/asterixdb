@@ -28,6 +28,7 @@ import org.apache.asterix.algebra.base.OperatorAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.MetadataProvider;
@@ -131,7 +132,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
         Dataset dataset = mp.findDataset(asid.getDatabaseName(), asid.getDataverseName(), asid.getDatasourceName());
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
-                    asid.getDatasourceName(), asid.getDataverseName());
+                    asid.getDatasourceName(),
+                    MetadataUtil.dataverseName(asid.getDatabaseName(), asid.getDataverseName(), mp.isUsingDatabase()));
         }
         if (dataset.getDatasetType() != DatasetType.INTERNAL) {
             return false;
@@ -320,7 +322,8 @@ public class PushFieldAccessRule implements IAlgebraicRewriteRule {
             Dataset dataset = mp.findDataset(asid.getDatabaseName(), asid.getDataverseName(), asid.getDatasourceName());
             if (dataset == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, scan.getSourceLocation(),
-                        asid.getDatasourceName(), asid.getDataverseName());
+                        asid.getDatasourceName(), MetadataUtil.dataverseName(asid.getDatabaseName(),
+                                asid.getDataverseName(), mp.isUsingDatabase()));
             }
             if (dataset.getDatasetType() != DatasetType.INTERNAL) {
                 setAsFinal(assignOp, context, finalAnnot);

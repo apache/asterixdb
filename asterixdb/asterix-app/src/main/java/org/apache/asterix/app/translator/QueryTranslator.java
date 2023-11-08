@@ -628,14 +628,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 if (stmtUseDataverse.getIfExists()) {
                     if (warningCollector.shouldWarn()) {
-                        warningCollector.warn(
-                                Warning.of(stmtUseDataverse.getSourceLocation(), ErrorCode.UNKNOWN_DATAVERSE, dvName));
+                        warningCollector.warn(Warning.of(stmtUseDataverse.getSourceLocation(),
+                                ErrorCode.UNKNOWN_DATAVERSE,
+                                MetadataUtil.dataverseName(dbName, dvName, metadataProvider.isUsingDatabase())));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return activeNamespace;
                 } else {
                     throw new MetadataException(ErrorCode.UNKNOWN_DATAVERSE, stmtUseDataverse.getSourceLocation(),
-                            dvName);
+                            MetadataUtil.dataverseName(dbName, dvName, metadataProvider.isUsingDatabase()));
                 }
             }
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -895,7 +896,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
 
             IDatasetDetails datasetDetails;
@@ -1215,9 +1217,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Collections.shuffle(allNodeList);
             selectedNodes.addAll(allNodeList.subList(0, nodegroupCardinality));
         }
-        //TODO(DB): node groups with database
         // Creates the associated node group for the dataset.
-        return DatasetUtil.createNodeGroupForNewDataset(dataverseName, datasetName, selectedNodes, metadataProvider);
+        return DatasetUtil.createNodeGroupForNewDataset(databaseName, dataverseName, datasetName, selectedNodes,
+                metadataProvider);
     }
 
     public void handleCreateIndexStatement(MetadataProvider metadataProvider, Statement stmt,
@@ -1255,13 +1257,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
 
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
 
             DatasetType datasetType = ds.getDatasetType();
@@ -1628,7 +1631,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, stmtCreateFilter.getSourceLocation(),
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
 
             String filterName = stmtCreateFilter.getFilterName();
@@ -1914,7 +1917,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             Datatype dt = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, databaseName, dataverseName, typeName);
             if (dt != null) {
@@ -2127,7 +2131,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
 
@@ -2320,12 +2325,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 if (ifExists) {
                     if (warningCollector.shouldWarn()) {
-                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, MetadataUtil
+                                .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase())));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
             ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName, true);
@@ -2335,11 +2342,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                            dataverseName);
+                            MetadataUtil.dataverseName(databaseName, dataverseName,
+                                    metadataProvider.isUsingDatabase()));
                 }
             } else if (ds.getDatasetType() == DatasetType.VIEW) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             validateDatasetState(metadataProvider, ds, sourceLoc);
 
@@ -2430,7 +2438,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 Index index = MetadataManager.INSTANCE.getIndex(mdTxnCtx, databaseName, dataverseName, datasetName,
@@ -2624,12 +2632,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (dv == null) {
                 if (stmtTypeDrop.getIfExists()) {
                     if (warningCollector.shouldWarn()) {
-                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, dataverseName));
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, MetadataUtil
+                                .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase())));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
 
@@ -2732,7 +2742,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             Namespace ns = new Namespace(dv.getDatabaseName(), dv.getDataverseName());
             Dataset existingDataset =
@@ -2786,7 +2797,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                     MetadataManager.INSTANCE.getDataverse(mdTxnCtx, refDatabaseName, refDataverseName);
                             if (refDataverse == null) {
                                 throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
-                                        refDataverseName);
+                                        MetadataUtil.dataverseName(refDatabaseName, refDataverseName,
+                                                metadataProvider.isUsingDatabase()));
                             }
                         }
                         String refDatasetName = foreignKeyDecl.getReferencedDatasetName().getValue();
@@ -2941,12 +2953,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 if (stmtViewDrop.getIfExists()) {
                     if (warningCollector.shouldWarn()) {
                         warningCollector.warn(Warning.of(stmtViewDrop.getSourceLocation(), ErrorCode.UNKNOWN_DATAVERSE,
-                                dataverseName));
+                                MetadataUtil.dataverseName(databaseName, dataverseName,
+                                        metadataProvider.isUsingDatabase())));
                     }
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
             Dataset dataset = metadataProvider.findDataset(databaseName, dataverseName, viewName, true);
@@ -3041,7 +3055,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             Namespace ns = new Namespace(dv.getDatabaseName(), dv.getDataverseName());
             List<TypeSignature> existingInlineTypes;
@@ -3324,7 +3339,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
             Function function = MetadataManager.INSTANCE.getFunction(mdTxnCtx, signature);
@@ -3386,7 +3402,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             String adapterName = cas.getAdapterName();
             DatasourceAdapter adapter =
@@ -3469,7 +3486,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                     return false;
                 } else {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
                 }
             }
             DatasourceAdapter adapter =
@@ -3526,7 +3544,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             ExternalFunctionLanguage language = cls.getLang();
             existingLibrary = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, databaseName, dataverseName, libraryName);
@@ -3664,7 +3683,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     return false;
                 } else {
                     throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, stmtDropLibrary.getSourceLocation(),
-                            dataverseName);
+                            MetadataUtil.dataverseName(databaseName, dataverseName,
+                                    metadataProvider.isUsingDatabase()));
                 }
             }
             Library library = MetadataManager.INSTANCE.getLibrary(mdTxnCtx, databaseName, dataverseName, libraryName);
@@ -3756,7 +3776,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, css.getSourceLocation(), dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, css.getSourceLocation(),
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             Synonym synonym = MetadataManager.INSTANCE.getSynonym(metadataProvider.getMetadataTxnContext(),
                     databaseName, dataverseName, synonymName);
@@ -3862,7 +3883,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected Map<String, String> createExternalDataPropertiesForCopyFromStmt(String databaseName,
             DataverseName dataverseName, CopyFromStatement copyFromStatement, Datatype itemType,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+            MetadataTransactionContext mdTxnCtx, MetadataProvider md) throws AlgebricksException {
         ExternalDetailsDecl edd = copyFromStatement.getExternalDetails();
         Map<String, String> properties = copyFromStatement.getExternalDetails().getProperties();
         String path = copyFromStatement.getPath();
@@ -3891,7 +3912,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset dataset = metadataProvider.findDataset(databaseName, dataverseName, copyStmt.getDatasetName());
             if (dataset == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, stmt.getSourceLocation(),
-                        datasetName, dataverseName);
+                        datasetName,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             Datatype itemType = MetadataManager.INSTANCE.getDatatype(mdTxnCtx, dataset.getItemTypeDatabaseName(),
                     dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
@@ -3911,7 +3933,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             ExternalDetailsDecl externalDetails = copyStmt.getExternalDetails();
             Map<String, String> properties = createExternalDataPropertiesForCopyFromStmt(databaseName, dataverseName,
-                    copyStmt, itemType, mdTxnCtx);
+                    copyStmt, itemType, mdTxnCtx, metadataProvider);
             ExternalDataUtils.normalize(properties);
             ExternalDataUtils.validate(properties);
             validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,
@@ -3997,7 +4019,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             try {
                 ExternalDetailsDecl edd = copyTo.getExternalDetailsDecl();
                 edd.setProperties(createAndValidateAdapterConfigurationForCopyToStmt(edd,
-                        ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx));
+                        ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx,
+                        metadataProvider));
 
                 Map<VarIdentifier, IAObject> externalVars = createExternalVariables(copyTo, stmtParams);
                 // Query Rewriting (happens under the same ongoing metadata transaction)
@@ -4646,7 +4669,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             if (fc == null) {
                 throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc, "Feed " + feedName
@@ -4703,13 +4726,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Check if the dataverse exists
             Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
             if (dv == null) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             // Check if the dataset exists
             ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             if (ds.getDatasetType() == DatasetType.INTERNAL) {
                 validateDatasetState(metadataProvider, ds, sourceLoc);
@@ -4932,7 +4956,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             if (ds.getDatasetType() != DatasetType.INTERNAL) {
                 throw new CompilationException(ErrorCode.OPERATION_NOT_SUPPORTED, sourceLoc);
@@ -5068,7 +5092,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Dataset ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName);
             if (ds == null) {
                 throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                        dataverseName);
+                        MetadataUtil.dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
             }
             // Prepare jobs to compact the datatset and its indexes
             List<Index> indexes =
@@ -5591,7 +5615,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected Map<String, String> createAndValidateAdapterConfigurationForCopyToStmt(
             ExternalDetailsDecl externalDetailsDecl, Set<String> supportedAdapters, SourceLocation sourceLocation,
-            MetadataTransactionContext mdTxnCtx) throws AlgebricksException {
+            MetadataTransactionContext mdTxnCtx, MetadataProvider md) throws AlgebricksException {
         String adapterName = externalDetailsDecl.getAdapter();
         Map<String, String> properties = externalDetailsDecl.getProperties();
         WriterValidationUtil.validateWriterConfiguration(adapterName, supportedAdapters, properties, sourceLocation);

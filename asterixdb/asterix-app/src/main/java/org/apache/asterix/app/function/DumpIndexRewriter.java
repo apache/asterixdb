@@ -68,7 +68,8 @@ public class DumpIndexRewriter extends FunctionRewriter {
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         final Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
-            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName, dataverseName);
+            throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, loc, datasetName,
+                    MetadataUtil.dataverseName(database, dataverseName, metadataProvider.isUsingDatabase()));
         }
         Index index = metadataProvider.getIndex(database, dataverseName, datasetName, indexName);
         if (index == null) {

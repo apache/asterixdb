@@ -34,6 +34,7 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractExpression;
 import org.apache.asterix.lang.common.base.Expression;
@@ -566,7 +567,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                     targetNamespace = new Namespace(dv.getDatabaseName(), dv.getDataverseName());
                 }
             } catch (AlgebricksException e) {
-                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, entityDataverseName);
+                throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, MetadataUtil
+                        .dataverseName(entityDatabaseName, entityDataverseName, metadataProvider.isUsingDatabase()));
             }
         }
 

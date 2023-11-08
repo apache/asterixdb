@@ -157,6 +157,7 @@ public class MetadataManagerUtil {
             DataverseName dataverseName, String datasetName) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, database, dataverseName, datasetName);
         if (dataset == null) {
+            //TODO(DB): include database
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
         }
         return dataset;
@@ -229,6 +230,7 @@ public class MetadataManagerUtil {
             MetadataTransactionContext mdTxnCtx, DataSourceId id) throws AlgebricksException {
         Dataset dataset = findDataset(mdTxnCtx, id.getDatabaseName(), id.getDataverseName(), id.getDatasourceName());
         if (dataset == null) {
+            //TODO(DB): include database
             throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
                     id.getDataverseName());
         }
@@ -241,6 +243,7 @@ public class MetadataManagerUtil {
                 datasourceType = DataSource.Type.EXTERNAL_DATASET;
                 break;
             default:
+                //TODO(DB): include database
                 throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, id.getDatasourceName(),
                         id.getDataverseName());
         }

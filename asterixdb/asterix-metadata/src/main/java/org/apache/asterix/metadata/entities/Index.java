@@ -284,8 +284,11 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         if (result != 0) {
             return result;
         }
-        //TODO(DB): fix to also consider database
-        return dataverseName.compareTo(otherIndex.getDataverseName());
+        result = dataverseName.compareTo(otherIndex.getDataverseName());
+        if (result != 0) {
+            return result;
+        }
+        return databaseName.compareTo(otherIndex.getDatabaseName());
     }
 
     public byte resourceType() throws CompilationException {
@@ -308,6 +311,7 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     @Override
     public String toString() {
+        //TODO(DB)
         return dataverseName + "." + datasetName + "." + indexName;
     }
 

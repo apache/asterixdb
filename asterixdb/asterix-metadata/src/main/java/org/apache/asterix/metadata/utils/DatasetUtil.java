@@ -367,7 +367,8 @@ public class DatasetUtil {
         DataverseName dataverseName = dataverse.getDataverseName();
         Dataset dataset = metadataProvider.findDataset(dataverse.getDatabaseName(), dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, MetadataUtil
+                    .dataverseName(dataverse.getDatabaseName(), dataverseName, metadataProvider.isUsingDatabase()));
         }
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
@@ -636,6 +637,8 @@ public class DatasetUtil {
     /***
      * Creates a node group that is associated with a new dataset.
      *
+     * @param databaseName,
+     *            the database name of the dataset.
      * @param dataverseName,
      *            the dataverse name of the dataset.
      * @param datasetName,
@@ -647,14 +650,16 @@ public class DatasetUtil {
      * @return the name of the created node group.
      * @throws Exception
      */
-    public static String createNodeGroupForNewDataset(DataverseName dataverseName, String datasetName,
-            Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
-        return createNodeGroupForNewDataset(dataverseName, datasetName, 0L, ncNames, metadataProvider);
+    public static String createNodeGroupForNewDataset(String databaseName, DataverseName dataverseName,
+            String datasetName, Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
+        return createNodeGroupForNewDataset(databaseName, dataverseName, datasetName, 0L, ncNames, metadataProvider);
     }
 
     /***
      * Creates a node group that is associated with a new dataset.
      *
+     * @param databaseName,
+     *            the database name of the dataset.
      * @param dataverseName,
      *            the dataverse name of the dataset.
      * @param datasetName,
@@ -668,10 +673,12 @@ public class DatasetUtil {
      * @return the name of the created node group.
      * @throws Exception
      */
-    public static String createNodeGroupForNewDataset(DataverseName dataverseName, String datasetName,
-            long rebalanceCount, Set<String> ncNames, MetadataProvider metadataProvider) throws Exception {
+    public static String createNodeGroupForNewDataset(String databaseName, DataverseName dataverseName,
+            String datasetName, long rebalanceCount, Set<String> ncNames, MetadataProvider metadataProvider)
+            throws Exception {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
-        String nodeGroup = dataverseName.getCanonicalForm() + "." + datasetName
+        boolean useDb = metadataProvider.getNamespaceResolver().isUsingDatabase();
+        String nodeGroup = (useDb ? databaseName + "." : "") + dataverseName.getCanonicalForm() + "." + datasetName
                 + (rebalanceCount == 0L ? "" : "_" + rebalanceCount);
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
         appCtx.getMetadataLockManager().acquireNodeGroupWriteLock(metadataProvider.getLocks(), nodeGroup);

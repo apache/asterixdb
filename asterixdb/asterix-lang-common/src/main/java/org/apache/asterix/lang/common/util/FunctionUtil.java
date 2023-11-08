@@ -38,6 +38,7 @@ import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.IParser;
@@ -173,10 +174,12 @@ public class FunctionUtil {
                 try {
                     dv = metadataProvider.findDataverse(database, dataverse);
                 } catch (AlgebricksException e) {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc, dataverse);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, e, sourceLoc,
+                            MetadataUtil.dataverseName(database, dataverse, metadataProvider.isUsingDatabase()));
                 }
                 if (dv == null) {
-                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, dataverse);
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc,
+                            MetadataUtil.dataverseName(database, dataverse, metadataProvider.isUsingDatabase()));
                 }
             }
         }

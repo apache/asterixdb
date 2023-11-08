@@ -251,6 +251,7 @@ public class TestExecutor {
     private static final String PROFILE_QUERY_TYPE = "profile";
     private static final String PLANS_QUERY_TYPE = "plans";
     private static final String SIGNATURE_QUERY_TYPE = "signature";
+    private static final String DEF_REPLACER = "def";
 
     private static final HashMap<Integer, ITestServer> runningTestServers = new HashMap<>();
     private static Map<String, InetSocketAddress> ncEndPoints;
@@ -277,6 +278,7 @@ public class TestExecutor {
 
     protected String deltaPath = null;
     public String stripSubstring = null;
+    public String executorId = null;
 
     public TestExecutor() {
         this(Collections.singletonList(
@@ -1844,13 +1846,8 @@ public class TestExecutor {
     }
 
     protected static boolean isExpected(Exception e, CompilationUnit cUnit) {
-        final List<String> expErrors = cUnit.getExpectedError();
-        for (String exp : expErrors) {
-            if (e.toString().contains(exp) || containsPattern(e.toString(), exp)) {
-                return true;
-            }
-        }
-        return false;
+        return cUnit.getExpectedError().stream().anyMatch(
+                exp -> e.toString().contains(exp.getValue()) || containsPattern(e.toString(), exp.getValue()));
     }
 
     private static boolean containsPattern(String exception, String maybePattern) {
@@ -2147,7 +2144,9 @@ public class TestExecutor {
         int numOfFiles = 0;
         List<CompilationUnit> cUnits = testCaseCtx.getTestCase().getCompilationUnit();
         for (CompilationUnit cUnit : cUnits) {
-            testCaseCtx.expectedErrors = cUnit.getExpectedError();
+            fixupMessages(cUnit);
+            testCaseCtx.expectedErrors = cUnit.getExpectedError().stream().map(CompilationUnit.ExpectedError::getValue)
+                    .collect(Collectors.toList());
             testCaseCtx.expectedWarnings = new BitSet(cUnit.getExpectedWarn().size());
             testCaseCtx.expectedWarnings.set(0, cUnit.getExpectedWarn().size());
             LOGGER.info(
@@ -2219,6 +2218,30 @@ public class TestExecutor {
                 }
             }
         }
+    }
+
+    private void fixupMessages(CompilationUnit cUnit) {
+        String replacerId = executorId == null ? DEF_REPLACER : executorId;
+
+        List<CompilationUnit.ExpectedWarn> expectedWarns = cUnit.getExpectedWarn();
+        expectedWarns.stream().filter(w -> !w.getReplacers().isEmpty()).forEach(w -> w.setValue(
+                MessageFormat.format(w.getValue(), (Object[]) getReplacements(cUnit, replacerId, w.getReplacers()))));
+
+        List<CompilationUnit.ExpectedError> expectedErrors = cUnit.getExpectedError();
+        expectedErrors.stream().filter(e -> !e.getReplacers().isEmpty()).forEach(e -> e.setValue(
+                MessageFormat.format(e.getValue(), (Object[]) getReplacements(cUnit, replacerId, e.getReplacers()))));
+    }
+
+    private static String[] getReplacements(CompilationUnit cUnit, String replacerId, List<String> replacers) {
+        Optional<String> replacements = replacers.stream().filter(s -> s.startsWith(replacerId)).findFirst();
+        if (replacements.isPresent()) {
+            return replacements.get().substring(replacerId.length() + 1).split(",");
+        }
+        LOGGER.error("Test '{}', could not find message replacements for '{}' in replacements {}", cUnit.getName(),
+                replacerId, replacers);
+        throw new RuntimeException(
+                String.format("Test '%s', could not find message replacements for '%s' in replacements %s",
+                        cUnit.getName(), replacerId, replacers));
     }
 
     private String applySubstitution(String statement, List<Parameter> parameters) throws Exception {
@@ -2747,7 +2770,8 @@ public class TestExecutor {
         if (fail) {
             LOGGER.error("Test {} failed to raise (an) expected warning(s):", cUnit.getName());
         }
-        List<String> expectedWarn = cUnit.getExpectedWarn();
+        List<String> expectedWarn =
+                cUnit.getExpectedWarn().stream().map(w -> w.getValue()).collect(Collectors.toList());
         for (int i = expectedWarnings.nextSetBit(0); i >= 0; i = expectedWarnings.nextSetBit(i + 1)) {
             String warning = expectedWarn.get(i);
             LOGGER.error(warning);
@@ -2912,13 +2936,14 @@ public class TestExecutor {
         }
     }
 
-    protected void validateWarnings(List<String> actualWarnings, List<String> expectedWarn, BitSet expectedWarnings,
-            boolean expectedSourceLoc, File testFile) throws Exception {
+    protected void validateWarnings(List<String> actualWarnings, List<CompilationUnit.ExpectedWarn> expectedWarn,
+            BitSet expectedWarnings, boolean expectedSourceLoc, File testFile) throws Exception {
         if (actualWarnings != null) {
             for (String actualWarn : actualWarnings) {
                 OptionalInt first = IntStream.range(0, expectedWarn.size())
-                        .filter(i -> actualWarn.contains(expectedWarn.get(i)) && expectedWarnings.get(i)).findFirst();
-                if (!first.isPresent()) {
+                        .filter(i -> actualWarn.contains(expectedWarn.get(i).getValue()) && expectedWarnings.get(i))
+                        .findFirst();
+                if (first.isEmpty()) {
                     String msg = "unexpected warning was encountered or has already been matched (" + actualWarn + ")";
                     LOGGER.error(msg);
                     if (!expectedWarnings.isEmpty()) {

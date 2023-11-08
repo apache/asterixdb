@@ -346,6 +346,10 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return namespaceResolver;
     }
 
+    public boolean isUsingDatabase() {
+        return namespaceResolver.isUsingDatabase();
+    }
+
     public StorageProperties getStorageProperties() {
         return storageProperties;
     }
@@ -816,7 +820,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         String database = dataSource.getId().getDatabaseName();
         Dataset dataset = findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
+            throw new AsterixException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, datasetName,
+                    MetadataUtil.dataverseName(database, dataverseName, isUsingDatabase()));
         }
         int numKeys = primaryKeys.size();
         int numFilterFields = DatasetUtil.getFilterField(dataset) == null ? 0 : 1;

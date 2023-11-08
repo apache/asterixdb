@@ -935,7 +935,8 @@ public class MetadataNode implements IMetadataNode {
             forceDropDataverse(txnId, database, dataverseName);
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
-                throw new AsterixException(UNKNOWN_DATAVERSE, e, dataverseName);
+                throw new AsterixException(UNKNOWN_DATAVERSE, e,
+                        MetadataUtil.dataverseName(database, dataverseName, mdIndexesProvider.isUsingDatabase()));
             } else {
                 throw new AsterixException(METADATA_ERROR, e, e.getMessage());
             }
@@ -970,7 +971,8 @@ public class MetadataNode implements IMetadataNode {
             boolean force) throws AlgebricksException {
         Dataset dataset = getDataset(txnId, database, dataverseName, datasetName);
         if (dataset == null) {
-            throw new AsterixException(UNKNOWN_DATASET_IN_DATAVERSE, datasetName, dataverseName);
+            throw new AsterixException(UNKNOWN_DATASET_IN_DATAVERSE, datasetName,
+                    MetadataUtil.dataverseName(database, dataverseName, mdIndexesProvider.isUsingDatabase()));
         }
         if (!force) {
             String datasetTypeDisplayName = DatasetUtil.getDatasetTypeDisplayName(dataset.getDatasetType());
@@ -3019,7 +3021,8 @@ public class MetadataNode implements IMetadataNode {
         } catch (HyracksDataException e) {
             if (e.matches(ErrorCode.UPDATE_OR_DELETE_NON_EXISTENT_KEY)) {
                 throw new AsterixException(UNKNOWN_DATASET_IN_DATAVERSE, e, dataset.getDatasetName(),
-                        dataset.getDataverseName());
+                        MetadataUtil.dataverseName(dataset.getDatabaseName(), dataset.getDataverseName(),
+                                mdIndexesProvider.isUsingDatabase()));
             } else {
                 throw new AsterixException(METADATA_ERROR, e, e.getMessage());
             }

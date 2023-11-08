@@ -50,7 +50,7 @@
     <test-case FilePath="api" check-warnings="true">
       <compilation-unit name="request-dataverse">
         <output-dir compare="Text">request-dataverse</output-dir>
-        <expected-warn>ASX1063: Cannot find dataverse with name testUnknown</expected-warn>
+        <expected-warn replacers="cloud:Default.testUnknown def:testUnknown">ASX1063: Cannot find dataverse with name {0}</expected-warn>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
@@ -4010,7 +4010,7 @@
     <test-case FilePath="custord">
       <compilation-unit name="join_q_07">
         <output-dir compare="Text">join_q_06</output-dir>
-        <expected-error>Cannot find dataset c in dataverse test nor an alias with name c</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">Cannot find dataset c in dataverse {0} nor an alias with name c</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="custord">
@@ -4084,7 +4084,7 @@
     <test-case FilePath="dapd">
       <compilation-unit name="q2-2-negative">
         <output-dir compare="Text">q2</output-dir>
-        <expected-error>Cannot find dataset e in dataverse test nor an alias with name e</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">Cannot find dataset e in dataverse {0} nor an alias with name e</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="dapd">
@@ -4162,7 +4162,7 @@
     <test-case FilePath="ddl">
       <compilation-unit name="create-dataset-3">
         <output-dir compare="Clean-JSON">create-dataset-3</output-dir>
-        <expected-error>ASX1077: Cannot find dataset non_existent in dataverse test nor an alias with name non_existent (in line 23, at column 21)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1077: Cannot find dataset non_existent in dataverse {0} nor an alias with name non_existent (in line 23, at column 21)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4219,8 +4219,8 @@
     <test-case FilePath="ddl/create-index">
       <compilation-unit name="create-index-6">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1050: Cannot find dataset with name LineItemView1 in dataverse test (in line 55, at column 1)</expected-error>
-        <expected-error>ASX1050: Cannot find dataset with name LineItemView2 in dataverse test (in line 60, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1050: Cannot find dataset with name LineItemView1 in dataverse {0} (in line 55, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1050: Cannot find dataset with name LineItemView2 in dataverse {0} (in line 60, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl/create-index">
@@ -4259,13 +4259,13 @@
       <compilation-unit name="invalid-dataverse">
         <output-dir compare="Text">invalid-dataverse</output-dir>
         <source-location>false</source-location>
-        <expected-warn>Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 27, at column 1)</expected-error>
-        <expected-warn>Cannot find dataverse with name fakeDataverse (in line 29, at column 1)</expected-warn>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 30, at column 1)</expected-error>
-        <expected-error>Cannot find datatype with name fakeDataverse.myType</expected-error>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 30, at column 1)</expected-error>
-        <expected-error>Cannot find dataverse with name fakeDataverse (in line 32, at column 1)</expected-error>
+        <expected-warn replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 22, at column 1)</expected-warn>
+        <expected-error replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 27, at column 1)</expected-error>
+        <expected-warn replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 29, at column 1)</expected-warn>
+        <expected-error replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 30, at column 1)</expected-error>
+        <expected-error replacers="cloud:fakeDataverse def:fakeDataverse">Cannot find datatype with name {0}.myType</expected-error>
+        <expected-error replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 30, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.fakeDataverse def:fakeDataverse">Cannot find dataverse with name {0} (in line 32, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -4364,14 +4364,14 @@
     <test-case FilePath="ddl" check-warnings="true">
       <compilation-unit name="drop_dataset_invalid_dataverse">
         <output-dir compare="Text">drop_dataset_invalid_dataverse</output-dir>
-        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
-        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
-        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
-        <expected-error>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-error>
-        <expected-error>ASX1050: Cannot find dataset with name fakeDataset1 in dataverse realDataverse (in line 22, at column 1)</expected-error>
-        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
-        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
-        <expected-warn>ASX1063: Cannot find dataverse with name fakeDataverse (in line 22, at column 1)</expected-warn>
+        <expected-error  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-error>
+        <expected-error  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-error>
+        <expected-error  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-error>
+        <expected-error  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.realDataverse def:realDataverse">ASX1050: Cannot find dataset with name fakeDataset1 in dataverse {0} (in line 22, at column 1)</expected-error>
+        <expected-warn  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-warn>
+        <expected-warn  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-warn>
+        <expected-warn  replacers="cloud:Default.fakeDataverse def:fakeDataverse">ASX1063: Cannot find dataverse with name {0} (in line 22, at column 1)</expected-warn>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
@@ -5956,13 +5956,13 @@
     <test-case FilePath="group-by">
       <compilation-unit name="core-01-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset e in dataverse gby nor an alias with name e</expected-error>
+        <expected-error replacers="cloud:Default.gby def:gby">Cannot find dataset e in dataverse {0} nor an alias with name e</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
       <compilation-unit name="core-02-error">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset f in dataverse gby nor an alias with name f</expected-error>
+        <expected-error replacers="cloud:Default.gby def:gby">Cannot find dataset f in dataverse {0} nor an alias with name f</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="group-by">
@@ -6722,7 +6722,7 @@
     <test-case FilePath="join">
       <compilation-unit name="cross-join-02-negative">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1077: Cannot find dataset x in dataverse Default nor an alias with name x (in line 26, at column 39)</expected-error>
+        <expected-error replacers="cloud:Default.Default def:Default">ASX1077: Cannot find dataset x in dataverse {0} nor an alias with name x (in line 26, at column 39)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
@@ -7102,8 +7102,8 @@
       <compilation-unit name="partition-by-nonexistent-field">
         <output-dir compare="Text">partition-by-nonexistent-field</output-dir>
         <expected-error>Field 'id' is not found</expected-error>
-        <expected-error>Cannot find dataset with name testds in dataverse test</expected-error>
-        <expected-error>Cannot find dataset testds in dataverse test nor an alias with name testds</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">Cannot find dataset with name testds in dataverse {0}</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">Cannot find dataset testds in dataverse {0} nor an alias with name testds</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
@@ -7298,8 +7298,8 @@
       <compilation-unit name="dump_index">
         <output-dir compare="Text">dump_index</output-dir>
         <expected-error>Cannot find index with name noindex</expected-error>
-        <expected-error>Cannot find dataset with name nodataset in dataverse test</expected-error>
-        <expected-error>Cannot find dataset with name ds in dataverse nodataverse</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">Cannot find dataset with name nodataset in dataverse {0}</expected-error>
+        <expected-error replacers="cloud:Default.nodataverse def:nodataverse">Cannot find dataset with name ds in dataverse {0}</expected-error>
         <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
         <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
         <expected-error>Unsupported type: dump-index cannot process input type null</expected-error>
@@ -11626,7 +11626,7 @@
     <test-case FilePath="synonym">
       <compilation-unit name="synonym-02-negative">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1063: Cannot find dataverse with name UNKNOWN_DATAVERSE</expected-error>
+        <expected-error replacers="cloud:Default.UNKNOWN_DATAVERSE def:UNKNOWN_DATAVERSE">ASX1063: Cannot find dataverse with name {0}</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="synonym">
@@ -13122,26 +13122,26 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-1">
         <output-dir compare="Text">bad-function-ddl-1</output-dir>
-        <expected-error>Cannot find dataset TweetMessages in dataverse experiments nor an alias with name TweetMessages</expected-error>
-        <expected-error>Cannot find dataset TweetMessages2 in dataverse experiments2 nor an alias with name TweetMessages2</expected-error>
+        <expected-error replacers="cloud:Default.experiments def:experiments">Cannot find dataset TweetMessages in dataverse {0} nor an alias with name TweetMessages</expected-error>
+        <expected-error replacers="cloud:Default.experiments2 def:experiments2">Cannot find dataset TweetMessages2 in dataverse {0} nor an alias with name TweetMessages2</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-2">
         <output-dir compare="Text">bad-function-ddl-2</output-dir>
-        <expected-error>Cannot find dataset TweetMessages in dataverse experiments2 nor an alias with name TweetMessages</expected-error>
+        <expected-error replacers="cloud:Default.experiments2 def:experiments2">Cannot find dataset TweetMessages in dataverse {0} nor an alias with name TweetMessages</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-3">
         <output-dir compare="Text">bad-function-ddl-3</output-dir>
-        <expected-error>Cannot find dataset TweetMessages in dataverse experiments nor an alias with name TweetMessages</expected-error>
+        <expected-error replacers="cloud:Default.experiments def:experiments">Cannot find dataset TweetMessages in dataverse {0} nor an alias with name TweetMessages</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-4">
         <output-dir compare="Text">bad-function-ddl-4</output-dir>
-        <expected-error>Cannot find dataset TweetMessages in dataverse experients nor an alias with name TweetMessages</expected-error>
+        <expected-error replacers="cloud:Default.experients def:experients">Cannot find dataset TweetMessages in dataverse {0} nor an alias with name TweetMessages</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -13160,13 +13160,13 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-7">
         <output-dir compare="Text">bad-function-ddl-7</output-dir>
-        <expected-error>Cannot find dataset TweetMessaes in dataverse experiments nor an alias with name TweetMessaes</expected-error>
+        <expected-error replacers="cloud:Default.experiments def:experiments">Cannot find dataset TweetMessaes in dataverse {0} nor an alias with name TweetMessaes</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-8">
         <output-dir compare="Text">bad-function-ddl-8</output-dir>
-        <expected-error>Cannot find dataset TweetMessaes in dataverse experiments nor an alias with name TweetMessaes</expected-error>
+        <expected-error replacers="cloud:Default.experiments def:experiments">Cannot find dataset TweetMessaes in dataverse {0} nor an alias with name TweetMessaes</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -13278,7 +13278,7 @@
     <test-case FilePath="user-defined-functions">
       <compilation-unit name="query-ASTERIXDB-1652">
         <output-dir compare="Text">query-ASTERIXDB-1652-2</output-dir>
-        <expected-error>ASX1063: Cannot find dataverse with name test</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1063: Cannot find dataverse with name {0}</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="user-defined-functions">
@@ -13559,7 +13559,7 @@
     <test-case FilePath="view">
       <compilation-unit name="create-view-2-negative">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1063: Cannot find dataverse with name test (in line 24, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1063: Cannot find dataverse with name {0} (in line 24, at column 1)</expected-error>
         <expected-error><![CDATA[ASX1001: Syntax error: In line 25 >>create view test.v1 as select * from range(1,2) r order by;<< Encountered ";" at column 59]]></expected-error>
         <expected-error>ASX1081: Cannot find function with signature test.undefined_range(2) (in line 25, at column 38)</expected-error>
         <expected-error>ASX1160: A view with this name test.v1 already exists (in line 26, at column 1)</expected-error>
@@ -13639,7 +13639,7 @@
         <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v1 (in line 34, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1166: Invalid foreign key definition: foreign key does not match primary key of view test1.employee_v2 (in line 34, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 34, at column 1)]]></expected-error>
-        <expected-error><![CDATA[ASX1063: Cannot find dataverse with name test3 (in line 42, at column 1)]]></expected-error>
+        <expected-error replacers="cloud:Default.test3 def:test3"><![CDATA[ASX1063: Cannot find dataverse with name {0} (in line 42, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1159: Cannot find view with name test1.employee_v3 (in line 42, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1159: Cannot find view with name test1.employee (in line 43, at column 1)]]></expected-error>
         <expected-error><![CDATA[ASX1164: Invalid foreign key definition (in line 43, at column 1)]]></expected-error>
@@ -13679,9 +13679,9 @@
     <test-case FilePath="view">
       <compilation-unit name="drop-view-2-negative">
         <output-dir compare="Text">drop-view-2-negative</output-dir>
-        <expected-error>ASX1063: Cannot find dataverse with name test (in line 24, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1063: Cannot find dataverse with name {0} (in line 24, at column 1)</expected-error>
         <expected-error>ASX1159: Cannot find view with name test.v1 (in line 25, at column 1)</expected-error>
-        <expected-error>ASX1050: Cannot find dataset with name v1 in dataverse test (in line 27, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test def:test">ASX1050: Cannot find dataset with name v1 in dataverse {0} (in line 27, at column 1)</expected-error>
         <expected-error>ASX1159: Cannot find view with name test.ds1 (in line 30, at column 1)</expected-error>
         <expected-error>ASX1148: Cannot drop dataset test2.ds2 being used by view test1.v1</expected-error>
         <expected-error>ASX1148: Cannot drop function test2.f2() being used by view test1.v1</expected-error>
@@ -13700,9 +13700,9 @@
     <test-case FilePath="view">
       <compilation-unit name="view-2-negative">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>ASX1050: Cannot find dataset with name v1 in dataverse test1 (in line 24, at column 17)</expected-error>
-        <expected-error>ASX1050: Cannot find dataset with name v2 in dataverse test1 (in line 24, at column 17)</expected-error>
-        <expected-error>ASX1050: Cannot find dataset with name v3 in dataverse test1 (in line 24, at column 1)</expected-error>
+        <expected-error replacers="cloud:Default.test1 def:test1">ASX1050: Cannot find dataset with name v1 in dataverse {0} (in line 24, at column 17)</expected-error>
+        <expected-error replacers="cloud:Default.test1 def:test1">ASX1050: Cannot find dataset with name v2 in dataverse {0} (in line 24, at column 17)</expected-error>
+        <expected-error replacers="cloud:Default.test1 def:test1">ASX1050: Cannot find dataset with name v3 in dataverse {0} (in line 24, at column 1)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="view">
@@ -13791,7 +13791,7 @@
     <test-case FilePath="load">
       <compilation-unit name="issue650_query">
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Cannot find dataset with name Users in dataverse fuzzyjoin</expected-error>
+        <expected-error replacers="cloud:Default.fuzzyjoin def:fuzzyjoin">Cannot find dataset with name Users in dataverse {0}</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="load">
@@ -15075,7 +15075,7 @@
     <test-case FilePath="union">
       <compilation-unit name="union_negative">
         <output-dir compare="Text">union</output-dir>
-        <expected-error>Cannot find dataset t in dataverse TinySocial nor an alias with name t</expected-error>
+        <expected-error replacers="cloud:Default.TinySocial def:TinySocial">Cannot find dataset t in dataverse {0} nor an alias with name t</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="union">

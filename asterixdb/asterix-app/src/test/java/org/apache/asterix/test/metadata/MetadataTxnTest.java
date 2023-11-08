@@ -133,8 +133,9 @@ public class MetadataTxnTest {
         metadataProvider.setMetadataTxnContext(rebalanceTxn);
         try {
             final Set<String> rebalanceToNodes = Stream.of("asterix_nc1").collect(Collectors.toSet());
-            DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDataverseName(), sourceDataset.getDatasetName(),
-                    sourceDataset.getRebalanceCount() + 1, rebalanceToNodes, metadataProvider);
+            DatasetUtil.createNodeGroupForNewDataset(sourceDataset.getDatabaseName(), sourceDataset.getDataverseName(),
+                    sourceDataset.getDatasetName(), sourceDataset.getRebalanceCount() + 1, rebalanceToNodes,
+                    metadataProvider);
             // rebalance failed --> abort txn
             MetadataManager.INSTANCE.abortTransaction(rebalanceTxn);
         } finally {

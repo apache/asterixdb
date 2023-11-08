@@ -40,6 +40,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.Expression.Kind;
 import org.apache.asterix.lang.common.base.ILangExpression;
@@ -207,7 +208,8 @@ abstract class LangExpressionToPlanTranslator
         if (dataset == null) {
             // This would never happen since we check for this in AqlTranslator
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, stmt.getDatasetName(),
-                    stmt.getDataverseName());
+                    MetadataUtil.dataverseName(stmt.getDatabaseName(), stmt.getDataverseName(),
+                            metadataProvider.isUsingDatabase()));
         }
         IAType itemType = metadataProvider.findType(dataset.getItemTypeDatabaseName(),
                 dataset.getItemTypeDataverseName(), dataset.getItemTypeName());
@@ -831,7 +833,7 @@ abstract class LangExpressionToPlanTranslator
         Dataset dataset = metadataProvider.findDataset(database, dataverseName, datasetName);
         if (dataset == null) {
             throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                    dataverseName);
+                    MetadataUtil.dataverseName(database, dataverseName, metadataProvider.isUsingDatabase()));
         }
         if (dataset.getDatasetType() == DatasetType.EXTERNAL) {
             throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,

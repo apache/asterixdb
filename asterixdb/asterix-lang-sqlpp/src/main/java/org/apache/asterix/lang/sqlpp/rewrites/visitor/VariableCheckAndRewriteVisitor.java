@@ -106,7 +106,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
                             dataverseNamePart);
                 }
                 //TODO(DB): decide
-                String databaseName = MetadataUtil.resolveDatabase(null, dataverseName);
+                String databaseName = MetadataUtil.databaseFor(dataverseName);
                 String datasetName = fa.getIdent().getValue();
                 CallExpr datasetExpr =
                         resolveAsDataset(databaseName, dataverseName, datasetName, parent, leadingVarExpr);
@@ -196,7 +196,7 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         } else {
             Pair<Dataset, Boolean> p = findDataset(databaseName, dataverseName, datasetName, true, sourceLoc);
             if (p == null) {
-                throw createUnresolvableError(dataverseName, datasetName, sourceLoc);
+                throw createUnresolvableError(databaseName, dataverseName, datasetName, sourceLoc);
             }
             Dataset resolvedDataset = p.first;
             resolvedDatabaseName = resolvedDataset.getDatabaseName();
@@ -261,15 +261,23 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         }
     }
 
-    private CompilationException createUnresolvableError(DataverseName dataverseName, String datasetName,
-            SourceLocation sourceLoc) {
+    private CompilationException createUnresolvableError(String databaseName, DataverseName dataverseName,
+            String datasetName, SourceLocation sourceLoc) {
         DataverseName defaultDataverseName = metadataProvider.getDefaultNamespace().getDataverseName();
+        String defaultDatabaseName = metadataProvider.getDefaultNamespace().getDatabaseName();
         if (dataverseName == null && defaultDataverseName == null) {
             return new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET, sourceLoc, datasetName);
         }
+        boolean useDb = metadataProvider.isUsingDatabase();
+        String namespace;
+        if (dataverseName == null) {
+            namespace = MetadataUtil.dataverseName(defaultDatabaseName, defaultDataverseName, useDb);
+        } else {
+            namespace = MetadataUtil.dataverseName(databaseName, dataverseName, useDb);
+        }
         //If no available dataset nor in-scope variable to resolve to, we throw an error.
         return new CompilationException(ErrorCode.NAME_RESOLVE_UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
-                dataverseName == null ? defaultDataverseName : dataverseName);
+                namespace);
     }
 
     private Pair<Dataset, Boolean> findDataset(String databaseName, DataverseName dataverseName, String datasetName,

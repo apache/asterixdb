@@ -42,6 +42,10 @@ public class MetadataUtil {
         }
     }
 
+    public static String dataverseName(String databaseName, DataverseName dataverseName, boolean useDb) {
+        return useDb ? databaseName + "." + dataverseName : String.valueOf(dataverseName);
+    }
+
     public static String getFullyQualifiedDisplayName(DataverseName dataverseName, String objectName) {
         return dataverseName + "." + objectName;
     }
