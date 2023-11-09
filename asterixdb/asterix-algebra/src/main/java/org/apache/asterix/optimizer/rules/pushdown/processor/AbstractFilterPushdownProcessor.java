@@ -53,15 +53,17 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
     }
 
     @Override
-    public final void process() throws AlgebricksException {
+    public final boolean process() throws AlgebricksException {
         List<ScanDefineDescriptor> scanDefineDescriptors = pushdownContext.getRegisteredScans();
+        boolean changed = false;
         for (ScanDefineDescriptor scanDefineDescriptor : scanDefineDescriptors) {
             if (skip(scanDefineDescriptor)) {
                 continue;
             }
             prepareScan(scanDefineDescriptor);
-            pushdownFilter(scanDefineDescriptor, scanDefineDescriptor);
+            changed |= pushdownFilter(scanDefineDescriptor, scanDefineDescriptor);
         }
+        return changed;
     }
 
     /**
@@ -119,9 +121,10 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
     protected abstract void putFilterInformation(ScanDefineDescriptor scanDefineDescriptor,
             ILogicalExpression inlinedExpr) throws AlgebricksException;
 
-    private void pushdownFilter(DefineDescriptor defineDescriptor, ScanDefineDescriptor scanDefineDescriptor)
+    private boolean pushdownFilter(DefineDescriptor defineDescriptor, ScanDefineDescriptor scanDefineDescriptor)
             throws AlgebricksException {
         List<UseDescriptor> useDescriptors = pushdownContext.getUseDescriptors(defineDescriptor);
+        boolean changed = false;
         for (UseDescriptor useDescriptor : useDescriptors) {
             /*
              * Pushdown works only if the scope(use) and scope(scan) are the same, as we cannot pushdown when
@@ -132,18 +135,20 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
                     && (useOperator.getOperatorTag() == LogicalOperatorTag.SELECT
                             || useOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN)
                     && isPushdownAllowed(useOperator)) {
-                inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
+                changed |= inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
             } else if (useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
-                inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
+                changed |= inlineAndPushdownFilter(useDescriptor, scanDefineDescriptor);
             }
         }
 
         for (UseDescriptor useDescriptor : useDescriptors) {
             DefineDescriptor nextDefineDescriptor = pushdownContext.getDefineDescriptor(useDescriptor);
             if (nextDefineDescriptor != null) {
-                pushdownFilter(nextDefineDescriptor, scanDefineDescriptor);
+                changed |= pushdownFilter(nextDefineDescriptor, scanDefineDescriptor);
             }
         }
+
+        return changed;
     }
 
     private boolean isPushdownAllowed(ILogicalOperator useOperator) {
@@ -152,24 +157,26 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         return disallowed == Boolean.FALSE;
     }
 
-    private void inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)
+    private boolean inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)
             throws AlgebricksException {
         ILogicalOperator selectOp = useDescriptor.getOperator();
         if (visitedOperators.contains(selectOp)) {
             // Skip and follow through to find any other selects that can be pushed down
-            return;
+            return false;
         }
-
+        boolean changed = false;
         // Get a clone of the SELECT expression and inline it
         ILogicalExpression inlinedExpr = pushdownContext.cloneAndInlineExpression(useDescriptor, context);
         // Prepare for pushdown
         preparePushdown(useDescriptor);
         if (pushdownFilterExpression(inlinedExpr)) {
             putFilterInformation(scanDefineDescriptor, inlinedExpr);
+            changed = true;
         }
 
         // Do not push down a select twice.
         visitedOperators.add(selectOp);
+        return changed;
     }
 
     protected final boolean pushdownFilterExpression(ILogicalExpression expression) throws AlgebricksException {

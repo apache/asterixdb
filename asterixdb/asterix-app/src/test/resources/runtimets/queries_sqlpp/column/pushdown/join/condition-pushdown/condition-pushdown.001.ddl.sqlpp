@@ -16,10 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+CREATE COLLECTION TestOpenColumn1
+PRIMARY KEY (c_id:bigint)
+WITH {
+    "storage-format": {"format": "column"}
+};
+
+
+CREATE COLLECTION TestOpenColumn2
+PRIMARY KEY (c_id:bigint)
+WITH {
+    "storage-format": {"format": "column"}
+};
+
+CREATE INDEX idx_column_t1_s ON TestOpenColumn1(c_s:string);
+CREATE INDEX idx_column_t2_s ON TestOpenColumn2(c_s:string);
+
+CREATE COLLECTION TestOpenRow1
+PRIMARY KEY (c_id:bigint)
+WITH {
+    "storage-format": {"format": "row"}
+};
+
+
+CREATE COLLECTION TestOpenRow2
+PRIMARY KEY (c_id:bigint)
+WITH {
+    "storage-format": {"format": "row"}
+};
+
+CREATE INDEX idx_row_t1_s ON TestOpenRow1(c_s:string);
+CREATE INDEX idx_row_t2_s ON TestOpenRow2(c_s:string);

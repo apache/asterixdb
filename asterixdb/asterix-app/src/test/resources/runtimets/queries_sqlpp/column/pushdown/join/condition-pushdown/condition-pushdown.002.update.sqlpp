@@ -16,10 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+USE test;
 
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+INSERT INTO TestOpenColumn1 ({
+    "c_id": 1,
+    "c_x": 1,
+    "c_s": "hello",
+    "c_i64": 2,
+    "c_i8": 2,
+    "c_d": 2
+});
+
+INSERT INTO TestOpenColumn2 ({
+    "c_id": 105,
+    "c_x": 105,
+    "c_s": "hello",
+    "c_i64": 2.25,
+    "c_i8": 10000.25,
+    "c_d": 3.5
+});
+
+INSERT INTO TestOpenRow1 ({
+    "c_id": 1,
+    "c_x": 1,
+    "c_s": "hello",
+    "c_i64": 2,
+    "c_i8": 2,
+    "c_d": 2
+});
+
+INSERT INTO TestOpenRow2 ({
+    "c_id": 105,
+    "c_x": 105,
+    "c_s": "hello",
+    "c_i64": 2.25,
+    "c_i8": 10000.25,
+    "c_d": 3.5
+});

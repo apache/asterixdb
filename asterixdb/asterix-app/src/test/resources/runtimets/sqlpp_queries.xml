@@ -16264,6 +16264,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="pushdown/join/condition-pushdown">
+        <output-dir compare="Text">pushdown/join/condition-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/join/left-outer">
+        <output-dir compare="Text">pushdown/join/left-outer</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="pushdown/other-pushdowns">
         <output-dir compare="Text">pushdown/other-pushdowns</output-dir>
       </compilation-unit>

@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+USE test;
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+EXPLAIN
+-- Should request the entire 'x' instead of {"x": {"y":any}}
+SELECT COUNT(c.x.y)
+FROM ColumnDataset c, RowDataset r
+WHERE c.x = r.x

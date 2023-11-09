@@ -19,6 +19,7 @@
 package org.apache.asterix.metadata.utils;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.om.base.ABoolean;
@@ -30,7 +31,10 @@ import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.om.types.AUnionType;
+import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.ConstantExpressionUtil;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
@@ -43,7 +47,7 @@ import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 
 public class PushdownUtil {
     //Set of allowed functions that can request a type in its entirety without marking it as leaf (i.e., ANY)
-    public static final Set<FunctionIdentifier> ALLOWED_FUNCTIONS = createAllowedFunctions();
+    public static final Set<FunctionIdentifier> YIELDABLE_FUNCTIONS = createYieldableFunctions();
     //Set of supported array functions
     public static final Set<FunctionIdentifier> ARRAY_FUNCTIONS = createSupportedArrayFunctions();
     //Set of supported functions that we can push down (a.k.a. path functions)
@@ -61,8 +65,9 @@ public class PushdownUtil {
         if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fieldAccessExpr.getFunctionIdentifier())) {
             return ConstantExpressionUtil.getStringArgument(fieldAccessExpr, 1);
         } else {
-            //FIELD_ACCESS_BY_INDEX
-            ARecordType recordType = (ARecordType) typeEnv.getType(fieldAccessExpr.getArguments().get(0).getValue());
+            // FIELD_ACCESS_BY_INDEX
+            IAType type = (IAType) typeEnv.getType(fieldAccessExpr.getArguments().get(0).getValue());
+            ARecordType recordType = getRecordType(type);
             int fieldIdx = ConstantExpressionUtil.getIntArgument(fieldAccessExpr, 1);
             return recordType.getFieldNames()[fieldIdx];
         }
@@ -138,6 +143,10 @@ public class PushdownUtil {
         return fid1 != null && fid1.equals(fid2);
     }
 
+    public static boolean isAllVariableExpressions(List<Mutable<ILogicalExpression>> arguments) {
+        return arguments.stream().allMatch(arg -> arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE);
+    }
+
     public static IAObject getConstant(ILogicalExpression expr) {
         IAlgebricksConstantValue algebricksConstant = ((ConstantExpression) expr).getValue();
         if (algebricksConstant.isTrue()) {
@@ -165,6 +174,15 @@ public class PushdownUtil {
         return Set.of(BuiltinFunctions.GET_ITEM, BuiltinFunctions.ARRAY_STAR, BuiltinFunctions.SCAN_COLLECTION);
     }
 
+    private static ARecordType getRecordType(IAType type) {
+        IAType recordType = type;
+        if (type.getTypeTag() == ATypeTag.UNION) {
+            recordType = ((AUnionType) type).getActualType();
+        }
+
+        return (ARecordType) recordType;
+    }
+
     private static Set<FunctionIdentifier> createSupportedFunctions() {
         Set<FunctionIdentifier> supportedFunctions = new HashSet<>();
         supportedFunctions.add(BuiltinFunctions.FIELD_ACCESS_BY_NAME);
@@ -173,11 +191,16 @@ public class PushdownUtil {
         return supportedFunctions;
     }
 
-    private static Set<FunctionIdentifier> createAllowedFunctions() {
-        return Set.of(BuiltinFunctions.IS_ARRAY, BuiltinFunctions.IS_OBJECT, BuiltinFunctions.IS_ATOMIC,
+    private static Set<FunctionIdentifier> createYieldableFunctions() {
+        return Set.of(BuiltinFunctions.IS_ARRAY, BuiltinFunctions.IS_MULTISET, BuiltinFunctions.IS_OBJECT,
+                BuiltinFunctions.IS_ATOMIC, BuiltinFunctions.IS_BINARY, BuiltinFunctions.IS_POINT,
+                BuiltinFunctions.IS_LINE, BuiltinFunctions.IS_RECTANGLE, BuiltinFunctions.IS_CIRCLE,
+                BuiltinFunctions.IS_POLYGON, BuiltinFunctions.IS_SPATIAL, BuiltinFunctions.IS_DATE,
+                BuiltinFunctions.IS_DATETIME, BuiltinFunctions.IS_TIME, BuiltinFunctions.IS_DURATION,
+                BuiltinFunctions.IS_INTERVAL, BuiltinFunctions.IS_TEMPORAL, BuiltinFunctions.IS_UUID,
                 BuiltinFunctions.IS_NUMBER, BuiltinFunctions.IS_BOOLEAN, BuiltinFunctions.IS_STRING,
-                AlgebricksBuiltinFunctions.IS_MISSING, AlgebricksBuiltinFunctions.IS_NULL, BuiltinFunctions.IS_UNKNOWN,
-                BuiltinFunctions.LT, BuiltinFunctions.LE, BuiltinFunctions.EQ, BuiltinFunctions.GT, BuiltinFunctions.GE,
+                BuiltinFunctions.IS_SYSTEM_NULL, AlgebricksBuiltinFunctions.IS_MISSING,
+                AlgebricksBuiltinFunctions.IS_NULL, BuiltinFunctions.IS_UNKNOWN, BuiltinFunctions.GET_TYPE,
                 BuiltinFunctions.SCALAR_SQL_COUNT);
     }
 

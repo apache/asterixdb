@@ -181,8 +181,9 @@ public class PushdownContext {
             case VARIABLE:
                 LogicalVariable variable = ((VariableReferenceExpression) expression).getVariableReference();
                 DefineDescriptor defineDescriptor = defineChain.get(variable);
-                if (defineDescriptor.isScanDefinition()) {
-                    // Reached the recordVariable
+                if (defineDescriptor == null || defineDescriptor.isScanDefinition()) {
+                    // Reached un-filterable source variable (e.g., originated from an internal dataset in row format)
+                    // or filterable source recordVariable (e.g., columnar dataset or external dataset with prefix)
                     return expression;
                 }
                 return cloneAndInline(defineDescriptor.getExpression(), context);

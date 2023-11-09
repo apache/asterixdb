@@ -46,12 +46,14 @@ public class InlineFilterExpressionsProcessor extends AbstractPushdownProcessor 
     }
 
     @Override
-    public void process() throws AlgebricksException {
+    public boolean process() throws AlgebricksException {
         List<ScanDefineDescriptor> scanDefineDescriptors = pushdownContext.getRegisteredScans();
         for (ScanDefineDescriptor scanDefineDescriptor : scanDefineDescriptors) {
             scanDefineDescriptor.setFilterExpression(inline(scanDefineDescriptor.getFilterExpression()));
             scanDefineDescriptor.setRangeFilterExpression(inline(scanDefineDescriptor.getRangeFilterExpression()));
         }
+        // Should always return false as this processor relies on filter pushdown
+        return false;
     }
 
     private ILogicalExpression inline(ILogicalExpression expression) {

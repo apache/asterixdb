@@ -16,10 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+USE test;
 
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+SELECT a.id AS aid, b.id AS bid
+FROM DBLP AS a
+LEFT OUTER UNNEST
+(
+  SELECT VALUE b
+  FROM CSX AS b
+  WHERE a.authors = b.authors
+) AS b
+ORDER BY a.id;

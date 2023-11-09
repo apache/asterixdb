@@ -16,10 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
-
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+USE test;
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+EXPLAIN
+SELECT t1.c_x c1, t2.c_x c2
+FROM  TestOpenColumn1 t1, TestOpenColumn2 t2
+WHERE to_string(t1.c_s) /*+ indexnl */ = t2.c_s
+ORDER BY t1.c_x, t2.c_x;

@@ -56,10 +56,12 @@ public class PushdownProcessorsExecutor {
         processors.add(processor);
     }
 
-    public void execute() throws AlgebricksException {
+    public boolean execute() throws AlgebricksException {
+        boolean changed = false;
         for (IPushdownProcessor processor : processors) {
-            processor.process();
+            changed |= processor.process();
         }
+        return changed;
     }
 
     public void finalizePushdown(PushdownContext pushdownContext, IOptimizationContext context) {

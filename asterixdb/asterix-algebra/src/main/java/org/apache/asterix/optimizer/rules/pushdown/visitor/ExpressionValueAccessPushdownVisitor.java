@@ -18,11 +18,12 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
-import static org.apache.asterix.metadata.utils.PushdownUtil.ALLOWED_FUNCTIONS;
 import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
+import static org.apache.asterix.metadata.utils.PushdownUtil.YIELDABLE_FUNCTIONS;
 
 import java.util.List;
 
+import org.apache.asterix.metadata.utils.PushdownUtil;
 import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -42,33 +43,32 @@ public class ExpressionValueAccessPushdownVisitor {
 
     public boolean transform(ILogicalExpression expression, LogicalVariable producedVariable,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
-        pushValueAccessExpression(expression, producedVariable, typeEnv);
-        return false;
+        return pushValueAccessExpression(expression, producedVariable, typeEnv);
     }
 
-    private void pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
+    private boolean pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
-        pushValueAccessExpression(exprRef.getValue(), producedVar, typeEnv);
+        return pushValueAccessExpression(exprRef.getValue(), producedVar, typeEnv);
     }
 
     /**
      * Pushdown field access expressions and array access expressions down
      */
-    private void pushValueAccessExpression(ILogicalExpression expr, LogicalVariable producedVar,
+    private boolean pushValueAccessExpression(ILogicalExpression expr, LogicalVariable producedVar,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         if (skipPushdown(expr)) {
-            return;
+            return false;
         }
 
         final AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expr;
 
         if (isSuccessfullyPushedDown(funcExpr, producedVar, typeEnv)) {
             //We successfully pushed down the value access function
-            return;
+            return true;
         }
 
         //Check nested arguments if contains any pushable value access
-        pushValueAccessExpressionArg(funcExpr.getArguments(), producedVar, typeEnv);
+        return pushValueAccessExpressionArg(funcExpr.getArguments(), producedVar, typeEnv);
     }
 
     /**
@@ -82,12 +82,12 @@ public class ExpressionValueAccessPushdownVisitor {
             return true;
         }
         return expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL || builder.isEmpty()
-                || isTypeCheckOnVariable(expr);
+                || shouldYieldVariables(expr);
     }
 
     /**
-     * If the expression is a type-check function on a variable. We should stop as we do not want to unregister
-     * the variable used by the type-check function.
+     * If the expression is an 'allowed' function with only variable arguments, we should stop as we do not
+     * want to unregister the variable used by the function.
      * <p>
      * Example:
      * SELECT p.personInfo.name
@@ -110,21 +110,23 @@ public class ExpressionValueAccessPushdownVisitor {
      * @param expression expression
      * @return if the function is a type-check function and has a variable argument.
      */
-    private boolean isTypeCheckOnVariable(ILogicalExpression expression) {
+    private boolean shouldYieldVariables(ILogicalExpression expression) {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) expression;
-        return ALLOWED_FUNCTIONS.contains(funcExpr.getFunctionIdentifier())
-                && funcExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE;
+        return YIELDABLE_FUNCTIONS.contains(funcExpr.getFunctionIdentifier())
+                && PushdownUtil.isAllVariableExpressions(funcExpr.getArguments());
     }
 
-    private void pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList, LogicalVariable producedVar,
-            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+    private boolean pushValueAccessExpressionArg(List<Mutable<ILogicalExpression>> exprList,
+            LogicalVariable producedVar, IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        boolean changed = false;
         for (Mutable<ILogicalExpression> exprRef : exprList) {
             /*
              * We need to set the produced variable as null here as the produced variable will not correspond to the
              * nested expression.
              */
-            pushValueAccessExpression(exprRef, producedVar, typeEnv);
+            changed |= pushValueAccessExpression(exprRef, producedVar, typeEnv);
         }
+        return changed;
     }
 
     private boolean isSuccessfullyPushedDown(AbstractFunctionCallExpression funcExpr, LogicalVariable producedVar,

@@ -88,6 +88,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
          * supports value-access, filter, and/or range-filter.
          */
         run = shouldRun(context);
+        boolean changed = false;
         if (run) {
             // Context holds all the necessary information to perform pushdowns
             PushdownContext pushdownContext = new PushdownContext();
@@ -97,11 +98,11 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
             // Execute several optimization passes to perform the pushdown
             PushdownProcessorsExecutor pushdownProcessorsExecutor = new PushdownProcessorsExecutor();
             addProcessors(pushdownProcessorsExecutor, pushdownContext, context);
-            pushdownProcessorsExecutor.execute();
+            changed = pushdownProcessorsExecutor.execute();
             pushdownProcessorsExecutor.finalizePushdown(pushdownContext, context);
             run = false;
         }
-        return false;
+        return changed;
     }
 
     private void addProcessors(PushdownProcessorsExecutor pushdownProcessorsExecutor, PushdownContext pushdownContext,

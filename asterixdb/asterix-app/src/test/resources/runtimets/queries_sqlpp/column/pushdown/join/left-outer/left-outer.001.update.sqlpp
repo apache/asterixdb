@@ -16,10 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+USE test;
 
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+INSERT INTO DBLP {"id":6, "authors":"asdaskhdaskj dhas dhkasj dsakjdh"};
+INSERT INTO CSX {"id":7, "authors":"asdaskhdaskj dhas dhkasj dsakjdh"};

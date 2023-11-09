@@ -48,20 +48,25 @@ public class ColumnValueAccessPushdownProcessor extends AbstractPushdownProcesso
     }
 
     @Override
-    public void process() throws AlgebricksException {
+    public boolean process() throws AlgebricksException {
         List<ScanDefineDescriptor> scanDefineDescriptors = pushdownContext.getRegisteredScans();
+        boolean changed = false;
         for (ScanDefineDescriptor scanDefineDescriptor : scanDefineDescriptors) {
             if (!DatasetUtil.isFieldAccessPushdownSupported(scanDefineDescriptor.getDataset())) {
                 continue;
             }
             pushdownFieldAccessForDataset(scanDefineDescriptor);
-            scanDefineDescriptor
-                    .setRecordNode((RootExpectedSchemaNode) builder.getNode(scanDefineDescriptor.getVariable()));
+            RootExpectedSchemaNode root = (RootExpectedSchemaNode) builder.getNode(scanDefineDescriptor.getVariable());
+            scanDefineDescriptor.setRecordNode(root);
+            changed |= !root.isAllFields();
             if (scanDefineDescriptor.hasMeta()) {
-                scanDefineDescriptor.setMetaNode(
-                        (RootExpectedSchemaNode) builder.getNode(scanDefineDescriptor.getMetaRecordVariable()));
+                RootExpectedSchemaNode metaRoot =
+                        (RootExpectedSchemaNode) builder.getNode(scanDefineDescriptor.getMetaRecordVariable());
+                changed |= !metaRoot.isAllFields();
+                scanDefineDescriptor.setMetaNode(metaRoot);
             }
         }
+        return changed;
     }
 
     private void pushdownFieldAccessForDataset(ScanDefineDescriptor scanDefineDescriptor) throws AlgebricksException {

@@ -16,10 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
-public interface IPushdownProcessor {
-    boolean process() throws AlgebricksException;
-}
+CREATE COLLECTION DBLP
+PRIMARY KEY (id:int)
+WITH {
+    "storage-format": {"format": "column"}
+};
+
+CREATE COLLECTION CSX
+PRIMARY KEY (id:int)
+WITH {
+    "storage-format": {"format": "column"}
+};
