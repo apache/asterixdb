@@ -46,8 +46,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.replication.AllDatasetsReplicationStrategy;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.ReplicationJob;
@@ -110,6 +112,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private final List<Path> storageRoots;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private final IPersistedResourceRegistry persistedResourceRegistry;
+    private IDatasetLifecycleManager datasetLifecycleManager;
 
     public PersistentLocalResourceRepository(IIOManager ioManager,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
@@ -346,6 +349,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    public void setDatasetLifecycleManager(IDatasetLifecycleManager datasetLifecycleManager) {
+        this.datasetLifecycleManager = datasetLifecycleManager;
+    }
+
     private void createReplicationJob(ReplicationOperation operation, FileReference fileRef)
             throws HyracksDataException {
         filesToBeReplicated.clear();
@@ -480,6 +487,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     public synchronized void cleanup(int partition) throws HyracksDataException {
+        datasetLifecycleManager.waitForIO(AllDatasetsReplicationStrategy.INSTANCE, partition);
         final Set<File> partitionIndexes = getPartitionIndexes(partition);
         try {
             for (File index : partitionIndexes) {
