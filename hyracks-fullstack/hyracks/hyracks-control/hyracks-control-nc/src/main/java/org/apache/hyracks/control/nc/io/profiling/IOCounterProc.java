@@ -50,9 +50,7 @@ public class IOCounterProc extends IOCounterCache<List<String>> {
     public long getWrites() {
         try {
             List<String> rows = getInfo();
-            long writes = extractRow(rows, 5);
-            long cancelledWrites = extractRow(rows, 6);
-            return writes - cancelledWrites;
+            return extractRow(rows, 5);
         } catch (Exception e) {
             LOGGER.log(failureCount++ > 0 ? Level.DEBUG : Level.WARN, "Failure getting writes", e);
             return IOCounterDefault.IO_COUNTER_UNAVAILABLE;
