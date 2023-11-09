@@ -207,7 +207,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         }
         Pair<ILogicalOperator, LogicalVariable> select =
                 selectExpression.getSelectSetOperation().accept(this, currentOpRef);
-        currentOpRef = new MutableObject<>(select.first);
+        if (select.first != null) {
+            currentOpRef = new MutableObject<>(select.first);
+        }
         if (selectExpression.hasOrderby()) {
             currentOpRef = new MutableObject<>(selectExpression.getOrderbyClause().accept(this, currentOpRef).first);
         }
@@ -769,7 +771,9 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         } else {
             ProjectOperator pr = new ProjectOperator(resVar);
             pr.getInputs().add(returnOpRef);
-            pr.setSourceLocation(returnOpRef.getValue().getSourceLocation());
+            if (returnOpRef.getValue() != null) {
+                pr.setSourceLocation(returnOpRef.getValue().getSourceLocation());
+            }
             return new Pair<>(pr, resVar);
         }
     }
