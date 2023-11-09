@@ -150,6 +150,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         IColumnIterableFilterEvaluator columnFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         List<IColumnValuesReader> filterColumnReaders = Collections.emptyList();
         List<IColumnRangeFilterValueAccessor> filterValueAccessors = Collections.emptyList();
+        String jobId = "";
         if (context != null) {
             FilterAccessorProvider filterAccessorProvider =
                     new FilterAccessorProvider(root, clipperVisitor, readerFactory, valueGetterFactory);
@@ -165,14 +166,15 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             filterAccessorProvider.reset();
             columnFilterEvaluator = columnFilterEvaluatorFactory.create(filterAccessorProvider, evaluatorContext);
             filterColumnReaders = filterAccessorProvider.getFilterColumnReaders();
+            jobId = context.getJobletContext().getJobId().toString();
         }
 
         // log normalized filter
-        logFilter(normalizedFilterEvaluator, normalizedEvaluatorFactory.toString());
+        logFilter(jobId, normalizedFilterEvaluator, normalizedEvaluatorFactory.toString());
         // log requested schema for record
-        logSchema(clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
+        logSchema(jobId, clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
         // log requested schema for meta-record
-        logSchema(metaClippedRoot, SchemaStringBuilderVisitor.META_RECORD_SCHEMA, fieldNamesDictionary);
+        logSchema(jobId, metaClippedRoot, SchemaStringBuilderVisitor.META_RECORD_SCHEMA, fieldNamesDictionary);
 
         // Primary key readers
         PrimitiveColumnValuesReader[] primaryKeyReaders =

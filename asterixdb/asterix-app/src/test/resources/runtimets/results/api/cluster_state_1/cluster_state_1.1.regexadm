@@ -42,7 +42,7 @@
     "default\.dir" : "target/io/dir/asterixdb",
     "library\.deploy\.timeout" : 1800,
     "log\.dir" : "logs/",
-    "log\.level" : "INFO",
+    "log\.level" : "DEBUG",
     "max\.wait\.active\.cluster" : 60,
     "max.web.request.size" : 209715200,
     "messaging\.frame\.count" : 512,

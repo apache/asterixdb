@@ -24,17 +24,21 @@
     <File name="InfoLog" fileName="target/info.log">
         <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </File>
+    <File name="DebugLog" fileName="target/debug.log">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </File>
     <Console name="ConsoleTest" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
     </Console>
   </Appenders>
   <Loggers>
-    <Root level="WARN">
-      <AppenderRef ref="InfoLog"/>
+    <Root>
+      <AppenderRef ref="InfoLog" level="INFO"/>
+      <AppenderRef ref="DebugLog" level="DEBUG"/>
     </Root>
     <Logger name="org.apache.hyracks.control.nc.service" level="INFO"/>
-    <Logger name="org.apache.hyracks" level="INFO"/>
-    <Logger name="org.apache.asterix" level="INFO"/>
+    <Logger name="org.apache.hyracks" level="DEBUG"/>
+    <Logger name="org.apache.asterix" level="DEBUG"/>
     <Logger name="org.apache.hyracks.test" level="INFO">
       <AppenderRef ref="ConsoleTest"/>
     </Logger>
