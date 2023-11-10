@@ -43,8 +43,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.replication.AllDatasetsReplicationStrategy;
 import org.apache.asterix.common.replication.IReplicationManager;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.replication.ReplicationJob;
@@ -106,6 +108,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     private final IPersistedResourceRegistry persistedResourceRegistry;
     private final ReentrantReadWriteLock resourcesAccessLock = new ReentrantReadWriteLock(true);
+    private IDatasetLifecycleManager datasetLifecycleManager;
 
     public PersistentLocalResourceRepository(IIOManager ioManager,
             IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
@@ -391,6 +394,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         }
     }
 
+    public void setDatasetLifecycleManager(IDatasetLifecycleManager datasetLifecycleManager) {
+        this.datasetLifecycleManager = datasetLifecycleManager;
+    }
+
     private void createReplicationJob(ReplicationOperation operation, FileReference fileRef)
             throws HyracksDataException {
         ReplicationJob job = new ReplicationJob(ReplicationJobType.METADATA, operation, ReplicationExecutionType.SYNC,
@@ -554,6 +561,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public void cleanup(int partition) throws HyracksDataException {
         beforeReadAccess();
         try {
+            datasetLifecycleManager.waitForIO(AllDatasetsReplicationStrategy.INSTANCE, partition);
             final Set<FileReference> partitionIndexes = getPartitionIndexes(partition);
             try {
                 for (FileReference index : partitionIndexes) {
