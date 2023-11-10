@@ -83,7 +83,7 @@ public final class S3ClientConfig {
     }
 
     public AwsCredentialsProvider createCredentialsProvider() {
-        return anonymousAuth ? AnonymousCredentialsProvider.create() : DefaultCredentialsProvider.create();
+        return anonymousAuth ? AnonymousCredentialsProvider.create() : DefaultCredentialsProvider.builder().build();
     }
 
     public long getProfilerLogInterval() {
