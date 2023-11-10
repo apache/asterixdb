@@ -278,7 +278,10 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (forceReadOnly) {
                 param.setReadOnly(true);
             }
-            LOGGER.info(() -> "handleRequest: " + LogRedactionUtil.statement(param.toString()));
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("handleRequest: uuid={}, clientContextID={}, {}", requestRef.getUuid(),
+                        param.getClientContextID(), LogRedactionUtil.statement(param.toString()));
+            }
             delivery = param.getMode();
             setSessionConfig(sessionOutput, param, delivery);
             final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
