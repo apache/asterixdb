@@ -243,8 +243,14 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return String.format("%s(id=%s, from=%s, uuid=%s, clientContextID=%s): %s", getClass().getSimpleName(),
-                requestMessageId, requestNodeId, requestReference.getUuid(), clientContextID,
-                LogRedactionUtil.statement(statementsText));
+        if (statementsText != null && (statementsText.startsWith("UPSERT") || statementsText.startsWith("INSERT"))) {
+            return String.format("%s(id=%s, from=%s, uuid=%s, clientContextID=%s): %s", getClass().getSimpleName(),
+                    requestMessageId, requestNodeId, requestReference.getUuid(), clientContextID,
+                    "UPSERT/INSERT statement");
+        } else {
+            return String.format("%s(id=%s, from=%s, uuid=%s, clientContextID=%s): %s", getClass().getSimpleName(),
+                    requestMessageId, requestNodeId, requestReference.getUuid(), clientContextID,
+                    LogRedactionUtil.statement(statementsText));
+        }
     }
 }

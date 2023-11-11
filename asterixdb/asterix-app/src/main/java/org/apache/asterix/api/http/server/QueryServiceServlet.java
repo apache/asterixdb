@@ -278,7 +278,14 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             if (forceReadOnly) {
                 param.setReadOnly(true);
             }
-            if (LOGGER.isInfoEnabled()) {
+            String statement = param.getStatement();
+            statement = statement == null || (!statement.isEmpty() && statement.charAt(statement.length() - 1) == ';')
+                    ? statement : (statement + ";");
+            if (statement != null && (statement.startsWith("UPSERT") || statement.startsWith("INSERT"))
+                    && LOGGER.isDebugEnabled()) {
+                LOGGER.debug("handleRequest: uuid={}, clientContextID={}, {}", requestRef.getUuid(),
+                        param.getClientContextID(), LogRedactionUtil.statement(param.toString()));
+            } else if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("handleRequest: uuid={}, clientContextID={}, {}", requestRef.getUuid(),
                         param.getClientContextID(), LogRedactionUtil.statement(param.toString()));
             }
@@ -287,9 +294,6 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             final ResultProperties resultProperties = new ResultProperties(delivery, param.getMaxResultReads());
             buildResponseHeaders(requestRef, sessionOutput, param, responsePrinter, delivery);
             responsePrinter.printHeaders();
-            String statement = param.getStatement();
-            statement = statement == null || (!statement.isEmpty() && statement.charAt(statement.length() - 1) == ';')
-                    ? statement : (statement + ";");
             validateStatement(statement);
             if (param.isParseOnly()) {
                 ResultUtil.ParseOnlyResult parseOnlyResult = parseStatement(statement);
