@@ -1,0 +1,19 @@
+{
+	"requestID": "R{.*}",
+	"signature": {
+		"*": "*"
+	},
+	"type": "application/x-adm",
+	"results": [ "{ \"v\": 1 }\n", "{ \"v\": 2 }\n" ],
+	"plans": "R{.*}",
+	"status": "success",
+	"metrics": {
+		"elapsedTime": "R{.*}",
+		"executionTime": "R{.*}",
+		"compileTime": "R{.*}",
+		"queueWaitTime": "R{.*}",
+		"resultCount": 2,
+		"resultSize": 32,
+		"processedObjects": 0
+	}
+}

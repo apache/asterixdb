@@ -31,7 +31,7 @@ import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 public class StatsCollector implements IStatsCollector {
-    private static final long serialVersionUID = 6858817639895434573L;
+    private static final long serialVersionUID = 6858817639895434574L;
 
     private final Map<String, IOperatorStats> operatorStatsMap = new LinkedHashMap<>();
 
@@ -66,6 +66,7 @@ public class StatsCollector implements IStatsCollector {
             aggregatedStats.getInputTupleCounter().update(stats.getInputTupleCounter().get());
             aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
             aggregatedStats.getPageReads().update(stats.getPageReads().get());
+            aggregatedStats.coldReadCounter().update(stats.coldReadCounter().get());
         }
         return aggregatedStats;
     }

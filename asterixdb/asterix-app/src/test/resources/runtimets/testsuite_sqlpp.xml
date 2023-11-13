@@ -101,6 +101,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
+      <compilation-unit name="cache-residency">
+        <output-dir compare="Text">cache-residency</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="request-param">
         <output-dir compare="Text">request-param</output-dir>
       </compilation-unit>

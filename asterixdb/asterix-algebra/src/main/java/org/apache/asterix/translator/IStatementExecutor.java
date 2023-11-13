@@ -106,7 +106,7 @@ public interface IStatementExecutor {
     }
 
     class Stats implements Serializable {
-        private static final long serialVersionUID = 5885273238208454611L;
+        private static final long serialVersionUID = 5885273238208454612L;
 
         public enum ProfileType {
             COUNTS("counts"),
@@ -138,6 +138,7 @@ public interface IStatementExecutor {
         private ProfileType profileType;
         private long totalWarningsCount;
         private long compileTime;
+        private double bufferCacheHitRatio;
 
         public long getCount() {
             return count;
@@ -203,6 +204,14 @@ public interface IStatementExecutor {
 
         public long getCompileTime() {
             return compileTime;
+        }
+
+        public void setBufferCacheHitRatio(double bufferCacheHitRatio) {
+            this.bufferCacheHitRatio = bufferCacheHitRatio;
+        }
+
+        public double getBufferCacheHitRatio() {
+            return bufferCacheHitRatio;
         }
     }
 

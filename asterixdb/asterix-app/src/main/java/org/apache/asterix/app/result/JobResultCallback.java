@@ -71,6 +71,8 @@ public class JobResultCallback implements IJobResultCallback {
     private void aggregateJobStats(JobId jobId, ResultMetadata metadata) {
         long processedObjects = 0;
         long aggregateTotalWarningsCount = 0;
+        long pagesRead = 0;
+        long nonPagedReads = 0;
         Set<Warning> AggregateWarnings = new HashSet<>();
         IJobManager jobManager =
                 ((ClusterControllerService) appCtx.getServiceContext().getControllerService()).getJobManager();
@@ -83,6 +85,8 @@ public class JobResultCallback implements IJobResultCallback {
                 final Collection<TaskProfile> jobletTasksProfile = jp.getTaskProfiles().values();
                 for (TaskProfile tp : jobletTasksProfile) {
                     processedObjects += tp.getStatsCollector().getAggregatedStats().getInputTupleCounter().get();
+                    pagesRead += tp.getStatsCollector().getAggregatedStats().getPageReads().get();
+                    nonPagedReads += tp.getStatsCollector().getAggregatedStats().coldReadCounter().get();
                     aggregateTotalWarningsCount += tp.getTotalWarningsCount();
                     Set<Warning> taskWarnings = tp.getWarnings();
                     if (AggregateWarnings.size() < maxWarnings && !taskWarnings.isEmpty()) {
@@ -96,6 +100,7 @@ public class JobResultCallback implements IJobResultCallback {
             metadata.setQueueWaitTimeInNanos(run.getJobProfile().getQueueWaitTimeInNanos());
         }
         metadata.setProcessedObjects(processedObjects);
+        metadata.setBufferCacheHitRatio(pagesRead > 0 ? (pagesRead - nonPagedReads) / pagesRead : Double.NaN);
         metadata.setWarnings(AggregateWarnings);
         metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
         if (run != null && run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {
