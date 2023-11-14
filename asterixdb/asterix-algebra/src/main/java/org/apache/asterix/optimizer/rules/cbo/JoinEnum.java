@@ -38,8 +38,8 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AOrderedList;
+import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -898,7 +898,12 @@ public class JoinEnum {
                     // There are predicates here. So skip the predicates and get the original dataset card.
                     // Now apply all the predicates and get the card after all predicates are applied.
                     result = stats.runSamplingQuery(this.optCtx, leafInput);
-                    double predicateCardinality = ((double) ((AInt64) result.get(0).get(0)).getLongValue());
+                    double predicateCardinality = stats.findPredicateCardinality(result);
+
+                    double projectedSize = -1.0;
+                    if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
+                        projectedSize = stats.findProjectedSize(result);
+                    }
                     if (predicateCardinality == 0.0) {
                         predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
                     }
@@ -913,11 +918,17 @@ public class JoinEnum {
                                     .warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
                         }
                     }
-
                     finalDatasetCard *= predicateCardinality / sampleCard;
                     // now switch the input back.
                     parent.getInputs().get(0).setValue(scanOp);
                     jn.setCardinality(finalDatasetCard);
+                    if (projectedSize > 0.0) {
+                        jn.setAvgDocSize(projectedSize);
+                    } else {
+                        ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
+                        int fields = record.numberOfFields();
+                        jn.setAvgDocSize(fields * 100); // cant think of anything better... cards are more important anyway
+                    }
                 }
             }
             dataScanPlan = jn.addSingleDatasetPlans();
@@ -1052,7 +1063,8 @@ public class JoinEnum {
                 SelectOperator selOp = new SelectOperator(new MutableObject<>(exp));
                 selOp.getInputs().add(new MutableObject<>(leafInput));
                 result = stats.runSamplingQuery(this.optCtx, selOp);
-                predicateCardinality = ((double) ((AInt64) result.get(0).get(0)).getLongValue());
+                predicateCardinality = stats.findPredicateCardinality(result);
+
                 if (predicateCardinality == 0.0) {
                     predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
                 }

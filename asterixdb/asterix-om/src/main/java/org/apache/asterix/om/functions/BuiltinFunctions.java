@@ -2108,7 +2108,8 @@ public class BuiltinFunctions {
         addFunction(DECODE_DATAVERSE_NAME, OrderedListOfAStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(COLLECTION_TO_SEQUENCE, CollectionToSequenceTypeComputer.INSTANCE, true);
-        addPrivateFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SERIALIZED_SIZE, AInt64TypeComputer.INSTANCE, true);
+        // used by CBO's internal sampling queries for determining projection sizes
 
         // external lookup
         addPrivateFunction(EXTERNAL_LOOKUP, AnyTypeComputer.INSTANCE, false);
