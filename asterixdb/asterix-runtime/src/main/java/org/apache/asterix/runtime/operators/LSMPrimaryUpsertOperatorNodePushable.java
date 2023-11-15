@@ -576,7 +576,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         final Map<String, ILSMComponentId> componentIdMap = new HashMap<>();
         boolean atomic = false;
         for (IIndex index : indexes) {
-            if (((ILSMIndex) index).isAtomic()) {
+            if (index != null && ((ILSMIndex) index).isAtomic()) {
                 PrimaryIndexOperationTracker opTracker =
                         ((PrimaryIndexOperationTracker) ((ILSMIndex) index).getOperationTracker());
                 opTracker.finishAllFlush();
@@ -602,7 +602,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
 
     private void abortAtomicUpsert() throws HyracksDataException {
         for (IIndex index : indexes) {
-            if (((ILSMIndex) index).isAtomic()) {
+            if (index != null && ((ILSMIndex) index).isAtomic()) {
                 PrimaryIndexOperationTracker opTracker =
                         ((PrimaryIndexOperationTracker) ((ILSMIndex) index).getOperationTracker());
                 opTracker.abort();
