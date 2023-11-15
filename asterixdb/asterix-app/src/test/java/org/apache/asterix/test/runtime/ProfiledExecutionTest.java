@@ -30,9 +30,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-/**
- * Runs the cluster state runtime tests with the storage parallelism.
- */
 @RunWith(Parameterized.class)
 public class ProfiledExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-single.conf";

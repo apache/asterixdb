@@ -16,12 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.dataflow.std.base;
 
--- compareunorderedarray=true
-USE test;
+import org.apache.hyracks.api.dataflow.ISelfProfilingNodePushable;
+import org.apache.hyracks.api.dataflow.ITimedWriter;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+public abstract class AbstractUnaryInputUnaryOutputIntrospectingOperatorNodePushable
+        extends AbstractUnaryInputUnaryOutputOperatorNodePushable implements ISelfProfilingNodePushable, ITimedWriter {
+
+}

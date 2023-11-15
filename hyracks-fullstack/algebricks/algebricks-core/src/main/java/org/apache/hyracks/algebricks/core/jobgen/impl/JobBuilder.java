@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksCountPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -38,6 +39,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.IHyracksJobBuilder;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator.ExecutionMode;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
@@ -148,11 +150,39 @@ public class JobBuilder implements IHyracksJobBuilder {
         hyracksOps.put(op, opDesc);
     }
 
+    private String getExtendedOdidForMetaOp(ILogicalOperator op, int k) {
+        String base = metaAsterixOps.get(k).getOperatorId().toString();
+        Pair<IPushRuntimeFactory, RecordDescriptor> fact = microOps.get(op);
+        List<Pair<IPushRuntimeFactory, RecordDescriptor>> metaOpPipeline = metaAsterixOpSkeletons.get(k);
+        int pos = metaOpPipeline.indexOf(fact);
+        return base + "." + pos;
+    }
+
+    private void getExtendedOdidForSubplanOp(SubplanOperator op, Map<ILogicalOperator, String> log2phys) {
+        String baseId = getExtendedOdidForMetaOp(op, algebraicOpBelongingToMetaAsterixOp.get(op));
+        op.getNestedPlans().forEach(plan -> plan.getRoots()
+                .forEach(root -> getExtendedOdidForOperator(baseId, root.getValue(), log2phys, 0)));
+    }
+
+    private int getExtendedOdidForOperator(String baseId, ILogicalOperator op, Map<ILogicalOperator, String> log2phys,
+            int input) {
+        List<Mutable<ILogicalOperator>> inputs = op.getInputs();
+        List<Integer> paths = new ArrayList<>(inputs.size());
+        for (int i = 0; i < inputs.size(); i++) {
+            ILogicalOperator nextOp = inputs.get(i).getValue();
+            paths.add(i, getExtendedOdidForOperator(baseId, nextOp, log2phys, i + input));
+        }
+        int lPath = paths.size() > 0 ? Collections.max(paths) : 0;
+        log2phys.put(op, baseId + "." + input + "." + lPath);
+        return lPath + 1;
+    }
+
     public Map<Object, String> getLogical2PhysicalMap() {
         Map<ILogicalOperator, String> mergedOperatorMap = new HashMap<>();
         hyracksOps.forEach(((k, v) -> mergedOperatorMap.put(k, v.getOperatorId().toString())));
-        algebraicOpBelongingToMetaAsterixOp
-                .forEach((k, v) -> mergedOperatorMap.put(k, metaAsterixOps.get(v).getOperatorId().toString()));
+        algebraicOpBelongingToMetaAsterixOp.forEach((k, v) -> mergedOperatorMap.put(k, getExtendedOdidForMetaOp(k, v)));
+        microOps.keySet().stream().filter(op -> op instanceof SubplanOperator)
+                .forEach(op -> getExtendedOdidForSubplanOp((SubplanOperator) op, mergedOperatorMap));
         connectors.forEach((k, v) -> mergedOperatorMap.put(k, v.getFirst().getConnectorId().toString()));
         return Collections.unmodifiableMap(mergedOperatorMap);
     }

@@ -24,14 +24,15 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class NoOpOperatorStats implements IOperatorStats {
 
-    private static final long serialVersionUID = 9055940822300360135L;
+    private static final long serialVersionUID = 9055940222300360256L;
 
     public static final NoOpOperatorStats INSTANCE = new NoOpOperatorStats();
+    public static final String INVALID_ODID = "ODID:-1";
+    public static final String NOOP_NAME = "NoOp";
 
     private static final ICounter NOOP_COUNTER = new ICounter() {
         private static final long serialVersionUID = 1L;
@@ -57,21 +58,20 @@ public class NoOpOperatorStats implements IOperatorStats {
         }
     };
 
-    private static final OperatorDescriptorId INVALID_ODID = new OperatorDescriptorId(-1);
-
     @Override
     public void writeFields(DataOutput output) throws IOException {
-
+        output.writeUTF(NOOP_NAME);
+        output.writeUTF(INVALID_ODID);
     }
 
     @Override
     public void readFields(DataInput input) throws IOException {
-
+        // nothing
     }
 
     @Override
     public String getName() {
-        return "";
+        return NOOP_NAME;
     }
 
     @Override
@@ -130,7 +130,7 @@ public class NoOpOperatorStats implements IOperatorStats {
     }
 
     @Override
-    public OperatorDescriptorId getId() {
+    public String getOperatorId() {
         return INVALID_ODID;
     }
 

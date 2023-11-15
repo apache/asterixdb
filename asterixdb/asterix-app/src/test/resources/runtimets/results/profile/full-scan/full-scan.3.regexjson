@@ -77,6 +77,24 @@
                     {
                         "name": "R{.+}",
                         "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": "R{[0-9.]+}",
+                        "avg-tuple-size": "R{[0-9.]+}",
+                        "min-tuple-size": "R{[0-9.]+}",
+                        "max-tuple-size": "R{[0-9.]+}"
+                    },
+                    {
+                        "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": "R{[0-9.]+}",
+                        "avg-tuple-size": "R{[0-9.]+}",
+                        "min-tuple-size": "R{[0-9.]+}",
+                        "max-tuple-size": "R{[0-9.]+}"
+                    },
+                    {
+                        "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
                         "runtime-id": "R{.+}"
                     }
                   ]

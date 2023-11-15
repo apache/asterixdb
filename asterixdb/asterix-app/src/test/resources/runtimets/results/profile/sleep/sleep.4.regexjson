@@ -80,6 +80,15 @@
                         "name": "R{.+}",
                         "run-time": "R{[0-9.]+}",
                         "runtime-id": "R{.+}"
+                    },
+                    {
+                        "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": "R{[0-9.]+}",
+                        "avg-tuple-size": "R{[0-9.]+}",
+                        "min-tuple-size": "R{[0-9.]+}",
+                        "max-tuple-size": "R{[0-9.]+}"
                     }
                   ]
                 },
@@ -93,10 +102,24 @@
                         "name": "R{.+}",
                         "run-time": "R{[0-9.]+}",
                         "runtime-id": "R{.+}",
-                        "cardinality-out": "R{[0-9.]+}",
-                        "avg-tuple-size": "R{[0-9.]+}",
-                        "min-tuple-size": "R{[0-9.]+}",
-                        "max-tuple-size": "R{[0-9.]+}"
+                        "cardinality-out": 10,
+                        "avg-tuple-size": 140,
+                        "min-tuple-size": 137,
+                        "max-tuple-size": 151
+                    },
+                    {
+                        "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": 5,
+                        "avg-tuple-size": 145,
+                        "min-tuple-size": 142,
+                        "max-tuple-size": 151
+                    },
+                    {
+                        "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}"
                     },
                     {
                         "name": "R{.+}",
@@ -111,17 +134,30 @@
                     },
                     {
                         "name": "R{.+}",
+                        "run-time": "R{[0-9.]+}",
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": 5,
+                        "avg-tuple-size": 16,
+                        "min-tuple-size": 14,
+                        "max-tuple-size": 19
+                    },
+                    {
+                        "name": "R{.+}",
                         "run-time": "R{5.+}",
                         "runtime-id": "R{.+}",
-                        "cardinality-out": "R{[0-9.]+}",
-                        "avg-tuple-size": "R{[0-9.]+}",
-                        "min-tuple-size": "R{[0-9.]+}",
-                        "max-tuple-size": "R{[0-9.]+}"
+                        "cardinality-out": 5,
+                        "avg-tuple-size": 161,
+                        "min-tuple-size": 156,
+                        "max-tuple-size": 170
                     },
                     {
                         "name": "R{.+}",
                         "run-time": "R{[0-9.]+}",
-                        "runtime-id": "R{.+}"
+                        "runtime-id": "R{.+}",
+                        "cardinality-out": 1,
+                        "avg-tuple-size": 0,
+                        "min-tuple-size": 0,
+                        "max-tuple-size": 0
                     }
                   ]
                 }

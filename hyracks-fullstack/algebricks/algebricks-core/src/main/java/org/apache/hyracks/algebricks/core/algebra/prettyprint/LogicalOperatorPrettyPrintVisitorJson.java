@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -82,7 +83,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WindowOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.WriteResultOperator;
-import org.apache.hyracks.api.dataflow.ActivityId;
+import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -107,7 +108,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final String OPTIMIZER_ESTIMATES = "optimizer-estimates";
     private final Map<AbstractLogicalOperator, String> operatorIdentity = new HashMap<>();
     private Map<Object, String> log2odid = Collections.emptyMap();
-    private Map<String, ProfileInfo> profile = Collections.emptyMap();
+    private Map<String, OperatorProfile> profile = Collections.emptyMap();
     private final IdCounter idCounter = new IdCounter();
     private final JsonGenerator jsonGenerator;
 
@@ -155,15 +156,88 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
-    private class ProfileInfo {
-        Map<Integer, Pair<Double, Double>> activities;
+    private class ExtendedActivityId {
+        private final OperatorDescriptorId odId;
+        private final int id;
+        private final int microId;
+        private final int subPipe;
+        private final int subId;
 
-        ProfileInfo() {
+        ExtendedActivityId(String str) {
+            if (str.startsWith("ANID:")) {
+                str = str.substring(5);
+                int idIdx = str.lastIndexOf(':');
+                this.odId = OperatorDescriptorId.parse(str.substring(0, idIdx));
+                String[] parts = str.substring(idIdx + 1).split("\\.");
+                this.id = Integer.parseInt(parts[0]);
+                if (parts.length >= 2) {
+                    this.microId = Integer.parseInt(parts[1]);
+                } else {
+                    this.microId = -1;
+                }
+                if (parts.length >= 4) {
+                    this.subPipe = Integer.parseInt(parts[2]);
+                    this.subId = Integer.parseInt(parts[3]);
+                } else {
+                    this.subPipe = -1;
+                    this.subId = -1;
+                }
+            } else {
+                throw new IllegalArgumentException("Unable to parse: " + str);
+            }
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(values());
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return (o instanceof ExtendedActivityId) && Objects.equals(((ExtendedActivityId) o).values(), values());
+        }
+
+        private List<?> values() {
+            return List.of(odId, id, microId, subPipe, subId);
+        }
+
+        @Override
+        public String toString() {
+            return "ANID:" + odId + ":" + getLocalId();
+        }
+
+        private void catenateId(StringBuilder sb, int i) {
+            if (sb.length() == 0) {
+                sb.append(i);
+                return;
+            }
+            sb.append(".");
+            sb.append(i);
+        }
+
+        public String getLocalId() {
+            StringBuilder sb = new StringBuilder();
+            catenateId(sb, odId.getId());
+            if (microId > 0) {
+                catenateId(sb, microId);
+            }
+            if (subId > 0) {
+                catenateId(sb, subPipe);
+                catenateId(sb, subId);
+            }
+            return sb.toString();
+        }
+    }
+
+    private class OperatorProfile {
+        Map<String, Pair<Double, Double>> activities;
+
+        OperatorProfile() {
             activities = new HashMap<>();
         }
 
-        void visit(int id, double time) {
-            Pair<Double, Double> times = activities.computeIfAbsent(id, i -> new Pair(time, time));
+        void updateOperator(String extendedOpId, double time) {
+            Pair<Double, Double> times = activities.computeIfAbsent(extendedOpId, i -> new Pair(time, time));
             if (times.getFirst() > time) {
                 times.setFirst(time);
             }
@@ -173,26 +247,27 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         }
     }
 
-    private static ActivityId acIdFromName(String name) {
+    private ExtendedActivityId acIdFromName(String name) {
         String[] parts = name.split(" - ");
-        return ActivityId.parse(parts[0]);
+        return new ExtendedActivityId(parts[0]);
     }
 
-    Map<String, ProfileInfo> processProfile(ObjectNode profile) {
-        Map<String, ProfileInfo> profiledOps = new HashMap<>();
+    Map<String, OperatorProfile> processProfile(ObjectNode profile) {
+        Map<String, OperatorProfile> profiledOps = new HashMap<>();
         for (JsonNode joblet : profile.get("joblets")) {
             for (JsonNode task : joblet.get("tasks")) {
                 for (JsonNode counters : task.get("counters")) {
-                    ProfileInfo info =
-                            profiledOps.computeIfAbsent(counters.get("runtime-id").asText(), i -> new ProfileInfo());
-                    info.visit(acIdFromName(counters.get("name").asText()).getLocalId(),
+                    OperatorProfile info = profiledOps.computeIfAbsent(counters.get("runtime-id").asText(),
+                            i -> new OperatorProfile());
+                    info.updateOperator(acIdFromName(counters.get("name").asText()).getLocalId(),
                             counters.get("run-time").asDouble());
                 }
                 for (JsonNode partition : task.get("partition-send-profile")) {
                     String id = partition.get("partition-id").get("connector-id").asText();
-                    ProfileInfo info = profiledOps.computeIfAbsent(id, i -> new ProfileInfo());
+                    OperatorProfile info = profiledOps.computeIfAbsent(id, i -> new OperatorProfile());
                     //CDIDs are unique
-                    info.visit(0, partition.get("close-time").asDouble() - partition.get("open-time").asDouble());
+                    info.updateOperator("0",
+                            partition.get("close-time").asDouble() - partition.get("open-time").asDouble());
                 }
             }
         }
@@ -268,15 +343,16 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             String od = log2odid.get(op);
             if (od != null) {
                 jsonGenerator.writeStringField("runtime-id", od);
-                ProfileInfo info = profile.get(od);
+                OperatorProfile info = profile.get(od);
                 if (info != null) {
                     if (info.activities.size() == 1) {
-                        jsonGenerator.writeNumberField("min-time", info.activities.get(0).first);
-                        jsonGenerator.writeNumberField("max-time", info.activities.get(0).second);
+                        Pair<Double, Double> minMax = info.activities.values().iterator().next();
+                        jsonGenerator.writeNumberField("min-time", minMax.first);
+                        jsonGenerator.writeNumberField("max-time", minMax.second);
                     } else {
                         jsonGenerator.writeObjectFieldStart("times");
-                        for (Map.Entry<Integer, Pair<Double, Double>> ac : info.activities.entrySet()) {
-                            jsonGenerator.writeObjectFieldStart(ac.getKey().toString());
+                        for (Map.Entry<String, Pair<Double, Double>> ac : info.activities.entrySet()) {
+                            jsonGenerator.writeObjectFieldStart(ac.getKey());
                             jsonGenerator.writeNumberField("min-time", ac.getValue().first);
                             jsonGenerator.writeNumberField("max-time", ac.getValue().second);
                             jsonGenerator.writeEndObject();
