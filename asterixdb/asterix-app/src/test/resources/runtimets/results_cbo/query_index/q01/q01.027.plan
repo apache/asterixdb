@@ -1,20 +1,20 @@
-distribute result [$$33] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+distribute result [$$33] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$33]) [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+    project ([$$33]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$33] <- [{"cnt": $$36}] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+      assign [$$33] <- [{"cnt": $$36}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$36] <- [agg-sql-sum($$37)] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+        aggregate [$$36] <- [agg-sql-sum($$37)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$37] <- [agg-sql-count(1)] [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+            aggregate [$$37] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- AGGREGATE  |PARTITIONED|
-              exchange [cardinality: 14.0, op-cost: 0.0, total-cost: 14.0]
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                data-scan []<-[$$34, $$35] <- test.ds1.ds1_dept.query-index [cardinality: 14.0, op-cost: 14.0, total-cost: 14.0]
+                data-scan []<-[$$34, $$35] <- test.ds1.ds1_dept.query-index [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- DATASOURCE_SCAN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

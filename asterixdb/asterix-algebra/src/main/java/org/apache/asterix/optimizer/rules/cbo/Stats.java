@@ -101,6 +101,8 @@ public class Stats {
     protected Index findSampleIndex(DataSourceScanOperator scanOp, IOptimizationContext context)
             throws AlgebricksException {
         DataSource ds = (DataSource) scanOp.getDataSource();
+        if (ds.getDatasourceType() != DataSource.Type.INTERNAL_DATASET)
+            return null;
         DataSourceId dsid = ds.getId();
         MetadataProvider mdp = (MetadataProvider) context.getMetadataProvider();
         return mdp.findSampleIndex(dsid.getDatabaseName(), dsid.getDataverseName(), dsid.getDatasourceName());
@@ -540,6 +542,11 @@ public class Stats {
         IAObject first = record.getValueByPos(0);
         double predicateCardinality = ((double) ((AInt64) first).getLongValue());
         return predicateCardinality;
+    }
+
+    public int numberOfFields(List<List<IAObject>> result) {
+        ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
+        return record.numberOfFields();
     }
 
     // Can have null returned, so this routine should only be called if at least tuple is returned by the sample

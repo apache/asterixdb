@@ -1,14 +1,14 @@
-distribute result [$$38] [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.45]
+distribute result [$$38] [cardinality: 1500.0, op-cost: 0.0, total-cost: 77032.61]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.45]
+  exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 77032.61]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$38]) [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.45]
+    project ([$$38]) [cardinality: 1500.0, op-cost: 0.0, total-cost: 77032.61]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$38] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$47}] [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.45]
+      assign [$$38] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$47}] [cardinality: 1500.0, op-cost: 0.0, total-cost: 77032.61]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.45]
+        exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 77032.61]
         -- SORT_MERGE_EXCHANGE [$$43(ASC), $$44(ASC), $$47(ASC) ]  |PARTITIONED|
-          order (ASC, $$43) (ASC, $$44) (ASC, $$47) [cardinality: 1500.0, op-cost: 75374.45, total-cost: 76874.45]
+          order (ASC, $$43) (ASC, $$44) (ASC, $$47) [cardinality: 1500.0, op-cost: 75532.61, total-cost: 77032.61]
           -- STABLE_SORT [$$43(ASC), $$44(ASC), $$47(ASC)]  |PARTITIONED|
             exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 1500.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$38] [cardinality: 1500.0, op-cost: 0.0, total-cost: 76874.4
               -- STREAM_PROJECT  |PARTITIONED|
                 exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 1500.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  left outer join (and(eq($$43, $$44), eq($$56, $$47))) [cardinality: 6005.0, op-cost: 7505.0, total-cost: 22515.0]
+                  left outer join (and(eq($$43, $$44), eq($$56, $$47))) [cardinality: 6016.3, op-cost: 7512.06, total-cost: 22529.12]
                   -- HYBRID_HASH_JOIN [$$43, $$56][$$44, $$47]  |PARTITIONED|
                     exchange [cardinality: 1500.0, op-cost: 0.0, total-cost: 1500.0]
                     -- HASH_PARTITION_EXCHANGE [$$43, $$56]  |PARTITIONED|

@@ -39,7 +39,6 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.om.base.AOrderedList;
-import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -78,8 +77,10 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.LimitOperato
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
+import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
 import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -866,7 +867,6 @@ public class JoinEnum {
                 }
                 double origDatasetCard, finalDatasetCard, sampleCard;
 
-                ILogicalOperator parent = findDataSourceScanOperatorParent(leafInput);
                 DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
                 if (scanOp == null) {
                     continue; // what happens to the cards and sizes then? this may happen in case of in lists
@@ -885,51 +885,72 @@ public class JoinEnum {
 
                 List<List<IAObject>> result;
                 SelectOperator selop = (SelectOperator) findASelectOp(leafInput);
+                if (selop == null) { // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
+                    selop = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
+                    ILogicalOperator op = selop;
+                    op.getInputs().add(new MutableObject<>(leafInput));
+                    leafInput = op;
+                }
+                ILogicalOperator parent = findDataSourceScanOperatorParent(leafInput);
+                Mutable<ILogicalOperator> ref = new MutableObject<>(leafInput);
 
-                if (jn.getCardinality() == jn.getOrigCardinality() && selop != null) { // this means there was no selectivity hint provided
-                    SampleDataSource sampledatasource = getSampleDataSource(scanOp);
-                    DataSourceScanOperator deepCopyofScan =
-                            (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
-                    deepCopyofScan.setDataSource(sampledatasource);
+                OperatorPropertiesUtil.typeOpRec(ref, optCtx);
+                if (LOGGER.isTraceEnabled()) {
+                    String viewPlan = new ALogicalPlanImpl(ref).toString(); //useful when debugging
+                    LOGGER.trace("viewPlan");
+                    LOGGER.trace(viewPlan);
+                }
 
-                    // if there is only one conjunct, I do not have to call the sampling query during index selection!
-                    // insert this in place of the scandatasourceOp.
-                    parent.getInputs().get(0).setValue(deepCopyofScan);
-                    // There are predicates here. So skip the predicates and get the original dataset card.
-                    // Now apply all the predicates and get the card after all predicates are applied.
+                SampleDataSource sampledatasource = getSampleDataSource(scanOp);
+                DataSourceScanOperator deepCopyofScan =
+                        (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
+                deepCopyofScan.setDataSource(sampledatasource);
+
+                // if there is only one conjunct, I do not have to call the sampling query during index selection!
+                // insert this in place of the scandatasourceOp.
+                parent.getInputs().get(0).setValue(deepCopyofScan);
+                // There are predicates here. So skip the predicates and get the original dataset card.
+                // Now apply all the predicates and get the card after all predicates are applied.
+                result = stats.runSamplingQuery(this.optCtx, leafInput);
+                double predicateCardinality = stats.findPredicateCardinality(result);
+
+                double projectedSize;
+                if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
+                    projectedSize = stats.findProjectedSize(result);
+                } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
+                    ILogicalExpression saveExpr = selop.getCondition().getValue();
+                    selop.getCondition().setValue(ConstantExpression.TRUE);
                     result = stats.runSamplingQuery(this.optCtx, leafInput);
-                    double predicateCardinality = stats.findPredicateCardinality(result);
-
-                    double projectedSize = -1.0;
-                    if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
+                    double x = stats.findPredicateCardinality(result);
+                    // better to check if x is 0
+                    if (x == 0.0) {
+                        int fields = stats.numberOfFields(result);
+                        projectedSize = fields * 100; // cant think of anything better... cards are more important anyway
+                    } else {
                         projectedSize = stats.findProjectedSize(result);
                     }
-                    if (predicateCardinality == 0.0) {
-                        predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
-                    }
-                    // now scale up
-                    sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-                    if (sampleCard == 0) { // should not happen unless the original dataset is empty
-                        sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
+                    selop.getCondition().setValue(saveExpr); // restore the expression
+                }
+                if (predicateCardinality == 0.0) {
+                    predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
+                }
+                // now scale up
+                sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+                if (sampleCard == 0) { // should not happen unless the original dataset is empty
+                    sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
 
-                        IWarningCollector warningCollector = optCtx.getWarningCollector();
-                        if (warningCollector.shouldWarn()) {
-                            warningCollector
-                                    .warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-                        }
-                    }
-                    finalDatasetCard *= predicateCardinality / sampleCard;
-                    // now switch the input back.
-                    parent.getInputs().get(0).setValue(scanOp);
-                    jn.setCardinality(finalDatasetCard);
-                    if (projectedSize > 0.0) {
-                        jn.setAvgDocSize(projectedSize);
-                    } else {
-                        ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
-                        int fields = record.numberOfFields();
-                        jn.setAvgDocSize(fields * 100); // cant think of anything better... cards are more important anyway
+                    IWarningCollector warningCollector = optCtx.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
                     }
                 }
+                finalDatasetCard *= predicateCardinality / sampleCard;
+                // now switch the input back.
+                parent.getInputs().get(0).setValue(scanOp);
+                if (jn.getCardinality() == jn.getOrigCardinality()) { // this means there was no selectivity hint provided
+                    jn.setCardinality(finalDatasetCard);
+                }
+                jn.setAvgDocSize(projectedSize);
             }
             dataScanPlan = jn.addSingleDatasetPlans();
             if (dataScanPlan == PlanNode.NO_PLAN) {
