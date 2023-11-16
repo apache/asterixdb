@@ -625,8 +625,13 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void indent) throws AlgebricksException {
-        writeUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
-        return null;
+        try {
+            writeUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
+            op.getProjectionFiltrationInfo().print(jsonGenerator);
+            return null;
+        } catch (IOException e) {
+            throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
+        }
     }
 
     @Override

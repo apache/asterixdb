@@ -380,7 +380,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     @Override
     public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Integer indent)
             throws AlgebricksException {
-        printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
+        AlgebricksStringBuilderWriter plan =
+                printAbstractUnnestMapOperator(op, indent, "left-outer-unnest-map", op.getMissingValue());
+        op.getProjectionFiltrationInfo().print(plan);
         return null;
     }
 

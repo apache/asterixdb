@@ -22,12 +22,14 @@ import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.DefaultProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
@@ -42,12 +44,20 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 public class LeftOuterUnnestMapOperator extends AbstractUnnestMapOperator {
 
     private IAlgebricksConstantValue missingValue;
+    private IProjectionFiltrationInfo projectionFiltrationInfo;
 
     public LeftOuterUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
             List<Object> variableTypes, IAlgebricksConstantValue missingValue) {
+        this(variables, expression, variableTypes, missingValue, DefaultProjectionFiltrationInfo.INSTANCE);
+    }
+
+    public LeftOuterUnnestMapOperator(List<LogicalVariable> variables, Mutable<ILogicalExpression> expression,
+            List<Object> variableTypes, IAlgebricksConstantValue missingValue,
+            IProjectionFiltrationInfo projectionFiltrationInfo) {
         // propagateInput is always set to true for this operator.
         super(variables, expression, variableTypes, true);
         setMissingValue(missingValue);
+        setProjectionFiltrationInfo(projectionFiltrationInfo);
     }
 
     public IAlgebricksConstantValue getMissingValue() {
@@ -100,5 +110,14 @@ public class LeftOuterUnnestMapOperator extends AbstractUnnestMapOperator {
         } else {
             throw new IllegalArgumentException(String.valueOf(value));
         }
+    }
+
+    public void setProjectionFiltrationInfo(IProjectionFiltrationInfo projectionFiltrationInfo) {
+        this.projectionFiltrationInfo =
+                projectionFiltrationInfo == null ? DefaultProjectionFiltrationInfo.INSTANCE : projectionFiltrationInfo;
+    }
+
+    public IProjectionFiltrationInfo getProjectionFiltrationInfo() {
+        return projectionFiltrationInfo;
     }
 }

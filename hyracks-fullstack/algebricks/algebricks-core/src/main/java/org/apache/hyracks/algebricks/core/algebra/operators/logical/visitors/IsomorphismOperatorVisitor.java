@@ -464,7 +464,8 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
             return Boolean.FALSE;
         }
         LeftOuterUnnestMapOperator loUnnestOpArg = (LeftOuterUnnestMapOperator) copyAndSubstituteVar(op, arg);
-        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), loUnnestOpArg.getVariables());
+        boolean isomorphic = VariableUtilities.varListEqualUnordered(op.getVariables(), loUnnestOpArg.getVariables())
+                && Objects.equals(op.getProjectionFiltrationInfo(), loUnnestOpArg.getProjectionFiltrationInfo());;
         if (!isomorphic) {
             return Boolean.FALSE;
         }

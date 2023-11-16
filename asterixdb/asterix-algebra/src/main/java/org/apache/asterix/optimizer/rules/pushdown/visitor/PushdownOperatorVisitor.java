@@ -53,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
@@ -167,6 +168,18 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
         return null;
     }
 
+    /**
+     * From the {@link LeftOuterUnnestMapOperator}, we need to register the payload variable (record variable) to check
+     * which expression in the plan is using it.
+     */
+    @Override
+    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
+        visitInputs(op);
+        DatasetDataSource datasetDataSource = getDatasetDataSourceIfApplicable(getDataSourceFromUnnestMapOperator(op));
+        registerDatasetIfApplicable(datasetDataSource, op);
+        return null;
+    }
+
     @Override
     public Void visitAggregateOperator(AggregateOperator op, Void arg) throws AlgebricksException {
         visitInputs(op, op.getVariables());
@@ -227,7 +240,7 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      * @param unnest unnest map operator
      * @return datasource
      */
-    private DataSource getDataSourceFromUnnestMapOperator(UnnestMapOperator unnest) throws AlgebricksException {
+    private DataSource getDataSourceFromUnnestMapOperator(AbstractUnnestMapOperator unnest) throws AlgebricksException {
         AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) unnest.getExpressionRef().getValue();
         String dataverse = ConstantExpressionUtil.getStringArgument(funcExpr, DATAVERSE_NAME_POS);
         String dataset = ConstantExpressionUtil.getStringArgument(funcExpr, DATASET_NAME_POS);
@@ -473,12 +486,6 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
 
     @Override
     public Void visitLeftOuterUnnestOperator(LeftOuterUnnestOperator op, Void arg) throws AlgebricksException {
-        visitInputs(op);
-        return null;
-    }
-
-    @Override
-    public Void visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, Void arg) throws AlgebricksException {
         visitInputs(op);
         return null;
     }

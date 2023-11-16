@@ -236,9 +236,10 @@ public abstract class AbstractAsterixColumnTupleReference extends AbstractColumn
         }
     }
 
-    protected void appendExceptionInformation(ColumnarValueException e) {
+    protected void appendExceptionInformation(ColumnarValueException e, int previousIndex) {
         ObjectNode node = e.createNode(getClass().getSimpleName());
         node.put("isAntiMatter", isAntimatter());
+        node.put("previousIndex", previousIndex);
         ArrayNode pkNodes = node.putArray("primaryKeyReaders");
         for (IColumnValuesReader reader : primaryKeyReaders) {
             reader.appendReaderInformation(pkNodes.addObject());

@@ -16399,6 +16399,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="secondary-index/outer-join">
+        <output-dir compare="Text">secondary-index/outer-join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="analyze-dataset">
         <output-dir compare="Text">analyze-dataset</output-dir>
       </compilation-unit>

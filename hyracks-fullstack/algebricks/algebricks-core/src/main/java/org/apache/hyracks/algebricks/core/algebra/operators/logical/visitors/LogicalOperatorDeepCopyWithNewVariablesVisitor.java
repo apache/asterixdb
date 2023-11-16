@@ -548,9 +548,11 @@ public class LogicalOperatorDeepCopyWithNewVariablesVisitor
     @Override
     public ILogicalOperator visitLeftOuterUnnestMapOperator(LeftOuterUnnestMapOperator op, ILogicalOperator arg)
             throws AlgebricksException {
+        IProjectionFiltrationInfo projectionFiltrationInfo =
+                op.getProjectionFiltrationInfo() != null ? op.getProjectionFiltrationInfo().createCopy() : null;
         LeftOuterUnnestMapOperator opCopy = new LeftOuterUnnestMapOperator(deepCopyVariableList(op.getVariables()),
                 exprDeepCopyVisitor.deepCopyExpressionReference(op.getExpressionRef()), op.getVariableTypes(),
-                op.getMissingValue());
+                op.getMissingValue(), projectionFiltrationInfo);
         deepCopyInputsAnnotationsAndExecutionMode(op, arg, opCopy);
         return opCopy;
     }

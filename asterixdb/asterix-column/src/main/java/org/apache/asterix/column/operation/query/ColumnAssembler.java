@@ -101,6 +101,10 @@ public final class ColumnAssembler {
         return rootAssembler.getValue();
     }
 
+    public IValueReference getPreviousValue() {
+        return rootAssembler.getValue();
+    }
+
     public int getNumberOfColumns() {
         return assemblers.length;
     }

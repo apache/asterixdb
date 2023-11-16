@@ -1,0 +1,47 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+-- Row inserts
+INSERT INTO ds1Row ({"id": 1, "a": 1, "b": 1 });
+INSERT INTO ds1Row ({"id": 2, "a": 1, "b": 2 });
+INSERT INTO ds1Row ({"id": 3, "a": 2, "b": 3 });
+INSERT INTO ds1Row ({"id": 4, "a": 2, "b": 4 });
+INSERT INTO ds1Row ({"id": 5, "a": 3, "b": 5 });
+INSERT INTO ds1Row ({"id": 6, "a": 3, "b": 6 });
+INSERT INTO ds1Row ({"id": 7, "a": 4, "b": 7 });
+
+INSERT INTO ds2Row ({"id": 100, "x": 2, "y": 100 });
+INSERT INTO ds2Row ({"id": 101, "x": 2, "y": 101 });
+INSERT INTO ds2Row ({"id": 102, "x": 3, "y": 102 });
+
+
+-- Column inserts
+INSERT INTO ds1Column ({"id": 1, "a": 1, "b": 1 });
+INSERT INTO ds1Column ({"id": 2, "a": 1, "b": 2 });
+INSERT INTO ds1Column ({"id": 3, "a": 2, "b": 3 });
+INSERT INTO ds1Column ({"id": 4, "a": 2, "b": 4 });
+INSERT INTO ds1Column ({"id": 5, "a": 3, "b": 5 });
+INSERT INTO ds1Column ({"id": 6, "a": 3, "b": 6 });
+INSERT INTO ds1Column ({"id": 7, "a": 4, "b": 7 });
+
+INSERT INTO ds2Column ({"id": 100, "x": 2, "y": 100 });
+INSERT INTO ds2Column ({"id": 101, "x": 2, "y": 101 });
+INSERT INTO ds2Column ({"id": 102, "x": 3, "y": 102 });

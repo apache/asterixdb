@@ -169,12 +169,14 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         //Next tuple
         frameTuple.next();
         //Check whether the frameTuple is not consumed and also include the search key
-        return highKey == null || isLessOrEqual(frameTuple, highKey, pred.isHighKeyInclusive());
+        return highKey == null
+                || isLessOrEqual(frameTuple, highKey, pred.isHighKeyInclusive(), pred.getHighKeyComparator());
     }
 
     protected boolean shouldYieldFirstCall() throws HyracksDataException {
         // Proceed if the highKey is null or the current tuple's key is less than (or equal) the highKey
-        return highKey == null || isLessOrEqual(frameTuple, highKey, pred.isHighKeyInclusive());
+        return highKey == null
+                || isLessOrEqual(frameTuple, highKey, pred.isHighKeyInclusive(), pred.getHighKeyComparator());
     }
 
     protected void releasePages() throws HyracksDataException {
@@ -185,16 +187,17 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         }
     }
 
-    private boolean isLessOrEqual(ITupleReference left, ITupleReference right, boolean inclusive)
-            throws HyracksDataException {
-        int cmp = originalKeyCmp.compare(left, right);
+    private boolean isLessOrEqual(ITupleReference left, ITupleReference right, boolean inclusive,
+            MultiComparator comparator) throws HyracksDataException {
+        int cmp = comparator.compare(left, right);
         return cmp < 0 || inclusive && cmp == 0;
     }
 
     protected int getLowKeyIndex() throws HyracksDataException {
         if (lowKey == null) {
             return 0;
-        } else if (isLessOrEqual(frame.getRightmostTuple(), lowKey, !pred.isLowKeyInclusive())) {
+        } else if (isLessOrEqual(frame.getRightmostTuple(), lowKey, !pred.isLowKeyInclusive(),
+                pred.getLowKeyComparator())) {
             //The highest key from the frame is less than the requested lowKey
             return frame.getTupleCount();
         }
@@ -214,7 +217,8 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     protected int getHighKeyIndex() throws HyracksDataException {
         if (highKey == null) {
             return frame.getTupleCount() - 1;
-        } else if (isLessOrEqual(highKey, frame.getLeftmostTuple(), !pred.isHighKeyInclusive())) {
+        } else if (isLessOrEqual(highKey, frame.getLeftmostTuple(), !pred.isHighKeyInclusive(),
+                pred.getHighKeyComparator())) {
             return -1;
         }
 

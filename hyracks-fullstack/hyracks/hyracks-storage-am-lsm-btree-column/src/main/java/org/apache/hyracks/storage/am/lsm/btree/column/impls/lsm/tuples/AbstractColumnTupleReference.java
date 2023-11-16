@@ -155,6 +155,16 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final void setAt(int startIndex) throws HyracksDataException {
+        if (tupleIndex == startIndex) {
+            /*
+             * This case happens when we ask for the same tuple again when utilizing a secondary index. To illustrate,
+             * assume that the secondary index search yielded the following PKs [1, 1, 1, 2] -- keys are always sorted.
+             * We see that the secondary index asked for the PK '1' three times. Asking for the same tuple multiple
+             * times is possible when we do index nested-loop join (indexnl).
+             * See ASTERIX-3311
+             */
+            return;
+        }
         /*
          * Let say that tupleIndex = 5 and startIndex = 12
          * Then, skipCount = 12 - 5 - 1 = 6.

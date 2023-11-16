@@ -112,7 +112,7 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
     }
 
     protected void writeMeta(ITupleReference tuple, DataOutput dos, ArrayTupleBuilder tb) throws IOException {
-        //NoOp
+        // NoOp
     }
 
     protected int getNumberOfTupleFields() {

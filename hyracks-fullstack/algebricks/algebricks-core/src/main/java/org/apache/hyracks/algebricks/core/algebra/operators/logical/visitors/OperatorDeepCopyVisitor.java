@@ -261,6 +261,7 @@ public class OperatorDeepCopyVisitor implements ILogicalOperatorVisitor<ILogical
             throws AlgebricksException {
         ArrayList<LogicalVariable> newInputList = new ArrayList<>();
         newInputList.addAll(op.getVariables());
+        IProjectionFiltrationInfo projectionFiltrationInfo = op.getProjectionFiltrationInfo().createCopy();
         return new LeftOuterUnnestMapOperator(newInputList, deepCopyExpressionRef(op.getExpressionRef()),
                 new ArrayList<>(op.getVariableTypes()), op.getMissingValue());
     }
