@@ -1,0 +1,20 @@
+{
+	"requestID": "R{.*}",
+	"signature": {
+		"*": "*"
+	},
+	"type": "application/x-adm",
+	"results": [ "{ \"$1\": 17 }\n" ],
+	"plans": "R{.*}",
+	"status": "success",
+	"metrics": {
+		"elapsedTime": "R{.*}",
+		"executionTime": "R{.*}",
+		"compileTime": "R{.*}",
+		"queueWaitTime": "R{.*}",
+		"resultCount": 1,
+		"resultSize": 18,
+		"processedObjects": 17,
+		"bufferCacheHitRatio": "100.00%"
+	}
+}

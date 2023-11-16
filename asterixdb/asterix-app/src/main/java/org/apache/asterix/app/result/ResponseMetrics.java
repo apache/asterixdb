@@ -30,12 +30,14 @@ public class ResponseMetrics {
     private long diskIoCount;
     private long compileTime;
     private long queueWaitTime;
+    private double bufferCacheHitRatio;
 
     private ResponseMetrics() {
     }
 
     public static ResponseMetrics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
-            long processedObjects, long errorCount, long warnCount, long compileTime, long queueWaitTime) {
+            long processedObjects, long errorCount, long warnCount, long compileTime, long queueWaitTime,
+            double bufferCacheHitRatio) {
         ResponseMetrics metrics = new ResponseMetrics();
         metrics.elapsedTime = elapsedTime;
         metrics.executionTime = executionTime;
@@ -46,6 +48,7 @@ public class ResponseMetrics {
         metrics.warnCount = warnCount;
         metrics.compileTime = compileTime;
         metrics.queueWaitTime = queueWaitTime;
+        metrics.bufferCacheHitRatio = bufferCacheHitRatio;
         return metrics;
     }
 
@@ -83,5 +86,9 @@ public class ResponseMetrics {
 
     public long getQueueWaitTime() {
         return queueWaitTime;
+    }
+
+    public double getBufferCacheHitRatio() {
+        return bufferCacheHitRatio;
     }
 }
