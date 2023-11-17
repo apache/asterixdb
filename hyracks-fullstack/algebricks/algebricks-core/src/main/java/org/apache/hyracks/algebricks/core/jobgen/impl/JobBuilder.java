@@ -74,6 +74,8 @@ public class JobBuilder implements IHyracksJobBuilder {
 
     private int aodCounter = 0;
 
+    private boolean genLog2PhysMap = false;
+
     public JobBuilder(JobSpecification jobSpec, AlgebricksAbsolutePartitionConstraint clusterLocations) {
         this.jobSpec = jobSpec;
         this.clusterLocations = clusterLocations;
@@ -94,6 +96,10 @@ public class JobBuilder implements IHyracksJobBuilder {
         int nPartitions = clusterLocations.getLocations().length;
         countOneLocation = new AlgebricksAbsolutePartitionConstraint(
                 new String[] { clusterLocations.getLocations()[Math.abs(jobSpec.hashCode() % nPartitions)] });
+    }
+
+    public void enableLog2PhysMapping() {
+        this.genLog2PhysMap = true;
     }
 
     @Override
@@ -214,7 +220,11 @@ public class JobBuilder implements IHyracksJobBuilder {
             jobSpec.addRoot(opDesc);
         }
         setAllPartitionConstraints(tgtConstraints);
-        jobSpec.setLogical2PhysicalMap(getLogical2PhysicalMap());
+        if (genLog2PhysMap) {
+            jobSpec.setLogical2PhysicalMap(getLogical2PhysicalMap());
+        } else {
+            jobSpec.setLogical2PhysicalMap(Collections.emptyMap());
+        }
     }
 
     public List<IOperatorDescriptor> getGeneratedMetaOps() {

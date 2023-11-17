@@ -77,7 +77,7 @@ public class PipelineAssembler {
             for (int j = 0; j < newRuntimes.length; j++) {
                 //ETS is wrapped externally, and doesn't need the micro-op wrapper since it isn't a pipeline
                 //we also want to avoid any instances of NoOp stats in the pipeline that snuck in somehow
-                boolean shouldProfile = !(runtimeFactory instanceof EmptyTupleSourceRuntimeFactory) && profile
+                boolean shouldProfile = profile && !(runtimeFactory instanceof EmptyTupleSourceRuntimeFactory)
                         && microOpStats.containsKey(runtimeFactory);
                 if (shouldProfile) {
                     ProfiledPushRuntime profiled;
