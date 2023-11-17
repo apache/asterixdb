@@ -38,8 +38,11 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements IColumnWriteMultiPageOp {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final List<CachedPage> columnsPages;
     private final List<CachedPage> tempConfiscatedPages;
     private final ColumnBTreeWriteLeafFrame columnarFrame;
@@ -47,6 +50,12 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private final ISplitKey lowKey;
     private boolean setLowKey;
     private int tupleCount;
+
+    // For logging
+    private int numberOfLeafNodes;
+    private int numberOfPagesInCurrentLeafNode;
+    private int maxNumberOfPagesForAColumn;
+    private int maxNumberOfPagesInALeafNode;
 
     public ColumnBTreeBulkloader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
             ITreeIndexFrame leafFrame) throws HyracksDataException {
@@ -59,6 +68,12 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         lowKey = new BTreeSplitKey(tupleWriter.createTupleReference());
         lowKey.getTuple().setFieldCount(cmp.getKeyFieldCount());
         setLowKey = true;
+
+        // For logging. Starts with 1 for page0
+        numberOfPagesInCurrentLeafNode = 1;
+        maxNumberOfPagesForAColumn = 0;
+        maxNumberOfPagesInALeafNode = 0;
+        numberOfLeafNodes = 1;
     }
 
     @Override
@@ -118,9 +133,14 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         for (ICachedPage page : tempConfiscatedPages) {
             bufferCache.returnPage(page, false);
         }
+
+        // For logging
+        int numberOfTempConfiscatedPages = tempConfiscatedPages.size();
         tempConfiscatedPages.clear();
         //Where Page0 and columns pages will be written
         super.end();
+
+        log("Finished");
     }
 
     @Override
@@ -156,6 +176,12 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         splitKey.setRightPage(leafFrontier.pageId);
         setLowKey = true;
         tupleCount = 0;
+
+        // For logging
+        maxNumberOfPagesInALeafNode = Math.max(maxNumberOfPagesInALeafNode, numberOfPagesInCurrentLeafNode);
+        // Starts with 1 for page0
+        numberOfPagesInCurrentLeafNode = 1;
+        numberOfLeafNodes++;
     }
 
     @Override
@@ -172,6 +198,12 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         for (ICachedPage c : columnsPages) {
             write(c);
         }
+
+        // For logging
+        int numberOfPagesInPersistedColumn = columnsPages.size();
+        maxNumberOfPagesForAColumn = Math.max(maxNumberOfPagesForAColumn, numberOfPagesInPersistedColumn);
+        numberOfPagesInCurrentLeafNode += numberOfPagesInPersistedColumn;
+
         columnsPages.clear();
     }
 
@@ -185,12 +217,27 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             bufferCache.returnPage(page, false);
         }
         super.abort();
+
+        // For logging
+        log("Aborted");
     }
 
     private void setSplitKey(ISplitKey splitKey, ITupleReference tuple) {
         int splitKeySize = tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
+    }
+
+    private void log(String status) {
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
+
+        int numberOfTempConfiscatedPages = tempConfiscatedPages.size();
+        LOGGER.debug(
+                "{} columnar bulkloader used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, and maxLeafNodePages: {}",
+                status, numberOfLeafNodes, numberOfTempConfiscatedPages, maxNumberOfPagesForAColumn,
+                maxNumberOfPagesInALeafNode);
     }
 
     /*

@@ -26,20 +26,25 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+
+import it.unimi.dsi.fastutil.longs.LongSet;
 
 public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
     private final int columnIndex;
     private final IColumnReadMultiPageOp multiPageOp;
     private final Queue<ICachedPage> pages;
+    private final LongSet pinnedPages;
     private int numberOfPages;
     private int startPage;
     private int startOffset;
     private int length;
 
-    public ColumnMultiBufferProvider(int columnIndex, IColumnReadMultiPageOp multiPageOp) {
+    public ColumnMultiBufferProvider(int columnIndex, IColumnReadMultiPageOp multiPageOp, LongSet pinnedPages) {
         this.columnIndex = columnIndex;
         this.multiPageOp = multiPageOp;
+        this.pinnedPages = pinnedPages;
         pages = new ArrayDeque<>();
     }
 
@@ -107,6 +112,7 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
     private ByteBuffer readNext() throws HyracksDataException {
         ICachedPage columnPage = multiPageOp.pin(startPage++);
         pages.add(columnPage);
+        pinnedPages.add(((CachedPage) columnPage).getDiskPageId());
         return columnPage.getBuffer();
     }
 

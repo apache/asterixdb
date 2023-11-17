@@ -25,8 +25,11 @@ import java.nio.ByteBuffer;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.util.StorageUtil;
 
 public final class MultiTemporaryBufferBytesOutputStream extends AbstractMultiBufferBytesOutputStream {
+    private static final int INITIAL_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(32, StorageUtil.StorageUnit.KILOBYTE);
+
     public MultiTemporaryBufferBytesOutputStream(Mutable<IColumnWriteMultiPageOp> multiPageOpRef) {
         super(multiPageOpRef);
     }
@@ -38,6 +41,14 @@ public final class MultiTemporaryBufferBytesOutputStream extends AbstractMultiBu
 
     @Override
     protected ByteBuffer confiscateNewBuffer() throws HyracksDataException {
+        if (buffers.isEmpty()) {
+            /*
+             * One buffer on the house to avoid confiscating a whole page for a tiny stream.
+             * This protects pressuring the buffer cache from confiscating pages for small columns. Think sparse
+             * columns, which may take only a few hundreds of bytes to write.
+             */
+            return ByteBuffer.allocate(INITIAL_BUFFER_SIZE);
+        }
         return multiPageOpRef.getValue().confiscateTemporary();
     }
 

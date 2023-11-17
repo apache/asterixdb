@@ -583,7 +583,9 @@ public class LSMHarness implements ILSMHarness {
     @Override
     public void merge(ILSMIOOperation operation) throws HyracksDataException {
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Started a merge operation for index: {}", lsmIndex);
+            MergeOperation mergeOp = (MergeOperation) operation;
+            LOGGER.debug("Started a merge operation (number of merging components {}) for index: {}",
+                    mergeOp.getMergingComponents().size(), lsmIndex);
         }
         synchronized (opTracker) {
             enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE);

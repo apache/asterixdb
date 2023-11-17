@@ -32,6 +32,9 @@ import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeRea
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+
 public abstract class AbstractColumnTupleReference implements IColumnTupleIterator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String UNSUPPORTED_OPERATION_MSG = "Operation is not supported for column tuples";
@@ -41,10 +44,14 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final IColumnBufferProvider[] filterBufferProviders;
     private final IColumnBufferProvider[] buffersProviders;
     private final int numberOfPrimaryKeys;
-    private int totalNumberOfMegaLeafNodes;
-    private int numOfSkippedMegaLeafNodes;
     private int endIndex;
     protected int tupleIndex;
+
+    // For logging
+    private final LongSet pinnedPages;
+    private int totalNumberOfMegaLeafNodes;
+    private int numOfSkippedMegaLeafNodes;
+    private int maxNumberOfPinnedPages;
 
     /**
      * Column tuple reference
@@ -64,6 +71,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
             primaryKeyBufferProviders[i] = new ColumnSingleBufferProvider(i);
         }
 
+        pinnedPages = new LongOpenHashSet();
         int numberOfFilteredColumns = info.getNumberOfFilteredColumns();
         filterBufferProviders = new IColumnBufferProvider[numberOfFilteredColumns];
         for (int i = 0; i < numberOfFilteredColumns; i++) {
@@ -71,7 +79,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
             if (columnIndex < 0) {
                 filterBufferProviders[i] = DummyColumnBufferProvider.INSTANCE;
             } else if (columnIndex >= numberOfPrimaryKeys) {
-                filterBufferProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp);
+                filterBufferProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp, pinnedPages);
             } else {
                 filterBufferProviders[i] = new ColumnSingleBufferProvider(columnIndex);
             }
@@ -82,7 +90,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         for (int i = 0; i < numberOfRequestedColumns; i++) {
             int columnIndex = info.getColumnIndex(i);
             if (columnIndex >= numberOfPrimaryKeys) {
-                buffersProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp);
+                buffersProviders[i] = new ColumnMultiBufferProvider(columnIndex, multiPageOp, pinnedPages);
             } else {
                 buffersProviders[i] = DummyColumnBufferProvider.INSTANCE;
             }
@@ -116,6 +124,8 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         int numberOfTuples = frame.getTupleCount();
         //Start new page and check whether we should skip reading non-key columns or not
         boolean readColumnPages = startNewPage(pageZero, frame.getNumberOfColumns(), numberOfTuples);
+        //Release previous pinned pages if any
+        unpinColumnsPages();
         /*
          * When startIndex = 0, a call to next() is performed to get the information of the PK
          * and 0 skips will be performed. If startIndex (for example) is 5, a call to next() will be performed
@@ -125,8 +135,6 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         if (readColumnPages) {
             for (int i = 0; i < filterBufferProviders.length; i++) {
                 IColumnBufferProvider provider = filterBufferProviders[i];
-                //Release previous pinned pages if any
-                provider.releaseAll();
                 provider.reset(frame);
                 startColumnFilter(provider, i, numberOfTuples);
             }
@@ -135,11 +143,10 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         if (readColumnPages && evaluateFilter()) {
             for (int i = 0; i < buffersProviders.length; i++) {
                 IColumnBufferProvider provider = buffersProviders[i];
-                //Release previous pinned pages if any
-                provider.releaseAll();
                 provider.reset(frame);
                 startColumn(provider, i, numberOfTuples);
             }
+
             /*
              * skipCount can be < 0 for cases when the tuples in the range [0, startIndex] are all anti-matters.
              * Consequently, tuples in the range [0, startIndex] do not have any non-key columns. Thus, the returned
@@ -150,6 +157,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
         } else {
             numOfSkippedMegaLeafNodes++;
         }
+
         totalNumberOfMegaLeafNodes++;
     }
 
@@ -232,17 +240,30 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     @Override
     public final void unpinColumnsPages() throws HyracksDataException {
+        for (int i = 0; i < filterBufferProviders.length; i++) {
+            filterBufferProviders[i].releaseAll();
+        }
+
         for (int i = 0; i < buffersProviders.length; i++) {
             buffersProviders[i].releaseAll();
         }
+
+        maxNumberOfPinnedPages = Math.max(maxNumberOfPinnedPages, pinnedPages.size());
+        pinnedPages.clear();
     }
 
     @Override
     public final void close() {
-        if (LOGGER.isInfoEnabled() && numOfSkippedMegaLeafNodes > 0) {
-            LOGGER.info("Filtered {} disk mega-leaf nodes out of {} in total", numOfSkippedMegaLeafNodes,
+        if (!LOGGER.isDebugEnabled()) {
+            return;
+        }
+
+        if (numOfSkippedMegaLeafNodes > 0) {
+            LOGGER.debug("Filtered {} disk mega-leaf nodes out of {} in total", numOfSkippedMegaLeafNodes,
                     totalNumberOfMegaLeafNodes);
         }
+
+        LOGGER.debug("Max number of pinned pages is {}", maxNumberOfPinnedPages + 1);
     }
 
     /* *************************************************************
