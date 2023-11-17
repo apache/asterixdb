@@ -213,7 +213,8 @@ export class PlanViewerComponent {
         nodeToAdd['detailed_label'] = nodes['operatorId'] + " : " + nodes['operator'];
         nodeToAdd['physical_operator'] = nodes['physical-operator'];
         nodeToAdd['execution_mode'] = "[" + nodes['execution-mode'] + "]"
-
+        nodeToAdd['min_time'] = nodes['min-time'];
+        nodeToAdd['max_time'] = nodes['max-time'];
         nodeToAdd["details"] = {};
 
         nodeToAdd['selected'] = false;

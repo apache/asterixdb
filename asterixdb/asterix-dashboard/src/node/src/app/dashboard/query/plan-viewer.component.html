@@ -157,6 +157,13 @@ limitations under the License.
               <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
                 {{node.execution_mode}}
               </svg:tspan>
+
+              <svg:tspan *ngIf="node.min_time" [attr.x]="node.dimension.width / 2" dy="1.5em">
+                Min: {{node.min_time}}
+              </svg:tspan>
+              <svg:tspan *ngIf="node.max_time" [attr.x]="node.dimension.width / 2" dy="1.5em">
+                Max: {{node.max_time}}
+              </svg:tspan>
               <ng-container *ngFor="let details of node.details | keyvalue">
                 <svg:tspan [attr.x]="node.dimension.width / 2" dy="1.5em">
                   {{details.value}}

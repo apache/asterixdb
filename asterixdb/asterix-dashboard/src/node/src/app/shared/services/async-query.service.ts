@@ -214,7 +214,8 @@ export class SQLService {
           'logical-plan': true,
           'optimized-logical-plan': true,
           'plan-format': planFormat,
-          'max-warnings': Number.MAX_SAFE_INTEGER
+          'max-warnings': Number.MAX_SAFE_INTEGER,
+          'profile': 'timings'
         }
 
         if (clientContextID != 'default') {
