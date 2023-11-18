@@ -25,14 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
-import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
 public class OperatorStats implements IOperatorStats {
-    private static final long serialVersionUID = 6401830963367567169L;
-
+    private static final long serialVersionUID = 6401830963361567126L;
     public final String operatorName;
-    public OperatorDescriptorId id;
+
+    public final String operatorId;
     public final ICounter tupleCounter;
     public final ICounter timeCounter;
     public final ICounter pageReads;
@@ -48,12 +47,12 @@ public class OperatorStats implements IOperatorStats {
 
     //TODO: this is quickly becoming gross it should just be a map where the value is obliged to be a Counter
 
-    public OperatorStats(String operatorName, OperatorDescriptorId id) {
+    public OperatorStats(String operatorName, String operatorId) {
         if (operatorName == null || operatorName.isEmpty()) {
             throw new IllegalArgumentException("operatorName must not be null or empty");
         }
         this.operatorName = operatorName;
-        this.id = id;
+        this.operatorId = operatorId;
         tupleCounter = new Counter("tupleCounter");
         timeCounter = new Counter("timeCounter");
         pageReads = new Counter("diskIoCounter");
@@ -67,17 +66,6 @@ public class OperatorStats implements IOperatorStats {
         bytesWritten = new Counter("bytesWritten");
         level.set(-1);
         indexesStats = new HashMap<>();
-    }
-
-    public OperatorStats(String operatorName) {
-        this(operatorName, new OperatorDescriptorId(-1));
-    }
-
-    public static IOperatorStats create(DataInput input) throws IOException {
-        String name = input.readUTF();
-        OperatorStats operatorStats = new OperatorStats(name);
-        operatorStats.readFields(input);
-        return operatorStats;
     }
 
     @Override
@@ -141,8 +129,8 @@ public class OperatorStats implements IOperatorStats {
     }
 
     @Override
-    public OperatorDescriptorId getId() {
-        return id;
+    public String getOperatorId() {
+        return operatorId;
     }
 
     @Override
@@ -178,7 +166,7 @@ public class OperatorStats implements IOperatorStats {
     @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeUTF(operatorName);
-        id.writeFields(output);
+        output.writeUTF(operatorId);
         output.writeLong(tupleCounter.get());
         output.writeLong(timeCounter.get());
         output.writeLong(pageReads.get());
@@ -195,7 +183,6 @@ public class OperatorStats implements IOperatorStats {
 
     @Override
     public void readFields(DataInput input) throws IOException {
-        id = OperatorDescriptorId.create(input);
         tupleCounter.set(input.readLong());
         timeCounter.set(input.readLong());
         pageReads.set(input.readLong());
@@ -229,13 +216,13 @@ public class OperatorStats implements IOperatorStats {
 
     @Override
     public String toString() {
-        return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"" + tupleCounter.getName() + "\": "
-                + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": " + timeCounter.get() + ", \""
-                + coldReadCounter.getName() + "\": " + coldReadCounter.get() + avgTupleSz.getName() + "\": "
-                + avgTupleSz.get() + ", \"" + minTupleSz.getName() + "\": " + minTupleSz.get() + ", \""
-                + minTupleSz.getName() + "\": " + timeCounter.get() + ", \"" + inputTupleCounter.getName() + "\": "
-                + bytesRead.get() + ", \"" + bytesRead.getName() + "\": " + bytesWritten.get() + ", \""
-                + bytesWritten.getName() + "\": " + inputTupleCounter.get() + ", \"" + level.getName() + "\": "
-                + level.get() + ", \"indexStats\": \"" + indexesStats + "\" }";
+        return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"id\": \"" + operatorId + "\", " + "\""
+                + tupleCounter.getName() + "\": " + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": "
+                + timeCounter.get() + ", \"" + coldReadCounter.getName() + "\": " + coldReadCounter.get()
+                + avgTupleSz.getName() + "\": " + avgTupleSz.get() + ", \"" + minTupleSz.getName() + "\": "
+                + minTupleSz.get() + ", \"" + minTupleSz.getName() + "\": " + timeCounter.get() + ", \""
+                + inputTupleCounter.getName() + "\": " + bytesRead.get() + ", \"" + bytesRead.getName() + "\": "
+                + bytesWritten.get() + ", \"" + bytesWritten.getName() + "\": " + inputTupleCounter.get() + ", \""
+                + level.getName() + "\": " + level.get() + ", \"indexStats\": \"" + indexesStats + "\" }";
     }
 }

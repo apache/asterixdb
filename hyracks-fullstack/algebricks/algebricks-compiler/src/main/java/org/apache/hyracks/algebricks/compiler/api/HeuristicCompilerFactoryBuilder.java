@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.algebricks.compiler.api;
 
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -47,6 +48,7 @@ import org.apache.hyracks.algebricks.data.IAWriterFactory;
 import org.apache.hyracks.algebricks.runtime.writers.SerializedDataWriterFactory;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuilder {
@@ -168,6 +170,17 @@ public class HeuristicCompilerFactoryBuilder extends AbstractCompilerFactoryBuil
                 throws AlgebricksException {
             AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting Job Generation.\n");
             PlanCompiler pc = factory.createPlanCompiler(oc, appContext, writerFactory);
+            return pc.compilePlan(plan, jobEventListenerFactory);
+        }
+
+        @Override
+        public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory,
+                EnumSet<JobFlag> runtimeFlags) throws AlgebricksException {
+            AlgebricksConfig.ALGEBRICKS_LOGGER.trace("Starting Job Generation.\n");
+            PlanCompiler pc = factory.createPlanCompiler(oc, appContext, writerFactory);
+            if (runtimeFlags.contains(JobFlag.PROFILE_RUNTIME)) {
+                pc.enableLog2PhysMapping();
+            }
             return pc.compilePlan(plan, jobEventListenerFactory);
         }
 

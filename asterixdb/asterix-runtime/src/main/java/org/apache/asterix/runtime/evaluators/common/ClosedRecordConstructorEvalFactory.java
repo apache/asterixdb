@@ -46,6 +46,11 @@ public class ClosedRecordConstructorEvalFactory implements IScalarEvaluatorFacto
     }
 
     @Override
+    public String toString() {
+        return "ClosedRecordConstructor";
+    }
+
+    @Override
     public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
         int n = args.length / 2;
         IScalarEvaluator[] evalFields = new IScalarEvaluator[n];

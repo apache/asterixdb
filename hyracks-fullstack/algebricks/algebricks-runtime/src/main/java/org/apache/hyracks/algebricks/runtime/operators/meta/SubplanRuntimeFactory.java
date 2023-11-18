@@ -20,7 +20,9 @@ package org.apache.hyracks.algebricks.runtime.operators.meta;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hyracks.algebricks.common.exceptions.NotImplementedException;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
@@ -32,16 +34,19 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputOneO
 import org.apache.hyracks.algebricks.runtime.operators.std.NestedTupleSourceRuntimeFactory.NestedTupleSourceRuntime;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriter;
 import org.apache.hyracks.api.dataflow.value.IMissingWriterFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 3L;
 
     private final List<AlgebricksPipeline> pipelines;
 
@@ -50,6 +55,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
     private final RecordDescriptor outputRecordDesc;
 
     private final IMissingWriterFactory[] missingWriterFactories;
+
+    private final Map<IPushRuntimeFactory, IOperatorStats> stats;
 
     public SubplanRuntimeFactory(List<AlgebricksPipeline> pipelines, IMissingWriterFactory[] missingWriterFactories,
             RecordDescriptor inputRecordDesc, RecordDescriptor outputRecordDesc, int[] projectionList) {
@@ -61,6 +68,7 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         if (projectionList != null) {
             throw new NotImplementedException();
         }
+        this.stats = new HashMap<>();
     }
 
     @Override
@@ -78,6 +86,14 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
         return sb.toString();
     }
 
+    public List<AlgebricksPipeline> getPipelines() {
+        return pipelines;
+    }
+
+    public void setStats(Map<IPushRuntimeFactory, IOperatorStats> stats) {
+        this.stats.putAll(stats);
+    }
+
     @Override
     public AbstractOneInputOneOutputPushRuntime createOneOutputPushRuntime(final IHyracksTaskContext ctx)
             throws HyracksDataException {
@@ -92,8 +108,11 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
 
         boolean first;
 
+        boolean profile;
+
         SubplanPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
             this.ctx = ctx;
+            this.profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
             this.first = true;
 
             IMissingWriter[] missingWriters = new IMissingWriter[missingWriterFactories.length];
@@ -114,6 +133,11 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 if (i == 0) {
                     // primary pipeline
                     outputWriter = new TupleOuterProduct(pipelineLastRecordDescriptor, missingWriters);
+                    //this is necessary to track the output of the last operator to the outer product,
+                    //i.e. the last real operator in pipeline 0 of the subplan
+                    if (profile) {
+                        outputWriter = new ProfiledFrameWriter(outputWriter);
+                    }
                     outputRecordDescriptor = SubplanRuntimeFactory.this.outputRecordDesc;
                 } else {
                     // secondary pipeline
@@ -127,7 +151,8 @@ public class SubplanRuntimeFactory extends AbstractOneInputOneOutputRuntimeFacto
                 }
 
                 PipelineAssembler pa = new PipelineAssembler(pipeline, 1, 1, inputRecordDesc, outputRecordDescriptor);
-                startOfPipelines[i] = (NestedTupleSourceRuntime) pa.assemblePipeline(outputWriter, ctx);
+                IFrameWriter head = pa.assemblePipeline(outputWriter, ctx, stats);
+                startOfPipelines[i] = (NestedTupleSourceRuntime) head;
                 pipelineAssemblers[i] = pa;
             }
         }

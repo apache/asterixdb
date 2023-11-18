@@ -39,12 +39,18 @@ public class PlanCompiler {
     private JobGenContext context;
     private Map<Mutable<ILogicalOperator>, List<Mutable<ILogicalOperator>>> operatorVisitedToParents = new HashMap<>();
 
+    boolean genLog2PhysMap = false;
+
     public PlanCompiler(JobGenContext context) {
         this.context = context;
     }
 
     public JobGenContext getContext() {
         return context;
+    }
+
+    public void enableLog2PhysMapping() {
+        this.genLog2PhysMap = true;
     }
 
     public JobSpecification compilePlan(ILogicalPlan plan, IJobletEventListenerFactory jobEventListenerFactory)
@@ -66,6 +72,9 @@ public class PlanCompiler {
         }
         List<ILogicalOperator> rootOps = new ArrayList<>();
         JobBuilder builder = new JobBuilder(spec, context.getClusterLocations());
+        if (genLog2PhysMap) {
+            builder.enableLog2PhysMapping();
+        }
         for (Mutable<ILogicalOperator> opRef : plan.getRoots()) {
             compileOpRef(opRef, spec, builder, outerPlanSchema);
             rootOps.add(opRef.getValue());

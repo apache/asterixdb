@@ -44,5 +44,11 @@
         <output-dir compare="Text">sleep</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="profile">
+      <compilation-unit name="non-unary-subplan">
+        <parameter name="profile" value="timings" type="string"/>
+        <output-dir compare="Text">non-unary-subplan</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

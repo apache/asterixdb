@@ -19,6 +19,8 @@
 
 package org.apache.asterix.runtime.operators;
 
+import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -85,7 +87,7 @@ public final class DatasetStreamStatsOperatorDescriptor extends AbstractSingleAc
                 writer.open();
                 IStatsCollector coll = ctx.getStatsCollector();
                 if (coll != null) {
-                    coll.add(new OperatorStats(operatorName));
+                    coll.add(new OperatorStats(operatorName, INVALID_ODID));
                 }
                 INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
                 indexesStats = new HashMap<>();

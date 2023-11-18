@@ -17,11 +17,12 @@
  * under the License.
  */
 
--- compareunorderedarray=true
-USE test;
+package org.apache.hyracks.api.dataflow;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+
+public interface ISelfProfilingNodePushable extends IStatsContainingNodePushable {
+    void addStats(IOperatorStats stats) throws HyracksDataException;
+
+}

@@ -18,10 +18,11 @@
  */
 package org.apache.hyracks.api.job.profiling;
 
+import java.io.DataInput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.io.IWritable;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 
@@ -86,11 +87,22 @@ public interface IOperatorStats extends IWritable, Serializable {
 
     ICounter getBytesWritten();
 
-    OperatorDescriptorId getId();
+    String getOperatorId();
 
     void updateIndexesStats(Map<String, IndexStats> indexesStats);
 
     Map<String, IndexStats> getIndexesStats();
 
     void updateFrom(IOperatorStats stats);
+
+    static IOperatorStats create(DataInput input) throws IOException {
+        String name = input.readUTF();
+        if (NoOpOperatorStats.NOOP_NAME.equals(name)) {
+            return NoOpOperatorStats.INSTANCE;
+        }
+        String operatorId = input.readUTF();
+        OperatorStats operatorStats = new OperatorStats(name, operatorId);
+        operatorStats.readFields(input);
+        return operatorStats;
+    }
 }

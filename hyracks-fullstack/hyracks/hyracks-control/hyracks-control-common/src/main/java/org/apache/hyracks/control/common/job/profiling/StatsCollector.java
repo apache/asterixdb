@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.job.profiling;
 
+import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -31,7 +33,7 @@ import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 
 public class StatsCollector implements IStatsCollector {
-    private static final long serialVersionUID = 6858817639895434574L;
+    private static final long serialVersionUID = 6858817639895434379L;
 
     private final Map<String, IOperatorStats> operatorStatsMap = new LinkedHashMap<>();
 
@@ -61,7 +63,7 @@ public class StatsCollector implements IStatsCollector {
 
     @Override
     public IOperatorStats getAggregatedStats() {
-        IOperatorStats aggregatedStats = new OperatorStats("aggregated");
+        IOperatorStats aggregatedStats = new OperatorStats("aggregated", INVALID_ODID);
         for (IOperatorStats stats : operatorStatsMap.values()) {
             aggregatedStats.getInputTupleCounter().update(stats.getInputTupleCounter().get());
             aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
@@ -74,8 +76,8 @@ public class StatsCollector implements IStatsCollector {
     @Override
     public void writeFields(DataOutput output) throws IOException {
         output.writeInt(operatorStatsMap.size());
-        for (IOperatorStats operatorStats : operatorStatsMap.values()) {
-            operatorStats.writeFields(output);
+        for (IOperatorStats stats : operatorStatsMap.values()) {
+            stats.writeFields(output);
         }
     }
 
@@ -83,7 +85,7 @@ public class StatsCollector implements IStatsCollector {
     public void readFields(DataInput input) throws IOException {
         int operatorCount = input.readInt();
         for (int i = 0; i < operatorCount; i++) {
-            IOperatorStats opStats = OperatorStats.create(input);
+            IOperatorStats opStats = IOperatorStats.create(input);
             operatorStatsMap.put(opStats.getName(), opStats);
         }
     }

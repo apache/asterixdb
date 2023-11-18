@@ -18,10 +18,16 @@
  */
 
 -- compareunorderedarray=true
-USE test;
+use test;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+select value
+array_sum((
+   select value a.f
+   from g as p
+   union all
+   select value a.f
+   from g as w
+))
+from TData as a
+group by a.x as x group as g
+;
