@@ -100,7 +100,7 @@ public class JobResultCallback implements IJobResultCallback {
             metadata.setQueueWaitTimeInNanos(run.getJobProfile().getQueueWaitTimeInNanos());
         }
         metadata.setProcessedObjects(processedObjects);
-        metadata.setBufferCacheHitRatio(pagesRead > 0 ? (pagesRead - nonPagedReads) / pagesRead : Double.NaN);
+        metadata.setBufferCacheHitRatio(pagesRead > 0 ? (pagesRead - nonPagedReads) / (double) pagesRead : Double.NaN);
         metadata.setWarnings(AggregateWarnings);
         metadata.setTotalWarningsCount(aggregateTotalWarningsCount);
         if (run != null && run.getFlags() != null && run.getFlags().contains(JobFlag.PROFILE_RUNTIME)) {

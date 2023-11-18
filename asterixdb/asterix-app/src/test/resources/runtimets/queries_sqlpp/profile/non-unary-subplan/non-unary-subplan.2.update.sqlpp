@@ -17,11 +17,12 @@
  * under the License.
  */
 
--- compareunorderedarray=true
-USE test;
+use test;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+insert into TData ( [
+{'id':1, 'x':1, 'f':19},
+{'id':2, 'x':2, 'f':12},
+{'id':3, 'x':1, 'f':10},
+{'id':4, 'x':2, 'f':17},
+{'id':5, 'x':1, 'f':12}
+]);

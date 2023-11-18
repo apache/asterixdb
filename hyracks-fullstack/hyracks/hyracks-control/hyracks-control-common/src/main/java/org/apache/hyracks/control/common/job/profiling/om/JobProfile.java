@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.job.profiling.om;
 
+import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -184,7 +186,7 @@ public class JobProfile extends AbstractProfile {
                 }
                 IOperatorStats opOutStats = outStats[i];
                 if (opOutStats == null) {
-                    opOutStats = new OperatorStats(operatorName);
+                    opOutStats = new OperatorStats(operatorName, INVALID_ODID);
                     outStats[i] = opOutStats;
                 }
                 opOutStats.updateFrom(opTaskStats);

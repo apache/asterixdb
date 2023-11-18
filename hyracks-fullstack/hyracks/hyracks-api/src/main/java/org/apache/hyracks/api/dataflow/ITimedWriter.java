@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.hyracks.api.dataflow;
 
--- compareunorderedarray=true
-USE test;
+import org.apache.hyracks.api.comm.IFrameWriter;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+public interface ITimedWriter extends IFrameWriter {
+    void setUpstreamStats(IOperatorStats stats);
+
+    long getTotalTime();
+}

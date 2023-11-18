@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.common.job.profiling.om;
 
+import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -130,8 +132,8 @@ public class TaskProfile extends AbstractProfile {
             jpe.put("name", key);
             jpe.put("run-time", Double
                     .parseDouble(new DecimalFormat("#.####").format((double) value.getTimeCounter().get() / 1000000)));
-            if (value.getId().getId() >= 0) {
-                jpe.put("runtime-id", value.getId().toString());
+            if (!value.getOperatorId().equals(INVALID_ODID)) {
+                jpe.put("runtime-id", value.getOperatorId());
             }
             if (value.getPageReads().get() > 0) {
                 jpe.put("pages-read", value.getPageReads().get());

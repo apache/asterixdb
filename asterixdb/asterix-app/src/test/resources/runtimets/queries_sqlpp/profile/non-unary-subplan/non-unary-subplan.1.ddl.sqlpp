@@ -17,11 +17,11 @@
  * under the License.
  */
 
--- compareunorderedarray=true
-USE test;
+drop dataverse test if exists;
+create dataverse test;
+use test;
 
-SELECT count(*) AS customers, city
-FROM Customers c
-WHERE c.age <65
-GROUP BY c.address.city
-ORDER BY sleep(city,1700);
+create type TType as open
+{ id: bigint };
+
+create dataset TData (TType) primary key id;

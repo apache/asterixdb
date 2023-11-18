@@ -18,8 +18,11 @@
  */
 package org.apache.hyracks.algebricks.compiler.api;
 
+import java.util.EnumSet;
+
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.job.IJobletEventListenerFactory;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public interface ICompiler {
@@ -27,6 +30,9 @@ public interface ICompiler {
 
     public JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobEventListenerFactory)
             throws AlgebricksException;
+
+    JobSpecification createJob(Object appContext, IJobletEventListenerFactory jobletEventListenerFactory,
+            EnumSet<JobFlag> runtimeFlags) throws AlgebricksException;
 
     boolean skipJobCapacityAssignment();
 }

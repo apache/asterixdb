@@ -25,6 +25,8 @@ import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.base.EnforcePushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntime;
 import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.base.ProfiledPushRuntime;
+import org.apache.hyracks.algebricks.runtime.operators.std.EmptyTupleSourceRuntimeFactory;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
@@ -32,6 +34,7 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 public class PipelineAssembler {
 
@@ -55,6 +58,11 @@ public class PipelineAssembler {
     }
 
     public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx) throws HyracksDataException {
+        return assemblePipeline(writer, ctx, new HashMap<>());
+    }
+
+    public IFrameWriter assemblePipeline(IFrameWriter writer, IHyracksTaskContext ctx,
+            Map<IPushRuntimeFactory, IOperatorStats> microOpStats) throws HyracksDataException {
         // should enforce protocol
         boolean enforce = ctx.getJobFlags().contains(JobFlag.ENFORCE_CONTRACT);
         boolean profile = ctx.getJobFlags().contains(JobFlag.PROFILE_RUNTIME);
@@ -67,7 +75,21 @@ public class PipelineAssembler {
             IPushRuntimeFactory runtimeFactory = runtimeFactories[i];
             IPushRuntime[] newRuntimes = runtimeFactory.createPushRuntime(ctx);
             for (int j = 0; j < newRuntimes.length; j++) {
-                if (enforce) {
+                //ETS is wrapped externally, and doesn't need the micro-op wrapper since it isn't a pipeline
+                //we also want to avoid any instances of NoOp stats in the pipeline that snuck in somehow
+                boolean shouldProfile = profile && !(runtimeFactory instanceof EmptyTupleSourceRuntimeFactory)
+                        && microOpStats.containsKey(runtimeFactory);
+                if (shouldProfile) {
+                    ProfiledPushRuntime profiled;
+                    if (j == 0) {
+                        profiled = (ProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                                microOpStats.get(runtimeFactory));
+                    } else {
+                        profiled = (ProfiledPushRuntime) ProfiledPushRuntime.time(newRuntimes[j],
+                                microOpStats.get(runtimeFactory), false);
+                    }
+                    newRuntimes[j] = profiled;
+                } else if (enforce && !profile) {
                     newRuntimes[j] = EnforcePushRuntime.enforce(newRuntimes[j]);
                 }
                 if (i == runtimeFactories.length - 1) {

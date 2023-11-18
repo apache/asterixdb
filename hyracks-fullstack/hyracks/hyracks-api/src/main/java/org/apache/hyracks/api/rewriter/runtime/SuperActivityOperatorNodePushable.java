@@ -109,11 +109,11 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
          */
         Set<Pair<Pair<IActivity, Integer>, Pair<IActivity, Integer>>> sources = new HashSet<>();
         for (Entry<ActivityId, IActivity> entry : startActivities.entrySet()) {
-            IOperatorNodePushable opPushable = null;
+            IOperatorNodePushable opPushable;
             if (profile) {
                 IOperatorNodePushable wrapped =
                         entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
-                opPushable = ProfiledOperatorNodePushable.time(wrapped, ctx, entry.getKey(), null);
+                opPushable = ProfiledOperatorNodePushable.time(wrapped, ctx, entry.getKey());
             } else {
                 opPushable = entry.getValue().createPushRuntime(ctx, recordDescProvider, partition, nPartitions);
                 ProfiledOperatorNodePushable.onlyAddStats(opPushable, ctx, entry.getKey());
@@ -147,12 +147,7 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 if (profile) {
                     IOperatorNodePushable wrapped = channel.getRight().getLeft().createPushRuntime(ctx,
                             recordDescProvider, partition, nPartitions);
-                    if (sourceOp instanceof ProfiledOperatorNodePushable) {
-                        destOp = ProfiledOperatorNodePushable.time(wrapped, ctx, destId,
-                                (ProfiledOperatorNodePushable) sourceOp);
-                    } else {
-                        destOp = ProfiledOperatorNodePushable.time(wrapped, ctx, destId, null);
-                    }
+                    destOp = ProfiledOperatorNodePushable.time(wrapped, ctx, destId);
                 } else {
                     destOp = channel.getRight().getLeft().createPushRuntime(ctx, recordDescProvider, partition,
                             nPartitions);
@@ -160,12 +155,6 @@ public class SuperActivityOperatorNodePushable implements IOperatorNodePushable 
                 }
                 operatorNodePushablesBFSOrder.add(destOp);
                 operatorNodePushables.put(destId, destOp);
-            } else if (profile) {
-                if (destOp instanceof ProfiledOperatorNodePushable
-                        && sourceOp instanceof ProfiledOperatorNodePushable) {
-                    ((ProfiledOperatorNodePushable) destOp).addParent(inputChannel,
-                            (ProfiledOperatorNodePushable) sourceOp);
-                }
             }
 
             /*

@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.api.dataflow;
 
+import static org.apache.hyracks.api.job.profiling.NoOpOperatorStats.INVALID_ODID;
+
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.com.job.profiling.counters.Counter;
@@ -28,28 +30,31 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.IStatsCollector;
+import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
 import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.api.job.profiling.counters.ICounter;
 import org.apache.hyracks.api.util.HyracksRunnable;
 import org.apache.hyracks.api.util.HyracksThrowingConsumer;
 import org.apache.hyracks.util.IntSerDeUtils;
 
-public class ProfiledFrameWriter implements IFrameWriter {
+public class ProfiledFrameWriter implements ITimedWriter {
 
     // The downstream data consumer of this writer.
     private final IFrameWriter writer;
-    private final ICounter tupleCounter;
-    private final IOperatorStats parentStats;
+    protected IOperatorStats upstreamStats = NoOpOperatorStats.INSTANCE;
     private int minSz = Integer.MAX_VALUE;
     private int maxSz = -1;
     private long avgSz;
     private ICounter totalTime;
 
-    public ProfiledFrameWriter(IFrameWriter writer, IOperatorStats parentStats) {
+    public ProfiledFrameWriter(IFrameWriter writer) {
         this.writer = writer;
-        this.parentStats = parentStats;
-        this.tupleCounter = parentStats != null ? parentStats.getTupleCounter() : null;
         this.totalTime = new Counter("totalTime");
+    }
+
+    @Override
+    public void setUpstreamStats(IOperatorStats stats) {
+        this.upstreamStats = stats;
     }
 
     public static void timeMethod(HyracksRunnable r, ICounter c) throws HyracksDataException {
@@ -80,25 +85,24 @@ public class ProfiledFrameWriter implements IFrameWriter {
     private void updateTupleStats(ByteBuffer buffer) {
         int tupleCountOffset = FrameHelper.getTupleCountOffset(buffer.limit());
         int tupleCount = IntSerDeUtils.getInt(buffer.array(), tupleCountOffset);
-        if (tupleCounter != null) {
-            long prevCount = tupleCounter.get();
-            for (int i = 0; i < tupleCount; i++) {
-                int tupleLen = getTupleLength(i, tupleCountOffset, buffer);
-                if (maxSz < tupleLen) {
-                    maxSz = tupleLen;
-                }
-                if (minSz > tupleLen) {
-                    minSz = tupleLen;
-                }
-                long prev = avgSz * prevCount;
-                avgSz = (prev + tupleLen) / (prevCount + 1);
-                prevCount++;
+        ICounter tupleCounter = upstreamStats.getTupleCounter();
+        long prevCount = tupleCounter.get();
+        for (int i = 0; i < tupleCount; i++) {
+            int tupleLen = getTupleLength(i, tupleCountOffset, buffer);
+            if (maxSz < tupleLen) {
+                maxSz = tupleLen;
             }
-            parentStats.getMaxTupleSz().set(maxSz);
-            parentStats.getMinTupleSz().set(minSz);
-            parentStats.getAverageTupleSz().set(avgSz);
-            tupleCounter.update(tupleCount);
+            if (minSz > tupleLen) {
+                minSz = tupleLen;
+            }
+            long prev = avgSz * prevCount;
+            avgSz = (prev + tupleLen) / (prevCount + 1);
+            prevCount++;
         }
+        upstreamStats.getMaxTupleSz().set(maxSz);
+        upstreamStats.getMinTupleSz().set(minSz);
+        upstreamStats.getAverageTupleSz().set(avgSz);
+        tupleCounter.update(tupleCount);
     }
 
     @Override
@@ -140,14 +144,15 @@ public class ProfiledFrameWriter implements IFrameWriter {
             throws HyracksDataException {
         if (!(writer instanceof ProfiledFrameWriter)) {
             IStatsCollector statsCollector = ctx.getStatsCollector();
-            IOperatorStats stats = new OperatorStats(name);
+            IOperatorStats stats = new OperatorStats(name, INVALID_ODID);
             statsCollector.add(stats);
-            return new ProfiledFrameWriter(writer, null);
-
-        } else
+            return new ProfiledFrameWriter(writer);
+        } else {
             return writer;
+        }
     }
 
+    @Override
     public long getTotalTime() {
         return totalTime.get();
     }
