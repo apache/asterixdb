@@ -42,6 +42,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.base.AnalysisUtil;
 import org.apache.asterix.optimizer.rules.am.array.AbstractOperatorFromSubplanRewrite;
 import org.apache.asterix.translator.ConstantHelper;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -504,7 +505,7 @@ public class Stats {
             }
         }
 
-        double predicateCardinality = findPredicateCardinality(result); // this routine knows how to look into the record inside result
+        double predicateCardinality = (double) ((AInt64) result.get(0).get(0)).getLongValue();
         if (predicateCardinality == 0.0) {
             predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
         }
@@ -527,7 +528,7 @@ public class Stats {
             selOp.getCondition().setValue(ConstantExpression.TRUE);
             result = runSamplingQuery(optCtx, selOp);
             selOp.getCondition().setValue(saveExprs);
-            sampleCard = findPredicateCardinality(result);
+            sampleCard = (double) ((AInt64) result.get(0).get(0)).getLongValue();
         }
         // switch  the scanOp back
         parent.getInputs().get(0).setValue(scanOp);
@@ -563,7 +564,43 @@ public class Stats {
         return projectedSize;
     }
 
+    // This one only gets the cardinality
     protected List<List<IAObject>> runSamplingQuery(IOptimizationContext ctx, ILogicalOperator logOp)
+            throws AlgebricksException {
+        LOGGER.info("***running sample query***");
+
+        IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
+
+        ILogicalOperator newScanOp = OperatorManipulationUtil.bottomUpCopyOperators(logOp);
+
+        List<Mutable<ILogicalExpression>> aggFunArgs = new ArrayList<>(1);
+        aggFunArgs.add(new MutableObject<>(ConstantExpression.TRUE));
+        BuiltinFunctionInfo countFn = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.COUNT);
+        AggregateFunctionCallExpression aggExpr = new AggregateFunctionCallExpression(countFn, false, aggFunArgs);
+
+        List<Mutable<ILogicalExpression>> aggExprList = new ArrayList<>(1);
+        aggExprList.add(new MutableObject<>(aggExpr));
+
+        List<LogicalVariable> aggVarList = new ArrayList<>(1);
+        LogicalVariable aggVar = newCtx.newVar();
+        aggVarList.add(aggVar);
+
+        AggregateOperator newAggOp = new AggregateOperator(aggVarList, aggExprList);
+        newAggOp.getInputs().add(new MutableObject<>(newScanOp));
+
+        Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
+
+        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx);
+        LOGGER.info("***returning from sample query***");
+
+        String viewInPlan = new ALogicalPlanImpl(newAggOpRef).toString(); //useful when debugging
+        LOGGER.trace("viewInPlan");
+        LOGGER.trace(viewInPlan);
+        return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+    }
+
+    // This one gets the cardinality and also projection sizes
+    protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp)
             throws AlgebricksException {
         LOGGER.info("***running sample query***");
 
@@ -577,8 +614,12 @@ public class Stats {
         // assign [$$68, $$69, $$70, $$71, $$72] <- [serialized-size($$60), serialized-size($$str), serialized-size($$61), serialized-size($$65), serialized-size($$67)]
 
         // add the assign [$$56, ..., ] <- [encoded-size($$67), ..., ] on top of newAggOp
-        List<LogicalVariable> vars = new ArrayList<>();
-        VariableUtilities.getLiveVariables(logOp, vars);
+        List<LogicalVariable> vars1 = new ArrayList<>();
+        VariableUtilities.getLiveVariables(logOp, vars1); // all the variables in the leafInput
+        List<LogicalVariable> vars3 = // these variables can be thrown away as they are not present joins and in the final project
+                new ArrayList<>(CollectionUtils.subtract(vars1, joinEnum.resultAndJoinVars /* vars2 */));
+        List<LogicalVariable> vars = new ArrayList<>(CollectionUtils.subtract(vars1, vars3)); // variables that will flow up the tree
+
         LogicalVariable newVar;
         // array to keep track of the assigns
         List<LogicalVariable> newVars = new ArrayList<>();
@@ -602,7 +643,6 @@ public class Stats {
         AssignOperator assignOp = new AssignOperator(newVars, exprs);
         assignOp.getInputs().add(new MutableObject<>(newScanOp));
         Mutable<ILogicalOperator> tmpRef = new MutableObject<>(assignOp);
-        String viewInPlan = new ALogicalPlanImpl(tmpRef).toString();
 
         // aggregate [$$73, $$74, $$75, $$76, $$77, $$78] <- [agg-count(true), sql-avg($$68), sql-avg($$69), sql-avg($$70), sql-avg($$71), sql-avg($$72)]
         // add the count-agg (true) first
@@ -649,14 +689,16 @@ public class Stats {
         pOp.getInputs().add(new MutableObject<>(assignOp));
 
         Mutable<ILogicalOperator> Ref = new MutableObject<>(pOp);
-        LOGGER.info("***returning from sample query***");
 
         OperatorPropertiesUtil.typeOpRec(Ref, newCtx);
-        String viewInPlan3 = new ALogicalPlanImpl(Ref).toString(); //useful when debugging
-        LOGGER.trace("viewInPlan3");
-        LOGGER.trace(viewInPlan3);
-        return AnalysisUtil.runQuery(Ref, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+        if (LOGGER.isTraceEnabled()) {
+            String viewInPlan = new ALogicalPlanImpl(Ref).toString(); //useful when debugging
+            LOGGER.trace("sampling query before calling runQuery");
+            LOGGER.trace(viewInPlan);
+        }
 
+        LOGGER.info("***returning from sample query***");
+        return AnalysisUtil.runQuery(Ref, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 
     private List<MutableObject> createMutableObjectArray(List<LogicalVariable> vars) {
@@ -721,7 +763,7 @@ public class Stats {
         ILogicalOperator copyOfSelOp = OperatorManipulationUtil.bottomUpCopyOperators(selOp);
         if (setSampleDataSource(copyOfSelOp, sampleDataSource)) {
             List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfSelOp);
-            sampleSize = (long) findPredicateCardinality(result);
+            sampleSize = (long) ((AInt64) result.get(0).get(0)).getLongValue();
         }
         return sampleSize;
     }
@@ -737,7 +779,7 @@ public class Stats {
             if (setSampleDataSource(copyOfGrpByDistinctOp, sampleDataSource)) {
                 // get distinct cardinality from the sampling source
                 List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfGrpByDistinctOp);
-                estDistCardinalityFromSample = findPredicateCardinality(result);
+                estDistCardinalityFromSample = (double) ((AInt64) result.get(0).get(0)).getLongValue();
             }
         }
         if (estDistCardinalityFromSample != -1.0) { // estimate distinct cardinality for the dataset from the sampled cardinality

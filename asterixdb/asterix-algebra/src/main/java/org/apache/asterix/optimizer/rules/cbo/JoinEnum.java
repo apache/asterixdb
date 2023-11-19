@@ -38,6 +38,7 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -138,6 +139,7 @@ public class JoinEnum {
     protected String queryPlanShape;
     protected ICost cost;
     protected ICostMethods costMethods;
+    List<LogicalVariable> resultAndJoinVars;
 
     public JoinEnum() {
     }
@@ -147,8 +149,8 @@ public class JoinEnum {
             List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
             List<Triple<Integer, Integer, Boolean>> buildSets, HashMap<LogicalVariable, Integer> varLeafInputIds,
             HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps,
-            ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, IOptimizationContext context)
-            throws AsterixException {
+            ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, List<LogicalVariable> resultAndJoinVars,
+            IOptimizationContext context) throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -170,6 +172,7 @@ public class JoinEnum {
         this.dataScanAndGroupByDistinctOps = dataScanAndGroupByDistinctOps;
         this.rootGroupByDistinctOp = grpByDistinctOp;
         this.rootOrderByOp = orderByOp;
+        this.resultAndJoinVars = resultAndJoinVars;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
@@ -911,7 +914,7 @@ public class JoinEnum {
                 parent.getInputs().get(0).setValue(deepCopyofScan);
                 // There are predicates here. So skip the predicates and get the original dataset card.
                 // Now apply all the predicates and get the card after all predicates are applied.
-                result = stats.runSamplingQuery(this.optCtx, leafInput);
+                result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
                 double predicateCardinality = stats.findPredicateCardinality(result);
 
                 double projectedSize;
@@ -920,7 +923,7 @@ public class JoinEnum {
                 } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
                     ILogicalExpression saveExpr = selop.getCondition().getValue();
                     selop.getCondition().setValue(ConstantExpression.TRUE);
-                    result = stats.runSamplingQuery(this.optCtx, leafInput);
+                    result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
                     double x = stats.findPredicateCardinality(result);
                     // better to check if x is 0
                     if (x == 0.0) {
@@ -1084,7 +1087,7 @@ public class JoinEnum {
                 SelectOperator selOp = new SelectOperator(new MutableObject<>(exp));
                 selOp.getInputs().add(new MutableObject<>(leafInput));
                 result = stats.runSamplingQuery(this.optCtx, selOp);
-                predicateCardinality = stats.findPredicateCardinality(result);
+                predicateCardinality = (double) ((AInt64) result.get(0).get(0)).getLongValue();
 
                 if (predicateCardinality == 0.0) {
                     predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
