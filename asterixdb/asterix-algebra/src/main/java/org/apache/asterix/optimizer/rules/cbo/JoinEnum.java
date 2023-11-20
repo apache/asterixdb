@@ -38,7 +38,6 @@ import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
-import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -915,7 +914,7 @@ public class JoinEnum {
                 // There are predicates here. So skip the predicates and get the original dataset card.
                 // Now apply all the predicates and get the card after all predicates are applied.
                 result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
-                double predicateCardinality = stats.findPredicateCardinality(result);
+                double predicateCardinality = stats.findPredicateCardinality(result, true);
 
                 double projectedSize;
                 if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
@@ -924,7 +923,7 @@ public class JoinEnum {
                     ILogicalExpression saveExpr = selop.getCondition().getValue();
                     selop.getCondition().setValue(ConstantExpression.TRUE);
                     result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
-                    double x = stats.findPredicateCardinality(result);
+                    double x = stats.findPredicateCardinality(result, true);
                     // better to check if x is 0
                     if (x == 0.0) {
                         int fields = stats.numberOfFields(result);
@@ -1087,7 +1086,7 @@ public class JoinEnum {
                 SelectOperator selOp = new SelectOperator(new MutableObject<>(exp));
                 selOp.getInputs().add(new MutableObject<>(leafInput));
                 result = stats.runSamplingQuery(this.optCtx, selOp);
-                predicateCardinality = (double) ((AInt64) result.get(0).get(0)).getLongValue();
+                predicateCardinality = stats.findPredicateCardinality(result, false);
 
                 if (predicateCardinality == 0.0) {
                     predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();

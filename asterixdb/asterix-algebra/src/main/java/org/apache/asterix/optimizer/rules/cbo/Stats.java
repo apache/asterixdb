@@ -505,7 +505,7 @@ public class Stats {
             }
         }
 
-        double predicateCardinality = (double) ((AInt64) result.get(0).get(0)).getLongValue();
+        double predicateCardinality = findPredicateCardinality(result, false);
         if (predicateCardinality == 0.0) {
             predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
         }
@@ -528,7 +528,7 @@ public class Stats {
             selOp.getCondition().setValue(ConstantExpression.TRUE);
             result = runSamplingQuery(optCtx, selOp);
             selOp.getCondition().setValue(saveExprs);
-            sampleCard = (double) ((AInt64) result.get(0).get(0)).getLongValue();
+            sampleCard = findPredicateCardinality(result, false);
         }
         // switch  the scanOp back
         parent.getInputs().get(0).setValue(scanOp);
@@ -537,12 +537,15 @@ public class Stats {
         return sel;
     }
 
-    public double findPredicateCardinality(List<List<IAObject>> result) {
-        ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
-        int fields = record.numberOfFields();
-        IAObject first = record.getValueByPos(0);
-        double predicateCardinality = ((double) ((AInt64) first).getLongValue());
-        return predicateCardinality;
+    public double findPredicateCardinality(List<List<IAObject>> result, boolean project) {
+        if (project) {
+            ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
+            int fields = record.numberOfFields();
+            IAObject first = record.getValueByPos(0);
+            return ((double) ((AInt64) first).getLongValue());
+        } else {
+            return (double) ((AInt64) result.get(0).get(0)).getLongValue();
+        }
     }
 
     public int numberOfFields(List<List<IAObject>> result) {
@@ -763,7 +766,7 @@ public class Stats {
         ILogicalOperator copyOfSelOp = OperatorManipulationUtil.bottomUpCopyOperators(selOp);
         if (setSampleDataSource(copyOfSelOp, sampleDataSource)) {
             List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfSelOp);
-            sampleSize = (long) ((AInt64) result.get(0).get(0)).getLongValue();
+            sampleSize = (long) findPredicateCardinality(result, false);
         }
         return sampleSize;
     }
@@ -779,7 +782,7 @@ public class Stats {
             if (setSampleDataSource(copyOfGrpByDistinctOp, sampleDataSource)) {
                 // get distinct cardinality from the sampling source
                 List<List<IAObject>> result = runSamplingQuery(optCtx, copyOfGrpByDistinctOp);
-                estDistCardinalityFromSample = (double) ((AInt64) result.get(0).get(0)).getLongValue();
+                estDistCardinalityFromSample = findPredicateCardinality(result, false);
             }
         }
         if (estDistCardinalityFromSample != -1.0) { // estimate distinct cardinality for the dataset from the sampled cardinality
