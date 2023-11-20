@@ -260,6 +260,11 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         return page;
     }
 
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
+        return pin(dpid, newPage);
+    }
+
     private int hash(long dpid) {
         int hashValue = (int) dpid ^ (Integer.reverse((int) (dpid >>> 32)) >>> 1);
         return hashValue % buckets.length;

@@ -273,6 +273,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         return page;
     }
 
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
+        return pin(dpid, newPage);
+    }
+
     private void incrementFilteredMemoryComponentUsage(long dpid, int pages) {
         if (filteredMemoryComponentMaxNumPages > 0) {
             // update memory usage of filtered index
