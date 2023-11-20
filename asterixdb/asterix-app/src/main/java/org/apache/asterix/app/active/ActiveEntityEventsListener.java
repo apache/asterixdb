@@ -691,7 +691,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public synchronized void replace(Dataset dataset) {
-        if (getDatasets().contains(dataset)) {
+        if (getDatasets().remove(dataset)) {
             getDatasets().remove(dataset);
             getDatasets().add(dataset);
         }

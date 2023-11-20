@@ -438,6 +438,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
                     LOGGER.warn(() -> "handleException: " + ex.getMessage() + ": "
                             + LogRedactionUtil.userData(param.toString()));
                     executionState.setStatus(ResultStatus.FATAL, HttpResponseStatus.SERVICE_UNAVAILABLE);
+                    return true;
                 default:
                     // fall-through
             }
