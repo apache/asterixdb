@@ -41,6 +41,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
+      <compilation-unit name="cluster_state_5">
+        <output-dir compare="Text">cluster_state_5</output-dir>
+        <expected-error>HTTP/1.1 404 Not Found</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="cluster_state_cc_1">
         <output-dir compare="Text">cluster_state_cc_1</output-dir>
       </compilation-unit>
