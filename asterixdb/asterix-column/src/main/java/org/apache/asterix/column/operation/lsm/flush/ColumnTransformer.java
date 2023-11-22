@@ -43,11 +43,26 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
     private final ObjectSchemaNode root;
     private AbstractSchemaNestedNode currentParent;
     private int primaryKeysLength;
+    /**
+     * Hack-alert! This tracks the total length of all strings (as they're not as encodable as numerics)
+     * The total length can be used by {@link FlushColumnTupleWriter} to stop writing tuples to the current mega
+     * leaf node to avoid having a single column that spans to megabytes of pages.
+     */
+    private int stringLengths;
 
     public ColumnTransformer(FlushColumnMetadata columnMetadata, ObjectSchemaNode root) {
         this.columnMetadata = columnMetadata;
         this.root = root;
         nonTaggedValue = new VoidPointable();
+        stringLengths = 0;
+    }
+
+    public int getStringLengths() {
+        return stringLengths;
+    }
+
+    public void resetStringLengths() {
+        stringLengths = 0;
     }
 
     /**
@@ -153,6 +168,8 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
         }
         if (node.isPrimaryKey()) {
             primaryKeysLength += writer.getEstimatedSize();
+        } else if (node.getTypeTag() == ATypeTag.STRING) {
+            stringLengths += pointable.getLength();
         }
         columnMetadata.exitNode(arg);
         return null;

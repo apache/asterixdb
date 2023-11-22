@@ -66,6 +66,7 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_GLOBAL_CLEANUP_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toSeconds(10)),
         STORAGE_COLUMN_MAX_TUPLE_COUNT(NONNEGATIVE_INTEGER, 15000),
         STORAGE_COLUMN_FREE_SPACE_TOLERANCE(DOUBLE, 0.15d),
+        STORAGE_COLUMN_MAX_LEAF_NODE_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(10, MEGABYTE)),
         STORAGE_FORMAT(STRING, "row"),
         STORAGE_PARTITIONING(STRING, "dynamic"),
         STORAGE_PARTITIONS_COUNT(INTEGER, 8);
@@ -91,6 +92,7 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_FORMAT:
                 case STORAGE_COLUMN_MAX_TUPLE_COUNT:
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
+                case STORAGE_COLUMN_MAX_LEAF_NODE_SIZE:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -147,6 +149,8 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_COLUMN_FREE_SPACE_TOLERANCE:
                     return "The percentage of the maximum tolerable empty space for a physical mega leaf page (e.g.,"
                             + " 0.15 means a physical page with 15% or less empty space is tolerable)";
+                case STORAGE_COLUMN_MAX_LEAF_NODE_SIZE:
+                    return "The maximum mega leaf node to write during flush and merge operations (default: 10MB)";
                 case STORAGE_FORMAT:
                     return "The default storage format (either row or column)";
                 case STORAGE_PARTITIONING:
@@ -298,6 +302,10 @@ public class StorageProperties extends AbstractProperties {
 
     public double getColumnFreeSpaceTolerance() {
         return accessor.getDouble(Option.STORAGE_COLUMN_FREE_SPACE_TOLERANCE);
+    }
+
+    public int getColumnMaxLeafNodeSize() {
+        return accessor.getInt(Option.STORAGE_COLUMN_MAX_LEAF_NODE_SIZE);
     }
 
     public String getStorageFormat() {

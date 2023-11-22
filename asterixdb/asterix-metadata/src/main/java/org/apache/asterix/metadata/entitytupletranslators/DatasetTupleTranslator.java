@@ -500,8 +500,14 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
         ADouble freeSpaceToleranceDouble = (ADouble) datasetFormatRecord.getValueByPos(freeSpaceToleranceIndex);
         double freeSpaceTolerance = freeSpaceToleranceDouble.getDoubleValue();
 
+        // MaxTupleCount
+        int maxLeafNodeSizeIndex = datasetFormatType
+                .getFieldIndex(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_LEAF_NODE_SIZE_FIELD_NAME);
+        AInt64 maxLeafNodeSizeInt = (AInt64) datasetFormatRecord.getValueByPos(maxLeafNodeSizeIndex);
+        int maxLeafNodeSize = (int) maxLeafNodeSizeInt.getLongValue();
+
         // Columnar
-        return new DatasetFormatInfo(format, maxTupleCount, freeSpaceTolerance);
+        return new DatasetFormatInfo(format, maxTupleCount, freeSpaceTolerance, maxLeafNodeSize);
     }
 
     @Override
@@ -772,6 +778,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
         // Columnar settings
         if (info.getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
+            // Max tuple count
             fieldName.reset();
             aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
@@ -780,6 +787,7 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             int64Serde.serialize(aInt64, fieldValue.getDataOutput());
             datasetFormatObject.addField(fieldName, fieldValue);
 
+            // free space tolerance
             fieldName.reset();
             aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
@@ -787,6 +795,16 @@ public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
             aDouble.setValue(info.getFreeSpaceTolerance());
             doubleSerde.serialize(aDouble, fieldValue.getDataOutput());
             datasetFormatObject.addField(fieldName, fieldValue);
+
+            // max leaf node size
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.DATASET_ARECORD_DATASET_MAX_LEAF_NODE_SIZE_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aInt64.setValue(info.getMaxLeafNodeSize());
+            int64Serde.serialize(aInt64, fieldValue.getDataOutput());
+            datasetFormatObject.addField(fieldName, fieldValue);
+
         }
 
         fieldName.reset();

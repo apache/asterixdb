@@ -121,7 +121,8 @@ public class BTreeResourceFactoryProvider implements IResourceFactoryProvider {
                     IColumnManagerFactory columnManagerFactory =
                             new ColumnManagerFactory(recordType, metaType, dataset.getPrimaryKeys(), keySourceIndicator,
                                     mdProvider.getStorageProperties().getBufferCachePageSize(),
-                                    datasetFormatInfo.getMaxTupleCount(), datasetFormatInfo.getFreeSpaceTolerance());
+                                    datasetFormatInfo.getMaxTupleCount(), datasetFormatInfo.getFreeSpaceTolerance(),
+                                    datasetFormatInfo.getMaxLeafNodeSize());
                     return new LSMColumnBTreeLocalResourceFactory(storageManager, typeTraits, cmpFactories,
                             filterTypeTraits, filterCmpFactories, filterFields, opTrackerFactory, ioOpCallbackFactory,
                             pageWriteCallbackFactory, metadataPageManagerFactory, vbcProvider, ioSchedulerProvider,

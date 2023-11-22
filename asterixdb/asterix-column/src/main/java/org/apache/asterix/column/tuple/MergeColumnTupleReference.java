@@ -38,6 +38,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     private final IColumnValuesReader[] columnReaders;
     private int skipCount;
     private IEndOfPageCallBack endOfPageCallBack;
+    private int mergingLength;
 
     public MergeColumnTupleReference(int componentIndex, ColumnBTreeReadLeafFrame frame,
             MergeColumnReadMetadata columnMetadata, IColumnReadMultiPageOp multiPageOp) {
@@ -64,6 +65,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         pageZero.position(pageZero.position() + numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE);
         // skip count is always start from zero as no "search" is conducted during a merge
         this.skipCount = 0;
+        mergingLength = 0;
         return true;
     }
 
@@ -79,6 +81,7 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         columnStream.reset(buffersProvider);
         IColumnValuesReader reader = columnReaders[ordinal];
         reader.reset(columnStream, numberOfTuples);
+        mergingLength += buffersProvider.getLength();
     }
 
     @Override
@@ -116,6 +119,10 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
         this.endOfPageCallBack = endOfPageCallBack;
     }
 
+    public int getMergingLength() {
+        return mergingLength;
+    }
+
     private static IEndOfPageCallBack createNoOpCallBack() {
         return columnTuple -> {
             if (!columnTuple.isEmpty()) {
@@ -124,5 +131,4 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
             }
         };
     }
-
 }

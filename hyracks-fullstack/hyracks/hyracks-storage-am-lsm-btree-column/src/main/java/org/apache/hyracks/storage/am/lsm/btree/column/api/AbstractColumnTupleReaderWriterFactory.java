@@ -31,6 +31,7 @@ public abstract class AbstractColumnTupleReaderWriterFactory implements ITreeInd
     protected final int pageSize;
     protected final int maxNumberOfTuples;
     protected final double tolerance;
+    protected final int maxLeafNodeSize;
 
     /**
      * Tuple reader/writer factory
@@ -38,11 +39,14 @@ public abstract class AbstractColumnTupleReaderWriterFactory implements ITreeInd
      * @param pageSize          {@link IBufferCache} page size
      * @param maxNumberOfTuples maximum number of tuples stored per a mega leaf page
      * @param tolerance         percentage of tolerated empty space
+     * @param maxLeafNodeSize   the maximum size a mega leaf node can occupy
      */
-    protected AbstractColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance) {
+    protected AbstractColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance,
+            int maxLeafNodeSize) {
         this.pageSize = pageSize;
         this.maxNumberOfTuples = maxNumberOfTuples;
         this.tolerance = tolerance;
+        this.maxLeafNodeSize = maxLeafNodeSize;
     }
 
     /**

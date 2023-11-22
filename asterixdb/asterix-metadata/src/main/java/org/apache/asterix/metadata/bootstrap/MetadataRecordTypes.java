@@ -188,6 +188,7 @@ public final class MetadataRecordTypes {
     public static final String DATASET_ARECORD_DATASET_FORMAT_FORMAT_FIELD_NAME = "Format";
     public static final String DATASET_ARECORD_DATASET_MAX_TUPLE_COUNT_FIELD_NAME = "MaxTupleCount";
     public static final String DATASET_ARECORD_DATASET_FREE_SPACE_TOLERANCE_FIELD_NAME = "FreeSpaceTolerance";
+    public static final String DATASET_ARECORD_DATASET_MAX_LEAF_NODE_SIZE_FIELD_NAME = "MaxLeafNodeSize";
 
     //------------------------------------------ Field ------------------------------------------//
     public static final int FIELD_ARECORD_FIELDNAME_FIELD_INDEX = 0;

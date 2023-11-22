@@ -37,6 +37,7 @@ import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
 import org.apache.asterix.object.base.AdmObjectNode;
 import org.apache.asterix.object.base.IAdmNode;
 import org.apache.asterix.runtime.compression.CompressionManager;
+import org.apache.hyracks.util.StorageUtil;
 
 public class DatasetDecl extends AbstractStatement {
 
@@ -153,7 +154,7 @@ public class DatasetDecl extends AbstractStatement {
     }
 
     public DatasetFormatInfo getDatasetFormatInfo(String defaultFormat, int defaultMaxTupleCount,
-            double defaultFreeSpaceTolerance) {
+            double defaultFreeSpaceTolerance, int defaultMaxLeafNodeSize) {
         if (datasetType != DatasetType.INTERNAL) {
             return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
@@ -172,8 +173,12 @@ public class DatasetDecl extends AbstractStatement {
         double freeSpaceTolerance = datasetFormatNode.getOptionalDouble(
                 DatasetDeclParametersUtil.DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME,
                 defaultFreeSpaceTolerance);
+        String maxLeafNodeSizeString =
+                datasetFormatNode.getOptionalString(DatasetDeclParametersUtil.DATASET_FORMAT_FREE_MAX_LEAF_NODE_SIZE);
+        int maxLeafNodeSize = maxLeafNodeSizeString == null ? defaultMaxLeafNodeSize
+                : (int) StorageUtil.getByteValue(maxLeafNodeSizeString);
 
-        return new DatasetFormatInfo(datasetFormat, maxTupleCount, freeSpaceTolerance);
+        return new DatasetFormatInfo(datasetFormat, maxTupleCount, freeSpaceTolerance, maxLeafNodeSize);
     }
 
     public Map<String, String> getHints() {

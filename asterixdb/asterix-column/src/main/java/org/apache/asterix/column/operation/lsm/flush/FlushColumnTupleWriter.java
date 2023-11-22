@@ -40,16 +40,18 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     private final RecordLazyVisitablePointable pointable;
     private final int maxNumberOfTuples;
     private final IColumnValuesWriter[] primaryKeyWriters;
+    private final int maxLeafNodeSize;
 
     protected int primaryKeysEstimatedSize;
 
     public FlushColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance) {
+            double tolerance, int maxLeafNodeSize) {
         this.columnMetadata = columnMetadata;
         transformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot());
         finalizer = new BatchFinalizerVisitor(columnMetadata);
         writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance);
         this.maxNumberOfTuples = maxNumberOfTuples;
+        this.maxLeafNodeSize = maxLeafNodeSize;
         pointable = new TypedRecordLazyVisitablePointable(columnMetadata.getDatasetType());
 
         int numberOfPrimaryKeys = columnMetadata.getNumberOfPrimaryKeys();
@@ -87,8 +89,16 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         return primaryKeysEstimatedSize + filterSize;
     }
 
+    /**
+     * TODO a better approach should be adopted
+     *
+     * @return the configured max number of tuples or zero if strings exceeded the maximum size
+     */
     @Override
     public final int getMaxNumberOfTuples() {
+        if (transformer.getStringLengths() >= maxLeafNodeSize) {
+            return 0;
+        }
         return maxNumberOfTuples;
     }
 
@@ -113,6 +123,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     @Override
     public final int flush(ByteBuffer pageZero) throws HyracksDataException {
         writer.setPageZeroBuffer(pageZero, getNumberOfColumns(), columnMetadata.getNumberOfPrimaryKeys());
+        transformer.resetStringLengths();
         return finalizer.finalizeBatch(writer, columnMetadata);
     }
 

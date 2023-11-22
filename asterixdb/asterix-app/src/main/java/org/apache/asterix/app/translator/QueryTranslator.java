@@ -889,7 +889,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         StorageProperties storageProperties = metadataProvider.getStorageProperties();
         DatasetFormatInfo datasetFormatInfo = dd.getDatasetFormatInfo(storageProperties.getStorageFormat(),
-                storageProperties.getColumnMaxTupleCount(), storageProperties.getColumnFreeSpaceTolerance());
+                storageProperties.getColumnMaxTupleCount(), storageProperties.getColumnFreeSpaceTolerance(),
+                storageProperties.getColumnMaxLeafNodeSize());
         try {
             //TODO(DB): also check for database existence?
 

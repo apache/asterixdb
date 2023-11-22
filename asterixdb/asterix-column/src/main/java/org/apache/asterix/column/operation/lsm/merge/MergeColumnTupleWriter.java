@@ -40,6 +40,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private final MergeColumnWriteMetadata columnMetadata;
+    private final int maxLeafNodeSize;
     private final MergeColumnTupleReference[] componentsTuples;
     private final RunLengthIntArray writtenComponents;
 
@@ -51,20 +52,24 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private int numberOfAntiMatter;
 
     public MergeColumnTupleWriter(MergeColumnWriteMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance) {
+            double tolerance, int maxLeafNodeSize) {
         this.columnMetadata = columnMetadata;
+        this.maxLeafNodeSize = maxLeafNodeSize;
         List<IColumnTupleIterator> componentsTuplesList = columnMetadata.getComponentsTuples();
         this.componentsTuples = new MergeColumnTupleReference[componentsTuplesList.size()];
+        int totalLength = 0;
+        int totalNumberOfTuples = 0;
         for (int i = 0; i < componentsTuplesList.size(); i++) {
             MergeColumnTupleReference mergeTuple = (MergeColumnTupleReference) componentsTuplesList.get(i);
             this.componentsTuples[i] = mergeTuple;
             mergeTuple.registerEndOfPageCallBack(this::writeAllColumns);
+            totalNumberOfTuples += mergeTuple.getTupleCount();
+            totalLength += mergeTuple.getMergingLength();
         }
+        this.maxNumberOfTuples = getMaxNumberOfTuples(maxNumberOfTuples, totalNumberOfTuples, totalLength);
         this.writtenComponents = new RunLengthIntArray();
-        this.maxNumberOfTuples = maxNumberOfTuples;
         writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance);
         writtenComponents.reset();
-
         primaryKeyWriters = new IColumnValuesWriter[columnMetadata.getNumberOfPrimaryKeys()];
         for (int i = 0; i < primaryKeyWriters.length; i++) {
             primaryKeyWriters[i] = columnMetadata.getWriter(i);
@@ -108,7 +113,6 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
         MergeColumnTupleReference columnTuple = (MergeColumnTupleReference) tuple;
-        // +1 to avoid having -0, where the '-' is an antimatter indicator
         int componentIndex = columnTuple.getComponentIndex();
         int skipCount = columnTuple.getAndResetSkipCount();
         if (skipCount > 0) {
@@ -225,5 +229,14 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
 
     private static int clearAntimatterIndicator(int componentIndex) {
         return -componentIndex - 1;
+    }
+
+    private int getMaxNumberOfTuples(int maxNumberOfTuples, int totalNumberOfTuples, int totalLength) {
+        int numberOfTuplesUsingMaxSize = Integer.MAX_VALUE;
+        if (totalLength > maxLeafNodeSize && totalNumberOfTuples > 0) {
+            int bytesPerTuple = (int) Math.ceil(totalLength / (double) totalNumberOfTuples);
+            numberOfTuplesUsingMaxSize = maxLeafNodeSize / bytesPerTuple;
+        }
+        return Math.min(maxNumberOfTuples, numberOfTuplesUsingMaxSize);
     }
 }

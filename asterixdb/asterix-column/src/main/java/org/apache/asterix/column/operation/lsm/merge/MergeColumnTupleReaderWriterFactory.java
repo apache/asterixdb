@@ -28,14 +28,15 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProj
 public class MergeColumnTupleReaderWriterFactory extends AbstractColumnTupleReaderWriterFactory {
     private static final long serialVersionUID = -2131401304338796428L;
 
-    public MergeColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance) {
-        super(pageSize, maxNumberOfTuples, tolerance);
+    public MergeColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance,
+            int maxMegaLeafNodeSize) {
+        super(pageSize, maxNumberOfTuples, tolerance, maxMegaLeafNodeSize);
     }
 
     @Override
     public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata) {
         MergeColumnWriteMetadata mergeWriteMetadata = (MergeColumnWriteMetadata) columnMetadata;
-        return new MergeColumnTupleWriter(mergeWriteMetadata, pageSize, maxNumberOfTuples, tolerance);
+        return new MergeColumnTupleWriter(mergeWriteMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
     }
 
     @Override

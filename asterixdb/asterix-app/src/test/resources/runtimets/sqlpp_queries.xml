@@ -16413,6 +16413,11 @@
         <output-dir compare="Text">analyze-dataset</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="metadata">
+        <output-dir compare="Text">metadata</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="copy-from">
     <test-case FilePath="copy-from">

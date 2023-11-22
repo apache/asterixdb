@@ -1,5 +1,5 @@
-{ "DatasetName": "ColumnDataset1", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 15000, "FreeSpaceTolerance": 0.15 } }
-{ "DatasetName": "ColumnDataset2", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 10, "FreeSpaceTolerance": 0.15 } }
-{ "DatasetName": "ColumnDataset3", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 15000, "FreeSpaceTolerance": 0.11 } }
-{ "DatasetName": "ColumnDataset4", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 10, "FreeSpaceTolerance": 0.11 } }
+{ "DatasetName": "ColumnDataset1", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 15000, "FreeSpaceTolerance": 0.15, "MaxLeafNodeSize": 10485760 } }
+{ "DatasetName": "ColumnDataset2", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 10, "FreeSpaceTolerance": 0.15, "MaxLeafNodeSize": 10485760 } }
+{ "DatasetName": "ColumnDataset3", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 15000, "FreeSpaceTolerance": 0.11, "MaxLeafNodeSize": 10485760 } }
+{ "DatasetName": "ColumnDataset4", "DatasetFormat": { "Format": "COLUMN", "MaxTupleCount": 10, "FreeSpaceTolerance": 0.11, "MaxLeafNodeSize": 5242880 } }
 { "DatasetName": "RowDataset", "DatasetFormat": { "Format": "ROW" } }

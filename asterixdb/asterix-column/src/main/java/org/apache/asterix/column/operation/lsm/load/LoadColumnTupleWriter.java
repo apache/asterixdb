@@ -25,8 +25,8 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 
 public class LoadColumnTupleWriter extends FlushColumnTupleWriter {
     public LoadColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance) {
-        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance);
+            double tolerance, int maxLeafNodeSize) {
+        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
     }
 
     @Override

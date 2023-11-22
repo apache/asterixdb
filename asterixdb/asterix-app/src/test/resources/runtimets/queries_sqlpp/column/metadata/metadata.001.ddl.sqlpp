@@ -42,7 +42,7 @@ PRIMARY KEY id WITH {
 
 CREATE DATASET ColumnDataset4(ColumnType)
 PRIMARY KEY id WITH {
-    "storage-format": {"format" : "column", "free-space-tolerance": 0.11, "max-tuple-count": 10}
+    "storage-format": {"format" : "column", "free-space-tolerance": 0.11, "max-tuple-count": 10, "max-leaf-node-size": "5MB"}
 };
 
 CREATE DATASET RowDataset(ColumnType)

@@ -26,12 +26,14 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 public class LoadColumnTupleReaderWriterFactory extends FlushColumnTupleReaderWriterFactory {
     private static final long serialVersionUID = -7583574057314353873L;
 
-    public LoadColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance) {
-        super(pageSize, maxNumberOfTuples, tolerance);
+    public LoadColumnTupleReaderWriterFactory(int pageSize, int maxNumberOfTuples, double tolerance,
+            int maxLeafNodeSize) {
+        super(pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
     }
 
     @Override
     public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata) {
-        return new LoadColumnTupleWriter((FlushColumnMetadata) columnMetadata, pageSize, maxNumberOfTuples, tolerance);
+        return new LoadColumnTupleWriter((FlushColumnMetadata) columnMetadata, pageSize, maxNumberOfTuples, tolerance,
+                maxLeafNodeSize);
     }
 }

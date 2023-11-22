@@ -32,15 +32,17 @@ public class DatasetFormatInfo implements Serializable {
     private final DatasetFormat format;
     private final int maxTupleCount;
     private final double freeSpaceTolerance;
+    private final int maxLeafNodeSize;
 
     private DatasetFormatInfo() {
-        this(DatasetFormat.ROW, -1, 0.0d);
+        this(DatasetFormat.ROW, -1, 0.0d, 0);
     }
 
-    public DatasetFormatInfo(DatasetFormat format, int maxTupleCount, double freeSpaceTolerance) {
+    public DatasetFormatInfo(DatasetFormat format, int maxTupleCount, double freeSpaceTolerance, int maxLeafNodeSize) {
         this.format = format;
         this.maxTupleCount = maxTupleCount;
         this.freeSpaceTolerance = freeSpaceTolerance;
+        this.maxLeafNodeSize = maxLeafNodeSize;
     }
 
     public DatasetFormat getFormat() {
@@ -53,6 +55,10 @@ public class DatasetFormatInfo implements Serializable {
 
     public double getFreeSpaceTolerance() {
         return freeSpaceTolerance;
+    }
+
+    public int getMaxLeafNodeSize() {
+        return maxLeafNodeSize;
     }
 
     @Override

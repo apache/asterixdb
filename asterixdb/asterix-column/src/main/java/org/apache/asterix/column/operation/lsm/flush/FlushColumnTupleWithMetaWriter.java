@@ -28,8 +28,8 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
     private final RecordLazyVisitablePointable metaPointable;
 
     public FlushColumnTupleWithMetaWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance) {
-        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance);
+            double tolerance, int maxLeafNodeSize) {
+        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
         metaColumnTransformer = new ColumnTransformer(columnMetadata, columnMetadata.getMetaRoot());
         metaPointable = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
     }

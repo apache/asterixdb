@@ -62,6 +62,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -83,6 +84,10 @@ public abstract class AbstractBytesTest extends TestBase {
      * Cap the maximum number of tuples stored per AMAX page
      */
     public static final int MAX_NUMBER_OF_TUPLES = 100;
+    /**
+     * Max size of the mega leaf node
+     */
+    public static final int MAX_LEAF_NODE_SIZE = StorageUtil.getIntSizeInBytes(512, StorageUtil.StorageUnit.KILOBYTE);
 
     /* ***************************************
      * Test static instances
@@ -145,8 +150,8 @@ public abstract class AbstractBytesTest extends TestBase {
     protected List<DummyPage> transform(int fileId, FlushColumnMetadata columnMetadata, List<IValueReference> records,
             int numberOfTuplesToWrite) throws IOException {
         IColumnWriteMultiPageOp multiPageOp = columnMetadata.getMultiPageOpRef().getValue();
-        FlushColumnTupleWriter writer =
-                new FlushColumnTupleWriter(columnMetadata, PAGE_SIZE, MAX_NUMBER_OF_TUPLES, TOLERANCE);
+        FlushColumnTupleWriter writer = new FlushColumnTupleWriter(columnMetadata, PAGE_SIZE, MAX_NUMBER_OF_TUPLES,
+                TOLERANCE, MAX_LEAF_NODE_SIZE);
 
         try {
             return writeTuples(fileId, writer, records, numberOfTuplesToWrite, multiPageOp);

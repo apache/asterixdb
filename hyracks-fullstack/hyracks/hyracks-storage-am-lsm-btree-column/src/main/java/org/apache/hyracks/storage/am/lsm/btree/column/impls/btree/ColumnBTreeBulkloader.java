@@ -56,6 +56,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private int numberOfPagesInCurrentLeafNode;
     private int maxNumberOfPagesForAColumn;
     private int maxNumberOfPagesInALeafNode;
+    private int maxTupleCount;
 
     public ColumnBTreeBulkloader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
             ITreeIndexFrame leafFrame) throws HyracksDataException {
@@ -74,6 +75,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         maxNumberOfPagesForAColumn = 0;
         maxNumberOfPagesInALeafNode = 0;
         numberOfLeafNodes = 1;
+        maxTupleCount = 0;
     }
 
     @Override
@@ -140,7 +142,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         //Where Page0 and columns pages will be written
         super.end();
 
-        log("Finished");
+        log("Finished", numberOfTempConfiscatedPages);
     }
 
     @Override
@@ -172,16 +174,18 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
             write(c);
         }
 
+        // For logging
+        maxNumberOfPagesInALeafNode = Math.max(maxNumberOfPagesInALeafNode, numberOfPagesInCurrentLeafNode);
+        maxTupleCount = Math.max(maxTupleCount, tupleCount);
+        // Starts with 1 for page0
+        numberOfPagesInCurrentLeafNode = 1;
+        numberOfLeafNodes++;
+
+        // Clear for next page
         pagesToWrite.clear();
         splitKey.setRightPage(leafFrontier.pageId);
         setLowKey = true;
         tupleCount = 0;
-
-        // For logging
-        maxNumberOfPagesInALeafNode = Math.max(maxNumberOfPagesInALeafNode, numberOfPagesInCurrentLeafNode);
-        // Starts with 1 for page0
-        numberOfPagesInCurrentLeafNode = 1;
-        numberOfLeafNodes++;
     }
 
     @Override
@@ -219,7 +223,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         super.abort();
 
         // For logging
-        log("Aborted");
+        log("Aborted", tempConfiscatedPages.size());
     }
 
     private void setSplitKey(ISplitKey splitKey, ITupleReference tuple) {
@@ -228,16 +232,15 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
     }
 
-    private void log(String status) {
+    private void log(String status, int numberOfTempConfiscatedPages) {
         if (!LOGGER.isDebugEnabled()) {
             return;
         }
 
-        int numberOfTempConfiscatedPages = tempConfiscatedPages.size();
         LOGGER.debug(
-                "{} columnar bulkloader used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, and maxLeafNodePages: {}",
-                status, numberOfLeafNodes, numberOfTempConfiscatedPages, maxNumberOfPagesForAColumn,
-                maxNumberOfPagesInALeafNode);
+                "{} columnar bulkloader wrote maximum {} and last {} and used leafNodes: {}, tempPagesAllocated: {}, maxPagesPerColumn: {}, and maxLeafNodePages: {}",
+                status, maxTupleCount, tupleCount, numberOfLeafNodes, numberOfTempConfiscatedPages,
+                maxNumberOfPagesForAColumn, maxNumberOfPagesInALeafNode);
     }
 
     /*

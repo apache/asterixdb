@@ -209,7 +209,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
 
     protected abstract void onNext() throws HyracksDataException;
 
-    protected final int getTupleCount() {
+    public final int getTupleCount() {
         return frame.getTupleCount();
     }
 

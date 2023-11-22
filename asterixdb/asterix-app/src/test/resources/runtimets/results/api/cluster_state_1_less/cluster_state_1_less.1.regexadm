@@ -61,6 +61,7 @@
     "ssl\.enabled" : false,
     "storage.buffercache.pagesize" : 32768,
     "storage.column.free.space.tolerance" : 0.15,
+    "storage.column.max.leaf.node.size" : 10485760,
     "storage.column.max.tuple.count" : 15000,
     "storage.compression.block" : "snappy",
     "storage.format" : "row",

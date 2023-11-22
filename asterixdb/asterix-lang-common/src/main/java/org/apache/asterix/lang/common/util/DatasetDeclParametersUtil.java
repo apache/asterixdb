@@ -71,6 +71,7 @@ public class DatasetDeclParametersUtil {
     public static final String DATASET_FORMAT_FORMAT_PARAMETER_NAME = "format";
     public static final String DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME = "max-tuple-count";
     public static final String DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME = "free-space-tolerance";
+    public static final String DATASET_FORMAT_FREE_MAX_LEAF_NODE_SIZE = "max-leaf-node-size";
 
     /* ***********************************************
      * Private members
@@ -179,10 +180,12 @@ public class DatasetDeclParametersUtil {
     }
 
     private static ARecordType getDatasetFormatType() {
-        final String[] formatFieldNames = { DATASET_FORMAT_FORMAT_PARAMETER_NAME,
-                DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME, DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME };
+        final String[] formatFieldNames =
+                { DATASET_FORMAT_FORMAT_PARAMETER_NAME, DATASET_FORMAT_MAX_TUPLE_COUNT_PARAMETER_NAME,
+                        DATASET_FORMAT_FREE_SPACE_TOLERANCE_PARAMETER_NAME, DATASET_FORMAT_FREE_MAX_LEAF_NODE_SIZE };
         final IAType[] formatFieldTypes = { BuiltinType.ASTRING, AUnionType.createUnknownableType(BuiltinType.AINT64),
-                AUnionType.createUnknownableType(BuiltinType.ADOUBLE) };
+                AUnionType.createUnknownableType(BuiltinType.ADOUBLE),
+                AUnionType.createUnknownableType(BuiltinType.ASTRING) };
         return new ARecordType(DATASET_FORMAT_PARAMETER_NAME, formatFieldNames, formatFieldTypes, false);
     }
 }
