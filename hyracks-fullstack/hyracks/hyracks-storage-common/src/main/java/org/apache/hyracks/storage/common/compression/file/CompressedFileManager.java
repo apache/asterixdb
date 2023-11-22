@@ -314,7 +314,9 @@ public class CompressedFileManager {
         final int numOfEntriesPerPage = bufferCache.getPageSize() / ENTRY_LENGTH;
         //get the last page which may contain less entries than maxNumOfEntries
         final long dpid = getDiskPageId(numOfPages - 1);
-        final ICachedPage page = bufferCache.pin(dpid, false);
+        //exclude the LAF from the buffer cache pin/read stats, because it is hot in any
+        //sane scenario. otherwise it inflates the query's cache ratio greatly. 
+        final ICachedPage page = bufferCache.pin(dpid, false, false);
         try {
             final ByteBuffer buf = page.getBuffer();
 
@@ -333,7 +335,10 @@ public class CompressedFileManager {
 
     private ICachedPage pinAndGetPage(int compressedPageId) throws HyracksDataException {
         final int pageId = compressedPageId * ENTRY_LENGTH / bufferCache.getPageSize();
-        return bufferCache.pin(getDiskPageId(pageId), false);
+        //don't increment the stats with this pin. this is because we are pinning on behalf
+        //of a caller, so our pins will be an interfering access pattern that conflates itself
+        //with the caller's cache pattern.
+        return bufferCache.pin(getDiskPageId(pageId), false, false);
     }
 
     private long getDiskPageId(int pageId) {

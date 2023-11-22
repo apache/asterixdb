@@ -77,10 +77,15 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        ICachedPage page = bufferCache.pin(dpid, newPage);
+    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
+        ICachedPage page = bufferCache.pin(dpid, newPage, incrementStats);
         pinCount.addAndGet(1);
         return page;
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
+        return pin(dpid, newPage, true);
     }
 
     @Override

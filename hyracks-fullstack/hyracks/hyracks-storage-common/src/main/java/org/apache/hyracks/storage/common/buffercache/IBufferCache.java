@@ -105,6 +105,28 @@ public interface IBufferCache {
     ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
 
     /**
+     * Pin the page so it can't be evicted from the buffer cache...
+     *
+     * @param dpid
+     *            page id is a unique id that is a combination of file id and page id
+     * @param newPage
+     *            whether this page is expected to be new.
+     *            NOTE: undefined:
+     *            -- what if the flag is true but the page exists?
+     *            -- what if the flag is false but the page doesn't exist
+     *
+     * @param incrementStats
+     *            whether to increment the coldRead and pinCount counters when
+     *            the page is pinned. this is to not bias the count when using
+     *            accessors that cause nested pins due to wrapping file handles,
+     *            like compression
+     *
+     * @return the pinned page
+     * @throws HyracksDataException
+     */
+    ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException;
+
+    /**
      * Unpin a pinned page so its buffer can be recycled
      *
      * @param page

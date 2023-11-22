@@ -21,7 +21,6 @@ package org.apache.asterix.api.http.server;
 import static org.apache.asterix.api.http.server.ServletConstants.ASTERIX_APP_CONTEXT_INFO_ATTR;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Predicate;
 
@@ -29,6 +28,7 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.IFormattedException;
 import org.apache.hyracks.control.common.config.ConfigUtils;
 import org.apache.hyracks.control.common.controllers.ControllerConfig;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -36,7 +36,6 @@ import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -67,7 +66,6 @@ public class ClusterApiServlet extends AbstractServlet {
     @Override
     protected void get(IServletRequest request, IServletResponse response) throws IOException {
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
-        PrintWriter responseWriter = response.writer();
         try {
             ObjectNode json;
             response.setStatus(HttpResponseStatus.OK);
@@ -81,15 +79,18 @@ public class ClusterApiServlet extends AbstractServlet {
                 default:
                     throw new IllegalArgumentException();
             }
-            JSONUtil.writeNode(responseWriter, json);
+            JSONUtil.writeNode(response.writer(), json);
         } catch (IllegalArgumentException e) { // NOSONAR - exception not logged or rethrown
             sendError(response, HttpResponseStatus.NOT_FOUND);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "exception thrown for " + request, e);
-            response.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-            responseWriter.write(e.toString());
+            LOGGER.info("exception thrown for {}", request, e);
+            if (e instanceof IFormattedException) {
+                sendError(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, (IFormattedException) e);
+            } else {
+                sendError(response, HttpResponseStatus.INTERNAL_SERVER_ERROR, e.toString());
+
+            }
         }
-        responseWriter.flush();
     }
 
     @Override

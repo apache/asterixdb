@@ -165,13 +165,18 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
 
     @Override
     public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
+        return pin(dpid, newPage, true);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
         // Calling the pinSanityCheck should be used only for debugging, since
         // the synchronized block over the fileInfoMap is a hot spot.
         if (DEBUG) {
             pinSanityCheck(dpid);
         }
         final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
-        if (threadStats != null) {
+        if (threadStats != null && incrementStats) {
             threadStats.pagePinned();
         }
         CachedPage cPage = findPage(dpid);
@@ -193,7 +198,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             synchronized (cPage) {
                 if (!cPage.valid) {
                     try {
-                        tryRead(cPage);
+                        tryRead(cPage, incrementStats);
                         cPage.valid = true;
                     } catch (Exception e) {
                         LOGGER.log(ExceptionUtils.causedByInterrupt(e) ? Level.DEBUG : Level.WARN,
@@ -520,10 +525,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         return false;
     }
 
-    private void tryRead(CachedPage cPage) throws HyracksDataException {
+    private void tryRead(CachedPage cPage, boolean incrementStats) throws HyracksDataException {
         for (int i = 1; i <= MAX_PAGE_READ_ATTEMPTS; i++) {
             try {
-                read(cPage);
+                read(cPage, incrementStats);
                 return;
             } catch (HyracksDataException readException) {
                 if (readException.matches(ErrorCode.CANNOT_READ_CLOSED_FILE) && i != MAX_PAGE_READ_ATTEMPTS) {
@@ -547,12 +552,12 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         }
     }
 
-    private void read(CachedPage cPage) throws HyracksDataException {
+    private void read(CachedPage cPage, boolean incrementStats) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
         fInfo.read(cPage);
         final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
-        if (threadStats != null) {
+        if (threadStats != null && incrementStats) {
             threadStats.coldRead();
         }
     }
