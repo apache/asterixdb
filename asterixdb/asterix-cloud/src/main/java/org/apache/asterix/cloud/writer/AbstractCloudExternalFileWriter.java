@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.writer;
 
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import org.apache.asterix.cloud.CloudOutputStream;
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
@@ -91,25 +93,54 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public final void write(IValueReference value) throws HyracksDataException {
-        printer.print(value);
+        try {
+            printer.print(value);
+        } catch (HyracksDataException e) {
+            throw e;
+        } catch (Exception e) {
+            if (isSdkException(e)) {
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+            }
+            throw e;
+        }
     }
 
     @Override
     public final void abort() throws HyracksDataException {
-        if (bufferedWriter != null) {
-            bufferedWriter.abort();
+        try {
+            if (bufferedWriter != null) {
+                bufferedWriter.abort();
+            }
+            printer.close();
+        } catch (HyracksDataException e) {
+            throw e;
+        } catch (Exception e) {
+            if (isSdkException(e)) {
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+            }
+            throw e;
         }
-        printer.close();
     }
 
     @Override
     public final void close() throws HyracksDataException {
-        printer.close();
+        try {
+            printer.close();
+        } catch (HyracksDataException e) {
+            throw e;
+        } catch (Exception e) {
+            if (isSdkException(e)) {
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+            }
+            throw e;
+        }
     }
 
     abstract String getAdapterName();
 
     abstract int getPathMaxLengthInBytes();
+
+    abstract boolean isSdkException(Exception e);
 
     private boolean checkAndWarnExceedingMaxLength(String fullPath) {
         boolean exceeding = isExceedingMaxLength(fullPath, getPathMaxLengthInBytes());

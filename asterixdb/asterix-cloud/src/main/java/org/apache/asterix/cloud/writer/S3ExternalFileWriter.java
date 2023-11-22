@@ -24,6 +24,8 @@ import org.apache.asterix.runtime.writer.IExternalFilePrinter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
+import software.amazon.awssdk.core.exception.SdkException;
+
 final class S3ExternalFileWriter extends AbstractCloudExternalFileWriter {
     static int MAX_LENGTH_IN_BYTES = 1024;
 
@@ -40,5 +42,10 @@ final class S3ExternalFileWriter extends AbstractCloudExternalFileWriter {
     @Override
     int getPathMaxLengthInBytes() {
         return MAX_LENGTH_IN_BYTES;
+    }
+
+    @Override
+    boolean isSdkException(Exception e) {
+        return e instanceof SdkException;
     }
 }

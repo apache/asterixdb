@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.writer;
 
 import static org.apache.asterix.cloud.writer.AbstractCloudExternalFileWriter.isExceedingMaxLength;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
 public final class S3ExternalFileWriterFactory implements IExternalFileWriterFactory {
@@ -126,12 +128,13 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
             doValidate(testClient, bucket);
         } catch (IOException e) {
             if (e.getCause() instanceof NoSuchBucketException) {
-                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, bucket);
+                throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, bucket);
             } else {
-                LOGGER.error(e);
                 throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
                         ExceptionUtils.getMessageOrToString(e));
             }
+        } catch (SdkException e) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }
     }
 
