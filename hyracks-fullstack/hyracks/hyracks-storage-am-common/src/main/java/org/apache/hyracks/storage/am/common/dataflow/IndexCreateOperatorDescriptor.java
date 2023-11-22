@@ -31,13 +31,13 @@ import org.apache.hyracks.storage.am.common.api.IIndexBuilderFactory;
 public class IndexCreateOperatorDescriptor extends AbstractSingleActivityOperatorDescriptor {
 
     private static final long serialVersionUID = 2L;
-    private final IIndexBuilderFactory indexBuilderFactory;
+    private final IIndexBuilderFactory[][] indexBuilderFactories;
     private final int[][] partitionsMap;
 
-    public IndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec, IIndexBuilderFactory indexBuilderFactory,
-            int[][] partitionsMap) {
+    public IndexCreateOperatorDescriptor(IOperatorDescriptorRegistry spec,
+            IIndexBuilderFactory[][] indexBuilderFactories, int[][] partitionsMap) {
         super(spec, 0, 0);
-        this.indexBuilderFactory = indexBuilderFactory;
+        this.indexBuilderFactories = indexBuilderFactories;
         this.partitionsMap = partitionsMap;
     }
 
@@ -45,9 +45,10 @@ public class IndexCreateOperatorDescriptor extends AbstractSingleActivityOperato
     public IOperatorNodePushable createPushRuntime(IHyracksTaskContext ctx,
             IRecordDescriptorProvider recordDescProvider, int partition, int nPartitions) throws HyracksDataException {
         int[] storagePartitions = partitionsMap[partition];
+        IIndexBuilderFactory[] partitionIndexBuilderFactories = indexBuilderFactories[partition];
         IIndexBuilder[] indexBuilders = new IIndexBuilder[storagePartitions.length];
         for (int i = 0; i < storagePartitions.length; i++) {
-            indexBuilders[i] = indexBuilderFactory.create(ctx, storagePartitions[i]);
+            indexBuilders[i] = partitionIndexBuilderFactories[i].create(ctx, storagePartitions[i]);
         }
         return new IndexCreateOperatorNodePushable(indexBuilders);
     }

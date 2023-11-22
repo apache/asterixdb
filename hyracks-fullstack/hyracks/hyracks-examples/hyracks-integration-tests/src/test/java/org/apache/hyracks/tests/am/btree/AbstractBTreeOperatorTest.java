@@ -120,8 +120,10 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IResourceFactory primaryResourceFactory = createPrimaryResourceFactory();
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, primarySplitProvider, primaryResourceFactory, false);
+        IIndexBuilderFactory[][] indexBuilderFactories = new IIndexBuilderFactory[1][1];
+        indexBuilderFactories[0][0] = indexBuilderFactory;
         IndexCreateOperatorDescriptor primaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtil.getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, TestUtil.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, primaryCreateOp, NC1_ID);
         spec.addRoot(primaryCreateOp);
         runTest(spec);
@@ -168,8 +170,10 @@ public abstract class AbstractBTreeOperatorTest extends AbstractIntegrationTest 
         IResourceFactory secondaryResourceFactory = createSecondaryResourceFactory();
         IIndexBuilderFactory indexBuilderFactory =
                 new IndexBuilderFactory(storageManager, secondarySplitProvider, secondaryResourceFactory, false);
+        IIndexBuilderFactory[][] indexBuilderFactories = new IIndexBuilderFactory[1][1];
+        indexBuilderFactories[0][0] = indexBuilderFactory;
         IndexCreateOperatorDescriptor secondaryCreateOp =
-                new IndexCreateOperatorDescriptor(spec, indexBuilderFactory, TestUtil.getPartitionsMap(1));
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, TestUtil.getPartitionsMap(1));
         PartitionConstraintHelper.addAbsoluteLocationConstraint(spec, secondaryCreateOp, NC1_ID);
         spec.addRoot(secondaryCreateOp);
         runTest(spec);

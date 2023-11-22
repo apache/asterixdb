@@ -339,7 +339,8 @@ public class DatasetUtil {
 
         JobSpecification spec = RuntimeUtils.createJobSpecification(metadataProvider.getApplicationContext());
         PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
-        FileSplit[] fs = partitioningProperties.getSplitsProvider().getFileSplits();
+        IFileSplitProvider splitsProvider = partitioningProperties.getSplitsProvider();
+        FileSplit[] fs = splitsProvider.getFileSplits();
         StringBuilder sb = new StringBuilder();
         for (FileSplit f : fs) {
             sb.append(f).append(" ");
@@ -349,17 +350,35 @@ public class DatasetUtil {
                 DatasetUtil.getMergePolicyFactory(dataset, metadataProvider.getMetadataTxnContext());
         // prepare a LocalResourceMetadata which will be stored in NC's local resource
         // repository
-        IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType, metaItemType,
-                compactionInfo.first, compactionInfo.second);
-        IndexBuilderFactory indexBuilderFactory =
-                new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
-                        partitioningProperties.getSplitsProvider(), resourceFactory, true);
-        IndexCreateOperatorDescriptor indexCreateOp = new IndexCreateOperatorDescriptor(spec, indexBuilderFactory,
-                partitioningProperties.getComputeStorageMap());
+        int[][] computeStorageMap = partitioningProperties.getComputeStorageMap();
+        IndexBuilderFactory[][] indexBuilderFactories = getIndexBuilderFactories(dataset, metadataProvider, index,
+                itemType, metaItemType, splitsProvider, compactionInfo.first, compactionInfo.second, computeStorageMap);
+        IndexCreateOperatorDescriptor indexCreateOp =
+                new IndexCreateOperatorDescriptor(spec, indexBuilderFactories, computeStorageMap);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(spec, indexCreateOp,
                 partitioningProperties.getConstraints());
         spec.addRoot(indexCreateOp);
         return spec;
+    }
+
+    public static IndexBuilderFactory[][] getIndexBuilderFactories(Dataset dataset, MetadataProvider metadataProvider,
+            Index index, ARecordType itemType, ARecordType metaItemType, IFileSplitProvider fileSplitProvider,
+            ILSMMergePolicyFactory mergePolicyFactory, Map<String, String> mergePolicyProperties,
+            int[][] computeStorageMap) throws AlgebricksException {
+        IndexBuilderFactory[][] indexBuilderFactories = new IndexBuilderFactory[computeStorageMap.length][];
+        for (int i = 0; i < computeStorageMap.length; i++) {
+            int len = computeStorageMap[i].length;
+            indexBuilderFactories[i] = new IndexBuilderFactory[len];
+            for (int k = 0; k < len; k++) {
+                IResourceFactory resourceFactory = dataset.getResourceFactory(metadataProvider, index, itemType,
+                        metaItemType, mergePolicyFactory, mergePolicyProperties);
+                IndexBuilderFactory indexBuilderFactory =
+                        new IndexBuilderFactory(metadataProvider.getStorageComponentProvider().getStorageManager(),
+                                fileSplitProvider, resourceFactory, true);
+                indexBuilderFactories[i][k] = indexBuilderFactory;
+            }
+        }
+        return indexBuilderFactories;
     }
 
     public static JobSpecification compactDatasetJobSpec(Dataverse dataverse, String datasetName,
