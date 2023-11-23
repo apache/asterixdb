@@ -45,6 +45,7 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
 
     protected final BulkLoadUsage usage;
     protected final IIndexDataflowHelper[] primaryIndexHelpers;
+    protected final boolean[] primaryIndexHelpersOpen;
     protected final IDatasetLifecycleManager datasetManager;
     protected final int datasetId;
     protected final int partition;
@@ -61,6 +62,7 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
 
         if (priamryIndexDataflowHelperFactory != null) {
             primaryIndexHelpers = new IIndexDataflowHelper[partitions.length];
+            primaryIndexHelpersOpen = new boolean[partitions.length];
             primaryIndexes = new ILSMIndex[partitions.length];
             for (int i = 0; i < partitions.length; i++) {
                 primaryIndexHelpers[i] = priamryIndexDataflowHelperFactory
@@ -68,6 +70,7 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
             }
         } else {
             primaryIndexHelpers = null;
+            primaryIndexHelpersOpen = null;
         }
         this.usage = usage;
         this.datasetId = datasetId;
@@ -86,6 +89,7 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
             bulkLoaders[indexId] = targetIndex.createBulkLoader(fillFactor, verifyInput, numElementsHint,
                     checkIfEmptyIndex, parameters);
         } else {
+            primaryIndexHelpersOpen[indexId] = true;
             primaryIndexHelpers[indexId].open();
             primaryIndexes[indexId] = (ILSMIndex) primaryIndexHelpers[indexId].getIndexInstance();
             List<ILSMDiskComponent> primaryComponents = primaryIndexes[indexId].getDiskComponents();
@@ -109,7 +113,7 @@ public class LSMIndexBulkLoadOperatorNodePushable extends IndexBulkLoadOperatorN
             super.close();
         } finally {
             if (primaryIndexHelpers != null) {
-                closeIndexes(primaryIndexes, primaryIndexHelpers);
+                closeIndexes(primaryIndexes, primaryIndexHelpers, primaryIndexHelpersOpen);
             }
         }
     }

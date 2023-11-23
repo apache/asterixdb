@@ -31,9 +31,12 @@ import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractTreeIndex implements ITreeIndex {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final int MINIMAL_TREE_PAGE_COUNT = 2;
     public static final int MINIMAL_TREE_PAGE_COUNT_WITH_FILTER = 3;
     protected int rootPage = 1;
@@ -121,7 +124,8 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void deactivate() throws HyracksDataException {
         if (!isActive) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_DEACTIVATE_INACTIVE_INDEX);
+            LOGGER.warn("not deactivating already inactive index {}", this);
+            return;
         }
         freePageManager.close(HaltOnFailureCallback.INSTANCE);
         bufferCache.closeFile(fileId);

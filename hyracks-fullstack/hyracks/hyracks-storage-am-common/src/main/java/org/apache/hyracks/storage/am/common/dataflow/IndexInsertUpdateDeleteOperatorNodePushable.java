@@ -62,6 +62,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     protected final IIndex[] indexes;
     protected final IIndexAccessor[] indexAccessors;
     protected final IIndexDataflowHelper[] indexHelpers;
+    protected final boolean[] indexHelpersOpen;
     protected final IModificationOperationCallback[] modCallbacks;
     protected final IModificationOperationCallbackFactory modOpCallbackFactory;
     protected final ITupleFilterFactory tupleFilterFactory;
@@ -83,6 +84,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         this.modCallbacks = new IModificationOperationCallback[partitions.length];
         this.storagePartitionId2Index = new Int2IntOpenHashMap();
         this.indexHelpers = new IIndexDataflowHelper[partitions.length];
+        this.indexHelpersOpen = new boolean[partitions.length];
         for (int i = 0; i < partitions.length; i++) {
             storagePartitionId2Index.put(partitions[i], i);
             indexHelpers[i] = indexHelperFactory.create(ctx.getJobletContext().getServiceContext(), partitions[i]);
@@ -103,6 +105,7 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
         try {
             for (int i = 0; i < indexHelpers.length; i++) {
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
+                indexHelpersOpen[i] = true;
                 indexHelper.open();
                 indexes[i] = indexHelper.getIndexInstance();
                 LocalResource resource = indexHelper.getResource();
@@ -193,10 +196,10 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
             if (writerOpen) {
                 writer.close();
             }
+        } catch (Throwable th) {
+            failure = th;
         } finally {
-            for (IIndexDataflowHelper indexHelper : indexHelpers) {
-                failure = ResourceReleaseUtils.close(indexHelper, failure);
-            }
+            failure = closeIndexHelpers(failure);
         }
         if (failure != null) {
             throw HyracksDataException.create(failure);
@@ -214,5 +217,16 @@ public class IndexInsertUpdateDeleteOperatorNodePushable extends AbstractUnaryIn
     @Override
     public void flush() throws HyracksDataException {
         writer.flush();
+    }
+
+    protected Throwable closeIndexHelpers(Throwable failure) {
+        //TODO(ali): should this be made similar to IndexSearchOperatorNodePushable.close()?
+        //TODO(ali): IIndexDataflowHelper.close() should be made idempotent and flags should be removed
+        for (int i = 0; i < indexHelpers.length; i++) {
+            if (indexHelpersOpen[i]) {
+                failure = ResourceReleaseUtils.close(indexHelpers[i], failure);
+            }
+        }
+        return failure;
     }
 }

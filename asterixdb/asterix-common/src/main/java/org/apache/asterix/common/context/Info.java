@@ -20,7 +20,13 @@ package org.apache.asterix.common.context;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public abstract class Info {
+
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final AtomicInteger referenceCount = new AtomicInteger();
     private volatile boolean isOpen;
 
@@ -33,7 +39,11 @@ public abstract class Info {
     }
 
     public void untouch() {
-        referenceCount.decrementAndGet();
+        int currentRefCount = referenceCount.get();
+        if (currentRefCount <= 0) {
+            LOGGER.warn("trying to decrement ref count {} that is already <=0", currentRefCount);
+        }
+        referenceCount.updateAndGet(i -> i > 0 ? i - 1 : i);
     }
 
     public int getReferenceCount() {

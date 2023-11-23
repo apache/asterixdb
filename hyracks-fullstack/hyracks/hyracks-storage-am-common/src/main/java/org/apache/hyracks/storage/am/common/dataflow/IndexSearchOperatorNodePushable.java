@@ -80,6 +80,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     protected ISearchPredicate searchPred;
     protected final IIndexDataflowHelper[] indexHelpers;
+    protected final boolean[] indexHelpersOpen;
     protected IIndex[] indexes;
     protected IIndexAccessor[] indexAccessors;
     protected IIndexCursor[] cursors;
@@ -137,6 +138,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
             storagePartitionId2Index.put(partitions[i], i);
         }
         this.indexHelpers = new IIndexDataflowHelper[partitions.length];
+        this.indexHelpersOpen = new boolean[partitions.length];
         this.indexes = new IIndex[partitions.length];
         this.indexAccessors = new IIndexAccessor[partitions.length];
         this.cursors = new IIndexCursor[partitions.length];
@@ -199,6 +201,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
         IIndexAccessParameters[] iaps = new IndexAccessParameters[partitions.length];
 
         for (int i = 0; i < partitions.length; i++) {
+            indexHelpersOpen[i] = true;
             indexHelpers[i].open();
             indexes[i] = indexHelpers[i].getIndexInstance();
             searchCallbacks[i] = searchCallbackFactory
@@ -359,12 +362,16 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
 
     private Throwable releaseResources(Throwable failure) {
         for (int i = 0; i < indexes.length; i++) {
-            // if index == null, then the index open was not successful
             try {
                 if (indexes[i] != null) {
                     failure = ResourceReleaseUtils.close(cursors[i], failure);
                     failure = CleanupUtils.destroy(failure, cursors[i], indexAccessors[i]);
                     failure = ResourceReleaseUtils.close(indexHelpers[i], failure);
+                } else if (indexHelpersOpen[i]) {
+                    // can mean the index was open, but getting the index instance failed (index == null)
+                    // or opening the index itself failed at some step during the open
+                    failure = ResourceReleaseUtils.close(indexHelpers[i], failure);
+                    //TODO(ali): IIndexDataflowHelper.close() should be made idempotent and flags should be removed
                 }
             } catch (Throwable th) {// NOSONAR ensure closing other indexes
                 // subsequently, the failure will be thrown

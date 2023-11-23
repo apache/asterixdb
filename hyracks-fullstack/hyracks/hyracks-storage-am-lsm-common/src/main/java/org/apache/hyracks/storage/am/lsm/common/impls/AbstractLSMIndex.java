@@ -218,7 +218,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void deactivate(boolean flush) throws HyracksDataException {
         if (!isActive) {
-            throw HyracksDataException.create(ErrorCode.CANNOT_DEACTIVATE_INACTIVE_INDEX);
+            LOGGER.warn("not deactivating already inactive index {}, flush requested:{}", this, flush);
+            return;
         }
         // The following member is used to prevent scheduling of new merges as memory components
         // get flushed. This now works only if the caller of deactivate waited for all IO

@@ -86,6 +86,7 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
     @Override
     public void open() throws HyracksDataException {
         super.open();
+        //TODO(ali): ensure open()/close()
         primaryIndexHelper.open();
         primaryIndex = (ILSMIndex) primaryIndexHelper.getIndexInstance();
         secondaryIndexHelper.open();

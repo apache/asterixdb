@@ -49,6 +49,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     protected final long numElementsHint;
     protected final boolean checkIfEmptyIndex;
     protected final IIndexDataflowHelper[] indexHelpers;
+    protected final boolean[] indexHelpersOpen;
     protected final RecordDescriptor recDesc;
     protected final PermutingFrameTupleReference tuple = new PermutingFrameTupleReference();
     protected final ITupleFilterFactory tupleFilterFactory;
@@ -71,6 +72,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
         this.storagePartitionId2Index = new Int2IntOpenHashMap();
         this.indexes = new IIndex[partitions.length];
         this.indexHelpers = new IIndexDataflowHelper[partitions.length];
+        this.indexHelpersOpen = new boolean[partitions.length];
         this.bulkLoaders = new IIndexBulkLoader[partitions.length];
         for (int i = 0; i < partitions.length; i++) {
             storagePartitionId2Index.put(partitions[i], i);
@@ -89,6 +91,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     public void open() throws HyracksDataException {
         accessor = new FrameTupleAccessor(recDesc);
         for (int i = 0; i < indexHelpers.length; i++) {
+            indexHelpersOpen[i] = true;
             indexHelpers[i].open();
             indexes[i] = indexHelpers[i].getIndexInstance();
             initializeBulkLoader(indexes[i], i);
@@ -133,7 +136,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
             throw HyracksDataException.create(th);
         } finally {
             try {
-                closeIndexes(indexes, indexHelpers);
+                closeIndexes(indexes, indexHelpers, indexHelpersOpen);
             } finally {
                 writer.close();
             }
@@ -164,11 +167,11 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
         }
     }
 
-    protected static void closeIndexes(IIndex[] indexes, IIndexDataflowHelper[] indexHelpers)
-            throws HyracksDataException {
+    protected static void closeIndexes(IIndex[] indexes, IIndexDataflowHelper[] indexHelpers,
+            boolean[] indexHelpersOpen) throws HyracksDataException {
         Throwable failure = null;
         for (int i = 0; i < indexes.length; i++) {
-            if (indexes[i] != null) {
+            if (indexes[i] != null || indexHelpersOpen[i]) {
                 failure = ResourceReleaseUtils.close(indexHelpers[i], failure);
             }
         }

@@ -49,7 +49,6 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
-import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
@@ -106,6 +105,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
             for (int i = 0; i < indexHelpers.length; i++) {
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
+                indexHelpersOpen[i] = true;
                 indexHelper.open();
                 indexes[i] = indexHelper.getIndexInstance();
                 if (((ILSMIndex) indexes[i]).isAtomic() && isPrimary()) {
@@ -213,10 +213,7 @@ public class LSMInsertDeleteOperatorNodePushable extends LSMIndexInsertUpdateDel
 
     @Override
     public void close() throws HyracksDataException {
-        Throwable failure = null;
-        for (IIndexDataflowHelper indexHelper : indexHelpers) {
-            failure = ResourceReleaseUtils.close(indexHelper, failure);
-        }
+        Throwable failure = closeIndexHelpers(null);
         if (writerOpen) {
             try {
                 writer.close();

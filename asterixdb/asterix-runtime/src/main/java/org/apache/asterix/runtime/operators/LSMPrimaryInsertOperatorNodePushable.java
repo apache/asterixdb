@@ -57,6 +57,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory
 import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
@@ -82,6 +83,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 
 public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDeleteOperatorNodePushable {
 
+    private final boolean[] keyIndexHelpersOpen;
     private final IIndexDataflowHelper[] keyIndexHelpers;
     private MultiComparator keySearchCmp;
     private RangePredicate searchPred;
@@ -116,6 +118,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         this.lsmAccessorForUniqunessChecks = new LSMTreeIndexAccessor[partitions.length];
         this.lsmAccessorForKeyIndexes = new LSMTreeIndexAccessor[partitions.length];
         this.keyIndexHelpers = new IIndexDataflowHelper[partitions.length];
+        this.keyIndexHelpersOpen = new boolean[partitions.length];
         this.processors = new IFrameTupleProcessor[partitions.length];
         if (keyIndexHelperFactory != null) {
             for (int i = 0; i < partitions.length; i++) {
@@ -220,6 +223,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             writerOpen = true;
             for (int i = 0; i < partitions.length; i++) {
                 IIndexDataflowHelper indexHelper = indexHelpers[i];
+                indexHelpersOpen[i] = true;
                 indexHelper.open();
                 indexes[i] = indexHelper.getIndexInstance();
                 IIndex index = indexes[i];
@@ -229,6 +233,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 IIndexDataflowHelper keyIndexHelper = keyIndexHelpers[i];
                 IIndex indexForUniquessCheck;
                 if (keyIndexHelper != null) {
+                    keyIndexHelpersOpen[i] = true;
                     keyIndexHelper.open();
                     indexForUniquessCheck = keyIndexHelper.getIndexInstance();
                 } else {
@@ -326,8 +331,8 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     public void close() throws HyracksDataException {
         Throwable failure = CleanupUtils.destroy(null, cursors);
         failure = CleanupUtils.close(writer, failure);
-        failure = CleanupUtils.close(indexHelpers, failure);
-        failure = CleanupUtils.close(keyIndexHelpers, failure);
+        failure = closeIndexHelpers(failure);
+        failure = closeKeyIndexHelpers(failure);
         if (failure == null && !failed) {
             commitAtomicInsert();
         } else {
@@ -386,5 +391,14 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 opTracker.abort();
             }
         }
+    }
+
+    private Throwable closeKeyIndexHelpers(Throwable failure) {
+        for (int i = 0; i < keyIndexHelpers.length; i++) {
+            if (keyIndexHelpersOpen[i]) {
+                failure = ResourceReleaseUtils.close(keyIndexHelpers[i], failure);
+            }
+        }
+        return failure;
     }
 }
