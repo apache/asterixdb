@@ -150,7 +150,7 @@ public abstract class AbstractIndexLifecycleTest {
         }
     }
 
-    @Test(expected = HyracksDataException.class)
+    @Test
     public void invalidSequenceTest6() throws Exception {
         index.create();
         index.activate();

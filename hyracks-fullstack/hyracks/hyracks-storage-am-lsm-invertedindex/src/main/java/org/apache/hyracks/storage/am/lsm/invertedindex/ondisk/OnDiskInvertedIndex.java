@@ -171,6 +171,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
     @Override
     public synchronized void deactivate() throws HyracksDataException {
         if (!isOpen && wasOpen) {
+            //TODO(ali): should return instead of throwing similar to other indexes
             throw new HyracksDataException("Failed to deactivate the index since it is already deactivated.");
         }
         btree.deactivate();

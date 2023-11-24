@@ -21,6 +21,7 @@ package org.apache.hyracks.storage.am.lsm.invertedindex.ondisk;
 
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ITypeTraits;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.data.std.accessors.IntegerBinaryComparatorFactory;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
@@ -31,6 +32,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedListBuilder;
 import org.apache.hyracks.storage.am.lsm.invertedindex.common.LSMInvertedIndexTestHarness;
 import org.apache.hyracks.storage.am.lsm.invertedindex.ondisk.fixedsize.FixedSizeElementInvertedListBuilder;
+import org.junit.Test;
 
 public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest {
 
@@ -87,5 +89,18 @@ public class OnDiskInvertedIndexLifecycleTest extends AbstractIndexLifecycleTest
     @Override
     protected void clearCheckableInsertions() throws Exception {
         // Do nothing.
+    }
+
+    @Test(expected = HyracksDataException.class)
+    @Override
+    public void invalidSequenceTest6() throws Exception {
+        index.create();
+        index.activate();
+        index.deactivate();
+        try {
+            index.deactivate();
+        } finally {
+            index.destroy();
+        }
     }
 }
