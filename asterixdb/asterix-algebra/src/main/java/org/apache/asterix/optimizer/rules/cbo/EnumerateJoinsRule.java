@@ -226,7 +226,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 return false; // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
                 // in JoinEnum does not capture this. Will fix later. Just bail for now.
             }
-            buildNewTree(cheapestPlanNode, newJoinOps, new MutableInt(0));
+            buildNewTree(cheapestPlanNode, newJoinOps, new MutableInt(0), context);
             opRef.setValue(newJoinOps.get(0));
 
             if (assignOps.size() > 0) {
@@ -234,6 +234,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     MutableBoolean removed = new MutableBoolean(false);
                     removed.setFalse();
                     pushAssignsAboveJoins(newJoinOps.get(0), assignOps.get(i), assignJoinExprs.get(i), removed);
+                    context.computeAndSetTypeEnvironmentForOperator(newJoinOps.get(i));
+                    context.computeAndSetTypeEnvironmentForOperator(assignOps.get(i));
                     if (removed.isTrue()) {
                         assignOps.remove(i);
                     }
@@ -274,6 +276,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         } else {
             buildNewTree(cheapestPlanNode);
         }
+        context.computeAndSetTypeEnvironmentForOperator(op);
         return true;
     }
 
@@ -915,8 +918,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     // This one is for join queries
-    private void buildNewTree(PlanNode plan, List<ILogicalOperator> joinOps, MutableInt totalNumberOfJoins)
-            throws AlgebricksException {
+    private void buildNewTree(PlanNode plan, List<ILogicalOperator> joinOps, MutableInt totalNumberOfJoins,
+            IOptimizationContext context) throws AlgebricksException {
         // we have to move the inputs in op around so that they match the tree structure in pn
         // we use the existing joinOps and switch the leafInputs appropriately.
         List<PlanNode> allPlans = joinEnum.getAllPlans();
@@ -942,13 +945,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 addCardCostAnnotations(selOp, leftPlan);
             }
             joinOp.getInputs().get(0).setValue(leftInput);
+            context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(0).getValue());
             addCardCostAnnotations(findDataSourceScanOperator(leftInput), leftPlan);
         } else {
             // join
             totalNumberOfJoins.increment();
             ILogicalOperator leftInput = joinOps.get(totalNumberOfJoins.intValue());
             joinOp.getInputs().get(0).setValue(leftInput);
-            buildNewTree(leftPlan, joinOps, totalNumberOfJoins);
+            context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(0).getValue());
+            buildNewTree(leftPlan, joinOps, totalNumberOfJoins, context);
         }
 
         if (rightPlan.IsScanNode()) {
@@ -960,13 +965,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 addCardCostAnnotations(selOp, rightPlan);
             }
             joinOp.getInputs().get(1).setValue(rightInput);
+            context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(1).getValue());
             addCardCostAnnotations(findDataSourceScanOperator(rightInput), rightPlan);
         } else {
             // join
             totalNumberOfJoins.increment();
             ILogicalOperator rightInput = joinOps.get(totalNumberOfJoins.intValue());
             joinOp.getInputs().get(1).setValue(rightInput);
-            buildNewTree(rightPlan, joinOps, totalNumberOfJoins);
+            context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(1).getValue());
+            buildNewTree(rightPlan, joinOps, totalNumberOfJoins, context);
         }
     }
 
