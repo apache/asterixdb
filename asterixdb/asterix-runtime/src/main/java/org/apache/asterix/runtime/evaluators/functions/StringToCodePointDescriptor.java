@@ -43,6 +43,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 @MissingNullInOutFunction
@@ -109,6 +110,9 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             }
                             listBuilder.write(out, true);
                             result.set(resultStorage);
+                        } catch (UTF8EncodingException ex) {
+                            PointableHelper.setNull(result);
+                            ExceptionUtil.warnStringFunctionFailed(ctx, sourceLoc, getIdentifier(), ex.getMessage());
                         } catch (IOException e1) {
                             throw HyracksDataException.create(e1);
                         }

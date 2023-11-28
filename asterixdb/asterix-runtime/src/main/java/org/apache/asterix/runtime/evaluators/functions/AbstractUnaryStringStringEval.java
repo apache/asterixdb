@@ -37,6 +37,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 
 abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
 
@@ -84,6 +85,9 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         try {
             process(stringPtr, resultPointable);
             writeResult(resultPointable);
+        } catch (UTF8EncodingException ex) {
+            PointableHelper.setNull(resultPointable);
+            ExceptionUtil.warnStringFunctionFailed(ctx, sourceLoc, funcID, ex.getMessage());
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

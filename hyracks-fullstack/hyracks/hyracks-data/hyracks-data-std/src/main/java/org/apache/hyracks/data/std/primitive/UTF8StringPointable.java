@@ -20,6 +20,7 @@ package org.apache.hyracks.data.std.primitive;
 
 import static org.apache.hyracks.util.string.UTF8StringUtil.HIGH_SURROGATE_WITHOUT_LOW_SURROGATE;
 import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
+import static org.apache.hyracks.util.string.UTF8StringUtil.MALFORMED_BYTES;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -35,6 +36,7 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
+import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -136,7 +138,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
 
         if (byteIdx != utf8Length) {
-            throw new IllegalArgumentException("Decoding error: malformed bytes");
+            throw new UTF8EncodingException(MALFORMED_BYTES);
         }
     }
 
@@ -317,7 +319,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                     return startMatchPos;
                 } else {
                     if (prevHighSurrogate) {
-                        throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                        throw new UTF8EncodingException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                     }
                     return codePointCount;
                 }
@@ -333,7 +335,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         codePointCount++;
                         prevHighSurrogate = false;
                     } else {
-                        throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                        throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
                     }
                 } else {
                     codePointCount++;
@@ -678,9 +680,9 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
             endIndex = startIndex;
             int cursorIndex = startIndex;
             while (cursorIndex < srcUtfLen) {
-                int codePioint = srcPtr.codePointAt(srcStart + cursorIndex);
+                int codePoint = srcPtr.codePointAt(srcStart + cursorIndex);
                 cursorIndex += srcPtr.codePointSize(srcStart + cursorIndex);
-                if (!codePointSet.contains(codePioint)) {
+                if (!codePointSet.contains(codePoint)) {
                     endIndex = cursorIndex;
                 }
             }
@@ -739,9 +741,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         cursorIndex--;
                         if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
                             ch = UTF8StringUtil.charAt(srcPtr.bytes, cursorIndex);
-                            if (Character.isHighSurrogate(ch) == false) {
-                                throw new IllegalArgumentException(
-                                        "Decoding Error: no corresponding high surrogate found for the following low surrogate");
+                            if (!Character.isHighSurrogate(ch)) {
+                                throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
                             }
 
                             charSize += UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
@@ -749,7 +750,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         }
                     }
                 } else if (Character.isHighSurrogate(ch)) {
-                    throw new IllegalArgumentException("Decoding Error: get a high surrogate without low surrogate");
+                    throw new UTF8EncodingException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                 }
 
                 builder.appendUtf8StringPointable(srcPtr, cursorIndex, charSize);

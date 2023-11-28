@@ -28,6 +28,7 @@ import java.io.UTFDataFormatException;
 import java.lang.ref.SoftReference;
 
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
+import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 
 /**
  * A helper package to operate the UTF8String in Hyracks.
@@ -35,6 +36,7 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 public class UTF8StringUtil {
 
+    public static final String MALFORMED_BYTES = "Decoding error: malformed bytes";
     public static final String LOW_SURROGATE_WITHOUT_HIGH_SURROGATE =
             "Decoding error: got a low surrogate without a leading high surrogate";
     public static final String HIGH_SURROGATE_WITHOUT_LOW_SURROGATE =
@@ -101,7 +103,7 @@ public class UTF8StringUtil {
 
         if (Character.isLowSurrogate(c1)) {
             // In this case, the index s doesn't point to a correct position
-            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+            throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {
@@ -112,7 +114,7 @@ public class UTF8StringUtil {
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
             } else {
-                throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                throw new UTF8EncodingException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
             }
         }
 
@@ -124,7 +126,7 @@ public class UTF8StringUtil {
         int size1 = charSize(b, s);
 
         if (Character.isLowSurrogate(c1)) {
-            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+            throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {

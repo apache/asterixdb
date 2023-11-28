@@ -11341,6 +11341,22 @@
         <output-dir compare="Text">substring-after-5</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="string" check-warnings="true">
+      <compilation-unit name="invalid-unicode">
+        <output-dir compare="Text">invalid-unicode</output-dir>
+        <expected-warn>ASX0060: Function 'string-length' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'string-to-codepoint' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'trim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'trim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'rtrim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'rtrim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'ltrim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'ltrim' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'reverse' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'position' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+        <expected-warn>ASX0060: Function 'position1' failed to evaluate because: Decoding error: got a low surrogate without a leading high surrogate</expected-warn>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subquery">
     <test-case FilePath="subquery">

@@ -35,6 +35,7 @@ import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 
 public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
 
@@ -106,6 +107,9 @@ public abstract class AbstractBinaryStringEval implements IScalarEvaluator {
         // The actual processing.
         try {
             process(leftStringPointable, rightStringPointable, resultPointable);
+        } catch (UTF8EncodingException ex) {
+            PointableHelper.setNull(resultPointable);
+            ExceptionUtil.warnStringFunctionFailed(ctx, sourceLoc, funcID, ex.getMessage());
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

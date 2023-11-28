@@ -143,6 +143,14 @@ public final class ExceptionUtil {
         warnInvalidValue(ctx, srcLoc, fid, argIdx, argValue, ErrorCode.NEGATIVE_VALUE);
     }
 
+    public static void warnStringFunctionFailed(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
+            String errMsg) {
+        if (ctx.getWarningCollector().shouldWarn()) {
+            ctx.getWarningCollector()
+                    .warn(Warning.of(srcLoc, ErrorCode.FUNCTION_EVALUATION_FAILED, fid.getName(), errMsg));
+        }
+    }
+
     private static void warnInvalidValue(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
             int argIdx, double argValue, ErrorCode errorCode) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
