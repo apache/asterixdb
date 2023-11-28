@@ -553,13 +553,26 @@ public class Stats {
         return record.numberOfFields();
     }
 
-    // Can have null returned, so this routine should only be called if at least tuple is returned by the sample
-    public double findProjectedSize(List<List<IAObject>> result) {
+    public double findSizeVarsFromDisk(List<List<IAObject>> result, int numDiskVars) {
         ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
         // Now figure out the projected size
         double projectedSize = 0.0;
         int fields = record.numberOfFields();
-        for (int j = 1; j < fields; j++) {
+        for (int j = 1; j <= numDiskVars; j++) {
+            IAObject field = record.getValueByPos(j);
+            double size = ((double) ((ADouble) field).getDoubleValue());
+            projectedSize += size;
+        }
+        return projectedSize;
+    }
+
+    // Can have null returned, so this routine should only be called if at least tuple is returned by the sample
+    public double findSizeVarsAfterScan(List<List<IAObject>> result, int numDiskVars) {
+        ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
+        // Now figure out the projected size
+        double projectedSize = 0.0;
+        int fields = record.numberOfFields();
+        for (int j = 1 + numDiskVars; j < fields; j++) { // must skip the disk vars
             IAObject field = record.getValueByPos(j);
             double size = ((double) ((ADouble) field).getDoubleValue());
             projectedSize += size;
@@ -603,8 +616,8 @@ public class Stats {
     }
 
     // This one gets the cardinality and also projection sizes
-    protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp)
-            throws AlgebricksException {
+    protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp,
+            int dataset, LogicalVariable primaryKey) throws AlgebricksException {
         LOGGER.info("***running sample query***");
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
@@ -619,9 +632,21 @@ public class Stats {
         // add the assign [$$56, ..., ] <- [encoded-size($$67), ..., ] on top of newAggOp
         List<LogicalVariable> vars1 = new ArrayList<>();
         VariableUtilities.getLiveVariables(logOp, vars1); // all the variables in the leafInput
+        // Depending on the order here. Assuming the first three variables are from the data scan operator.
+        if (!joinEnum.resultAndJoinVars.contains(primaryKey)) { // if the entire row is not being projected, we must remove $$p
+            vars1.remove(primaryKey);
+        }
+
         List<LogicalVariable> vars3 = // these variables can be thrown away as they are not present joins and in the final project
                 new ArrayList<>(CollectionUtils.subtract(vars1, joinEnum.resultAndJoinVars /* vars2 */));
-        List<LogicalVariable> vars = new ArrayList<>(CollectionUtils.subtract(vars1, vars3)); // variables that will flow up the tree
+        List<LogicalVariable> vars4 = new ArrayList<>(CollectionUtils.subtract(vars1, vars3)); // variables that will flow up the tree
+
+        List<LogicalVariable> vars = new ArrayList<>();
+        vars.addAll(vars1);
+        vars.addAll(vars4); // doing a union all; duplicates must not be removed
+        //vars1 is what comes out of the disk
+        joinEnum.jnArray[dataset].setNumVarsFromDisk(vars1.size());
+        joinEnum.jnArray[dataset].setNumVarsAfterScan(vars4.size()); // Is this used? check.
 
         LogicalVariable newVar;
         // array to keep track of the assigns

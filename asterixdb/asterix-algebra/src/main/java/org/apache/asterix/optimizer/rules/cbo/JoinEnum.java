@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
@@ -801,6 +802,8 @@ public class JoinEnum {
                     }
                     jn.setOrigCardinality(idxDetails.getSourceCardinality());
                     jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
+                    jn.setSizeVarsFromDisk(10); // dummy value
+                    jn.setSizeVarsAfterScan(10); // dummy value
                 }
                 // multiply by the respective predicate selectivities
                 jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInput, false));
@@ -903,33 +906,48 @@ public class JoinEnum {
                     LOGGER.trace(viewPlan);
                 }
 
+                // find if row or columnar format
+                DatasetDataSource dds = (DatasetDataSource) scanOp.getDataSource();
+                if (dds.getDataset().getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.ROW) {
+                    jn.setColumnar(false);
+                }
+
                 SampleDataSource sampledatasource = getSampleDataSource(scanOp);
                 DataSourceScanOperator deepCopyofScan =
                         (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
                 deepCopyofScan.setDataSource(sampledatasource);
-
+                LogicalVariable primaryKey;
+                if (deepCopyofScan.getVariables().size() > 1) {
+                    primaryKey = deepCopyofScan.getVariables().get(1);
+                } else {
+                    primaryKey = deepCopyofScan.getVariables().get(0);
+                }
                 // if there is only one conjunct, I do not have to call the sampling query during index selection!
                 // insert this in place of the scandatasourceOp.
                 parent.getInputs().get(0).setValue(deepCopyofScan);
                 // There are predicates here. So skip the predicates and get the original dataset card.
                 // Now apply all the predicates and get the card after all predicates are applied.
-                result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
+                result = stats.runSamplingQueryProjection(this.optCtx, leafInput, i, primaryKey);
                 double predicateCardinality = stats.findPredicateCardinality(result, true);
 
-                double projectedSize;
+                double sizeVarsFromDisk;
+                double sizeVarsAfterScan;
+
                 if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
-                    projectedSize = stats.findProjectedSize(result);
+                    sizeVarsFromDisk = stats.findSizeVarsFromDisk(result, jn.getNumVarsFromDisk());
+                    sizeVarsAfterScan = stats.findSizeVarsAfterScan(result, jn.getNumVarsFromDisk());
                 } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
                     ILogicalExpression saveExpr = selop.getCondition().getValue();
                     selop.getCondition().setValue(ConstantExpression.TRUE);
-                    result = stats.runSamplingQueryProjection(this.optCtx, leafInput);
+                    result = stats.runSamplingQueryProjection(this.optCtx, leafInput, i, primaryKey);
                     double x = stats.findPredicateCardinality(result, true);
                     // better to check if x is 0
                     if (x == 0.0) {
-                        int fields = stats.numberOfFields(result);
-                        projectedSize = fields * 100; // cant think of anything better... cards are more important anyway
+                        sizeVarsFromDisk = jn.getNumVarsFromDisk() * 100;
+                        sizeVarsAfterScan = jn.getNumVarsAfterScan() * 100; // cant think of anything better... cards are more important anyway
                     } else {
-                        projectedSize = stats.findProjectedSize(result);
+                        sizeVarsFromDisk = stats.findSizeVarsFromDisk(result, jn.getNumVarsFromDisk());
+                        sizeVarsAfterScan = stats.findSizeVarsAfterScan(result, jn.getNumVarsFromDisk());
                     }
                     selop.getCondition().setValue(saveExpr); // restore the expression
                 }
@@ -952,7 +970,9 @@ public class JoinEnum {
                 if (jn.getCardinality() == jn.getOrigCardinality()) { // this means there was no selectivity hint provided
                     jn.setCardinality(finalDatasetCard);
                 }
-                jn.setAvgDocSize(projectedSize);
+                jn.setSizeVarsFromDisk(sizeVarsFromDisk);
+                jn.setSizeVarsAfterScan(sizeVarsAfterScan);
+                jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
             }
             dataScanPlan = jn.addSingleDatasetPlans();
             if (dataScanPlan == PlanNode.NO_PLAN) {
@@ -1075,6 +1095,7 @@ public class JoinEnum {
 
                 // replace the dataScanSourceOperator with the sampling source
                 SampleDataSource sampledatasource = getSampleDataSource(scanOp);
+
                 DataSourceScanOperator deepCopyofScan =
                         (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
                 deepCopyofScan.setDataSource(sampledatasource);

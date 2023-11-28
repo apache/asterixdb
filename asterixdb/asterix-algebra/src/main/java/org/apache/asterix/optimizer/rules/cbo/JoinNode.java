@@ -79,7 +79,10 @@ public class JoinNode {
     private ICost cheapestPlanCost;
     protected double origCardinality; // without any selections
     protected double cardinality;
-    protected double size;
+    protected double size; // avg size of whole document; available from the sample
+    protected double diskProjectionSize; // what is coming out of the disk; in case of row format, it is the entire document
+                                         // in case of columnar we need to add sizes of individual fields.
+    protected double projectionSizeAfterScan; // excludes fields only used for selections
     protected double distinctCardinality; // estimated distinct cardinality for this joinNode
     protected List<Integer> planIndexesArray; // indexes into the PlanNode array in enumerateJoins
     protected int jnIndex;
@@ -97,6 +100,11 @@ public class JoinNode {
     // The triple above is : Index, selectivity, and the index expression
     protected static int NO_JN = -1;
     private static int NO_CARDS = -2;
+    private int numVarsFromDisk = -1; // number of variables projected from disk
+    private int numVarsAfterScan = -1; // number of variables after all selection fields have been removed and are needed for joins and final projects
+    private double sizeVarsFromDisk = -1.0;
+    private double sizeVarsAfterScan = -1.0;
+    private boolean columnar = true; // default
 
     private JoinNode(int i) {
         this.jnArrayIndex = i;
@@ -137,8 +145,12 @@ public class JoinNode {
         origCardinality = Math.max(card, Cost.MIN_CARD);
     }
 
-    protected void setAvgDocSize(double avgDocSize) {
+    public void setAvgDocSize(double avgDocSize) {
         size = avgDocSize;
+    }
+
+    public double getAvgDocSize() {
+        return size;
     }
 
     public void setLimitVal(int val) {
@@ -150,11 +162,11 @@ public class JoinNode {
     }
 
     public double getInputSize() {
-        return size;
+        return sizeVarsFromDisk;
     }
 
     public double getOutputSize() {
-        return size; // need to change this to account for projections
+        return sizeVarsAfterScan;
     }
 
     public JoinNode getLeftJn() {
@@ -175,6 +187,46 @@ public class JoinNode {
 
     protected Index.SampleIndexDetails getIdxDetails() {
         return idxDetails;
+    }
+
+    public void setNumVarsFromDisk(int num) {
+        numVarsFromDisk = num;
+    }
+
+    public void setNumVarsAfterScan(int num) {
+        numVarsAfterScan = num;
+    }
+
+    public void setSizeVarsFromDisk(double size) {
+        sizeVarsFromDisk = size;
+    }
+
+    public void setSizeVarsAfterScan(double size) {
+        sizeVarsAfterScan = size;
+    }
+
+    public int getNumVarsFromDisk() {
+        return numVarsFromDisk;
+    }
+
+    public int getNumVarsAfterScan() {
+        return numVarsAfterScan;
+    }
+
+    public double getSizeVarsFromDisk() {
+        return sizeVarsFromDisk;
+    }
+
+    public double getSizeVarsAfterScan() {
+        return sizeVarsAfterScan;
+    }
+
+    public void setColumnar(boolean format) {
+        columnar = format;
+    }
+
+    public boolean getColumnar() {
+        return columnar;
     }
 
     private boolean nestedLoopsApplicable(ILogicalExpression joinExpr) throws AlgebricksException {
