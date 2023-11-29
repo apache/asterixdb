@@ -1,0 +1,1 @@
+{ "avgpay": null, "workers": [ { "name": "Bill", "salary": 2000 }, { "name": "Fred", "salary": 3000 } ], "deptno": "K55" }

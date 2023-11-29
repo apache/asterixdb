@@ -240,8 +240,9 @@ public class ArrayIndexUtil {
      * Traverse each distinct record path and invoke the appropriate commands for each scenario. Here, we keep track
      * of the record/list type at each step and give this to each command.
      */
-    public static void walkArrayPath(Index index, ARecordType baseRecordType, List<String> flattenedFieldName,
-            List<Boolean> unnestFlags, TypeTrackerCommandExecutor commandExecutor) throws AlgebricksException {
+    public static void walkArrayPath(Index index, Index.ArrayIndexElement workingElement, ARecordType baseRecordType,
+            List<String> flattenedFieldName, List<Boolean> unnestFlags, TypeTrackerCommandExecutor commandExecutor)
+            throws AlgebricksException {
         ArrayPath arrayPath = new ArrayPath(flattenedFieldName, unnestFlags).invoke();
         List<List<String>> fieldNamesPerArray = arrayPath.fieldNamesPerArray;
         List<Boolean> unnestFlagsPerArray = arrayPath.unnestFlagsPerArray;
@@ -286,15 +287,15 @@ public class ArrayIndexUtil {
                     }
                 }
                 boolean isFirstArrayStep = i == 0;
-                boolean isLastUnnestInIntermediateStep = i < fieldNamesPerArray.size() - 1;
+                boolean isLastUnnestInIntermediateStep = i <= fieldNamesPerArray.size() - 1;
                 commandExecutor.executeActionOnEachArrayStep(startingStepRecordType, workingType,
                         fieldNamesPerArray.get(i), isFirstArrayStep, isLastUnnestInIntermediateStep);
             }
 
             if (i == fieldNamesPerArray.size() - 1) {
                 boolean isNonArrayStep = !unnestFlagsPerArray.get(i);
-                commandExecutor.executeActionOnFinalArrayStep(startingStepRecordType, fieldNamesPerArray.get(i),
-                        isNonArrayStep, requiresOnlyOneUnnest);
+                commandExecutor.executeActionOnFinalArrayStep(workingElement, baseRecordType, startingStepRecordType,
+                        fieldNamesPerArray.get(i), isNonArrayStep, requiresOnlyOneUnnest);
             }
         }
     }
@@ -341,8 +342,9 @@ public class ArrayIndexUtil {
                 List<String> fieldName, boolean isFirstArrayStep, boolean isLastUnnestInIntermediateStep)
                 throws AlgebricksException;
 
-        void executeActionOnFinalArrayStep(ARecordType startingStepRecordType, List<String> fieldName,
-                boolean isNonArrayStep, boolean requiresOnlyOneUnnest) throws AlgebricksException;
+        void executeActionOnFinalArrayStep(Index.ArrayIndexElement workingElement, ARecordType baseRecordType,
+                ARecordType startingStepRecordType, List<String> fieldName, boolean isNonArrayStep,
+                boolean requiresOnlyOneUnnest) throws AlgebricksException;
     }
 
     private static class ArrayPath {

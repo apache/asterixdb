@@ -3162,7 +3162,7 @@ public class AccessMethodUtils {
                     List<String> flatName = ArrayIndexUtil.getFlattenedKeyFieldNames(e.getUnnestList(), project);
                     List<Boolean> unnestFlags = ArrayIndexUtil.getUnnestFlags(e.getUnnestList(), project);
                     analysisCtx.getArrayIndexStructureMatcher().reset(assignVar, subTree);
-                    ArrayIndexUtil.walkArrayPath(index, subTree.getRecordType(), flatName, unnestFlags,
+                    ArrayIndexUtil.walkArrayPath(index, e, subTree.getRecordType(), flatName, unnestFlags,
                             analysisCtx.getArrayIndexStructureMatcher());
 
                     LogicalVariable varAfterWalk = analysisCtx.getArrayIndexStructureMatcher().getEndVar();
