@@ -8356,8 +8356,6 @@
       <test-case FilePath="array-index/bulk-loading/on-index-creation/open">
         <compilation-unit name="composite-atomic">
           <output-dir compare="Text">composite-atomic</output-dir>
-          <expected-error>ASX0001: Field type string cannot be promoted to type bigint</expected-error>
-          <source-location>false</source-location>
         </compilation-unit>
       </test-case>
     </test-group>
@@ -8659,17 +8657,6 @@
       <test-case FilePath="array-index">
         <compilation-unit name="index-bad-fields">
           <output-dir compare="Text">index-bad-fields</output-dir>
-        </compilation-unit>
-      </test-case>
-    </test-group>
-    <test-group name="array-index/index-bad-fields-bulkload">
-      <test-case FilePath="array-index">
-        <compilation-unit name="index-bad-fields-bulkload">
-          <output-dir compare="Text">index-bad-fields-bulkload</output-dir>
-          <expected-error>ASX0018: Cannot convert the string type to the bigint type</expected-error>
-          <expected-error>ASX0018: Cannot convert the string type to the bigint type</expected-error>
-          <expected-error>ASX0001: Field type bigint cannot be promoted to type string</expected-error>
-          <source-location>false</source-location>
         </compilation-unit>
       </test-case>
     </test-group>

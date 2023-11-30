@@ -35,6 +35,7 @@ import org.apache.asterix.om.types.AUnorderedListType;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 
@@ -254,7 +255,8 @@ public class ArrayIndexUtil {
         IAType workingType = baseRecordType;
 
         for (int i = 0; i < fieldNamesPerArray.size(); i++) {
-            ARecordType startingStepRecordType = (isTrackingType) ? (ARecordType) workingType : null;
+            ARecordType startingStepRecordType =
+                    (isTrackingType) ? (ARecordType) workingType : RecordUtil.FULLY_OPEN_RECORD_TYPE;
             if (isTrackingType) {
                 if (!workingType.getTypeTag().equals(ATypeTag.OBJECT)) {
                     throw new AsterixException(ErrorCode.COMPILATION_ERROR, "Mismatched record type to depth-"

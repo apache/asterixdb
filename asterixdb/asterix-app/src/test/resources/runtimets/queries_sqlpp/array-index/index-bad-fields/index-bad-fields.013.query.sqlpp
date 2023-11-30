@@ -19,4 +19,7 @@
 
 USE test;
 
-CREATE INDEX i2 ON ds1(UNNEST d select x:string) EXCLUDE UNKNOWN KEY;
+SET `import-private-functions` `true`;
+FROM DUMP_INDEX("test", "ds1", "i10") AS v
+SELECT VALUE v
+ORDER BY v.values;

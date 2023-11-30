@@ -17,4 +17,9 @@
  * under the License.
  */
 
-DROP DATAVERSE test;
+USE test;
+
+SET `import-private-functions` `true`;
+FROM DUMP_INDEX("test", "ds1", "i9") AS v
+SELECT VALUE v
+ORDER BY v.values;

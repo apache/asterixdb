@@ -20,6 +20,6 @@
 USE test;
 
 SET `import-private-functions` `true`;
-FROM DUMP_INDEX("test", "ds1", "i4") AS v
+FROM DUMP_INDEX("test", "ds1", "i8") AS v
 SELECT VALUE v
 ORDER BY v.values;

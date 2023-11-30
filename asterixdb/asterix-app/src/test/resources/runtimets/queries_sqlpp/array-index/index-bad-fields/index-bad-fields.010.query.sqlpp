@@ -18,11 +18,8 @@
  */
 
 USE test;
-UPSERT INTO ds1 {"id": 1, "a": ["hello", 1]};
-UPSERT INTO ds1 {"id": 2, "b": ["hello", "hello"]};
-UPSERT INTO ds1 {"id": 3, "b": [11, 12]};
-UPSERT INTO ds1 {"id": 4, "c": [10, 10]};
 
-UPSERT INTO ds1 {"id": 5, "d": [{"x":1}, {"x":"A"}]};
-UPSERT INTO ds1 {"id": 6, "d": [{"x":1}, {"x":"A"}]};
-
+SET `import-private-functions` `true`;
+FROM DUMP_INDEX("test", "ds1", "i7") AS v
+SELECT VALUE v
+ORDER BY v.values;

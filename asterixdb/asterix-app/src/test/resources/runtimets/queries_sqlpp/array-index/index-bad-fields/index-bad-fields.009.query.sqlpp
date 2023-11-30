@@ -16,13 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- * Description  : Test array indexes where some tuples have malformed values in indexed fields
- * Expected Res : Said tuples are not indexed
- */
 
-CREATE DATAVERSE test;
 USE test;
-CREATE TYPE dt1 as {id:int};
-CREATE DATASET ds1(dt1) primary key id;
 
+SET `import-private-functions` `true`;
+FROM DUMP_INDEX("test", "ds1", "i6") AS v
+SELECT VALUE v
+ORDER BY v.values;

@@ -478,9 +478,22 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, AndDescriptor::new);
     }
 
+    public AlgebricksMetaOperatorDescriptor createCastFilterAnyUnknownSelectOp(JobSpecification spec,
+            int numSecondaryKeyFields, RecordDescriptor secondaryRecDesc, List<IAType> castFieldTypes)
+            throws AlgebricksException {
+        return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, AndDescriptor::new, castFieldTypes);
+    }
+
     private AlgebricksMetaOperatorDescriptor createFilterSelectOp(JobSpecification spec, int numSecondaryKeyFields,
             RecordDescriptor secondaryRecDesc, Supplier<AbstractFunctionDescriptor> predicatesCombinerFuncSupplier)
             throws AlgebricksException {
+        return createFilterSelectOp(spec, numSecondaryKeyFields, secondaryRecDesc, predicatesCombinerFuncSupplier,
+                Collections.emptyList());
+    }
+
+    private AlgebricksMetaOperatorDescriptor createFilterSelectOp(JobSpecification spec, int numSecondaryKeyFields,
+            RecordDescriptor secondaryRecDesc, Supplier<AbstractFunctionDescriptor> predicatesCombinerFuncSupplier,
+            List<IAType> castFieldTypes) throws AlgebricksException {
         IScalarEvaluatorFactory[] predicateArgsEvalFactories = new IScalarEvaluatorFactory[numSecondaryKeyFields];
         NotDescriptor notDesc = new NotDescriptor();
         notDesc.setSourceLocation(sourceLoc);
@@ -489,8 +502,14 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         for (int i = 0; i < numSecondaryKeyFields; i++) {
             // Access column i, and apply 'is not null'.
             ColumnAccessEvalFactory columnAccessEvalFactory = new ColumnAccessEvalFactory(i);
+            IScalarEvaluatorFactory evalFactory = columnAccessEvalFactory;
+            if (castFieldTypes != null && !castFieldTypes.isEmpty()) {
+                IScalarEvaluatorFactory[] castArg = new IScalarEvaluatorFactory[] { columnAccessEvalFactory };
+                evalFactory = createCastFunction(castFieldTypes.get(i), BuiltinType.ANY, index.isEnforced(), sourceLoc)
+                        .createEvaluatorFactory(castArg);
+            }
             IScalarEvaluatorFactory isUnknownEvalFactory =
-                    isUnknownDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { columnAccessEvalFactory });
+                    isUnknownDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { evalFactory });
             IScalarEvaluatorFactory notEvalFactory =
                     notDesc.createEvaluatorFactory(new IScalarEvaluatorFactory[] { isUnknownEvalFactory });
             predicateArgsEvalFactories[i] = notEvalFactory;

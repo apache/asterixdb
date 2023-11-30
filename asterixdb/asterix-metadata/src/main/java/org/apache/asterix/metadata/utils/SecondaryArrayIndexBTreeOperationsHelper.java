@@ -158,7 +158,7 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
         int flattenedListPos = 0;
         for (Index.ArrayIndexElement e : arrayIndexDetails.getElementList()) {
             for (int i = 0; i < e.getProjectList().size(); i++) {
-                addSKEvalFactories(isOverridingKeyFieldTypes ? enforcedItemType : itemType, flattenedListPos, false, e);
+                addSKEvalFactories(itemType, flattenedListPos, false, e);
                 Pair<IAType, Boolean> keyTypePair = ArrayIndexUtil.getNonNullableOpenFieldType(e.getTypeList().get(i),
                         e.getUnnestList(), e.getProjectList().get(i), itemType);
                 IAType keyType = keyTypePair.first;
@@ -268,12 +268,6 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
             spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
 
             sourceOp = targetOp;
-            if (arrayIndexDetails.isOverridingKeyFieldTypes() && !enforcedItemType.equals(itemType)) {
-                // If we have an enforced type, insert a "cast" after the primary index scan.
-                targetOp = createCastOp(spec, dataset.getDatasetType(), true);
-                spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
-                sourceOp = targetOp;
-            }
 
             // We do not index meta fields. Project away meta fields if they exist.
             if (dataset.hasMetaPart()) {
@@ -306,7 +300,15 @@ public class SecondaryArrayIndexBTreeOperationsHelper extends SecondaryTreeIndex
 
             if (anySecondaryKeyIsNullable || arrayIndexDetails.isOverridingKeyFieldTypes()) {
                 // If any of the secondary fields are nullable, then we need to filter out the nulls.
-                targetOp = createFilterAnyUnknownSelectOp(spec, numTotalSecondaryKeys, secondaryRecDesc);
+                List<IAType> secondaryKeyTypes = new ArrayList<>();
+                if (arrayIndexDetails.isOverridingKeyFieldTypes() && !enforcedItemType.equals(itemType)) {
+                    for (Index.ArrayIndexElement arrayIndexElement : arrayIndexDetails.getElementList()) {
+                        List<IAType> typeList = arrayIndexElement.getTypeList();
+                        secondaryKeyTypes.addAll(typeList);
+                    }
+                }
+                targetOp = createCastFilterAnyUnknownSelectOp(spec, numTotalSecondaryKeys, secondaryRecDesc,
+                        secondaryKeyTypes);
                 spec.connect(new OneToOneConnectorDescriptor(spec), sourceOp, 0, targetOp, 0);
                 sourceOp = targetOp;
             }
