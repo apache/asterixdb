@@ -21,11 +21,11 @@ package org.apache.asterix.runtime.unnestingfunctions.std;
 
 import java.io.IOException;
 
+import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
-import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 import org.apache.asterix.runtime.unnestingfunctions.base.AbstractUnnestingFunctionDynamicDescriptor;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
@@ -52,7 +52,7 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
 
     @Override
     public IUnnestingEvaluatorFactory createUnnestingEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        return new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc);
+        return new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc, getIdentifier());
     }
 
     public static class ScanCollectionUnnestingFunctionFactory implements IUnnestingEvaluatorFactory {
@@ -60,10 +60,13 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
         private static final long serialVersionUID = 1L;
         private IScalarEvaluatorFactory listEvalFactory;
         private final SourceLocation sourceLoc;
+        private final FunctionIdentifier funID;
 
-        public ScanCollectionUnnestingFunctionFactory(IScalarEvaluatorFactory arg, SourceLocation sourceLoc) {
+        public ScanCollectionUnnestingFunctionFactory(IScalarEvaluatorFactory arg, SourceLocation sourceLoc,
+                FunctionIdentifier funID) {
             this.listEvalFactory = arg;
             this.sourceLoc = sourceLoc;
+            this.funID = funID;
         }
 
         @Override
@@ -88,8 +91,9 @@ public class ScanCollectionDescriptor extends AbstractUnnestingFunctionDynamicDe
                     }
                     if (typeTag != ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG
                             && typeTag != ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG) {
-                        throw new TypeMismatchException(sourceLoc, typeTag, ATypeTag.SERIALIZED_ORDEREDLIST_TYPE_TAG,
-                                ATypeTag.SERIALIZED_UNORDEREDLIST_TYPE_TAG);
+                        ExceptionUtil.warnTypeMismatch(ctx, sourceLoc, funID, typeTag, 0, ATypeTag.MULTISET);
+                        metUnknown = true;
+                        return;
                     }
                     listAccessor.reset(inputVal.getByteArray(), inputVal.getStartOffset());
                     itemIndex = 0;

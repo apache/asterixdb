@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.builders.OrderedListBuilder;
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
@@ -60,14 +59,14 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
-                    protected final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    protected final DataOutput out = resultStorage.getDataOutput();
-                    protected final IPointable argPtr = new VoidPointable();
-                    protected final IScalarEvaluator stringEval = args[0].createScalarEvaluator(ctx);
-                    protected final AOrderedListType intListType = new AOrderedListType(BuiltinType.AINT64, null);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable argPtr = new VoidPointable();
+                    private final IScalarEvaluator stringEval = args[0].createScalarEvaluator(ctx);
+                    private final AOrderedListType intListType = new AOrderedListType(BuiltinType.AINT64, null);
 
-                    private OrderedListBuilder listBuilder = new OrderedListBuilder();
-                    private ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
+                    private final OrderedListBuilder listBuilder = new OrderedListBuilder();
+                    private final ArrayBackedValueStorage inputVal = new ArrayBackedValueStorage();
 
                     @SuppressWarnings("unchecked")
                     private final ISerializerDeserializer<AInt64> int64Serde =
@@ -109,8 +108,14 @@ public class StringToCodePointDescriptor extends AbstractScalarFunctionDynamicDe
                             }
                             listBuilder.write(out, true);
                             result.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw HyracksDataException.create(e1);
+                        } catch (HyracksDataException ex) {
+                            if (ExceptionUtil.isStringUnicodeError(ex)) {
+                                PointableHelper.setNull(result);
+                                ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, getIdentifier(),
+                                        ex.getMessageNoCode());
+                                return;
+                            }
+                            throw ex;
                         }
                     }
                 };

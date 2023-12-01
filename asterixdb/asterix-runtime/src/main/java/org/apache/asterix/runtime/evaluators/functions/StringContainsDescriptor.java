@@ -46,7 +46,8 @@ public class StringContainsDescriptor extends AbstractScalarFunctionDynamicDescr
                 return new AbstractBinaryStringBoolEval(ctx, args[0], args[1], BuiltinFunctions.STRING_CONTAINS,
                         sourceLoc) {
                     @Override
-                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right) {
+                    protected boolean compute(UTF8StringPointable left, UTF8StringPointable right)
+                            throws HyracksDataException {
                         return UTF8StringPointable.contains(left, right, false);
                     }
                 };

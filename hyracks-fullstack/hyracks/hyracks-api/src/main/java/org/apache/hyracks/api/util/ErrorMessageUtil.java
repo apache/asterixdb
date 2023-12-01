@@ -125,6 +125,13 @@ public class ErrorMessageUtil {
         }
     }
 
+    public static String getMessageNoCode(String component, String message) {
+        if (NONE.equals(component)) {
+            return message;
+        }
+        return message.substring(message.indexOf(":") + 2);
+    }
+
     public static String getCauseMessage(Throwable t) {
         if (t instanceof IFormattedException) {
             return t.getMessage();

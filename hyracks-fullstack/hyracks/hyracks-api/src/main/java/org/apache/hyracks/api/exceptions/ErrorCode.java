@@ -154,6 +154,7 @@ public enum ErrorCode implements IError {
     PARSING_ERROR(124),
     INVALID_INVERTED_LIST_TYPE_TRAITS(125),
     ILLEGAL_STATE(126),
+    INVALID_STRING_UNICODE(127),
 
     // Compilation error codes.
     RULECOLLECTION_NOT_INSTANCE_OF_LIST(10000),

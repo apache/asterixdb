@@ -158,6 +158,10 @@ public class HyracksException extends IOException implements IFormattedException
         return message;
     }
 
+    public String getMessageNoCode() {
+        return ErrorMessageUtil.getMessageNoCode(component, getMessage());
+    }
+
     @Override
     public String toString() {
         return getLocalizedMessage();

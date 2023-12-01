@@ -19,7 +19,6 @@
 package org.apache.asterix.runtime.evaluators.functions;
 
 import java.io.DataOutput;
-import java.io.IOException;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -56,13 +55,13 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
             @Override
             public IScalarEvaluator createScalarEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
                 return new IScalarEvaluator() {
-                    private AMutableInt64 result = new AMutableInt64(0);
-                    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-                    private DataOutput out = resultStorage.getDataOutput();
-                    private IPointable inputArg = new VoidPointable();
-                    private IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
+                    private final AMutableInt64 result = new AMutableInt64(0);
+                    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+                    private final DataOutput out = resultStorage.getDataOutput();
+                    private final IPointable inputArg = new VoidPointable();
+                    private final IScalarEvaluator eval = args[0].createScalarEvaluator(ctx);
                     @SuppressWarnings("unchecked")
-                    private ISerializerDeserializer<AInt64> int64Serde =
+                    private final ISerializerDeserializer<AInt64> int64Serde =
                             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
 
                     @Override
@@ -89,8 +88,14 @@ public class StringLengthDescriptor extends AbstractScalarFunctionDynamicDescrip
                             result.setValue(len);
                             int64Serde.serialize(result, out);
                             resultPointable.set(resultStorage);
-                        } catch (IOException e1) {
-                            throw HyracksDataException.create(e1);
+                        } catch (HyracksDataException ex) {
+                            if (ExceptionUtil.isStringUnicodeError(ex)) {
+                                PointableHelper.setNull(resultPointable);
+                                ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, getIdentifier(),
+                                        ex.getMessageNoCode());
+                                return;
+                            }
+                            throw ex;
                         }
                     }
                 };

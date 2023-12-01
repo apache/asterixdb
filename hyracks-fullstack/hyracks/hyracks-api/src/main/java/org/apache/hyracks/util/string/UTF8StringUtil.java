@@ -17,6 +17,8 @@
 
 package org.apache.hyracks.util.string;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.INVALID_STRING_UNICODE;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -27,6 +29,7 @@ import java.io.OutputStream;
 import java.io.UTFDataFormatException;
 import java.lang.ref.SoftReference;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
 
 /**
@@ -35,10 +38,11 @@ import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
  */
 public class UTF8StringUtil {
 
+    public static final String MALFORMED_BYTES = "malformed bytes";
     public static final String LOW_SURROGATE_WITHOUT_HIGH_SURROGATE =
-            "Decoding error: got a low surrogate without a leading high surrogate";
+            "got a low surrogate without a leading high surrogate";
     public static final String HIGH_SURROGATE_WITHOUT_LOW_SURROGATE =
-            "Decoding error: got a high surrogate without a following low surrogate";
+            "got a high surrogate without a following low surrogate";
 
     private UTF8StringUtil() {
     }
@@ -96,12 +100,12 @@ public class UTF8StringUtil {
         }
     }
 
-    public static int codePointAt(byte[] b, int s) {
+    public static int codePointAt(byte[] b, int s) throws HyracksDataException {
         char c1 = charAt(b, s);
 
         if (Character.isLowSurrogate(c1)) {
             // In this case, the index s doesn't point to a correct position
-            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+            throw HyracksDataException.create(INVALID_STRING_UNICODE, LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {
@@ -112,19 +116,19 @@ public class UTF8StringUtil {
             if (Character.isLowSurrogate(c2)) {
                 return Character.toCodePoint(c1, c2);
             } else {
-                throw new IllegalArgumentException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                throw HyracksDataException.create(INVALID_STRING_UNICODE, HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
             }
         }
 
         return c1;
     }
 
-    public static int codePointSize(byte[] b, int s) {
+    public static int codePointSize(byte[] b, int s) throws HyracksDataException {
         char c1 = charAt(b, s);
         int size1 = charSize(b, s);
 
         if (Character.isLowSurrogate(c1)) {
-            throw new IllegalArgumentException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+            throw HyracksDataException.create(INVALID_STRING_UNICODE, LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
         }
 
         if (Character.isHighSurrogate(c1)) {
@@ -204,7 +208,7 @@ public class UTF8StringUtil {
         return charCount;
     }
 
-    public static int getNumCodePoint(byte[] b, int s) {
+    public static int getNumCodePoint(byte[] b, int s) throws HyracksDataException {
         int len = getUTFLength(b, s);
         int pos = s + getNumBytesToStoreLength(len);
         int end = pos + len;

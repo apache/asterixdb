@@ -207,4 +207,16 @@ public class ExceptionUtils {
     public static String getMessageOrToString(Throwable e) {
         return e instanceof IFormattedException ? e.getMessage() : e.toString();
     }
+
+    /**
+     * Checks if the error code of the throwable is of the provided type
+     *
+     * @param throwable throwable with error code
+     * @param code error code to match against
+     *
+     * @return true if error code matches, false otherwise
+     */
+    public static boolean isErrorCode(HyracksDataException throwable, ErrorCode code) {
+        return throwable.getError().isPresent() && throwable.getError().get() == code;
+    }
 }
