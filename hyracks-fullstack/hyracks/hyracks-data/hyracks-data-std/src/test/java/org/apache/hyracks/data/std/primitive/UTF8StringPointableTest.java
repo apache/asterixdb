@@ -30,6 +30,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
 import org.apache.hyracks.util.string.UTF8StringSample;
@@ -68,7 +69,7 @@ public class UTF8StringPointableTest {
     }
 
     @Test
-    public void testFindInCodePoint() {
+    public void testFindInCodePoint() throws HyracksDataException {
         UTF8StringPointable strp = generateUTF8Pointable(STRING_EMOJI_FAMILY_OF_4 + EMOJI_BASKETBALL);
         UTF8StringPointable pattern = generateUTF8Pointable(EMOJI_BASKETBALL);
 

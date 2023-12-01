@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.util.string;
+package org.apache.hyracks.api.string;
 
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_127;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_128;
@@ -46,6 +46,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.junit.Test;
 
 public class UTF8StringUtilTest {
@@ -178,7 +180,7 @@ public class UTF8StringUtilTest {
     }
 
     @Test
-    public void testGetNumCodePoint() {
+    public void testGetNumCodePoint() throws HyracksDataException {
         String str = "\uD83D\uDC69\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66";
         assertEquals(getNumCodePoint(writeStringToBytes(str), 0), 7);
 

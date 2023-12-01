@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.hyracks.util.string;
+package org.apache.hyracks.api.string;
 
 import static org.apache.hyracks.util.string.UTF8StringSample.EMPTY_STRING;
 import static org.apache.hyracks.util.string.UTF8StringSample.STRING_LEN_127;
@@ -37,6 +37,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
+import org.apache.hyracks.util.string.UTF8StringReader;
+import org.apache.hyracks.util.string.UTF8StringWriter;
 import org.junit.Test;
 
 public class UTF8StringReaderWriterTest {

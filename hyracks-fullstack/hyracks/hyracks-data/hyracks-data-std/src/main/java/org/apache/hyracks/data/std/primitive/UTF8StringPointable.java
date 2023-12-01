@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.data.std.primitive;
 
+import static org.apache.hyracks.api.exceptions.ErrorCode.INVALID_STRING_UNICODE;
 import static org.apache.hyracks.util.string.UTF8StringUtil.HIGH_SURROGATE_WITHOUT_LOW_SURROGATE;
 import static org.apache.hyracks.util.string.UTF8StringUtil.LOW_SURROGATE_WITHOUT_HIGH_SURROGATE;
 import static org.apache.hyracks.util.string.UTF8StringUtil.MALFORMED_BYTES;
@@ -36,7 +37,6 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IPointableFactory;
 import org.apache.hyracks.data.std.util.GrowableArray;
 import org.apache.hyracks.data.std.util.UTF8StringBuilder;
-import org.apache.hyracks.util.exceptions.UTF8EncodingException;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -122,15 +122,15 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return UTF8StringUtil.charSize(bytes, start + offset);
     }
 
-    public int codePointAt(int offset) {
+    public int codePointAt(int offset) throws HyracksDataException {
         return UTF8StringUtil.codePointAt(bytes, start + offset);
     }
 
-    public int codePointSize(int offset) {
+    public int codePointSize(int offset) throws HyracksDataException {
         return UTF8StringUtil.codePointSize(bytes, start + offset);
     }
 
-    public void getCodePoints(IntCollection codePointSet) {
+    public void getCodePoints(IntCollection codePointSet) throws HyracksDataException {
         int byteIdx = 0;
         while (byteIdx < utf8Length) {
             codePointSet.add(codePointAt(metaLength + byteIdx));
@@ -138,7 +138,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         }
 
         if (byteIdx != utf8Length) {
-            throw new UTF8EncodingException(MALFORMED_BYTES);
+            throw HyracksDataException.create(INVALID_STRING_UNICODE, MALFORMED_BYTES);
         }
     }
 
@@ -204,7 +204,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                 other.getStartOffset());
     }
 
-    public int find(UTF8StringPointable pattern, boolean ignoreCase) {
+    public int find(UTF8StringPointable pattern, boolean ignoreCase) throws HyracksDataException {
         return find(this, pattern, ignoreCase);
     }
 
@@ -229,7 +229,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *            to ignore case or not.
      * @return the byte offset of the first character of the matching string. Not including the MetaLength.
      */
-    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase)
+            throws HyracksDataException {
         return find(src, pattern, ignoreCase, 0);
     }
 
@@ -242,7 +243,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      *            to ignore case or not.
      * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
      */
-    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+    public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase)
+            throws HyracksDataException {
         return findInByteOrCodePoint(src, pattern, ignoreCase, 0, false);
     }
 
@@ -258,7 +260,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * @return the byte offset of the first character of the matching string after <code>startMatchPos}</code>.
      *         Not including the MetaLength.
      */
-    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch) {
+    public static int find(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase, int startMatch)
+            throws HyracksDataException {
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, true);
     }
 
@@ -274,13 +277,13 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
      * @return the offset in the unit of code point of the first character of the matching string. Not including the MetaLength.
      */
     public static int findInCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
-            int startMatch) {
+            int startMatch) throws HyracksDataException {
         return findInByteOrCodePoint(src, pattern, ignoreCase, startMatch, false);
     }
 
     // If resultInByte is true, then return the position in bytes, otherwise return the position in code points
     private static int findInByteOrCodePoint(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase,
-            int startMatch, boolean resultInByte) {
+            int startMatch, boolean resultInByte) throws HyracksDataException {
         int startMatchPos = startMatch;
         final int srcUtfLen = src.getUTF8Length();
         final int pttnUtfLen = pattern.getUTF8Length();
@@ -319,7 +322,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                     return startMatchPos;
                 } else {
                     if (prevHighSurrogate) {
-                        throw new UTF8EncodingException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                        throw HyracksDataException.create(INVALID_STRING_UNICODE, HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                     }
                     return codePointCount;
                 }
@@ -335,7 +338,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         codePointCount++;
                         prevHighSurrogate = false;
                     } else {
-                        throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                        throw HyracksDataException.create(INVALID_STRING_UNICODE, LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
                     }
                 } else {
                     codePointCount++;
@@ -347,11 +350,12 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
         return -1;
     }
 
-    public boolean contains(UTF8StringPointable pattern, boolean ignoreCase) {
+    public boolean contains(UTF8StringPointable pattern, boolean ignoreCase) throws HyracksDataException {
         return contains(this, pattern, ignoreCase);
     }
 
-    public static boolean contains(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase) {
+    public static boolean contains(UTF8StringPointable src, UTF8StringPointable pattern, boolean ignoreCase)
+            throws HyracksDataException {
         return find(src, pattern, ignoreCase) >= 0;
     }
 
@@ -742,7 +746,8 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         if (UTF8StringUtil.isCharStart(srcPtr.bytes, cursorIndex)) {
                             ch = UTF8StringUtil.charAt(srcPtr.bytes, cursorIndex);
                             if (!Character.isHighSurrogate(ch)) {
-                                throw new UTF8EncodingException(LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
+                                throw HyracksDataException.create(INVALID_STRING_UNICODE,
+                                        LOW_SURROGATE_WITHOUT_HIGH_SURROGATE);
                             }
 
                             charSize += UTF8StringUtil.charSize(srcPtr.bytes, cursorIndex);
@@ -750,7 +755,7 @@ public final class UTF8StringPointable extends AbstractPointable implements IHas
                         }
                     }
                 } else if (Character.isHighSurrogate(ch)) {
-                    throw new UTF8EncodingException(HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
+                    throw HyracksDataException.create(INVALID_STRING_UNICODE, HIGH_SURROGATE_WITHOUT_LOW_SURROGATE);
                 }
 
                 builder.appendUtf8StringPointable(srcPtr, cursorIndex, charSize);

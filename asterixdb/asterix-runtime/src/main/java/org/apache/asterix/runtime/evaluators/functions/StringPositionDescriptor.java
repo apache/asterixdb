@@ -47,7 +47,8 @@ public class StringPositionDescriptor extends AbstractScalarFunctionDynamicDescr
                         StringPositionDescriptor.this.getIdentifier(), sourceLoc) {
 
                     @Override
-                    protected int compute(UTF8StringPointable left, UTF8StringPointable right) {
+                    protected int compute(UTF8StringPointable left, UTF8StringPointable right)
+                            throws HyracksDataException {
                         return UTF8StringPointable.findInCodePoint(left, right, false);
                     }
                 };
