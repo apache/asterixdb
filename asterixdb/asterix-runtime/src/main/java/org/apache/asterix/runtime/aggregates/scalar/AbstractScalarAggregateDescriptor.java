@@ -80,7 +80,7 @@ public abstract class AbstractScalarAggregateDescriptor extends AbstractScalarFu
             public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
                 // Use ScanCollection to iterate over list items.
                 ScanCollectionUnnestingFunctionFactory scanCollectionFactory =
-                        new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc);
+                        new ScanCollectionUnnestingFunctionFactory(args[0], sourceLoc, getIdentifier());
                 return createScalarAggregateEvaluator(aggFuncFactory.createAggregateEvaluator(ctx),
                         scanCollectionFactory, ctx);
             }

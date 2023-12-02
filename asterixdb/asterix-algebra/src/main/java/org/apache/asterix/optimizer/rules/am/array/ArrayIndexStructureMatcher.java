@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.utils.ArrayIndexUtil;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AString;
@@ -72,8 +73,9 @@ public class ArrayIndexStructureMatcher implements ArrayIndexUtil.TypeTrackerCom
     }
 
     @Override
-    public void executeActionOnFinalArrayStep(ARecordType startingStepRecordType, List<String> fieldName,
-            boolean isNonArrayStep, boolean requiresOnlyOneUnnest) {
+    public void executeActionOnFinalArrayStep(Index.ArrayIndexElement workingElement, ARecordType baseRecordType,
+            ARecordType startingStepRecordType, List<String> fieldName, boolean isNonArrayStep,
+            boolean requiresOnlyOneUnnest) {
         if (isNonArrayStep) {
             isStructureMatched = isStructureMatched && matchAssignVarAndFieldName(startingStepRecordType, fieldName);
         }

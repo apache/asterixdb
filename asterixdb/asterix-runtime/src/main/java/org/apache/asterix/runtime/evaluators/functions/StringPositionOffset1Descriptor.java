@@ -47,7 +47,8 @@ public class StringPositionOffset1Descriptor extends AbstractScalarFunctionDynam
                         StringPositionOffset1Descriptor.this.getIdentifier(), sourceLoc) {
 
                     @Override
-                    protected int compute(UTF8StringPointable left, UTF8StringPointable right) {
+                    protected int compute(UTF8StringPointable left, UTF8StringPointable right)
+                            throws HyracksDataException {
                         int pos = UTF8StringPointable.findInCodePoint(left, right, false);
                         return pos < 0 ? pos : pos + 1;
                     }

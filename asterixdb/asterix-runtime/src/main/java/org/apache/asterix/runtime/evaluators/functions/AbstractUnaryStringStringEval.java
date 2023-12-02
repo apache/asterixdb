@@ -84,6 +84,13 @@ abstract class AbstractUnaryStringStringEval implements IScalarEvaluator {
         try {
             process(stringPtr, resultPointable);
             writeResult(resultPointable);
+        } catch (HyracksDataException ex) {
+            if (ExceptionUtil.isStringUnicodeError(ex)) {
+                PointableHelper.setNull(resultPointable);
+                ExceptionUtil.warnFunctionEvalFailed(ctx, sourceLoc, funcID, ex.getMessageNoCode());
+                return;
+            }
+            throw ex;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

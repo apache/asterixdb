@@ -19,6 +19,10 @@
 
 package org.apache.asterix.om.exceptions;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.FUNCTION_EVALUATION_FAILED;
+import static org.apache.hyracks.api.exceptions.ErrorCode.INVALID_STRING_UNICODE;
+import static org.apache.hyracks.api.util.ExceptionUtils.isErrorCode;
+
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -26,6 +30,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
@@ -143,6 +148,13 @@ public final class ExceptionUtil {
         warnInvalidValue(ctx, srcLoc, fid, argIdx, argValue, ErrorCode.NEGATIVE_VALUE);
     }
 
+    public static void warnFunctionEvalFailed(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
+            String errMsg) {
+        if (ctx.getWarningCollector().shouldWarn()) {
+            ctx.getWarningCollector().warn(Warning.of(srcLoc, FUNCTION_EVALUATION_FAILED, fid.getName(), errMsg));
+        }
+    }
+
     private static void warnInvalidValue(IEvaluatorContext ctx, SourceLocation srcLoc, FunctionIdentifier fid,
             int argIdx, double argValue, ErrorCode errorCode) {
         IWarningCollector warningCollector = ctx.getWarningCollector();
@@ -150,5 +162,9 @@ public final class ExceptionUtil {
             warningCollector.warn(
                     Warning.of(srcLoc, errorCode, fid.getName(), indexToPosition(argIdx), Double.toString(argValue)));
         }
+    }
+
+    public static boolean isStringUnicodeError(HyracksDataException throwable) {
+        return isErrorCode(throwable, INVALID_STRING_UNICODE);
     }
 }

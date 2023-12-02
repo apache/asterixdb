@@ -67,7 +67,7 @@ public class CleanupUtils {
             } catch (Throwable th) { // NOSONAR Will be suppressed
                 try {
                     LOGGER.log(ExceptionUtils.causedByInterrupt(th) ? Level.DEBUG : Level.WARN,
-                            "Failure closing a closeable resource of class {}", writer.getClass().getSimpleName(), th);
+                            "Failure closing a closeable resource of class {}", writer.getClass().getName(), th);
                 } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                     // NOSONAR: Ignore logging failure
                 }
@@ -92,7 +92,7 @@ public class CleanupUtils {
         } catch (Throwable th) { // NOSONAR Will be suppressed
             try {
                 LOGGER.log(ExceptionUtils.causedByInterrupt(th) ? Level.DEBUG : Level.WARN,
-                        "Failure failing " + writer.getClass().getSimpleName(), th);
+                        "Failure failing " + writer.getClass().getName(), th);
             } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                 // NOSONAR ignore logging failure
             }
@@ -138,7 +138,7 @@ public class CleanupUtils {
             } catch (Throwable th) { // NOSONAR Will be suppressed
                 try {
                     LOGGER.log(ExceptionUtils.causedByInterrupt(th) ? Level.DEBUG : Level.WARN,
-                            "Failure closing a closeable resource", th);
+                            "Failure closing a closeable resource {}", closable.getClass().getName(), th);
                 } catch (Throwable loggingFailure) { // NOSONAR: Ignore catching Throwable
                     // NOSONAR ignore logging failure
                 }

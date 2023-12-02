@@ -22,6 +22,7 @@ package org.apache.asterix.runtime.evaluators.functions.utils;
 import java.io.IOException;
 
 import org.apache.asterix.runtime.evaluators.functions.StringEvaluatorUtils;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
@@ -51,7 +52,7 @@ public class StringTrimmer {
      * @param resultArray
      *            , the byte array to hold results.
      */
-    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray) {
+    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray) throws HyracksDataException {
         this(resultBuilder, resultArray, null);
     }
 
@@ -63,7 +64,8 @@ public class StringTrimmer {
      * @param pattern
      *            , the string that is used to construct the charset for trimming.
      */
-    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray, UTF8StringPointable pattern) {
+    public StringTrimmer(UTF8StringBuilder resultBuilder, GrowableArray resultArray, UTF8StringPointable pattern)
+            throws HyracksDataException {
         this.resultBuilder = resultBuilder;
         this.resultArray = resultArray;
         if (pattern != null) {
@@ -78,7 +80,7 @@ public class StringTrimmer {
      * @param patternPtr
      *            , a pattern string.
      */
-    public void build(UTF8StringPointable patternPtr) {
+    public void build(UTF8StringPointable patternPtr) throws HyracksDataException {
         final boolean newPattern = (codePointSet.size() == 0) || lastPatternPtr.compareTo(patternPtr) != 0;
         if (newPattern) {
             StringEvaluatorUtils.copyResetUTF8Pointable(patternPtr, lastPatternStorage, lastPatternPtr);
