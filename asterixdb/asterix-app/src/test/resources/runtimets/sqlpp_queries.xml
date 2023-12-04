@@ -16438,6 +16438,16 @@
         <output-dir compare="Text">metadata</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="supported-types">
+        <output-dir compare="Text">supported-types</output-dir>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime, date, time, duration]' are not supported in columnar storage format. Supported types are [bigint, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, double, string, boolean, uuid]</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="copy-from">
     <test-case FilePath="copy-from">

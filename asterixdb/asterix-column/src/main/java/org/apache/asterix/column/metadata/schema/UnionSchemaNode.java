@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.metadata.schema;
 
+import static org.apache.asterix.column.util.ColumnValuesUtil.getNormalizedTypeTag;
+
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -69,7 +71,7 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
 
     public AbstractSchemaNode getOrCreateChild(ATypeTag childTypeTag, FlushColumnMetadata columnMetadata)
             throws HyracksDataException {
-        ATypeTag normalizedTypeTag = FlushColumnMetadata.getNormalizedTypeTag(childTypeTag);
+        ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
         AbstractSchemaNode currentChild = children.get(normalizedTypeTag);
         //The parent of a union child should be the actual parent
         AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, normalizedTypeTag);

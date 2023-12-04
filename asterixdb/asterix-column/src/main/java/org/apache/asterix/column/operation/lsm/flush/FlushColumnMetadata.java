@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.lsm.flush;
 
+import static org.apache.asterix.column.util.ColumnValuesUtil.getNormalizedTypeTag;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -560,19 +562,6 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
             String metaRecordSchema = LogRedactionUtil.userData(schemaBuilder.build(metaRoot));
             LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.META_RECORD_SCHEMA,
                     metaRecordSchema);
-        }
-    }
-
-    public static ATypeTag getNormalizedTypeTag(ATypeTag typeTag) {
-        switch (typeTag) {
-            case TINYINT:
-            case SMALLINT:
-            case INTEGER:
-                return ATypeTag.BIGINT;
-            case FLOAT:
-                return ATypeTag.DOUBLE;
-            default:
-                return typeTag;
         }
     }
 

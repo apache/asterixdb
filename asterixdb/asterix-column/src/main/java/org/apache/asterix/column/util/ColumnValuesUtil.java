@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.util;
 
+import org.apache.asterix.om.types.ATypeTag;
+
 public class ColumnValuesUtil {
     private ColumnValuesUtil() {
     }
@@ -44,5 +46,18 @@ public class ColumnValuesUtil {
 
     public static int clearNullBit(int nullBitMask, int level) {
         return (nullBitMask - 1) & level;
+    }
+
+    public static ATypeTag getNormalizedTypeTag(ATypeTag typeTag) {
+        switch (typeTag) {
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
+                return ATypeTag.BIGINT;
+            case FLOAT:
+                return ATypeTag.DOUBLE;
+            default:
+                return typeTag;
+        }
     }
 }
