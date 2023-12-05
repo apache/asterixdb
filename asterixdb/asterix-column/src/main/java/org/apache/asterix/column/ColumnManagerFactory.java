@@ -26,6 +26,7 @@ import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleReaderWrite
 import org.apache.asterix.column.operation.lsm.load.LoadColumnTupleReaderWriterFactory;
 import org.apache.asterix.column.operation.lsm.merge.MergeColumnTupleReaderWriterFactory;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
@@ -71,8 +72,10 @@ public final class ColumnManagerFactory implements IColumnManagerFactory {
     }
 
     @Override
-    public AbstractColumnTupleReaderWriterFactory getLoadColumnTupleReaderWriterFactory() {
-        return new LoadColumnTupleReaderWriterFactory(pageSize, maxTupleCount, tolerance, maxLeafNodeSize);
+    public AbstractColumnTupleReaderWriterFactory getLoadColumnTupleReaderWriterFactory(
+            IBinaryComparatorFactory[] cmpFactories) {
+        return new LoadColumnTupleReaderWriterFactory(pageSize, maxTupleCount, tolerance, maxLeafNodeSize,
+                cmpFactories);
     }
 
     @Override

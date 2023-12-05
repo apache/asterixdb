@@ -82,7 +82,7 @@ public class LSMColumnBTreeUtil {
         ITreeIndexFrameFactory mergeLeafFrameFactory = new ColumnBTreeLeafFrameFactory(copyTupleWriterFactory,
                 columnManagerFactory.createMergeColumnTupleReaderWriterFactory());
         ITreeIndexFrameFactory bulkLoadLeafFrameFactory = new ColumnBTreeLeafFrameFactory(bulkLoadTupleWriterFactory,
-                columnManagerFactory.getLoadColumnTupleReaderWriterFactory());
+                columnManagerFactory.getLoadColumnTupleReaderWriterFactory(cmpFactories));
         ITreeIndexFrameFactory insertLeafFrameFactory = new BTreeNSMLeafFrameFactory(insertTupleWriterFactory);
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);

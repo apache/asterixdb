@@ -20,17 +20,35 @@ package org.apache.asterix.column.operation.lsm.load;
 
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleWriter;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
+import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LoadColumnTupleWriter extends FlushColumnTupleWriter {
+    private final PointableTupleReference prevTupleKeys;
+    private final MultiComparator comparator;
+
     public LoadColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance, int maxLeafNodeSize) {
+            double tolerance, int maxLeafNodeSize, MultiComparator comparator) {
         super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
+        prevTupleKeys =
+                PointableTupleReference.create(columnMetadata.getNumberOfPrimaryKeys(), ArrayBackedValueStorage::new);
+        this.comparator = comparator;
     }
 
     @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
+        ensureKeysUniqueness(tuple);
         writeRecord(tuple);
+    }
+
+    private void ensureKeysUniqueness(ITupleReference tuple) throws HyracksDataException {
+        if (prevTupleKeys.getFieldLength(0) > 0 && comparator.compare(prevTupleKeys, tuple) == 0) {
+            throw HyracksDataException.create(ErrorCode.DUPLICATE_LOAD_INPUT);
+        }
+        prevTupleKeys.set(tuple);
     }
 }

@@ -20,6 +20,7 @@ package org.apache.hyracks.storage.am.lsm.btree.column.api;
 
 import java.io.Serializable;
 
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperationType;
 
@@ -31,8 +32,11 @@ public interface IColumnManagerFactory extends Serializable, IJsonSerializable {
 
     /**
      * Get column tuple reader/writer for the {@link LSMIOOperationType#LOAD}
+     *
+     * @param cmpFactories Primary keys comparators' factories
      */
-    AbstractColumnTupleReaderWriterFactory getLoadColumnTupleReaderWriterFactory();
+    AbstractColumnTupleReaderWriterFactory getLoadColumnTupleReaderWriterFactory(
+            IBinaryComparatorFactory[] cmpFactories);
 
     /**
      * Get column tuple reader/writer for the {@link LSMIOOperationType#FLUSH}
