@@ -468,7 +468,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
-                        handleCopyFromStatement(metadataProvider, stmt, hcc);
+                        handleCopyFromStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case COPY_TO:
                         metadataProvider.setResultSetId(new ResultSetId(resultSetIdCounter.getAndInc()));
@@ -495,7 +495,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 stats, requestParameters, stmtParams, stmtRewriter);
                         break;
                     case DELETE:
-                        handleDeleteStatement(metadataProvider, stmt, hcc, stmtParams, stmtRewriter);
+                        handleDeleteStatement(metadataProvider, stmt, hcc, stmtParams, stmtRewriter, requestParameters);
                         break;
                     case CREATE_FEED:
                         handleCreateFeedStatement(metadataProvider, stmt);
@@ -3926,7 +3926,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCopyFromStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         CopyFromStatement copyStmt = (CopyFromStatement) stmt;
         String datasetName = copyStmt.getDatasetName();
         metadataProvider.validateDatabaseObjectName(copyStmt.getNamespace(), datasetName, copyStmt.getSourceLocation());
@@ -3993,7 +3993,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             numParticipatingNodes, numParticipatingPartitions));
                 }
                 jobId = JobUtils.runJob(hcc, spec, jobFlags, false);
-
+                final IRequestTracker requestTracker = appCtx.getRequestTracker();
+                final ClientRequest clientRequest =
+                        (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+                clientRequest.setJobId(jobId);
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
@@ -4158,6 +4161,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             participatingDatasetIds, numParticipatingNodes, numParticipatingPartitions));
                 }
                 jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
+                final IRequestTracker requestTracker = appCtx.getRequestTracker();
+                final ClientRequest clientRequest =
+                        (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+                clientRequest.setJobId(jobId);
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
@@ -4181,8 +4188,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public JobSpecification handleDeleteStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter)
-            throws Exception {
+            IHyracksClientConnection hcc, Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter,
+            IRequestParameters requestParameters) throws Exception {
         DeleteStatement stmtDelete = (DeleteStatement) stmt;
         String datasetName = stmtDelete.getDatasetName();
         metadataProvider.validateDatabaseObjectName(stmtDelete.getNamespace(), datasetName, stmt.getSourceLocation());
@@ -4223,6 +4230,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             participatingDatasetIds, numParticipatingNodes, numParticipatingPartitions));
                 }
                 jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
+                final IRequestTracker requestTracker = appCtx.getRequestTracker();
+                final ClientRequest clientRequest =
+                        (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
+                clientRequest.setJobId(jobId);
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
