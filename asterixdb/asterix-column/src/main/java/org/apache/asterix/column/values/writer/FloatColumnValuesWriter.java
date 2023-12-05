@@ -18,47 +18,41 @@
  */
 package org.apache.asterix.column.values.writer;
 
-import static org.apache.asterix.column.util.ColumnValuesUtil.getNormalizedTypeTag;
-
 import java.io.IOException;
 
-import org.apache.asterix.column.bytes.encoder.AbstractParquetValuesWriter;
-import org.apache.asterix.column.bytes.encoder.ParquetDeltaBinaryPackingValuesWriterForLong;
 import org.apache.asterix.column.bytes.encoder.ParquetPlainFixedLengthValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
-import org.apache.asterix.column.values.writer.filters.LongColumnFilterWriter;
+import org.apache.asterix.column.values.writer.filters.DoubleColumnFilterWriter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.primitive.DoublePointable;
+import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 import org.apache.parquet.bytes.BytesInput;
 
-final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
-    private final AbstractParquetValuesWriter longWriter;
-    private final ATypeTag typeTag;
+public final class FloatColumnValuesWriter extends AbstractColumnValuesWriter {
+    private final ParquetPlainFixedLengthValuesWriter floatWriter;
 
-    public LongColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
-            boolean collection, boolean filtered, ATypeTag typeTag) {
+    public FloatColumnValuesWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int columnIndex, int level,
+            boolean collection, boolean filtered) {
         super(columnIndex, level, collection, filtered);
-        longWriter = filtered ? new ParquetDeltaBinaryPackingValuesWriterForLong(multiPageOpRef)
-                : new ParquetPlainFixedLengthValuesWriter(multiPageOpRef);
-
-        this.typeTag = filtered ? getNormalizedTypeTag(typeTag) : typeTag;
+        floatWriter = new ParquetPlainFixedLengthValuesWriter(multiPageOpRef);
     }
 
     @Override
-    protected void addValue(ATypeTag tag, IValueReference value) {
-        final long normalizedInt = getValue(tag, value.getByteArray(), value.getStartOffset());
-        longWriter.writeLong(normalizedInt);
-        filterWriter.addLong(normalizedInt);
+    protected void addValue(ATypeTag tag, IValueReference value) throws IOException {
+        final float normalizedDouble = getValue(tag, value.getByteArray(), value.getStartOffset());
+        floatWriter.writeFloat(normalizedDouble);
+        filterWriter.addDouble(normalizedDouble);
     }
 
-    private long getValue(ATypeTag typeTag, byte[] byteArray, int offset) {
+    private float getValue(ATypeTag typeTag, byte[] byteArray, int offset) {
         switch (typeTag) {
             case TINYINT:
                 return byteArray[offset];
@@ -68,55 +62,59 @@ final class LongColumnValuesWriter extends AbstractColumnValuesWriter {
                 return IntegerPointable.getInteger(byteArray, offset);
             case BIGINT:
                 return LongPointable.getLong(byteArray, offset);
+            case FLOAT:
+                return FloatPointable.getFloat(byteArray, offset);
+            case DOUBLE:
+                return (float) DoublePointable.getDouble(byteArray, offset);
             default:
-                throw new IllegalAccessError(typeTag + " is not of type integer");
+                throw new IllegalAccessError(typeTag + "is not of floating type");
         }
     }
 
     @Override
     protected void resetValues() throws HyracksDataException {
-        longWriter.reset();
+        floatWriter.reset();
     }
 
     @Override
     protected BytesInput getBytes() throws IOException {
-        return longWriter.getBytes();
+        return floatWriter.getBytes();
     }
 
     @Override
     protected int getValuesEstimatedSize() {
-        return longWriter.getEstimatedSize();
+        return floatWriter.getEstimatedSize();
     }
 
     @Override
     protected int calculateEstimatedSize(int length) {
-        return longWriter.calculateEstimatedSize(length);
+        return floatWriter.calculateEstimatedSize(length);
     }
 
     @Override
     protected int getValuesAllocatedSize() {
-        return longWriter.getAllocatedSize();
+        return floatWriter.getAllocatedSize();
     }
 
     @Override
     protected void addValue(IColumnValuesReader reader) throws IOException {
-        long value = reader.getLong();
-        longWriter.writeLong(value);
-        filterWriter.addLong(value);
+        float value = reader.getFloat();
+        floatWriter.writeFloat(value);
+        filterWriter.addDouble(value);
     }
 
     @Override
     protected AbstractColumnFilterWriter createFilter() {
-        return new LongColumnFilterWriter();
+        return new DoubleColumnFilterWriter();
     }
 
     @Override
     protected void closeValues() {
-        longWriter.close();
+        floatWriter.close();
     }
 
     @Override
     protected ATypeTag getTypeTag() {
-        return typeTag;
+        return ATypeTag.FLOAT;
     }
 }

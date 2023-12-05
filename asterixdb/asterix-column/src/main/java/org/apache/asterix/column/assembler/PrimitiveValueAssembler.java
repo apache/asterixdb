@@ -50,6 +50,8 @@ final class PrimitiveValueAssembler extends AbstractPrimitiveValueAssembler {
             throw createException();
         } else if (reader.isNull() && (isDelegate() || reader.getLevel() + 1 == level)) {
             addNullToAncestor(reader.getLevel());
+        } else if (reader.isMissing() && isDelegate() && reader.getLevel() < level) {
+            addMissingToAncestor(reader.getLevel());
         } else if (reader.isValue()) {
             addValueToParent();
         }

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.om.lazy;
 
+import static org.apache.asterix.om.typecomputer.impl.TypeComputeUtils.getActualType;
+
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
@@ -121,13 +123,14 @@ public abstract class AbstractLazyNestedVisitablePointable extends AbstractLazyV
      * @return a visitable pointable that corresponds to {@code type}
      */
     static AbstractLazyVisitablePointable createVisitable(IAType type) {
-        ATypeTag typeTag = type.getTypeTag();
+        IAType actualType = getActualType(type);
+        ATypeTag typeTag = actualType.getTypeTag();
         switch (typeTag) {
             case OBJECT:
-                return new TypedRecordLazyVisitablePointable(false, (ARecordType) type);
+                return new TypedRecordLazyVisitablePointable(false, (ARecordType) actualType);
             case ARRAY:
             case MULTISET:
-                AbstractCollectionType listType = (AbstractCollectionType) type;
+                AbstractCollectionType listType = (AbstractCollectionType) actualType;
                 return NonTaggedFormatUtil.isFixedSizedCollection(listType.getItemType())
                         ? new FixedListLazyVisitablePointable(false, listType)
                         : new VariableListLazyVisitablePointable(false, listType);

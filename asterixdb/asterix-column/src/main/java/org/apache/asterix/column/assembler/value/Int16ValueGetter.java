@@ -21,16 +21,16 @@ package org.apache.asterix.column.assembler.value;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.primitive.ShortPointable;
 
-class LongValueGetter extends AbstractFixedLengthValueGetter {
-    LongValueGetter() {
-        super(ATypeTag.BIGINT, Long.BYTES);
+public class Int16ValueGetter extends AbstractFixedLengthValueGetter {
+    Int16ValueGetter() {
+        super(ATypeTag.SMALLINT, Short.BYTES);
     }
 
     @Override
     public IValueReference getValue(IColumnValuesReader reader) {
-        LongPointable.setLong(value.getByteArray(), value.getStartOffset() + 1, reader.getLong());
+        ShortPointable.setShort(value.getByteArray(), value.getStartOffset() + 1, (short) reader.getLong());
         return value;
     }
 }

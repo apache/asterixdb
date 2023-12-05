@@ -102,10 +102,21 @@ public class TypedRecordLazyVisitablePointable extends RecordLazyVisitablePointa
         if (isTaggedChild()) {
             visitablePointable = openVisitable;
         } else {
-            visitablePointable = closedVisitables[currentIndex];
+            visitablePointable = getClosedChildVisitable();
         }
         visitablePointable.set(getChildValue());
         return visitablePointable;
+    }
+
+    private AbstractLazyVisitablePointable getClosedChildVisitable() {
+        switch (getChildTypeTag()) {
+            case MISSING:
+                return MissingLazyVisitablePointable.INSTANCE;
+            case NULL:
+                return NullLazyVisitablePointable.INSTANCE;
+            default:
+                return closedVisitables[currentIndex];
+        }
     }
 
     private void setClosedValueInfo() throws HyracksDataException {
@@ -148,7 +159,7 @@ public class TypedRecordLazyVisitablePointable extends RecordLazyVisitablePointa
         int currentPointer = pointer + 4;
         if (NonTaggedFormatUtil.hasOptionalField(recordType)) {
             initClosedChildrenTags(data, currentPointer);
-            currentPointer =
+            currentPointer +=
                     (numberOfClosedChildren % 4 == 0 ? numberOfClosedChildren / 4 : numberOfClosedChildren / 4 + 1);
         }
         closedValuesOffset = currentPointer;

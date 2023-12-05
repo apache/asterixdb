@@ -18,12 +18,15 @@
  */
 package org.apache.asterix.column.metadata.schema.visitor;
 
+import static org.apache.asterix.om.typecomputer.impl.TypeComputeUtils.getActualType;
+
 import java.util.List;
 
 import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
-import org.apache.asterix.column.metadata.schema.collection.ArraySchemaNode;
+import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSchemaNode;
+import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -51,9 +54,10 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
         ObjectSchemaNode objectNode = (ObjectSchemaNode) arg;
         columnMetadata.enterLevel(objectNode);
         try {
-            if (processedPrimaryKeys < primaryKeys.size()) {
+            if (isProcessingPrimaryKeys()) {
                 processPrimaryKeys(recordType, objectNode);
             }
+
             for (int i = 0; i < recordType.getFieldTypes().length; i++) {
                 processField(i, recordType, objectNode);
             }
@@ -66,8 +70,8 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
 
     @Override
     public Void visit(AbstractCollectionType collectionType, AbstractSchemaNode arg) {
-        ArraySchemaNode collectionNode = (ArraySchemaNode) arg;
-        IAType itemType = collectionType.getItemType();
+        AbstractCollectionSchemaNode collectionNode = (AbstractCollectionSchemaNode) arg;
+        IAType itemType = getActualType(collectionType.getItemType());
         columnMetadata.enterLevel(collectionNode);
         try {
             AbstractSchemaNode itemNode = collectionNode.getOrCreateItem(itemType.getTypeTag(), columnMetadata);
@@ -86,7 +90,7 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
 
     @Override
     public Void visitFlat(IAType flatType, AbstractSchemaNode arg) {
-        if (processedPrimaryKeys < primaryKeys.size()) {
+        if (isProcessingPrimaryKeys()) {
             processedPrimaryKeys++;
         }
         return null;
@@ -97,9 +101,14 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
      * Handling primary keys and record fields conversion
      * **************************************************************
      */
+
+    private boolean isProcessingPrimaryKeys() {
+        return processedPrimaryKeys < primaryKeys.size();
+    }
+
     private void processPrimaryKeys(ARecordType recordType, ObjectSchemaNode objectNode) throws HyracksDataException {
         if (objectNode == columnMetadata.getRoot() || objectNode == columnMetadata.getMetaRoot()) {
-            while (processedPrimaryKeys < primaryKeys.size()) {
+            while (isProcessingPrimaryKeys()) {
                 currentPrimaryKeyPath = primaryKeys.get(processedPrimaryKeys);
                 currentPathIndex = 0;
                 processPrimaryKeyPath(recordType, objectNode);
@@ -113,6 +122,10 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
     private void processPrimaryKeyPath(ARecordType recordType, ObjectSchemaNode objectNode)
             throws HyracksDataException {
         int fieldIndex = recordType.getFieldIndex(currentPrimaryKeyPath.get(currentPathIndex));
+        if (fieldIndex < 0) {
+            currentPathIndex--;
+            return;
+        }
         processField(fieldIndex, recordType, objectNode);
     }
 
@@ -122,10 +135,22 @@ public class SchemaBuilderFromIATypeVisitor implements IATypeVisitor<Void, Abstr
         String[] fieldNames = recordType.getFieldNames();
         FieldNamesDictionary dictionary = columnMetadata.getFieldNamesDictionary();
 
+        if (isProcessingPrimaryKeys() && !fieldNames[fieldIndex].equals(currentPrimaryKeyPath.get(currentPathIndex))) {
+            // Still processing PKs, do not add any fields to the children until all PKs are processed
+            return;
+        }
+
         int fieldNameIndex = dictionary.getOrCreateFieldNameIndex(fieldNames[fieldIndex]);
+        AbstractSchemaNode childNode = objectNode.getChild(fieldNameIndex);
+        if (!childNode.isNested() && childNode != MissingFieldSchemaNode.INSTANCE) {
+            // Avoid processing the flat child twice
+            // Can happen if the child is a PK
+            return;
+        }
+
         IValueReference fieldName = dictionary.getFieldName(fieldNameIndex);
 
-        IAType fieldType = fieldTypes[fieldIndex];
+        IAType fieldType = getActualType(fieldTypes[fieldIndex]);
         AbstractSchemaNode child = objectNode.getOrCreateChild(fieldName, fieldType.getTypeTag(), columnMetadata);
 
         fieldType.accept(this, child);

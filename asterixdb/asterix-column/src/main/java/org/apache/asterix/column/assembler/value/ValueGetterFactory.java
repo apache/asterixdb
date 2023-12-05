@@ -35,8 +35,16 @@ public class ValueGetterFactory implements IValueGetterFactory {
                 return MissingValueGetter.INSTANCE;
             case BOOLEAN:
                 return new BooleanValueGetter();
+            case TINYINT:
+                return new Int8ValueGetter();
+            case SMALLINT:
+                return new Int16ValueGetter();
+            case INTEGER:
+                return new Int32ValueGetter();
             case BIGINT:
-                return new LongValueGetter();
+                return new Int64ValueGetter();
+            case FLOAT:
+                return new FloatValueGetter();
             case DOUBLE:
                 return new DoubleValueGetter();
             case STRING:

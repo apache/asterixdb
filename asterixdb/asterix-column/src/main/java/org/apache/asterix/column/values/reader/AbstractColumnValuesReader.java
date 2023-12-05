@@ -147,6 +147,11 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
     }
 
     @Override
+    public float getFloat() {
+        return valueReader.getFloat();
+    }
+
+    @Override
     public final double getDouble() {
         return valueReader.getDouble();
     }

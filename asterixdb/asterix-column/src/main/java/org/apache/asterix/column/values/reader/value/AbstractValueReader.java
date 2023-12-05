@@ -41,6 +41,10 @@ public abstract class AbstractValueReader implements Comparable<AbstractValueRea
         throw new UnsupportedOperationException(getClass().getName());
     }
 
+    public float getFloat() {
+        throw new UnsupportedOperationException(getClass().getName());
+    }
+
     public double getDouble() {
         throw new UnsupportedOperationException(getClass().getName());
     }

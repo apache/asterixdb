@@ -110,6 +110,11 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
             }
         }
 
+        if (pointable.getNumberOfChildren() == 0) {
+            // Set as empty object
+            objectNode.setEmptyObject(columnMetadata);
+        }
+
         columnMetadata.exitNode(arg);
         currentParent = previousParent;
         return null;

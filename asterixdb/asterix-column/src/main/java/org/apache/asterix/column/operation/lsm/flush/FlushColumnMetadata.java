@@ -339,9 +339,10 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         AbstractSchemaNode currentChild = child;
         ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
         if (currentChild == null || normalizedTypeTag != ATypeTag.MISSING && normalizedTypeTag != ATypeTag.NULL
-                && currentChild.getTypeTag() != ATypeTag.UNION && currentChild.getTypeTag() != normalizedTypeTag) {
+                && currentChild.getTypeTag() != ATypeTag.UNION
+                && getNormalizedTypeTag(currentChild.getTypeTag()) != normalizedTypeTag) {
             //Create a new child or union type if required type is different from the current child type
-            currentChild = createChild(child, normalizedTypeTag);
+            currentChild = createChild(child, childTypeTag);
             //Flag that the schema has changed
             changed = true;
         }
@@ -422,6 +423,23 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         }
     }
 
+    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node)
+            throws HyracksDataException {
+        //Flush all definition levels from parent to the current node
+        flushDefinitionLevels(level, parent, node);
+        //Add null value (+2) to say that both the parent and the child are present
+        definitionLevels.get(node).add(ColumnValuesUtil.getNullMask(level + 2) | level);
+        node.incrementCounter();
+    }
+
+    public void close() {
+        //Dereference multiPageOp
+        multiPageOpRef.setValue(null);
+        for (int i = 0; i < columnWriters.size(); i++) {
+            columnWriters.get(i).close();
+        }
+    }
+
     private void flushDefinitionLevels(int parentMask, int childMask, RunLengthIntArray parentDefLevels,
             AbstractSchemaNode node) throws HyracksDataException {
         int startIndex = node.getCounter();
@@ -480,9 +498,10 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         }
     }
 
-    private AbstractSchemaNode createChild(AbstractSchemaNode child, ATypeTag normalizedTypeTag)
+    private AbstractSchemaNode createChild(AbstractSchemaNode child, ATypeTag childTypeTag)
             throws HyracksDataException {
         AbstractSchemaNode createdChild;
+        ATypeTag normalizedTypeTag = getNormalizedTypeTag(childTypeTag);
         if (child != null) {
             if (child.getTypeTag() == ATypeTag.NULL) {
                 //The previous child was a NULL. The new child needs to inherit the NULL definition levels
@@ -498,13 +517,13 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
                 createdChild = addDefinitionLevelsAndGet(new UnionSchemaNode(child, createChild(normalizedTypeTag)));
             }
         } else {
-            createdChild = createChild(normalizedTypeTag);
+            createdChild = createChild(childTypeTag);
         }
         return createdChild;
     }
 
-    private AbstractSchemaNode createChild(ATypeTag normalizedTypeTag) throws HyracksDataException {
-        switch (normalizedTypeTag) {
+    private AbstractSchemaNode createChild(ATypeTag childTypeTag) throws HyracksDataException {
+        switch (childTypeTag) {
             case OBJECT:
                 return addDefinitionLevelsAndGet(new ObjectSchemaNode());
             case ARRAY:
@@ -514,12 +533,17 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
             case NULL:
             case MISSING:
             case BOOLEAN:
+            case FLOAT:
             case DOUBLE:
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
             case BIGINT:
             case STRING:
             case UUID:
                 int columnIndex = nullWriterIndexes.isEmpty() ? columnWriters.size() : nullWriterIndexes.removeInt(0);
                 boolean primaryKey = columnIndex < getNumberOfPrimaryKeys();
+                ATypeTag normalizedTypeTag = primaryKey ? childTypeTag : getNormalizedTypeTag(childTypeTag);
                 boolean writeAlways = primaryKey || repeated > 0;
                 boolean filtered = !primaryKey;
                 int maxLevel = primaryKey ? 1 : level + 1;
@@ -531,7 +555,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
                 addColumn(columnIndex, writer);
                 return new PrimitiveSchemaNode(columnIndex, normalizedTypeTag, primaryKey);
             default:
-                throw new IllegalStateException("Unsupported type " + normalizedTypeTag);
+                throw new IllegalStateException("Unsupported type " + childTypeTag);
 
         }
     }
@@ -563,22 +587,5 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
             LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.META_RECORD_SCHEMA,
                     metaRecordSchema);
         }
-    }
-
-    public void close() {
-        //Dereference multiPageOp
-        multiPageOpRef.setValue(null);
-        for (int i = 0; i < columnWriters.size(); i++) {
-            columnWriters.get(i).close();
-        }
-    }
-
-    public void addNestedNull(AbstractSchemaNestedNode parent, AbstractSchemaNestedNode node)
-            throws HyracksDataException {
-        //Flush all definition levels from parent to the current node
-        flushDefinitionLevels(level, parent, node);
-        //Add null value (+2) to say that both the parent and the child are present
-        definitionLevels.get(node).add(ColumnValuesUtil.getNullMask(level + 2) | level);
-        node.incrementCounter();
     }
 }

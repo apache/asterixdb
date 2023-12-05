@@ -32,6 +32,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringWriter;
@@ -42,6 +43,11 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class FieldNamesDictionary {
+    /**
+     * Dummy field name used to add a column when encountering empty object
+     */
+    public static final IValueReference DUMMY_FIELD_NAME;
+    public static final int DUMMY_FIELD_NAME_INDEX = -1;
     //For both declared and inferred fields
     private final List<IValueReference> fieldNames;
     private final Object2IntMap<String> declaredFieldNamesToIndexMap;
@@ -54,6 +60,12 @@ public class FieldNamesDictionary {
 
     //For lookups
     private final ArrayBackedValueStorage lookupStorage;
+
+    static {
+        VoidPointable dummy = new VoidPointable();
+        dummy.set(new byte[0], 0, 0);
+        DUMMY_FIELD_NAME = dummy;
+    }
 
     public FieldNamesDictionary() {
         this(new ArrayList<>(), new Object2IntOpenHashMap<>(), new Int2IntOpenHashMap());
@@ -78,6 +90,10 @@ public class FieldNamesDictionary {
 
     //TODO solve collision (they're so rare that I haven't seen any)
     public int getOrCreateFieldNameIndex(IValueReference fieldName) throws HyracksDataException {
+        if (fieldName == DUMMY_FIELD_NAME) {
+            return DUMMY_FIELD_NAME_INDEX;
+        }
+
         int hash = getHash(fieldName);
         if (!hashToFieldNameIndexMap.containsKey(hash)) {
             int index = addFieldName(creatFieldName(fieldName), hash);
@@ -137,6 +153,9 @@ public class FieldNamesDictionary {
     }
 
     public IValueReference getFieldName(int index) {
+        if (index == DUMMY_FIELD_NAME_INDEX) {
+            return DUMMY_FIELD_NAME;
+        }
         return fieldNames.get(index);
     }
 

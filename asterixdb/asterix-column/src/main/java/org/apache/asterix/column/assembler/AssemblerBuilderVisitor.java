@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.assembler.value.IValueGetterFactory;
+import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -95,16 +96,18 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
 
         BitSet declaredFields = handleDeclaredFields(objectNode, info, objectAssembler);
         IntList childrenFieldNameIndexes = objectNode.getChildrenFieldNameIndexes();
-        if (declaredFields.length() < childrenFieldNameIndexes.size()) {
-            //Open fields are requested
+        int numberOfAddedChildren = declaredFields.cardinality();
+        if (numberOfAddedChildren < childrenFieldNameIndexes.size()) {
+            // Now handle any open fields
             for (int i = 0; i < childrenFieldNameIndexes.size(); i++) {
-                int fieldNameIndex = childrenFieldNameIndexes.getInt(i);
-                AbstractSchemaNode childNode = objectNode.getChild(fieldNameIndex);
-                if (childNode.getTypeTag() != ATypeTag.MISSING && !declaredFields.get(fieldNameIndex)) {
+                int fieldNameIdx = childrenFieldNameIndexes.getInt(i);
+                AbstractSchemaNode childNode = objectNode.getChild(fieldNameIdx);
+                if (fieldNameIdx == FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX || !declaredFields.get(fieldNameIdx)) {
+                    numberOfAddedChildren++;
                     IAType childType = getChildType(childNode, BuiltinType.ANY);
-                    IValueReference fieldName = columnMetadata.getFieldNamesDictionary().getFieldName(fieldNameIndex);
+                    IValueReference fieldName = columnMetadata.getFieldNamesDictionary().getFieldName(fieldNameIdx);
                     //The last child should be a delegate
-                    boolean delegate = i == childrenFieldNameIndexes.size() - 1;
+                    boolean delegate = numberOfAddedChildren == childrenFieldNameIndexes.size();
                     AssemblerInfo childInfo = new AssemblerInfo(childType, objectAssembler, delegate, fieldName);
                     childNode.accept(this, childInfo);
                 }
@@ -125,17 +128,18 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         String[] declaredFieldNames = declaredType.getFieldNames();
         IAType[] declaredFieldTypes = declaredType.getFieldTypes();
 
-        // The last child of a declared field can be a delegate iff all requested fields are declared
-        boolean containsDelegate = objectNode.getChildren().size() == declaredFieldTypes.length;
+        int addedChildren = 0;
+        int requestedChildren = objectNode.getChildren().size();
         for (int i = 0; i < declaredFieldTypes.length; i++) {
             String fieldName = declaredFieldNames[i];
             int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getFieldNameIndex(fieldName);
             //Check if the declared field was requested
             AbstractSchemaNode childNode = objectNode.getChild(fieldNameIndex);
             if (childNode.getTypeTag() != ATypeTag.MISSING) {
+                addedChildren++;
                 IAType childType = getChildType(childNode, declaredFieldTypes[i]);
                 processedFields.set(fieldNameIndex);
-                boolean delegate = containsDelegate && i == declaredFieldTypes.length - 1;
+                boolean delegate = addedChildren == requestedChildren;
                 AssemblerInfo childInfo = new AssemblerInfo(childType, objectAssembler, delegate, i);
                 childNode.accept(this, childInfo);
             }
@@ -204,7 +208,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
     @Override
     public AbstractValueAssembler visit(PrimitiveSchemaNode primitiveNode, AssemblerInfo info) {
         AbstractPrimitiveValueAssembler assembler;
-        IValueGetter valueGetter = valueGetterFactory.createValueGetter(primitiveNode.getTypeTag());
+        IValueGetter valueGetter = valueGetterFactory.createValueGetter(getTypeTag(info, primitiveNode));
         if (!delimiters.isEmpty()) {
             IColumnValuesReader reader = readerFactory.createValueReader(primitiveNode.getTypeTag(),
                     primitiveNode.getColumnIndex(), level, getDelimiters());
@@ -225,6 +229,17 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
         }
         valueAssemblers.add(assembler);
         return assembler;
+    }
+
+    private ATypeTag getTypeTag(AssemblerInfo info, PrimitiveSchemaNode primitiveNode) {
+        IAType declaredType = info.getDeclaredType();
+
+        if (declaredType.getTypeTag() == ATypeTag.ANY) {
+            return primitiveNode.getTypeTag();
+        }
+
+        // Declared types are not (and cannot be) normalized
+        return declaredType.getTypeTag();
     }
 
     private int[] getDelimiters() {

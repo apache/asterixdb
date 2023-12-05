@@ -45,7 +45,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
  */
 public class ColumnSupportedTypesValidator implements IATypeVisitor<Void, Set<ATypeTag>> {
     private static final Set<ATypeTag> SUPPORTED_PRIMITIVE_TYPES =
-            Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.DOUBLE, ATypeTag.STRING, ATypeTag.UUID);
+            Set.of(ATypeTag.BOOLEAN, ATypeTag.BIGINT, ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING, ATypeTag.UUID);
     private static final String SUPPORTED_TYPES_STRING =
             SUPPORTED_PRIMITIVE_TYPES.stream().sorted().collect(Collectors.toList()).toString();
     private static final ColumnSupportedTypesValidator VALIDATOR = new ColumnSupportedTypesValidator();

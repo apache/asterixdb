@@ -42,6 +42,7 @@ import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
@@ -271,6 +272,13 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
             final boolean isExpanded = serRecord[pointer] == 1;
             //if isExpanded, advance to numberOfSchemaFields
             pointer += 1 + (isExpanded ? 4 : 0);
+        }
+
+        // get number of the actual schema fields
+        int numberOfSchemaFields = IntegerPointable.getInteger(serRecord, pointer);
+        if (numberOfSchemaFields == 0) {
+            // This could happen when columnar datasets assemble empty records (result of filtered mega leaf nodes)
+            return -1;
         }
 
         //advance to nullBitmap

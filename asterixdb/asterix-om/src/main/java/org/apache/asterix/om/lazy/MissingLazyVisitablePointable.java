@@ -16,36 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values.reader.value.key;
+package org.apache.asterix.om.lazy;
 
-import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.data.std.primitive.LongPointable;
 
-public final class LongKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
-    private final ATypeTag typeTag;
+class MissingLazyVisitablePointable extends FlatLazyVisitablePointable {
+    public static final FlatLazyVisitablePointable INSTANCE = new MissingLazyVisitablePointable();
 
-    public LongKeyValueReader(ATypeTag typeTag) {
-        this.typeTag = typeTag;
-    }
-
-    @Override
-    public ATypeTag getTypeTag() {
-        return typeTag;
-    }
-
-    @Override
-    protected int getValueLength() {
-        return Long.BYTES;
-    }
-
-    @Override
-    public long getLong() {
-        return LongPointable.getLong(value.getByteArray(), value.getStartOffset());
-    }
-
-    @Override
-    public int compareTo(AbstractValueReader o) {
-        return Long.compare(getLong(), o.getLong());
+    public MissingLazyVisitablePointable() {
+        super(false, ATypeTag.MISSING);
     }
 }

@@ -40,8 +40,14 @@ public class ColumnValuesWriterFactory implements IColumnValuesWriterFactory {
                 return new NullMissingColumnValuesWriter(columnIndex, maxLevel, writeAlways, filtered);
             case BOOLEAN:
                 return new BooleanColumnValuesWriter(columnIndex, maxLevel, writeAlways, filtered);
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
             case BIGINT:
-                return new LongColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
+                return new LongColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered,
+                        typeTag);
+            case FLOAT:
+                return new FloatColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
             case DOUBLE:
                 return new DoubleColumnValuesWriter(multiPageOpRef, columnIndex, maxLevel, writeAlways, filtered);
             case STRING:

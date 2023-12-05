@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.assembler;
 
+import static org.apache.asterix.om.typecomputer.impl.TypeComputeUtils.getActualType;
+
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -60,7 +62,7 @@ public class AssemblerInfo {
     public AssemblerInfo(IAType declaredType, AbstractNestedValueAssembler parent, boolean delegate,
             IValueReference fieldName, int fieldIndex, boolean fieldNameTagged) {
         this.parent = parent;
-        this.declaredType = declaredType;
+        this.declaredType = getActualType(declaredType);
         this.delegate = delegate;
         this.fieldName = fieldNameTagged ? fieldName : createTaggedFieldName(fieldName);
         this.fieldIndex = fieldIndex;

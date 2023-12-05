@@ -16,36 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values.reader.value.key;
+package org.apache.asterix.column.assembler.value;
 
-import org.apache.asterix.column.values.reader.value.AbstractValueReader;
+import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
-public final class LongKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
-    private final ATypeTag typeTag;
-
-    public LongKeyValueReader(ATypeTag typeTag) {
-        this.typeTag = typeTag;
+class Int64ValueGetter extends AbstractFixedLengthValueGetter {
+    Int64ValueGetter() {
+        super(ATypeTag.BIGINT, Long.BYTES);
     }
 
     @Override
-    public ATypeTag getTypeTag() {
-        return typeTag;
-    }
-
-    @Override
-    protected int getValueLength() {
-        return Long.BYTES;
-    }
-
-    @Override
-    public long getLong() {
-        return LongPointable.getLong(value.getByteArray(), value.getStartOffset());
-    }
-
-    @Override
-    public int compareTo(AbstractValueReader o) {
-        return Long.compare(getLong(), o.getLong());
+    public IValueReference getValue(IColumnValuesReader reader) {
+        LongPointable.setLong(value.getByteArray(), value.getStartOffset() + 1, reader.getLong());
+        return value;
     }
 }

@@ -122,15 +122,18 @@ public final class UnionSchemaNode extends AbstractSchemaNestedNode {
     }
 
     /**
-     * This would return any numeric node
+     * This would return any numeric node that has a different typeTag than the 'excludeTypeTag'
      *
+     * @param excludeTypeTag exclude child with the provided {@link ATypeTag}
      * @return first numeric node or missing node
      * @see SchemaClipperVisitor
      */
-    public AbstractSchemaNode getNumericChildOrMissing() {
-        for (AbstractSchemaNode node : children.values()) {
-            if (ATypeHierarchy.getTypeDomain(node.getTypeTag()) == ATypeHierarchy.Domain.NUMERIC) {
-                return node;
+    public AbstractSchemaNode getNumericChildOrMissing(ATypeTag excludeTypeTag) {
+        for (AbstractSchemaNode child : children.values()) {
+            ATypeTag childTypeTag = child.getTypeTag();
+            boolean numeric = ATypeHierarchy.getTypeDomain(childTypeTag) == ATypeHierarchy.Domain.NUMERIC;
+            if (numeric && childTypeTag != excludeTypeTag) {
+                return child;
             }
         }
         return MissingFieldSchemaNode.INSTANCE;

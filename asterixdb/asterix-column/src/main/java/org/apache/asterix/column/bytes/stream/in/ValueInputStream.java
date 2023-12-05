@@ -25,6 +25,7 @@ import java.io.InputStream;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.DoublePointable;
+import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 import org.apache.parquet.bytes.LittleEndianDataInputStream;
@@ -57,6 +58,11 @@ public final class ValueInputStream extends InputStream {
     public long readLong() throws IOException {
         readFully(readBuffer, Long.BYTES);
         return LongPointable.getLong(readBuffer, 0);
+    }
+
+    public float readFloat() throws IOException {
+        readFully(readBuffer, Float.BYTES);
+        return FloatPointable.getFloat(readBuffer, 0);
     }
 
     public double readDouble() throws IOException {

@@ -77,7 +77,11 @@ public abstract class AbstractSchemaNode {
             case NULL:
             case MISSING:
             case BOOLEAN:
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
             case BIGINT:
+            case FLOAT:
             case DOUBLE:
             case STRING:
             case UUID:

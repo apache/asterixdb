@@ -20,32 +20,26 @@ package org.apache.asterix.column.values.reader.value.key;
 
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.data.std.primitive.LongPointable;
+import org.apache.hyracks.data.std.primitive.FloatPointable;
 
-public final class LongKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
-    private final ATypeTag typeTag;
-
-    public LongKeyValueReader(ATypeTag typeTag) {
-        this.typeTag = typeTag;
-    }
-
+public final class FloatKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
     @Override
     public ATypeTag getTypeTag() {
-        return typeTag;
+        return ATypeTag.FLOAT;
     }
 
     @Override
     protected int getValueLength() {
-        return Long.BYTES;
+        return Float.BYTES;
     }
 
     @Override
-    public long getLong() {
-        return LongPointable.getLong(value.getByteArray(), value.getStartOffset());
+    public double getDouble() {
+        return FloatPointable.getFloat(value.getByteArray(), value.getStartOffset());
     }
 
     @Override
     public int compareTo(AbstractValueReader o) {
-        return Long.compare(getLong(), o.getLong());
+        return Float.compare(getFloat(), o.getFloat());
     }
 }

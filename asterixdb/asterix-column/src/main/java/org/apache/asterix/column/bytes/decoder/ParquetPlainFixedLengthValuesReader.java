@@ -68,6 +68,15 @@ public class ParquetPlainFixedLengthValuesReader extends AbstractParquetValuesRe
     }
 
     @Override
+    public float readFloat() {
+        try {
+            return in.readFloat();
+        } catch (IOException e) {
+            throw new ParquetDecodingException("could not read double", e);
+        }
+    }
+
+    @Override
     public double readDouble() {
         try {
             return in.readDouble();

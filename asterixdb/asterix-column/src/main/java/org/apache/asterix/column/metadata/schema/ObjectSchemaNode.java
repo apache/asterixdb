@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
@@ -41,14 +42,17 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntUnaryOperator;
 
 public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
     private final Int2IntMap fieldNameIndexToChildIndexMap;
     private final List<AbstractSchemaNode> children;
+    private IntUnaryOperator nextIndex;
 
     public ObjectSchemaNode() {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
         children = new ArrayList<>();
+        nextIndex = this::nextIndex;
     }
 
     ObjectSchemaNode(DataInput input, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels)
@@ -60,6 +64,11 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
         deserializeFieldNameIndexToChildIndex(input, fieldNameIndexToChildIndexMap, numberOfChildren);
+        if (fieldNameIndexToChildIndexMap.containsKey(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX)) {
+            nextIndex = this::emptyColumnIndex;
+        } else {
+            nextIndex = this::nextIndex;
+        }
 
         children = new ArrayList<>();
         deserializeChildren(input, children, numberOfChildren, definitionLevels);
@@ -69,7 +78,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
             FlushColumnMetadata columnMetadata) throws HyracksDataException {
         int numberOfChildren = children.size();
         int fieldNameIndex = columnMetadata.getFieldNamesDictionary().getOrCreateFieldNameIndex(fieldName);
-        int childIndex = fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, numberOfChildren);
+        int childIndex = fieldNameIndexToChildIndexMap.getOrDefault(fieldNameIndex, nextIndex.apply(fieldNameIndex));
         AbstractSchemaNode currentChild = childIndex == numberOfChildren ? null : children.get(childIndex);
         AbstractSchemaNode newChild = columnMetadata.getOrCreateChild(currentChild, childTypeTag);
         if (currentChild == null) {
@@ -88,16 +97,20 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         children.add(child);
     }
 
+    public void setEmptyObject(FlushColumnMetadata columnMetadata) throws HyracksDataException {
+        if (!children.isEmpty()) {
+            return;
+        }
+        AbstractSchemaNode emptyChild = columnMetadata.getOrCreateChild(null, ATypeTag.MISSING);
+        addChild(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX, emptyChild);
+        nextIndex = this::emptyColumnIndex;
+    }
+
     public AbstractSchemaNode getChild(int fieldNameIndex) {
         if (fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex)) {
             return children.get(fieldNameIndexToChildIndexMap.get(fieldNameIndex));
         }
         return MissingFieldSchemaNode.INSTANCE;
-    }
-
-    public void removeChild(int fieldNameIndex) {
-        int childIndex = fieldNameIndexToChildIndexMap.remove(fieldNameIndex);
-        children.remove(childIndex);
     }
 
     public List<AbstractSchemaNode> getChildren() {
@@ -110,10 +123,6 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
     public IntList getChildrenFieldNameIndexes() {
         return IntImmutableList.toList(fieldNameIndexToChildIndexMap.int2IntEntrySet().stream()
                 .sorted(Comparator.comparingInt(Entry::getIntValue)).mapToInt(Entry::getIntKey));
-    }
-
-    public boolean containsField(int fieldNameIndex) {
-        return fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex);
     }
 
     @Override
@@ -141,7 +150,8 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         output.write(ATypeTag.OBJECT.serialize());
         output.writeInt(children.size());
         for (Int2IntMap.Entry fieldNameIndexChildIndex : fieldNameIndexToChildIndexMap.int2IntEntrySet()) {
-            output.writeInt(fieldNameIndexChildIndex.getIntKey());
+            int fieldNameIndex = fieldNameIndexChildIndex.getIntKey();
+            output.writeInt(fieldNameIndex);
             output.writeInt(fieldNameIndexChildIndex.getIntValue());
         }
         pathInfoSerializer.enter(this);
@@ -178,5 +188,16 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
         for (int i = 0; i < numberOfChildren; i++) {
             children.add(AbstractSchemaNode.deserialize(input, definitionLevels));
         }
+    }
+
+    private int nextIndex(int fieldNameIndex) {
+        return children.size();
+    }
+
+    private int emptyColumnIndex(int fieldNameIndex) {
+        nextIndex = this::nextIndex;
+        fieldNameIndexToChildIndexMap.remove(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX);
+        fieldNameIndexToChildIndexMap.put(fieldNameIndex, 0);
+        return 0;
     }
 }

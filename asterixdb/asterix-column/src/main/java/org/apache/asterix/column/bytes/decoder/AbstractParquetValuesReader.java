@@ -40,6 +40,10 @@ public abstract class AbstractParquetValuesReader {
         throw new UnsupportedOperationException(getClass().getName());
     }
 
+    public float readFloat() {
+        throw new UnsupportedOperationException(getClass().getName());
+    }
+
     public double readDouble() {
         throw new UnsupportedOperationException(getClass().getName());
     }

@@ -108,6 +108,8 @@ public interface IColumnValuesReader extends Comparable<IColumnValuesReader> {
 
     long getLong();
 
+    float getFloat();
+
     double getDouble();
 
     boolean getBoolean();

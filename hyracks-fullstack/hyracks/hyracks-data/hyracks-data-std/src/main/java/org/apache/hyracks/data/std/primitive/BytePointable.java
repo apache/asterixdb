@@ -66,7 +66,7 @@ public final class BytePointable extends AbstractPointable implements IHashable,
         return bytes[start];
     }
 
-    private static void setByte(byte[] bytes, int start, byte value) {
+    public static void setByte(byte[] bytes, int start, byte value) {
         bytes[start] = value;
     }
 

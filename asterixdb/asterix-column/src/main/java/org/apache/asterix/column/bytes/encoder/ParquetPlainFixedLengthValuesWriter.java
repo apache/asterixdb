@@ -62,6 +62,15 @@ public class ParquetPlainFixedLengthValuesWriter extends AbstractParquetValuesWr
     }
 
     @Override
+    public void writeFloat(float v) {
+        try {
+            out.writeFloat(v);
+        } catch (IOException e) {
+            throw new ParquetEncodingException("could not write int", e);
+        }
+    }
+
+    @Override
     public final void writeDouble(double v) {
         try {
             out.writeDouble(v);

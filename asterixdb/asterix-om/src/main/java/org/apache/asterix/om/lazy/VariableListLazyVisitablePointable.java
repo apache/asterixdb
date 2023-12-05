@@ -38,6 +38,7 @@ public class VariableListLazyVisitablePointable extends AbstractListLazyVisitabl
         itemTag = listType.getItemType().getTypeTag();
         //-1 if not tagged. The offsets were calculated as if the tag exists.
         actualChildOffset = isTagged() ? 0 : -1;
+        currentChildTypeTag = itemTag.serialize();
     }
 
     @Override

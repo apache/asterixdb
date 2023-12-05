@@ -54,8 +54,6 @@ public class ColumnValuesUtil {
             case SMALLINT:
             case INTEGER:
                 return ATypeTag.BIGINT;
-            case FLOAT:
-                return ATypeTag.DOUBLE;
             default:
                 return typeTag;
         }

@@ -46,7 +46,7 @@ public class FixedListLazyVisitablePointable extends AbstractListLazyVisitablePo
     @Override
     public void nextChild() {
         byte[] data = getByteArray();
-        int itemOffset = getStartOffset() + itemsOffset + currentIndex * itemSize;
+        int itemOffset = itemsOffset + currentIndex * itemSize;
         currentValue.set(data, itemOffset, itemSize);
         currentIndex++;
     }

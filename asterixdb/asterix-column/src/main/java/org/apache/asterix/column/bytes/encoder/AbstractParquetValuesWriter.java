@@ -85,6 +85,13 @@ public abstract class AbstractParquetValuesWriter {
     /**
      * @param v the value to encode
      */
+    public void writeFloat(float v) {
+        throw new UnsupportedOperationException(getClass().getName());
+    }
+
+    /**
+     * @param v the value to encode
+     */
     public void writeLong(long v) {
         throw new UnsupportedOperationException(getClass().getName());
     }

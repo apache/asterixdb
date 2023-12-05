@@ -26,11 +26,13 @@ import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.value.AbstractValueReader;
 import org.apache.asterix.column.values.reader.value.BooleanValueReader;
 import org.apache.asterix.column.values.reader.value.DoubleValueReader;
+import org.apache.asterix.column.values.reader.value.FloatValueReader;
 import org.apache.asterix.column.values.reader.value.LongValueReader;
 import org.apache.asterix.column.values.reader.value.NoOpValueReader;
 import org.apache.asterix.column.values.reader.value.StringValueReader;
 import org.apache.asterix.column.values.reader.value.UUIDValueReader;
 import org.apache.asterix.column.values.reader.value.key.DoubleKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.FloatKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.LongKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.StringKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.UUIDKeyValueReader;
@@ -71,8 +73,13 @@ public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
                 return NoOpValueReader.INSTANCE;
             case BOOLEAN:
                 return new BooleanValueReader();
+            case TINYINT:
+            case SMALLINT:
+            case INTEGER:
             case BIGINT:
-                return primaryKey ? new LongKeyValueReader() : new LongValueReader();
+                return primaryKey ? new LongKeyValueReader(typeTag) : new LongValueReader();
+            case FLOAT:
+                return primaryKey ? new FloatKeyValueReader() : new FloatValueReader();
             case DOUBLE:
                 return primaryKey ? new DoubleKeyValueReader() : new DoubleValueReader();
             case STRING:

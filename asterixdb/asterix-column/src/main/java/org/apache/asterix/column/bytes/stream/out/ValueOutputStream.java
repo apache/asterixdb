@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.hyracks.data.std.primitive.DoublePointable;
+import org.apache.hyracks.data.std.primitive.FloatPointable;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.data.std.primitive.LongPointable;
 
@@ -49,9 +50,13 @@ public final class ValueOutputStream extends OutputStream {
         out.write(writeBuffer, 0, Long.BYTES);
     }
 
+    public void writeFloat(float value) throws IOException {
+        FloatPointable.setFloat(writeBuffer, 0, value);
+        out.write(writeBuffer, 0, Float.BYTES);
+    }
+
     public void writeDouble(double value) throws IOException {
         DoublePointable.setDouble(writeBuffer, 0, value);
         out.write(writeBuffer, 0, Double.BYTES);
     }
-
 }

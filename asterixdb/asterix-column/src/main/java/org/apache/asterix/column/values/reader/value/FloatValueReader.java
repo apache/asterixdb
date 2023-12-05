@@ -16,36 +16,44 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.values.reader.value.key;
+package org.apache.asterix.column.values.reader.value;
 
-import org.apache.asterix.column.values.reader.value.AbstractValueReader;
+import java.io.IOException;
+
+import org.apache.asterix.column.bytes.decoder.ParquetPlainFixedLengthValuesReader;
+import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.hyracks.data.std.primitive.LongPointable;
 
-public final class LongKeyValueReader extends AbstractFixedLengthColumnKeyValueReader {
-    private final ATypeTag typeTag;
+public final class FloatValueReader extends AbstractValueReader {
+    private final ParquetPlainFixedLengthValuesReader floatReader;
+    private float nextValue;
 
-    public LongKeyValueReader(ATypeTag typeTag) {
-        this.typeTag = typeTag;
+    public FloatValueReader() {
+        floatReader = new ParquetPlainFixedLengthValuesReader(Float.BYTES);
+    }
+
+    @Override
+    public void init(AbstractBytesInputStream in, int tupleCount) throws IOException {
+        floatReader.initFromPage(in);
+    }
+
+    @Override
+    public void nextValue() {
+        nextValue = floatReader.readFloat();
+    }
+
+    @Override
+    public float getFloat() {
+        return nextValue;
     }
 
     @Override
     public ATypeTag getTypeTag() {
-        return typeTag;
-    }
-
-    @Override
-    protected int getValueLength() {
-        return Long.BYTES;
-    }
-
-    @Override
-    public long getLong() {
-        return LongPointable.getLong(value.getByteArray(), value.getStartOffset());
+        return ATypeTag.FLOAT;
     }
 
     @Override
     public int compareTo(AbstractValueReader o) {
-        return Long.compare(getLong(), o.getLong());
+        return Float.compare(nextValue, o.getFloat());
     }
 }

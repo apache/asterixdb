@@ -22,7 +22,7 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-abstract class AbstractNestedValueAssembler extends AbstractValueAssembler {
+public abstract class AbstractNestedValueAssembler extends AbstractValueAssembler {
     protected final ArrayBackedValueStorage storage;
 
     AbstractNestedValueAssembler(int level, AssemblerInfo info) {
