@@ -110,6 +110,10 @@ public final class ColumnAssembler {
     }
 
     public int skip(int count) throws HyracksDataException {
+        if (numberOfTuples == 0) {
+            // Avoid advancing tupleIndex and numberOfSkips if a mega leaf node is filtered out
+            return 0;
+        }
         numberOfSkips += count;
         tupleIndex += count;
         for (int i = 0; i < assemblers.length; i++) {

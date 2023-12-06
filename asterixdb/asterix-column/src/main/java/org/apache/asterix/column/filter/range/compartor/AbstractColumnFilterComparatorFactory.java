@@ -25,6 +25,7 @@ import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessorFactory;
+import org.apache.asterix.column.filter.range.accessor.NoOpColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -48,13 +49,20 @@ abstract class AbstractColumnFilterComparatorFactory implements IColumnRangeFilt
 
         ATypeTag leftTypeTag = leftAccessor.getTypeTag();
         ATypeTag rightTypeTag = rightAccessor.getTypeTag();
-        if (leftTypeTag != rightTypeTag && ATypeHierarchy.isCompatible(leftTypeTag, rightTypeTag)) {
+        if (isNoOp(leftAccessor, rightAccessor)
+                || leftTypeTag != rightTypeTag && ATypeHierarchy.isCompatible(leftTypeTag, rightTypeTag)) {
             // Cannot compare comparable values with different types. Bail out.
             return TrueColumnFilterEvaluator.INSTANCE;
         } else if (cannotCompare(leftTypeTag, rightTypeTag)) {
             return FalseColumnFilterEvaluator.INSTANCE;
         }
         return createComparator(leftAccessor, rightAccessor);
+    }
+
+    private boolean isNoOp(IColumnRangeFilterValueAccessor leftAccessor,
+            IColumnRangeFilterValueAccessor rightAccessor) {
+        return leftAccessor == NoOpColumnRangeFilterValueAccessor.INSTANCE
+                || rightAccessor == NoOpColumnRangeFilterValueAccessor.INSTANCE;
     }
 
     private boolean cannotCompare(ATypeTag leftTypeTag, ATypeTag rightTypeTag) {

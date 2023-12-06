@@ -84,9 +84,11 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
     /**
      * Prepare to pushdown a SELECT expression in the use-descriptor
      *
-     * @param useDescriptor contains the SELECT operator and its expression
+     * @param useDescriptor  contains the operator and its expression
+     * @param scanDescriptor contains the scan definition where to push the filter expression
      */
-    protected abstract void preparePushdown(UseDescriptor useDescriptor) throws AlgebricksException;
+    protected abstract void preparePushdown(UseDescriptor useDescriptor, ScanDefineDescriptor scanDescriptor)
+            throws AlgebricksException;
 
     /**
      * Is an expression pushable
@@ -159,23 +161,25 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
 
     private boolean inlineAndPushdownFilter(UseDescriptor useDescriptor, ScanDefineDescriptor scanDefineDescriptor)
             throws AlgebricksException {
-        ILogicalOperator selectOp = useDescriptor.getOperator();
-        if (visitedOperators.contains(selectOp)) {
+        ILogicalOperator op = useDescriptor.getOperator();
+        if (visitedOperators.contains(op)) {
             // Skip and follow through to find any other selects that can be pushed down
             return false;
         }
         boolean changed = false;
-        // Get a clone of the SELECT expression and inline it
+
+        // Get a clone of the operator's expression and inline it
         ILogicalExpression inlinedExpr = pushdownContext.cloneAndInlineExpression(useDescriptor, context);
+
         // Prepare for pushdown
-        preparePushdown(useDescriptor);
+        preparePushdown(useDescriptor, scanDefineDescriptor);
         if (pushdownFilterExpression(inlinedExpr)) {
             putFilterInformation(scanDefineDescriptor, inlinedExpr);
             changed = true;
         }
 
         // Do not push down a select twice.
-        visitedOperators.add(selectOp);
+        visitedOperators.add(op);
         return changed;
     }
 

@@ -41,21 +41,8 @@ public class ExpressionValueAccessPushdownVisitor {
         this.builder = builder;
     }
 
-    public boolean transform(ILogicalExpression expression, LogicalVariable producedVariable,
-            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
-        return pushValueAccessExpression(expression, producedVariable, typeEnv);
-    }
-
-    private boolean pushValueAccessExpression(Mutable<ILogicalExpression> exprRef, LogicalVariable producedVar,
-            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
-        return pushValueAccessExpression(exprRef.getValue(), producedVar, typeEnv);
-    }
-
-    /**
-     * Pushdown field access expressions and array access expressions down
-     */
-    private boolean pushValueAccessExpression(ILogicalExpression expr, LogicalVariable producedVar,
-            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+    public boolean transform(ILogicalExpression expr, LogicalVariable producedVar, IVariableTypeEnvironment typeEnv)
+            throws AlgebricksException {
         if (skipPushdown(expr)) {
             return false;
         }
@@ -124,7 +111,7 @@ public class ExpressionValueAccessPushdownVisitor {
              * We need to set the produced variable as null here as the produced variable will not correspond to the
              * nested expression.
              */
-            changed |= pushValueAccessExpression(exprRef, producedVar, typeEnv);
+            changed |= transform(exprRef.getValue(), null, typeEnv);
         }
         return changed;
     }

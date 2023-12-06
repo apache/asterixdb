@@ -21,10 +21,10 @@ package org.apache.asterix.column.filter.range.accessor;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.om.types.ATypeTag;
 
-public class NoOpColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
-    public static final IColumnRangeFilterValueAccessor INSTANCE = new NoOpColumnRangeFilterValueAccessor();
+public class MissingColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
+    public static final IColumnRangeFilterValueAccessor INSTANCE = new MissingColumnRangeFilterValueAccessor();
 
-    private NoOpColumnRangeFilterValueAccessor() {
+    private MissingColumnRangeFilterValueAccessor() {
     }
 
     @Override
@@ -34,6 +34,6 @@ public class NoOpColumnRangeFilterValueAccessor implements IColumnRangeFilterVal
 
     @Override
     public ATypeTag getTypeTag() {
-        return ATypeTag.ANY;
+        return ATypeTag.MISSING;
     }
 }

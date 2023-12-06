@@ -30,6 +30,7 @@ import org.apache.asterix.column.assembler.value.IValueGetterFactory;
 import org.apache.asterix.column.filter.FilterAccessorProvider;
 import org.apache.asterix.column.filter.IColumnFilterEvaluator;
 import org.apache.asterix.column.filter.TrueColumnFilterEvaluator;
+import org.apache.asterix.column.filter.iterable.ColumnFilterEvaluatorContext;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
@@ -44,14 +45,11 @@ import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
-import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
-import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
 
 /**
@@ -150,22 +148,21 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         IColumnIterableFilterEvaluator columnFilterEvaluator = TrueColumnFilterEvaluator.INSTANCE;
         List<IColumnValuesReader> filterColumnReaders = Collections.emptyList();
         List<IColumnRangeFilterValueAccessor> filterValueAccessors = Collections.emptyList();
-        String jobId = "";
+        String jobId = null;
         if (context != null) {
-            FilterAccessorProvider filterAccessorProvider =
+            FilterAccessorProvider accessorProvider =
                     new FilterAccessorProvider(root, clipperVisitor, readerFactory, valueGetterFactory);
-            TaskUtil.put(FilterAccessorProvider.FILTER_ACCESSOR_PROVIDER_KEY, filterAccessorProvider, context);
             // Min/Max filters in page0
-            normalizedFilterEvaluator = normalizedEvaluatorFactory.create(filterAccessorProvider);
-            filterValueAccessors = filterAccessorProvider.getFilterAccessors();
+            normalizedFilterEvaluator = normalizedEvaluatorFactory.create(accessorProvider);
+            filterValueAccessors = accessorProvider.getFilterAccessors();
 
             // Filter columns (columns appeared in WHERE clause)
-            IEvaluatorContext evaluatorContext = new EvaluatorContext(context);
+            ColumnFilterEvaluatorContext evaluatorContext = new ColumnFilterEvaluatorContext(context, accessorProvider);
             // ignore atomic (or flat) types information
             clipperVisitor.setIgnoreFlatType(true);
-            filterAccessorProvider.reset();
-            columnFilterEvaluator = columnFilterEvaluatorFactory.create(filterAccessorProvider, evaluatorContext);
-            filterColumnReaders = filterAccessorProvider.getFilterColumnReaders();
+            accessorProvider.reset();
+            columnFilterEvaluator = columnFilterEvaluatorFactory.create(evaluatorContext);
+            filterColumnReaders = accessorProvider.getFilterColumnReaders();
             jobId = context.getJobletContext().getJobId().toString();
         }
 

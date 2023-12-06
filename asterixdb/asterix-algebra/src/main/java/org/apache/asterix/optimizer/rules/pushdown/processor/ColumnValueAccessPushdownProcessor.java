@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.pushdown.processor;
 import java.util.List;
 
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.PushdownUtil;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.DefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
@@ -29,6 +30,7 @@ import org.apache.asterix.optimizer.rules.pushdown.schema.ExpectedSchemaBuilder;
 import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpressionValueAccessPushdownVisitor;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
@@ -81,7 +83,8 @@ public class ColumnValueAccessPushdownProcessor extends AbstractPushdownProcesso
         List<UseDescriptor> useDescriptors = pushdownContext.getUseDescriptors(defineDescriptor);
         for (UseDescriptor useDescriptor : useDescriptors) {
             LogicalVariable producedVariable = useDescriptor.getProducedVariable();
-            IVariableTypeEnvironment typeEnv = useDescriptor.getOperator().computeOutputTypeEnvironment(context);
+            ILogicalOperator op = useDescriptor.getOperator();
+            IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(op, context);
             expressionVisitor.transform(useDescriptor.getExpression(), producedVariable, typeEnv);
         }
 

@@ -113,7 +113,6 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
 
     @Override
     public AbstractSchemaNode visit(PrimitiveSchemaNode primitiveNode, Void arg) throws HyracksDataException {
-        //Missing column index is -1
         return primitiveNode;
     }
 
@@ -126,8 +125,9 @@ public class PathExtractorVisitor implements ISchemaNodeVisitor<AbstractSchemaNo
     private IColumnValuesReader createReader(PrimitiveSchemaNode primitiveNode, List<IColumnValuesReader> readers) {
         IColumnValuesReader reader;
         if (delimiters.isEmpty()) {
-            reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(), level,
-                    primitiveNode.isPrimaryKey());
+            int nodeLevel = primitiveNode.isPrimaryKey() ? 1 : level;
+            reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(),
+                    nodeLevel, primitiveNode.isPrimaryKey());
         } else {
             // array
             reader = readerFactory.createValueReader(primitiveNode.getTypeTag(), primitiveNode.getColumnIndex(), level,

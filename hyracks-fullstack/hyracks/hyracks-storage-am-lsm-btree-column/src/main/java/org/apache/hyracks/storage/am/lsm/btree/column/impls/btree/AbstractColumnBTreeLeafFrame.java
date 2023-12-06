@@ -94,7 +94,8 @@ public abstract class AbstractColumnBTreeLeafFrame implements ITreeIndexFrame {
     @Override
     public final void setPage(ICachedPage page) {
         this.page = page;
-        this.buf = page.getBuffer();
+        // Duplicate to avoid interference when scanning the dataset twice
+        this.buf = page.getBuffer().duplicate();
         buf.clear();
         buf.position(HEADER_SIZE);
     }

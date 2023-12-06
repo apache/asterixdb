@@ -54,7 +54,7 @@ public class ParquetPlainFixedLengthValuesReader extends AbstractParquetValuesRe
         try {
             in.skipBytes(valueLength);
         } catch (IOException e) {
-            throw new ParquetDecodingException("could not skip double", e);
+            throw new ParquetDecodingException("could not skip " + valueLength + " bytes", e);
         }
     }
 
@@ -63,7 +63,7 @@ public class ParquetPlainFixedLengthValuesReader extends AbstractParquetValuesRe
         try {
             return in.readLong();
         } catch (IOException e) {
-            throw new ParquetDecodingException("could not read double", e);
+            throw new ParquetDecodingException("could not read long", e);
         }
     }
 
@@ -72,7 +72,7 @@ public class ParquetPlainFixedLengthValuesReader extends AbstractParquetValuesRe
         try {
             return in.readFloat();
         } catch (IOException e) {
-            throw new ParquetDecodingException("could not read double", e);
+            throw new ParquetDecodingException("could not read float", e);
         }
     }
 

@@ -16,24 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.range.accessor;
+package org.apache.asterix.column.filter.iterable;
 
-import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
-import org.apache.asterix.om.types.ATypeTag;
+import org.apache.asterix.column.filter.FilterAccessorProvider;
+import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
+import org.apache.hyracks.api.context.IHyracksTaskContext;
 
-public class NoOpColumnRangeFilterValueAccessor implements IColumnRangeFilterValueAccessor {
-    public static final IColumnRangeFilterValueAccessor INSTANCE = new NoOpColumnRangeFilterValueAccessor();
+public class ColumnFilterEvaluatorContext extends EvaluatorContext {
+    private final FilterAccessorProvider filterAccessorProvider;
 
-    private NoOpColumnRangeFilterValueAccessor() {
+    public ColumnFilterEvaluatorContext(IHyracksTaskContext taskContext,
+            FilterAccessorProvider filterAccessorProvider) {
+        super(taskContext);
+        this.filterAccessorProvider = filterAccessorProvider;
     }
 
-    @Override
-    public long getNormalizedValue() {
-        throw new IllegalStateException("should not be invoked");
-    }
-
-    @Override
-    public ATypeTag getTypeTag() {
-        return ATypeTag.ANY;
+    public FilterAccessorProvider getFilterAccessorProvider() {
+        return filterAccessorProvider;
     }
 }

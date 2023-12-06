@@ -34,7 +34,7 @@ public final class FloatKeyValueReader extends AbstractFixedLengthColumnKeyValue
     }
 
     @Override
-    public double getDouble() {
+    public float getFloat() {
         return FloatPointable.getFloat(value.getByteArray(), value.getStartOffset());
     }
 

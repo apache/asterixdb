@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.utils.DatasetUtil;
+import org.apache.asterix.metadata.utils.PushdownUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
@@ -45,6 +46,7 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
@@ -92,8 +94,11 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected void preparePushdown(UseDescriptor useDescriptor) throws AlgebricksException {
-        exprToNodeVisitor.setTypeEnv(useDescriptor.getOperator().computeOutputTypeEnvironment(context));
+    protected void preparePushdown(UseDescriptor useDescriptor, ScanDefineDescriptor scanDescriptor)
+            throws AlgebricksException {
+        ILogicalOperator useOp = useDescriptor.getOperator();
+        ILogicalOperator scanOp = scanDescriptor.getOperator();
+        exprToNodeVisitor.setTypeEnv(PushdownUtil.getTypeEnv(useOp, scanOp, context));
         paths.clear();
     }
 

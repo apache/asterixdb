@@ -80,7 +80,7 @@ public class ExpectedSchemaBuilder {
         AbstractComplexExpectedSchemaNode parent = node.getParent();
         if (parent == null) {
             //It is a root node. Request the entire record
-            varToNode.put(variable, RootExpectedSchemaNode.ALL_FIELDS_ROOT_NODE);
+            varToNode.put(variable, RootExpectedSchemaNode.ALL_FIELDS_ROOT_IRREPLACEABLE_NODE);
         } else {
             // If it is a nested node, replace it to a LEAF node
             AnyExpectedSchemaNode leafNode = (AnyExpectedSchemaNode) node.replaceIfNeeded(ExpectedSchemaNodeType.ANY,

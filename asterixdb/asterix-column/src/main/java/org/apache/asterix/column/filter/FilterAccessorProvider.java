@@ -32,6 +32,7 @@ import org.apache.asterix.column.filter.iterable.accessor.MissingEvaluator;
 import org.apache.asterix.column.filter.iterable.accessor.UnionColumnFilterValueAccessorEvaluator;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.accessor.ColumnRangeFilterValueAccessor;
+import org.apache.asterix.column.filter.range.accessor.MissingColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.filter.range.accessor.NoOpColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -48,7 +49,6 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class FilterAccessorProvider {
-    public static final String FILTER_ACCESSOR_PROVIDER_KEY = "filter-accessor-provider";
     private final ObjectSchemaNode root;
     private final ObjectSchemaNode metaRoot;
     private final SchemaClipperVisitor clipperVisitor;
@@ -88,9 +88,13 @@ public class FilterAccessorProvider {
             cachedNodes.put(path, node);
         }
 
+        if (node.isPrimaryKey()) {
+            return NoOpColumnRangeFilterValueAccessor.INSTANCE;
+        }
+
         ATypeTag typeTag = node.getTypeTag();
         if (typeTag == ATypeTag.MISSING) {
-            return NoOpColumnRangeFilterValueAccessor.INSTANCE;
+            return MissingColumnRangeFilterValueAccessor.INSTANCE;
         }
         IColumnRangeFilterValueAccessor accessor =
                 new ColumnRangeFilterValueAccessor(node.getColumnIndex(), typeTag, min);

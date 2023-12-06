@@ -21,10 +21,10 @@ package org.apache.asterix.column.filter.iterable.evaluator;
 import java.util.List;
 
 import org.apache.asterix.column.filter.FilterAccessorProvider;
+import org.apache.asterix.column.filter.iterable.ColumnFilterEvaluatorContext;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.values.IColumnValuesReader;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -38,10 +38,16 @@ public class ColumnIterableFilterEvaluatorFactory implements IColumnIterableFilt
     }
 
     @Override
-    public IColumnIterableFilterEvaluator create(FilterAccessorProvider filterAccessorProvider,
-            IEvaluatorContext context) throws HyracksDataException {
-        List<IColumnValuesReader> readers = filterAccessorProvider.getFilterColumnReaders();
+    public IColumnIterableFilterEvaluator create(ColumnFilterEvaluatorContext context) throws HyracksDataException {
         IScalarEvaluator evaluator = evaluatorFactory.createScalarEvaluator(context);
+        FilterAccessorProvider filterAccessorProvider = context.getFilterAccessorProvider();
+        // Readers are populated by evaluatorFactory.createScalarEvaluator()
+        List<IColumnValuesReader> readers = filterAccessorProvider.getFilterColumnReaders();
+
+        if (readers.isEmpty()) {
+            throw new NullPointerException("Readers are empty");
+        }
+
         if (readers.stream().anyMatch(IColumnValuesReader::isRepeated)) {
             return new ColumnarRepeatedIterableFilterEvaluator(evaluator, readers);
         }

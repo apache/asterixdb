@@ -27,7 +27,10 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     private static final int ALL_FIELDS_ROOT = 1;
     //Root with custom fields
     private static final int CLIPPED_ROOT = 2;
+    private static final int ALL_FIELDS_ROOT_IRREPLACEABLE = 3;
     public static final RootExpectedSchemaNode ALL_FIELDS_ROOT_NODE = new RootExpectedSchemaNode(ALL_FIELDS_ROOT);
+    public static final RootExpectedSchemaNode ALL_FIELDS_ROOT_IRREPLACEABLE_NODE =
+            new RootExpectedSchemaNode(ALL_FIELDS_ROOT_IRREPLACEABLE);
     public static final RootExpectedSchemaNode EMPTY_ROOT_NODE = new RootExpectedSchemaNode(EMPTY_ROOT);
 
     private final int rootType;
@@ -39,10 +42,6 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     private RootExpectedSchemaNode(int rootType) {
         super(null, null, null);
         this.rootType = rootType;
-    }
-
-    public int getRootType() {
-        return rootType;
     }
 
     @Override
@@ -65,6 +64,6 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     }
 
     public boolean isAllFields() {
-        return rootType == ALL_FIELDS_ROOT;
+        return rootType == ALL_FIELDS_ROOT || rootType == ALL_FIELDS_ROOT_IRREPLACEABLE;
     }
 }

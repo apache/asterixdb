@@ -43,6 +43,7 @@ import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescript
 import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -51,6 +52,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractUnnestMapOperator;
@@ -127,7 +129,18 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
         // Enter scope for (new stage) for operators like GROUP and JOIN
         pushdownContext.enterScope(op);
         defUseComputer.init(op, producedVariables);
+
         op.acceptExpressionTransform(defUseComputer);
+        if (op.getOperatorTag() == LogicalOperatorTag.UNIONALL) {
+            // UnionAll is a special case
+            UnionAllOperator unionOp = (UnionAllOperator) op;
+            for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> vars : unionOp.getVariableMappings()) {
+                VariableReferenceExpression left = new VariableReferenceExpression(vars.first);
+                pushdownContext.use(op, left, -1, null);
+                VariableReferenceExpression right = new VariableReferenceExpression(vars.second);
+                pushdownContext.use(op, right, -1, null);
+            }
+        }
     }
 
     /*
@@ -212,7 +225,8 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
      * 2- return the actual DatasetDataSource
      */
     private DatasetDataSource getDatasetDataSourceIfApplicable(DataSource dataSource) throws AlgebricksException {
-        if (dataSource == null || dataSource.getDatasourceType() == DataSource.Type.SAMPLE) {
+        if (dataSource == null || dataSource.getDatasourceType() == DataSource.Type.SAMPLE
+                || !(dataSource instanceof DatasetDataSource)) {
             return null;
         }
 

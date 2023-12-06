@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.column.filter;
 
+import org.apache.asterix.column.filter.iterable.ColumnFilterEvaluatorContext;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 /**
@@ -41,8 +41,7 @@ public class NoOpColumnFilterEvaluatorFactory
     }
 
     @Override
-    public IColumnIterableFilterEvaluator create(FilterAccessorProvider filterAccessorProvider,
-            IEvaluatorContext context) throws HyracksDataException {
+    public IColumnIterableFilterEvaluator create(ColumnFilterEvaluatorContext context) throws HyracksDataException {
         return TrueColumnFilterEvaluator.INSTANCE;
     }
 

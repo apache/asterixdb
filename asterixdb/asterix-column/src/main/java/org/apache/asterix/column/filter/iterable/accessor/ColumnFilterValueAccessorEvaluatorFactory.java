@@ -19,13 +19,12 @@
 package org.apache.asterix.column.filter.iterable.accessor;
 
 import org.apache.asterix.column.filter.FilterAccessorProvider;
+import org.apache.asterix.column.filter.iterable.ColumnFilterEvaluatorContext;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.dataflow.common.utils.TaskUtil;
 
 public class ColumnFilterValueAccessorEvaluatorFactory implements IScalarEvaluatorFactory {
     private static final long serialVersionUID = -7871899093673316190L;
@@ -37,12 +36,8 @@ public class ColumnFilterValueAccessorEvaluatorFactory implements IScalarEvaluat
 
     @Override
     public IScalarEvaluator createScalarEvaluator(IEvaluatorContext ctx) throws HyracksDataException {
-        IHyracksTaskContext taskContext = ctx.getTaskContext();
-        FilterAccessorProvider provider =
-                TaskUtil.get(FilterAccessorProvider.FILTER_ACCESSOR_PROVIDER_KEY, taskContext);
-        if (provider == null) {
-            throw new IllegalStateException("FILTER_ACCESSOR_PROVIDER_KEY is not set");
-        }
-        return provider.createColumnAccessEvaluator(path);
+        ColumnFilterEvaluatorContext columnEvalCtx = (ColumnFilterEvaluatorContext) ctx;
+        FilterAccessorProvider filterAccessorProvider = columnEvalCtx.getFilterAccessorProvider();
+        return filterAccessorProvider.createColumnAccessEvaluator(path);
     }
 }

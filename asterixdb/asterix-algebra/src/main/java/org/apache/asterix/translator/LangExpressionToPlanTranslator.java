@@ -2198,6 +2198,8 @@ abstract class LangExpressionToPlanTranslator
         NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(subplanOp));
         ntsOp.setSourceLocation(sourceLoc);
         SelectOperator select = new SelectOperator(selectExpr);
+        // Disable pushdowns
+        select.getAnnotations().put(OperatorAnnotations.DISALLOW_FILTER_PUSHDOWN_TO_SCAN, Boolean.TRUE);
         // The select operator cannot be moved up and down, otherwise it will cause
         // typing issues (ASTERIXDB-1203).
         OperatorPropertiesUtil.markMovable(select, false);

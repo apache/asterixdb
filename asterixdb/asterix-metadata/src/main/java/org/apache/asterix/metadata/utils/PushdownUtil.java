@@ -37,7 +37,10 @@ import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IAlgebricksConstantValue;
@@ -58,6 +61,27 @@ public class PushdownUtil {
     public static final Set<FunctionIdentifier> RANGE_FILTER_PUSHABLE_FUNCTIONS = createRangeFilterPushableFunctions();
 
     private PushdownUtil() {
+    }
+
+    public static IVariableTypeEnvironment getTypeEnv(ILogicalOperator useOperator, IOptimizationContext context)
+            throws AlgebricksException {
+        if (useOperator.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
+                || useOperator.getOperatorTag() == LogicalOperatorTag.INNERJOIN) {
+            // Special case: for pushed select condition
+            return useOperator.computeOutputTypeEnvironment(context);
+        } else {
+            return useOperator.computeInputTypeEnvironment(context);
+        }
+    }
+
+    public static IVariableTypeEnvironment getTypeEnv(ILogicalOperator useOperator, ILogicalOperator scanOperator,
+            IOptimizationContext context) throws AlgebricksException {
+        if (useOperator == scanOperator) {
+            // Special case: for pushed select condition
+            return useOperator.computeOutputTypeEnvironment(context);
+        } else {
+            return scanOperator.computeOutputTypeEnvironment(context);
+        }
     }
 
     public static String getFieldName(AbstractFunctionCallExpression fieldAccessExpr, IVariableTypeEnvironment typeEnv)

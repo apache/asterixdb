@@ -20,11 +20,8 @@ package org.apache.asterix.column.filter.iterable;
 
 import java.io.Serializable;
 
-import org.apache.asterix.column.filter.FilterAccessorProvider;
-import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface IColumnIterableFilterEvaluatorFactory extends Serializable {
-    IColumnIterableFilterEvaluator create(FilterAccessorProvider filterAccessorProvider, IEvaluatorContext context)
-            throws HyracksDataException;
+    IColumnIterableFilterEvaluator create(ColumnFilterEvaluatorContext context) throws HyracksDataException;
 }
