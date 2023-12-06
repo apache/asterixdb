@@ -75,6 +75,8 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
             op2Ref.setValue(b0);
             b0Ref.setValue(op1);
             opRef.setValue(op2);
+            context.computeAndSetTypeEnvironmentForOperator(op1);
+            context.computeAndSetTypeEnvironmentForOperator(op2);
             return true;
         } else {
             Mutable<ILogicalOperator> b1Ref = op2.getInputs().get(1);
@@ -86,6 +88,8 @@ public class PushMapOperatorDownThroughProductRule implements IAlgebraicRewriteR
                 op2Ref.setValue(b1);
                 b1Ref.setValue(op1);
                 opRef.setValue(op2);
+                context.computeAndSetTypeEnvironmentForOperator(op1);
+                context.computeAndSetTypeEnvironmentForOperator(op2);
                 return true;
             } else {
                 return false;
