@@ -100,7 +100,7 @@ public class ExceptionUtils {
      *            the subsequent failure
      * @return the root exception, or null if both parameters are null
      */
-    public static Throwable suppress(Throwable first, Throwable second) {
+    public static <T extends Throwable> T suppress(T first, T second) {
         if (second instanceof InterruptedException) {
             Thread.currentThread().interrupt();
         }
