@@ -1015,7 +1015,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // on top of that LeafInput. Modify the joinLeafInputsHashMap as well.
     private void pushAssignsIntoLeafInputs(IPlanPrettyPrinter pp, List<ILogicalOperator> leafInputs,
             List<AssignOperator> assignOps, List<ILogicalExpression> assignJoinExprs) throws AlgebricksException {
-        int pos = 0;
         for (ILogicalOperator lo : leafInputs) {
             ILogicalOperator joinLeafInput = lo;
             printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Incoming leaf Input");
@@ -1023,10 +1022,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (assignNumber != -1) {
                 joinLeafInput = addAssignToLeafInput(joinLeafInput, assignOps.get(assignNumber));
                 printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Modified leaf Input");
-                leafInputs.add(pos, joinLeafInput);
                 assignOps.remove(assignNumber);
             }
-            pos++;
         }
     }
 

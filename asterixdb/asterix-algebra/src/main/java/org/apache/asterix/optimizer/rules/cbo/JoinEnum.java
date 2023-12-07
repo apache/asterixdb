@@ -440,6 +440,7 @@ public class JoinEnum {
             usedVars.clear();
             ILogicalExpression expr = jc.joinCondition;
             expr.getUsedVariables(usedVars);
+            List<AssignOperator> erase = new ArrayList<>();
             for (AssignOperator aOp : assignOps) {
                 for (int i = 0; i < aOp.getVariables().size(); i++) {
                     if (usedVars.contains(aOp.getVariables().get(i))) {
@@ -447,8 +448,12 @@ public class JoinEnum {
                                 aOp.getVariables().get(i), aOp.getExpressions().get(i).getValue());
                         jc.joinCondition = expr;
                         jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true);
+                        erase.add(aOp);
                     }
                 }
+            }
+            for (int i = erase.size() - 1; i >= 0; i--) {
+                assignOps.remove(erase.get(i));
             }
         }
 
