@@ -6700,6 +6700,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="join">
+      <compilation-unit name="nlj-outer">
+        <output-dir compare="Text">nlj-outer</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="join">
       <compilation-unit name="nlj_partitioning_property">
         <output-dir compare="Text">nlj_partitioning_property</output-dir>
       </compilation-unit>
