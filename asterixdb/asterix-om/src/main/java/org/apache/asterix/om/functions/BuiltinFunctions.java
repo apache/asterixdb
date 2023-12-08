@@ -589,8 +589,6 @@ public class BuiltinFunctions {
 
     // sql aggregate functions
     public static final FunctionIdentifier SQL_AVG = FunctionConstants.newAsterix("agg-sql-avg", 1);
-    public static final FunctionIdentifier SQL_SCHEMA =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "agg-sql-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
             FunctionConstants.newAsterix("intermediate-agg-sql-avg", 1);
     public static final FunctionIdentifier SQL_SCHEMA = FunctionConstants.newAsterix("agg-sql-schema", 1);
@@ -599,8 +597,6 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SQL_COUNT = FunctionConstants.newAsterix("agg-sql-count", 1);
     public static final FunctionIdentifier SQL_SUM = FunctionConstants.newAsterix("agg-sql-sum", 1);
     public static final FunctionIdentifier LOCAL_SQL_SUM = FunctionConstants.newAsterix("agg-local-sql-sum", 1);
-    public static final FunctionIdentifier INTERMEDIATE_SQL_SCHEMA =
-            new FunctionIdentifier(FunctionConstants.ASTERIX_NS, "intermediate-agg-sql-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_SUM =
             FunctionConstants.newAsterix("agg-intermediate-sql-sum", 1);
     public static final FunctionIdentifier GLOBAL_SQL_SUM = FunctionConstants.newAsterix("agg-global-sql-sum", 1);
@@ -675,10 +671,6 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_SAMP = FunctionConstants.newAsterix("sql-stddev_samp", 1);
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_POP = FunctionConstants.newAsterix("sql-stddev_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_SCHEMA = FunctionConstants.newAsterix("sql-schema", 1);
-    public static final FunctionIdentifier SCALAR_SQL_UNION_MBR = FunctionConstants.newAsterix("sql-union_mbr", 1);
-    public static final FunctionIdentifier SCALAR_SQL_KURTOSIS = FunctionConstants.newAsterix("sql-kurtosis", 1);
-    public static final FunctionIdentifier SCALAR_SQL_SKEWNESS = FunctionConstants.newAsterix("sql-skewness", 1);
-    public static final FunctionIdentifier SCALAR_SQL_VAR_POP = FunctionConstants.newAsterix("sql-var_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_SAMP = FunctionConstants.newAsterix("sql-var_samp", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_POP = FunctionConstants.newAsterix("sql-var_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_SKEWNESS = FunctionConstants.newAsterix("sql-skewness", 1);
