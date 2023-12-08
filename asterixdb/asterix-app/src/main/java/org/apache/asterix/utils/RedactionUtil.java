@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 
 import org.apache.hyracks.util.ILogRedactor;
 
+import com.fasterxml.jackson.databind.node.TextNode;
+
 public class RedactionUtil {
     private RedactionUtil() {
         throw new AssertionError("do not instantiate");
@@ -34,6 +36,7 @@ public class RedactionUtil {
     private static final Pattern STATEMENT_PATTERN =
             Pattern.compile("(" + SECRET_ACCESS_KEY_FIELD_NAME + ").*", CASE_INSENSITIVE | DOTALL);
     private static final String STATEMENT_REPLACEMENT = "$1...<redacted sensitive data>";
+    public static final TextNode REDACTED_SENSITIVE_ENTRY_VALUE = new TextNode("<redacted sensitive entry>");
 
     public static final ILogRedactor LOG_REDACTOR = new ILogRedactor() {
         @Override

@@ -243,7 +243,8 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return String.format("%s(id=%s, from=%s, uuid=%s): %s", getClass().getSimpleName(), requestMessageId,
-                requestNodeId, requestReference.getUuid(), LogRedactionUtil.statement(statementsText));
+        return String.format("%s(id=%s, from=%s, uuid=%s, clientContextID=%s): %s", getClass().getSimpleName(),
+                requestMessageId, requestNodeId, requestReference.getUuid(), clientContextID,
+                LogRedactionUtil.statement(statementsText));
     }
 }
