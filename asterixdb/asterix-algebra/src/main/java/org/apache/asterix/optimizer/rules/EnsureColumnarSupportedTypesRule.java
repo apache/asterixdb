@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules;
 
-import org.apache.asterix.column.metadata.schema.visitor.ColumnSupportedTypesValidator;
+import org.apache.asterix.column.validation.ColumnSupportedTypesValidator;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.declared.DataSource;

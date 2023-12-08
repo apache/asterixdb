@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.metadata.schema.visitor;
+package org.apache.asterix.column.validation;
 
 import static org.apache.asterix.column.util.ColumnValuesUtil.getNormalizedTypeTag;
 

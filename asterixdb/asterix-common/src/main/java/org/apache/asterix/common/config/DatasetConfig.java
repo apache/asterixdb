@@ -21,6 +21,9 @@ package org.apache.asterix.common.config;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
+
 public class DatasetConfig {
 
     /*
@@ -108,8 +111,13 @@ public class DatasetConfig {
             return formats;
         }
 
-        public static DatasetFormat getFormat(String format) {
-            return FORMATS.get(format.trim().toLowerCase());
+        public static DatasetFormat getFormat(String format) throws CompilationException {
+            DatasetFormat formatEnum = FORMATS.get(format.trim().toLowerCase());
+            if (formatEnum == null) {
+                throw CompilationException.create(ErrorCode.UNKNOWN_STORAGE_FORMAT, format);
+            }
+
+            return formatEnum;
         }
     }
 }

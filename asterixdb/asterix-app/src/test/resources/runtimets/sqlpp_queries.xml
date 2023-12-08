@@ -16448,6 +16448,18 @@
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="validation">
+        <output-dir compare="Text">validation</output-dir>
+        <expected-error>ASX1191: Merge policy 'correlated-prefix' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1192: Filters are not supported with columnar storage format</expected-error>
+        <expected-error>ASX1193: Unknown storage format 'col'</expected-error>
+        <expected-error>ASX1194: Index type 'RTREE' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1194: Index type 'LENGTH_PARTITIONED_NGRAM_INVIX' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1194: Index type 'LENGTH_PARTITIONED_WORD_INVIX' is not supported with columnar storage format</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="copy-from">
     <test-case FilePath="copy-from">

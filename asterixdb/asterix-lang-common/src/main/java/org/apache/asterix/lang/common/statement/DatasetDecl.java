@@ -154,7 +154,7 @@ public class DatasetDecl extends AbstractStatement {
     }
 
     public DatasetFormatInfo getDatasetFormatInfo(String defaultFormat, int defaultMaxTupleCount,
-            double defaultFreeSpaceTolerance, int defaultMaxLeafNodeSize) {
+            double defaultFreeSpaceTolerance, int defaultMaxLeafNodeSize) throws CompilationException {
         if (datasetType != DatasetType.INTERNAL) {
             return DatasetFormatInfo.SYSTEM_DEFAULT;
         }
