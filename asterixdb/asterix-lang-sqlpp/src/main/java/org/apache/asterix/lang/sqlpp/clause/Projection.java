@@ -33,7 +33,8 @@ public class Projection extends AbstractClause {
         NAMED_EXPR, // expr AS name
         STAR, // *
         VAR_STAR, // variable.*
-        EVERY_VAR_STAR // *.* (currently only used in SQL-compatible mode)
+        EVERY_VAR_STAR, // *.* (currently only used in SQL-compatible mode)
+        UNIFIED_SCHEMA
     }
 
     private Kind kind;
@@ -56,6 +57,7 @@ public class Projection extends AbstractClause {
                 break;
             case STAR:
             case EVERY_VAR_STAR:
+            case UNIFIED_SCHEMA:
                 if (expr != null || name != null) {
                     throw new IllegalArgumentException();
                 }
@@ -146,6 +148,8 @@ public class Projection extends AbstractClause {
                 return expr + ".*";
             case EVERY_VAR_STAR:
                 return "*.*";
+            case UNIFIED_SCHEMA:
+                return "unified_schema";
             default:
                 throw new IllegalStateException();
         }

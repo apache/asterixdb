@@ -37,6 +37,7 @@ import org.apache.asterix.om.base.AMutableInt64;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
+import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
@@ -71,7 +72,9 @@ public abstract class AbstractAvgAggregateFunction extends AbstractAggregateFunc
     private final ARecordType recType;
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private IPointable inputVal = new VoidPointable();
+    private IPointable inputVal = new RecordLazyVisitablePointable(false);
+
+    //    private RecordLazyVisitablePointable inputValLazy;
     private IScalarEvaluator eval;
     protected ATypeTag aggType;
     private double sum;

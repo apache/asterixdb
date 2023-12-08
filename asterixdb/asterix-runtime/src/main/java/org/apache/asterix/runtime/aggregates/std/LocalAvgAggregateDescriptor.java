@@ -19,6 +19,8 @@
 
 package org.apache.asterix.runtime.aggregates.std;
 
+import java.util.Arrays;
+
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.runtime.aggregates.base.AbstractAggregateFunctionDynamicDescriptor;
@@ -50,5 +52,10 @@ public class LocalAvgAggregateDescriptor extends AbstractAggregateFunctionDynami
                 return new LocalAvgAggregateFunction(args, ctx, sourceLoc);
             }
         };
+    }
+
+    public void setImmutableStates(Object... states) {
+        // no states
+        System.out.println(Arrays.toString(states));
     }
 }

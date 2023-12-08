@@ -36,6 +36,7 @@ public class ScalarMaxAggregateDescriptor extends AbstractScalarAggregateDescrip
 
     @Override
     public FunctionIdentifier getIdentifier() {
+
         return BuiltinFunctions.SCALAR_MAX;
     }
 

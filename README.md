@@ -18,6 +18,50 @@
  !-->
 <a href="http://asterixdb.apache.org"><img src="http://asterixdb.apache.org/img/asterixdb_tm.png" height=100></img></a>
 
+# Schema Inference From NoSQL Records
+
+## Project Objectives
+
+### Contributors
+
+Calvin Thomas Dani
+
+Guided by : Dr. Shiva Jahangiri
+
+## Description
+The project aims to generate JSON schema of the records in the NoSQL Distributed Database. The objective is achieved by creating aggregate function to aggregate schema of all records within a query. Providing valuable insights on the datatypes and data to the user.
+Its application could be used to monitor during development, evaluate the data before running long running queries etc.
+  
+1. Aggregate Function
+- Aggregate functions return single valued results based on defined function.
+- Extending the definition we will be returning a single schema by aggregating all schema in the distributed controllers
+2. Record -> Schema phase
+- This phase of the aggregate function converts each record to its schema.
+- The basis of this functionality is based on one of AsterixDB Columnar capabilities.
+- Each cluster of records at the end of this phase will have a schema describing all the records in it.
+3. Schema -> Schema phase
+- This phase of the aggregate function aggregates each schema to one single schema.
+- At the end of this phase we will have one single schema which is an aggregate of all the schema.
+- This schema will be able to describe all the records in the dataverse
+4. JSON Schema Draft 2020 output
+- This is the defined output of the schema generated sent to the console to be consumed by the end user.
+
+
+
+
+### Milestones
+
+1. Adding custom aggregate function for schema inference:
+   - Status : Completed
+2. Integrating schema inferrer from previous works of AsterixDB columnar database for record -> schema.
+   - Status : Completed 
+3. Adding schema -> schema inferrer for combining various schema from various distributed controllers in asterixDB
+   - Status : Completed
+4. Adding test to the  test suite to validate created schema 
+   - Status : Completed
+5. Displaying the schema finally in JSON Schema with DRAFT2020 Dialect
+   - Status : In Progress
+
 ## What is AsterixDB?
 
 AsterixDB is a BDMS (Big Data Management System) with a rich feature set that sets it apart from other Big Data platforms.  Its feature set makes it well-suited to modern needs such as web data warehousing and social data storage and analysis. AsterixDB has:

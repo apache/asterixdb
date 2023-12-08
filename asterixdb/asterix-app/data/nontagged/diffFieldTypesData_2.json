@@ -1,0 +1,1 @@
+{ "id" :1, "first_name" : "Calvin" , "last_name" : "Hobbes", "cars" : [ "Honda","Toyota","BMW"],"favorite":{{"Samosa"}},"friends": { "Best_friend":"Hobbes"},"children":null,"toy":false }

@@ -1,0 +1,1 @@
+{ "id": 1, "first_name": "Calvin", "last_name": "Hobbes", "vehicles": [ "Honda", "Toyota", "BMW", { "Boat": [ "Honda", "Yamaha" ] } ], "favorite": {{ "Samosa" }}, "friends": { "Best_friend": "Hobbes", "Number_friends": 1, "Alias": [ "Hobbes", { "Animal": "Tiger", "Toy": true }, 1 ] } }

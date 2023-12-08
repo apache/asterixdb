@@ -1,0 +1,62 @@
+<!--
+  ~ Licensed to the Apache Software Foundation (ASF) under one
+  ~ or more contributor license agreements.  See the NOTICE file
+  ~ distributed with this work for additional information
+  ~ regarding copyright ownership.  The ASF licenses this file
+  ~ to you under the Apache License, Version 2.0 (the
+  ~ "License"); you may not use this file except in compliance
+  ~ with the License.  You may obtain a copy of the License at
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<test-suite
+             xmlns="urn:xml.testframework.asterix.apache.org"
+             ResultOffsetPath="results"
+             QueryOffsetPath="queries_sqlpp"
+             QueryFileExtension=".sqlpp">
+
+  <test-group name="schema-inference">
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-01">
+        <output-dir compare="Text">schema-inference-01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-02">
+        <output-dir compare="Text">schema-inference-02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-03">
+        <output-dir compare="Text">schema-inference-03</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-04">
+        <output-dir compare="Text">schema-inference-04</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-05">
+        <output-dir compare="Text">schema-inference-05</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-06">
+        <output-dir compare="Text">schema-inference-06</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="schema-inference">
+      <compilation-unit name="schema-inference-07">
+        <output-dir compare="Text">schema-inference-07</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+</test-suite>
