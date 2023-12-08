@@ -294,6 +294,7 @@
                 <exclude>src/test/resources/**/results_parser_sqlpp/**</exclude>
                 <exclude>src/test/resources/**/results/**</exclude>
                 <exclude>src/test/resources/**/results_cbo/**</exclude>
+                <exclude>src/test/resources/**/results_column/**</exclude>
                 <exclude>src/test/resources/**/results_less_parallelism/**</exclude>
                 <exclude>src/test/resources/**/results_full_parallelism/**</exclude>
                 <exclude>src/test/resources/fuzzyjoin/pub/fuzzy-join-aql*.dot</exclude>
@@ -447,7 +448,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/CloudStorageTest.java,**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,**/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java</test.excludes>
+        <test.excludes>**/CloudStorageTest.java,**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/SqlppExecutionColumnTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,**/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java</test.excludes>
         <itest.excludes>**/*.java</itest.excludes>
       </properties>
       <build>
@@ -496,7 +497,7 @@
     <profile>
       <id>asterix-gerrit-ssl-compression</id>
       <properties>
-        <test.includes>**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/*AnalyzedExecutionTest.java</test.includes>
+        <test.includes>**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/*AnalyzedExecutionTest.java,**/SqlppExecutionColumnTest.java</test.includes>
         <itest.excludes>**/*.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>

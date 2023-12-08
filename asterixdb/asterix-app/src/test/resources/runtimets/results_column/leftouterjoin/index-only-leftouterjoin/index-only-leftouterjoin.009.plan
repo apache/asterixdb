@@ -1,0 +1,62 @@
+distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$52]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$52] <- [{"t1_id": $$53, "t2_id": $$54}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ASSIGN  |PARTITIONED|
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- SORT_MERGE_EXCHANGE [$$53(ASC), $$54(ASC) ]  |PARTITIONED|
+          order (ASC, $$53) (ASC, $$54) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STABLE_SORT [$$53(ASC), $$54(ASC)]  |PARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$53, $$54]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                select ($$62) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_SELECT  |PARTITIONED|
+                  window-aggregate [$$62] <- [win-mark-first-missing-impl($$54)] partition [$$53] order (DESC, $$54) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- WINDOW_STREAM  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$53) (DESC, $$54) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STABLE_SORT [$$53(ASC), $$54(DESC)]  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                          project ([$$53, $$54]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            select (eq($$55, $$t2.getField("c_int32"))) retain-untrue ($$54 <- missing) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- STREAM_SELECT  |PARTITIONED|
+                              project ([$$53, $$55, $$54, $$t2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left-outer-unnest-map [$$54, $$t2] <- index-search("ds_inner_untyped", 0, "Default", "test", "ds_inner_untyped", true, false, 1, $$61, 1, $$61, true, true, true) project ({c_int32:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      order (ASC, $$61) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STABLE_SORT [$$61(ASC)]  |PARTITIONED|
+                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          project ([$$53, $$55, $$61]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              left-outer-unnest-map [$$60, $$61] <- index-search("idx_c_int32", 0, "Default", "test", "ds_inner_untyped", true, true, 1, $$55, 1, $$55, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                  project ([$$53, $$55]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                    assign [$$55] <- [int32($$t1.getField(1))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- ASSIGN  |PARTITIONED|
+                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        data-scan []<-[$$53, $$t1] <- test.ds_outer_typed project ({c_int32:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -91,8 +91,9 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
         if (!arg.isCollection() && isNotCompatible(collectionType, arg)) {
             return MissingFieldSchemaNode.INSTANCE;
         }
-        AbstractCollectionSchemaNode collectionNode =
-                getActualNode(arg, arg.getTypeTag(), AbstractCollectionSchemaNode.class);
+
+        ATypeTag typeTag = arg.isCollection() ? arg.getTypeTag() : ATypeTag.ARRAY;
+        AbstractCollectionSchemaNode collectionNode = getActualNode(arg, typeTag, AbstractCollectionSchemaNode.class);
         AbstractSchemaNode newItemNode = collectionType.getItemType().accept(this, collectionNode.getItemNode());
         AbstractCollectionSchemaNode clippedCollectionNode =
                 AbstractCollectionSchemaNode.create(collectionType.getTypeTag());
