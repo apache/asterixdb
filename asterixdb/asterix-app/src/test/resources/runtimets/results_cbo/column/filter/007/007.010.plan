@@ -1,18 +1,18 @@
-distribute result [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+distribute result [$$37] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$37]) [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+    project ([$$37]) [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$37] <- [{"$1": $$39}] [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+      assign [$$37] <- [{"$1": $$39}] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$39] <- [agg-sql-sum($$42)] [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+        aggregate [$$39] <- [agg-sql-sum($$42)] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$42] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+            aggregate [$$42] <- [agg-sql-count(1)] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
             -- AGGREGATE  |PARTITIONED|
-              select (array-contains($$C.getField("checkin_times").getField("dates"), "2018-05-25")) [cardinality: 2.1, op-cost: 0.0, total-cost: 30.0]
+              select (array-contains($$C.getField("checkin_times").getField("dates"), "2018-05-25")) [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
               -- STREAM_SELECT  |PARTITIONED|
                 project ([$$C]) [cardinality: 30.0, op-cost: 0.0, total-cost: 30.0]
                 -- STREAM_PROJECT  |PARTITIONED|

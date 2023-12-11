@@ -1,16 +1,16 @@
-distribute result [$$item] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.25]
+distribute result [$$item] [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.25]
+  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$item]) [cardinality: 2.1, op-cost: 0.0, total-cost: 8.25]
+    project ([$$item]) [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.25]
+      exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
       -- SORT_MERGE_EXCHANGE [$$27(ASC), $$item(ASC) ]  |PARTITIONED|
-        order (ASC, $$27) (ASC, $$item) [cardinality: 2.1, op-cost: 2.25, total-cost: 8.25]
+        order (ASC, $$27) (ASC, $$item) [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
         -- STABLE_SORT [$$27(ASC), $$item(ASC)]  |PARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 6.0]
+          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            select (eq($$item, 100)) [cardinality: 2.1, op-cost: 0.0, total-cost: 6.0]
+            select (eq($$item, 100)) [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
             -- STREAM_SELECT  |PARTITIONED|
               project ([$$27, $$item]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
               -- STREAM_PROJECT  |PARTITIONED|

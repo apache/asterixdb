@@ -251,9 +251,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             opRef.setValue(root);
 
             if (LOGGER.isTraceEnabled()) {
-                String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
-                LOGGER.trace("viewInPlanAgain");
-                LOGGER.trace(viewInPlan);
                 String viewOutPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
                 LOGGER.trace("viewOutPlan");
                 LOGGER.trace(viewOutPlan);
@@ -793,7 +790,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 return i;
             }
         }
-
         return -1;
     }
 

@@ -703,7 +703,7 @@ public class JoinEnum {
                     jn.aliases.addAll(jnJ.aliases);
                     Collections.sort(jn.aliases);
                     jn.size = jnI.size + jnJ.size;
-                    jn.setCardinality(jn.computeJoinCardinality());
+                    jn.setCardinality(jn.computeJoinCardinality(), true);
                 } else {
                     addPlansToThisJn = jnNewBits.jnIndex;
                 }
@@ -744,7 +744,8 @@ public class JoinEnum {
         }
 
         double grpInputCard = (double) Math.round(jnArray[jnNumber].getCardinality() * 100) / 100;
-        double grpOutputCard = (double) Math.round(jnArray[jnNumber].distinctCardinality * 100) / 100;
+        double grpOutputCard =
+                (double) Math.round(Math.min(grpInputCard, jnArray[jnNumber].distinctCardinality) * 100) / 100;
 
         // set the root group-by/distinct operator's cardinality annotations (if exists)
         if (!cboTestMode && this.rootGroupByDistinctOp != null) {
@@ -753,7 +754,7 @@ public class JoinEnum {
         }
 
         // set the root order by operator's cardinality annotations (if exists)
-        if (this.rootOrderByOp != null) {
+        if (!cboTestMode && this.rootOrderByOp != null) {
             if (this.rootGroupByDistinctOp != null) {
                 this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpOutputCard);
                 this.rootOrderByOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpOutputCard);
@@ -805,20 +806,20 @@ public class JoinEnum {
                     if (idxDetails == null) {
                         return PlanNode.NO_PLAN;
                     }
-                    jn.setOrigCardinality(idxDetails.getSourceCardinality());
+                    jn.setOrigCardinality(idxDetails.getSourceCardinality(), false);
                     jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
                     jn.setSizeVarsFromDisk(10); // dummy value
                     jn.setSizeVarsAfterScan(10); // dummy value
                 }
                 // multiply by the respective predicate selectivities
-                jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInput, false));
+                jn.setCardinality(jn.origCardinality * stats.getSelectivity(leafInput, false), false);
             } else {
                 // could be unnest or assign
                 jn.datasetNames = new ArrayList<>(Collections.singleton("unnestOrAssign"));
                 jn.aliases = new ArrayList<>(Collections.singleton("unnestOrAssign"));
                 double card = findInListCard(leafInput);
-                jn.setOrigCardinality(card);
-                jn.setCardinality(card);
+                jn.setOrigCardinality(card, false);
+                jn.setCardinality(card, false);
                 // just a guess
                 jn.size = 10;
             }
@@ -875,22 +876,22 @@ public class JoinEnum {
                     }
                     continue;
                 }
-                double origDatasetCard, finalDatasetCard, sampleCard;
+                double origDatasetCard, finalDatasetCard;
+                finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
 
                 DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
                 if (scanOp == null) {
                     continue; // what happens to the cards and sizes then? this may happen in case of in lists
                 }
-                finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
 
-                ILogicalOperator grpByDistinctOp = this.dataScanAndGroupByDistinctOps.get(scanOp);
-                if (grpByDistinctOp != null) {
-                    long distinctCardinality = stats.findDistinctCardinality(grpByDistinctOp);
-                    jn.distinctCardinality = (double) distinctCardinality;
-                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY,
-                            (double) Math.round(finalDatasetCard * 100) / 100);
-                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
-                            (double) Math.round(distinctCardinality * 100) / 100);
+                double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+                if (sampleCard == 0) { // should not happen unless the original dataset is empty
+                    sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
+
+                    IWarningCollector warningCollector = optCtx.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+                    }
                 }
 
                 List<List<IAObject>> result;
@@ -933,12 +934,12 @@ public class JoinEnum {
                 // There are predicates here. So skip the predicates and get the original dataset card.
                 // Now apply all the predicates and get the card after all predicates are applied.
                 result = stats.runSamplingQueryProjection(this.optCtx, leafInput, i, primaryKey);
-                double predicateCardinality = stats.findPredicateCardinality(result, true);
+                double predicateCardinalityFromSample = stats.findPredicateCardinality(result, true);
 
                 double sizeVarsFromDisk;
                 double sizeVarsAfterScan;
 
-                if (predicateCardinality > 0.0) { // otherwise, we get nulls for the averages
+                if (predicateCardinalityFromSample > 0.0) { // otherwise, we get nulls for the averages
                     sizeVarsFromDisk = stats.findSizeVarsFromDisk(result, jn.getNumVarsFromDisk());
                     sizeVarsAfterScan = stats.findSizeVarsAfterScan(result, jn.getNumVarsFromDisk());
                 } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
@@ -956,29 +957,42 @@ public class JoinEnum {
                     }
                     selop.getCondition().setValue(saveExpr); // restore the expression
                 }
-                if (predicateCardinality == 0.0) {
-                    predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
-                }
-                // now scale up
-                sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-                if (sampleCard == 0) { // should not happen unless the original dataset is empty
-                    sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
 
-                    IWarningCollector warningCollector = optCtx.getWarningCollector();
-                    if (warningCollector.shouldWarn()) {
-                        warningCollector.warn(Warning.of(scanOp.getSourceLocation(), ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-                    }
+                // Adjust for zero predicate cardinality from the sample.
+                predicateCardinalityFromSample = Math.max(predicateCardinalityFromSample, 0.0001);
+
+                // Do the scale up for the final cardinality after the predicates.
+                boolean scaleUp = sampleCard != origDatasetCard;
+                if (scaleUp) {
+                    finalDatasetCard *= predicateCardinalityFromSample / sampleCard;
+                } else {
+                    finalDatasetCard = predicateCardinalityFromSample;
                 }
-                finalDatasetCard *= predicateCardinality / sampleCard;
                 // now switch the input back.
                 parent.getInputs().get(0).setValue(scanOp);
+
                 if (jn.getCardinality() == jn.getOrigCardinality()) { // this means there was no selectivity hint provided
-                    jn.setCardinality(finalDatasetCard);
+                    // If the sample size is the same as the original dataset (happens when the dataset
+                    // is small), no need to assign any artificial min. cardinality as the sample is accurate.
+                    jn.setCardinality(finalDatasetCard, scaleUp);
                 }
+
                 jn.setSizeVarsFromDisk(sizeVarsFromDisk);
                 jn.setSizeVarsAfterScan(sizeVarsAfterScan);
                 jn.setAvgDocSize(idxDetails.getSourceAvgItemSize());
+
+                // Compute the distinct cardinalities for each base join node.
+                ILogicalOperator grpByDistinctOp = this.dataScanAndGroupByDistinctOps.get(scanOp);
+                if (grpByDistinctOp != null) {
+                    long distinctCardinality = stats.findDistinctCardinality(grpByDistinctOp);
+                    jn.distinctCardinality = (double) distinctCardinality;
+                    double grpInputCard = (double) Math.round(finalDatasetCard * 100) / 100;
+                    double grpOutputCard = (double) Math.round(Math.min(grpInputCard, distinctCardinality) * 100) / 100;
+                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpInputCard);
+                    grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpOutputCard);
+                }
             }
+
             dataScanPlan = jn.addSingleDatasetPlans();
             if (dataScanPlan == PlanNode.NO_PLAN) {
                 return PlanNode.NO_PLAN;

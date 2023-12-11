@@ -131,18 +131,18 @@ public class JoinNode {
         return cardinality;
     }
 
-    protected void setCardinality(double card) {
+    protected void setCardinality(double card, boolean setMinCard) {
         // Minimum cardinality for operators is MIN_CARD to prevent bad plans due to cardinality under estimation errors.
-        cardinality = Math.max(card, Cost.MIN_CARD);
+        cardinality = setMinCard ? Math.max(card, Cost.MIN_CARD) : card;
     }
 
     public double getOrigCardinality() {
         return origCardinality;
     }
 
-    protected void setOrigCardinality(double card) {
+    protected void setOrigCardinality(double card, boolean setMinCard) {
         // Minimum cardinality for operators is MIN_CARD to prevent bad plans due to cardinality under estimation errors.
-        origCardinality = Math.max(card, Cost.MIN_CARD);
+        origCardinality = setMinCard ? Math.max(card, Cost.MIN_CARD) : card;
     }
 
     public void setAvgDocSize(double avgDocSize) {

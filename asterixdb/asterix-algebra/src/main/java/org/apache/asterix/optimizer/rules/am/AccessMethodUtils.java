@@ -1347,7 +1347,7 @@ public class AccessMethodUtils {
         ILogicalOperator currentOp = inputOp;
 
         boolean constantAssignVarUsedInTopOp = false;
-        if (assignsBeforeTopOpRef != null) {
+        if (assignsBeforeTopOpRef != null && !assignsBeforeTopOpRef.isEmpty()) {
             // From the first ASSIGN (earliest in the plan) to the last ASSGIN (latest)
             for (int i = assignsBeforeTopOpRef.size() - 1; i >= 0; i--) {
                 AssignOperator tmpOp = (AssignOperator) assignsBeforeTopOpRef.get(i).getValue();
@@ -1613,7 +1613,7 @@ public class AccessMethodUtils {
 
         // If there are ASSIGN operators before the SELECT or JOIN operator,
         // we need to put these operators between the SELECT or JOIN and the primary index lookup in the left path.
-        if (assignsBeforeTopOpRef != null) {
+        if (assignsBeforeTopOpRef != null && !assignsBeforeTopOpRef.isEmpty()) {
             // Makes the primary unnest-map as the child of the last ASSIGN (from top) in the path.
             assignBeforeTopOp = assignsBeforeTopOpRef.get(assignsBeforeTopOpRef.size() - 1).getValue();
             assignBeforeTopOp.getInputs().clear();

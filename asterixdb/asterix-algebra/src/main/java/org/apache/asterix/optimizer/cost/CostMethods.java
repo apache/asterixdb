@@ -193,6 +193,6 @@ public class CostMethods implements ICostMethods {
     }
 
     protected double costSort(double inputCard) {
-        return (inputCard <= 0 ? 0 : inputCard * Math.log(inputCard) / Math.log(2)); // log to the base 2
+        return (inputCard <= 1 ? 0 : inputCard * Math.log(inputCard) / Math.log(2)); // log to the base 2
     }
 }

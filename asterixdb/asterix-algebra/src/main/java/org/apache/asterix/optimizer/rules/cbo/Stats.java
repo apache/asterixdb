@@ -204,30 +204,33 @@ public class Stats {
             if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                 sel = getSelectivityFromAnnotation(
                         (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
-                return 1.0 - sel;
+                // We want to return 1.0 and not 0.0 if there was no annotation
+                return (sel == 1.0) ? 1.0 : 1.0 - sel;
             }
         }
 
         double s;
         PredicateCardinalityAnnotation pca = afcExpr.getAnnotation(PredicateCardinalityAnnotation.class);
-        if (pca != null) {
-            s = pca.getSelectivity();
-            if (s <= 0 || s >= 1) {
-                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.of(afcExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                            "selectivity", "Selectivity specified: " + s
-                                    + ", has to be a decimal value greater than 0 and less than 1"));
+        if (!join) {
+            if (pca != null) {
+                s = pca.getSelectivity();
+                if (s <= 0 || s >= 1) {
+                    IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(afcExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                                "selectivity", "Selectivity specified: " + s
+                                        + ", has to be a decimal value greater than 0 and less than 1"));
+                    }
+                } else {
+                    sel *= s;
                 }
-            } else {
-                sel *= s;
             }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
             s = findJoinSelectivity(jpa, afcExpr);
             sel *= s;
         }
-        if (join && s == 1.0) {
+        if (join && sel == 1.0) {
             // assume no selectivity was assigned
             joinEnum.singleDatasetPreds.add(afcExpr);
         }

@@ -1,18 +1,18 @@
-distribute result [$$51] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$51]) [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+    project ([$$51]) [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$51] <- [{"$1": $$53}] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+      assign [$$51] <- [{"$1": $$53}] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+        aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+            aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
             -- AGGREGATE  |PARTITIONED|
-              select ($$44) [cardinality: 2.1, op-cost: 0.0, total-cost: 8.0]
+              select ($$44) [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
               -- STREAM_SELECT  |PARTITIONED|
                 project ([$$44]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                 -- STREAM_PROJECT  |PARTITIONED|
