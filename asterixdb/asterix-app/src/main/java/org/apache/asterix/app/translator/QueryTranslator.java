@@ -4864,9 +4864,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // ensure request not cancelled before running job
             ensureNotCancelled(clientRequest);
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("createAndRunJob jobId:{}, uuid:{}", jobId,
-                        requestParameters.getRequestReference().getUuid());
+            if (LOGGER.isInfoEnabled()) {
+                LOGGER.info("Created job {} for query uuid:{}, clientContextID:{}", jobId,
+                        requestParameters.getRequestReference().getUuid(), requestParameters.getClientContextId());
             }
             clientRequest.setJobId(jobId);
             if (jId != null) {
