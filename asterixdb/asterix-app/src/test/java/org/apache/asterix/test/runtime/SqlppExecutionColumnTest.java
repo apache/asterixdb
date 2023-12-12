@@ -28,6 +28,7 @@ import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.base.AsterixTestHelper;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.xml.TestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,10 +63,16 @@ public class SqlppExecutionColumnTest {
     public static Collection<Object[]> tests() throws Exception {
         IGNORED = new HashSet<>(AsterixTestHelper.readTestListFile(new File(IGNORE_FILE)));
         Collection<Object[]> tests = LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_sqlpp_column.xml");
-        return tests.stream().filter(t -> {
-            TestCaseContext ctx = (TestCaseContext) t[0];
-            return !IGNORED_GROUPS.contains(ctx.getTestCase().getFilePath()) && !IGNORED.contains(ctx.toString());
-        }).collect(Collectors.toList());
+        return tests.stream().filter(SqlppExecutionColumnTest::allow).collect(Collectors.toList());
+    }
+
+    private static boolean allow(Object[] test) {
+        TestCaseContext ctx = (TestCaseContext) test[0];
+        TestCase testCase = ctx.getTestCase();
+        boolean notIgnored = !IGNORED_GROUPS.contains(testCase.getFilePath()) && !IGNORED.contains(ctx.toString());
+        boolean noCorrelatedPrefix = testCase.getCompilationUnit().stream().noneMatch(cu -> cu.getPlaceholder().stream()
+                .anyMatch(ph -> ph.getValue().toLowerCase().contains("correlated-prefix")));
+        return notIgnored && noCorrelatedPrefix;
     }
 
     protected TestCaseContext tcCtx;

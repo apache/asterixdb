@@ -26,7 +26,6 @@ join: hash_join_record
 distinct: record
 
 ##### Unsupported merge-policy (correlated-prefix) #####
-ddl: index-cast-null
 dml: using-correlated-prefix-merge-policy
 dml: using-correlated-prefix-merge-policy-with-feed
 dml: scan-delete-btree-correlated-secondary-index-nullable

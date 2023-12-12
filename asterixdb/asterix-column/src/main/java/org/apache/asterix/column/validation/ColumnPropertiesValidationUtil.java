@@ -19,15 +19,18 @@
 package org.apache.asterix.column.validation;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ColumnPropertiesValidationUtil {
+    private static final Set<String> UNSUPPORTED_MERGE_POLICIES = Set.of(CorrelatedPrefixMergePolicyFactory.NAME);
+
     private ColumnPropertiesValidationUtil() {
     }
 
@@ -37,7 +40,7 @@ public class ColumnPropertiesValidationUtil {
             return;
         }
 
-        if (!StorageConstants.DEFAULT_COMPACTION_POLICY_NAME.equals(mergePolicy)) {
+        if (UNSUPPORTED_MERGE_POLICIES.contains(mergePolicy.toLowerCase())) {
             throw CompilationException.create(ErrorCode.UNSUPPORTED_COLUMN_MERGE_POLICY, sourceLocation, mergePolicy);
         }
 
