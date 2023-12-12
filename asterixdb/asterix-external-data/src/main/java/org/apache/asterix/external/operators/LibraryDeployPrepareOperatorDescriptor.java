@@ -33,7 +33,7 @@ import java.security.MessageDigest;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.LibraryDescriptor;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.util.ExternalLibraryUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -56,9 +56,9 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
     private final URI libLocation;
     private final String authToken;
 
-    public LibraryDeployPrepareOperatorDescriptor(IOperatorDescriptorRegistry spec, DataverseName dataverseName,
+    public LibraryDeployPrepareOperatorDescriptor(IOperatorDescriptorRegistry spec, Namespace namespace,
             String libraryName, ExternalFunctionLanguage language, URI libLocation, String authToken) {
-        super(spec, dataverseName, libraryName);
+        super(spec, namespace, libraryName);
         this.language = language;
         this.libLocation = libLocation;
         this.authToken = authToken;
@@ -74,7 +74,7 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
             @Override
             protected void execute() throws IOException {
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Prepare deployment of library {}.{}", dataverseName, libraryName);
+                    LOGGER.info("Prepare deployment of library {}.{}", namespace, libraryName);
                 }
 
                 // #. create library dir if necessary, clean 'stage' dir

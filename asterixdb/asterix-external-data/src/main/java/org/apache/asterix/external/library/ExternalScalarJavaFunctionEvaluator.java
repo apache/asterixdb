@@ -23,7 +23,7 @@ import static org.apache.asterix.om.types.EnumDeserializer.ATYPETAGDESERIALIZER;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.api.IExternalScalarFunction;
 import org.apache.asterix.external.api.IFunctionFactory;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
@@ -49,9 +49,9 @@ class ExternalScalarJavaFunctionEvaluator extends ExternalScalarFunctionEvaluato
             IEvaluatorContext context) throws HyracksDataException {
         super(finfo, args, argTypes, context);
 
-        DataverseName libraryDataverseName = finfo.getLibraryDataverseName();
+        Namespace libraryNamespace = finfo.getLibraryNamespace();
         String libraryName = finfo.getLibraryName();
-        JavaLibrary library = (JavaLibrary) libraryManager.getLibrary(libraryDataverseName, libraryName);
+        JavaLibrary library = (JavaLibrary) libraryManager.getLibrary(libraryNamespace, libraryName);
 
         String classname = finfo.getExternalIdentifier().get(0);
         try {

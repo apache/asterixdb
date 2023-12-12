@@ -188,7 +188,7 @@ public class FeedMetadataUtil {
         if (!ExternalFunctionLanguage.JAVA.name().equals(library.getLanguage())) {
             throw new HyracksDataException("Unexpected library language: " + library.getLanguage());
         }
-        return new ExternalAdapterFactory(libraryDataverse, libraryName, adapterFactoryClassname);
+        return new ExternalAdapterFactory(libraryDatabaseName, libraryDataverse, libraryName, adapterFactoryClassname);
     }
 
     @SuppressWarnings("rawtypes")

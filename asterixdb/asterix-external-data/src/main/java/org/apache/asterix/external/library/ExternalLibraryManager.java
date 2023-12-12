@@ -64,6 +64,8 @@ import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -139,7 +141,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     private final FileReference distDir;
     private final Path trashDirPath;
     //TODO(DB): change for database
-    private final Map<Pair<DataverseName, String>, ILibrary> libraries = new HashMap<>();
+    private final Map<Pair<Namespace, String>, ILibrary> libraries = new HashMap<>();
     private IPCSystem pythonIPC;
     private final ExternalFunctionResultRouter router;
     private final IIOManager ioManager;
@@ -219,7 +221,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     @Override
     public void stop(boolean dumpState, OutputStream ouputStream) {
         synchronized (this) {
-            for (Map.Entry<Pair<DataverseName, String>, ILibrary> p : libraries.entrySet()) {
+            for (Map.Entry<Pair<Namespace, String>, ILibrary> p : libraries.entrySet()) {
                 ILibrary library = p.getValue();
                 try {
                     library.close();
@@ -235,13 +237,13 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
         return storageDir;
     }
 
-    private FileReference getDataverseDir(DataverseName dataverseName) throws HyracksDataException {
-        return getChildFileRef(storageDir, StoragePathUtil.prepareDataverseName(dataverseName));
+    private FileReference getDataverseDir(Namespace namespace) throws HyracksDataException {
+        return getChildFileRef(storageDir, namespacePathResolver.resolve(namespace));
     }
 
     @Override
-    public FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException {
-        FileReference dataverseDir = getDataverseDir(dataverseName);
+    public FileReference getLibraryDir(Namespace namespace, String libraryName) throws HyracksDataException {
+        FileReference dataverseDir = getDataverseDir(namespace);
         return getChildFileRef(dataverseDir, libraryName);
     }
 
@@ -251,8 +253,8 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     @Override
-    public List<Pair<DataverseName, String>> getLibraryListing() throws IOException {
-        List<Pair<DataverseName, String>> libs = new ArrayList<>();
+    public List<Pair<Namespace, String>> getLibraryListing() throws IOException {
+        List<Pair<Namespace, String>> libs = new ArrayList<>();
         Files.walkFileTree(storageDirPath, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path currPath, BasicFileAttributes attrs) {
@@ -277,29 +279,40 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                     //? shouldn't happen
                     return FileVisitResult.TERMINATE;
                 }
-                //add first part, then all multiparts
-                dvParts.add(tokens[0]);
-                int currToken = 1;
-                for (; currToken < tokens.length && tokens[currToken]
-                        .codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER; currToken++) {
-                    dvParts.add(tokens[currToken].substring(1));
-                }
-                //we should only arrive at foo/^bar/^baz/.../^bat/lib
-                //anything else is fishy or empty
-                if (currToken != tokens.length - 1) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-                String candidateLib = tokens[currToken];
-                DataverseName candidateDv;
                 try {
+                    String candidateDb = MetadataConstants.DEFAULT_DATABASE;
+                    if (namespacePathResolver.usingDatabase()) {
+                        if (tokens.length < 3) {
+                            return FileVisitResult.TERMINATE;
+                        }
+                        libs.add(new Pair<>(new Namespace(candidateDb, DataverseName.create(List.of(tokens[1]))),
+                                tokens[3]));
+                        return FileVisitResult.SKIP_SUBTREE;
+
+                    }
+                    //add first part, then look for multiparts
+                    dvParts.add(tokens[0]);
+                    int currToken = 1;
+                    for (; currToken < tokens.length && tokens[currToken]
+                            .codePointAt(0) == StoragePathUtil.DATAVERSE_CONTINUATION_MARKER; currToken++) {
+                        dvParts.add(tokens[currToken].substring(1));
+                    }
+                    //we should only arrive at foo/^bar/^baz/.../^bat/lib
+                    //anything else is fishy or empty
+                    if (currToken != tokens.length - 1) {
+                        return FileVisitResult.SKIP_SUBTREE;
+                    }
+                    String candidateLib = tokens[currToken];
+                    DataverseName candidateDv;
                     candidateDv = DataverseName.create(dvParts);
+                    Namespace candidateNs = new Namespace(candidateDb, candidateDv);
+                    FileReference candidateLibPath = findLibraryRevDir(candidateNs, candidateLib);
+                    if (candidateLibPath != null) {
+                        libs.add(new Pair<>(candidateNs, candidateLib));
+                    }
                 } catch (AsterixException e) {
                     // shouldn't happen
                     throw HyracksDataException.create(e);
-                }
-                FileReference candidateLibPath = findLibraryRevDir(candidateDv, candidateLib);
-                if (candidateLibPath != null) {
-                    libs.add(new Pair<>(candidateDv, candidateLib));
                 }
                 return FileVisitResult.SKIP_SUBTREE;
             }
@@ -308,8 +321,8 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     @Override
-    public String getLibraryHash(DataverseName dataverseName, String libraryName) throws IOException {
-        FileReference revDir = findLibraryRevDir(dataverseName, libraryName);
+    public String getLibraryHash(Namespace namespace, String libraryName) throws IOException {
+        FileReference revDir = findLibraryRevDir(namespace, libraryName);
         if (revDir == null) {
             throw HyracksDataException
                     .create(AsterixException.create(ErrorCode.EXTERNAL_UDF_EXCEPTION, "Library does not exist"));
@@ -319,26 +332,26 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     @Override
-    public ILibrary getLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException {
-        Pair<DataverseName, String> key = getKey(dataverseName, libraryName);
+    public ILibrary getLibrary(Namespace namespace, String libraryName) throws HyracksDataException {
+        Pair<Namespace, String> key = getKey(namespace, libraryName);
         synchronized (this) {
             ILibrary library = libraries.get(key);
             if (library == null) {
-                library = loadLibrary(dataverseName, libraryName);
+                library = loadLibrary(namespace, libraryName);
                 libraries.put(key, library);
             }
             return library;
         }
     }
 
-    private ILibrary loadLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException {
-        FileReference libRevDir = findLibraryRevDir(dataverseName, libraryName);
+    private ILibrary loadLibrary(Namespace namespace, String libraryName) throws HyracksDataException {
+        FileReference libRevDir = findLibraryRevDir(namespace, libraryName);
         if (libRevDir == null) {
-            throw new HyracksDataException("Cannot find library: " + dataverseName + '.' + libraryName);
+            throw new HyracksDataException("Cannot find library: " + namespace + '.' + libraryName);
         }
         FileReference libContentsDir = libRevDir.getChild(CONTENTS_DIR_NAME);
         if (!libContentsDir.getFile().isDirectory()) {
-            throw new HyracksDataException("Cannot find library: " + dataverseName + '.' + libraryName);
+            throw new HyracksDataException("Cannot find library: " + namespace + '.' + libraryName);
         }
         try {
             ExternalFunctionLanguage libLang = getLibraryDescriptor(libRevDir).getLanguage();
@@ -351,7 +364,7 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
                     throw new HyracksDataException("Invalid language: " + libraryName);
             }
         } catch (IOException e) {
-            LOGGER.error("Failed to initialize library " + dataverseName + '.' + libraryName, e);
+            LOGGER.error("Failed to initialize library " + namespace + '.' + libraryName, e);
             throw HyracksDataException.create(e);
         }
     }
@@ -377,9 +390,8 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
 
     }
 
-    private FileReference findLibraryRevDir(DataverseName dataverseName, String libraryName)
-            throws HyracksDataException {
-        FileReference libraryBaseDir = getLibraryDir(dataverseName, libraryName);
+    private FileReference findLibraryRevDir(Namespace namespace, String libraryName) throws HyracksDataException {
+        FileReference libraryBaseDir = getLibraryDir(namespace, libraryName);
         if (!libraryBaseDir.getFile().isDirectory()) {
             return null;
         }
@@ -395,8 +407,8 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     }
 
     @Override
-    public void closeLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException {
-        Pair<DataverseName, String> key = getKey(dataverseName, libraryName);
+    public void closeLibrary(Namespace namespace, String libraryName) throws HyracksDataException {
+        Pair<Namespace, String> key = getKey(namespace, libraryName);
         ILibrary library;
         synchronized (this) {
             library = libraries.remove(key);
@@ -410,8 +422,16 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     public void dumpState(OutputStream os) {
     }
 
-    private static Pair<DataverseName, String> getKey(DataverseName dataverseName, String libraryName) {
-        return new Pair<>(dataverseName, libraryName);
+    private static Pair<Namespace, String> getKey(Namespace namespace, String libraryName) {
+        return new Pair<>(namespace, libraryName);
+    }
+
+    @Override
+    public String getNsOrDv(Namespace ns) {
+        if (namespacePathResolver.usingDatabase()) {
+            return ns.toString();
+        }
+        return ns.getDataverseName().toString();
     }
 
     public Path zipAllLibs() throws IOException {

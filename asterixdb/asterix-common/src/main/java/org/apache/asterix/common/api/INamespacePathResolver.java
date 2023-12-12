@@ -27,4 +27,6 @@ public interface INamespacePathResolver {
 
     String resolve(String databaseName, DataverseName dataverseName);
 
+    boolean usingDatabase();
+
 }

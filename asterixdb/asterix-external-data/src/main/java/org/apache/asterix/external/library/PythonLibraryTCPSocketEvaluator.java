@@ -69,8 +69,7 @@ public class PythonLibraryTCPSocketEvaluator extends AbstractLibrarySocketEvalua
     @Override
     public void start() throws IOException, AsterixException {
         PythonLibraryEvaluatorId fnId = (PythonLibraryEvaluatorId) id;
-        PythonLibrary library =
-                (PythonLibrary) libMgr.getLibrary(fnId.getLibraryDataverseName(), fnId.getLibraryName());
+        PythonLibrary library = (PythonLibrary) libMgr.getLibrary(fnId.getLibraryNamespace(), fnId.getLibraryName());
         String wd = library.getFile().getAbsolutePath();
         int port = ipcSys.getSocketAddress().getPort();
         List<String> args = new ArrayList<>();
@@ -110,7 +109,7 @@ public class PythonLibraryTCPSocketEvaluator extends AbstractLibrarySocketEvalua
             ExternalFunctionResultRouter router, IPCSystem ipcSys, File pythonHome, IHyracksTaskContext ctx,
             String sitePkgs, List<String> pythonArgs, Map<String, String> pythonEnv, IWarningCollector warningCollector,
             SourceLocation sourceLoc) throws IOException, AsterixException {
-        PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(finfo.getLibraryDataverseName(),
+        PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(finfo.getLibraryNamespace(),
                 finfo.getLibraryName(), Thread.currentThread());
         PythonLibraryTCPSocketEvaluator evaluator = (PythonLibraryTCPSocketEvaluator) ctx.getStateObject(evaluatorId);
         if (evaluator == null) {

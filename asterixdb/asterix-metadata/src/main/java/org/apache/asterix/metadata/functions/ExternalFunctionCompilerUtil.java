@@ -26,6 +26,7 @@ import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Function;
 import org.apache.asterix.om.functions.IExternalFunctionInfo;
@@ -81,8 +82,10 @@ public class ExternalFunctionCompilerUtil {
 
         //TODO(DB): review
         return new ExternalScalarFunctionInfo(function.getSignature().createFunctionIdentifier(), paramTypes,
-                returnType, typeComputer, lang, function.getLibraryDataverseName(), function.getLibraryName(),
-                function.getExternalIdentifier(), function.getResources(), deterministic, function.getNullCall());
+                returnType, typeComputer, lang,
+                new Namespace(function.getLibraryDatabaseName(), function.getLibraryDataverseName()),
+                function.getLibraryName(), function.getExternalIdentifier(), function.getResources(), deterministic,
+                function.getNullCall());
     }
 
     private static IFunctionInfo getUnnestFunctionInfo(MetadataProvider metadataProvider, Function function) {

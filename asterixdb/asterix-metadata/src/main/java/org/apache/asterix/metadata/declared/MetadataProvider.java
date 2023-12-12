@@ -578,9 +578,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 break;
             case EXTERNAL:
                 ExternalAdapterFactory extAdapterFactory = (ExternalAdapterFactory) adapterFactory;
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDataverse(),
-                        extAdapterFactory.getLibraryName(), extAdapterFactory.getClassName(), recordType,
-                        policyAccessor, factoryOutput.second);
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDatabase(),
+                        extAdapterFactory.getLibraryDataverse(), extAdapterFactory.getLibraryName(),
+                        extAdapterFactory.getClassName(), recordType, policyAccessor, factoryOutput.second);
                 break;
             default:
                 break;

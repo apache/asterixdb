@@ -22,7 +22,7 @@ package org.apache.asterix.common.metadata;
 import java.io.Serializable;
 import java.util.Objects;
 
-public final class Namespace implements Serializable {
+public final class Namespace implements Serializable, Comparable<Namespace> {
 
     private static final long serialVersionUID = 1L;
 
@@ -61,4 +61,12 @@ public final class Namespace implements Serializable {
         return Objects.equals(databaseName, that.databaseName) && Objects.equals(dataverseName, that.dataverseName);
     }
 
+    @Override
+    public int compareTo(Namespace that) {
+        int dbComp = databaseName.compareTo(that.getDatabaseName());
+        if (dbComp == 0) {
+            return dataverseName.compareTo(that.getDataverseName());
+        }
+        return dbComp;
+    }
 }

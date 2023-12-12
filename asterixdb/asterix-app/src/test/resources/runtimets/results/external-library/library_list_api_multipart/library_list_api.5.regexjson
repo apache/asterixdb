@@ -1,5 +1,5 @@
 [{
-	"dataverse": "external/lib/test",
+	"dataverse": "external.lib.test",
 	"hash_md5": "R{[a-zA-Z0-9-]+}",
 	"name": "testlib"
 },
@@ -9,12 +9,12 @@
 	"name": "testlib"
 },
 {
-	"dataverse": "externallibtest/foo",
+	"dataverse": "externallibtest.foo",
 	"hash_md5": "R{[a-zA-Z0-9-]+}",
 	"name": "testlib"
 },
 {
-	"dataverse": "externallibtest/foo/bar",
+	"dataverse": "externallibtest.foo.bar",
 	"hash_md5": "R{[a-zA-Z0-9-]+}",
 	"name": "testlib"
 }]

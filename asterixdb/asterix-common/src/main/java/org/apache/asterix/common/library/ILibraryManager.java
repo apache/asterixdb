@@ -26,7 +26,7 @@ import java.security.MessageDigest;
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.ipc.ExternalFunctionResultRouter;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -38,21 +38,23 @@ import org.apache.hyracks.ipc.impl.IPCSystem;
 
 public interface ILibraryManager {
 
-    List<Pair<DataverseName, String>> getLibraryListing() throws IOException;
+    List<Pair<Namespace, String>> getLibraryListing() throws IOException;
 
-    String getLibraryHash(DataverseName dataverseName, String libraryName) throws IOException;
+    String getLibraryHash(Namespace namespace, String libraryName) throws IOException;
 
-    ILibrary getLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException;
+    ILibrary getLibrary(Namespace namespace, String libraryName) throws HyracksDataException;
 
-    void closeLibrary(DataverseName dataverseName, String libraryName) throws HyracksDataException;
+    void closeLibrary(Namespace namespace, String libraryName) throws HyracksDataException;
 
     // deployment helpers
 
     FileReference getStorageDir();
 
-    FileReference getLibraryDir(DataverseName dataverseName, String libraryName) throws HyracksDataException;
+    FileReference getLibraryDir(Namespace namespace, String libraryName) throws HyracksDataException;
 
     FileReference getDistributionDir();
+
+    String getNsOrDv(Namespace ns);
 
     void dropLibraryPath(FileReference fileRef) throws HyracksDataException;
 

@@ -448,7 +448,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app</id>
       <properties>
-        <test.excludes>**/CloudStorageTest.java,**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/SqlppExecutionColumnTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,**/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java</test.excludes>
+        <test.excludes>**/CloudStorageTest.java,**/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,**/SqlppExecutionColumnTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,**/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java,**/CloudPythonTest.java</test.excludes>
         <itest.excludes>**/*.java</itest.excludes>
       </properties>
       <build>
@@ -482,7 +482,7 @@
       <id>asterix-gerrit-asterix-app-sql-execution</id>
       <properties>
         <test.excludes>**/*.java</test.excludes>
-        <itest.includes>**/SqlppExecution*IT.java,**/ExternalPythonFunctionIT.java</itest.includes>
+        <itest.includes>**/SqlppExecution*IT.java,**/ExternalPythonFunctionIT.java,**/CloudPythonTest.java</itest.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>

@@ -30,6 +30,7 @@
     </test-case>
     <test-case FilePath="external-library">
       <compilation-unit name="mysentiment_multipart">
+        <description>MP</description>
         <output-dir compare="Text">mysentiment</output-dir>
       </compilation-unit>
     </test-case>
