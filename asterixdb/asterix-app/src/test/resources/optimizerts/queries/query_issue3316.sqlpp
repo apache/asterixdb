@@ -17,19 +17,18 @@
  * under the License.
  */
 /*
- * Description  : This test case is to verify the fix for issue827
- * https://code.google.com/p/asterixdb/issues/detail?id=849
+ * Description  : This test case is to verify the fix for issue 3316
  * Expected Res : SUCCESS
- * Date         : 2nd Feb. 2015
  */
 
 drop  dataverse test if exists;
 create  dataverse test;
 
 use test;
+create type dt1 as {id:int};
 
-create dataset collection0 primary key (id:int);
-create dataset collection1 primary key (id:int);
+create dataset collection0(dt1) primary key id;
+create dataset collection1(dt1) primary key id;
 
 SELECT DISTINCT T1.*,
         (SELECT H.u

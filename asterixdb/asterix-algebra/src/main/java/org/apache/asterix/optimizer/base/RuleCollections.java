@@ -115,6 +115,7 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
 import org.apache.hyracks.algebricks.rewriter.rules.BreakSelectIntoConjunctsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ComplexUnnestToProductRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateAssignsRule;
+import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateLeftOuterJoinSelectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.EliminateGroupByEmptyKeyRule;
@@ -346,6 +347,8 @@ public final class RuleCollections {
         planCleanupRules.add(new RemoveRedundantVariablesInUnionRule()); // relies on RemoveUnusedAssignAndAggregateRule
         planCleanupRules.add(new PushProjectDownRule());
         planCleanupRules.add(new PushSelectDownRule());
+        // Must run after PushSelectDownRule
+        planCleanupRules.add(new ConsolidateLeftOuterJoinSelectsRule());
         planCleanupRules.add(new SetClosedRecordConstructorsRule());
         planCleanupRules.add(new IntroduceDynamicTypeCastRule());
         planCleanupRules.add(new IntroduceDynamicTypeCastForExternalFunctionRule());

@@ -19,6 +19,8 @@
 
 package org.apache.asterix.api.http.server;
 
+import static org.apache.asterix.utils.RedactionUtil.REDACTED_SENSITIVE_ENTRY_VALUE;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -43,6 +45,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 import org.apache.hyracks.util.JSONUtil;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -80,7 +83,8 @@ public class QueryServiceRequestParameters {
         SIGNATURE("signature"),
         MULTI_STATEMENT("multi-statement"),
         MAX_WARNINGS("max-warnings"),
-        SQL_COMPAT("sql-compat");
+        SQL_COMPAT("sql-compat"),
+        SOURCE("source");
 
         private final String str;
 
@@ -124,6 +128,7 @@ public class QueryServiceRequestParameters {
     private String statement;
     private String clientContextID;
     private String dataverse;
+    private String source;
     private ClientType clientType = ClientType.ASTERIX;
     private OutputFormat format = OutputFormat.CLEAN_JSON;
     private ResultDelivery mode = ResultDelivery.IMMEDIATE;
@@ -170,6 +175,14 @@ public class QueryServiceRequestParameters {
 
     public void setStatement(String statement) {
         this.statement = statement;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public OutputFormat getFormat() {
@@ -380,7 +393,8 @@ public class QueryServiceRequestParameters {
         ObjectNode object = OBJECT_MAPPER.createObjectNode();
         object.put("host", host);
         object.put("path", path);
-        object.put("statement", statement != null ? JSONUtil.escape(new StringBuilder(), statement).toString() : null);
+        object.put("statement", statement != null
+                ? LogRedactionUtil.statement(JSONUtil.escape(new StringBuilder(), statement).toString()) : null);
         object.put("pretty", pretty);
         object.put("mode", mode.getName());
         object.put("clientContextID", clientContextID);
@@ -402,9 +416,10 @@ public class QueryServiceRequestParameters {
         object.put("readOnly", readOnly);
         object.put("maxWarnings", maxWarnings);
         object.put("sqlCompat", sqlCompatMode);
+        object.put("source", source);
         if (statementParams != null) {
             for (Map.Entry<String, JsonNode> statementParam : statementParams.entrySet()) {
-                object.set('$' + statementParam.getKey(), statementParam.getValue());
+                object.set('$' + statementParam.getKey(), REDACTED_SENSITIVE_ENTRY_VALUE);
             }
         }
         return object;
@@ -486,6 +501,7 @@ public class QueryServiceRequestParameters {
         setSignature(parseBoolean(req, Parameter.SIGNATURE.str(), valGetter, isSignature()));
         setClientType(parseIfExists(req, Parameter.CLIENT_TYPE.str(), valGetter, getClientType(), clientTypes::get));
         setSQLCompatMode(parseBoolean(req, Parameter.SQL_COMPAT.str(), valGetter, isSQLCompatMode()));
+        setSource(valGetter.apply(req, Parameter.SOURCE.str()));
     }
 
     protected void setExtraParams(JsonNode jsonRequest) throws HyracksDataException {
