@@ -17,15 +17,11 @@
  * under the License.
  */
 
-/*
- * Description: This test case is to verify the fix for ASTERIXDB-2947
- */
+USE tpch;
 
-drop dataverse test if exists;
-create dataverse test;
-
-use test;
-
-create type dt1 as {id:int};
-create dataset collection0(dt1) primary key id;
-create dataset collection1(dt1) primary key id;
+SELECT VALUE COUNT(*)
+FROM            Customer c
+LEFT OUTER JOIN Orders o
+ON  c.c_custkey  = o.o_custkey
+AND o.o_comment NOT LIKE '%special%requests%'
+AND (CASE WHEN o.o_totalprice > 100000.0 THEN TRUE ELSE FALSE END)
