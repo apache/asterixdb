@@ -147,7 +147,7 @@ public class PushdownUtil {
     }
 
     public static boolean isNestedFunction(FunctionIdentifier fid) {
-        return isObjectFunction(fid) || isArrayFunction(fid) || BuiltinFunctions.DEEP_EQUAL.equals(fid);
+        return isObjectFunction(fid) || isArrayOrAggregateFunction(fid) || BuiltinFunctions.DEEP_EQUAL.equals(fid);
     }
 
     public static boolean isObjectFunction(FunctionIdentifier fid) {
@@ -155,10 +155,11 @@ public class PushdownUtil {
         return functionName.contains("object") || BuiltinFunctions.PAIRS.equals(fid);
     }
 
-    public static boolean isArrayFunction(FunctionIdentifier fid) {
+    public static boolean isArrayOrAggregateFunction(FunctionIdentifier fid) {
         String functionName = fid.getName();
         return functionName.startsWith("array") || functionName.startsWith("strict") || functionName.startsWith("sql")
-                || BuiltinFunctions.GET_ITEM.equals(fid);
+                || BuiltinFunctions.GET_ITEM.equals(fid) || BuiltinFunctions.isBuiltinScalarAggregateFunction(fid)
+                || BuiltinFunctions.isBuiltinAggregateFunction(fid);
     }
 
     public static boolean isSameFunction(ILogicalExpression expr1, ILogicalExpression expr2) {

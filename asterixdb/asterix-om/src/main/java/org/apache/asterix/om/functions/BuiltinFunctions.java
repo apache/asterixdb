@@ -2780,19 +2780,33 @@ public class BuiltinFunctions {
     }
 
     public enum WindowFunctionProperty implements BuiltinFunctionProperty {
-        /** Whether the order clause is prohibited */
+        /**
+         * Whether the order clause is prohibited
+         */
         NO_ORDER_CLAUSE,
-        /** Whether the frame clause is prohibited */
+        /**
+         * Whether the frame clause is prohibited
+         */
         NO_FRAME_CLAUSE,
-        /** Whether the first argument is a list */
+        /**
+         * Whether the first argument is a list
+         */
         HAS_LIST_ARG,
-        /** Whether order by expressions must be injected as arguments */
+        /**
+         * Whether order by expressions must be injected as arguments
+         */
         INJECT_ORDER_ARGS,
-        /** Whether a running aggregate requires partition materialization runtime */
+        /**
+         * Whether a running aggregate requires partition materialization runtime
+         */
         MATERIALIZE_PARTITION,
-        /** Whether FROM (FIRST | LAST) modifier is allowed */
+        /**
+         * Whether FROM (FIRST | LAST) modifier is allowed
+         */
         ALLOW_FROM_FIRST_LAST,
-        /** Whether (RESPECT | IGNORE) NULLS modifier is allowed */
+        /**
+         * Whether (RESPECT | IGNORE) NULLS modifier is allowed
+         */
         ALLOW_RESPECT_IGNORE_NULLS
     }
 
@@ -2823,7 +2837,9 @@ public class BuiltinFunctions {
     }
 
     public enum DataSourceFunctionProperty implements BuiltinFunctionProperty {
-        /** Force minimum memory budget if a query only uses this function */
+        /**
+         * Force minimum memory budget if a query only uses this function
+         */
         MIN_MEMORY_BUDGET
     }
 
@@ -2861,6 +2877,10 @@ public class BuiltinFunctions {
 
     public static boolean isBuiltinAggregateFunction(FunctionIdentifier fi) {
         return builtinAggregateFunctions.contains(fi);
+    }
+
+    public static boolean isBuiltinScalarAggregateFunction(FunctionIdentifier fi) {
+        return scalarToAggregateFunctionMap.containsKey(fi);
     }
 
     public static boolean isBuiltinUnnestingFunction(FunctionIdentifier fi) {
