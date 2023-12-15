@@ -16373,6 +16373,11 @@
         <output-dir compare="Text">filter/not-in_every</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/non-existing-fields">
+        <output-dir compare="Text">filter/non-existing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="column">
       <compilation-unit name="big-object">
         <output-dir compare="Text">big-object</output-dir>

@@ -1,0 +1,9 @@
+{ "orderno": 1001, "custid": "C41", "order_date": "2017-04-29", "ship_date": "2017-05-03", "items": [ { "itemno": 347, "qty": 5, "price": 19.99 }, { "itemno": 193, "qty": 2, "price": 28.89 } ] }
+{ "orderno": 1002, "custid": "C13", "order_date": "2017-05-01", "ship_date": "2017-05-03", "items": [ { "itemno": 460, "qty": 95, "price": 100.99 }, { "itemno": 680, "qty": 150, "price": 8.75 } ] }
+{ "orderno": 1003, "custid": "C31", "order_date": "2017-06-15", "ship_date": "2017-06-16", "items": [ { "itemno": 120, "qty": 2, "price": 88.99 }, { "itemno": 460, "qty": 3, "price": 99.99 } ] }
+{ "orderno": 1004, "custid": "C35", "order_date": "2017-07-10", "ship_date": "2017-07-15", "items": [ { "itemno": 680, "qty": 6, "price": 9.99 }, { "itemno": 195, "qty": 4, "price": 35.00 } ] }
+{ "orderno": 1005, "custid": "C37", "order_date": "2017-08-30", "items": [ { "itemno": 460, "qty": 2, "price": 99.98 }, { "itemno": 347, "qty": 120, "price": 22.00 }, { "itemno": 780, "qty": 1, "price": 1500.00  }, { "itemno": 375, "qty": 2, "price": 149.98 } ] }
+{ "orderno": 1006, "custid": "C41", "order_date": "2017-09-02", "ship_date": "2017-09-04", "items": [ { "itemno": 680, "qty": 51, "price": 25.98 }, { "itemno": 120, "qty": 65, "price": 85.00 }, { "itemno": 460, "qty": 120, "price": 99.98 } ] }
+{ "orderno": 1007, "custid": "C13", "order_date": "2017-09-13", "ship_date": "2017-09-20", "items": [ { "itemno": 185, "qty": 5, "price": 21.99 }, { "itemno": 680, "qty": 1, "price": 20.50 } ] }
+{ "orderno": 1008, "custid": "C13", "order_date": "2017-10-13", "items": [ { "itemno": 460, "qty": 20, "price": 99.99 } ] }
+{ "orderno": 1009, "custid": "C13", "order_date": "2017-10-13", "items": [ ] }
