@@ -244,7 +244,8 @@ public class PushdownContext {
 
     private static Set<LogicalOperatorTag> getScopeOperators() {
         return EnumSet.of(LogicalOperatorTag.INNERJOIN, LogicalOperatorTag.LEFTOUTERJOIN, LogicalOperatorTag.GROUP,
-                LogicalOperatorTag.AGGREGATE, LogicalOperatorTag.WINDOW, LogicalOperatorTag.UNIONALL);
+                LogicalOperatorTag.AGGREGATE, LogicalOperatorTag.WINDOW, LogicalOperatorTag.RUNNINGAGGREGATE,
+                LogicalOperatorTag.UNIONALL, LogicalOperatorTag.INTERSECT);
     }
 
 }
