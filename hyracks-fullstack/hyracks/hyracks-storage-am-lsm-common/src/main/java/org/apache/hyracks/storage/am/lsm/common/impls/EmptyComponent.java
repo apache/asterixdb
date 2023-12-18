@@ -152,4 +152,9 @@ public class EmptyComponent implements ILSMDiskComponent {
     public int getReaderCount() {
         return 0;
     }
+
+    @Override
+    public String toString() {
+        return "EmptyComponent";
+    }
 }

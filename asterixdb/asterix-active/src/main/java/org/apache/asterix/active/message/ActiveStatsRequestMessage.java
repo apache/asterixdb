@@ -25,7 +25,7 @@ public class ActiveStatsRequestMessage extends ActiveManagerMessage {
     private final long reqId;
 
     public ActiveStatsRequestMessage(ActiveRuntimeId runtimeId, long reqId) {
-        super(Kind.REQUEST_STATS, runtimeId, null);
+        super(Kind.REQUEST_STATS, runtimeId, null, "");
         this.reqId = reqId;
     }
 

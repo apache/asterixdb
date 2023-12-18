@@ -146,7 +146,7 @@ public class ActiveStatsTest {
         Assert.assertTrue(requestedStats.contains("N/A"));
         // Fake partition message and notify eventListener
         ActivePartitionMessage partitionMessage =
-                new ActivePartitionMessage(activeRuntimeId, jobId, Event.RUNTIME_REGISTERED, null);
+                new ActivePartitionMessage(activeRuntimeId, jobId, Event.RUNTIME_REGISTERED, null, "");
         partitionMessage.handle(appCtx);
         start.sync();
         if (start.hasFailed()) {

@@ -263,7 +263,7 @@ public class TestUserActor extends Actor {
         Action action = new Action() {
             @Override
             protected void doExecute(MetadataProvider mdProvider) throws Exception {
-                handler.suspend(mdProvider);
+                handler.suspend(mdProvider, "");
             }
         };
         add(action);

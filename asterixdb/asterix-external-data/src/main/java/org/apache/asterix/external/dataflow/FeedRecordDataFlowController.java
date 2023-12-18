@@ -98,7 +98,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
                 }
             }
         } catch (HyracksDataException e) {
-            LOGGER.log(Level.WARN, "Exception during ingestion", e);
+            logFailure(e);
             if (e.matches(ErrorCode.FEED_FAILED_WHILE_GETTING_A_NEW_RECORD)) {
                 // Failure but we know we can for sure push the previously parsed records safely
                 failure = e;
@@ -113,7 +113,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
             }
         } catch (Throwable e) {
             failure = e;
-            LOGGER.log(Level.WARN, "Failure while operating a feed source", e);
+            logFailure(e);
         } finally {
             failure = finish(failure);
         }
@@ -126,7 +126,7 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     }
 
     private synchronized void setState(State newState) {
-        LOGGER.log(Level.INFO, "State is being set from " + state + " to " + newState);
+        LOGGER.info("controller is being set from {} to {} ", state, newState);
         state = newState;
     }
 
@@ -288,5 +288,13 @@ public class FeedRecordDataFlowController<T> extends AbstractFeedDataFlowControl
     @Override
     public void handleGenericEvent(ActiveManagerMessage event) {
         recordReader.handleGenericEvent(event);
+    }
+
+    private void logFailure(Throwable th) {
+        if (th instanceof InterruptedException || th.getCause() instanceof InterruptedException) {
+            LOGGER.warn("data flow controller interrupted", th);
+        } else {
+            LOGGER.warn("data flow controller failed", th);
+        }
     }
 }

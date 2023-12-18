@@ -92,7 +92,7 @@ public class TestNodeControllerActor extends Actor {
                     subscriber.beforeExecute();
                 }
                 ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
-                        new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_DEREGISTERED, null));
+                        new ActiveRuntimeId(entityId, id, partition), jobId, Event.RUNTIME_DEREGISTERED, null, ""));
                 clusterController.activeEvent(event);
             }
         };
