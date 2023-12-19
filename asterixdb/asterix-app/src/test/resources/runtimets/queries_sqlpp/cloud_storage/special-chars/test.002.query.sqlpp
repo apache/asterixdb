@@ -20,4 +20,4 @@
 USE `part_1-`.`p_r-t2`;
 
 SELECT VALUE COUNT(*)
-FROM `some@dataset`;
+FROM `some_data-set`;

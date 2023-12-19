@@ -1928,6 +1928,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             validateNamespaceName(namespace, sourceLoc);
         }
         validateDatabaseObjectNameImpl(objectName, sourceLoc);
+        if (namespaceResolver.isUsingDatabase()) {
+            validateChars(objectName, sourceLoc);
+        }
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {

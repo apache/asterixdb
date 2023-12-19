@@ -16,11 +16,5 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-DROP DATABASE `part_1-` IF EXISTS;
-CREATE DATABASE `part_1-`;
-DROP DATAVERSE `part_1-`.`p_r-t2` IF EXISTS;
-CREATE DATAVERSE `part_1-`.`p_r-t2`;
-
-USE `part_1-`.`p_r-t2`;
-CREATE COLLECTION `some_data-set` PRIMARY KEY (id: int);
+// should fail. only chars, letters, '-' and '_' are allowed
+CREATE DATAVERSE db1.`dv.with.dot`;

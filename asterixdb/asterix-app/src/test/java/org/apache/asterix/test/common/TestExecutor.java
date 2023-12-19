@@ -2224,24 +2224,27 @@ public class TestExecutor {
         String replacerId = executorId == null ? DEF_REPLACER : executorId;
 
         List<CompilationUnit.ExpectedWarn> expectedWarns = cUnit.getExpectedWarn();
-        expectedWarns.stream().filter(w -> !w.getReplacers().isEmpty()).forEach(w -> w.setValue(
-                MessageFormat.format(w.getValue(), (Object[]) getReplacements(cUnit, replacerId, w.getReplacers()))));
+        expectedWarns.stream().filter(w -> w.getReplacers() != null && !w.getReplacers().isEmpty())
+                .forEach(w -> w.setValue(MessageFormat.format(w.getValue(),
+                        (Object[]) getReplacements(cUnit, replacerId, w.getReplacers()))));
 
         List<CompilationUnit.ExpectedError> expectedErrors = cUnit.getExpectedError();
-        expectedErrors.stream().filter(e -> !e.getReplacers().isEmpty()).forEach(e -> e.setValue(
-                MessageFormat.format(e.getValue(), (Object[]) getReplacements(cUnit, replacerId, e.getReplacers()))));
+        expectedErrors.stream().filter(e -> e.getReplacers() != null && !e.getReplacers().isEmpty())
+                .forEach(e -> e.setValue(MessageFormat.format(e.getValue(),
+                        (Object[]) getReplacements(cUnit, replacerId, e.getReplacers()))));
     }
 
-    private static String[] getReplacements(CompilationUnit cUnit, String replacerId, List<String> replacers) {
-        Optional<String> replacements = replacers.stream().filter(s -> s.startsWith(replacerId)).findFirst();
+    private static String[] getReplacements(CompilationUnit cUnit, String replacerId, String replacersStr) {
+        String[] replacers = replacersStr.split("\\|");
+        Optional<String> replacements = Arrays.stream(replacers).filter(s -> s.startsWith(replacerId)).findFirst();
         if (replacements.isPresent()) {
             return replacements.get().substring(replacerId.length() + 1).split(",");
         }
         LOGGER.error("Test '{}', could not find message replacements for '{}' in replacements {}", cUnit.getName(),
-                replacerId, replacers);
+                replacerId, replacersStr);
         throw new RuntimeException(
                 String.format("Test '%s', could not find message replacements for '%s' in replacements %s",
-                        cUnit.getName(), replacerId, replacers));
+                        cUnit.getName(), replacerId, replacersStr));
     }
 
     private String applySubstitution(String statement, List<Parameter> parameters) throws Exception {

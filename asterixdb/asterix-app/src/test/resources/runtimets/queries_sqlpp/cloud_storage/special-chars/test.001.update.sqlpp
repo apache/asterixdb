@@ -19,4 +19,4 @@
 
 USE `part_1-`.`p_r-t2`;
 
-UPSERT INTO `some@dataset` {"id": 1};
+UPSERT INTO `some_data-set` {"id": 1};
