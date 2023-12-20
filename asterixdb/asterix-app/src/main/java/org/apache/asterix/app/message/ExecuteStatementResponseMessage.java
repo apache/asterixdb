@@ -31,9 +31,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.Warning;
 
 public final class ExecuteStatementResponseMessage implements INcAddressedMessage {
-    private static final long serialVersionUID = 1L;
+
+    private static final long serialVersionUID = 2L;
 
     private final long requestMessageId;
+    private final String clientContextID;
+    private final String uuid;
 
     private String result;
 
@@ -49,8 +52,10 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     private Collection<Warning> warnings;
 
-    public ExecuteStatementResponseMessage(long requestMessageId) {
+    public ExecuteStatementResponseMessage(long requestMessageId, String clientContextID, String uuid) {
         this.requestMessageId = requestMessageId;
+        this.clientContextID = clientContextID;
+        this.uuid = uuid;
     }
 
     @Override
@@ -120,7 +125,7 @@ public final class ExecuteStatementResponseMessage implements INcAddressedMessag
 
     @Override
     public String toString() {
-        return String.format("%s(id=%s): %d characters", getClass().getSimpleName(), requestMessageId,
-                result != null ? result.length() : 0);
+        return String.format("%s(id=%s, uuid=%s, clientContextId=%s): %d characters", getClass().getSimpleName(),
+                requestMessageId, uuid, clientContextID, result != null ? result.length() : 0);
     }
 }

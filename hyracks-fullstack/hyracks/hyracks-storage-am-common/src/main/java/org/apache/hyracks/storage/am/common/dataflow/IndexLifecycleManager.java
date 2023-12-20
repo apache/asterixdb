@@ -196,7 +196,7 @@ public class IndexLifecycleManager implements IResourceLifecycleManager<IIndex>,
     public void unregister(String resourcePath) throws HyracksDataException {
         IndexInfo info = indexInfos.get(resourcePath);
         if (info == null) {
-            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST);
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST, resourcePath);
         }
 
         if (info.referenceCount != 0) {

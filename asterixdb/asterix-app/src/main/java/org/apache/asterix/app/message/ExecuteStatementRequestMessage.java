@@ -150,7 +150,8 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         ILangCompilationProvider compilationProvider = ccExtMgr.getCompilationProvider(lang);
         IStorageComponentProvider storageComponentProvider = ccAppCtx.getStorageComponentProvider();
         IStatementExecutorFactory statementExecutorFactory = ccApp.getStatementExecutorFactory();
-        ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
+        ExecuteStatementResponseMessage responseMsg =
+                new ExecuteStatementResponseMessage(requestMessageId, clientContextID, requestReference.getUuid());
         final IStatementExecutor.StatementProperties statementProperties = new IStatementExecutor.StatementProperties();
         responseMsg.setStatementProperties(statementProperties);
         try {
@@ -230,9 +231,10 @@ public class ExecuteStatementRequestMessage implements ICcAddressedMessage {
         return null;
     }
 
-    protected static void sendRejection(Exception reason, CCMessageBroker messageBroker, long requestMessageId,
+    protected void sendRejection(Exception reason, CCMessageBroker messageBroker, long requestMessageId,
             String requestNodeId) {
-        ExecuteStatementResponseMessage responseMsg = new ExecuteStatementResponseMessage(requestMessageId);
+        ExecuteStatementResponseMessage responseMsg =
+                new ExecuteStatementResponseMessage(requestMessageId, clientContextID, requestReference.getUuid());
         responseMsg.setError(reason);
         try {
             messageBroker.sendApplicationMessageToNC(responseMsg, requestNodeId);

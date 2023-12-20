@@ -318,6 +318,6 @@ public class StartTasksWork extends AbstractWork {
 
     @Override
     public String toString() {
-        return getName() + " jobId:" + jobId;
+        return getName() + " jobId:" + jobId + " tasks:" + taskDescriptors.size();
     }
 }

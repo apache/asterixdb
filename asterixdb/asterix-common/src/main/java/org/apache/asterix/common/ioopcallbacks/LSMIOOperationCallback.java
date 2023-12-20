@@ -54,7 +54,6 @@ import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReferenc
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.util.ComponentUtils;
 import org.apache.hyracks.storage.am.lsm.common.util.LSMComponentIdUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -173,11 +172,11 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         synchronized (lsmIndex.getOperationTracker()) {
             List<ILSMDiskComponent> diskComponents = lsmIndex.getDiskComponents();
             if (diskComponents.isEmpty()) {
-                LOGGER.log(Level.INFO, "There are no disk components");
+                LOGGER.info("there are no disk components for {}", lsmIndex);
                 return LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID;
             }
             if (deletedComponents.contains(diskComponents.get(diskComponents.size() - 1))) {
-                LOGGER.log(Level.INFO, "All disk components have been deleted");
+                LOGGER.info("all disk components have been deleted for {}", lsmIndex);
                 return LSMComponentId.EMPTY_INDEX_LAST_COMPONENT_ID;
             }
             int mostRecentComponentIndex = 0;

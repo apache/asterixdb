@@ -29,8 +29,13 @@ import org.apache.hyracks.control.cc.job.TaskAttempt;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
 import org.apache.hyracks.control.common.job.profiling.om.JobletProfile;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TaskCompleteWork extends AbstractTaskLifecycleWork {
+
+    private static final Logger LOGGER = LogManager.getLogger();
     private final TaskProfile statistics;
 
     public TaskCompleteWork(ClusterControllerService ccs, JobId jobId, TaskAttemptId taId, String nodeId,
@@ -44,8 +49,10 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
         IJobManager jobManager = ccs.getJobManager();
         JobRun run = jobManager.get(jobId);
         if (run == null) {
+            LOGGER.debug("node completed task for unknown job {}:{}:{}", nodeId, jobId, taId);
             return;
         }
+        LOGGER.debug("node completed task {}:{}:{}", nodeId, jobId, taId);
         if (statistics != null) {
             JobProfile jobProfile = run.getJobProfile();
             Map<String, JobletProfile> jobletProfiles = jobProfile.getJobletProfiles();
@@ -62,5 +69,10 @@ public class TaskCompleteWork extends AbstractTaskLifecycleWork {
     @Override
     public String toString() {
         return getName() + ": [" + nodeId + "[" + jobId + ":" + taId + "]";
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

@@ -31,6 +31,7 @@ import org.apache.hyracks.control.common.controllers.NodeParameters;
 import org.apache.hyracks.control.common.controllers.NodeRegistration;
 import org.apache.hyracks.control.common.ipc.NodeControllerRemoteProxy;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -82,5 +83,10 @@ public class RegisterNodeWork extends SynchronizableWork {
             nodeManager.removeNode(id);
             nc.sendRegistrationResult(params, e);
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

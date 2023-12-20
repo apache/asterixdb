@@ -50,9 +50,7 @@ public class RemoveDeadNodesWork extends AbstractWork {
             Collection<JobId> affectedJobIds = result.getRight();
             int size = affectedJobIds.size();
             if (size > 0) {
-                if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Number of affected jobs: " + size);
-                }
+                LOGGER.info("number of affected jobs due to dead nodes removal {}", size);
                 IJobManager jobManager = ccs.getJobManager();
                 for (JobId jobId : affectedJobIds) {
                     JobRun run = jobManager.get(jobId);
