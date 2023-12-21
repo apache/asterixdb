@@ -1,0 +1,132 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into collection0
+([
+  {
+      "Id": 1,
+      "Item Count": 1,
+      "Ship Priority": "0",
+      "Order Priority": "1-URGENT",
+      "Order Status": "F",
+      "Order Quantity": 38,
+      "Sales Total": 195.19,
+      "Discount": 0.08,
+      "Tax Rate": 0.03,
+      "Ship Mode": "REGULAR AIR",
+      "Fill Time": 2,
+      "Gross Profit": -71.33,
+      "Price": 5.28,
+      "Ship Handle Cost": 5.06,
+      "Employee Name": "Purkey, Jan",
+      "Employee Dept": "1054",
+      "Manager Name": "Collins, Babs",
+      "Employee Yrs Exp": 6,
+      "Employee Salary": 104677,
+      "Customer Name": "Roy Skaria",
+      "Customer State": "OHIO",
+      "Call Center Region": "CENTRAL",
+      "Customer Balance": 6496,
+      "Customer Segment": "CONSUMER",
+      "Prod Type1": "OFFICE SUPPLIES",
+      "Prod Type2": "PAPER",
+      "Prod Type3": "STATIONARY",
+      "Prod Type4": "BUSINESS STATIONARY",
+      "Product Name": "Astroparche® Fine Business Paper",
+      "Product Container": "SMALL BOX",
+      "Ship Promo": "REGULAR SHIPPING",
+      "Supplier Name": "Supplier_098",
+      "Supplier Balance": 5873,
+      "Supplier Region": "WEST",
+      "Supplier State": "CALIFORNIA",
+      "Order ID": "21284",
+      "Order Year": 1997,
+      "Order Month": 9,
+      "Order Day": 15,
+      "Order Date": "1997-09-15T00:00:00.000",
+      "Order Quarter": "Q3",
+      "Product Base Margin": 0.37,
+      "Product ID": "1811",
+      "Receive Time": 3,
+      "Received Date": "1997-09-20T00:00:00.000",
+      "Ship Date": "1997-09-17T00:00:00.000",
+      "Ship Charge": 5.06,
+      "Total Cycle Time": 5,
+      "Product In Stock": "YES",
+      "PID": 6632,
+      "Market Segment": "CONSUMER"
+  },
+{
+    "Id": 2,
+    "Item Count": 1,
+    "Ship Priority": "0",
+    "Order Priority": "4-NOT SPECIFIED",
+    "Order Status": "F",
+    "Order Quantity": 36,
+    "Sales Total": 603.9,
+    "Discount": 0.07,
+    "Tax Rate": 0.02,
+    "Ship Mode": "REGULAR AIR",
+    "Fill Time": 1,
+    "Gross Profit": 168.93,
+    "Price": 17.52,
+    "Ship Handle Cost": 5.6,
+    "Employee Name": "Purkey, Jan",
+    "Employee Dept": "1054",
+    "Manager Name": "Collins, Babs",
+    "Employee Yrs Exp": 6,
+    "Employee Salary": 104677,
+    "Customer Name": "Nathan Mautz",
+    "Customer State": "ILLINOIS",
+    "Call Center Region": "CENTRAL",
+    "Customer Balance": 1820,
+    "Customer Segment": "HOME OFFICE",
+    "Prod Type1": "OFFICE SUPPLIES",
+    "Prod Type2": "PAPER",
+    "Prod Type3": "WRITINGS PADS",
+    "Prod Type4": "MEMO SLIPS",
+    "Product Name": "TOPS Carbonless Receipt Book, Four 2-3/4 x 7-1/4 Money Receipts per Page",
+    "Product Container": "WRAP BAG",
+    "Ship Promo": "REGULAR SHIPPING",
+    "Supplier Name": "Supplier_090",
+    "Supplier Balance": 6202,
+    "Supplier Region": "WEST",
+    "Supplier State": "NEW MEXICO",
+    "Order ID": "1250",
+    "Order Year": 1997,
+    "Order Month": 9,
+    "Order Day": 29,
+    "Order Date": "1997-09-29T00:00:00.000",
+    "Order Quarter": "Q3",
+    "Product Base Margin": 0.37,
+    "Product ID": "1860",
+    "Receive Time": 2,
+    "Received Date": "1997-10-02T00:00:00.000",
+    "Ship Date": "1997-09-30T00:00:00.000",
+    "Ship Charge": 5.6,
+    "Total Cycle Time": 3,
+    "Product In Stock": "YES",
+    "PID": 6981,
+    "Market Segment": "HOME OFFICE"
+}
+]);
+
+
