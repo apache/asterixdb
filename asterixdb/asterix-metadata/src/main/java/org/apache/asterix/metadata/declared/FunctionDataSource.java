@@ -108,6 +108,10 @@ public abstract class FunctionDataSource extends DataSource {
                 tupleFilterFactory, outputLimit);
     }
 
+    public boolean skipJobCapacityAssignment() {
+        return false;
+    }
+
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations);
 
