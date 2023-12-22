@@ -172,18 +172,20 @@ public class Stats {
 
     // The expression we get may not be a base condition. It could be comprised of ors and ands and nots. So have to
     //recursively find the overall selectivity.
-    private double getSelectivityFromAnnotation(AbstractFunctionCallExpression afcExpr, boolean join)
-            throws AlgebricksException {
+    private double getSelectivityFromAnnotation(AbstractFunctionCallExpression afcExpr, boolean join,
+            boolean singleDatasetPreds) throws AlgebricksException {
         double sel = 1.0;
 
         if (afcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
             double orSel = getSelectivityFromAnnotation(
-                    (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
+                    (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join,
+                    singleDatasetPreds);
             for (int i = 1; i < afcExpr.getArguments().size(); i++) {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                     sel = getSelectivityFromAnnotation(
-                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join);
+                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
+                            singleDatasetPreds);
                     orSel = orSel + sel - orSel * sel;
                 }
             }
@@ -194,7 +196,8 @@ public class Stats {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                     sel = getSelectivityFromAnnotation(
-                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join);
+                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
+                            singleDatasetPreds);
                     andSel *= sel;
                 }
             }
@@ -203,7 +206,8 @@ public class Stats {
             ILogicalExpression lexpr = afcExpr.getArguments().get(0).getValue();
             if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                 sel = getSelectivityFromAnnotation(
-                        (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
+                        (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join,
+                        singleDatasetPreds);
                 // We want to return 1.0 and not 0.0 if there was no annotation
                 return (sel == 1.0) ? 1.0 : 1.0 - sel;
             }
@@ -224,26 +228,35 @@ public class Stats {
                 } else {
                     sel *= s;
                 }
+            } else if (singleDatasetPreds) {
+                // Single dataset predicates inside join predicates will have a selectivity annotation.
+                // If the annotation is not present, return -1, so we don't overwrite previously
+                // computed selectivity.
+                return -1;
             }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
             s = findJoinSelectivity(jpa, afcExpr);
             sel *= s;
         }
-        if (join && sel == 1.0) {
+
+        List<LogicalVariable> usedVars = new ArrayList<>();
+        usedVars.clear();
+        afcExpr.getUsedVariables(usedVars);
+        if (join && sel == 1.0 && usedVars.size() == 1) {
             // assume no selectivity was assigned
             joinEnum.singleDatasetPreds.add(afcExpr);
         }
         return sel;
     }
 
-    protected double getSelectivityFromAnnotationMain(ILogicalExpression leExpr, boolean join)
-            throws AlgebricksException {
+    protected double getSelectivityFromAnnotationMain(ILogicalExpression leExpr, boolean join,
+            boolean singleDatasetPreds) throws AlgebricksException {
         double sel = 1.0;
 
         if (leExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) leExpr;
-            sel = getSelectivityFromAnnotation(afcExpr, join);
+            sel = getSelectivityFromAnnotation(afcExpr, join, singleDatasetPreds);
         }
 
         return sel;
@@ -261,7 +274,7 @@ public class Stats {
         while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), join);
+                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), join, false);
             }
             if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 sel *= getSelectivity((SubplanOperator) op);
@@ -278,7 +291,7 @@ public class Stats {
         while (true) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), false);
+                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), false, false);
             }
             if (op.getInputs().size() > 0) {
                 op = op.getInputs().get(0).getValue();

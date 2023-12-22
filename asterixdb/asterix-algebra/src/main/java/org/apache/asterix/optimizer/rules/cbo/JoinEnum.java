@@ -402,6 +402,7 @@ public class JoinEnum {
     // This finds all the join Conditions in the whole query. This is a global list of all join predicates.
     // It also fills in the dataset Bits for each join predicate.
     private void findJoinConditionsAndAssignSels() throws AlgebricksException {
+
         List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
         for (JoinOperator jOp : allJoinOps) {
             AbstractBinaryJoinOperator joinOp = jOp.getAbstractJoinOp();
@@ -417,7 +418,6 @@ public class JoinEnum {
                     }
                     jc.joinCondition = conj.getValue().cloneExpression();
                     joinConditions.add(jc);
-                    jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true);
                 }
             } else {
                 if ((expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL)) {
@@ -429,32 +429,31 @@ public class JoinEnum {
                     // change to not a true condition
                     jc.joinCondition = expr.cloneExpression();
                     joinConditions.add(jc);
-                    jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true);
                 }
             }
         }
 
         // now patch up any join conditions that have variables referenced in any internal assign statements.
         List<LogicalVariable> usedVars = new ArrayList<>();
+        List<AssignOperator> erase = new ArrayList<>();
         for (JoinCondition jc : joinConditions) {
             usedVars.clear();
             ILogicalExpression expr = jc.joinCondition;
             expr.getUsedVariables(usedVars);
-            List<AssignOperator> erase = new ArrayList<>();
             for (AssignOperator aOp : assignOps) {
                 for (int i = 0; i < aOp.getVariables().size(); i++) {
                     if (usedVars.contains(aOp.getVariables().get(i))) {
                         OperatorManipulationUtil.replaceVarWithExpr((AbstractFunctionCallExpression) expr,
                                 aOp.getVariables().get(i), aOp.getExpressions().get(i).getValue());
                         jc.joinCondition = expr;
-                        jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true);
                         erase.add(aOp);
                     }
                 }
             }
-            for (int i = erase.size() - 1; i >= 0; i--) {
-                assignOps.remove(erase.get(i));
-            }
+            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true, false);
+        }
+        for (int i = erase.size() - 1; i >= 0; i--) {
+            assignOps.remove(erase.get(i));
         }
 
         // now fill the datasetBits for each join condition.
@@ -1143,8 +1142,11 @@ public class JoinEnum {
 
         if (this.singleDatasetPreds.size() > 0) { // We did not have selectivities for these before. Now we do.
             for (JoinCondition jc : joinConditions) {
-                jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false);
                 // we may be repeating some work here, but that is ok. This will rarely happen (happens in q7 tpch)
+                double sel = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false, true);
+                if (sel != -1) {
+                    jc.selectivity = sel;
+                }
             }
         }
     }
