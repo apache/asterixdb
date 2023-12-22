@@ -18,7 +18,6 @@
  */
 package org.apache.hyracks.http.server;
 
-import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -29,6 +28,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.server.utils.HttpUtil;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpScheme;
@@ -46,13 +46,11 @@ public class FormUrlEncodedRequest extends BaseRequest implements IServletReques
             new QueryStringDecoder(request.uri()).parameters()
                     .forEach((name, value) -> parameters.computeIfAbsent(name, a -> new ArrayList<>()).addAll(value));
         }
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-        return new FormUrlEncodedRequest(request, localAddress, remoteAddress, parameters, scheme);
+        return new FormUrlEncodedRequest(ctx.channel(), request, parameters, scheme);
     }
 
-    private FormUrlEncodedRequest(FullHttpRequest request, InetSocketAddress localAddress,
-            InetSocketAddress remoteAddress, Map<String, List<String>> parameters, HttpScheme scheme) {
-        super(request, localAddress, remoteAddress, parameters, scheme);
+    private FormUrlEncodedRequest(Channel channel, FullHttpRequest request, Map<String, List<String>> parameters,
+            HttpScheme scheme) {
+        super(channel, request, parameters, scheme);
     }
 }
