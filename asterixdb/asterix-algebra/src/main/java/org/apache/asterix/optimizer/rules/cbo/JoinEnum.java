@@ -1178,32 +1178,40 @@ public class JoinEnum {
         markCompositeJoinPredicates();
         int lastJnNum = enumerateHigherLevelJoinNodes();
         JoinNode lastJn = jnArray[allTabsJnNum];
-        //System.out.println(dumpJoinNodes(allTabsJnNum));
         if (LOGGER.isTraceEnabled()) {
             EnumerateJoinsRule.printPlan(pp, op, "Original Whole plan in JN END");
             LOGGER.trace(dumpJoinNodes(lastJnNum));
         }
 
-        // find the cheapest plan
-        int cheapestPlanIndex = lastJn.cheapestPlanIndex;
-        if (LOGGER.isTraceEnabled() && cheapestPlanIndex > 0) {
-            LOGGER.trace("Cheapest Plan is {} number of terms is {} joinNodes {}", cheapestPlanIndex, numberOfTerms,
-                    lastJnNum);
-        }
-
-        return cheapestPlanIndex;
+        // return the cheapest plan
+        return lastJn.cheapestPlanIndex;
     }
 
     private String dumpJoinNodes(int numJoinNodes) {
         StringBuilder sb = new StringBuilder(128);
         sb.append(LocalDateTime.now());
+        dumpContext(sb);
         for (int i = 1; i <= numJoinNodes; i++) {
             JoinNode jn = jnArray[i];
             sb.append(jn);
         }
-        sb.append('\n').append("Printing cost of all Final Plans").append('\n');
+        sb.append("Number of terms is ").append(numberOfTerms).append(", Number of Join Nodes is ").append(numJoinNodes)
+                .append('\n');
+        sb.append("Printing cost of all Final Plans").append('\n');
         jnArray[numJoinNodes].printCostOfAllPlans(sb);
         return sb.toString();
+    }
+
+    private void dumpContext(StringBuilder sb) {
+        sb.append("\n\nOPT CONTEXT").append('\n');
+        sb.append("----------------------------------------\n");
+        sb.append("BLOCK SIZE = ").append(getCostMethodsHandle().getBufferCachePageSize()).append('\n');
+        sb.append("DOP = ").append(getCostMethodsHandle().getDOP()).append('\n');
+        sb.append("MAX MEMORY SIZE FOR JOIN = ").append(getCostMethodsHandle().getMaxMemorySizeForJoin()).append('\n');
+        sb.append("MAX MEMORY SIZE FOR GROUP = ").append(getCostMethodsHandle().getMaxMemorySizeForGroup())
+                .append('\n');
+        sb.append("MAX MEMORY SIZE FOR SORT = ").append(getCostMethodsHandle().getMaxMemorySizeForSort()).append('\n');
+        sb.append("----------------------------------------\n");
     }
 
     private static boolean getForceJoinOrderMode(IOptimizationContext context) {

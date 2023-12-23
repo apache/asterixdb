@@ -1366,96 +1366,109 @@ public class JoinNode {
 
     @Override
     public String toString() {
-        if (planIndexesArray.isEmpty()) {
-            return "";
-        }
-        List<PlanNode> allPlans = joinEnum.allPlans;
+        List<PlanNode> allPlans = joinEnum.getAllPlans();
         StringBuilder sb = new StringBuilder(128);
-        // This will avoid printing JoinNodes that have no plans
         if (IsBaseLevelJoinNode()) {
-            sb.append("\nPrinting Scan Node ").append(jnArrayIndex).append('\n');
+            sb.append("Printing Scan Node ");
         } else {
-            sb.append("\nPrinting Join Node ").append(jnArrayIndex).append('\n');
+            sb.append("Printing Join Node ");
         }
-        sb.append("datasetNames ");
-        for (String datasetName : datasetNames) {
-            sb.append(datasetName).append(' ');
+        sb.append(jnArrayIndex).append('\n');
+        sb.append("datasetNames (aliases) ");
+        for (int j = 0; j < datasetNames.size(); j++) {
+            sb.append(datasetNames.get(j)).append('(').append(aliases.get(j)).append(')').append(' ');
         }
         sb.append('\n');
-        sb.append("datasetIndex ");
+        sb.append("datasetIndexes ");
         for (int j = 0; j < datasetIndexes.size(); j++) {
-            sb.append(j).append(datasetIndexes.get(j));
+            sb.append(j).append(datasetIndexes.get(j)).append(' ');
         }
         sb.append('\n');
-        sb.append("datasetBits is ").append(datasetBits).append('\n');
+        sb.append("datasetBits ").append(datasetBits).append('\n');
+        sb.append("jnIndex ").append(jnIndex).append('\n');
+        sb.append("level ").append(level).append('\n');
+        sb.append("highestDatasetId ").append(highestDatasetId).append('\n');
         if (IsBaseLevelJoinNode()) {
-            sb.append("orig cardinality is ").append((double) Math.round(origCardinality * 100) / 100).append('\n');
+            sb.append("orig cardinality ").append((double) Math.round(origCardinality * 100) / 100).append('\n');
         }
-        sb.append("cardinality is ").append((double) Math.round(cardinality * 100) / 100).append('\n');
+        sb.append("cardinality ").append((double) Math.round(cardinality * 100) / 100).append('\n');
+        sb.append("size ").append((double) Math.round(size * 100) / 100).append('\n');
         if (planIndexesArray.size() == 0) {
             sb.append("No plans considered for this join node").append('\n');
-        }
-        sb.append("jnIndex ").append(jnIndex).append('\n');
-        sb.append("datasetBits ").append(datasetBits).append('\n');
-        sb.append("cardinality ").append((double) Math.round(cardinality * 100) / 100).append('\n');
-        sb.append("size ").append((double) Math.round(size * 100) / 100).append('\n');
-        sb.append("level ").append(level).append('\n');
-        sb.append("highestDatasetId ").append(highestDatasetId).append('\n');
-        sb.append("----------------").append('\n');
-        for (int j = 0; j < planIndexesArray.size(); j++) {
-            int k = planIndexesArray.get(j);
-            PlanNode pn = allPlans.get(k);
-            sb.append("planIndexesArray  [").append(j).append("] is ").append(k).append('\n');
-            sb.append("Printing Plan ").append(k).append('\n');
-            if (IsBaseLevelJoinNode()) {
-                sb.append("DATA_SOURCE_SCAN").append('\n');
-            } else {
-                sb.append("\n");
-                sb.append(pn.joinMethod().getFirst()).append('\n');
-                sb.append("Printing Join expr ").append('\n');
-                if (pn.joinExpr != null) {
-                    sb.append(pn.joinExpr).append('\n');
-                    sb.append("outer join " + pn.outerJoin).append('\n');
+        } else {
+            for (int j = 0; j < planIndexesArray.size(); j++) {
+                int k = planIndexesArray.get(j);
+                PlanNode pn = allPlans.get(k);
+                sb.append("\nPrinting Plan Node ").append(k).append('\n');
+                sb.append("planIndexesArray [").append(j).append("] ").append(k).append('\n');
+                if (IsBaseLevelJoinNode()) {
+                    if (pn.IsScanNode()) {
+                        if (pn.getScanOp() == PlanNode.ScanMethod.TABLE_SCAN) {
+                            sb.append("DATA_SOURCE_SCAN").append('\n');
+                        } else {
+                            sb.append("INDEX_SCAN").append('\n');
+                        }
+                    }
                 } else {
-                    sb.append("null").append('\n');
+                    sb.append(pn.joinMethod().getFirst()).append('\n');
+                    sb.append("Join expr ");
+                    if (pn.joinExpr != null) {
+                        sb.append(pn.joinExpr).append('\n');
+                        sb.append("outer join " + pn.outerJoin).append('\n');
+                    } else {
+                        sb.append("null").append('\n');
+                    }
+                }
+                sb.append("operator cost ").append(dumpCost(pn.getOpCost()));
+                sb.append("total cost ").append(dumpCost(pn.getTotalCost()));
+                sb.append("jnIndexes ").append(pn.jnIndexes[0]).append(" ").append(pn.jnIndexes[1]).append('\n');
+                if (IsHigherLevelJoinNode()) {
+                    PlanNode leftPlan = pn.getLeftPlanNode();
+                    PlanNode rightPlan = pn.getRightPlanNode();
+                    sb.append("planIndexes ").append(leftPlan.getIndex()).append(" ").append(rightPlan.getIndex())
+                            .append('\n');
+                    sb.append(dumpLeftRightPlanCosts(pn));
                 }
             }
-            sb.append("card ").append((double) Math.round(cardinality * 100) / 100).append('\n');
-            sb.append("operator cost ").append(pn.opCost.computeTotalCost()).append('\n');
-            sb.append("total cost ").append(pn.totalCost.computeTotalCost()).append('\n');
-            sb.append("jnIndexes ").append(pn.jnIndexes[0]).append(" ").append(pn.jnIndexes[1]).append('\n');
-            if (IsHigherLevelJoinNode()) {
-                PlanNode leftPlan = pn.getLeftPlanNode();
-                PlanNode rightPlan = pn.getRightPlanNode();
-                int l = leftPlan.allPlansIndex;
-                int r = rightPlan.allPlansIndex;
-                sb.append("planIndexes ").append(l).append(" ").append(r).append('\n');
-                sb.append("(lcost = ").append(leftPlan.totalCost.computeTotalCost()).append(") (rcost = ")
-                        .append(rightPlan.totalCost.computeTotalCost()).append(")").append('\n');
-                sb.append("------------------").append('\n');
-            }
+            sb.append("\nCheapest plan for JoinNode ").append(jnArrayIndex).append(" is ").append(cheapestPlanIndex)
+                    .append(", cost is ").append(allPlans.get(cheapestPlanIndex).getTotalCost().computeTotalCost())
+                    .append('\n');
         }
-        sb.append("*****************************").append('\n');
-        sb.append("jnIndex ").append(jnIndex).append('\n');
-        sb.append("datasetBits ").append(datasetBits).append('\n');
-        sb.append("cardinality ").append((double) Math.round(cardinality * 100) / 100).append('\n');
-        sb.append("size ").append((double) Math.round(size * 100) / 100).append('\n');
-        sb.append("level ").append(level).append('\n');
-        sb.append("highestDatasetId ").append(highestDatasetId).append('\n');
-        sb.append("--------------------------------------").append('\n');
+        sb.append("-----------------------------------------------------------------").append('\n');
+        return sb.toString();
+    }
+
+    protected String dumpCost(ICost cost) {
+        StringBuilder sb = new StringBuilder(128);
+        sb.append(cost.computeTotalCost()).append('\n');
+        return sb.toString();
+    }
+
+    protected String dumpLeftRightPlanCosts(PlanNode pn) {
+        StringBuilder sb = new StringBuilder(128);
+        PlanNode leftPlan = pn.getLeftPlanNode();
+        PlanNode rightPlan = pn.getRightPlanNode();
+        ICost leftPlanTotalCost = leftPlan.getTotalCost();
+        ICost rightPlanTotalCost = rightPlan.getTotalCost();
+
+        sb.append("  left plan cost ").append(leftPlanTotalCost.computeTotalCost()).append(", right plan cost ")
+                .append(rightPlanTotalCost.computeTotalCost()).append('\n');
         return sb.toString();
     }
 
     protected void printCostOfAllPlans(StringBuilder sb) {
         List<PlanNode> allPlans = joinEnum.allPlans;
         ICost minCost = joinEnum.getCostHandle().maxCost();
+        int lowestCostPlanIndex = 0;
         for (int planIndex : planIndexesArray) {
             ICost planCost = allPlans.get(planIndex).totalCost;
             sb.append("plan ").append(planIndex).append(" cost is ").append(planCost.computeTotalCost()).append('\n');
             if (planCost.costLT(minCost)) {
                 minCost = planCost;
+                lowestCostPlanIndex = planIndex;
             }
         }
-        sb.append("LOWEST COST ").append(minCost.computeTotalCost()).append('\n');
+        sb.append("Cheapest Plan is ").append(lowestCostPlanIndex).append(", Cost is ")
+                .append(minCost.computeTotalCost()).append('\n');
     }
 }

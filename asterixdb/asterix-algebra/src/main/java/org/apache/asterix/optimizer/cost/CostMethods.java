@@ -54,7 +54,7 @@ public class CostMethods implements ICostMethods {
         DOP = getDOP();
         maxMemorySizeForJoin = getMaxMemorySizeForJoin();
         maxMemorySizeForGroup = getMaxMemorySizeForGroup();
-        maxMemorySizeForJoin = getMaxMemorySizeForSort();
+        maxMemorySizeForSort = getMaxMemorySizeForSort();
     }
 
     private long getBufferCacheSize() {
@@ -62,7 +62,7 @@ public class CostMethods implements ICostMethods {
         return metadataProvider.getStorageProperties().getBufferCacheSize();
     }
 
-    private long getBufferCachePageSize() {
+    public long getBufferCachePageSize() {
         MetadataProvider metadataProvider = (MetadataProvider) optCtx.getMetadataProvider();
         return metadataProvider.getStorageProperties().getBufferCachePageSize();
     }
