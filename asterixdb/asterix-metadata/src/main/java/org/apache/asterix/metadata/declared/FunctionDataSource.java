@@ -121,6 +121,10 @@ public abstract class FunctionDataSource extends DataSource {
                 outputLimit);
     }
 
+    public boolean skipJobCapacityAssignment() {
+        return false;
+    }
+
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations);
 

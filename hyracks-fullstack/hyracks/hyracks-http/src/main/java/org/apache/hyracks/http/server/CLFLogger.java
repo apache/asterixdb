@@ -120,21 +120,22 @@ public class CLFLogger extends ChannelDuplexHandler {
     @Override
     public void flush(ChannelHandlerContext ctx) throws Exception {
         if (lastChunk) {
-            printAndPrepare();
+            printAndPrepare(ctx);
             lastChunk = false;
         }
         ctx.flush();
     }
 
-    private void printAndPrepare() {
+    private void printAndPrepare(ChannelHandlerContext ctx) {
         if (!accessLogger.isEnabled(ACCESS_LOG_LEVEL)) {
             return;
         }
         logLineBuilder.append(clientIp);
         //identd value - not relevant here
         logLineBuilder.append(" - ");
+        logLineBuilder.append(getUserId(ctx));
         //no http auth or any auth either for that matter
-        logLineBuilder.append(" - [");
+        logLineBuilder.append(" [");
         logLineBuilder.append(DATE_TIME_FORMATTER.format(requestTime));
         logLineBuilder.append("] \"");
         logLineBuilder.append(reqLine);
@@ -145,5 +146,9 @@ public class CLFLogger extends ChannelDuplexHandler {
         accessLogger.log(ACCESS_LOG_LEVEL, logLineBuilder);
         respSize = 0;
         logLineBuilder.setLength(0);
+    }
+
+    protected String getUserId(ChannelHandlerContext ctx) {
+        return "-";
     }
 }

@@ -1,0 +1,55 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create type dt1 as {Id:int};
+create dataset collection0(dt1) primary key Id;
+
+CREATE VIEW `Staples`(
+`Item Count` BIGINT NOT UNKNOWN, `Ship Priority` STRING NOT UNKNOWN, `Order Priority` STRING NOT UNKNOWN,
+`Order Status` STRING NOT UNKNOWN, `Order Quantity` DOUBLE NOT UNKNOWN, `Sales Total` DOUBLE NOT UNKNOWN,
+`Discount` DOUBLE NOT UNKNOWN, `Tax Rate` DOUBLE NOT UNKNOWN, `Ship Mode` STRING NOT UNKNOWN, `Fill Time` DOUBLE NOT UNKNOWN,
+`Gross Profit` DOUBLE NOT UNKNOWN, `Price` DOUBLE NOT UNKNOWN, `Ship Handle Cost` DOUBLE NOT UNKNOWN, `Employee Name` STRING NOT UNKNOWN,
+`Employee Dept` STRING NOT UNKNOWN, `Manager Name` STRING NOT UNKNOWN, `Employee Yrs Exp` DOUBLE NOT UNKNOWN, `Employee Salary` DOUBLE NOT UNKNOWN,
+`Customer Name` STRING NOT UNKNOWN, `Customer State` STRING NOT UNKNOWN, `Call Center Region` STRING NOT UNKNOWN, `Customer Balance` DOUBLE NOT UNKNOWN,
+`Customer Segment` STRING NOT UNKNOWN, `Prod Type1` STRING NOT UNKNOWN, `Prod Type2` STRING NOT UNKNOWN, `Prod Type3` STRING NOT UNKNOWN,
+`Prod Type4` STRING NOT UNKNOWN, `Product Name` STRING NOT UNKNOWN, `Product Container` STRING NOT UNKNOWN, `Ship Promo` STRING NOT UNKNOWN,
+`Supplier Name` STRING NOT UNKNOWN, `Supplier Balance` DOUBLE NOT UNKNOWN, `Supplier Region` STRING NOT UNKNOWN, `Supplier State` STRING NOT UNKNOWN,
+`Order ID` STRING NOT UNKNOWN, `Order Year` BIGINT NOT UNKNOWN, `Order Month` BIGINT NOT UNKNOWN, `Order Day` BIGINT NOT UNKNOWN,
+`Order Date` DATETIME NOT UNKNOWN, `Order Quarter` STRING NOT UNKNOWN, `Product Base Margin` DOUBLE NOT UNKNOWN, `Product ID` STRING NOT UNKNOWN,
+`Receive Time` DOUBLE NOT UNKNOWN, `Received Date` DATETIME NOT UNKNOWN, `Ship Date` DATETIME NOT UNKNOWN, `Ship Charge` DOUBLE NOT UNKNOWN,
+`Total Cycle Time` DOUBLE NOT UNKNOWN, `Product In Stock` STRING NOT UNKNOWN, `PID` BIGINT NOT UNKNOWN, `Market Segment` STRING NOT UNKNOWN)
+default NULL AS `collection0`;
+
+SELECT `Staples`.`Employee Name` AS `Employee Name`,
+  AVG(`Staples`.`Employee Salary`) AS `avg:Employee Salary:ok`
+FROM `Staples` `Staples`
+  INNER JOIN (
+  SELECT `Staples`.`Call Center Region` AS `Call Center Region`,
+    `Staples`.`Employee Name` AS `Employee Name`
+  FROM `Staples` `Staples`
+  GROUP BY `Staples`.`Call Center Region`,
+    `Staples`.`Employee Name`
+  HAVING ((AVG(`Staples`.`Employee Salary`)>=102499.99999999898) AND (AVG(`Staples`.`Employee Salary`)<=110000.00000000111))
+) `t0` ON ((`Staples`.`Call Center Region` = `t0`.`Call Center Region`) AND (`Staples`.`Employee Name` = `t0`.`Employee Name`))
+GROUP BY `Staples`.`Employee Name`;

@@ -85,11 +85,13 @@ public final class UnorderedPartitionedProperty extends AbstractGroupingProperty
     @Override
     public IPartitioningProperty substituteColumnVars(Map<LogicalVariable, LogicalVariable> varMap) {
         boolean applied = false;
-        Set<LogicalVariable> newColumnSet = new ListSet<>(columnSet);
-        for (Map.Entry<LogicalVariable, LogicalVariable> me : varMap.entrySet()) {
-            if (newColumnSet.remove(me.getKey())) {
-                newColumnSet.add(me.getValue());
+        Set<LogicalVariable> newColumnSet = new ListSet<>();
+        for (LogicalVariable variable : columnSet) {
+            if (varMap.containsKey(variable)) {
+                newColumnSet.add(varMap.get(variable));
                 applied = true;
+            } else {
+                newColumnSet.add(variable);
             }
         }
         return applied ? new UnorderedPartitionedProperty(newColumnSet, domain, partitionsMap) : this;
