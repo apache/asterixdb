@@ -39,6 +39,7 @@ import org.apache.asterix.external.indexing.ExternalFile;
 import org.apache.asterix.metadata.api.IAsterixStateProxy;
 import org.apache.asterix.metadata.api.IExtensionMetadataEntity;
 import org.apache.asterix.metadata.api.IExtensionMetadataSearchKey;
+import org.apache.asterix.metadata.api.IMetadataIndex;
 import org.apache.asterix.metadata.api.IMetadataManager;
 import org.apache.asterix.metadata.api.IMetadataNode;
 import org.apache.asterix.metadata.entities.CompactionPolicy;
@@ -64,6 +65,7 @@ import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 
 /**
@@ -1186,6 +1188,16 @@ public abstract class MetadataManager implements IMetadataManager {
             IExtensionMetadataSearchKey searchKey) throws AlgebricksException {
         try {
             return metadataNode.getEntities(mdTxnCtx.getTxnId(), searchKey);
+        } catch (RemoteException e) {
+            throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
+        }
+    }
+
+    @Override
+    public JsonNode getEntitiesAsJson(MetadataTransactionContext mdTxnCtx, IMetadataIndex metadataIndex,
+            int payloadPosition) throws AlgebricksException {
+        try {
+            return metadataNode.getEntitiesAsJson(mdTxnCtx.getTxnId(), metadataIndex, payloadPosition);
         } catch (RemoteException e) {
             throw new MetadataException(ErrorCode.REMOTE_EXCEPTION_WHEN_CALLING_METADATA_NODE, e);
         }

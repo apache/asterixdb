@@ -81,7 +81,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class FunctionTupleTranslator extends AbstractDatatypeTupleTranslator<Function> {
 
     // Payload field containing serialized Function.
-    private static final int FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
+    public static final int FUNCTION_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     protected OrderedListBuilder dependenciesListBuilder;
     protected OrderedListBuilder dependencyListBuilder;

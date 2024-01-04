@@ -84,7 +84,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class DatasetTupleTranslator extends AbstractTupleTranslator<Dataset> {
 
     // Payload field containing serialized Dataset.
-    private static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    public static final int DATASET_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected AMutableInt32 aInt32;
     protected AMutableInt64 aInt64;

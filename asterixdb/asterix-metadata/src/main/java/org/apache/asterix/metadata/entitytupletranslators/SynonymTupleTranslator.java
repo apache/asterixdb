@@ -36,7 +36,7 @@ public final class SynonymTupleTranslator extends AbstractTupleTranslator<Synony
 
     // Payload field containing serialized Synonym.
 
-    private static final int SYNONYM_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    public static final int SYNONYM_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected SynonymTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.SYNONYM_DATASET, SYNONYM_PAYLOAD_TUPLE_FIELD_INDEX);

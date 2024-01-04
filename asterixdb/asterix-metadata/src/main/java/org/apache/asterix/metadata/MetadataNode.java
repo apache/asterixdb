@@ -22,6 +22,7 @@ package org.apache.asterix.metadata;
 import static org.apache.asterix.common.api.IIdentifierMapper.Modifier.PLURAL;
 import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 
+import java.io.PrintStream;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,6 +49,7 @@ import org.apache.asterix.common.transactions.TransactionOptions;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.NullIntrospector;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.formats.nontagged.TypeTraitProvider;
@@ -119,11 +121,14 @@ import org.apache.asterix.transaction.management.opcallbacks.UpsertOperationCall
 import org.apache.asterix.transaction.management.service.transaction.DatasetIdFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Triple;
+import org.apache.hyracks.algebricks.data.IPrinter;
+import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -142,9 +147,12 @@ import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.IModificationOperationCallback;
 import org.apache.hyracks.storage.common.MultiComparator;
 import org.apache.hyracks.util.ExitUtil;
+import org.apache.hyracks.util.JSONUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 
 public class MetadataNode implements IMetadataNode {
@@ -325,6 +333,16 @@ public class MetadataNode implements IMetadataNode {
         ExtensionMetadataDataset<T> index = getExtensionMetadataDataset(searchKey.getDatasetId());
         IMetadataEntityTupleTranslator<T> tupleTranslator = index.getTupleTranslator(false);
         return getEntities(txnId, searchKey.getSearchKey(), tupleTranslator, index);
+    }
+
+    @Override
+    public JsonNode getEntitiesAsJson(TxnId txnId, IMetadataIndex metadataIndex, int payloadPosition)
+            throws AlgebricksException, RemoteException {
+        try {
+            return getJsonNodes(txnId, metadataIndex, payloadPosition);
+        } catch (HyracksDataException e) {
+            throw new AlgebricksException(e);
+        }
     }
 
     private <T extends IExtensionMetadataEntity> ExtensionMetadataDataset<T> getExtensionMetadataDataset(
@@ -2484,5 +2502,45 @@ public class MetadataNode implements IMetadataNode {
 
     public ITxnIdFactory getTxnIdFactory() {
         return txnIdFactory;
+    }
+
+    private ArrayNode getJsonNodes(TxnId txnId, IMetadataIndex mdIndex, int payloadPosition)
+            throws AlgebricksException, HyracksDataException {
+        IValueExtractor<JsonNode> valueExtractor = createValueExtractor(mdIndex, payloadPosition);
+        List<JsonNode> results = new ArrayList<>();
+        searchIndex(txnId, mdIndex, null, valueExtractor, results);
+        ArrayNode array = JSONUtil.createArray();
+        results.forEach(array::add);
+        return array;
+    }
+
+    private static IValueExtractor<JsonNode> createValueExtractor(IMetadataIndex mdIndex, int payloadFieldIndex) {
+        return new IValueExtractor<>() {
+
+            final ARecordType payloadRecordType = mdIndex.getPayloadRecordType();
+            final IPrinterFactory printerFactory =
+                    CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(payloadRecordType);
+            final IPrinter printer = printerFactory.createPrinter();
+            final ByteArrayAccessibleOutputStream outputStream = new ByteArrayAccessibleOutputStream();
+            final PrintStream printStream = new PrintStream(outputStream);
+
+            @Override
+            public JsonNode getValue(TxnId txnId, ITupleReference tuple) {
+                try {
+                    byte[] serRecord = tuple.getFieldData(payloadFieldIndex);
+                    int recordStartOffset = tuple.getFieldStart(payloadFieldIndex);
+                    int recordLength = tuple.getFieldLength(payloadFieldIndex);
+
+                    printer.init();
+                    outputStream.reset();
+
+                    printer.print(serRecord, recordStartOffset, recordLength, printStream);
+                    printStream.flush();
+                    return JSONUtil.readTree(outputStream.getByteArray(), 0, outputStream.getLength());
+                } catch (Throwable th) {
+                    return JSONUtil.createObject();
+                }
+            }
+        };
     }
 }

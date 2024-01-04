@@ -39,7 +39,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse> {
 
     // Payload field containing serialized Dataverse.
-    private static final int DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
+    public static final int DATAVERSE_PAYLOAD_TUPLE_FIELD_INDEX = 1;
 
     protected AMutableInt32 aInt32;
 

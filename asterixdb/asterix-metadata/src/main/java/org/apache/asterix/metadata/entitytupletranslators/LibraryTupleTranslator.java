@@ -45,7 +45,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
 
     // Payload field containing serialized Library.
-    private static final int LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
+    public static final int LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX = 2;
 
     protected LibraryTupleTranslator(boolean getTuple) {
         super(getTuple, MetadataPrimaryIndexes.LIBRARY_DATASET, LIBRARY_PAYLOAD_TUPLE_FIELD_INDEX);

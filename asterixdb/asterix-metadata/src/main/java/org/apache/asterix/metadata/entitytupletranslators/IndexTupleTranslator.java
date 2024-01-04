@@ -83,7 +83,7 @@ import com.google.common.base.Strings;
 public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
 
     // Payload field containing serialized Index.
-    private static final int INDEX_PAYLOAD_TUPLE_FIELD_INDEX = 3;
+    public static final int INDEX_PAYLOAD_TUPLE_FIELD_INDEX = 3;
 
     // Field name of open field.
     public static final String GRAM_LENGTH_FIELD_NAME = "GramLength";

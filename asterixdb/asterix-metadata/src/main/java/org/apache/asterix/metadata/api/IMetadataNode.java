@@ -47,6 +47,8 @@ import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.transaction.management.opcallbacks.AbstractIndexModificationOperationCallback;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * A metadata node stores metadata in its local storage structures (currently
  * BTrees). A metadata node services requests on behalf of the (possibly remote)
@@ -967,6 +969,21 @@ public interface IMetadataNode extends Remote, Serializable {
      * @throws RemoteException
      */
     <T extends IExtensionMetadataEntity> List<T> getEntities(TxnId txnId, IExtensionMetadataSearchKey searchKey)
+            throws AlgebricksException, RemoteException;
+
+    /**
+     * Gets all the records of a metadata dataset as JSON.
+     *
+     * @param txnId transaction id
+     * @param metadataIndex the metadata dataset
+     * @param payloadPosition the position of the record in the tuple
+     *
+     * @return the metadata records as JSON
+     *
+     * @throws AlgebricksException AlgebricksException
+     * @throws RemoteException RemoteException
+     */
+    JsonNode getEntitiesAsJson(TxnId txnId, IMetadataIndex metadataIndex, int payloadPosition)
             throws AlgebricksException, RemoteException;
 
     void addFeedConnection(TxnId txnId, FeedConnection feedConnection) throws AlgebricksException, RemoteException;
