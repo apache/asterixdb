@@ -27,7 +27,7 @@ import org.apache.hyracks.api.result.IResultMetadata;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ResultMetadata implements IResultMetadata {
-    private static final long serialVersionUID = 1905367559307369035L;
+    private static final long serialVersionUID = 1905367559307369036L;
 
     private final SessionConfig.OutputFormat format;
     private long jobDuration;
@@ -39,6 +39,7 @@ public class ResultMetadata implements IResultMetadata {
     private long totalWarningsCount;
     private transient List<Object> outputTypes;
     private long queueWaitTimeInNanos;
+    private long bufferCachePageReadCount;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -66,6 +67,14 @@ public class ResultMetadata implements IResultMetadata {
 
     public double getBufferCacheHitRatio() {
         return bufferCacheHitRatio;
+    }
+
+    public void setBufferCachePageReadCount(long bufferCachePageReadCount) {
+        this.bufferCachePageReadCount = bufferCachePageReadCount;
+    }
+
+    public long getBufferCachePageReadCount() {
+        return bufferCachePageReadCount;
     }
 
     public void setWarnings(Set<Warning> warnings) {

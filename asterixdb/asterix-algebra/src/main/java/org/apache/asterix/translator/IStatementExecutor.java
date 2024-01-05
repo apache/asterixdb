@@ -139,6 +139,7 @@ public interface IStatementExecutor {
         private long totalWarningsCount;
         private long compileTime;
         private double bufferCacheHitRatio;
+        private long bufferCachePageReadCount;
 
         public long getCount() {
             return count;
@@ -212,6 +213,14 @@ public interface IStatementExecutor {
 
         public double getBufferCacheHitRatio() {
             return bufferCacheHitRatio;
+        }
+
+        public void setBufferCachePageReadCount(long bufferCachePageReadCount) {
+            this.bufferCachePageReadCount = bufferCachePageReadCount;
+        }
+
+        public long getBufferCachePageReadCount() {
+            return bufferCachePageReadCount;
         }
     }
 

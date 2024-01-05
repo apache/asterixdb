@@ -39,7 +39,8 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         ERROR_COUNT("errorCount"),
         PROCESSED_OBJECTS_COUNT("processedObjects"),
         WARNING_COUNT("warningCount"),
-        BUFFERCACHE_HIT_RATIO("bufferCacheHitRatio");
+        BUFFERCACHE_HIT_RATIO("bufferCacheHitRatio"),
+        BUFFERCACHE_PAGEREAD_COUNT("bufferCachePageReadCount");
 
         private final String str;
 
@@ -92,7 +93,11 @@ public class MetricsPrinter implements IResponseFieldPrinter {
         if (usedCache) {
             pw.print("\t");
             String pctValue = String.format("%.2f%%", metrics.getBufferCacheHitRatio() * 100);
-            ResultUtil.printField(pw, Metrics.BUFFERCACHE_HIT_RATIO.str(), pctValue, hasWarnings || hasErrors);
+            ResultUtil.printField(pw, Metrics.BUFFERCACHE_HIT_RATIO.str(), pctValue, true);
+            pw.print("\n");
+            pw.print("\t");
+            ResultUtil.printField(pw, Metrics.BUFFERCACHE_PAGEREAD_COUNT.str(), metrics.getBufferCachePageReadCount(),
+                    hasWarnings || hasErrors);
             pw.print("\n");
         }
         if (hasWarnings) {
