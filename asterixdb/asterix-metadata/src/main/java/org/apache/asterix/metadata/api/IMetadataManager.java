@@ -47,6 +47,8 @@ import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * A metadata manager provides user access to Asterix metadata (e.g., types,
  * datasets, indexes, etc.). A metadata manager satisfies requests by contacting
@@ -881,6 +883,20 @@ public interface IMetadataManager extends IMetadataBootstrap {
      */
     <T extends IExtensionMetadataEntity> List<T> getEntities(MetadataTransactionContext mdTxnCtx,
             IExtensionMetadataSearchKey searchKey) throws AlgebricksException;
+
+    /**
+     * Gets all the records of a metadata dataset as JSON.
+     *
+     * @param mdTxnCtx metadata transaction context
+     * @param metadataIndex the metadata dataset
+     * @param payloadPosition the position of the record in the tuple
+     *
+     * @return the metadata records as JSON
+     *
+     * @throws AlgebricksException AlgebricksException
+     */
+    JsonNode getEntitiesAsJson(MetadataTransactionContext mdTxnCtx, IMetadataIndex metadataIndex, int payloadPosition)
+            throws AlgebricksException;
 
     /**
      * Indicate when the metadata node has left or rejoined the cluster, and the

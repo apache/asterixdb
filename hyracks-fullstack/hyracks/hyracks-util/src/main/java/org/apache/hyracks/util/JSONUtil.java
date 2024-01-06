@@ -50,6 +50,10 @@ public class JSONUtil {
         SORTED_MAPPER.configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
     }
 
+    public static JsonNode readTree(byte[] bytes, int start, int size) throws IOException {
+        return OBJECT_MAPPER.readTree(bytes, start, size);
+    }
+
     public static String convertNode(final JsonNode node) throws JsonProcessingException {
         return SORTED_MAPPER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
     }
