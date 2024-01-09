@@ -47,7 +47,8 @@ abstract class AbstractExpectedSchemaNode implements IExpectedSchemaNode {
         return functionName;
     }
 
-    protected void setParent(AbstractComplexExpectedSchemaNode parent) {
+    @Override
+    public void setParent(AbstractComplexExpectedSchemaNode parent) {
         this.parent = parent;
     }
 }

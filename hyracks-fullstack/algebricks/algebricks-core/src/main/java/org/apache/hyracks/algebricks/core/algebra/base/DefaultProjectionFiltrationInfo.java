@@ -32,6 +32,11 @@ public class DefaultProjectionFiltrationInfo implements IProjectionFiltrationInf
     }
 
     @Override
+    public void substituteFilterVariable(LogicalVariable oldVar, LogicalVariable newVar) {
+        // NoOp
+    }
+
+    @Override
     public IProjectionFiltrationInfo createCopy() {
         return INSTANCE;
     }

@@ -26,24 +26,25 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.visitor.SimpleStringBuilderForIATypeVisitor;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IProjectionFiltrationInfo;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.EquivalentVariableExpressionComparatorVisitor;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 
 public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltrationInfo {
     protected final ARecordType projectedType;
-
     protected final ILogicalExpression filterExpression;
-    protected final Map<ILogicalExpression, ARecordType> filterPaths;
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
     private final boolean embedFilterValues;
+    protected final Map<ILogicalExpression, ARecordType> filterPaths;
 
     public ExternalDatasetProjectionFiltrationInfo(ARecordType projectedType,
             Map<String, FunctionCallInformation> sourceInformationMap, Map<ILogicalExpression, ARecordType> filterPaths,
@@ -64,10 +65,26 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
             projectedType = other.projectedType.deepCopy(other.projectedType);
         }
         functionCallInfoMap = new HashMap<>(other.functionCallInfoMap);
-
-        filterExpression = other.filterExpression;
-        filterPaths = new HashMap<>(other.filterPaths);
+        filterExpression = cloneExpression(other.filterExpression);
+        filterPaths = clonePaths(other.filterPaths);
         embedFilterValues = other.embedFilterValues;
+    }
+
+    @Override
+    public void substituteFilterVariable(LogicalVariable oldVar, LogicalVariable newVar) {
+        if (filterExpression != null) {
+            filterExpression.substituteVar(oldVar, newVar);
+        }
+
+        Map<ILogicalExpression, ARecordType> newPaths = new HashMap<>(filterPaths);
+        // We need to re-add to recompute the hashCode of each expression
+        filterPaths.clear();
+        for (Map.Entry<ILogicalExpression, ARecordType> path : newPaths.entrySet()) {
+            ILogicalExpression expr = path.getKey();
+            ARecordType type = path.getValue();
+            expr.substituteVar(oldVar, newVar);
+            filterPaths.put(expr, type);
+        }
     }
 
     @Override
@@ -105,7 +122,7 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
         }
         ExternalDatasetProjectionFiltrationInfo otherInfo = (ExternalDatasetProjectionFiltrationInfo) o;
         return projectedType.deepEqual(otherInfo.projectedType)
-                && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap);
+                && filterExpressionEquals(filterExpression, otherInfo.filterExpression);
     }
 
     @Override
@@ -151,13 +168,43 @@ public class ExternalDatasetProjectionFiltrationInfo implements IProjectionFiltr
         }
     }
 
-    protected String getOnelinerSchema(ARecordType type, StringBuilder builder) {
+    protected static ILogicalExpression cloneExpression(ILogicalExpression expression) {
+        if (expression == null) {
+            return null;
+        }
+
+        return expression.cloneExpression();
+    }
+
+    protected static Map<ILogicalExpression, ARecordType> clonePaths(Map<ILogicalExpression, ARecordType> filterPaths) {
+        Map<ILogicalExpression, ARecordType> newFilterPaths = new HashMap<>(filterPaths.size());
+        for (Map.Entry<ILogicalExpression, ARecordType> path : filterPaths.entrySet()) {
+            newFilterPaths.put(path.getKey().cloneExpression(), path.getValue());
+        }
+        return newFilterPaths;
+    }
+
+    protected static String getOnelinerSchema(ARecordType type, StringBuilder builder) {
         //Return oneliner JSON like representation for the requested fields
         SimpleStringBuilderForIATypeVisitor visitor = new SimpleStringBuilderForIATypeVisitor();
         type.accept(visitor, builder);
         String onelinerSchema = builder.toString();
         builder.setLength(0);
         return onelinerSchema;
+    }
+
+    protected static boolean filterExpressionEquals(ILogicalExpression expr1, ILogicalExpression expr2) {
+        if (expr1 == expr2) {
+            return true;
+        } else if (expr1 == null || expr2 == null) {
+            return false;
+        }
+
+        try {
+            return expr1.accept(EquivalentVariableExpressionComparatorVisitor.INSTANCE, expr2) == Boolean.TRUE;
+        } catch (AlgebricksException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**

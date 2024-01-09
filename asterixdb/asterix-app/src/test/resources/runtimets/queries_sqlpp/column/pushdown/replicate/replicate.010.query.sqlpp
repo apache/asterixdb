@@ -1,0 +1,37 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+USE test;
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+EXPLAIN
+WITH revenue AS (
+    SELECT s.s_w_id * s.s_i_id MOD 10000 as supplier_no, SUM(ol.ol_amount) AS total_rev
+    FROM stock s, orders o, o.o_orderline ol
+    WHERE ol.ol_i_id = s.s_i_id
+      AND ol.ol_supply_w_id = s.s_w_id
+      -- With index (replicate should appear after the primary index's unnest-map)
+      AND ol.ol_delivery_d >= '2018-01-01 00:00:00.000000'
+      AND ol.ol_delivery_d < '2018-04-01 00:00:00.000000'
+    GROUP BY s.s_w_id * s.s_i_id MOD 10000
+)
+SELECT su.su_suppkey, su.su_name, su.su_address, su.su_phone, r.total_revenue
+FROM revenue r,  supplier su
+WHERE su.su_suppkey = r.supplier_no
+  AND r.total_revenue = (SELECT VALUE max(r1.total_revenue) FROM revenue r1)[0]
+ORDER BY su.su_suppkey;

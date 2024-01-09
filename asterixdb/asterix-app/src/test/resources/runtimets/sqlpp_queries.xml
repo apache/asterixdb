@@ -16314,6 +16314,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="pushdown/replicate">
+        <output-dir compare="Text">pushdown/replicate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="select-count-one-field">
         <output-dir compare="Text">select-count-one-field</output-dir>
       </compilation-unit>

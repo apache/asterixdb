@@ -63,6 +63,7 @@ public class PushdownContext {
     private final Map<LogicalVariable, List<UseDescriptor>> useChain;
     private final List<ILogicalOperator> scopes;
     private final Map<ILogicalOperator, ILogicalExpression> inlinedCache;
+    private final Map<Dataset, List<ScanDefineDescriptor>> datasetToScans;
 
     public PushdownContext() {
         registeredScans = new ArrayList<>();
@@ -71,6 +72,7 @@ public class PushdownContext {
         this.useChain = new HashMap<>();
         scopes = new ArrayList<>();
         inlinedCache = new HashMap<>();
+        datasetToScans = new HashMap<>();
     }
 
     public void enterScope(ILogicalOperator operator) {
@@ -94,6 +96,8 @@ public class PushdownContext {
             useChain.put(pkVar, new ArrayList<>());
         }
         registeredScans.add(scanDefDesc);
+        List<ScanDefineDescriptor> datasetScans = datasetToScans.computeIfAbsent(dataset, k -> new ArrayList<>());
+        datasetScans.add(scanDefDesc);
     }
 
     public void define(LogicalVariable variable, ILogicalOperator operator, ILogicalExpression expression,
@@ -169,6 +173,10 @@ public class PushdownContext {
 
         // Clone the cached expression as a processor may change it
         return inlinedExpr.cloneExpression();
+    }
+
+    public Map<Dataset, List<ScanDefineDescriptor>> getDatasetToScanDefinitionDescriptors() {
+        return datasetToScans;
     }
 
     private ILogicalExpression cloneAndInline(ILogicalExpression expression, IOptimizationContext context)

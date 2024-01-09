@@ -47,6 +47,13 @@ public interface IExpectedSchemaNode {
     AbstractComplexExpectedSchemaNode getParent();
 
     /**
+     * Set parent of a node
+     *
+     * @param parent new parent
+     */
+    void setParent(AbstractComplexExpectedSchemaNode parent);
+
+    /**
      * For visiting a node
      *
      * @param visitor schema node visitor

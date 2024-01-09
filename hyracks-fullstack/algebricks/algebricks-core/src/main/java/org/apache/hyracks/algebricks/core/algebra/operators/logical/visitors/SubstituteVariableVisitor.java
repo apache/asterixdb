@@ -140,6 +140,7 @@ public class SubstituteVariableVisitor
             substUsedVariables(op.getMinFilterVars(), pair.first, pair.second);
             substUsedVariables(op.getMaxFilterVars(), pair.first, pair.second);
         }
+        op.getProjectionFiltrationInfo().substituteFilterVariable(pair.first, pair.second);
         return null;
     }
 
@@ -317,6 +318,7 @@ public class SubstituteVariableVisitor
         } else {
             substUsedVariablesInExpr(op.getSelectCondition(), pair.first, pair.second);
         }
+        op.getProjectionFiltrationInfo().substituteFilterVariable(pair.first, pair.second);
         return null;
     }
 
@@ -327,6 +329,7 @@ public class SubstituteVariableVisitor
         if (producedVarFound) {
             substProducedVarInTypeEnvironment(op, pair);
         }
+        op.getProjectionFiltrationInfo().substituteFilterVariable(pair.first, pair.second);
         return null;
     }
 

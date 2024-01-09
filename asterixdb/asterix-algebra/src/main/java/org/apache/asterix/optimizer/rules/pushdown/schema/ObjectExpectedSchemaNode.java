@@ -20,7 +20,6 @@ package org.apache.asterix.optimizer.rules.pushdown.schema;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
@@ -29,14 +28,18 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private final Map<String, IExpectedSchemaNode> children;
 
-    ObjectExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
+    public ObjectExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
             String functionName) {
         super(parent, sourceLocation, functionName);
         children = new HashMap<>();
     }
 
-    public Set<Map.Entry<String, IExpectedSchemaNode>> getChildren() {
-        return children.entrySet();
+    public boolean isRoot() {
+        return false;
+    }
+
+    public Map<String, IExpectedSchemaNode> getChildren() {
+        return children;
     }
 
     public void addChild(String fieldName, IExpectedSchemaNode child) {

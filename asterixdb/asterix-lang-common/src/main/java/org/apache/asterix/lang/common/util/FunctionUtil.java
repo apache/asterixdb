@@ -78,7 +78,8 @@ public class FunctionUtil {
 
     public static final String IMPORT_PRIVATE_FUNCTIONS = "import-private-functions";
     //TODO(wyk) add Multiply and Add
-    private static final Set<FunctionIdentifier> COMMUTATIVE_FUNCTIONS = Set.of(BuiltinFunctions.EQ);
+    private static final Set<FunctionIdentifier> COMMUTATIVE_FUNCTIONS =
+            Set.of(BuiltinFunctions.EQ, BuiltinFunctions.AND, BuiltinFunctions.OR);
 
     private static final DataverseName FN_DATASET_DATAVERSE_NAME =
             FunctionSignature.getDataverseName(BuiltinFunctions.DATASET);

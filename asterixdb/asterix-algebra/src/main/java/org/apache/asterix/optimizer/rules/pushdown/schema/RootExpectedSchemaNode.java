@@ -45,6 +45,11 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     }
 
     @Override
+    public boolean isRoot() {
+        return true;
+    }
+
+    @Override
     public AbstractComplexExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
             SourceLocation sourceLocation, String functionName) {
         if (rootType == ALL_FIELDS_ROOT) {

@@ -27,7 +27,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private final Map<ExpectedSchemaNodeType, AbstractComplexExpectedSchemaNode> children;
 
-    protected UnionExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
+    public UnionExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
             String functionName) {
         super(parent, sourceLocation, functionName);
         children = new EnumMap<>(ExpectedSchemaNodeType.class);
@@ -42,7 +42,7 @@ public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
         throw new UnsupportedOperationException("Cannot replace a child of UNION");
     }
 
-    protected void addChild(AbstractComplexExpectedSchemaNode node) {
+    public void addChild(AbstractComplexExpectedSchemaNode node) {
         children.put(node.getType(), node);
     }
 

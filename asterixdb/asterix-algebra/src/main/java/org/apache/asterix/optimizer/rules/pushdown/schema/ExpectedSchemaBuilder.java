@@ -210,7 +210,9 @@ public class ExpectedSchemaBuilder {
             IExpectedSchemaNode child) throws AlgebricksException {
         UnionExpectedSchemaNode unionNode = (UnionExpectedSchemaNode) parent;
         ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
-        addChild(parentExpr, null, unionNode.getChild(parentType), child);
+        AbstractComplexExpectedSchemaNode actualParent = unionNode.getChild(parentType);
+        child.setParent(actualParent);
+        addChild(parentExpr, null, actualParent, child);
     }
 
     private static boolean isVariable(ILogicalExpression expr) {
