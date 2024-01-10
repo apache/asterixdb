@@ -37,13 +37,13 @@
       <licenses>
         <license>
           <name>an MIT-style license</name>
-          <url>https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.25/slf4j-api/LICENSE.txt</url>
+          <url>https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.36/slf4j-api/LICENSE.txt</url>
         </license>
       </licenses>
       <properties>
-        <license.ignoreMissingEmbeddedNotice>1.7.25</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreMissingEmbeddedLicense>1.7.25</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreLicenseOverride>1.7.25</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedNotice>1.7.36</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.7.36</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreLicenseOverride>1.7.36</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
