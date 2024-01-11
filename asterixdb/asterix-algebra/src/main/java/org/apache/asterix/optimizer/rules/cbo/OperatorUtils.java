@@ -100,7 +100,7 @@ public class OperatorUtils {
             }
 
             if (scanOp != null) {
-                ILogicalOperator inputOp = (selOp != null) ? selOp : ((assignOp != null) ? assignOp : scanOp);
+                ILogicalOperator inputOp = (assignOp != null) ? assignOp : ((selOp != null) ? selOp : scanOp);
                 SourceLocation sourceLocation = inputOp.getSourceLocation();
                 DistinctOperator distinctOp =
                         createDistinctOp(foundDistinctVars, inputOp, sourceLocation, distinctPair.second, context);
