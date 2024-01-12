@@ -92,7 +92,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         boolean changed = false;
         if (run) {
             // Context holds all the necessary information to perform pushdowns
-            PushdownContext pushdownContext = new PushdownContext();
+            PushdownContext pushdownContext = new PushdownContext(context);
             // Compute all the necessary pushdown information and performs inter-operator pushdown optimizations
             PushdownOperatorVisitor pushdownInfoComputer = new PushdownOperatorVisitor(pushdownContext, context);
             opRef.getValue().accept(pushdownInfoComputer, null);

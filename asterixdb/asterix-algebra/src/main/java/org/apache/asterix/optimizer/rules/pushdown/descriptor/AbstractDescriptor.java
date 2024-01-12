@@ -23,13 +23,15 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 
 class AbstractDescriptor {
     protected final int scope;
+    protected final ILogicalOperator subplanOperator;
     protected final ILogicalOperator operator;
     protected final ILogicalExpression expression;
     protected final int expressionIndex;
 
-    public AbstractDescriptor(int scope, ILogicalOperator operator, ILogicalExpression expression,
-            int expressionIndex) {
+    public AbstractDescriptor(int scope, ILogicalOperator subplanOperator, ILogicalOperator operator,
+            ILogicalExpression expression, int expressionIndex) {
         this.scope = scope;
+        this.subplanOperator = subplanOperator;
         this.operator = operator;
         this.expression = expression;
         this.expressionIndex = expressionIndex;
@@ -49,5 +51,13 @@ class AbstractDescriptor {
 
     public int getScope() {
         return scope;
+    }
+
+    public boolean inSubplan() {
+        return subplanOperator != null;
+    }
+
+    public ILogicalOperator getSubplanOperator() {
+        return subplanOperator;
     }
 }

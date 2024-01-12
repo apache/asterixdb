@@ -16,23 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.base;
 
-public interface OperatorAnnotations {
-    // hints
-    String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
-    String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
-    String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
-    String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
-    // Boolean
-    String CARDINALITY = "CARDINALITY"; // -->
-    // Integer
-    String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
-    // Integer
-    String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
-    String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
-    String OP_COST_TOTAL = "TOTAL_COST";
-    String OP_COST_LOCAL = "OP_COST";
-    String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
-    String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
-}
+USE test;
+
+SET `compiler.column.filter` "false";
+
+
+
+SELECT VALUE COUNT(*)
+FROM ColumnDataset p
+WHERE p.arrayOrObject.text = "7"
+  AND EXISTS (
+                SELECT *
+                FROM ColumnDataset b2, b2.arrayOrObject ao
+                WHERE ao.text = "1"
+            )

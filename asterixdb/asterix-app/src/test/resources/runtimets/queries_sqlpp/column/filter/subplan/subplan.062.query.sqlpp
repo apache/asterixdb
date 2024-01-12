@@ -16,23 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.base;
 
-public interface OperatorAnnotations {
-    // hints
-    String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
-    String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
-    String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
-    String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
-    // Boolean
-    String CARDINALITY = "CARDINALITY"; // -->
-    // Integer
-    String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
-    // Integer
-    String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
-    String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
-    String OP_COST_TOTAL = "TOTAL_COST";
-    String OP_COST_LOCAL = "OP_COST";
-    String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
-    String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
-}
+USE test;
+
+SET `compiler.column.filter` "true";
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+EXPLAIN
+SELECT VALUE array_count(X)
+FROM ColumnDataset p
+WITH X AS (
+        SELECT VALUE 1
+        FROM ColumnDataset p2, p2.arrayOrObject ao
+        -- This filter can be pushed as we are scanning a dataset
+        WHERE ao.text >= "1"
+          AND ao.text <= "2"
+)
+WHERE p.arrayOrObject.text = "7"

@@ -16389,6 +16389,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/sql-compat">
+        <output-dir compare="Text">filter/sql-compat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/subplan">
+        <output-dir compare="Text">filter/subplan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="big-object">
         <output-dir compare="Text">big-object</output-dir>
       </compilation-unit>

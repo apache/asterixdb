@@ -45,7 +45,8 @@ public class SqlppAnalyzedExecutionTest {
     protected static final String TEST_CONFIG_FILE_NAME = "src/test/resources/cc-analyze.conf";
     private final String[] denyList = { "synonym: synonym-01", "ddl: analyze-dataset-1", "misc: dump_index",
             "array-index: composite-index-queries", "filters: upsert", "column: analyze-dataset",
-            "column: filter/boolean", "ddl: analyze-dataset-with-indexes", "warnings: cardinality-hint-warning" };
+            "column: filter/boolean", "column: filter/sql-compat"
+            /*re-enable once the cbo stats class cast bug is fixed*/, "ddl: analyze-dataset-with-indexes", "warnings: cardinality-hint-warning" };
 
     @BeforeClass
     public static void setUp() throws Exception {

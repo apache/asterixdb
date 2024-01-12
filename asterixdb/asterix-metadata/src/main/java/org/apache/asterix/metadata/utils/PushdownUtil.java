@@ -59,6 +59,10 @@ public class PushdownUtil {
     public static final Set<FunctionIdentifier> FILTER_PUSHABLE_PATH_FUNCTIONS = createFilterPushablePathFunctions();
     public static final Set<FunctionIdentifier> COMPARE_FUNCTIONS = createCompareFunctions();
     public static final Set<FunctionIdentifier> RANGE_FILTER_PUSHABLE_FUNCTIONS = createRangeFilterPushableFunctions();
+    // Set of aggregate functions in a subplan that allows the SELECT in such subplan to be pushed (SOME and EXISTS)
+    public static final Set<FunctionIdentifier> FILTER_PUSHABLE_AGGREGATE_FUNCTIONS =
+            createFilterPushableAggregateFunctions();
+    public static final Set<FunctionIdentifier> FILTER_PROHIBITED_FUNCTIONS = createFilterProhibitedFunctions();
 
     private PushdownUtil() {
     }
@@ -172,6 +176,17 @@ public class PushdownUtil {
         return arguments.stream().allMatch(arg -> arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE);
     }
 
+    public static boolean isSupportedFilterAggregateFunction(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        return fid != null && FILTER_PUSHABLE_AGGREGATE_FUNCTIONS.contains(fid);
+    }
+
+    public static boolean isProhibitedFilterFunction(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        return fid != null && !RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(fid)
+                && (isNestedFunction(fid) || isTypeFunction(fid) || FILTER_PROHIBITED_FUNCTIONS.contains(fid));
+    }
+
     public static IAObject getConstant(ILogicalExpression expr) {
         IAlgebricksConstantValue algebricksConstant = ((ConstantExpression) expr).getValue();
         if (algebricksConstant.isTrue()) {
@@ -247,5 +262,17 @@ public class PushdownUtil {
         pushableFunctions.add(AlgebricksBuiltinFunctions.OR);
         pushableFunctions.add(AlgebricksBuiltinFunctions.NOT);
         return pushableFunctions;
+    }
+
+    private static Set<FunctionIdentifier> createFilterPushableAggregateFunctions() {
+        Set<FunctionIdentifier> pushableFunctions = new HashSet<>();
+        pushableFunctions.add(BuiltinFunctions.NON_EMPTY_STREAM);
+        return pushableFunctions;
+    }
+
+    private static Set<FunctionIdentifier> createFilterProhibitedFunctions() {
+        Set<FunctionIdentifier> prohibitedFunctions = new HashSet<>();
+        prohibitedFunctions.add(BuiltinFunctions.EMPTY_STREAM);
+        return prohibitedFunctions;
     }
 }

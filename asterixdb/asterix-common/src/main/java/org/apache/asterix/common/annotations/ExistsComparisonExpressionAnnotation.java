@@ -16,23 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.algebricks.core.algebra.base;
+package org.apache.asterix.common.annotations;
 
-public interface OperatorAnnotations {
-    // hints
-    String USE_HASH_GROUP_BY = "USE_HASH_GROUP_BY"; // -->
-    String USE_EXTERNAL_GROUP_BY = "USE_EXTERNAL_GROUP_BY"; // -->
-    String USE_STATIC_RANGE = "USE_STATIC_RANGE"; // -->
-    String USE_DYNAMIC_RANGE = "USE_DYNAMIC_RANGE";
-    // Boolean
-    String CARDINALITY = "CARDINALITY"; // -->
-    // Integer
-    String MAX_NUMBER_FRAMES = "MAX_NUMBER_FRAMES"; // -->
-    // Integer
-    String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
-    String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
-    String OP_COST_TOTAL = "TOTAL_COST";
-    String OP_COST_LOCAL = "OP_COST";
-    String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
-    String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
+import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+
+/**
+ * An annotation to indicate an expression is a comparison for EXISTS/NOT EXISTS
+ */
+public class ExistsComparisonExpressionAnnotation implements IExpressionAnnotation {
+    public static final IExpressionAnnotation INSTANCE = new ExistsComparisonExpressionAnnotation();
+
+    private ExistsComparisonExpressionAnnotation() {
+    }
 }

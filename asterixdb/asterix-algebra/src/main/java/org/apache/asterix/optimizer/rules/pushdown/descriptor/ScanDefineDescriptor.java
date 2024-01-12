@@ -47,7 +47,7 @@ public class ScanDefineDescriptor extends DefineDescriptor {
 
     public ScanDefineDescriptor(int scope, Dataset dataset, List<LogicalVariable> primaryKeyVariables,
             LogicalVariable recordVariable, LogicalVariable metaRecordVariable, ILogicalOperator operator) {
-        super(scope, recordVariable, operator, null, -1);
+        super(scope, null, recordVariable, operator, null, -1);
         this.primaryKeyVariables = primaryKeyVariables;
         this.metaRecordVariable = metaRecordVariable;
         this.dataset = dataset;

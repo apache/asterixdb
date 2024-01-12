@@ -25,9 +25,9 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 public class DefineDescriptor extends AbstractDescriptor {
     private final LogicalVariable variable;
 
-    public DefineDescriptor(int scope, LogicalVariable variable, ILogicalOperator operator,
-            ILogicalExpression expression, int expressionIndex) {
-        super(scope, operator, expression, expressionIndex);
+    public DefineDescriptor(int scope, ILogicalOperator subplanOperator, LogicalVariable variable,
+            ILogicalOperator operator, ILogicalExpression expression, int expressionIndex) {
+        super(scope, subplanOperator, operator, expression, expressionIndex);
         this.variable = variable;
     }
 

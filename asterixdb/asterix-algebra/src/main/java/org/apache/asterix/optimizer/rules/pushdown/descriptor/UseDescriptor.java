@@ -29,9 +29,9 @@ public class UseDescriptor extends AbstractDescriptor {
     private final Set<LogicalVariable> usedVariables;
     private final LogicalVariable producedVariable;
 
-    public UseDescriptor(int scope, ILogicalOperator operator, ILogicalExpression expression, int expressionIndex,
-            LogicalVariable producedVariable) {
-        super(scope, operator, expression, expressionIndex);
+    public UseDescriptor(int scope, ILogicalOperator subplanOperator, ILogicalOperator operator,
+            ILogicalExpression expression, int expressionIndex, LogicalVariable producedVariable) {
+        super(scope, subplanOperator, operator, expression, expressionIndex);
         this.usedVariables = new HashSet<>();
         this.producedVariable = producedVariable;
     }

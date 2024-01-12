@@ -18,9 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.processor;
 
-import static org.apache.asterix.metadata.utils.PushdownUtil.RANGE_FILTER_PUSHABLE_FUNCTIONS;
-import static org.apache.asterix.metadata.utils.PushdownUtil.isNestedFunction;
-import static org.apache.asterix.metadata.utils.PushdownUtil.isTypeFunction;
+import static org.apache.asterix.metadata.utils.PushdownUtil.isProhibitedFilterFunction;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,9 +101,9 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected boolean isPushable(AbstractFunctionCallExpression expression) {
+    protected boolean isNotPushable(AbstractFunctionCallExpression expression) {
         FunctionIdentifier fid = expression.getFunctionIdentifier();
-        return RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(fid) || !isNestedFunction(fid) && !isTypeFunction(fid);
+        return isProhibitedFilterFunction(expression);
     }
 
     @Override
