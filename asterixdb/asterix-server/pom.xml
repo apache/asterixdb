@@ -284,8 +284,8 @@
               <noticeUrl>https://bitbucket.org/connect2id/nimbus-content-type/raw/18f43920bc8e88873f0c1e42723640536866d3df/COPYRIGHT.txt</noticeUrl>
             </override>
             <override>
-              <gav>io.projectreactor:reactor-core:3.4.27</gav>
-              <url>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</url>
+              <gav>io.projectreactor:reactor-core:3.4.34</gav>
+              <url>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.34/LICENSE</url>
             </override>
             <override>
               <gavs>
@@ -499,7 +499,7 @@
                 <aliasUrl>https://aws.amazon.com/apache2.0</aliasUrl>
                 <aliasUrl>https://opensource.org/licenses/Apache-2.0</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/jorabin/KeePassJava2/KeePassJava2-2.1.4/LICENSE</aliasUrl>
-                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.27/LICENSE</aliasUrl>
+                <aliasUrl>https://raw.githubusercontent.com/reactor/reactor-core/v3.4.34/LICENSE</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/codehaus/stax/master/dev/ASF2.0.txt</aliasUrl>
                 <aliasUrl>https://bitbucket.org/connect2id/oauth-2.0-sdk-with-openid-connect-extensions/raw/c8f09b035b7e93858a39ad4a46ba4d0e17a0aefe/LICENSE.txt</aliasUrl>
                 <aliasUrl>https://raw.githubusercontent.com/google/auto/auto-value-1.10.1/LICENSE</aliasUrl>
