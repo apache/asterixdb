@@ -91,10 +91,10 @@
     <awsjavasdk.version>2.17.218</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.572</hadoop-awsjavasdk.version>
-    <azureblobjavasdk.version>12.22.0</azureblobjavasdk.version>
-    <azurecommonjavasdk.version>12.21.0</azurecommonjavasdk.version>
-    <azureidentity.version>1.9.0</azureidentity.version>
-    <azuredatalakejavasdk.version>12.7.2</azuredatalakejavasdk.version>
+    <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
+    <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>
+    <azureidentity.version>1.11.1</azureidentity.version>
+    <azuredatalakejavasdk.version>12.18.1</azuredatalakejavasdk.version>
     <gcsjavasdk.version>2.26.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
     <hadoop-gcs.version>hadoop3-2.2.6</hadoop-gcs.version>
