@@ -32,7 +32,10 @@ import java.util.TreeMap;
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig;
+import org.apache.asterix.metadata.declared.DatasetDataSource;
+import org.apache.asterix.metadata.declared.SampleDataSource;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.optimizer.cost.Cost;
 import org.apache.asterix.optimizer.cost.ICost;
@@ -41,6 +44,7 @@ import org.apache.asterix.optimizer.rules.am.IAccessMethod;
 import org.apache.asterix.optimizer.rules.am.IOptimizableFuncExpr;
 import org.apache.asterix.optimizer.rules.am.IntroduceJoinAccessMethodRule;
 import org.apache.asterix.optimizer.rules.am.IntroduceSelectAccessMethodRule;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -59,7 +63,11 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinali
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorManipulationUtil;
+import org.apache.hyracks.algebricks.core.algebra.util.OperatorPropertiesUtil;
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
@@ -299,6 +307,118 @@ public class JoinNode {
         }
     }
 
+    public void setCardsAndSizes(Index.SampleIndexDetails idxDetails, ILogicalOperator leafInput)
+            throws AlgebricksException {
+
+        double origDatasetCard, finalDatasetCard;
+        finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
+
+        DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(leafInput);
+        if (scanOp == null) {
+            return; // what happens to the cards and sizes then? this may happen in case of in lists
+        }
+
+        double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+        if (sampleCard == 0) { // should not happen unless the original dataset is empty
+            sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
+
+            IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
+                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+            }
+        }
+
+        List<List<IAObject>> result;
+        SelectOperator selop = (SelectOperator) joinEnum.findASelectOp(leafInput);
+        if (selop == null) { // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
+            selop = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
+            ILogicalOperator op = selop;
+            op.getInputs().add(new MutableObject<>(leafInput));
+            leafInput = op;
+        }
+        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(leafInput);
+        Mutable<ILogicalOperator> ref = new MutableObject<>(leafInput);
+
+        OperatorPropertiesUtil.typeOpRec(ref, joinEnum.optCtx);
+        if (LOGGER.isTraceEnabled()) {
+            String viewPlan = new ALogicalPlanImpl(ref).toString(); //useful when debugging
+            LOGGER.trace("viewPlan");
+            LOGGER.trace(viewPlan);
+        }
+
+        // find if row or columnar format
+        DatasetDataSource dds = (DatasetDataSource) scanOp.getDataSource();
+        if (dds.getDataset().getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.ROW) {
+            setColumnar(false);
+        }
+
+        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        DataSourceScanOperator deepCopyofScan =
+                (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
+        deepCopyofScan.setDataSource(sampledatasource);
+        LogicalVariable primaryKey;
+        if (deepCopyofScan.getVariables().size() > 1) {
+            primaryKey = deepCopyofScan.getVariables().get(1);
+        } else {
+            primaryKey = deepCopyofScan.getVariables().get(0);
+        }
+        // if there is only one conjunct, I do not have to call the sampling query during index selection!
+        // insert this in place of the scandatasourceOp.
+        parent.getInputs().get(0).setValue(deepCopyofScan);
+        // There are predicates here. So skip the predicates and get the original dataset card.
+        // Now apply all the predicates and get the card after all predicates are applied.
+        result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
+                primaryKey);
+        double predicateCardinalityFromSample = joinEnum.getStatsHandle().findPredicateCardinality(result, true);
+
+        double sizeVarsFromDisk;
+        double sizeVarsAfterScan;
+
+        if (predicateCardinalityFromSample > 0.0) { // otherwise, we get nulls for the averages
+            sizeVarsFromDisk = joinEnum.getStatsHandle().findSizeVarsFromDisk(result, getNumVarsFromDisk());
+            sizeVarsAfterScan = joinEnum.getStatsHandle().findSizeVarsAfterScan(result, getNumVarsFromDisk());
+        } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
+            ILogicalExpression saveExpr = selop.getCondition().getValue();
+            selop.getCondition().setValue(ConstantExpression.TRUE);
+            result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
+                    primaryKey);
+            double x = joinEnum.getStatsHandle().findPredicateCardinality(result, true);
+            // better to check if x is 0
+            if (x == 0.0) {
+                sizeVarsFromDisk = getNumVarsFromDisk() * 100;
+                sizeVarsAfterScan = getNumVarsAfterScan() * 100; // cant think of anything better... cards are more important anyway
+            } else {
+                sizeVarsFromDisk = joinEnum.getStatsHandle().findSizeVarsFromDisk(result, getNumVarsFromDisk());
+                sizeVarsAfterScan = joinEnum.getStatsHandle().findSizeVarsAfterScan(result, getNumVarsFromDisk());
+            }
+            selop.getCondition().setValue(saveExpr); // restore the expression
+        }
+
+        // Adjust for zero predicate cardinality from the sample.
+        predicateCardinalityFromSample = Math.max(predicateCardinalityFromSample, 0.0001);
+
+        // Do the scale up for the final cardinality after the predicates.
+        boolean scaleUp = sampleCard != origDatasetCard;
+        if (scaleUp) {
+            finalDatasetCard *= predicateCardinalityFromSample / sampleCard;
+        } else {
+            finalDatasetCard = predicateCardinalityFromSample;
+        }
+        // now switch the input back.
+        parent.getInputs().get(0).setValue(scanOp);
+
+        if (getCardinality() == getOrigCardinality()) { // this means there was no selectivity hint provided
+            // If the sample size is the same as the original dataset (happens when the dataset
+            // is small), no need to assign any artificial min. cardinality as the sample is accurate.
+            setCardinality(finalDatasetCard, scaleUp);
+        }
+
+        setSizeVarsFromDisk(sizeVarsFromDisk);
+        setSizeVarsAfterScan(sizeVarsAfterScan);
+        setAvgDocSize(idxDetails.getSourceAvgItemSize());
+    }
+
     private List<Integer> getNewJoinConditionsOnly() {
         List<Integer> newJoinConditions = new ArrayList<>();
         JoinNode leftJn = this.leftJn;
@@ -536,7 +656,7 @@ public class JoinNode {
                         selOp.getInputs().add(new MutableObject<>(leafInput));
                     }
                     sel = joinEnum.getStatsHandle().findSelectivityForThisPredicate(selOp, afce,
-                            chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY), this.origCardinality);
+                            chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY));
                 }
                 IndexCostInfo.add(new Triple<>(chosenIndex, sel, afce));
             }
@@ -1393,6 +1513,8 @@ public class JoinNode {
         }
         sb.append("cardinality ").append((double) Math.round(cardinality * 100) / 100).append('\n');
         sb.append("size ").append((double) Math.round(size * 100) / 100).append('\n');
+        sb.append("outputSize(sizeVarsAfterScan) ").append((double) Math.round(sizeVarsAfterScan * 100) / 100)
+                .append('\n');
         if (planIndexesArray.size() == 0) {
             sb.append("No plans considered for this join node").append('\n');
         } else {

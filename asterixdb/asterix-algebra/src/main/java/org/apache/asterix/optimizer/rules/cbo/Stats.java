@@ -431,7 +431,7 @@ public class Stats {
     }
 
     protected double findSelectivityForThisPredicate(SelectOperator selOp, AbstractFunctionCallExpression exp,
-            boolean arrayIndex, double datasetCard) throws AlgebricksException {
+            boolean arrayIndex) throws AlgebricksException {
         // replace the SelOp.condition with the new exp and replace it at the end
         // The Selop here is the start of the leafInput.
 
@@ -449,8 +449,6 @@ public class Stats {
 
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
-        // origDatasetCard must be equal to datasetCard. So we do not need datasetCard passed in here. VIJAY check if
-        // this parameter can be removed.
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
         if (sampleCard == 0) {
             sampleCard = 1;
@@ -522,9 +520,7 @@ public class Stats {
         }
 
         double predicateCardinality = findPredicateCardinality(result, false);
-        if (predicateCardinality == 0.0) {
-            predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
-        }
+        predicateCardinality = Math.max(predicateCardinality, 0.0001);
 
         if (arrayIndex) {
             // In case of array predicates, the sample cardinality should be computed as
@@ -634,7 +630,7 @@ public class Stats {
     // This one gets the cardinality and also projection sizes
     protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp,
             int dataset, LogicalVariable primaryKey) throws AlgebricksException {
-        LOGGER.info("***running sample query***");
+        LOGGER.info("***running projection sample query***");
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
 
@@ -741,7 +737,7 @@ public class Stats {
             LOGGER.trace(viewInPlan);
         }
 
-        LOGGER.info("***returning from sample query***");
+        LOGGER.info("***returning from projection sample query***");
         return AnalysisUtil.runQuery(Ref, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 
