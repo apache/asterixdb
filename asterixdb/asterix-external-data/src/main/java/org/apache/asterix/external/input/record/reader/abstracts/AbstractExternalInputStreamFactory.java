@@ -70,8 +70,8 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector)
             throws AlgebricksException {
         this.configuration = configuration;
-        this.partitionConstraint =
-                ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager().getClusterLocations();
+        this.partitionConstraint = ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager()
+                .getSortedClusterLocations();
     }
 
     public static class PartitionWorkLoadBasedOnSize implements Serializable {

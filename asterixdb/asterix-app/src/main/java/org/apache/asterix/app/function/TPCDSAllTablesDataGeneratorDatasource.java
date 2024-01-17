@@ -64,6 +64,6 @@ public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
 
     @Override
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
-        return new AlgebricksAbsolutePartitionConstraint(csm.getClusterLocations().getLocations());
+        return csm.getSortedClusterLocations();
     }
 }

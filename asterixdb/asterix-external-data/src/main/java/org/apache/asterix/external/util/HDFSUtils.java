@@ -265,7 +265,7 @@ public class HDFSUtils {
     public static AlgebricksAbsolutePartitionConstraint getPartitionConstraints(IApplicationContext appCtx,
             AlgebricksAbsolutePartitionConstraint clusterLocations) {
         if (clusterLocations == null) {
-            return ((ICcApplicationContext) appCtx).getClusterStateManager().getClusterLocations();
+            return ((ICcApplicationContext) appCtx).getClusterStateManager().getSortedClusterLocations();
         }
         return clusterLocations;
 
