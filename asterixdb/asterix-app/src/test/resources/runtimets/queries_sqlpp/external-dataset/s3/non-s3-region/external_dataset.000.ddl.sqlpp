@@ -34,7 +34,7 @@ create external dataset test(test) using S3 (
     ("accessKeyId"="dummyAccessKey"),
     ("secretAccessKey"="dummySecretKey"),
     ("region"="some-new-region"),
-    ("serviceEndpoint"="http://localhost:8001"),
+    ("serviceEndpoint"="http://127.0.0.1:8001"),
     ("container"="playground"),
     ("definition"="json-data/reviews/single-line/json"),
     ("format"="json")
