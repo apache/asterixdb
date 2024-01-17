@@ -135,9 +135,8 @@ public class Stats {
         double sel = 1.0;
 
         if (afcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
-            double orSel = getSelectivityFromAnnotation(
-                    (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
-            for (int i = 1; i < afcExpr.getArguments().size(); i++) {
+            double orSel = 0.0;
+            for (int i = 0; i < afcExpr.getArguments().size(); i++) {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                     sel = getSelectivityFromAnnotation(
