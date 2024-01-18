@@ -133,8 +133,11 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void close() throws HyracksDataException {
-                    state.joiner.closeCache();
-                    ctx.setStateObject(state);
+                    // state and state.joiner can be null if open() fails
+                    if (state != null && state.joiner != null) {
+                        state.joiner.closeCache();
+                        ctx.setStateObject(state);
+                    }
                 }
 
                 @Override
@@ -161,10 +164,10 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
 
                 @Override
                 public void open() throws HyracksDataException {
-                    writer.open();
                     state = (JoinCacheTaskState) ctx.getStateObject(
                             new TaskId(new ActivityId(getOperatorId(), JOIN_CACHE_ACTIVITY_ID), partition));
                     state.joiner.setComparator(comparatorFactory.createTuplePairComparator(ctx));
+                    writer.open();
                 }
 
                 @Override
@@ -175,11 +178,7 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 @Override
                 public void close() throws HyracksDataException {
                     if (failed) {
-                        try {
-                            state.joiner.closeCache();
-                        } finally {
-                            writer.close();
-                        }
+                        closeOnFail();
                         return;
                     }
                     try {
@@ -201,6 +200,29 @@ public class NestedLoopJoinOperatorDescriptor extends AbstractOperatorDescriptor
                 public void fail() throws HyracksDataException {
                     failed = true;
                     writer.fail();
+                }
+
+                private void closeOnFail() {
+                    try {
+                        // state can be null if open() fails
+                        JoinCacheTaskState stateObject = state;
+                        if (state == null) {
+                            // make sure if the state object is actually still in the ctx, then close the resources
+                            stateObject = (JoinCacheTaskState) ctx.getStateObject(
+                                    new TaskId(new ActivityId(getOperatorId(), JOIN_CACHE_ACTIVITY_ID), partition));
+                        }
+                        if (stateObject != null) {
+                            state.joiner.closeCache();
+                        }
+                    } catch (Exception e) {
+                        // ignore
+                    } finally {
+                        try {
+                            writer.close();
+                        } catch (Exception e) {
+                            // ignore
+                        }
+                    }
                 }
             };
         }
