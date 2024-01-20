@@ -58,6 +58,10 @@ public class JSONUtil {
         return SORTED_MAPPER.writeValueAsString(SORTED_MAPPER.treeToValue(node, Object.class));
     }
 
+    public static byte[] asBytes(JsonNode node) throws JsonProcessingException {
+        return OBJECT_MAPPER.writeValueAsBytes(node);
+    }
+
     public static String convertNodeUnchecked(final JsonNode node) throws UncheckedExecutionException {
         try {
             return convertNode(node);

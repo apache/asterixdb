@@ -279,4 +279,15 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     public final JsonNode listAsJson(ObjectMapper objectMapper) {
         return cloudClient.listAsJson(objectMapper, bucket);
     }
+
+    /**
+     * Writes the bytes to the specified key in the bucket
+     *
+     * @param key the key where the bytes will be written
+     * @param bytes the bytes to write
+     */
+    public final void put(String key, byte[] bytes) {
+        cloudClient.write(bucket, key, bytes);
+    }
+
 }
