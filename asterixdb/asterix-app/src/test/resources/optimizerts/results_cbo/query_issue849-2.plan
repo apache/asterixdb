@@ -19,27 +19,14 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
-          -- UNNEST  |PARTITIONED|
-            -- STREAM_PROJECT  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- PRE_CLUSTERED_GROUP_BY[$$47]  |PARTITIONED|
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- STREAM_SELECT  |LOCAL|
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            -- HYBRID_HASH_JOIN [$$47][$$49]  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+                -- DATASOURCE_SCAN (test.s)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$47(ASC)]  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- STREAM_PROJECT  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- HYBRID_HASH_JOIN [$$47][$$49]  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.s)  |PARTITIONED|
-                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                              -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
-                                -- STREAM_PROJECT  |UNPARTITIONED|
-                                  -- ASSIGN  |UNPARTITIONED|
-                                    -- UNNEST  |UNPARTITIONED|
-                                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
+                -- STREAM_PROJECT  |UNPARTITIONED|
+                  -- ASSIGN  |UNPARTITIONED|
+                    -- UNNEST  |UNPARTITIONED|
+                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
