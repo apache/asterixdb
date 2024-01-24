@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
+import org.apache.asterix.api.http.server.ActiveRequestsServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.RequestReference;
@@ -57,8 +57,8 @@ public class QueryCancellationServletTest {
         RequestTracker tracker = new RequestTracker(appCtx);
         Mockito.when(appCtx.getRequestTracker()).thenReturn(tracker);
         // Creates a query cancellation servlet.
-        CcQueryCancellationServlet cancellationServlet =
-                new CcQueryCancellationServlet(new ConcurrentHashMap<>(), appCtx, new String[] { "/" });
+        ActiveRequestsServlet cancellationServlet =
+                new ActiveRequestsServlet(new ConcurrentHashMap<>(), appCtx, new String[] { "/" });
         // Adds mocked Hyracks client connection into the servlet context.
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         cancellationServlet.ctx().put(ServletConstants.HYRACKS_CONNECTION_ATTR, mockHcc);

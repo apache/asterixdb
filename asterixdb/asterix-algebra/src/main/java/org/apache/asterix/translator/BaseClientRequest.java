@@ -93,7 +93,8 @@ public abstract class BaseClientRequest implements IClientRequest {
         return JSONUtil.convertNodeUnchecked(asJson());
     }
 
-    protected ObjectNode asJson() {
+    @Override
+    public ObjectNode asJson() {
         ObjectNode json = JSONUtil.createObject();
         json.put("uuid", requestReference.getUuid());
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());
