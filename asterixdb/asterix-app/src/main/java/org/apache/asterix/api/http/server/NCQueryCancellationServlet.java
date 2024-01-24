@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.api.http.server;
 
-import static org.apache.asterix.api.http.server.CcQueryCancellationServlet.REQUEST_UUID_PARAM_NAME;
+import static org.apache.asterix.api.http.server.ActiveRequestsServlet.REQUEST_UUID_PARAM_NAME;
 import static org.apache.asterix.app.message.ExecuteStatementRequestMessage.DEFAULT_NC_TIMEOUT_MILLIS;
 
 import java.util.concurrent.ConcurrentMap;

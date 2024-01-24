@@ -37,9 +37,9 @@ import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.http.IQueryWebServerRegistrant;
+import org.apache.asterix.api.http.server.ActiveRequestsServlet;
 import org.apache.asterix.api.http.server.ActiveStatsApiServlet;
 import org.apache.asterix.api.http.server.ApiServlet;
-import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
 import org.apache.asterix.api.http.server.ClusterApiServlet;
 import org.apache.asterix.api.http.server.ClusterControllerDetailsApiServlet;
 import org.apache.asterix.api.http.server.ConnectorApiServlet;
@@ -315,7 +315,7 @@ public class CCApplication extends BaseCCApplication {
         ConcurrentMap<String, Object> ctx = server.ctx();
         switch (key) {
             case Servlets.RUNNING_REQUESTS:
-                return new CcQueryCancellationServlet(ctx, appCtx, paths);
+                return new ActiveRequestsServlet(ctx, appCtx, paths);
             case Servlets.QUERY_STATUS:
                 return new QueryStatusApiServlet(ctx, appCtx, paths);
             case Servlets.QUERY_RESULT:

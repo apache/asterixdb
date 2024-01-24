@@ -21,6 +21,8 @@ package org.apache.asterix.common.api;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 public interface IClientRequest {
 
     enum State {
@@ -86,7 +88,13 @@ public interface IClientRequest {
     void cancel(ICcApplicationContext appCtx) throws HyracksDataException;
 
     /**
-     * @return A json representation of this request
+     * @return A json string representation of this request
      */
     String toJson();
+
+    /**
+     * @return A json node representation of this request
+     */
+    ObjectNode asJson();
+
 }

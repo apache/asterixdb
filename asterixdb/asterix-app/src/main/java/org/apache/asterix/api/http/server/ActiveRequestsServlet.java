@@ -19,6 +19,7 @@
 package org.apache.asterix.api.http.server;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter;
@@ -27,7 +28,6 @@ import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
-import org.apache.hyracks.http.server.AbstractServlet;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,24 +35,27 @@ import org.apache.logging.log4j.Logger;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
 /**
- * The servlet provides a REST API for cancelling an on-going query.
+ * The servlet provides a REST API for getting the running queries or cancelling an on-going one.
  */
-public class CcQueryCancellationServlet extends AbstractServlet {
+public class ActiveRequestsServlet extends AbstractRequestsServlet {
 
     public static final String REQUEST_UUID_PARAM_NAME = "request_id";
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ICcApplicationContext appCtx;
 
-    public CcQueryCancellationServlet(ConcurrentMap<String, Object> ctx, ICcApplicationContext appCtx,
-            String... paths) {
-        super(ctx, paths);
-        this.appCtx = appCtx;
+    public ActiveRequestsServlet(ConcurrentMap<String, Object> ctx, ICcApplicationContext appCtx, String... paths) {
+        super(ctx, appCtx, paths);
+    }
+
+    @Override
+    public Collection<IClientRequest> getRequests() {
+        return appCtx.getRequestTracker().getRunningRequests();
     }
 
     @Override
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
         String uuid = request.getParameter(REQUEST_UUID_PARAM_NAME);
         String clientCtxId = request.getParameter(Parameter.CLIENT_ID.str());
+        LOGGER.debug("received cancel request, uuid={}, clientCtxId={}", uuid, clientCtxId);
         if (uuid == null && clientCtxId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;

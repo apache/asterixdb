@@ -76,7 +76,7 @@ public class ClientRequest extends BaseClientRequest {
     }
 
     @Override
-    protected ObjectNode asJson() {
+    public ObjectNode asJson() {
         ObjectNode json = super.asJson();
         json.put("jobId", jobId != null ? jobId.toString() : null);
         json.put("statement", statement);
