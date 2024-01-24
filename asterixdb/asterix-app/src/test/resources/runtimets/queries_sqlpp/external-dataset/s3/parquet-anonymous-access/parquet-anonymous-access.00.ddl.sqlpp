@@ -26,7 +26,7 @@ CREATE TYPE ParquetType AS {
 
 CREATE EXTERNAL DATASET ParquetDataset(ParquetType) USING S3 (
 ("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
+("serviceEndpoint"="http://127.0.0.1:8001"),
 ("container"="playground"),
 ("definition"="parquet-data/reviews"),
 ("format"="parquet"),

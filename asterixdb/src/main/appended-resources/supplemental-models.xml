@@ -480,8 +480,8 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>third-party-jackson-core</artifactId>
       <properties>
-        <license.alternateNoticeFile>2.17.218:META-INF/NOTICE.txt</license.alternateNoticeFile>
-        <license.alternateLicenseFile>2.17.218:META-INF/LICENSE.txt</license.alternateLicenseFile>
+        <license.alternateNoticeFile>2.23.3:META-INF/NOTICE.txt</license.alternateNoticeFile>
+        <license.alternateLicenseFile>2.23.3:META-INF/LICENSE.txt</license.alternateLicenseFile>
       </properties>
     </project>
   </supplement>
@@ -609,8 +609,9 @@
       <groupId>org.reactivestreams</groupId>
       <artifactId>reactive-streams</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.0.3</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.0.3,1.0.4</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.3,1.0.4</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.0.3,1.0.4</license.ignoreLicenseOverride>
         <license.ignoreNoticeOverride>1.0.3</license.ignoreNoticeOverride>
       </properties>
     </project>

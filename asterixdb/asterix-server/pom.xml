@@ -605,6 +605,13 @@
                 <aliasUrl>https://github.com/aws/mit-0</aliasUrl>
               </aliasUrls>
             </license>
+            <license>
+              <displayName>MIT License</displayName>
+              <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/main/LICENSE.txt</url>
+              <aliasUrls>
+                <aliasUrl>com.microsoft.azure--msal4j--1.14.0_MIT License</aliasUrl>
+              </aliasUrls>
+            </license>
           </licenses>
           <templateProperties>
             <packageName>Apache AsterixDB Server Install</packageName>
