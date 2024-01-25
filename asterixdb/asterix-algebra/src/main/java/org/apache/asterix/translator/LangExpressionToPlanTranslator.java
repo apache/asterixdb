@@ -394,21 +394,29 @@ abstract class LangExpressionToPlanTranslator
             }
         }
 
-        // Set order expression(s) if any. We do order first to prevent partition variables to be used
+        // Handle order by
+        List<Expression> orderExprList = copyTo.getOrderByExpressions();
+        List<OrderbyClause.OrderModifier> orderModifierList = copyTo.getOrderByModifiers();
+        List<OrderbyClause.NullOrderModifier> nullOrderModifierList = copyTo.getOrderByNullModifiers();
         List<Pair<OrderOperator.IOrder, Mutable<ILogicalExpression>>> orderExprListOut = new ArrayList<>();
-        List<Expression> orderExprList = copyTo.getOrderbyExpressions();
-        List<OrderbyClause.OrderModifier> orderModifierList = copyTo.getOrderbyModifiers();
-        List<OrderbyClause.NullOrderModifier> nullOrderModifierList = copyTo.getOrderbyNullModifiers();
-        for (int i = 0; i < orderExprList.size(); i++) {
-            Expression orderExpr = orderExprList.get(i);
-            OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
-            OrderbyClause.NullOrderModifier nullOrderModifier = nullOrderModifierList.get(i);
-            Pair<ILogicalExpression, Mutable<ILogicalOperator>> orderExprResult =
-                    langExprToAlgExpression(orderExpr, topOpRef);
-            Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> wrappedPair =
-                    wrapInAssign(context.newVar(), orderExprResult.first, orderExprResult.second);
-            addOrderByExpression(orderExprListOut, wrappedPair.first.getValue(), orderModifier, nullOrderModifier);
-            topOpRef = wrappedPair.second;
+        if (!copyTo.isPartitioned() && copyTo.isOrdered()) {
+            // The output must be ordered (sorted) entirely, create an implicit orderBy-clause
+            OrderbyClause orderbyClause = new OrderbyClause(orderExprList, orderModifierList, nullOrderModifierList);
+            Pair<ILogicalOperator, LogicalVariable> order = orderbyClause.accept(this, topOpRef);
+            topOpRef = new MutableObject<>(order.first);
+        } else {
+            // Potentially an ordered partitions. Set order expression(s) if any.
+            for (int i = 0; i < orderExprList.size(); i++) {
+                Expression orderExpr = orderExprList.get(i);
+                OrderbyClause.OrderModifier orderModifier = orderModifierList.get(i);
+                OrderbyClause.NullOrderModifier nullOrderModifier = nullOrderModifierList.get(i);
+                Pair<ILogicalExpression, Mutable<ILogicalOperator>> orderExprResult =
+                        langExprToAlgExpression(orderExpr, topOpRef);
+                Pair<Mutable<ILogicalExpression>, Mutable<ILogicalOperator>> wrappedPair =
+                        wrapInAssign(context.newVar(), orderExprResult.first, orderExprResult.second);
+                addOrderByExpression(orderExprListOut, wrappedPair.first.getValue(), orderModifier, nullOrderModifier);
+                topOpRef = wrappedPair.second;
+            }
         }
 
         // Set Path
@@ -445,12 +453,14 @@ abstract class LangExpressionToPlanTranslator
             fullPathExpr = concat;
         }
 
+        // Write adapter configuration
         writeDataSink = new WriteDataSink(copyTo.getAdapter(), copyTo.getProperties());
         // writeOperator
         WriteOperator writeOperator = new WriteOperator(sourceExprRef, new MutableObject<>(fullPathExpr),
                 partitionExpressionRefs, orderExprListOut, writeDataSink);
         writeOperator.getInputs().add(topOpRef);
 
+        // We need DistributeResultOperator to ensure all warnings to be delivered to the user
         ResultSetSinkId rssId = new ResultSetSinkId(metadataProvider.getResultSetId());
         ResultSetDataSink sink = new ResultSetDataSink(rssId, null);
         DistributeResultOperator newTop = new DistributeResultOperator(new ArrayList<>(), sink, resultMetadata);

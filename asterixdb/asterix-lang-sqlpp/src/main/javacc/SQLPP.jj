@@ -2959,13 +2959,15 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   OrderbyClause orderByClause = null;
 }
 {
-   <OVER> <LEFTPAREN> <IDENTIFIER> {expectToken(PARTITION);} <BY>
+   <OVER> <LEFTPAREN>
+
+   (<IDENTIFIER> {expectToken(PARTITION);} <BY>
    partitionExpr = Expression() { partitionExprs.add(partitionExpr);}
    ((<AS>)? partitionVar = Variable() { partitionVarExprs.put(0, partitionVar); })?
    (
      <COMMA> partitionExpr = Expression() { partitionExprs.add(partitionExpr); }
      ((<AS>)? partitionVar = Variable() { partitionVarExprs.put(partitionExprs.size() - 1, partitionVar); })?
-   )*
+   )*)?
    (
       orderByClause = OrderbyClause()
       {
@@ -2975,6 +2977,11 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
       }
    )?
    <RIGHTPAREN>
+   {
+     if(partitionExprs.isEmpty() && orderbyList.isEmpty()) {
+       throw new SqlppParseException(getSourceLocation(token), "OVER-clause cannot be empty");
+     }
+   }
 }
 
 

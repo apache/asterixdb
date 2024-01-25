@@ -312,7 +312,7 @@ public abstract class AbstractSqlppContainsExpressionVisitor<T>
     public Boolean visit(CopyToStatement stmtCopy, T arg) throws CompilationException {
         return stmtCopy.accept(this, arg) || visitExprList(stmtCopy.getPathExpressions(), arg)
                 || visitExprList(stmtCopy.getPartitionExpressions(), arg)
-                || visitExprList(stmtCopy.getOrderbyList(), arg);
+                || visitExprList(stmtCopy.getOrderByList(), arg);
     }
 
     private boolean visit(ILangExpression expr, T arg) throws CompilationException {

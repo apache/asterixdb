@@ -254,7 +254,7 @@ public abstract class GatherFunctionCallsVisitor extends AbstractQueryExpression
         stmtCopy.getQuery().accept(this, arg);
         acceptList(stmtCopy.getPathExpressions(), arg);
         acceptList(stmtCopy.getPartitionExpressions(), arg);
-        acceptList(stmtCopy.getOrderbyList(), arg);
+        acceptList(stmtCopy.getOrderByList(), arg);
         return null;
     }
 

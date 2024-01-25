@@ -581,27 +581,30 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
 
         if (cto.hasOverClause()) {
             out.print("over (");
-            List<Expression> partitionExprs = cto.getPartitionExpressions();
-            Map<Integer, VariableExpr> partitionVars = cto.getPartitionsVariables();
-            out.print(skip(step + 1) + "partition ");
-            for (int i = 0; i < partitionExprs.size(); i++) {
-                if (i > 0) {
-                    out.print(COMMA + " ");
-                }
-                partitionExprs.get(i).accept(this, step + 2);
-                VariableExpr partVar = partitionVars.get(i);
-                if (partVar != null) {
-                    out.print(" as ");
-                    partVar.accept(this, step);
+            if (cto.hasPartitionClause()) {
+                List<Expression> partitionExprs = cto.getPartitionExpressions();
+                Map<Integer, VariableExpr> partitionVars = cto.getPartitionsVariables();
+                out.print(skip(step + 1) + "partition ");
+                for (int i = 0; i < partitionExprs.size(); i++) {
+                    if (i > 0) {
+                        out.print(COMMA + " ");
+                    }
+                    partitionExprs.get(i).accept(this, step + 2);
+                    VariableExpr partVar = partitionVars.get(i);
+                    if (partVar != null) {
+                        out.print(" as ");
+                        partVar.accept(this, step);
+                    }
                 }
             }
             out.println();
             if (cto.hasOrderClause()) {
                 out.print(skip(step + 1) + "order ");
-                printDelimitedObyExpressions(cto.getOrderbyList(), cto.getOrderbyModifiers(),
-                        cto.getOrderbyNullModifierList(), step + 1);
+                printDelimitedObyExpressions(cto.getOrderByList(), cto.getOrderByModifiers(),
+                        cto.getOrderByNullModifierList(), step + 1);
                 out.println();
             }
+            out.println(')');
         }
 
         out.println("with ");

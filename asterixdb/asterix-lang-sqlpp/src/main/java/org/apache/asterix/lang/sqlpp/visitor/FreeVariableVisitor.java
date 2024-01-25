@@ -523,7 +523,7 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
         stmtCopy.getBody().accept(this, freeVars);
         visit(stmtCopy.getPathExpressions(), freeVars);
         visit(stmtCopy.getPartitionExpressions(), freeVars);
-        visit(stmtCopy.getOrderbyList(), freeVars);
+        visit(stmtCopy.getOrderByList(), freeVars);
         return null;
     }
 

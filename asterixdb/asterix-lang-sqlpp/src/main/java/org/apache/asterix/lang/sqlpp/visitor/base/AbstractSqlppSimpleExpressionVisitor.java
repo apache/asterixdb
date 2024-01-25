@@ -363,7 +363,7 @@ public class AbstractSqlppSimpleExpressionVisitor
         stmtCopy.setBody(stmtCopy.getBody().accept(this, arg));
         stmtCopy.setPathExpressions(visit(stmtCopy.getPathExpressions(), arg));
         stmtCopy.setPartitionExpressions(visit(stmtCopy.getPartitionExpressions(), arg));
-        stmtCopy.setOrderbyList(visit(stmtCopy.getOrderbyList(), arg));
+        stmtCopy.setOrderByList(visit(stmtCopy.getOrderByList(), arg));
         return null;
     }
 

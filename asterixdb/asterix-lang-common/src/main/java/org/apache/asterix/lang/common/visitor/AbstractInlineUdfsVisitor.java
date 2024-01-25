@@ -298,9 +298,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         changed |= part.first;
         stmtCopy.setPartitionExpressions(part.second);
 
-        Pair<Boolean, List<Expression>> order = inlineUdfsInExprList(stmtCopy.getOrderbyList());
+        Pair<Boolean, List<Expression>> order = inlineUdfsInExprList(stmtCopy.getOrderByList());
         changed |= order.first;
-        stmtCopy.setOrderbyList(order.second);
+        stmtCopy.setOrderByList(order.second);
 
         return changed;
     }

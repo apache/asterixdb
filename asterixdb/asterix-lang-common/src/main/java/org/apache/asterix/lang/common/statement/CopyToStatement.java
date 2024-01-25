@@ -40,22 +40,22 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
     private final VariableExpr sourceVariable;
     private final ExternalDetailsDecl externalDetailsDecl;
     private final Map<Integer, VariableExpr> partitionsVariables;
-    private final List<OrderbyClause.OrderModifier> orderbyModifiers;
-    private final List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
+    private final List<OrderbyClause.OrderModifier> orderByModifiers;
+    private final List<OrderbyClause.NullOrderModifier> orderByNullModifierList;
 
     private Namespace namespace;
     private Query query;
     private List<Expression> pathExpressions;
 
     private List<Expression> partitionExpressions;
-    private List<Expression> orderbyList;
+    private List<Expression> orderByList;
     private int varCounter;
 
     public CopyToStatement(Namespace namespace, String datasetName, Query query, VariableExpr sourceVariable,
             ExternalDetailsDecl externalDetailsDecl, List<Expression> pathExpressions,
             List<Expression> partitionExpressions, Map<Integer, VariableExpr> partitionsVariables,
-            List<Expression> orderbyList, List<OrderbyClause.OrderModifier> orderbyModifiers,
-            List<OrderbyClause.NullOrderModifier> orderbyNullModifierList, int varCounter) {
+            List<Expression> orderbyList, List<OrderbyClause.OrderModifier> orderByModifiers,
+            List<OrderbyClause.NullOrderModifier> orderByNullModifierList, int varCounter) {
         this.namespace = namespace;
         this.datasetName = datasetName;
         this.query = query;
@@ -64,9 +64,9 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
         this.pathExpressions = pathExpressions;
         this.partitionExpressions = partitionExpressions;
         this.partitionsVariables = partitionsVariables;
-        this.orderbyList = orderbyList;
-        this.orderbyModifiers = orderbyModifiers;
-        this.orderbyNullModifierList = orderbyNullModifierList;
+        this.orderByList = orderbyList;
+        this.orderByModifiers = orderByModifiers;
+        this.orderByNullModifierList = orderByNullModifierList;
         this.varCounter = varCounter;
 
         if (pathExpressions.isEmpty()) {
@@ -141,28 +141,32 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
         return partitionsVariables;
     }
 
-    public List<Expression> getOrderbyList() {
-        return orderbyList;
+    public List<Expression> getOrderByList() {
+        return orderByList;
     }
 
-    public void setOrderbyList(List<Expression> orderbyList) {
-        this.orderbyList = orderbyList;
+    public void setOrderByList(List<Expression> orderbyList) {
+        this.orderByList = orderbyList;
     }
 
-    public List<OrderbyClause.OrderModifier> getOrderbyModifiers() {
-        return orderbyModifiers;
+    public List<OrderbyClause.OrderModifier> getOrderByModifiers() {
+        return orderByModifiers;
     }
 
-    public List<OrderbyClause.NullOrderModifier> getOrderbyNullModifierList() {
-        return orderbyNullModifierList;
+    public List<OrderbyClause.NullOrderModifier> getOrderByNullModifierList() {
+        return orderByNullModifierList;
     }
 
     public boolean hasOverClause() {
+        return hasPartitionClause() || hasOrderClause();
+    }
+
+    public boolean hasPartitionClause() {
         return !partitionExpressions.isEmpty();
     }
 
     public boolean hasOrderClause() {
-        return !orderbyList.isEmpty();
+        return !orderByList.isEmpty();
     }
 
     @Override
@@ -186,7 +190,7 @@ public class CopyToStatement extends AbstractStatement implements IReturningStat
         topLevelExpressions.add(query.getBody());
         topLevelExpressions.addAll(pathExpressions);
         topLevelExpressions.addAll(partitionExpressions);
-        topLevelExpressions.addAll(orderbyList);
+        topLevelExpressions.addAll(orderByList);
         return topLevelExpressions;
     }
 

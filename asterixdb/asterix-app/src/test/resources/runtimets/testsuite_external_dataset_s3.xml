@@ -44,6 +44,11 @@
         <output-dir compare="Text">empty-path</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="order-by">
+        <output-dir compare="Text">order-by</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="early-missing">
         <output-dir compare="Text">early-missing</output-dir>
@@ -77,6 +82,12 @@
         <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [localfs, s3]</expected-error>
         <expected-error>ASX1189: Unsupported writing format 'csv'. Supported formats: [json]</expected-error>
         <expected-error>ASX1096: Unknown compression scheme rar. Supported schemes are [gzip]</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="empty-over">
+        <output-dir compare="Text">empty-over</output-dir>
+        <expected-error>ASX1001: Syntax error: OVER-clause cannot be empty</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -600,8 +600,8 @@ public class CompiledStatements {
         private final List<Expression> partitionExpressions;
         private final Map<Integer, VariableExpr> partitionsVariables;
         private final List<Expression> orderbyList;
-        private final List<OrderbyClause.OrderModifier> orderbyModifiers;
-        private final List<OrderbyClause.NullOrderModifier> orderbyNullModifierList;
+        private final List<OrderbyClause.OrderModifier> orderByModifiers;
+        private final List<OrderbyClause.NullOrderModifier> orderByNullModifierList;
 
         public CompiledCopyToStatement(CopyToStatement copyToStatement) {
             this.query = copyToStatement.getQuery();
@@ -612,9 +612,9 @@ public class CompiledStatements {
             this.pathExpressions = copyToStatement.getPathExpressions();
             this.partitionExpressions = copyToStatement.getPartitionExpressions();
             this.partitionsVariables = copyToStatement.getPartitionsVariables();
-            this.orderbyList = copyToStatement.getOrderbyList();
-            this.orderbyModifiers = copyToStatement.getOrderbyModifiers();
-            this.orderbyNullModifierList = copyToStatement.getOrderbyNullModifierList();
+            this.orderbyList = copyToStatement.getOrderByList();
+            this.orderByModifiers = copyToStatement.getOrderByModifiers();
+            this.orderByNullModifierList = copyToStatement.getOrderByNullModifierList();
         }
 
         @Override
@@ -658,16 +658,16 @@ public class CompiledStatements {
             return partitionsVariables.get(index);
         }
 
-        public List<Expression> getOrderbyExpressions() {
+        public List<Expression> getOrderByExpressions() {
             return orderbyList;
         }
 
-        public List<OrderbyClause.OrderModifier> getOrderbyModifiers() {
-            return orderbyModifiers;
+        public List<OrderbyClause.OrderModifier> getOrderByModifiers() {
+            return orderByModifiers;
         }
 
-        public List<OrderbyClause.NullOrderModifier> getOrderbyNullModifiers() {
-            return orderbyNullModifierList;
+        public List<OrderbyClause.NullOrderModifier> getOrderByNullModifiers() {
+            return orderByNullModifierList;
         }
     }
 
