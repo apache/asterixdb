@@ -38,6 +38,9 @@
         <expected-error>ASX1115: Invalid name for a database object: 'dv.with.dot'</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: 'col.with.dot'</expected-error>
         <expected-error>ASX1115: Invalid name for a database object: 'db.with.dot'</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: '123collection'</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: '12dataverse'</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: '1db'</expected-error>
       </compilation-unit>
     </test-case>
   </test-group>

@@ -1956,9 +1956,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private static void validateChars(String name, SourceLocation srcLoc) throws AsterixException {
         for (int off = 0, len = name.length(); off < len;) {
             int codePointChar = name.codePointAt(off);
-            if (!Character.isLetterOrDigit(codePointChar)) {
-                if (codePointChar != '_' && codePointChar != '-') {
+            if (off == 0) {
+                if (!Character.isLetter(codePointChar)) {
                     throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, srcLoc, name);
+                }
+            } else {
+                if (!Character.isLetterOrDigit(codePointChar)) {
+                    if (codePointChar != '_' && codePointChar != '-') {
+                        throw new AsterixException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, srcLoc, name);
+                    }
                 }
             }
             off += Character.charCount(codePointChar);
