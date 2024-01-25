@@ -84,7 +84,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private List<AssignOperator> assignOps;
     private List<ILogicalExpression> assignJoinExprs; // These are the join expressions below the assign operator.
 
-    // The Distinct operators for each Select or DataSourceScan operator (if applicable)
     // The Distinct operators for each DataSourceScan operator (if applicable)
     private HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
 
@@ -133,7 +132,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        // If cboMode or cboTestMode is true, identify each DistinctOp or GroupByOp for the corresponding DataScanOp
         if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT) {
             // If cboMode or cboTestMode is true, identify each DistinctOp or GroupByOp for the corresponding DataScanOp
             getDistinctOpsForJoinNodes(op, context);
@@ -455,9 +453,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 this.rootGroupByDistinctOp = grpByDistinctOp;
             } else if (tag == LogicalOperatorTag.INNERJOIN || tag == LogicalOperatorTag.LEFTOUTERJOIN) {
                 if (grpByDistinctOp != null) {
+                    Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctVarsFuncPair =
+                            OperatorUtils.getGroupByDistinctVarFuncPair(grpByDistinctOp);
                     for (int i = 0; i < currentOp.getInputs().size(); i++) {
                         ILogicalOperator nextOp = currentOp.getInputs().get(i).getValue();
-                        OperatorUtils.createDistinctOpsForJoinNodes(nextOp, grpByDistinctOp, context,
+                        OperatorUtils.createDistinctOpsForJoinNodes(nextOp, distinctVarsFuncPair, context,
                                 dataScanAndGroupByDistinctOps);
                     }
                 }

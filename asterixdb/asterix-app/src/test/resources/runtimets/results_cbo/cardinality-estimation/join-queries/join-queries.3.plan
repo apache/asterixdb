@@ -1,8 +1,8 @@
-distribute result [$$35] [cardinality: 924.07, op-cost: 0.0, total-cost: 136471.34]
+distribute result [$$35] [cardinality: 960.71, op-cost: 0.0, total-cost: 136471.34]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 924.07, op-cost: 0.0, total-cost: 136471.34]
+  exchange [cardinality: 960.71, op-cost: 0.0, total-cost: 136471.34]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    distinct ([$$35]) [cardinality: 924.07, op-cost: 58474.7, total-cost: 136471.34]
+    distinct ([$$35]) [cardinality: 960.71, op-cost: 58474.7, total-cost: 136471.34]
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
       exchange [cardinality: 4783.64, op-cost: 0.0, total-cost: 77996.64]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

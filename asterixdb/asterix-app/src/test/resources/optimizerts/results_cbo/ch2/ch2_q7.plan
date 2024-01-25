@@ -3,12 +3,12 @@
     -- STREAM_PROJECT  |PARTITIONED|
       -- ASSIGN  |PARTITIONED|
         -- SORT_MERGE_EXCHANGE [$$su_nationkey(ASC), $#1(ASC), $#2(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$326, $$327, $$328]  |PARTITIONED|
+          -- SORT_GROUP_BY[$$328, $$329, $$330]  |PARTITIONED|
                   {
                     -- AGGREGATE  |LOCAL|
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
                   }
-            -- HASH_PARTITION_EXCHANGE [$$326, $$327, $$328]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$328, $$329, $$330]  |PARTITIONED|
               -- SORT_GROUP_BY[$$277, $$273, $$274]  |PARTITIONED|
                       {
                         -- AGGREGATE  |LOCAL|
@@ -25,8 +25,8 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- HYBRID_HASH_JOIN [$$324][$$300]  |PARTITIONED|
-                                        -- HASH_PARTITION_EXCHANGE [$$324]  |PARTITIONED|
+                                      -- HYBRID_HASH_JOIN [$$326][$$300]  |PARTITIONED|
+                                        -- HASH_PARTITION_EXCHANGE [$$326]  |PARTITIONED|
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             -- ASSIGN  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|

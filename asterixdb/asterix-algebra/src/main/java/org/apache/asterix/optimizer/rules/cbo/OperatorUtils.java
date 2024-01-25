@@ -20,9 +20,9 @@
 package org.apache.asterix.optimizer.rules.cbo;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.constants.AsterixConstantValue;
@@ -48,9 +48,13 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class OperatorUtils {
 
-    public static void createDistinctOpsForJoinNodes(ILogicalOperator op, ILogicalOperator grpByDistinctOp,
-            IOptimizationContext context, Map<DataSourceScanOperator, ILogicalOperator> scanAndDistinctOps) {
-        if (op == null) {
+    public static void createDistinctOpsForJoinNodes(ILogicalOperator op,
+            Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctVarsFuncPair,
+            IOptimizationContext context, HashMap<DataSourceScanOperator, ILogicalOperator> scanAndDistinctOps) {
+
+        List<LogicalVariable> distinctVars = distinctVarsFuncPair.getFirst();
+        List<AbstractFunctionCallExpression> distinctFunctions = distinctVarsFuncPair.getSecond();
+        if (op == null || distinctVars.size() == 0) {
             return;
         }
 
@@ -60,20 +64,23 @@ public class OperatorUtils {
         ILogicalOperator currentOp = op;
         LogicalOperatorTag tag = currentOp.getOperatorTag();
         // add DistinctOp to count distinct values in an attribute
-        if (tag == LogicalOperatorTag.ASSIGN || tag == LogicalOperatorTag.SELECT
-                || tag == LogicalOperatorTag.DATASOURCESCAN) {
-            Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctPair =
-                    getGroupByDistinctVarFuncPair(grpByDistinctOp);
-            List<LogicalVariable> distinctVars = distinctPair.first;
-            if (distinctVars.size() == 0) {
-                return;
+        if (tag == LogicalOperatorTag.INNERJOIN || tag == LogicalOperatorTag.LEFTOUTERJOIN) {
+            for (int i = 0; i < currentOp.getInputs().size(); i++) {
+                ILogicalOperator nextOp = currentOp.getInputs().get(i).getValue();
+                createDistinctOpsForJoinNodes(nextOp, distinctVarsFuncPair, context, scanAndDistinctOps);
             }
-
+        } else {
             DataSourceScanOperator scanOp = null;
             LogicalVariable assignVar;
             while (tag != LogicalOperatorTag.EMPTYTUPLESOURCE) {
                 if (tag == LogicalOperatorTag.SELECT) {
-                    selOp = currentOp;
+                    ILogicalOperator nextOp = currentOp.getInputs().get(0).getValue();
+                    if (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN
+                            || nextOp.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN) {
+                        if (selOp == null && assignOp == null) { // first corresponding SelectOp found iff no corresponding AssignOp appeared before
+                            selOp = currentOp; // one DataSourceScanOp possible, save the corresponding SelectOp
+                        }
+                    }
                 } else if (tag == LogicalOperatorTag.ASSIGN) {
                     assignVar = ((AssignOperator) currentOp).getVariables().get(0);
                     int idx = distinctVars.indexOf(assignVar);
@@ -85,6 +92,7 @@ public class OperatorUtils {
                     }
                 } else if (tag == LogicalOperatorTag.DATASOURCESCAN) {
                     scanOp = (DataSourceScanOperator) currentOp;
+                    // will work for any attributes present in GroupByOp or DistinctOp
                     List<LogicalVariable> scanVars = scanOp.getVariables();
                     for (LogicalVariable scanVar : scanVars) { // add all required variables of the DataSourceScanOp
                         if (distinctVars.contains(scanVar)) {
@@ -94,24 +102,63 @@ public class OperatorUtils {
                     if (foundDistinctVars.size() == 0) {
                         scanOp = null; // GroupByOp or DistinctOp doesn't contain any attributes of the dataset
                     }
+                } else if (tag == LogicalOperatorTag.GROUP) { // GroupByOp found through looping (not as direct inputs of a JoinOp)
+                    List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> nestedGrpVarsList =
+                            ((GroupByOperator) currentOp).getGroupByList();
+                    // look for any DistinctOp/GroupByOp variables are replaceable with a nested GroupByOp Variable-expression
+                    for (int i = 0; i < nestedGrpVarsList.size(); i++) {
+                        LogicalVariable prevVar = nestedGrpVarsList.get(i).first;
+                        int idx = distinctVars.indexOf(prevVar);
+                        if (idx != -1 && distinctVars.size() > 0) {
+                            ILogicalExpression expr = nestedGrpVarsList.get(i).second.getValue();
+                            if (expr.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                LogicalVariable newVar = ((VariableReferenceExpression) expr).getVariableReference();
+                                distinctVars.remove(idx);
+                                distinctVars.add(newVar);
+
+                                // replace corresponding functions' variables
+                                for (AbstractFunctionCallExpression funcExpr : distinctFunctions) {
+                                    replaceVariableInFunction(funcExpr, prevVar, newVar);
+                                }
+                            }
+                        }
+                    }
+                } else if (tag == LogicalOperatorTag.INNERJOIN || tag == LogicalOperatorTag.LEFTOUTERJOIN) {
+                    for (int i = 0; i < currentOp.getInputs().size(); i++) {
+                        ILogicalOperator nextOp = currentOp.getInputs().get(i).getValue();
+                        createDistinctOpsForJoinNodes(nextOp, distinctVarsFuncPair, context, scanAndDistinctOps);
+                    }
+                    break; // next operators are already handled in the recursion, so exit looping
                 }
+                // TODO(mehnaz): handle DISTINCT and UNNEST operators (if appears in sub-queries)
+
+                // proceed to the next operator
                 currentOp = currentOp.getInputs().get(0).getValue();
                 tag = currentOp.getOperatorTag();
             }
 
             if (scanOp != null) {
-                ILogicalOperator inputOp = (assignOp != null) ? assignOp : ((selOp != null) ? selOp : scanOp);
+                ILogicalOperator inputOp = (selOp != null) ? selOp : ((assignOp != null) ? assignOp : scanOp);
                 SourceLocation sourceLocation = inputOp.getSourceLocation();
                 DistinctOperator distinctOp =
-                        createDistinctOp(foundDistinctVars, inputOp, sourceLocation, distinctPair.second, context);
+                        createDistinctOp(foundDistinctVars, inputOp, sourceLocation, distinctFunctions, context);
                 if (distinctOp != null) {
                     scanAndDistinctOps.put(scanOp, distinctOp);
                 }
             }
-        } else if (tag == LogicalOperatorTag.INNERJOIN || tag == LogicalOperatorTag.LEFTOUTERJOIN) {
-            for (int i = 0; i < currentOp.getInputs().size(); i++) {
-                ILogicalOperator nextOp = currentOp.getInputs().get(i).getValue();
-                createDistinctOpsForJoinNodes(nextOp, grpByDistinctOp, context, scanAndDistinctOps);
+        }
+    }
+
+    private static void replaceVariableInFunction(AbstractFunctionCallExpression funcExpr, LogicalVariable prevVar,
+            LogicalVariable newVar) {
+        List<Mutable<ILogicalExpression>> argList = funcExpr.getArguments();
+        for (Mutable<ILogicalExpression> arg : argList) {
+            if (arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                if (prevVar.equals(((VariableReferenceExpression) arg.getValue()).getVariableReference())) {
+                    arg.getValue().substituteVar(prevVar, newVar);
+                }
+            } else if (arg.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                replaceVariableInFunction((AbstractFunctionCallExpression) arg.getValue(), prevVar, newVar);
             }
         }
     }
@@ -129,9 +176,8 @@ public class OperatorUtils {
         return variables;
     }
 
-    private static Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> getGroupByDistinctVarFuncPair(
+    public static Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> getGroupByDistinctVarFuncPair(
             ILogicalOperator grpByDistinctOp) {
-
         Pair<List<LogicalVariable>, List<AbstractFunctionCallExpression>> distinctVarsFunctions =
                 new Pair<>(new ArrayList<>(), new ArrayList<>());
         List<LogicalVariable> distinctVars = distinctVarsFunctions.getFirst();
@@ -144,22 +190,37 @@ public class OperatorUtils {
         ILogicalExpression varRef;
         ILogicalOperator nextOp;
         if (grpByDistinctOp.getOperatorTag() == LogicalOperatorTag.DISTINCT) {
-            nextOp = grpByDistinctOp.getInputs().get(0).getValue();
-            if (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
-                ILogicalExpression assignExpr = ((AssignOperator) nextOp).getExpressions().get(0).getValue();
-                if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) { // FId: open-object-constructor
-                    List<Mutable<ILogicalExpression>> argList =
-                            ((AbstractFunctionCallExpression) assignExpr).getArguments();
-                    for (int i = 0; i < argList.size(); i += 2) {
-                        // Only odd position arguments are field value expressions.
-                        varRef = argList.get(i + 1).getValue();
-                        if (varRef.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
-                            distinctVars.add(((VariableReferenceExpression) varRef).getVariableReference());
-                        } else if (varRef.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                            distinctVars.addAll(getFunctionVariables((AbstractFunctionCallExpression) varRef));
-                            distinctFunctions.add((AbstractFunctionCallExpression) varRef);
+            ILogicalExpression distinctExpr = ((DistinctOperator) grpByDistinctOp).getExpressions().get(0).getValue();
+            if (distinctExpr.getExpressionTag() == LogicalExpressionTag.VARIABLE) { // this Distinct expression should be a variable
+                distinctVars.add(((VariableReferenceExpression) distinctExpr).getVariableReference()); // initial Variable-expression
+                nextOp = grpByDistinctOp.getInputs().get(0).getValue();
+
+                // loop through as long as AssignOp variable does not match with DistinctOp Variable-expression
+                while (nextOp.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    LogicalVariable assignVar = ((AssignOperator) nextOp).getVariables().get(0);
+                    if (assignVar.equals(((VariableReferenceExpression) distinctExpr).getVariableReference())) {
+                        assert distinctVars.size() == 1;
+                        distinctVars.remove(0); // remove initial Variable-expression of DistinctOp
+
+                        ILogicalExpression assignExpr = ((AssignOperator) nextOp).getExpressions().get(0).getValue();
+                        if (assignExpr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) { // FId: open-object-constructor
+                            List<Mutable<ILogicalExpression>> argList =
+                                    ((AbstractFunctionCallExpression) assignExpr).getArguments();
+
+                            // add all variables and the corresponding functions from AssignOp arguments
+                            for (int i = 0; i < argList.size(); i += 2) {
+                                varRef = argList.get(i + 1).getValue();
+                                if (varRef.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                    distinctVars.add(((VariableReferenceExpression) varRef).getVariableReference());
+                                } else if (varRef.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                                    distinctVars.addAll(getFunctionVariables((AbstractFunctionCallExpression) varRef));
+                                    distinctFunctions.add((AbstractFunctionCallExpression) varRef.cloneExpression());
+                                }
+                            }
                         }
+                        break;
                     }
+                    nextOp = nextOp.getInputs().get(0).getValue();
                 }
             }
         } else if (grpByDistinctOp.getOperatorTag() == LogicalOperatorTag.GROUP) {
@@ -178,7 +239,7 @@ public class OperatorUtils {
                         if (idx != -1 && fVars.size() > 0) {
                             distinctVars.remove(idx);
                             distinctVars.addAll(fVars);
-                            distinctFunctions.add((AbstractFunctionCallExpression) assignExpr);
+                            distinctFunctions.add((AbstractFunctionCallExpression) assignExpr.cloneExpression());
                         }
                     }
                 }
@@ -197,14 +258,12 @@ public class OperatorUtils {
         List<Mutable<ILogicalExpression>> openRecConsArgs = new ArrayList<>();
         for (AbstractFunctionCallExpression expr : funcExpr) {
             List<LogicalVariable> funcVars = getFunctionVariables(expr);
-            if (new HashSet<>(distinctVars).containsAll(funcVars)) {
-                // all variables in the function are of the current dataset
+            if (new HashSet<>(distinctVars).containsAll(funcVars)) { // all variables in the function are of the current dataset
                 openRecConsArgs.add(new MutableObject<>(
                         new ConstantExpression(new AsterixConstantValue(new AString(String.valueOf(counter))))));
                 openRecConsArgs.add(new MutableObject<>(expr));
                 counter++;
-                // DistinctOp variables are found in the function, so remove
-                notFoundDistinctVars.removeAll(funcVars);
+                notFoundDistinctVars.removeAll(funcVars); // DistinctOp variables are found in the function, so remove
             }
         }
         if (openRecConsArgs.size() > 0) { // at least one Function expression is available/applicable
@@ -243,8 +302,7 @@ public class OperatorUtils {
             for (LogicalVariable var : distinctVars) {
                 VariableReferenceExpression varExpr = new VariableReferenceExpression(var);
                 varExpr.setSourceLocation(sourceLocation);
-                Mutable<ILogicalExpression> vRef = new MutableObject<>(varExpr);
-                distinctExpr.add(vRef);
+                distinctExpr.add(new MutableObject<>(varExpr));
             }
         } else {
             VariableReferenceExpression varExpr = new VariableReferenceExpression(assignOp.getVariables().get(0));
