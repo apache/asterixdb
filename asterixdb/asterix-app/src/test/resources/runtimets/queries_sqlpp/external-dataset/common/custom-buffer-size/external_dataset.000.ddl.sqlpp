@@ -30,7 +30,7 @@ create external dataset test1(test) using S3 (
 ("accessKeyId"="dummyAccessKey"),
 ("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
+("serviceEndpoint"="http://127.0.0.1:8001"),
 ("container"="playground"),
 ("definition"="json-data/reviews/single-line/json"),
 ("format"="json"));
@@ -40,7 +40,7 @@ create external dataset test2(test) using S3 (
 ("accessKeyId"="dummyAccessKey"),
 ("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
+("serviceEndpoint"="http://127.0.0.1:8001"),
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines/json"),
 ("format"="json"));
@@ -50,7 +50,7 @@ create external dataset test3(test) using S3 (
 ("accessKeyId"="dummyAccessKey"),
 ("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
+("serviceEndpoint"="http://127.0.0.1:8001"),
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines-with-arrays/json"),
 ("format"="json"));
@@ -60,7 +60,7 @@ create external dataset test4(test) using S3 (
 ("accessKeyId"="dummyAccessKey"),
 ("secretAccessKey"="dummySecretKey"),
 ("region"="us-west-2"),
-("serviceEndpoint"="http://localhost:8001"),
+("serviceEndpoint"="http://127.0.0.1:8001"),
 ("container"="playground"),
 ("definition"="json-data/reviews/multi-lines-with-nested-objects/json"),
 ("format"="json"));
