@@ -302,7 +302,7 @@ public class ClusterStateManager implements IClusterStateManager {
     }
 
     @Override
-    public synchronized AlgebricksAbsolutePartitionConstraint getSortedClusterLocations() {
+    public synchronized AlgebricksAbsolutePartitionConstraint getNodeSortedClusterLocations() {
         String[] clone = getClusterLocations().getLocations().clone();
         Arrays.sort(clone);
         return new AlgebricksAbsolutePartitionConstraint(clone);

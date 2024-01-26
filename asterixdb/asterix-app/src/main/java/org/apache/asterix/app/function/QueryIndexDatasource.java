@@ -80,7 +80,7 @@ public class QueryIndexDatasource extends FunctionDataSource {
     }
 
     @Override
-    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
+    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
         return storageLocations;
     }
 

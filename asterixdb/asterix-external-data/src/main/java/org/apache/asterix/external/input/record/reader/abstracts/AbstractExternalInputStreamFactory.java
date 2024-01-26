@@ -70,8 +70,8 @@ public abstract class AbstractExternalInputStreamFactory implements IInputStream
     public void configure(IServiceContext ctx, Map<String, String> configuration, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException, HyracksDataException {
         this.configuration = configuration;
-        this.partitionConstraint = ((ICcApplicationContext) ctx.getApplicationContext()).getClusterStateManager()
-                .getSortedClusterLocations();
+        this.partitionConstraint = ((ICcApplicationContext) ctx.getApplicationContext()).getDataPartitioningProvider()
+                .getClusterLocations();
         this.filterEvaluatorFactory = filterEvaluatorFactory;
     }
 

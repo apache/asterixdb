@@ -1010,7 +1010,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
+        //TODO(partitioning): should this be removed and getSortedClusterLocations() is used instead?
         return appCtx.getClusterStateManager().getClusterLocations();
+    }
+
+    public DataPartitioningProvider getDataPartitioningProvider() {
+        return dataPartitioningProvider;
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(

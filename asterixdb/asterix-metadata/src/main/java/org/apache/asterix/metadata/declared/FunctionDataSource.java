@@ -110,7 +110,7 @@ public abstract class FunctionDataSource extends DataSource {
         adapterFactory.setOutputType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         IClusterStateManager csm = metadataProvider.getApplicationContext().getClusterStateManager();
         FunctionDataSourceFactory factory =
-                new FunctionDataSourceFactory(createFunction(metadataProvider, getLocations(csm)));
+                new FunctionDataSourceFactory(createFunction(metadataProvider, getLocations(csm, metadataProvider)));
         IDataParserFactory dataParserFactory = createDataParserFactory();
         dataParserFactory.setRecordType(RecordUtil.FULLY_OPEN_RECORD_TYPE);
         dataParserFactory.configure(Collections.emptyMap());
@@ -126,8 +126,8 @@ public abstract class FunctionDataSource extends DataSource {
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations);
 
-    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
-        String[] sortedLocations = csm.getSortedClusterLocations().getLocations();
+    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
+        String[] sortedLocations = md.getDataPartitioningProvider().getClusterLocations().getLocations();
         return new AlgebricksAbsolutePartitionConstraint(
                 Arrays.stream(sortedLocations).distinct().toArray(String[]::new));
     }

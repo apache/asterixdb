@@ -54,7 +54,7 @@ public class DumpIndexDatasource extends FunctionDataSource {
     }
 
     @Override
-    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
+    protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
         return constraint;
     }
 

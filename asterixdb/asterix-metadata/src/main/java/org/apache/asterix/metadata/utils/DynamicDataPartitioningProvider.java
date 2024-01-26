@@ -24,6 +24,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.metadata.MetadataTransactionContext;
 import org.apache.asterix.metadata.entities.Dataset;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -63,5 +64,10 @@ public class DynamicDataPartitioningProvider extends DataPartitioningProvider {
                 StoragePathUtil.splitProviderAndPartitionConstraints(splits);
         int[][] partitionsMap = getOneToOnePartitionsMap(getLocationsCount(splitsAndConstraints.second));
         return PartitioningProperties.of(splitsAndConstraints.first, splitsAndConstraints.second, partitionsMap);
+    }
+
+    @Override
+    public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
+        return clusterStateManager.getNodeSortedClusterLocations();
     }
 }

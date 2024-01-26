@@ -18,5 +18,10 @@
  */
 package org.apache.asterix.common.dataflow;
 
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+
 public interface IDataPartitioningProvider {
+
+    AlgebricksAbsolutePartitionConstraint getClusterLocations();
+
 }

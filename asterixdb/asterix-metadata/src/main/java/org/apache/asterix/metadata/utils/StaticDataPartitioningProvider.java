@@ -30,6 +30,7 @@ import org.apache.asterix.common.cluster.SplitComputeLocations;
 import org.apache.asterix.common.cluster.StorageComputePartitionsMap;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -50,10 +51,10 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
 
     @Override
     public PartitioningProperties getPartitioningProperties(String databaseName) {
-        SplitComputeLocations dataverseSplits = getSplits(databaseName);
+        SplitComputeLocations databaseSplits = getSplits(databaseName);
         StorageComputePartitionsMap partitionMap = clusterStateManager.getStorageComputeMap();
         int[][] partitionsMap = partitionMap.getComputeToStorageMap(false);
-        return PartitioningProperties.of(dataverseSplits.getSplitsProvider(), dataverseSplits.getConstraints(),
+        return PartitioningProperties.of(databaseSplits.getSplitsProvider(), databaseSplits.getConstraints(),
                 partitionsMap);
     }
 
@@ -126,5 +127,11 @@ public class StaticDataPartitioningProvider extends DataPartitioningProvider {
         AlgebricksPartitionConstraint constraints =
                 new AlgebricksAbsolutePartitionConstraint(locations.toArray(new String[0]));
         return new SplitComputeLocations(splitProvider, constraints);
+    }
+
+    @Override
+    public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
+        SplitComputeLocations locations = getSplits(MetadataConstants.DEFAULT_DATABASE);
+        return (AlgebricksAbsolutePartitionConstraint) locations.getConstraints();
     }
 }

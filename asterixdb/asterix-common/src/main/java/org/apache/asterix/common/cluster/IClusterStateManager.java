@@ -173,7 +173,7 @@ public interface IClusterStateManager {
     /**
      * @return the constraint representing all the partitions of the cluster sorted by node name
      */
-    AlgebricksAbsolutePartitionConstraint getSortedClusterLocations();
+    AlgebricksAbsolutePartitionConstraint getNodeSortedClusterLocations();
 
     /**
      * @param excludePendingRemoval true, if the desired set shouldn't have pending removal nodes
