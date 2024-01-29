@@ -313,7 +313,7 @@ public class Stats {
     }
 
     private AggregateOperator findAggOp(ILogicalOperator op, ILogicalExpression exp) throws AlgebricksException {
-        /*private final */ ContainsExpressionVisitor visitor = new ContainsExpressionVisitor();
+        ContainsExpressionVisitor visitor = new ContainsExpressionVisitor();
         SubplanOperator subOp;
         while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
@@ -327,104 +327,70 @@ public class Stats {
         return null;
     }
 
-    private SubplanOperator findSubplanWithExpr(ILogicalOperator op, ILogicalExpression exp)
+    protected SelectOperator findSelectOpWithExpr(ILogicalOperator op, ILogicalExpression exp)
             throws AlgebricksException {
-        /*private final */ ContainsExpressionVisitor visitor = new ContainsExpressionVisitor();
+        ContainsExpressionVisitor visitor = new ContainsExpressionVisitor();
         SubplanOperator subOp;
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                subOp = (SubplanOperator) op;
-                ILogicalOperator nextOp = subOp.getNestedPlans().get(0).getRoots().get(0).getValue();
-
-                while (nextOp != null) {
+        ILogicalOperator currentOp = op;
+        while (currentOp != null && currentOp.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (currentOp.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+                ILogicalOperator nextOp = currentOp.getInputs().get(0).getValue();
+                if (nextOp.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
+                    subOp = (SubplanOperator) nextOp;
+                    ILogicalOperator childOp = subOp.getNestedPlans().get(0).getRoots().get(0).getValue();
+                    while (childOp != null) {
+                        visitor.setExpression(exp);
+                        if (childOp.acceptExpressionTransform(visitor)) {
+                            return (SelectOperator) currentOp;
+                        }
+                        if (childOp.getInputs().isEmpty()) {
+                            break;
+                        }
+                        childOp = childOp.getInputs().get(0).getValue();
+                    }
+                } else {
                     visitor.setExpression(exp);
-                    if (nextOp.acceptExpressionTransform(visitor)) {
-                        return subOp;
+                    if (currentOp.acceptExpressionTransform(visitor)) {
+                        return (SelectOperator) currentOp;
                     }
-
-                    if (nextOp.getInputs().isEmpty()) {
-                        break;
-                    }
-                    nextOp = nextOp.getInputs().get(0).getValue();
                 }
             }
-            op = op.getInputs().get(0).getValue();
+            currentOp = currentOp.getInputs().get(0).getValue();
         }
         return null;
     }
 
-    private List<ILogicalExpression> storeSubplanSelectsAndMakeThemTrue(ILogicalOperator op) {
+    // For the otherSelOp, leave the selection condition the same but all other selects and subplan selects should be marked true
+    private List<ILogicalExpression> storeSelectConditionsAndMakeThemTrue(ILogicalOperator op,
+            SelectOperator otherSelOp) {
         List<ILogicalExpression> selExprs = new ArrayList<>();
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                if (op.getInputs().get(0).getValue().getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                    SelectOperator selOp = (SelectOperator) op;
+        ILogicalOperator currentOp = op;
+        while (currentOp != null && currentOp.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (currentOp.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+                SelectOperator selOp = (SelectOperator) currentOp;
+                if (selOp != otherSelOp) {
                     selExprs.add(selOp.getCondition().getValue());
                     selOp.getCondition().setValue(ConstantExpression.TRUE);
                 }
             }
-            op = op.getInputs().get(0).getValue();
+            currentOp = currentOp.getInputs().get(0).getValue();
         }
         return selExprs;
     }
 
-    private void restoreAllSubplanSelects(ILogicalOperator op, List<ILogicalExpression> selExprs) {
+    private void restoreAllSelectConditions(ILogicalOperator op, List<ILogicalExpression> selExprs,
+            ILogicalOperator otherSelOp) {
         int i = 0;
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                if (op.getInputs().get(0).getValue().getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                    SelectOperator selOp = (SelectOperator) op;
+        ILogicalOperator currentOp = op;
+        while (currentOp != null && currentOp.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (currentOp.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
+                SelectOperator selOp = (SelectOperator) currentOp;
+                if (selOp != otherSelOp) {
                     selOp.getCondition().setValue(selExprs.get(i));
                     i++;
                 }
             }
-            op = op.getInputs().get(0).getValue();
-        }
-    }
-
-    // For the SubOp subplan, leave the selection condition the same but all other selects and subsplan selects should be marked true
-    private List<ILogicalExpression> storeSubplanSelectsAndMakeThemTrue(ILogicalOperator op, SubplanOperator subOp) {
-        List<ILogicalExpression> selExprs = new ArrayList<>();
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                ILogicalOperator op2 = op.getInputs().get(0).getValue();
-                if (op2.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                    SubplanOperator subOp2 = (SubplanOperator) op2;
-                    if (subOp2 != subOp) {
-                        SelectOperator selOp = (SelectOperator) op;
-                        selExprs.add(selOp.getCondition().getValue());
-                        selOp.getCondition().setValue(ConstantExpression.TRUE);
-                    } // else leave expression as is.
-                } else { // a non subplan select
-                    SelectOperator selOp = (SelectOperator) op;
-                    selExprs.add(selOp.getCondition().getValue());
-                    selOp.getCondition().setValue(ConstantExpression.TRUE);
-                }
-            }
-            op = op.getInputs().get(0).getValue();
-        }
-        return selExprs;
-    }
-
-    private void restoreAllSubplanSelectConditions(ILogicalOperator op, List<ILogicalExpression> selExprs,
-            SubplanOperator subOp) {
-        int i = 0;
-        while (op != null && op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
-            if (op.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                ILogicalOperator op2 = op.getInputs().get(0).getValue();
-                if (op2.getOperatorTag().equals(LogicalOperatorTag.SUBPLAN)) {
-                    SubplanOperator subOp2 = (SubplanOperator) op2;
-                    if (subOp2 != subOp) {
-                        SelectOperator selOp = (SelectOperator) op;
-                        selOp.getCondition().setValue(selExprs.get(i));
-                        i++;
-                    }
-                } else { // a non subplan select
-                    SelectOperator selOp = (SelectOperator) op;
-                    selOp.getCondition().setValue(selExprs.get(i));
-                }
-            }
-            op = op.getInputs().get(0).getValue();
+            currentOp = currentOp.getInputs().get(0).getValue();
         }
     }
 
@@ -465,56 +431,39 @@ public class Stats {
 
         List<ILogicalOperator> subPlans = countOps(selOp, LogicalOperatorTag.SUBPLAN);
         int numSubplans = subPlans.size();
+        List<ILogicalOperator> selOps = countOps(selOp, LogicalOperatorTag.SELECT);
+        int numSelects = selOps.size();
+        int nonSubplanSelects = numSelects - numSubplans;
+
         List<List<IAObject>> result;
-
-        // insert this in place of the scandatasourceOp.
         parent.getInputs().get(0).setValue(deepCopyofScan);
-        if (numSubplans == 0) { // just switch the predicates; the simplest case. There should be no other case if subplans were canonical
-            ILogicalExpression saveExprs = selOp.getCondition().getValue();
-            selOp.getCondition().setValue(exp);
-            result = runSamplingQuery(optCtx, selOp);
-            selOp.getCondition().setValue(saveExprs);
-        } else {
-            List<ILogicalOperator> selOps = countOps(selOp, LogicalOperatorTag.SELECT);
-            int numSelects = selOps.size();
-            int nonSubplanSelects = numSelects - numSubplans;
-
-            if (numSubplans == 1 && nonSubplanSelects == 0) {
-                AggregateOperator aggOp = findAggOp(selOp, exp);
-                if (aggOp.getExpressions().size() > 1) {
-                    // ANY and EVERY IN query; for selectivity purposes, we need to transform this into a ANY IN query
-                    SelectOperator newSelOp = (SelectOperator) OperatorManipulationUtil.bottomUpCopyOperators(selOp);
-                    aggOp = findAggOp(newSelOp, exp);
-                    ILogicalOperator input = aggOp.getInputs().get(0).getValue();
-                    SelectOperator condition = (SelectOperator) OperatorManipulationUtil
-                            .bottomUpCopyOperators(AbstractOperatorFromSubplanRewrite.getSelectFromPlan(aggOp));
-                    //push this condition below aggOp.
-                    aggOp.getInputs().get(0).setValue(condition);
-                    condition.getInputs().get(0).setValue(input);
-                    ILogicalExpression newExp2 = newSelOp.getCondition().getValue();
-                    if (newExp2.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                        AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newExp2;
-                        afce.getArguments().get(1).setValue(ConstantExpression.TRUE);
-                    }
-                    result = runSamplingQuery(optCtx, newSelOp); // no need to switch anything
-                } else
-                    result = runSamplingQuery(optCtx, selOp);
-            } else { // the painful part; have to find where exp that is passed in is coming from. >= 1 and >= 1 case
-                // Assumption is that there is exaclty one select condition above each subplan.
-                // This was ensured before this routine is called
-                SubplanOperator subOp = findSubplanWithExpr(selOp, exp);
-                if (subOp == null) { // the exp is not coming from a subplan
-                    List<ILogicalExpression> selExprs;
-                    selExprs = storeSubplanSelectsAndMakeThemTrue(selOp); // all these will be marked true and will be resorted later.
-                    result = runSamplingQuery(optCtx, selOp);
-                    restoreAllSubplanSelects(selOp, selExprs);
-                } else { // found the matching subPlan oper. Only keep this predicate and make all others true and then restore them.
-                    List<ILogicalExpression> selExprs;
-                    selExprs = storeSubplanSelectsAndMakeThemTrue(selOp, subOp); // all these will be marked true and will be resorted later.
-                    result = runSamplingQuery(optCtx, selOp);
-                    restoreAllSubplanSelectConditions(selOp, selExprs, subOp);
+        if (numSubplans == 1 && nonSubplanSelects == 0) {
+            AggregateOperator aggOp = findAggOp(selOp, exp);
+            if (aggOp.getExpressions().size() > 1) {
+                // ANY and EVERY IN query; for selectivity purposes, we need to transform this into a ANY IN query
+                SelectOperator newSelOp = (SelectOperator) OperatorManipulationUtil.bottomUpCopyOperators(selOp);
+                aggOp = findAggOp(newSelOp, exp);
+                ILogicalOperator input = aggOp.getInputs().get(0).getValue();
+                SelectOperator condition = (SelectOperator) OperatorManipulationUtil
+                        .bottomUpCopyOperators(AbstractOperatorFromSubplanRewrite.getSelectFromPlan(aggOp));
+                //push this condition below aggOp.
+                aggOp.getInputs().get(0).setValue(condition);
+                condition.getInputs().get(0).setValue(input);
+                ILogicalExpression newExp2 = newSelOp.getCondition().getValue();
+                if (newExp2.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newExp2;
+                    afce.getArguments().get(1).setValue(ConstantExpression.TRUE);
                 }
+                result = runSamplingQuery(optCtx, newSelOp); // no need to switch anything
+            } else {
+                result = runSamplingQuery(optCtx, selOp);
             }
+        } else {
+            SelectOperator selOp2 = findSelectOpWithExpr(selOp, exp);
+            List<ILogicalExpression> selExprs;
+            selExprs = storeSelectConditionsAndMakeThemTrue(selOp, selOp2); // all these will be marked true and will be resorted later.
+            result = runSamplingQuery(optCtx, selOp);
+            restoreAllSelectConditions(selOp, selExprs, selOp2);
         }
 
         double predicateCardinality = findPredicateCardinality(result, false);
@@ -534,10 +483,12 @@ public class Stats {
             // SELECT count(*) as revenue
             // FROM   orders o, o.o_orderline ol
             // WHERE  TRUE;
-            ILogicalExpression saveExprs = selOp.getCondition().getValue();
-            selOp.getCondition().setValue(ConstantExpression.TRUE);
+
+            // Replace ALL SELECTS with TRUE
+            List<ILogicalExpression> selExprs;
+            selExprs = storeSelectConditionsAndMakeThemTrue(selOp, null); // all these will be marked true and will be resorted later.
             result = runSamplingQuery(optCtx, selOp);
-            selOp.getCondition().setValue(saveExprs);
+            restoreAllSelectConditions(selOp, selExprs, null);
             sampleCard = findPredicateCardinality(result, false);
         }
         // switch  the scanOp back

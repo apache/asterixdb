@@ -629,8 +629,8 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                     continue;
                 }
                 AbstractFunctionCallExpression argFuncExpr = (AbstractFunctionCallExpression) argExpr;
-                boolean matchFound = analyzeFunctionExprAndUpdateAnalyzedAM(argFuncExpr, assignsAndUnnests, analyzedAMs,
-                        context, typeEnvironment);
+                boolean matchFound = analyzeSelectOrJoinOpConditionAndUpdateAnalyzedAM(argFuncExpr, assignsAndUnnests,
+                        analyzedAMs, context, typeEnvironment);
                 found = found || matchFound;
             }
             return found;

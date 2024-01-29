@@ -1,14 +1,14 @@
-distribute result [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$15]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    project ([$$15]) [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$15] <- [le($$x, 2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$15] <- [le($$x, 2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
       -- ASSIGN  |UNPARTITIONED|
-        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-          order (ASC, $$x) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          order (ASC, $$x) [cardinality: 0.0, op-cost: 33.22, total-cost: 33.22]
           -- STABLE_SORT [$$x(ASC)]  |UNPARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

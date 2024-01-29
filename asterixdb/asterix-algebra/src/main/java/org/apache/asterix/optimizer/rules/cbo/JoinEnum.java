@@ -967,7 +967,7 @@ public class JoinEnum {
         return null;
     }
 
-    private boolean findUnnestOp(ILogicalOperator op) {
+    protected boolean findUnnestOp(ILogicalOperator op) {
         ILogicalOperator currentOp = op;
         while (currentOp != null && currentOp.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (currentOp.getOperatorTag().equals(LogicalOperatorTag.UNNEST)) {
@@ -995,13 +995,16 @@ public class JoinEnum {
                 ILogicalOperator leafInput = findLeafInput(vars);
                 SelectOperator selOp;
                 if (leafInput.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                    selOp = (SelectOperator) leafInput;
+                    selOp = (SelectOperator) getStatsHandle().findSelectOpWithExpr(leafInput, exp);
+                    if (selOp == null) {
+                        selOp = (SelectOperator) leafInput;
+                    }
                 } else {
                     selOp = new SelectOperator(new MutableObject<>(exp));
                     selOp.getInputs().add(new MutableObject<>(leafInput));
                 }
                 sel = getStatsHandle().findSelectivityForThisPredicate(selOp, (AbstractFunctionCallExpression) exp,
-                        findUnnestOp(leafInput));
+                        findUnnestOp(selOp));
                 // Sometimes the sample query returns greater more rows than the sample size. Cap the selectivity to 0.9999
                 sel = Math.min(sel, 0.9999);
 

@@ -420,7 +420,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         return nextOp;
     }
 
-    private ILogicalOperator findSelectOrDataScan(ILogicalOperator op) {
+    private ILogicalOperator findSelectOrUnnestOrDataScan(ILogicalOperator op) {
         LogicalOperatorTag tag;
         ILogicalOperator currentOp = op;
         while (true) {
@@ -431,7 +431,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (tag == LogicalOperatorTag.EMPTYTUPLESOURCE) {
                 return null; // if this happens, there is nothing we can do in CBO code since there is no datasourcescan
             }
-            if ((tag == LogicalOperatorTag.SELECT) || (tag == LogicalOperatorTag.DATASOURCESCAN)) {
+            if ((tag == LogicalOperatorTag.SELECT) || (tag == LogicalOperatorTag.UNNEST)
+                    || (tag == LogicalOperatorTag.DATASOURCESCAN)) {
                 return currentOp;
             }
 
@@ -685,7 +686,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 EmptyTupleSourceOperator etsOp = etsDataSource.first;
                 DataSourceScanOperator dataSourceOp = etsDataSource.second;
                 if (op.getOperatorTag().equals(LogicalOperatorTag.DISTRIBUTE_RESULT)) {// single table query
-                    ILogicalOperator selectOp = findSelectOrDataScan(op);
+                    ILogicalOperator selectOp = findSelectOrUnnestOrDataScan(op);
                     if (selectOp == null) {
                         return false;
                     } else {
@@ -759,7 +760,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         afcExpr.removeAnnotation(HashJoinExpressionAnnotation.class);
     }
 
-    private void setAnnotation(AbstractFunctionCallExpression afcExpr, IExpressionAnnotation anno) {
+    protected static void setAnnotation(AbstractFunctionCallExpression afcExpr, IExpressionAnnotation anno) {
         FunctionIdentifier fi = afcExpr.getFunctionIdentifier();
         List<Mutable<ILogicalExpression>> arguments = afcExpr.getArguments();
 
@@ -829,7 +830,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private void buildNewTree(PlanNode plan) {
         ILogicalOperator leftInput = plan.getLeafInput();
         skipAllIndexes(plan, leftInput);
-        ILogicalOperator selOp = findSelectOrDataScan(leftInput);
+        ILogicalOperator selOp = findSelectOrUnnestOrDataScan(leftInput);
         if (selOp != null) {
             addCardCostAnnotations(selOp, plan);
         }
@@ -936,7 +937,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // leaf
             ILogicalOperator leftInput = leftPlan.getLeafInput();
             skipAllIndexes(leftPlan, leftInput);
-            ILogicalOperator selOp = findSelectOrDataScan(leftInput);
+            ILogicalOperator selOp = findSelectOrUnnestOrDataScan(leftInput);
             if (selOp != null) {
                 addCardCostAnnotations(selOp, leftPlan);
             }
@@ -956,7 +957,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // leaf
             ILogicalOperator rightInput = rightPlan.getLeafInput();
             skipAllIndexes(rightPlan, rightInput);
-            ILogicalOperator selOp = findSelectOrDataScan(rightInput);
+            ILogicalOperator selOp = findSelectOrUnnestOrDataScan(rightInput);
             if (selOp != null) {
                 addCardCostAnnotations(selOp, rightPlan);
             }

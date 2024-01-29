@@ -93,7 +93,7 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 6.5]
                                                 -- ASSIGN  |PARTITIONED|
                                                   project ([$$ht2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- STREAM_PROJECT  |PARTITIONED|
-                                                    unnest $$ht2 <- scan-collection($$108) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    unnest $$ht2 <- scan-collection($$108) [cardinality: 1.0, op-cost: 2.0, total-cost: 2.0]
                                                     -- UNNEST  |PARTITIONED|
                                                       project ([$$108]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- STREAM_PROJECT  |PARTITIONED|

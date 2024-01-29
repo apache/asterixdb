@@ -617,7 +617,7 @@ public class JoinNode {
             if (IndexCostInfo.get(i).second == -1.0) {
                 AbstractFunctionCallExpression afce = IndexCostInfo.get(i).third;
                 // this index has to be skipped, so find the corresponding expression
-                afce.putAnnotation(SkipSecondaryIndexSearchExpressionAnnotation
+                EnumerateJoinsRule.setAnnotation(afce, SkipSecondaryIndexSearchExpressionAnnotation
                         .newInstance(Collections.singleton(IndexCostInfo.get(i).first.getIndexName())));
             }
         }
@@ -650,13 +650,17 @@ public class JoinNode {
                     sel = selectivityAnnotation.getSelectivity();
                 } else {
                     if (leafInput.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                        selOp = (SelectOperator) leafInput;
+                        selOp = (SelectOperator) joinEnum.getStatsHandle().findSelectOpWithExpr(leafInput, afce);
+                        if (selOp == null) {
+                            selOp = (SelectOperator) leafInput;
+                        }
                     } else {
                         selOp = new SelectOperator(new MutableObject<>(afce));
                         selOp.getInputs().add(new MutableObject<>(leafInput));
                     }
                     sel = joinEnum.getStatsHandle().findSelectivityForThisPredicate(selOp, afce,
-                            chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY));
+                            chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY)
+                                    || joinEnum.findUnnestOp(selOp));
                 }
                 IndexCostInfo.add(new Triple<>(chosenIndex, sel, afce));
             }
