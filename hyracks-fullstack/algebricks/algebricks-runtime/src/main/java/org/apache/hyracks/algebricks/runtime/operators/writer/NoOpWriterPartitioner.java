@@ -16,10 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.writer;
+package org.apache.hyracks.algebricks.runtime.operators.writer;
 
-public interface IExternalFileFilterWriterFactoryProvider {
-    IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration);
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
-    char getSeparator();
+class NoOpWriterPartitioner implements IWriterPartitioner {
+    private boolean first = true;
+
+    public NoOpWriterPartitioner() {
+    }
+
+    @Override
+    public boolean isNewPartition(FrameTupleAccessor tupleAccessor, int index) throws HyracksDataException {
+        if (first) {
+            first = false;
+            return true;
+        }
+        return false;
+    }
 }

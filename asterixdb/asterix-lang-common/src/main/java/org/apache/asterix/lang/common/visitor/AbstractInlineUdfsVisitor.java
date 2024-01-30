@@ -302,6 +302,10 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         changed |= order.first;
         stmtCopy.setOrderByList(order.second);
 
+        Pair<Boolean, List<Expression>> key = inlineUdfsInExprList(stmtCopy.getKeyExpressions());
+        changed |= key.first;
+        stmtCopy.setKeyExpressions(key.second);
+
         return changed;
     }
 

@@ -23,44 +23,30 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.algebricks.runtime.operators.base.AbstractOneInputSinkPushRuntime;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
 import org.apache.hyracks.api.comm.IFrameWriter;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.accessors.PermutingFrameTupleReference;
-import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
-import org.apache.hyracks.dataflow.std.group.preclustered.PreclusteredGroupWriter;
 
 final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
     private final int sourceColumn;
-    private final int[] partitionColumns;
+    private final IWriterPartitioner partitioner;
     private final IPointable sourceValue;
-    private final PointableTupleReference partitionColumnsPrevCopy;
-    private final PermutingFrameTupleReference partitionColumnsRef;
-    private final IBinaryComparator[] partitionComparators;
     private final IExternalWriter writer;
     private FrameTupleAccessor tupleAccessor;
     private FrameTupleReference tupleRef;
-    private boolean first;
     private IFrameWriter frameWriter;
 
-    SinkExternalWriterRuntime(int sourceColumn, int[] partitionColumns, IBinaryComparator[] partitionComparators,
-            RecordDescriptor inputRecordDesc, IExternalWriter writer) {
+    SinkExternalWriterRuntime(int sourceColumn, IWriterPartitioner partitioner, RecordDescriptor inputRecordDesc,
+            IExternalWriter writer) {
         this.sourceColumn = sourceColumn;
-        this.partitionColumns = partitionColumns;
+        this.partitioner = partitioner;
         this.sourceValue = new VoidPointable();
-        partitionColumnsRef = new PermutingFrameTupleReference(partitionColumns);
-        partitionColumnsPrevCopy =
-                PointableTupleReference.create(partitionColumns.length, ArrayBackedValueStorage::new);
-        this.partitionComparators = partitionComparators;
         this.inputRecordDesc = inputRecordDesc;
         this.writer = writer;
-        first = true;
     }
 
     @Override
@@ -83,8 +69,6 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
             }
             setValue(tupleRef, sourceColumn, sourceValue);
             writer.write(sourceValue);
-            partitionColumnsRef.reset(tupleAccessor, i);
-            partitionColumnsPrevCopy.set(partitionColumnsRef);
         }
     }
 
@@ -106,13 +90,7 @@ final class SinkExternalWriterRuntime extends AbstractOneInputSinkPushRuntime {
     }
 
     private boolean isNewPartition(int index) throws HyracksDataException {
-        if (first) {
-            first = false;
-            return true;
-        }
-
-        return !PreclusteredGroupWriter.sameGroup(partitionColumnsPrevCopy, tupleAccessor, index, partitionColumns,
-                partitionComparators);
+        return partitioner.isNewPartition(tupleAccessor, index);
     }
 
     private void setValue(IFrameTupleReference tuple, int column, IPointable value) {

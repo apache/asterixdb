@@ -437,6 +437,9 @@ public class AbstractSqlppExpressionScopingVisitor extends AbstractSqlppSimpleEx
         // Visit path exprs
         stmtCopy.setPathExpressions(visit(stmtCopy.getPathExpressions(), stmtCopy));
 
+        // Visit key exprs
+        stmtCopy.setKeyExpressions(visit(stmtCopy.getKeyExpressions(), stmtCopy));
+
         return null;
     }
 

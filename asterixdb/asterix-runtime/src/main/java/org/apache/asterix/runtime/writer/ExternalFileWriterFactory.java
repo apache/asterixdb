@@ -28,17 +28,17 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class ExternalWriterFactory implements IExternalWriterFactory {
+public class ExternalFileWriterFactory implements IExternalWriterFactory {
     private static final long serialVersionUID = 1412969574113419638L;
     private final IExternalFileWriterFactory writerFactory;
-    private final IExternalFilePrinterFactory printerFactory;
+    private final IExternalPrinterFactory printerFactory;
     private final String fileExtension;
     private final int maxResult;
     private final IScalarEvaluatorFactory pathEvalFactory;
     private final String staticPath;
     private final SourceLocation pathSourceLocation;
 
-    public ExternalWriterFactory(IExternalFileWriterFactory writerFactory, IExternalFilePrinterFactory printerFactory,
+    public ExternalFileWriterFactory(IExternalFileWriterFactory writerFactory, IExternalPrinterFactory printerFactory,
             String fileExtension, int maxResult, IScalarEvaluatorFactory pathEvalFactory, String staticPath,
             SourceLocation pathSourceLocation) {
         this.writerFactory = writerFactory;
@@ -65,6 +65,6 @@ public class ExternalWriterFactory implements IExternalWriterFactory {
             resolver = new StaticPathResolver(fileExtension, fileSeparator, partition, staticPath);
         }
         IExternalFileWriter writer = writerFactory.createWriter(context, printerFactory);
-        return new ExternalWriter(resolver, writer, maxResult);
+        return new ExternalFileWriter(resolver, writer, maxResult);
     }
 }

@@ -54,7 +54,7 @@ final class DynamicPathResolver extends AbstractPathResolver {
     @Override
     public String getPartitionDirectory(IFrameTupleReference tuple) throws HyracksDataException {
         if (!appendPrefix(tuple)) {
-            return ExternalWriter.UNRESOLVABLE_PATH;
+            return ExternalFileWriter.UNRESOLVABLE_PATH;
         }
 
         if (dirStringBuilder.length() > 0 && dirStringBuilder.charAt(dirStringBuilder.length() - 1) != fileSeparator) {

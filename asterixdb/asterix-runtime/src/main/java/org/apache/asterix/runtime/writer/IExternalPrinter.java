@@ -18,28 +18,37 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import java.io.Serializable;
+import java.io.OutputStream;
 
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 /**
- * An interface for writing to a storage device
- * Implementer should also provide a singleton to {@link IExternalFileWriterFactoryProvider}
+ * An {@link IExternalFileWriter} printer
  */
-public interface IExternalFileWriterFactory extends IExternalWriterFactoryValidator, Serializable {
-    /**
-     * Create a writer
-     *
-     * @param context        task context
-     * @param printerFactory printer factory for writing the final result
-     * @return a new file writer
-     */
-    IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
-            throws HyracksDataException;
+public interface IExternalPrinter {
 
     /**
-     * @return file (or path) separator
+     * Open the printer
      */
-    char getSeparator();
+    void open() throws HyracksDataException;
+
+    /**
+     * Initialize the printer with a new stream
+     *
+     * @param outputStream to print to
+     */
+    void newStream(OutputStream outputStream) throws HyracksDataException;
+
+    /**
+     * Print the provided value
+     *
+     * @param value to print
+     */
+    void print(IValueReference value) throws HyracksDataException;
+
+    /**
+     * Flush and close the printer
+     */
+    void close() throws HyracksDataException;
 }

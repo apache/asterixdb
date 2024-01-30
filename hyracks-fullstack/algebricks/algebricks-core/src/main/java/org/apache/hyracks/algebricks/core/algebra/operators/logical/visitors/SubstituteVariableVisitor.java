@@ -389,6 +389,7 @@ public class SubstituteVariableVisitor
         for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : op.getOrderExpressions()) {
             substUsedVariablesInExpr(orderExpr.second, pair.first, pair.second);
         }
+        substUsedVariablesInExpr(op.getKeyExpressions(), pair.first, pair.second);
         return null;
     }
 

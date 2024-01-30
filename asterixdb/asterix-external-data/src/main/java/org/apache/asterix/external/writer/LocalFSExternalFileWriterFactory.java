@@ -23,11 +23,11 @@ import java.io.File;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
-import org.apache.asterix.runtime.writer.IExternalFileFilterWriterFactoryProvider;
-import org.apache.asterix.runtime.writer.IExternalFilePrinterFactory;
+import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
+import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
+import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -36,18 +36,17 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public final class LocalFSExternalFileWriterFactory implements IExternalFileWriterFactory {
     private static final long serialVersionUID = 871685327574547749L;
     private static final char SEPARATOR = File.separatorChar;
-    public static final IExternalFileFilterWriterFactoryProvider PROVIDER =
-            new IExternalFileFilterWriterFactoryProvider() {
-                @Override
-                public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
-                    return new LocalFSExternalFileWriterFactory(configuration);
-                }
+    public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
+        @Override
+        public IExternalFileWriterFactory create(ExternalWriterConfiguration configuration) {
+            return new LocalFSExternalFileWriterFactory(configuration);
+        }
 
-                @Override
-                public char getSeparator() {
-                    return SEPARATOR;
-                }
-            };
+        @Override
+        public char getSeparator() {
+            return SEPARATOR;
+        }
+    };
     private static final ILocalFSValidator NO_OP_VALIDATOR = LocalFSExternalFileWriterFactory::noOpValidation;
     private static final ILocalFSValidator VALIDATOR = LocalFSExternalFileWriterFactory::validate;
     private final SourceLocation pathSourceLocation;
@@ -55,7 +54,7 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
     private final String staticPath;
     private boolean validated;
 
-    private LocalFSExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
+    private LocalFSExternalFileWriterFactory(ExternalWriterConfiguration externalConfig) {
         pathSourceLocation = externalConfig.getPathSourceLocation();
         singleNodeCluster = externalConfig.isSingleNodeCluster();
         staticPath = externalConfig.getStaticPath();
@@ -63,7 +62,7 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
     }
 
     @Override
-    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalFilePrinterFactory printerFactory)
+    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
         ILocalFSValidator validator = VALIDATOR;
         if (staticPath != null) {

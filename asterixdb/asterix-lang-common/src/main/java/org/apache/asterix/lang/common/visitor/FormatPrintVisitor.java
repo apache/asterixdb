@@ -573,12 +573,10 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         cto.getSourceVariable().accept(this, step);
         out.println();
 
-        if (cto.isSinkFileStore()) {
+        if (cto.isFileStoreSink()) {
             formatPrintCopyToFileStore(cto, step);
-        } else if (cto.isSinkDatabaseWithKey()) {
-            formatPrintCopyToDatabaseWithKey(cto, step);
         } else {
-            throw new IllegalStateException("NYI: This should never happen");
+            formatPrintCopyToDatabaseWithKey(cto, step);
         }
 
         out.println("with ");

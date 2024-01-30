@@ -362,6 +362,10 @@ public class UsedVariableVisitor implements ILogicalOperatorVisitor<Void, Void> 
         for (Pair<IOrder, Mutable<ILogicalExpression>> orderExpr : op.getOrderExpressions()) {
             orderExpr.second.getValue().getUsedVariables(usedVariables);
         }
+
+        for (Mutable<ILogicalExpression> expr : op.getKeyExpressions()) {
+            expr.getValue().getUsedVariables(usedVariables);
+        }
         return null;
     }
 

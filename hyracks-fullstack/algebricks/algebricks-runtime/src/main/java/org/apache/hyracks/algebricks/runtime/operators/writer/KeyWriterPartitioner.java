@@ -16,16 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.writer;
+package org.apache.hyracks.algebricks.runtime.operators.writer;
 
-import java.io.Serializable;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
-/**
- * {@link IExternalFileWriter} printer factory
- */
-public interface IExternalFilePrinterFactory extends Serializable {
-    /**
-     * @return a new external file printer
-     */
-    IExternalFilePrinter createPrinter();
+class KeyWriterPartitioner implements IWriterPartitioner {
+    public static final IWriterPartitioner INSTANCE = new KeyWriterPartitioner();
+
+    private KeyWriterPartitioner() {
+    }
+
+    @Override
+    public boolean isNewPartition(FrameTupleAccessor tupleAccessor, int index) throws HyracksDataException {
+        // Every key is a partition
+        return true;
+    }
 }

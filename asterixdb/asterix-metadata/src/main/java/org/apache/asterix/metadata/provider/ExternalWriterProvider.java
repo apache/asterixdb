@@ -30,17 +30,17 @@ import org.apache.asterix.external.writer.compressor.IExternalFileCompressStream
 import org.apache.asterix.external.writer.compressor.NoOpExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.printer.TextualExternalFilePrinterFactory;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
-import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
-import org.apache.asterix.runtime.writer.IExternalFileFilterWriterFactoryProvider;
-import org.apache.asterix.runtime.writer.IExternalFilePrinterFactory;
+import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
+import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
+import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 
 public class ExternalWriterProvider {
-    private static final Map<String, IExternalFileFilterWriterFactoryProvider> CREATOR_MAP;
+    private static final Map<String, IExternalFileWriterFactoryProvider> CREATOR_MAP;
     private static final Map<String, IExternalFileCompressStreamFactory> STREAM_COMPRESSORS;
 
     private ExternalWriterProvider() {
@@ -59,7 +59,7 @@ public class ExternalWriterProvider {
     public static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,
             String staticPath, SourceLocation pathExpressionLocation) {
         String adapterName = sink.getAdapterName().toLowerCase();
-        IExternalFileFilterWriterFactoryProvider creator = CREATOR_MAP.get(adapterName);
+        IExternalFileWriterFactoryProvider creator = CREATOR_MAP.get(adapterName);
 
         if (creator == null) {
             throw new UnsupportedOperationException("Unsupported adapter " + adapterName);
@@ -83,12 +83,12 @@ public class ExternalWriterProvider {
         return Integer.parseInt(maxResultString);
     }
 
-    private static ExternalFileWriterConfiguration createConfiguration(ICcApplicationContext appCtx,
-            IWriteDataSink sink, String staticPath, SourceLocation pathExpressionLocation) {
+    private static ExternalWriterConfiguration createConfiguration(ICcApplicationContext appCtx, IWriteDataSink sink,
+            String staticPath, SourceLocation pathExpressionLocation) {
         Map<String, String> params = sink.getConfiguration();
         boolean singleNodeCluster = isSingleNodeCluster(appCtx);
 
-        return new ExternalFileWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster);
+        return new ExternalWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster);
     }
 
     private static boolean isSingleNodeCluster(ICcApplicationContext appCtx) {
@@ -96,8 +96,8 @@ public class ExternalWriterProvider {
         return ccs.getNodeManager().getIpAddressNodeNameMap().size() == 1;
     }
 
-    private static void addCreator(String adapterName, IExternalFileFilterWriterFactoryProvider creator) {
-        IExternalFileFilterWriterFactoryProvider registeredCreator = CREATOR_MAP.get(adapterName.toLowerCase());
+    private static void addCreator(String adapterName, IExternalFileWriterFactoryProvider creator) {
+        IExternalFileWriterFactoryProvider registeredCreator = CREATOR_MAP.get(adapterName.toLowerCase());
         if (registeredCreator != null) {
             throw new IllegalStateException(
                     "Adapter " + adapterName + " is registered to " + registeredCreator.getClass().getName());
@@ -105,7 +105,7 @@ public class ExternalWriterProvider {
         CREATOR_MAP.put(adapterName.toLowerCase(), creator);
     }
 
-    public static IExternalFilePrinterFactory createPrinter(IWriteDataSink sink, Object sourceType) {
+    public static IExternalPrinterFactory createPrinter(IWriteDataSink sink, Object sourceType) {
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
 
@@ -131,7 +131,7 @@ public class ExternalWriterProvider {
     }
 
     public static char getSeparator(String adapterName) {
-        IExternalFileFilterWriterFactoryProvider creator = CREATOR_MAP.get(adapterName.toLowerCase());
+        IExternalFileWriterFactoryProvider creator = CREATOR_MAP.get(adapterName.toLowerCase());
 
         if (creator == null) {
             throw new UnsupportedOperationException("Unsupported adapter " + adapterName);

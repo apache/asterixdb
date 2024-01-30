@@ -18,37 +18,11 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import java.io.OutputStream;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.api.IValueReference;
-
-/**
- * An {@link IExternalFileWriter} printer
- */
-public interface IExternalFilePrinter {
-
+public interface IExternalWriterFactoryValidator {
     /**
-     * Open the printer
+     * Perform the necessary validation to ensure the writer has the proper permissions
      */
-    void open() throws HyracksDataException;
-
-    /**
-     * Initialize the printer with a new stream
-     *
-     * @param outputStream to print to
-     */
-    void newStream(OutputStream outputStream) throws HyracksDataException;
-
-    /**
-     * Print the provided value
-     *
-     * @param value to print
-     */
-    void print(IValueReference value) throws HyracksDataException;
-
-    /**
-     * Flush and close the printer
-     */
-    void close() throws HyracksDataException;
+    void validate() throws AlgebricksException;
 }

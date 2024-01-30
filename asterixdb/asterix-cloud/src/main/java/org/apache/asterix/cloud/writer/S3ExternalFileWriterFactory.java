@@ -36,12 +36,12 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
-import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
-import org.apache.asterix.runtime.writer.IExternalFileFilterWriterFactoryProvider;
-import org.apache.asterix.runtime.writer.IExternalFilePrinter;
-import org.apache.asterix.runtime.writer.IExternalFilePrinterFactory;
+import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
+import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
+import org.apache.asterix.runtime.writer.IExternalPrinter;
+import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -59,24 +59,23 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     private static final long serialVersionUID = 4551318140901866805L;
     private static final Logger LOGGER = LogManager.getLogger();
     static final char SEPARATOR = '/';
-    public static final IExternalFileFilterWriterFactoryProvider PROVIDER =
-            new IExternalFileFilterWriterFactoryProvider() {
-                @Override
-                public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
-                    return new S3ExternalFileWriterFactory(configuration);
-                }
+    public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
+        @Override
+        public IExternalFileWriterFactory create(ExternalWriterConfiguration configuration) {
+            return new S3ExternalFileWriterFactory(configuration);
+        }
 
-                @Override
-                public char getSeparator() {
-                    return SEPARATOR;
-                }
-            };
+        @Override
+        public char getSeparator() {
+            return SEPARATOR;
+        }
+    };
     private final Map<String, String> configuration;
     private final SourceLocation pathSourceLocation;
     private final String staticPath;
     private transient S3CloudClient cloudClient;
 
-    private S3ExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
+    private S3ExternalFileWriterFactory(ExternalWriterConfiguration externalConfig) {
         configuration = externalConfig.getConfiguration();
         pathSourceLocation = externalConfig.getPathSourceLocation();
         staticPath = externalConfig.getStaticPath();
@@ -84,11 +83,11 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     }
 
     @Override
-    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalFilePrinterFactory printerFactory)
+    public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
         buildClient();
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        IExternalFilePrinter printer = printerFactory.createPrinter();
+        IExternalPrinter printer = printerFactory.createPrinter();
         IWarningCollector warningCollector = context.getWarningCollector();
         return new S3ExternalFileWriter(printer, cloudClient, bucket, staticPath == null, warningCollector,
                 pathSourceLocation);

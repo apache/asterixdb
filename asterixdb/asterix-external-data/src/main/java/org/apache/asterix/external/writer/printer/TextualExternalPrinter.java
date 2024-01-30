@@ -21,21 +21,18 @@ package org.apache.asterix.external.writer.printer;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-final class TextualExternalFilePrinter implements IExternalPrinter {
+final class TextualExternalPrinter implements IExternalPrinter {
     private final IPrinter printer;
-    private final IExternalFileCompressStreamFactory compressStreamFactory;
     private TextualOutputStreamDelegate delegate;
     private PrintStream printStream;
 
-    TextualExternalFilePrinter(IPrinter printer, IExternalFileCompressStreamFactory compressStreamFactory) {
+    TextualExternalPrinter(IPrinter printer) {
         this.printer = printer;
-        this.compressStreamFactory = compressStreamFactory;
     }
 
     @Override
@@ -44,18 +41,14 @@ final class TextualExternalFilePrinter implements IExternalPrinter {
     }
 
     @Override
-    public void newStream(OutputStream outputStream) throws HyracksDataException {
-        if (printStream != null) {
-            close();
-        }
-        delegate = new TextualOutputStreamDelegate(compressStreamFactory.createStream(outputStream));
+    public void newStream(OutputStream outputStream) {
+        delegate = new TextualOutputStreamDelegate(outputStream);
         printStream = new PrintStream(delegate);
     }
 
     @Override
     public void print(IValueReference value) throws HyracksDataException {
         printer.print(value.getByteArray(), value.getStartOffset(), value.getLength(), printStream);
-        printStream.println();
         delegate.checkError();
     }
 

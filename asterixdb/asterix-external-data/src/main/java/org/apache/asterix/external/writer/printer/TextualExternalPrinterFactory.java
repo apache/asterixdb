@@ -18,22 +18,20 @@
  */
 package org.apache.asterix.external.writer.printer;
 
-import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
+import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
-public class TextualExternalFilePrinterFactory extends TextualExternalPrinterFactory {
-    private static final long serialVersionUID = 8971234908711234L;
-    private final IExternalFileCompressStreamFactory compressStreamFactory;
+public class TextualExternalPrinterFactory implements IExternalPrinterFactory {
+    private static final long serialVersionUID = 9155959967258587588L;
+    protected final IPrinterFactory printerFactory;
 
-    public TextualExternalFilePrinterFactory(IPrinterFactory printerFactory,
-            IExternalFileCompressStreamFactory compressStreamFactory) {
-        super(printerFactory);
-        this.compressStreamFactory = compressStreamFactory;
+    public TextualExternalPrinterFactory(IPrinterFactory printerFactory) {
+        this.printerFactory = printerFactory;
     }
 
     @Override
     public IExternalPrinter createPrinter() {
-        return new TextualExternalFilePrinter(printerFactory.createPrinter(), compressStreamFactory);
+        return new TextualExternalPrinter(printerFactory.createPrinter());
     }
 }

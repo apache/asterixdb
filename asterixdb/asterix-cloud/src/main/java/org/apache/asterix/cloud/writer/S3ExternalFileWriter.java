@@ -20,7 +20,7 @@ package org.apache.asterix.cloud.writer;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.runtime.writer.IExternalFilePrinter;
+import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
@@ -29,7 +29,7 @@ import software.amazon.awssdk.core.exception.SdkException;
 final class S3ExternalFileWriter extends AbstractCloudExternalFileWriter {
     static int MAX_LENGTH_IN_BYTES = 1024;
 
-    S3ExternalFileWriter(IExternalFilePrinter printer, ICloudClient cloudClient, String bucket, boolean partitionedPath,
+    S3ExternalFileWriter(IExternalPrinter printer, ICloudClient cloudClient, String bucket, boolean partitionedPath,
             IWarningCollector warningCollector, SourceLocation pathSourceLocation) {
         super(printer, cloudClient, bucket, partitionedPath, warningCollector, pathSourceLocation);
     }

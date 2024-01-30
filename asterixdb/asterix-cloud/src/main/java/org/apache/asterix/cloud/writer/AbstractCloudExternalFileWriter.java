@@ -28,8 +28,8 @@ import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.runtime.writer.IExternalFilePrinter;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
+import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -39,7 +39,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import com.google.common.base.Utf8;
 
 abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
-    private final IExternalFilePrinter printer;
+    private final IExternalPrinter printer;
     private final ICloudClient cloudClient;
     private final String bucket;
     private final boolean partitionedPath;
@@ -48,7 +48,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     private final IWriteBufferProvider bufferProvider;
     private ICloudBufferedWriter bufferedWriter;
 
-    AbstractCloudExternalFileWriter(IExternalFilePrinter printer, ICloudClient cloudClient, String bucket,
+    AbstractCloudExternalFileWriter(IExternalPrinter printer, ICloudClient cloudClient, String bucket,
             boolean partitionedPath, IWarningCollector warningCollector, SourceLocation pathSourceLocation) {
         this.printer = printer;
         this.cloudClient = cloudClient;
@@ -118,7 +118,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             if (isSdkException(e)) {
                 throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
             }
-            throw e;
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -132,7 +132,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             if (isSdkException(e)) {
                 throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
             }
-            throw e;
+            throw HyracksDataException.create(e);
         }
     }
 

@@ -25,19 +25,19 @@ import java.io.IOException;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.runtime.writer.IExternalFilePrinter;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
+import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 final class LocalFSExternalFileWriter implements IExternalFileWriter {
-    private final IExternalFilePrinter printer;
+    private final IExternalPrinter printer;
     private final ILocalFSValidator validator;
     private final SourceLocation pathSourceLocation;
 
-    LocalFSExternalFileWriter(IExternalFilePrinter printer, ILocalFSValidator validator,
+    LocalFSExternalFileWriter(IExternalPrinter printer, ILocalFSValidator validator,
             SourceLocation pathSourceLocation) {
         this.printer = printer;
         this.validator = validator;
