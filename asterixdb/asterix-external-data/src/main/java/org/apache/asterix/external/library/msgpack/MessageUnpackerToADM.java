@@ -16,7 +16,35 @@
  */
 package org.apache.asterix.external.library.msgpack;
 
-import static org.msgpack.core.MessagePack.Code.*;
+import static org.msgpack.core.MessagePack.Code.ARRAY16;
+import static org.msgpack.core.MessagePack.Code.ARRAY32;
+import static org.msgpack.core.MessagePack.Code.FALSE;
+import static org.msgpack.core.MessagePack.Code.FIXARRAY_PREFIX;
+import static org.msgpack.core.MessagePack.Code.FIXMAP_PREFIX;
+import static org.msgpack.core.MessagePack.Code.FIXSTR_PREFIX;
+import static org.msgpack.core.MessagePack.Code.FLOAT32;
+import static org.msgpack.core.MessagePack.Code.FLOAT64;
+import static org.msgpack.core.MessagePack.Code.INT16;
+import static org.msgpack.core.MessagePack.Code.INT32;
+import static org.msgpack.core.MessagePack.Code.INT64;
+import static org.msgpack.core.MessagePack.Code.INT8;
+import static org.msgpack.core.MessagePack.Code.MAP16;
+import static org.msgpack.core.MessagePack.Code.MAP32;
+import static org.msgpack.core.MessagePack.Code.NIL;
+import static org.msgpack.core.MessagePack.Code.STR16;
+import static org.msgpack.core.MessagePack.Code.STR32;
+import static org.msgpack.core.MessagePack.Code.STR8;
+import static org.msgpack.core.MessagePack.Code.TRUE;
+import static org.msgpack.core.MessagePack.Code.UINT16;
+import static org.msgpack.core.MessagePack.Code.UINT32;
+import static org.msgpack.core.MessagePack.Code.UINT64;
+import static org.msgpack.core.MessagePack.Code.UINT8;
+import static org.msgpack.core.MessagePack.Code.isFixInt;
+import static org.msgpack.core.MessagePack.Code.isFixStr;
+import static org.msgpack.core.MessagePack.Code.isFixedArray;
+import static org.msgpack.core.MessagePack.Code.isFixedMap;
+import static org.msgpack.core.MessagePack.Code.isNegFixInt;
+import static org.msgpack.core.MessagePack.Code.isPosFixInt;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -27,9 +55,9 @@ import java.util.List;
 import org.apache.asterix.builders.AbvsBuilderFactory;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
-import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8DataOutput;
+import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8OutputStream;
 import org.apache.asterix.external.input.stream.builders.ListLikeNumericArrayFactory;
-import org.apache.asterix.external.input.stream.builders.StandardToModifiedUTF8DataOutputFactory;
+import org.apache.asterix.external.input.stream.builders.StandardToModifiedUTF8OutputStreamFactory;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.util.container.IObjectPool;
 import org.apache.asterix.om.util.container.ListObjectPool;
@@ -43,8 +71,8 @@ public class MessageUnpackerToADM {
 
     private final IObjectPool<IMutableValueStorage, ATypeTag> abvsBuilderPool =
             new ListObjectPool<>(new AbvsBuilderFactory());
-    private final IObjectPool<StandardUTF8ToModifiedUTF8DataOutput, ATypeTag> utfPool =
-            new ListObjectPool<>(new StandardToModifiedUTF8DataOutputFactory());
+    private final IObjectPool<StandardUTF8ToModifiedUTF8OutputStream, ATypeTag> utfPool =
+            new ListObjectPool<>(new StandardToModifiedUTF8OutputStreamFactory());
     private final IObjectPool<List<Long>, Long> listPool = new ListObjectPool<>(new ListLikeNumericArrayFactory<>());
 
     public MessageUnpackerToADM() {
@@ -291,7 +319,7 @@ public class MessageUnpackerToADM {
             throw new UnsupportedOperationException("String is too long");
         }
         int len = (int) uLen;
-        StandardUTF8ToModifiedUTF8DataOutput conv = utfPool.allocate(ATypeTag.STRING);
+        StandardUTF8ToModifiedUTF8OutputStream conv = utfPool.allocate(ATypeTag.STRING);
         conv.setDataOutput(out);
         conv.write(in.array(), in.arrayOffset() + in.position(), len);
         in.position(in.position() + len);

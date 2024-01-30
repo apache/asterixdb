@@ -19,18 +19,18 @@
 package org.apache.asterix.external.input.stream.builders;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
-import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8DataOutput;
+import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8OutputStream;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.util.container.IObjectFactory;
 import org.apache.hyracks.util.string.UTF8StringReader;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
-public class StandardToModifiedUTF8DataOutputFactory
-        implements IObjectFactory<StandardUTF8ToModifiedUTF8DataOutput, ATypeTag> {
+public class StandardToModifiedUTF8OutputStreamFactory
+        implements IObjectFactory<StandardUTF8ToModifiedUTF8OutputStream, ATypeTag> {
 
     @Override
-    public StandardUTF8ToModifiedUTF8DataOutput create(ATypeTag type) {
-        return new StandardUTF8ToModifiedUTF8DataOutput(
+    public StandardUTF8ToModifiedUTF8OutputStream create(ATypeTag type) {
+        return new StandardUTF8ToModifiedUTF8OutputStream(
                 new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()));
     }
 

@@ -27,7 +27,7 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ABinarySerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.external.input.filter.NoOpFilterValueEmbedder;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
-import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8DataOutput;
+import org.apache.asterix.external.input.stream.StandardUTF8ToModifiedUTF8OutputStream;
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -91,7 +91,7 @@ public class ParquetConverterContext extends ParserContext {
      * Binary values members
      * ************************************************************************
      */
-    private final StandardUTF8ToModifiedUTF8DataOutput modifiedUTF8DataOutput;
+    private final StandardUTF8ToModifiedUTF8OutputStream modifiedUTF8DataOutput;
     private byte[] lengthBytes;
 
     /*
@@ -137,7 +137,7 @@ public class ParquetConverterContext extends ParserContext {
             List<Warning> warnings) {
         this.warnings = warnings;
         this.valueEmbedder = valueEmbedder;
-        modifiedUTF8DataOutput = new StandardUTF8ToModifiedUTF8DataOutput(
+        modifiedUTF8DataOutput = new StandardUTF8ToModifiedUTF8OutputStream(
                 new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader()));
 
         parseJson = configuration.getBoolean(ParquetOptions.HADOOP_PARSE_JSON_STRING, false);

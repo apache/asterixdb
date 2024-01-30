@@ -20,16 +20,17 @@ package org.apache.asterix.external.input.stream;
 
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
 
 /**
- * Writes modified UTF-8 string format to {@link StandardUTF8ToModifiedUTF8DataOutput#out}
+ * Writes modified UTF-8 string format to {@link StandardUTF8ToModifiedUTF8OutputStream#out}
  * from standard UTF-8 string format.
  */
-public class StandardUTF8ToModifiedUTF8DataOutput implements DataOutput {
+public class StandardUTF8ToModifiedUTF8OutputStream extends OutputStream {
     private static final byte[] EMPTY = new byte[0];
     private final AStringSerializerDeserializer stringSerDer;
     private final ResettableUTF8InputStreamReader reader;
@@ -37,7 +38,7 @@ public class StandardUTF8ToModifiedUTF8DataOutput implements DataOutput {
     private char[] appendBuffer;
     private DataOutput out;
 
-    public StandardUTF8ToModifiedUTF8DataOutput(AStringSerializerDeserializer stringSerDer) {
+    public StandardUTF8ToModifiedUTF8OutputStream(AStringSerializerDeserializer stringSerDer) {
         this.stringSerDer = stringSerDer;
         reader = new ResettableUTF8InputStreamReader(new ByteArrayAccessibleInputStream(EMPTY, 0, 0));
         inputBuffer = new char[ExternalDataConstants.DEFAULT_BUFFER_SIZE];
@@ -65,61 +66,6 @@ public class StandardUTF8ToModifiedUTF8DataOutput implements DataOutput {
             numOfChars = reader.read(inputBuffer);
         }
         stringSerDer.serialize(appendBuffer, 0, length, out);
-    }
-
-    @Override
-    public void writeBoolean(boolean v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeByte(int v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeShort(int v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeChar(int v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeInt(int v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeLong(long v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeFloat(float v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeDouble(double v) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeBytes(String s) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeChars(String s) throws IOException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void writeUTF(String s) throws IOException {
-        throw new UnsupportedOperationException();
     }
 
     public void setDataOutput(DataOutput out) {

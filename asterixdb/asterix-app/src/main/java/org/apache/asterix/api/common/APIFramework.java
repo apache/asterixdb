@@ -331,7 +331,7 @@ public class APIFramework {
                 new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
         JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory, runtimeFlags);
 
-        if (isQuery) {
+        if (isQuery || isCopy) {
             if (!compiler.skipJobCapacityAssignment()) {
                 if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
                     // Sets a required capacity, only for read-only queries.
