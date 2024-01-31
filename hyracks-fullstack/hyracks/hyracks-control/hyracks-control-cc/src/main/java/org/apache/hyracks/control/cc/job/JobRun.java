@@ -82,13 +82,13 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private final Map<ConnectorDescriptorId, IConnectorPolicy> connectorPolicyMap;
 
-    private long createTime;
+    private final long createTime;
 
-    private long startTime;
+    private volatile long startTime;
 
     private String startTimeZoneId;
 
-    private long endTime;
+    private volatile long endTime;
 
     private JobStatus status;
 
@@ -98,7 +98,7 @@ public class JobRun implements IJobStatusConditionVariable {
 
     private List<Exception> pendingExceptions;
 
-    private Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
+    private final Map<OperatorDescriptorId, Map<Integer, String>> operatorLocations;
 
     private JobRun(DeploymentId deploymentId, JobId jobId, Set<JobFlag> jobFlags, JobSpecification spec,
             ActivityClusterGraph acg) {
@@ -220,6 +220,10 @@ public class JobRun implements IJobStatusConditionVariable {
     public void setEndTime(long endTime) {
         this.endTime = endTime;
         this.profile.setEndTime(endTime);
+    }
+
+    public long getQueueWaitTimeInMillis() {
+        return startTime > 0 ? startTime - createTime : System.currentTimeMillis() - createTime;
     }
 
     public void registerOperatorLocation(OperatorDescriptorId op, int partition, String location) {

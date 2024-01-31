@@ -18,11 +18,18 @@
  */
 package org.apache.asterix.translator;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.resource.IClusterCapacity;
+import org.apache.hyracks.control.cc.ClusterControllerService;
+import org.apache.hyracks.control.cc.job.JobRun;
+import org.apache.hyracks.util.StorageUtil;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -31,19 +38,26 @@ public class ClientRequest extends BaseClientRequest {
     protected final long creationTime = System.nanoTime();
     protected final Thread executor;
     protected final String statement;
+    protected final ClusterControllerService ccService;
     protected final String clientContextId;
     protected volatile JobId jobId;
+    private String plan; // can be null
 
-    public ClientRequest(ICommonRequestParameters requestParameters) {
+    public ClientRequest(ICommonRequestParameters requestParameters, ICcApplicationContext appCtx) {
         super(requestParameters.getRequestReference());
         this.clientContextId = requestParameters.getClientContextId();
         this.statement = requestParameters.getStatement();
         this.executor = Thread.currentThread();
+        this.ccService = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
     }
 
     @Override
     public String getClientContextId() {
         return clientContextId;
+    }
+
+    public void setPlan(String plan) {
+        this.plan = plan;
     }
 
     public synchronized void setJobId(JobId jobId) {
@@ -78,9 +92,53 @@ public class ClientRequest extends BaseClientRequest {
     @Override
     public ObjectNode asJson() {
         ObjectNode json = super.asJson();
-        json.put("jobId", jobId != null ? jobId.toString() : null);
+        putJobDetails(json);
         json.put("statement", statement);
         json.put("clientContextID", clientContextId);
+        if (plan != null) {
+            json.put("plan", plan);
+        }
         return json;
+    }
+
+    private void putJobDetails(ObjectNode json) {
+        if (jobId == null) {
+            json.putNull("jobId");
+        } else {
+            try {
+                json.put("jobId", jobId.toString());
+                JobRun jobRun = ccService.getJobManager().get(jobId);
+                if (jobRun != null) {
+                    json.put("jobStatus", String.valueOf(jobRun.getStatus()));
+                    putJobRequiredResources(json, jobRun);
+                    putTimes(json, jobRun);
+                }
+            } catch (Throwable th) {
+                // ignore
+            }
+        }
+    }
+
+    private static void putTimes(ObjectNode json, JobRun jobRun) {
+        AMutableDateTime dateTime = new AMutableDateTime(0);
+        putTime(json, jobRun.getCreateTime(), "jobCreateTime", dateTime);
+        putTime(json, jobRun.getStartTime(), "jobStartTime", dateTime);
+        putTime(json, jobRun.getEndTime(), "jobEndTime", dateTime);
+        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(jobRun.getQueueWaitTimeInMillis()) + "s");
+    }
+
+    private static void putJobRequiredResources(ObjectNode json, JobRun jobRun) {
+        IClusterCapacity jobCapacity = jobRun.getJobSpecification().getRequiredClusterCapacity();
+        if (jobCapacity != null) {
+            json.put("jobRequiredCPUs", jobCapacity.getAggregatedCores());
+            json.put("jobRequiredMemory", StorageUtil.toHumanReadableSize(jobCapacity.getAggregatedMemoryByteSize()));
+        }
+    }
+
+    private static void putTime(ObjectNode json, long time, String label, AMutableDateTime dateTime) {
+        if (time > 0) {
+            dateTime.setValue(time);
+            json.put(label, dateTime.toSimpleString());
+        }
     }
 }

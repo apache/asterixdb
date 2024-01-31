@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.api;
 
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
@@ -36,10 +37,12 @@ public interface IReceptionist {
      * Generates a {@link IClientRequest} based on the requests parameters
      *
      * @param requestParameters
+     * @param appCtx
      * @return the client request
      * @throws HyracksDataException
      */
-    IClientRequest requestReceived(ICommonRequestParameters requestParameters) throws HyracksDataException;
+    IClientRequest requestReceived(ICommonRequestParameters requestParameters, ICcApplicationContext appCtx)
+            throws HyracksDataException;
 
     /**
      * Ensures a client's request can be executed before its job is started
@@ -56,6 +59,6 @@ public interface IReceptionist {
      * @param metadataProvider
      * @throws HyracksDataException
      */
-    void ensureAuthorized(ICommonRequestParameters requestParameters, IMetadataProvider metadataProvider)
+    void ensureAuthorized(ICommonRequestParameters requestParameters, IMetadataProvider<?, ?> metadataProvider)
             throws HyracksDataException;
 }

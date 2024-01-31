@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.TaskId;
@@ -90,10 +89,6 @@ public class JobProfile extends AbstractProfile {
 
     public void setEndTime(long endTime) {
         this.endTime = endTime;
-    }
-
-    public long getQueueWaitTimeInNanos() {
-        return TimeUnit.MILLISECONDS.toNanos(startTime - createTime);
     }
 
     @Override
