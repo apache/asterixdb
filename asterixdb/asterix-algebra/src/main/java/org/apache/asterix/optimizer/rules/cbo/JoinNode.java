@@ -1269,7 +1269,6 @@ public class JoinNode {
                 validBuildOrProbeObject = true;
             }
             if (validBuildOrProbeObject) {
-                joinEnum.joinHints.put(hintHashJoin, null);
                 if ((build && (rightJn.datasetNames.contains(buildOrProbeObject)
                         || rightJn.aliases.contains(buildOrProbeObject)))
                         || (probe && (leftJn.datasetNames.contains(buildOrProbeObject)
@@ -1284,10 +1283,13 @@ public class JoinNode {
                             hintHashJoin, outerJoin);
                 }
             }
-            if (hjPlan == PlanNode.NO_PLAN && commutativeHjPlan == PlanNode.NO_PLAN) {
+            if (hjPlan != PlanNode.NO_PLAN || commutativeHjPlan != PlanNode.NO_PLAN) {
+                // hintHashJoin has been used.
+                joinEnum.joinHints.put(hintHashJoin, null);
+            } else if (!(joinEnum.joinHints.containsKey(hintHashJoin)
+                    && joinEnum.joinHints.get(hintHashJoin) == null)) {
                 // Hints are attached to predicates, so newJoinConditions should not be empty, but adding the check to be safe.
                 if (!joinEnum.getJoinConditions().isEmpty() && !newJoinConditions.isEmpty()) {
-                    IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
                     if (!joinEnum.joinHints.containsKey(hintHashJoin)) {
                         joinEnum.joinHints.put(hintHashJoin,
                                 Warning.of(
@@ -1329,7 +1331,6 @@ public class JoinNode {
                 validBroadcastObject = true;
             }
             if (validBroadcastObject) {
-                joinEnum.joinHints.put(hintBroadcastHashJoin, null);
                 if (rightJn.datasetNames.contains(broadcastObject) || rightJn.aliases.contains(broadcastObject)) {
                     bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, leftPlan, rightPlan, hashJoinExpr,
                             hintBroadcastHashJoin, outerJoin);
@@ -1338,7 +1339,6 @@ public class JoinNode {
                             hashJoinExpr, hintBroadcastHashJoin, outerJoin);
                 }
             } else if (broadcastObject == null) {
-                joinEnum.joinHints.put(hintBroadcastHashJoin, null);
                 bcastHjPlan = buildBroadcastHashJoinPlan(leftJn, rightJn, leftPlan, rightPlan, hashJoinExpr,
                         hintBroadcastHashJoin, outerJoin);
                 if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
@@ -1346,10 +1346,13 @@ public class JoinNode {
                             hashJoinExpr, hintBroadcastHashJoin, outerJoin);
                 }
             }
-            if (bcastHjPlan == PlanNode.NO_PLAN && commutativeBcastHjPlan == PlanNode.NO_PLAN) {
+            if (bcastHjPlan != PlanNode.NO_PLAN || commutativeBcastHjPlan != PlanNode.NO_PLAN) {
+                // hintBroadcastHashJoin has been used.
+                joinEnum.joinHints.put(hintBroadcastHashJoin, null);
+            } else if (!(joinEnum.joinHints.containsKey(hintBroadcastHashJoin)
+                    && joinEnum.joinHints.get(hintBroadcastHashJoin) == null)) {
                 // Hints are attached to predicates, so newJoinConditions should not be empty, but adding the check to be safe.
                 if (!joinEnum.getJoinConditions().isEmpty() && !newJoinConditions.isEmpty()) {
-                    IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
                     if (!joinEnum.joinHints.containsKey(hintBroadcastHashJoin)) {
                         joinEnum.joinHints.put(hintBroadcastHashJoin,
                                 Warning.of(
@@ -1384,16 +1387,17 @@ public class JoinNode {
                 }
             }
         } else if (hintNLJoin != null) {
-            joinEnum.joinHints.put(hintNLJoin, null);
             nljPlan = buildNLJoinPlan(leftJn, rightJn, leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
             if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
                 commutativeNljPlan = buildNLJoinPlan(rightJn, leftJn, rightPlan, leftPlan, nestedLoopJoinExpr,
                         hintNLJoin, outerJoin);
             }
-            if (nljPlan == PlanNode.NO_PLAN && commutativeNljPlan == PlanNode.NO_PLAN) {
+            if (nljPlan != PlanNode.NO_PLAN || commutativeNljPlan != PlanNode.NO_PLAN) {
+                // hintNLJ has been used.
+                joinEnum.joinHints.put(hintNLJoin, null);
+            } else if (!(joinEnum.joinHints.containsKey(hintNLJoin) && joinEnum.joinHints.get(hintNLJoin) == null)) {
                 // Hints are attached to predicates, so newJoinConditions should not be empty, but adding the check to be safe.
                 if (!joinEnum.getJoinConditions().isEmpty() && !newJoinConditions.isEmpty()) {
-                    IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
                     if (!joinEnum.joinHints.containsKey(hintNLJoin)) {
                         joinEnum.joinHints.put(hintNLJoin,
                                 Warning.of(
