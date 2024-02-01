@@ -437,10 +437,10 @@ public class S3Utils {
                     warningCollector);
 
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-            if (!listObjectsResponse.isTruncated()) {
-                break;
-            } else {
+            if (listObjectsResponse.isTruncated() != null && listObjectsResponse.isTruncated()) {
                 newMarker = listObjectsResponse.nextContinuationToken();
+            } else {
+                break;
             }
         }
 
@@ -480,10 +480,10 @@ public class S3Utils {
                     warningCollector);
 
             // Mark the flag as done if done, otherwise, get the marker of the previous response for the next request
-            if (!listObjectsResponse.isTruncated()) {
-                break;
-            } else {
+            if (listObjectsResponse.isTruncated() != null && listObjectsResponse.isTruncated()) {
                 newMarker = listObjectsResponse.nextMarker();
+            } else {
+                break;
             }
         }
 
