@@ -1303,15 +1303,8 @@ public class JoinNode {
                         buildHashJoinPlan(rightJn, leftJn, rightPlan, leftPlan, hashJoinExpr, hintHashJoin, outerJoin);
             }
         }
-        if (hjPlan == PlanNode.NO_PLAN && commutativeHjPlan == PlanNode.NO_PLAN) {
-            // No hinted HJ plan, issue an inapplicable hint warning.
-            inapplicableHintWarning(hintHashJoin, newJoinConditions);
-            return false;
-        }
 
-        // hintHashJoin has been used, no warning to be issued.
-        joinEnum.joinHints.put(hintHashJoin, null);
-        return true;
+        return handleHints(hjPlan, commutativeHjPlan, hintHashJoin, newJoinConditions);
     }
 
     private boolean buildHintedBcastHJPlans(JoinNode leftJn, JoinNode rightJn, PlanNode leftPlan, PlanNode rightPlan,
@@ -1342,15 +1335,8 @@ public class JoinNode {
                         hintBroadcastHashJoin, outerJoin);
             }
         }
-        if (bcastHjPlan == PlanNode.NO_PLAN && commutativeBcastHjPlan == PlanNode.NO_PLAN) {
-            // No hinted BHJ plan, issue an inapplicable hint warning.
-            inapplicableHintWarning(hintBroadcastHashJoin, newJoinConditions);
-            return false;
-        }
 
-        // hintBroadcastHashJoin has been used, no warning to be issued.
-        joinEnum.joinHints.put(hintBroadcastHashJoin, null);
-        return true;
+        return handleHints(bcastHjPlan, commutativeBcastHjPlan, hintBroadcastHashJoin, newJoinConditions);
     }
 
     private boolean buildHintedNLJPlans(JoinNode leftJn, JoinNode rightJn, PlanNode leftPlan, PlanNode rightPlan,
@@ -1363,14 +1349,26 @@ public class JoinNode {
             commutativeNljPlan =
                     buildNLJoinPlan(rightJn, leftJn, rightPlan, leftPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
         }
-        if (nljPlan == PlanNode.NO_PLAN && commutativeNljPlan == PlanNode.NO_PLAN) {
-            // No hinted NLJ plan, issue an inapplicable hint warning.
-            inapplicableHintWarning(hintNLJoin, newJoinConditions);
-            return false;
+
+        return handleHints(nljPlan, commutativeNljPlan, hintNLJoin, newJoinConditions);
+    }
+
+    private boolean handleHints(int plan, int commutativePlan, IExpressionAnnotation hint,
+            List<Integer> newJoinConditions) {
+        if (plan != PlanNode.NO_PLAN || commutativePlan != PlanNode.NO_PLAN) {
+            // The hint has been applied to produce a valid plan.
+            joinEnum.joinHints.put(hint, null);
+            return true;
         }
 
-        // hintNLJoin has been used, no warning to be issued.
-        joinEnum.joinHints.put(hintNLJoin, null);
+        // No hinted plan, issue an inapplicable hint warning if the hint
+        // has not been applied previously.
+        if (!(joinEnum.joinHints.containsKey(hint) && joinEnum.joinHints.get(hint) == null)) {
+            inapplicableHintWarning(hint, newJoinConditions);
+            return false; // This will trigger enumeration of all non-hinted plans.
+        }
+
+        // The hint has been applied previously, do not enumerate all non-hinted plans.
         return true;
     }
 
@@ -1398,6 +1396,7 @@ public class JoinNode {
     private void inapplicableHintWarning(IExpressionAnnotation hint, List<Integer> newJoinConditions) {
         HashJoinExpressionAnnotation hintHashJoin;
         BroadcastExpressionAnnotation hintBroadcastHashJoin;
+
         String param1 = "";
         String param2 = "";
 
