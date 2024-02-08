@@ -32,7 +32,7 @@ public class PlanNode {
     protected static int NO_PLAN = -1;
 
     private final JoinEnum joinEnum;
-    boolean outerJoin = false;
+    protected boolean outerJoin;
     protected int allPlansIndex;
     protected int[] planIndexes;
     protected int[] jnIndexes;
@@ -45,6 +45,9 @@ public class PlanNode {
     protected JoinMethod joinOp;
     protected boolean indexHint;
     protected IExpressionAnnotation joinHint;
+
+    protected int numHintsUsed;
+
     // Used to indicate which side to build for HJ and which side to broadcast for BHJ.
     protected HashJoinExpressionAnnotation.BuildSide side;
     protected ScanMethod scanOp;
@@ -69,6 +72,10 @@ public class PlanNode {
         joinEnum = joinE;
         planIndexes = new int[2]; // 0 is for left, 1 is for right
         jnIndexes = new int[2]; // join node index(es)
+        outerJoin = false;
+        indexHint = false;
+        joinHint = null;
+        numHintsUsed = 0;
     }
 
     public int getIndex() {

@@ -776,7 +776,10 @@ public class JoinNode {
             pn.setRightPlanIndex(PlanNode.NO_PLAN); // There ane no plans below this plan.
             pn.setOpCost(totalCost);
             pn.setScanMethod(PlanNode.ScanMethod.INDEX_SCAN);
-            pn.indexHint = mandatoryIndexesInfo.size() > 0;
+            if (mandatoryIndexesInfo.size() > 0) {
+                pn.indexHint = true;
+                pn.numHintsUsed = 1;
+            }
             pn.setTotalCost(totalCost);
             allPlans.add(pn);
             this.planIndexesArray.add(pn.allPlansIndex);
@@ -949,6 +952,11 @@ public class JoinNode {
                 pn.setRightPlanIndex(rightPlan.allPlansIndex);
                 pn.joinOp = PlanNode.JoinMethod.HYBRID_HASH_JOIN; // need to check that all the conditions have equality predicates ONLY.
                 pn.joinHint = hintHashJoin;
+                pn.numHintsUsed = allPlans.get(pn.getLeftPlanIndex()).numHintsUsed
+                        + allPlans.get(pn.getRightPlanIndex()).numHintsUsed;
+                if (hintHashJoin != null) {
+                    pn.numHintsUsed++;
+                }
                 pn.side = HashJoinExpressionAnnotation.BuildSide.RIGHT;
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = hjCost;
@@ -1018,6 +1026,11 @@ public class JoinNode {
                 pn.setRightPlanIndex(rightPlan.allPlansIndex);
                 pn.joinOp = PlanNode.JoinMethod.BROADCAST_HASH_JOIN; // need to check that all the conditions have equality predicates ONLY.
                 pn.joinHint = hintBroadcastHashJoin;
+                pn.numHintsUsed = allPlans.get(pn.getLeftPlanIndex()).numHintsUsed
+                        + allPlans.get(pn.getRightPlanIndex()).numHintsUsed;
+                if (hintBroadcastHashJoin != null) {
+                    pn.numHintsUsed++;
+                }
                 pn.side = HashJoinExpressionAnnotation.BuildSide.RIGHT;
                 pn.joinExpr = hashJoinExpr;
                 pn.opCost = bcastHjCost;
@@ -1083,6 +1096,11 @@ public class JoinNode {
             pn.setRightPlanIndex(rightPlan.allPlansIndex);
             pn.joinOp = PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN;
             pn.joinHint = hintNLJoin;
+            pn.numHintsUsed = allPlans.get(pn.getLeftPlanIndex()).numHintsUsed
+                    + allPlans.get(pn.getRightPlanIndex()).numHintsUsed;
+            if (hintNLJoin != null) {
+                pn.numHintsUsed++;
+            }
             pn.joinExpr = nestedLoopJoinExpr; // save it so can be used to add the NESTED annotation in getNewTree.
             pn.opCost = nljCost;
             pn.totalCost = totalCost;
@@ -1431,29 +1449,25 @@ public class JoinNode {
         List<PlanNode> allPlans = joinEnum.allPlans;
         ICost cheapestCost = joinEnum.getCostHandle().maxCost();
         PlanNode cheapestPlanNode = null;
-        boolean isCheapestPlanHinted = false;
-        boolean isPlanHinted;
+        int numHintsUsedInCheapestPlan = 0;
 
         for (int planIndex : this.planIndexesArray) {
             PlanNode plan = allPlans.get(planIndex);
-            isPlanHinted = plan.joinHint != null || plan.indexHint;
-
-            if (isPlanHinted && !isCheapestPlanHinted) {
-                // The hinted plan wins!
+            if (plan.numHintsUsed > numHintsUsedInCheapestPlan) {
+                // "plan" has used more hints than "cheapestPlan", "plan" wins!
                 cheapestPlanNode = plan;
                 cheapestCost = plan.totalCost;
-                isCheapestPlanHinted = true;
-            } else if (isPlanHinted || !isCheapestPlanHinted) {
-                // Either both plans are hinted, or both are non-hinted.
+                numHintsUsedInCheapestPlan = plan.numHintsUsed;
+            } else if (plan.numHintsUsed == numHintsUsedInCheapestPlan) {
+                // Either both "plan" and "cheapestPlan" are hinted, or both are non-hinted.
                 // Cost is the decider.
                 if (plan.totalCost.costLT(cheapestCost)) {
                     cheapestPlanNode = plan;
                     cheapestCost = plan.totalCost;
-                    isCheapestPlanHinted = isPlanHinted;
                 }
             } else {
-                // this is the case where isPlanHinted == false AND isCheapestPlanHinted == true
-                // Nothing to do.
+                // This is the case where "plan" has used fewer hints than "cheapestPlan".
+                // We have already captured the cheapest plan, nothing to do.
             }
         }
         return cheapestPlanNode;
