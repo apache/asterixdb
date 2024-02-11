@@ -766,10 +766,6 @@ public class JoinEnum {
         // join nodes have been allocated in the JoinEnum
         // add a dummy Plan Node; we do not want planNode at position 0 to be a valid plan
         PlanNode pn = new PlanNode(0, this);
-        pn.jn = null;
-        pn.jnIndexes[0] = pn.jnIndexes[1] = JoinNode.NO_JN;
-        pn.planIndexes[0] = pn.planIndexes[1] = PlanNode.NO_PLAN;
-        pn.opCost = pn.totalCost = new Cost(0);
         allPlans.add(pn);
 
         boolean noCards = false;
@@ -1078,7 +1074,7 @@ public class JoinEnum {
     }
 
     private void dumpContext(StringBuilder sb) {
-        sb.append("\n\nOPT CONTEXT").append('\n');
+        sb.append("\n\nCBO CONTEXT").append('\n');
         sb.append("----------------------------------------\n");
         sb.append("BLOCK SIZE = ").append(getCostMethodsHandle().getBufferCachePageSize()).append('\n');
         sb.append("DOP = ").append(getCostMethodsHandle().getDOP()).append('\n');
