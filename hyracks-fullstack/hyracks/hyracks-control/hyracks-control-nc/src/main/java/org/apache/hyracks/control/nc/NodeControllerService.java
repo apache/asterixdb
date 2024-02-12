@@ -45,6 +45,7 @@ import org.apache.hyracks.api.application.INCApplication;
 import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.api.client.NodeStatus;
 import org.apache.hyracks.api.comm.NetworkAddress;
+import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -56,7 +57,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponentManager;
 import org.apache.hyracks.api.lifecycle.LifeCycleComponentManager;
-import org.apache.hyracks.api.network.INetworkSecurityConfig;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.result.IResultPartitionManager;
 import org.apache.hyracks.api.service.IControllerService;
@@ -197,8 +197,7 @@ public class NodeControllerService implements IControllerService {
         if (application == null) {
             throw new IllegalArgumentException("INCApplication cannot be null");
         }
-        final INetworkSecurityConfig securityConfig = getNetworkSecurityConfig();
-        networkSecurityManager = new NetworkSecurityManager(securityConfig);
+        networkSecurityManager = createNetworkSecurityManager(ncConfig.getAppConfig(), application);
         this.application = application;
         id = ncConfig.getNodeId();
         if (id == null) {
@@ -726,8 +725,9 @@ public class NodeControllerService implements IControllerService {
         return networkSecurityManager;
     }
 
-    protected INetworkSecurityConfig getNetworkSecurityConfig() {
-        return NetworkSecurityConfig.of(ncConfig.isSslEnabled(), ncConfig.getKeyStorePath(),
-                ncConfig.getKeyStorePassword(), ncConfig.getTrustStorePath());
+    protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig,
+            INCApplication application) {
+        return new NetworkSecurityManager(NetworkSecurityConfig.of(ncConfig.isSslEnabled(), ncConfig.getKeyStorePath(),
+                ncConfig.getKeyStorePassword(), ncConfig.getTrustStorePath()));
     }
 }

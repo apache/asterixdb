@@ -35,6 +35,7 @@ import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.hyracks.api.application.IApplication;
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.client.ClusterControllerInfo;
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -49,7 +50,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobIdFactory;
 import org.apache.hyracks.api.job.JobParameterByteStore;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
-import org.apache.hyracks.api.network.INetworkSecurityConfig;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.api.service.IControllerService;
 import org.apache.hyracks.api.topology.ClusterTopology;
@@ -170,8 +170,7 @@ public class ClusterControllerService implements IControllerService {
         File jobLogFolder = new File(ccConfig.getRootDir(), "logs/jobs");
         jobLog = new LogFile(jobLogFolder);
 
-        final INetworkSecurityConfig securityConfig = getNetworkSecurityConfig();
-        networkSecurityManager = new NetworkSecurityManager(securityConfig);
+        networkSecurityManager = createNetworkSecurityManager(ccConfig.getAppConfig(), application);
 
         // WorkQueue is in charge of heartbeat as well as other events.
         workQueue = new WorkQueue("ClusterController", Thread.MAX_PRIORITY);
@@ -567,8 +566,9 @@ public class ClusterControllerService implements IControllerService {
         return networkSecurityManager;
     }
 
-    protected INetworkSecurityConfig getNetworkSecurityConfig() {
-        return NetworkSecurityConfig.of(ccConfig.isSslEnabled(), ccConfig.getKeyStorePath(),
-                ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath());
+    protected INetworkSecurityManager createNetworkSecurityManager(IApplicationConfig appConfig, IApplication app)
+            throws Exception {
+        return new NetworkSecurityManager(NetworkSecurityConfig.of(ccConfig.isSslEnabled(), ccConfig.getKeyStorePath(),
+                ccConfig.getKeyStorePassword(), ccConfig.getTrustStorePath()));
     }
 }

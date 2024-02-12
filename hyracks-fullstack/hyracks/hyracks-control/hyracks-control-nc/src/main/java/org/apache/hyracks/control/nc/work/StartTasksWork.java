@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.control.nc.work;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -301,12 +299,9 @@ public class StartTasksWork extends AbstractWork {
                         NetworkAddress networkAddress = inputAddresses[i][j];
                         PartitionId pid = new PartitionId(jobId, inputs.get(i).getConnectorId(), j,
                                 td.getTaskAttemptId().getTaskId().getPartition());
-                        PartitionChannel channel = new PartitionChannel(pid,
-                                new NetworkInputChannel(ncs.getNetworkManager(),
-                                        new InetSocketAddress(
-                                                InetAddress.getByAddress(networkAddress.lookupIpAddress()),
-                                                networkAddress.getPort()),
-                                        pid, 5));
+                        PartitionChannel channel =
+                                new PartitionChannel(pid, new NetworkInputChannel(ncs.getNetworkManager(),
+                                        networkAddress.toResolvedInetSocketAddress(), pid, 5));
                         channels.add(channel);
                     }
                 }

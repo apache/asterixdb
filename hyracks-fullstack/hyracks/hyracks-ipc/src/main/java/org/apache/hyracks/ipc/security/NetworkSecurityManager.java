@@ -36,7 +36,7 @@ import org.apache.hyracks.ipc.sockets.SslSocketChannelFactory;
 public class NetworkSecurityManager implements INetworkSecurityManager {
 
     private volatile INetworkSecurityConfig config;
-    private final ISocketChannelFactory sslSocketFactory;
+    protected final ISocketChannelFactory sslSocketFactory;
     public static final String TSL_VERSION = "TLSv1.2";
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
