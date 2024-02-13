@@ -18,37 +18,27 @@
  */
 package org.apache.asterix.external.parser.factory;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.api.IStreamDataParser;
-import org.apache.asterix.external.parser.JSONDataParser;
+import org.apache.asterix.external.parser.AvroDataParser;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.avro.generic.GenericRecord;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-
-public class JSONDataParserFactory extends AbstractGenericDataParserFactory<char[]> {
+public class AvroDataParserFactory extends AbstractGenericDataParserFactory<GenericRecord> {
 
     private static final long serialVersionUID = 1L;
-    private static final List<String> PARSER_FORMAT = Collections.unmodifiableList(
-            Arrays.asList(ExternalDataConstants.FORMAT_JSON_LOWER_CASE, ExternalDataConstants.FORMAT_JSON_UPPER_CASE));
-    private final JsonFactory jsonFactory;
+    private static final List<String> PARSER_FORMAT = List.of(ExternalDataConstants.FORMAT_AVRO);
 
-    public JSONDataParserFactory() {
-        jsonFactory = new JsonFactory();
-        jsonFactory.configure(JsonParser.Feature.STRICT_DUPLICATE_DETECTION, true);
-        jsonFactory.configure(JsonFactory.Feature.CANONICALIZE_FIELD_NAMES, true);
-        jsonFactory.configure(JsonFactory.Feature.INTERN_FIELD_NAMES, true);
+    public AvroDataParserFactory() {
     }
 
     @Override
     public IStreamDataParser createInputStreamParser(IExternalDataRuntimeContext context) {
-        return createParser(context);
+        throw new UnsupportedOperationException("jkghdfkgd");
     }
 
     @Override
@@ -62,17 +52,17 @@ public class JSONDataParserFactory extends AbstractGenericDataParserFactory<char
     }
 
     @Override
-    public IRecordDataParser<char[]> createRecordParser(IExternalDataRuntimeContext context) {
+    public IRecordDataParser<GenericRecord> createRecordParser(IExternalDataRuntimeContext context) {
         return createParser(context);
     }
 
     @Override
     public Class<?> getRecordClass() {
-        return char[].class;
+        return GenericRecord.class;
     }
 
-    private JSONDataParser createParser(IExternalDataRuntimeContext context) {
-        return new JSONDataParser(recordType, jsonFactory, context);
+    private AvroDataParser createParser(IExternalDataRuntimeContext context) {
+        return new AvroDataParser(context);
     }
 
 }

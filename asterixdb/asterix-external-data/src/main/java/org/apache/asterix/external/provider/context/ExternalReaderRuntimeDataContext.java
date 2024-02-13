@@ -21,13 +21,13 @@ package org.apache.asterix.external.provider.context;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
-import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 
 public class ExternalReaderRuntimeDataContext extends ExternalStreamRuntimeDataContext {
     private final IExternalFilterValueEmbedder valueEmbedder;
-    private StreamRecordReader reader;
+    private IRecordReader<?> reader;
 
     public ExternalReaderRuntimeDataContext(IHyracksTaskContext context, int partition,
             IExternalFilterValueEmbedder valueEmbedder) {
@@ -59,7 +59,7 @@ public class ExternalReaderRuntimeDataContext extends ExternalStreamRuntimeDataC
         return valueEmbedder;
     }
 
-    public void setReader(StreamRecordReader reader) {
+    public void setReader(IRecordReader<?> reader) {
         this.reader = reader;
     }
 }

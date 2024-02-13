@@ -21,6 +21,7 @@ package org.apache.asterix.external.api;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -28,7 +29,7 @@ public interface IRecordReaderFactory<T> extends IExternalDataSourceFactory {
 
     IRecordReader<? extends T> createRecordReader(IExternalDataRuntimeContext context) throws HyracksDataException;
 
-    Class<?> getRecordClass();
+    Class<?> getRecordClass() throws AsterixException;
 
     @Override
     default DataSourceType getDataSourceType() {

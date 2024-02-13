@@ -190,6 +190,7 @@ public class ExternalDataConstants {
      */
     public static final String FORMAT_BINARY = "binary";
     public static final String FORMAT_ADM = "adm";
+    public static final String FORMAT_AVRO = "avro";
     public static final String FORMAT_JSON_LOWER_CASE = "json";
     public static final String FORMAT_JSON_UPPER_CASE = "JSON";
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
@@ -210,7 +211,7 @@ public class ExternalDataConstants {
     static {
         ALL_FORMATS = Set.of(FORMAT_BINARY, FORMAT_ADM, FORMAT_JSON_LOWER_CASE, FORMAT_DELIMITED_TEXT, FORMAT_TWEET,
                 FORMAT_RSS, FORMAT_SEMISTRUCTURED, FORMAT_LINE_SEPARATED, FORMAT_HDFS_WRITABLE, FORMAT_KV, FORMAT_CSV,
-                FORMAT_TSV, FORMAT_PARQUET);
+                FORMAT_TSV, FORMAT_PARQUET, FORMAT_AVRO);
         TEXTUAL_FORMATS = Set.of(FORMAT_ADM, FORMAT_JSON_LOWER_CASE, FORMAT_CSV, FORMAT_TSV);
     }
 

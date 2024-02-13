@@ -22,3 +22,4 @@ org.apache.asterix.external.parser.factory.RecordWithMetadataParserFactory
 org.apache.asterix.external.parser.factory.RSSParserFactory
 org.apache.asterix.external.parser.factory.TweetParserFactory
 org.apache.asterix.external.parser.factory.NoOpDataParserFactory
+org.apache.asterix.external.parser.factory.AvroDataParserFactory

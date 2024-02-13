@@ -32,8 +32,10 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.input.record.reader.stream.AvroRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -53,6 +55,18 @@ public class StreamRecordReaderProvider {
 
     private StreamRecordReaderProvider() {
         // do nothing
+    }
+
+    public static Class<?> getRecordClass(Map<String, String> configuration) throws AsterixException {
+        String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
+        if (format == null) {
+            throw new AsterixException("Unspecified parameter: " + ExternalDataConstants.KEY_FORMAT);
+        }
+        if (format.equalsIgnoreCase(ExternalDataConstants.FORMAT_AVRO)) {
+            return GenericRecord.class;
+        }
+        // By default, return char[]
+        return char[].class;
     }
 
     public static Class findRecordReaderClazzWithConfig(Map<String, String> configuration, String format)
@@ -90,12 +104,14 @@ public class StreamRecordReaderProvider {
 
     public static Class getRecordReaderClazz(Map<String, String> configuration) throws AsterixException {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
-
         if (recordReaders == null) {
             recordReaders = initRecordReaders();
         }
 
         if (format != null) {
+            if (format.equalsIgnoreCase(ExternalDataConstants.FORMAT_AVRO)) {
+                return AvroRecordReader.class;
+            }
             if (recordReaders.containsKey(format)) {
                 return findRecordReaderClazzWithConfig(configuration, format);
             }

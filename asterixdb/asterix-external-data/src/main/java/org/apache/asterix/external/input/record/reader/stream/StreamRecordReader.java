@@ -18,27 +18,21 @@
  */
 package org.apache.asterix.external.input.record.reader.stream;
 
-import static org.apache.asterix.external.util.ExternalDataConstants.EMPTY_STRING;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_REDACT_WARNINGS;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IRawRecord;
-import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IStreamNotificationHandler;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
 import org.apache.asterix.external.input.record.CharArrayRecord;
 import org.apache.asterix.external.input.stream.AsterixInputStreamReader;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
-import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public abstract class StreamRecordReader implements IRecordReader<char[]>, IStreamNotificationHandler {
+public abstract class StreamRecordReader extends AbstractStreamRecordReader<char[]>
+        implements IStreamNotificationHandler {
     protected AsterixInputStreamReader reader;
     protected CharArrayRecord record;
     protected char[] inputBuffer;
@@ -46,18 +40,13 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     protected int bufferPosn = 0;
     protected boolean done = false;
     protected IFeedLogManager feedLogManager;
-    private Supplier<String> dataSourceName = EMPTY_STRING;
-    private Supplier<String> previousDataSourceName = EMPTY_STRING;
 
-    public void configure(AsterixInputStream inputStream, Map<String, String> config) {
+    protected void configure(AsterixInputStream inputStream, Map<String, String> config) {
         int bufferSize = ExternalDataUtils.getOrDefaultBufferSize(config);
         this.reader = new AsterixInputStreamReader(inputStream, bufferSize);
         record = new CharArrayRecord();
         inputBuffer = new char[bufferSize];
-        if (!ExternalDataUtils.isTrue(config, KEY_REDACT_WARNINGS)) {
-            this.dataSourceName = reader::getStreamName;
-            this.previousDataSourceName = reader::getPreviousStreamName;
-        }
+        setSuppliers(config, reader::getStreamName, reader::getPreviousStreamName);
     }
 
     @Override
@@ -88,9 +77,6 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
     }
 
     @Override
-    public abstract boolean hasNext() throws IOException;
-
-    @Override
     public void setFeedLogManager(IFeedLogManager feedLogManager) throws HyracksDataException {
         this.feedLogManager = feedLogManager;
         reader.setFeedLogManager(feedLogManager);
@@ -115,19 +101,5 @@ public abstract class StreamRecordReader implements IRecordReader<char[]>, IStre
         record.reset();
     }
 
-    @Override
-    public final Supplier<String> getDataSourceName() {
-        return dataSourceName;
-    }
-
-    String getPreviousStreamName() {
-        return previousDataSourceName.get();
-    }
-
-    public abstract List<String> getRecordReaderFormats();
-
     public abstract String getRequiredConfigs();
-
-    public abstract void configure(IHyracksTaskContext ctx, AsterixInputStream inputStream, Map<String, String> config)
-            throws HyracksDataException;
 }
