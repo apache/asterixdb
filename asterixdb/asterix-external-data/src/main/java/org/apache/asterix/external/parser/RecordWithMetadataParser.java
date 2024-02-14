@@ -88,7 +88,7 @@ public class RecordWithMetadataParser<T, O> implements IRecordWithMetadataParser
     }
 
     @Override
-    public void parseMeta(DataOutput out) throws HyracksDataException {
+    public void parseMeta(DataOutput out, IRawRecord<? extends T> record) throws HyracksDataException {
         try {
             if (rwm.getRecord().size() == 0) {
                 out.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);

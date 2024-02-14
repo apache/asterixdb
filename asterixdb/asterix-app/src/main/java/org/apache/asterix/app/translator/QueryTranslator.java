@@ -981,7 +981,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         compactionPolicy = StorageConstants.DEFAULT_FILTERED_DATASET_COMPACTION_POLICY_NAME;
                         compactionPolicyProperties = StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES;
                     }
-                    boolean isDatasetWithoutTypeSpec = aRecordType.getFieldNames().length == 0 && metaRecType == null;
+                    boolean isDatasetWithoutTypeSpec = isDatasetWithoutTypeSpec(dd, aRecordType, metaRecType);
                     // Validate dataset properties if the format is COLUMN
                     ColumnPropertiesValidationUtil.validate(sourceLoc, datasetFormatInfo.getFormat(), compactionPolicy,
                             filterField);
@@ -1106,6 +1106,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             throw e;
         }
         return Optional.of(dataset);
+    }
+
+    protected boolean isDatasetWithoutTypeSpec(DatasetDecl datasetDecl, ARecordType aRecordType,
+            ARecordType metaRecType) {
+        return aRecordType.getFieldNames().length == 0 && metaRecType == null;
     }
 
     protected IDataset createDataset(DatasetDecl dd, String database, DataverseName dataverseName, String datasetName,

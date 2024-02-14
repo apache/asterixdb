@@ -66,8 +66,8 @@ public class MetadataManagerUtil {
     }
 
     /**
-     * Checks if a dataset is created without type specification and has no meta part. For such datasets,
-     * creates and returns a record type based on the primary key and primary key types information included in the
+     * Checks if a dataset is created without type specification and has no meta part or if the datasetWithoutTypeSpecification is true.
+     * For such datasets, creates and returns a record type based on the primary key and primary key types information included in the
      * internal details.
      *
      * @param itemType     record type of the dataset
@@ -78,11 +78,11 @@ public class MetadataManagerUtil {
      */
     public static IAType findTypeForDatasetWithoutType(IAType itemType, IAType metaItemType, Dataset dataset)
             throws AlgebricksException {
-        ARecordType recordType = (ARecordType) itemType;
-        if (recordType.getFieldNames().length == 0 && metaItemType == null
-                && dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL) {
+        if (dataset.getDatasetType() == DatasetConfig.DatasetType.INTERNAL) {
             InternalDatasetDetails dsDetails = (InternalDatasetDetails) dataset.getDatasetDetails();
-            return findType(dsDetails.getPrimaryKey(), dsDetails.getPrimaryKeyType());
+            if (dsDetails.isDatasetWithoutTypeSpecification()) {
+                return findType(dsDetails.getPrimaryKey(), dsDetails.getPrimaryKeyType());
+            }
         }
         return itemType;
     }

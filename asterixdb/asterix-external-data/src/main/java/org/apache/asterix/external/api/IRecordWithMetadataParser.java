@@ -24,7 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public interface IRecordWithMetadataParser<T> extends IRecordDataParser<T> {
-    public void parseMeta(DataOutput out) throws HyracksDataException;
+    void parseMeta(DataOutput out, IRawRecord<? extends T> record) throws HyracksDataException;
 
     void appendLastParsedPrimaryKeyToTuple(ArrayTupleBuilder tb) throws HyracksDataException;
 }
