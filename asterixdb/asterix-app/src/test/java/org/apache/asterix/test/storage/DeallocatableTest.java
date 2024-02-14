@@ -22,9 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.app.bootstrap.TestNodeController;
-import org.apache.asterix.replication.management.NetworkingUtil;
 import org.apache.asterix.test.common.TestHelper;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
+import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.ConnectorDescriptorId;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
@@ -63,8 +63,8 @@ public class DeallocatableTest {
             final IHyracksTaskContext ctx = nc.createTestContext(jobId, 0, true);
             final ConnectorDescriptorId codId = new ConnectorDescriptorId(1);
             final PartitionId pid = new PartitionId(ctx.getJobletContext().getJobId(), codId, 1, 1);
-            final ChannelControlBlock ccb = ncs.getNetworkManager()
-                    .connect(NetworkingUtil.getSocketAddress(ncs.getNetworkManager().getLocalNetworkAddress()));
+            NetworkAddress netAddr = ncs.getNetworkManager().getLocalNetworkAddress();
+            final ChannelControlBlock ccb = ncs.getNetworkManager().connect(netAddr.toResolvedInetSocketAddress());
             final NetworkOutputChannel networkOutputChannel = new NetworkOutputChannel(ccb, 0);
             final MaterializingPipelinedPartition mpp =
                     new MaterializingPipelinedPartition(ctx, ncs.getPartitionManager(), pid, taId, ncs.getExecutor());

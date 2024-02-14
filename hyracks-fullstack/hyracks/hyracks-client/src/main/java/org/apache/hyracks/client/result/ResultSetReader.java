@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.client.result;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -28,7 +26,6 @@ import org.apache.hyracks.api.channels.IInputChannel;
 import org.apache.hyracks.api.channels.IInputChannelMonitor;
 import org.apache.hyracks.api.comm.FrameHelper;
 import org.apache.hyracks.api.comm.IFrame;
-import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -146,8 +143,7 @@ public class ResultSetReader implements IResultSetReader {
 
     private SocketAddress getSocketAddress(ResultDirectoryRecord record) throws HyracksDataException {
         try {
-            final NetworkAddress netAddr = record.getNetworkAddress();
-            return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
+            return record.getNetworkAddress().toResolvedInetSocketAddress();
         } catch (UnknownHostException e) {
             throw HyracksDataException.create(e);
         }

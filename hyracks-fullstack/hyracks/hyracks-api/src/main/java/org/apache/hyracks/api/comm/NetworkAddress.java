@@ -35,8 +35,6 @@ public final class NetworkAddress implements IWritable, Serializable {
     private String address;
     // Cached locally, not serialized
     private volatile byte[] ipAddress;
-    // Cached locally, not serialized
-    private volatile InetSocketAddress inetSocketAddress;
 
     private int port;
 
@@ -76,11 +74,12 @@ public final class NetworkAddress implements IWritable, Serializable {
         return ipAddress;
     }
 
-    public InetSocketAddress resolveInetSocketAddress() {
-        if (inetSocketAddress == null) {
-            inetSocketAddress = new InetSocketAddress(address, port);
+    public InetSocketAddress toResolvedInetSocketAddress() throws UnknownHostException {
+        InetSocketAddress addr = toInetSocketAddress();
+        if (addr.isUnresolved()) {
+            throw new UnknownHostException(getAddress());
         }
-        return inetSocketAddress;
+        return addr;
     }
 
     public InetSocketAddress toInetSocketAddress() {

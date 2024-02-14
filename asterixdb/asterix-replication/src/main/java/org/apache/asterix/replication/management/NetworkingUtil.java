@@ -21,18 +21,14 @@ package org.apache.asterix.replication.management;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.SocketAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Enumeration;
 
-import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.api.network.ISocketChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -129,16 +125,6 @@ public class NetworkingUtil {
         long pos = 0;
         long fileSize = fileChannel.size();
         fileChannel.transferFrom(socketChannel, pos, fileSize);
-    }
-
-    public static InetSocketAddress getSocketAddress(SocketChannel socketChannel) {
-        String hostAddress = socketChannel.socket().getInetAddress().getHostAddress();
-        int port = socketChannel.socket().getPort();
-        return InetSocketAddress.createUnresolved(hostAddress, port);
-    }
-
-    public static SocketAddress getSocketAddress(NetworkAddress netAddr) throws UnknownHostException {
-        return new InetSocketAddress(InetAddress.getByAddress(netAddr.lookupIpAddress()), netAddr.getPort());
     }
 
     public static boolean isHealthy(ISocketChannel sc) {
