@@ -31,7 +31,7 @@ import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.IAType;
 
 public abstract class AbstractGenericDataParserFactory<T> extends AbstractRecordStreamParserFactory<T> {
-
+    private static final long serialVersionUID = 1L;
     private static final List<ATypeTag> UNSUPPORTED_TYPES = Collections
             .unmodifiableList(Arrays.asList(ATypeTag.MULTISET, ATypeTag.POINT3D, ATypeTag.CIRCLE, ATypeTag.RECTANGLE,
                     ATypeTag.INTERVAL, ATypeTag.DAYTIMEDURATION, ATypeTag.DURATION, ATypeTag.BINARY));
