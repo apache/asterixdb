@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.network.ISocketChannel;
@@ -77,11 +78,13 @@ public class IPCConnectionManager {
     private volatile boolean stopped;
 
     private final ISocketChannelFactory socketChannelFactory;
+    private final ExecutorService executor;
 
-    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory)
-            throws IOException {
+    IPCConnectionManager(IPCSystem system, InetSocketAddress socketAddress, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor) throws IOException {
         this.system = system;
         this.socketChannelFactory = socketChannelFactory;
+        this.executor = executor;
         this.serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.socket().setReuseAddress(true);
         serverSocketChannel.configureBlocking(false);
@@ -514,8 +517,10 @@ public class IPCConnectionManager {
         }
 
         private void asyncHandshake(ISocketChannel socketChannel, IPCHandle handle, SelectionKey channelKey) {
-            CompletableFuture.supplyAsync(socketChannel::handshake).exceptionally(ex -> false).thenAccept(
-                    handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, socketChannel, handle, channelKey));
+            CompletableFuture.supplyAsync(socketChannel::handshake, IPCConnectionManager.this.executor)
+                    .exceptionally(ex -> false)
+                    .thenAccept(handshakeSuccess -> handleHandshakeCompletion(handshakeSuccess, socketChannel, handle,
+                            channelKey));
         }
 
         private void handleHandshakeCompletion(Boolean handshakeSuccess, ISocketChannel socketChannel, IPCHandle handle,

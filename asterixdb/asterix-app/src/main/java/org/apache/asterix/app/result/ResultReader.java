@@ -65,6 +65,6 @@ public class ResultReader {
     public static ResultSet createResultSet(IHyracksClientConnection hcc, IControllerService srv,
             CompilerProperties compilerProperties) throws Exception {
         return new ResultSet(hcc, srv.getNetworkSecurityManager().getSocketChannelFactory(),
-                compilerProperties.getFrameSize(), ResultReader.NUM_READERS);
+                compilerProperties.getFrameSize(), ResultReader.NUM_READERS, srv.getExecutor());
     }
 }

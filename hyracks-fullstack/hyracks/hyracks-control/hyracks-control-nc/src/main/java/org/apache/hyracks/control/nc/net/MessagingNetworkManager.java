@@ -58,7 +58,7 @@ public class MessagingNetworkManager {
             ISocketChannelFactory socketChannelFactory) {
         this.ncs = ncs;
         md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
-                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory);
+                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory, ncs.getExecutor());
         publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }
 

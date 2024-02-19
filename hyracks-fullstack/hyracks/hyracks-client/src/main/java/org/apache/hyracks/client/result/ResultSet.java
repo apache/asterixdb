@@ -20,6 +20,7 @@ package org.apache.hyracks.client.result;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.comm.NetworkAddress;
@@ -43,11 +44,12 @@ public class ResultSet implements IResultSet, Closeable {
     private final IHyracksCommonContext resultClientCtx;
 
     public ResultSet(IHyracksClientConnection hcc, ISocketChannelFactory socketChannelFactory, int frameSize,
-            int nReaders) throws Exception {
+            int nReaders, ExecutorService executor) throws Exception {
         NetworkAddress ddsAddress = hcc.getResultDirectoryAddress();
-        resultDirectory = new ResultDirectory(ddsAddress.getAddress(), ddsAddress.getPort(), socketChannelFactory);
+        resultDirectory =
+                new ResultDirectory(ddsAddress.getAddress(), ddsAddress.getPort(), socketChannelFactory, executor);
 
-        netManager = new ClientNetworkManager(nReaders, socketChannelFactory);
+        netManager = new ClientNetworkManager(nReaders, socketChannelFactory, executor);
         netManager.start();
 
         resultClientCtx = new ResultClientContext(frameSize);

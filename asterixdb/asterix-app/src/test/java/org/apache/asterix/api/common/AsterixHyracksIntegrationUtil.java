@@ -182,7 +182,7 @@ public class AsterixHyracksIntegrationUtil {
         // Wait until cluster becomes active
         ((ICcApplicationContext) cc.getApplicationContext()).getClusterStateManager().waitForState(ClusterState.ACTIVE);
         hcc = new HyracksConnection(cc.getConfig().getClientListenAddress(), cc.getConfig().getClientListenPort(),
-                cc.getNetworkSecurityManager().getSocketChannelFactory());
+                cc.getNetworkSecurityManager().getSocketChannelFactory(), cc.getExecutor());
         this.ncs = nodeControllers.toArray(new NodeControllerService[nodeControllers.size()]);
     }
 

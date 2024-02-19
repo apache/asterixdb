@@ -62,6 +62,7 @@ import org.apache.hyracks.ipc.api.RPCInterface;
 import org.apache.hyracks.ipc.sockets.PlainSocketChannelFactory;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.InterruptibleAction;
+import org.apache.hyracks.util.annotations.AiProvenance;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -95,23 +96,34 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
 
     private final BlockingQueue<UnInterruptibleRequest<?>> uninterruptibles = new ArrayBlockingQueue<>(1);
 
+    // non-null only when the handshake executor was created by this instance, and so must be shut down by close()
+    private final ExecutorService ownedExecutor;
+
     /**
      * Constructor to create a connection to the Hyracks Cluster Controller.
      *
-     * @param ccHost
-     *            Host name (or IP Address) where the Cluster Controller can be
-     *            reached.
-     * @param ccPort
-     *            Port to reach the Hyracks Cluster Controller at the specified
-     *            host name.
+     * @param ccHost               Host name (or IP Address) where the Cluster Controller can be
+     *                             reached.
+     * @param ccPort               Port to reach the Hyracks Cluster Controller at the specified
+     *                             host name.
+     * @param socketChannelFactory The socket channel factory
+     * @param executor             The executor on which asynchronous socket handshakes are performed; owned by the
+     *                             caller and not shut down by {@link #close()}
      * @throws Exception
      */
-    public HyracksConnection(String ccHost, int ccPort, ISocketChannelFactory socketChannelFactory) throws Exception {
+    public HyracksConnection(String ccHost, int ccPort, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor) throws Exception {
+        this(ccHost, ccPort, socketChannelFactory, executor, false);
+    }
+
+    private HyracksConnection(String ccHost, int ccPort, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor, boolean ownsExecutor) throws Exception {
         this.ccHost = ccHost;
         this.ccPort = ccPort;
+        this.ownedExecutor = ownsExecutor ? executor : null;
         RPCInterface rpci = new RPCInterface();
         ipc = new IPCSystem(new InetSocketAddress(0), socketChannelFactory, rpci,
-                new JavaSerializationBasedPayloadSerializerDeserializer());
+                new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
         ipc.start();
         hci = new HyracksClientInterfaceRemoteProxy(ipc.getReconnectingHandle(new InetSocketAddress(ccHost, ccPort)),
                 rpci);
@@ -120,13 +132,35 @@ public final class HyracksConnection implements Closeable, IHyracksClientConnect
         uninterruptibleExecutor.execute(new UninterrubtileHandlerWatcher());
     }
 
+    /**
+     * Constructor to create a connection to the Hyracks Cluster Controller, using an internally created executor for
+     * asynchronous socket handshakes. The internal executor is shut down by {@link #close()}; prefer one of the
+     * constructors taking an {@link ExecutorService} where a suitable executor is already available.
+     */
     public HyracksConnection(String ccHost, int ccPort) throws Exception {
-        this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE);
+        this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE, newHandshakeExecutor(), true);
+    }
+
+    public HyracksConnection(String ccHost, int ccPort, ExecutorService executor) throws Exception {
+        this(ccHost, ccPort, PlainSocketChannelFactory.INSTANCE, executor);
+    }
+
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.GENERATED, notes = "owned handshake executor")
+    private static ExecutorService newHandshakeExecutor() {
+        return Executors.newCachedThreadPool(r -> {
+            Thread t = new Thread(r, "HyracksConnection Handshake thread");
+            t.setDaemon(true);
+            return t;
+        });
     }
 
     @Override
+    @AiProvenance(agent = AiProvenance.Agent.CLAUDE_OPUS_5, tool = AiProvenance.Tool.CLAUDE_CODE_UI, contributionKind = AiProvenance.ContributionKind.REFACTORED, notes = "shut down owned executor")
     public void close() {
         ipc.stop();
+        if (ownedExecutor != null) {
+            ownedExecutor.shutdownNow();
+        }
     }
 
     @Override

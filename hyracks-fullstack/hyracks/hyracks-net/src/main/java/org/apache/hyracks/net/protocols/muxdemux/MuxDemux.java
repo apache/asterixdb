@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.exceptions.NetException;
@@ -65,22 +66,17 @@ public class MuxDemux {
     /**
      * Constructor.
      *
-     * @param localAddress
-     *            - TCP/IP socket address to listen on. Null for non-listening unidirectional sockets
-     * @param listener
-     *            - Callback interface to report channel events. Null for non-listening unidirectional sockets
-     * @param nThreads
-     *            - Number of threads to use for data transfer
-     * @param maxConnectionAttempts
-     *            - Maximum number of connection attempts
-     * @param channelInterfaceFactory
-     *            - The channel interface factory
-     * @param socketChannelFactory
-     *            - The socket channel factory
+     * @param localAddress            - TCP/IP socket address to listen on. Null for non-listening unidirectional sockets
+     * @param listener                - Callback interface to report channel events. Null for non-listening unidirectional sockets
+     * @param nThreads                - Number of threads to use for data transfer
+     * @param maxConnectionAttempts   - Maximum number of connection attempts
+     * @param channelInterfaceFactory - The channel interface factory
+     * @param socketChannelFactory    - The socket channel factory
+     * @param executor                - Executor on which asynchronous socket handshakes are performed
      */
     public MuxDemux(InetSocketAddress localAddress, IChannelOpenListener listener, int nThreads,
             int maxConnectionAttempts, IChannelInterfaceFactory channelInterfaceFactory,
-            ISocketChannelFactory socketChannelFactory) {
+            ISocketChannelFactory socketChannelFactory, ExecutorService executor) {
         this.localAddress = localAddress;
         this.channelOpenListener = listener;
         this.maxConnectionAttempts = maxConnectionAttempts;
@@ -163,7 +159,7 @@ public class MuxDemux {
                     }
                 }
             }
-        }, nThreads, socketChannelFactory);
+        }, nThreads, socketChannelFactory, executor);
         perfCounters = new MuxDemuxPerformanceCounters();
     }
 
