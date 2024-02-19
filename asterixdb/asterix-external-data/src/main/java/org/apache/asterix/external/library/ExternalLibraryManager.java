@@ -183,7 +183,8 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
     public void initialize(boolean resetStorageData) throws HyracksDataException {
         try {
             pythonIPC = new IPCSystem(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0),
-                    PlainSocketChannelFactory.INSTANCE, router, new ExternalFunctionResultRouter.NoOpNoSerJustDe());
+                    PlainSocketChannelFactory.INSTANCE, router, new ExternalFunctionResultRouter.NoOpNoSerJustDe(),
+                    ncs.getExecutor());
             pythonIPC.start();
             Path baseDirPath = baseDir.getFile().toPath();
             if (Files.isDirectory(baseDirPath)) {

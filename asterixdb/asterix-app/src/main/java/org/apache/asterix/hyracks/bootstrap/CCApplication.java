@@ -188,7 +188,8 @@ public class CCApplication extends BaseCCApplication {
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port,
-                ccServiceCtx.getControllerService().getNetworkSecurityManager().getSocketChannelFactory());
+                ccServiceCtx.getControllerService().getNetworkSecurityManager().getSocketChannelFactory(),
+                ccServiceCtx.getControllerService().getExecutor());
         MetadataBuiltinFunctions.init();
         ReplicationProperties repProp =
                 new ReplicationProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));

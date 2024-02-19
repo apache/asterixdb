@@ -21,6 +21,7 @@ package org.apache.hyracks.hdfs2.scheduler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hyracks.api.client.NodeControllerInfo;
@@ -43,10 +44,12 @@ public class Scheduler {
      * The constructor of the scheduler
      *
      * @param ncNameToNcInfos
+     * @param executor       Executor on which asynchronous socket handshakes are performed
      * @throws HyracksException
      */
-    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory) throws HyracksException {
-        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ipAddress, port, channelFactory);
+    public Scheduler(String ipAddress, int port, ISocketChannelFactory channelFactory, ExecutorService executor)
+            throws HyracksException {
+        scheduler = new org.apache.hyracks.hdfs.scheduler.Scheduler(ipAddress, port, channelFactory, executor);
     }
 
     /**

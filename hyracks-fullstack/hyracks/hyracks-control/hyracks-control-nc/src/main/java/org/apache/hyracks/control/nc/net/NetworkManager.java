@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.comm.IChannelInterfaceFactory;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
@@ -63,11 +64,12 @@ public class NetworkManager implements IChannelConnectionFactory {
 
     public NetworkManager(String inetAddress, int inetPort, PartitionManager partitionManager, int nThreads,
             int nBuffers, String publicInetAddress, int publicInetPort,
-            IChannelInterfaceFactory channelInterfaceFactory, ISocketChannelFactory socketChannelFactory) {
+            IChannelInterfaceFactory channelInterfaceFactory, ISocketChannelFactory socketChannelFactory,
+            ExecutorService executor) {
         this.partitionManager = partitionManager;
         this.nBuffers = nBuffers;
         md = new MuxDemux(new InetSocketAddress(inetAddress, inetPort), new ChannelOpenListener(), nThreads,
-                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory);
+                MAX_CONNECTION_ATTEMPTS, channelInterfaceFactory, socketChannelFactory, executor);
         // Just save these values for the moment; may be reset in start()
         publicNetworkAddress = new NetworkAddress(publicInetAddress, publicInetPort);
     }

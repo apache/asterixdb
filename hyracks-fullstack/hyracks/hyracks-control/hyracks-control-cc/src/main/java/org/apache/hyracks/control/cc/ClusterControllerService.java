@@ -221,12 +221,13 @@ public class ClusterControllerService implements IControllerService {
         IIPCI ccIPCI = new ClusterControllerIPCI(this);
         clusterIPC = new IPCSystem(
                 new InetSocketAddress(ccConfig.getClusterListenAddress(), ccConfig.getClusterListenPort()),
-                networkSecurityManager.getSocketChannelFactory(), ccIPCI, new CCNCFunctions.SerializerDeserializer());
+                networkSecurityManager.getSocketChannelFactory(), ccIPCI, new CCNCFunctions.SerializerDeserializer(),
+                executor);
         IIPCI ciIPCI = new ClientInterfaceIPCI(this, jobIdFactory);
         clientIPC =
                 new IPCSystem(new InetSocketAddress(ccConfig.getClientListenAddress(), ccConfig.getClientListenPort()),
                         networkSecurityManager.getSocketChannelFactory(), ciIPCI,
-                        new JavaSerializationBasedPayloadSerializerDeserializer());
+                        new JavaSerializationBasedPayloadSerializerDeserializer(), executor);
         clusterIPC.start();
         clientIPC.start();
         startWebServers();
