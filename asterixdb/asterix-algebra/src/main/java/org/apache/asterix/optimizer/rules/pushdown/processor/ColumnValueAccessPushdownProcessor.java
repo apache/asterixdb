@@ -32,8 +32,10 @@ import org.apache.asterix.optimizer.rules.pushdown.visitor.ExpressionValueAccess
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.InsertDeleteUpsertOperator;
 
 /**
  * Computes the expected schema for columnar datasets (whether internal or external). The expected schema is then
@@ -84,6 +86,13 @@ public class ColumnValueAccessPushdownProcessor extends AbstractPushdownProcesso
         for (UseDescriptor useDescriptor : useDescriptors) {
             LogicalVariable producedVariable = useDescriptor.getProducedVariable();
             ILogicalOperator op = useDescriptor.getOperator();
+            if (isDelete(op)) {
+                /*
+                 * Delete operation uses the record variable as an expression. Hence, all fields will be projected.
+                 * This is inefficient as only the columns of the delete predicate AND the indexed columns are needed.
+                 */
+                continue;
+            }
             IVariableTypeEnvironment typeEnv = PushdownUtil.getTypeEnv(op, context);
             expressionVisitor.transform(useDescriptor.getExpression(), producedVariable, typeEnv);
         }
@@ -100,5 +109,14 @@ public class ColumnValueAccessPushdownProcessor extends AbstractPushdownProcesso
                 pushdownFieldAccess(nextDefineDescriptor);
             }
         }
+    }
+
+    private boolean isDelete(ILogicalOperator op) {
+        if (op.getOperatorTag() != LogicalOperatorTag.INSERT_DELETE_UPSERT) {
+            return false;
+        }
+
+        InsertDeleteUpsertOperator deleteOp = (InsertDeleteUpsertOperator) op;
+        return deleteOp.getOperation() == InsertDeleteUpsertOperator.Kind.DELETE;
     }
 }
