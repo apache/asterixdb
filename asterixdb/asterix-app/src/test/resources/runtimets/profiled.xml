@@ -45,6 +45,14 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="profile">
+      <compilation-unit name="plansleep">
+        <parameter name="profile" value="timings" type="string"/>
+        <parameter name="optimized-logical-plan" value="true" type="string"/>
+        <parameter name="plan-format" value="json" type="string"/>
+        <output-dir compare="Clean-JSON">plansleep</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="profile">
       <compilation-unit name="non-unary-subplan">
         <parameter name="profile" value="timings" type="string"/>
         <output-dir compare="Text">non-unary-subplan</output-dir>

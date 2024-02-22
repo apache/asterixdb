@@ -228,19 +228,32 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     }
 
     private class OperatorProfile {
-        Map<String, Pair<Double, Double>> activities;
+        Map<String, Pair<Double, Double>> activityTimes;
+        Map<String, Pair<Long, Long>> activityCards;
 
         OperatorProfile() {
-            activities = new HashMap<>();
+            activityTimes = new HashMap<>();
+            activityCards = new HashMap<>();
+        }
+
+        void updateOperator(String extendedOpId, double time, long cardinality) {
+            updateMinMax(time, extendedOpId, activityTimes);
+            if (cardinality > 0) {
+                updateMinMax(cardinality, extendedOpId, activityCards);
+            }
         }
 
         void updateOperator(String extendedOpId, double time) {
-            Pair<Double, Double> times = activities.computeIfAbsent(extendedOpId, i -> new Pair(time, time));
-            if (times.getFirst() > time) {
-                times.setFirst(time);
+            updateMinMax(time, extendedOpId, activityTimes);
+        }
+
+        private <T extends Comparable<T>> void updateMinMax(T comp, String id, Map<String, Pair<T, T>> opMap) {
+            Pair<T, T> times = opMap.computeIfAbsent(id, i -> new Pair(comp, comp));
+            if (times.getFirst().compareTo(comp) > 0) {
+                times.setFirst(comp);
             }
-            if (times.getSecond() < time) {
-                times.setSecond(time);
+            if (times.getSecond().compareTo(comp) < 0) {
+                times.setSecond(comp);
             }
         }
     }
@@ -257,6 +270,11 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 for (JsonNode counters : task.get("counters")) {
                     OperatorProfile info = profiledOps.computeIfAbsent(counters.get("runtime-id").asText(),
                             i -> new OperatorProfile());
+                    JsonNode card = counters.get("cardinality-out");
+                    if (card != null) {
+                        info.updateOperator(acIdFromName(counters.get("name").asText()).getLocalId(),
+                                counters.get("run-time").asDouble(), counters.get("cardinality-out").asLong(-1));
+                    }
                     info.updateOperator(acIdFromName(counters.get("name").asText()).getLocalId(),
                             counters.get("run-time").asDouble());
                 }
@@ -343,16 +361,26 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStringField("runtime-id", od);
                 OperatorProfile info = profile.get(od);
                 if (info != null) {
-                    if (info.activities.size() == 1) {
-                        Pair<Double, Double> minMax = info.activities.values().iterator().next();
+                    if (info.activityTimes.size() == 1) {
+                        Pair<Double, Double> minMax = info.activityTimes.values().iterator().next();
                         jsonGenerator.writeNumberField("min-time", minMax.first);
                         jsonGenerator.writeNumberField("max-time", minMax.second);
+                        if (info.activityCards.size() > 0) {
+                            Pair<Long, Long> minMaxCard = info.activityCards.values().iterator().next();
+                            jsonGenerator.writeNumberField("min-cardinality", minMaxCard.first);
+                            jsonGenerator.writeNumberField("max-cardinality", minMaxCard.second);
+                        }
                     } else {
                         jsonGenerator.writeObjectFieldStart("times");
-                        for (Map.Entry<String, Pair<Double, Double>> ac : info.activities.entrySet()) {
-                            jsonGenerator.writeObjectFieldStart(ac.getKey());
-                            jsonGenerator.writeNumberField("min-time", ac.getValue().first);
-                            jsonGenerator.writeNumberField("max-time", ac.getValue().second);
+                        for (String acId : info.activityTimes.keySet()) {
+                            jsonGenerator.writeObjectFieldStart(acId);
+                            jsonGenerator.writeNumberField("min-time", info.activityTimes.get(acId).first);
+                            jsonGenerator.writeNumberField("max-time", info.activityTimes.get(acId).second);
+                            Pair<Long, Long> cards = info.activityCards.get(acId);
+                            if (cards != null) {
+                                jsonGenerator.writeNumberField("min-cardinality", info.activityCards.get(acId).first);
+                                jsonGenerator.writeNumberField("max-cardinality", info.activityCards.get(acId).second);
+                            }
                             jsonGenerator.writeEndObject();
                         }
                         jsonGenerator.writeEndObject();

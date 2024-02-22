@@ -1,0 +1,390 @@
+{
+  "optimizedLogicalPlan": {
+    "operator": "distribute-result",
+    "expressions": [
+      "$$48"
+    ],
+    "operatorId": "1.1",
+    "runtime-id": "R{.+}",
+    "min-time": "R{[0-9.]+}",
+    "max-time": "R{[0-9.]+}",
+    "physical-operator": "DISTRIBUTE_RESULT",
+    "execution-mode": "PARTITIONED",
+    "optimizer-estimates": "R{.+}",
+    "inputs": [
+      {
+        "operator": "exchange",
+        "operatorId": "1.2",
+        "runtime-id": "R{.+}",
+        "physical-operator": "ONE_TO_ONE_EXCHANGE",
+        "execution-mode": "PARTITIONED",
+        "optimizer-estimates":"R{.+}",
+        "inputs": [
+          {
+            "operator": "project",
+            "variables": [
+              "$$48"
+            ],
+            "operatorId": "1.3",
+            "runtime-id": "R{.+}",
+            "min-time": "R{[0-9.]+}",
+            "max-time": "R{[0-9.]+}",
+            "min-cardinality": 3,
+            "max-cardinality": 3,
+            "physical-operator": "STREAM_PROJECT",
+            "execution-mode": "PARTITIONED",
+            "optimizer-estimates": "R{.+}",
+            "inputs": [
+              {
+                "operator": "exchange",
+                "operatorId": "1.4",
+                "runtime-id": "R{.+}",
+                "min-time": "R{[0-9.]+}",
+                "max-time": "R{[0-9.]+}",
+                "physical-operator": "SORT_MERGE_EXCHANGE [$$49(ASC) ]",
+                "execution-mode": "PARTITIONED",
+                "optimizer-estimates": "R{.+}",
+                "inputs": [
+                  {
+                    "operator": "order",
+                    "order-by-list": [
+                      {
+                        "order": "ASC",
+                        "expression": "$$49"
+                      }
+                    ],
+                    "operatorId": "1.5",
+                    "runtime-id": "R{.+}",
+                    "min-time": "R{[0-9.]+}",
+                    "max-time": "R{[0-9.]+}",
+                    "physical-operator": "STABLE_SORT [$$49(ASC)]",
+                    "execution-mode": "PARTITIONED",
+                    "optimizer-estimates": "R{.+}",
+                    "inputs": [
+                      {
+                        "operator": "exchange",
+                        "operatorId": "1.6",
+                        "runtime-id": "R{.+}",
+                        "physical-operator": "ONE_TO_ONE_EXCHANGE",
+                        "execution-mode": "PARTITIONED",
+                        "optimizer-estimates": "R{.+}",
+                        "inputs": [
+                          {
+                            "operator": "project",
+                            "variables": [
+                              "$$48",
+                              "$$49"
+                            ],
+                            "operatorId": "1.7",
+                            "runtime-id": "R{.+}",
+                            "min-time": "R{[0-9.]+}",
+                            "max-time": "R{[0-9.]+}",
+                            "min-cardinality": 3,
+                            "max-cardinality": 3,
+                            "physical-operator": "STREAM_PROJECT",
+                            "execution-mode": "PARTITIONED",
+                            "optimizer-estimates": "R{.+}",
+                            "inputs": [
+                              {
+                                "operator": "assign",
+                                "variables": [
+                                  "$$49"
+                                ],
+                                "expressions": [
+                                  "sleep($$city, 1700)"
+                                ],
+                                "operatorId": "1.8",
+                                "runtime-id": "R{.+}",
+                                "min-time": "R{5.+}",
+                                "max-time": "R{5.+}",
+                                "min-cardinality": 3,
+                                "max-cardinality": 3,
+                                "physical-operator": "ASSIGN",
+                                "execution-mode": "PARTITIONED",
+                                "optimizer-estimates": "R{.+}",
+                                "inputs": [
+                                  {
+                                    "operator": "project",
+                                    "variables": [
+                                      "$$city",
+                                      "$$48"
+                                    ],
+                                    "operatorId": "1.9",
+                                    "runtime-id": "R{.+}",
+                                    "min-time": "R{[0-9.]+}",
+                                    "max-time": "R{[0-9.]+}",
+                                    "min-cardinality": 3,
+                                    "max-cardinality": 3,
+                                    "physical-operator": "STREAM_PROJECT",
+                                    "execution-mode": "PARTITIONED",
+                                    "optimizer-estimates": "R{.+}",
+                                    "inputs": [
+                                      {
+                                        "operator": "assign",
+                                        "variables": [
+                                          "$$48"
+                                        ],
+                                        "expressions": [
+                                          "{\"customers\": $$52, \"city\": $$city}"
+                                        ],
+                                        "operatorId": "1.10",
+                                        "runtime-id": "R{.+}",
+                                        "min-time": "R{[0-9.]+}",
+                                        "max-time": "R{[0-9.]+}",
+                                        "min-cardinality": 3,
+                                        "max-cardinality": 3,
+                                        "physical-operator": "ASSIGN",
+                                        "execution-mode": "PARTITIONED",
+                                        "optimizer-estimates": "R{.+}",
+                                        "inputs": [
+                                          {
+                                            "operator": "exchange",
+                                            "operatorId": "1.11",
+                                            "runtime-id": "R{.+}",
+                                            "physical-operator": "ONE_TO_ONE_EXCHANGE",
+                                            "execution-mode": "PARTITIONED",
+                                            "optimizer-estimates": "R{.+}",
+                                            "inputs": [
+                                              {
+                                                "operator": "group-by",
+                                                "group-by-list": [
+                                                  {
+                                                    "variable": "$$city",
+                                                    "expression": "$$56"
+                                                  }
+                                                ],
+                                                "subplan": [
+                                                  {
+                                                    "operator": "aggregate",
+                                                    "variables": [
+                                                      "$$52"
+                                                    ],
+                                                    "expressions": [
+                                                      "agg-sql-sum($$55)"
+                                                    ],
+                                                    "operatorId": "1.11.1",
+                                                    "physical-operator": "AGGREGATE",
+                                                    "execution-mode": "LOCAL",
+                                                    "inputs": [
+                                                      {
+                                                        "operator": "nested-tuple-source",
+                                                        "operatorId": "1.11.2",
+                                                        "physical-operator": "NESTED_TUPLE_SOURCE",
+                                                        "execution-mode": "LOCAL"
+                                                      }
+                                                    ]
+                                                  }
+                                                ],
+                                                "operatorId": "1.12",
+                                                "runtime-id": "R{.+}",
+                                                "min-time": "R{[0-9.]+}",
+                                                "max-time": "R{[0-9.]+}",
+                                                "min-cardinality": 3,
+                                                "max-cardinality": 3,
+                                                "physical-operator": "SORT_GROUP_BY[$$56]",
+                                                "execution-mode": "PARTITIONED",
+                                                "optimizer-estimates": "R{.+}",
+                                                "inputs": [
+                                                  {
+                                                    "operator": "exchange",
+                                                    "operatorId": "1.13",
+                                                    "runtime-id": "R{.+}",
+                                                    "min-time": "R{[0-9.]+}",
+                                                    "max-time": "R{[0-9.]+}",
+                                                    "physical-operator": "HASH_PARTITION_EXCHANGE [$$56]",
+                                                    "execution-mode": "PARTITIONED",
+                                                    "optimizer-estimates": "R{.+}",
+                                                    "inputs": [
+                                                      {
+                                                        "operator": "group-by",
+                                                        "group-by-list": [
+                                                          {
+                                                            "variable": "$$56",
+                                                            "expression": "$$50"
+                                                          }
+                                                        ],
+                                                        "subplan": [
+                                                          {
+                                                            "operator": "aggregate",
+                                                            "variables": [
+                                                              "$$55"
+                                                            ],
+                                                            "expressions": [
+                                                              "agg-sql-count(1)"
+                                                            ],
+                                                            "operatorId": "1.13.1",
+                                                            "physical-operator": "AGGREGATE",
+                                                            "execution-mode": "LOCAL",
+                                                            "inputs": [
+                                                              {
+                                                                "operator": "nested-tuple-source",
+                                                                "operatorId": "1.13.2",
+                                                                "physical-operator": "NESTED_TUPLE_SOURCE",
+                                                                "execution-mode": "LOCAL"
+                                                              }
+                                                            ]
+                                                          }
+                                                        ],
+                                                        "operatorId": "1.14",
+                                                        "runtime-id": "R{.+}",
+                                                        "min-time": "R{[0-9.]+}",
+                                                        "max-time": "R{[0-9.]+}",
+                                                        "physical-operator": "SORT_GROUP_BY[$$50]",
+                                                        "execution-mode": "PARTITIONED",
+                                                        "optimizer-estimates": "R{.+}",
+                                                        "inputs": [
+                                                          {
+                                                            "operator": "exchange",
+                                                            "operatorId": "1.15",
+                                                            "runtime-id": "R{.+}",
+                                                            "physical-operator": "ONE_TO_ONE_EXCHANGE",
+                                                            "execution-mode": "PARTITIONED",
+                                                            "optimizer-estimates": "R{.+}",
+                                                            "inputs": [
+                                                              {
+                                                                "operator": "project",
+                                                                "variables": [
+                                                                  "$$50"
+                                                                ],
+                                                                "operatorId": "1.16",
+                                                                "runtime-id": "R{.+}",
+                                                                "min-time": "R{[0-9.]+}",
+                                                                "max-time": "R{[0-9.]+}",
+                                                                "min-cardinality": 5,
+                                                                "max-cardinality": 5,
+                                                                "physical-operator": "STREAM_PROJECT",
+                                                                "execution-mode": "PARTITIONED",
+                                                                "optimizer-estimates": "R{.+}",
+                                                                "inputs": [
+                                                                  {
+                                                                    "operator": "assign",
+                                                                    "variables": [
+                                                                      "$$50"
+                                                                    ],
+                                                                    "expressions": [
+                                                                      "$$c.getField(3).getField(2)"
+                                                                    ],
+                                                                    "operatorId": "1.17",
+                                                                    "runtime-id": "R{.+}",
+                                                                    "min-time": "R{[0-9.]+}",
+                                                                    "max-time": "R{[0-9.]+}",
+                                                                    "min-cardinality": 5,
+                                                                    "max-cardinality": 5,
+                                                                    "physical-operator": "ASSIGN",
+                                                                    "execution-mode": "PARTITIONED",
+                                                                    "optimizer-estimates": "R{.+}",
+                                                                    "inputs": [
+                                                                      {
+                                                                        "operator": "select",
+                                                                        "condition": "lt($$c.getField(2), 65)",
+                                                                        "operatorId": "1.18",
+                                                                        "runtime-id": "R{.+}",
+                                                                        "min-time": "R{[0-9.]+}",
+                                                                        "max-time": "R{[0-9.]+}",
+                                                                        "min-cardinality": 5,
+                                                                        "max-cardinality": 5,
+                                                                        "physical-operator": "STREAM_SELECT",
+                                                                        "execution-mode": "PARTITIONED",
+                                                                        "optimizer-estimates": "R{.+}",
+                                                                        "inputs": [
+                                                                          {
+                                                                            "operator": "project",
+                                                                            "variables": [
+                                                                              "$$c"
+                                                                            ],
+                                                                            "operatorId": "1.19",
+                                                                            "runtime-id": "R{.+}",
+                                                                            "min-time": "R{[0-9.]+}",
+                                                                            "max-time": "R{[0-9.]+}",
+                                                                            "min-cardinality": 10,
+                                                                            "max-cardinality": 10,
+                                                                            "physical-operator": "STREAM_PROJECT",
+                                                                            "execution-mode": "PARTITIONED",
+                                                                            "optimizer-estimates": "R{.+}",
+                                                                            "inputs": [
+                                                                              {
+                                                                                "operator": "exchange",
+                                                                                "operatorId": "1.20",
+                                                                                "runtime-id": "R{.+}",
+                                                                                "physical-operator": "ONE_TO_ONE_EXCHANGE",
+                                                                                "execution-mode": "PARTITIONED",
+                                                                                "optimizer-estimates": "R{.+}",
+                                                                                "inputs": [
+                                                                                  {
+                                                                                    "operator": "data-scan",
+                                                                                    "variables": [
+                                                                                      "$$51",
+                                                                                      "$$c"
+                                                                                    ],
+                                                                                    "data-source": "test.Customers",
+                                                                                    "operatorId": "1.21",
+                                                                                    "runtime-id": "R{.+}",
+                                                                                    "min-time": "R{[0-9.]+}",
+                                                                                    "max-time": "R{[0-9.]+}",
+                                                                                    "min-cardinality": 10,
+                                                                                    "max-cardinality": 10,
+                                                                                    "physical-operator": "DATASOURCE_SCAN",
+                                                                                    "execution-mode": "PARTITIONED",
+                                                                                    "optimizer-estimates": "R{.+}",
+                                                                                    "inputs": [
+                                                                                      {
+                                                                                        "operator": "exchange",
+                                                                                        "operatorId": "1.22",
+                                                                                        "runtime-id": "R{.+}",
+                                                                                        "physical-operator": "ONE_TO_ONE_EXCHANGE",
+                                                                                        "execution-mode": "PARTITIONED",
+                                                                                        "optimizer-estimates": "R{.+}",
+                                                                                        "inputs": [
+                                                                                          {
+                                                                                            "operator": "empty-tuple-source",
+                                                                                            "operatorId": "1.23",
+                                                                                            "runtime-id": "R{.+}",
+                                                                                            "physical-operator": "EMPTY_TUPLE_SOURCE",
+                                                                                            "execution-mode": "PARTITIONED",
+                                                                                            "optimizer-estimates": "R{.+}"
+                                                                                          }
+                                                                                        ]
+                                                                                      }
+                                                                                    ]
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            ]
+                                                                          }
+                                                                        ]
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                ]
+                                                              }
+                                                            ]
+                                                          }
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

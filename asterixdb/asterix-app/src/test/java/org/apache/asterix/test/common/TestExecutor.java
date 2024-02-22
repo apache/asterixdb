@@ -831,9 +831,10 @@ public class TestExecutor {
         List<Parameter> newParams = setFormatInAccept(fmt) ? params
                 : upsertParam(params, QueryServiceRequestParameters.Parameter.FORMAT.str(), ParameterTypeEnum.STRING,
                         fmt.extension());
-
-        newParams = upsertParam(newParams, QueryServiceRequestParameters.Parameter.PLAN_FORMAT.str(),
-                ParameterTypeEnum.STRING, DEFAULT_PLAN_FORMAT);
+        String planFormatKey = QueryServiceRequestParameters.Parameter.PLAN_FORMAT.str();
+        if (!newParams.stream().anyMatch(p -> p.getName().equals(planFormatKey))) {
+            newParams = upsertParam(newParams, planFormatKey, ParameterTypeEnum.STRING, DEFAULT_PLAN_FORMAT);
+        }
         final Optional<String> maxReadsOptional = extractMaxResultReads(str);
         if (maxReadsOptional.isPresent()) {
             newParams = upsertParam(newParams, QueryServiceRequestParameters.Parameter.MAX_RESULT_READS.str(),
