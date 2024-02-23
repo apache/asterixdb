@@ -1211,6 +1211,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ExternalDetailsDecl externalDetails = (ExternalDetailsDecl) dd.getDatasetDetailsDecl();
         Map<String, String> properties = externalDetails.getProperties();
         ExternalDataUtils.validateParquetTypeAndConfiguration(properties, (ARecordType) itemType.getDatatype());
+        ExternalDataUtils.validateAvroTypeAndConfiguration(properties, (ARecordType) itemType.getDatatype());
         return properties;
     }
 

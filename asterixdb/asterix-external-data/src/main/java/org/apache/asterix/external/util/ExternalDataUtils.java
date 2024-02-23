@@ -917,6 +917,19 @@ public class ExternalDataUtils {
                 || ExternalDataConstants.FORMAT_PARQUET.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
     }
 
+    public static void validateAvroTypeAndConfiguration(Map<String, String> properties, ARecordType datasetRecordType)
+            throws CompilationException {
+        if (isAvroFormat(properties)) {
+            if (datasetRecordType.getFieldTypes().length != 0) {
+                throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_AVRO, datasetRecordType.getTypeName());
+            }
+        }
+    }
+
+    public static boolean isAvroFormat(Map<String, String> properties) {
+        return ExternalDataConstants.FORMAT_AVRO.equals(properties.get(ExternalDataConstants.KEY_FORMAT));
+    }
+
     public static void setExternalDataProjectionInfo(ExternalDatasetProjectionFiltrationInfo projectionInfo,
             Map<String, String> properties) throws IOException {
         properties.put(ExternalDataConstants.KEY_REQUESTED_FIELDS,

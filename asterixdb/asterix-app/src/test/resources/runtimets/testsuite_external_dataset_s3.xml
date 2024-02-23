@@ -294,6 +294,111 @@
       </compilation-unit>
     </test-case>
     <!-- Parquet Tests End -->
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-map">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/avro-types/avro-map</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-nested-records">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/avro-types/avro-nested-records</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-primitives">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/avro-types/avro-primitives</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-union">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/avro-types/avro-union</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/type-mismatch">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/type-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/string-standard-utf8">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/string-standard-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/select-all-fields">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/select-all-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/select-count-one-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/array-access">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/array-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/field-access">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/field-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/heterogeneous-access">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/heterogeneous-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/invalid-avro-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">none</output-dir>
+        <source-location>false</source-location>
+        <expected-error>Not an Avro data file.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/invalid-type">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX3123: Type 'AvroType' contains declared fields, which is not supported for 'avro' format</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/missing-fields">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/missing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/multi-file-multi-schema">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/multi-file-multi-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/no-files">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/no-files</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/object-concat">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
     <!-- Dynamic prefixes tests start -->
     <test-case FilePath="external-dataset/common/dynamic-prefixes">
       <compilation-unit name="embed-with-closed-type">

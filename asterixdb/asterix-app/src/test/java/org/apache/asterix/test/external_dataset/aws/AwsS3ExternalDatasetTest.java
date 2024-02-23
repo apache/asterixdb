@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.test.external_dataset.aws;
 
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createAvroFiles;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createAvroFilesRecursively;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFiles;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFilesRecursively;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
@@ -194,6 +196,8 @@ public class AwsS3ExternalDatasetTest {
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
         createBinaryFiles(DEFAULT_PARQUET_SRC_PATH);
         createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
+        createAvroFiles(DEFAULT_PARQUET_SRC_PATH);
+        createAvroFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         setNcEndpoints(testExecutor);
         startAwsS3MockServer();
     }

@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.external_dataset;
 
+import static org.apache.asterix.test.external_dataset.avro.AvroFileConverterUtil.AVRO_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BOM_FILE_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.DYNAMIC_PREFIX_AT_START_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
+import org.apache.asterix.test.external_dataset.avro.AvroFileConverterUtil;
 import org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.commons.io.FilenameUtils;
@@ -51,6 +53,7 @@ public class ExternalDatasetTestUtils {
     private static final FilenameFilter JSON_FILTER = ((dir, name) -> name.endsWith(".json"));
     private static final FilenameFilter CSV_FILTER = ((dir, name) -> name.endsWith(".csv"));
     private static final FilenameFilter PARQUET_FILTER = ((dir, name) -> name.endsWith(".parquet"));
+    private static final FilenameFilter AVRO_FILTER = ((dir, name) -> name.endsWith(".avro"));
 
     // Base directory paths for data files
     private static String JSON_DATA_PATH;
@@ -64,6 +67,7 @@ public class ExternalDatasetTestUtils {
     public static final String TSV_DEFINITION = "tsv-data/reviews/";
     public static final String MIXED_DEFINITION = "mixed-data/reviews/";
     public static final String PARQUET_DEFINITION = "parquet-data/reviews/";
+    public static final String AVRO_DEFINITION = "avro-data/reviews/";
 
     // This is used for a test to generate over 1000 number of files
     public static final String OVER_1000_OBJECTS_PATH = "over-1000-objects";
@@ -101,6 +105,13 @@ public class ExternalDatasetTestUtils {
         BinaryFileConverterUtil.convertToParquet(basePath, parquetRawJsonDir, BINARY_GEN_BASEDIR);
     }
 
+    public static void createAvroFiles(String avroRawJsonDir) throws IOException {
+        File basePath = new File(".");
+        // cleaning directory
+        BinaryFileConverterUtil.cleanBinaryDirectory(basePath, AVRO_GEN_BASEDIR);
+        AvroFileConverterUtil.convertToAvro(basePath, avroRawJsonDir, AVRO_GEN_BASEDIR);
+    }
+
     /**
      * Generate binary files (e.g., parquet files)
      */
@@ -112,6 +123,14 @@ public class ExternalDatasetTestUtils {
         int startIndex = dataToConvertDirPath.indexOf("/external-filter");
         BinaryFileConverterUtil.convertToParquetRecursively(basePath, dataToConvertDirPath, BINARY_GEN_BASEDIR,
                 JSON_FILTER, startIndex);
+    }
+
+    public static void createAvroFilesRecursively(String dataToConvertDirPath) throws IOException {
+        //base path
+        File basePath = new File(".");
+        int startIndex = dataToConvertDirPath.indexOf("/external-filter");
+        AvroFileConverterUtil.convertToAvroRecursively(basePath, dataToConvertDirPath, AVRO_GEN_BASEDIR, JSON_FILTER,
+                startIndex);
     }
 
     public static void setDataPaths(String jsonDataPath, String csvDataPath, String tsvDataPath) {
@@ -156,6 +175,10 @@ public class ExternalDatasetTestUtils {
         LOGGER.info("Adding Parquet files to the bucket");
         loadParquetFiles();
         LOGGER.info("Parquet files added successfully");
+
+        LOGGER.info("Adding Avro files to the bucket");
+        loadAvroFiles();
+        LOGGER.info("Avro files added successfully");
 
         LOGGER.info("Files added successfully");
     }
@@ -323,9 +346,35 @@ public class ExternalDatasetTestUtils {
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), PARQUET_FILTER);
         for (File file : files) {
             String fileName = file.getName();
+            String fileParent = file.getParent();
             String externalFilterDefinition = file.getParent().substring(generatedDataBasePath.length() + 1) + "/";
             loadData(file.getParent(), "", fileName, "parquet-data/" + externalFilterDefinition, "", false, false);
         }
+    }
+
+    private static void loadAvroFiles() {
+        String generatedDataBasePath = AVRO_GEN_BASEDIR;
+        String definition = AVRO_DEFINITION;
+        String definitionSegment = "";
+
+        loadData(generatedDataBasePath, "", "dummy_tweet.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_age.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_age-string.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_name.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "id_name_comment.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "heterogeneous_1.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "heterogeneous_2.avro", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "avro_type.avro", definition, definitionSegment, false, false);
+
+        Collection<File> files =
+                IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), AVRO_FILTER);
+        for (File file : files) {
+            String fileName = file.getName();
+            String fileParent = file.getParent();
+            String externalFilterDefinition = file.getParent().substring(generatedDataBasePath.length() + 1) + "/";
+            loadData(file.getParent(), "", fileName, "avro-data/" + externalFilterDefinition, "", false, false);
+        }
+        return;
     }
 
     private static void loadDirectory(String dataBasePath, String rootPath, FilenameFilter filter) {

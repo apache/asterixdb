@@ -127,6 +127,8 @@ public class AzureBlobStorageExternalDatasetTest {
         final TestExecutor testExecutor = new AzureTestExecutor();
         ExternalDatasetTestUtils.createBinaryFiles(PARQUET_RAW_DATA_PATH);
         createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
+        ExternalDatasetTestUtils.createAvroFiles(PARQUET_RAW_DATA_PATH);
+        createAvroFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         LangExecutionUtil.setUp(TEST_CONFIG_FILE_NAME, testExecutor);
         setNcEndpoints(testExecutor);
         createBlobServiceClient();
