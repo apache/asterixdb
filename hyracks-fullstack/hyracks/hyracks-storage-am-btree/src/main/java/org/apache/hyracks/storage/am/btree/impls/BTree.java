@@ -105,7 +105,7 @@ public class BTree extends AbstractTreeIndex {
         RangePredicate diskOrderScanPred = new RangePredicate(null, null, true, true, ctx.getCmp(), ctx.getCmp());
         int maxPageId = freePageManager.getMaxPageId(ctx.getMetaFrame());
         int currentPageId = bulkloadLeafStart;
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId), false);
+        final ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId), false);
         page.acquireReadLatch();
         try {
             cursor.setBufferCache(bufferCache);
@@ -116,7 +116,7 @@ public class BTree extends AbstractTreeIndex {
             ctx.getCursorInitialState().setSearchOperationCallback(ctx.getSearchCallback());
             ctx.getCursorInitialState().setOriginialKeyComparator(ctx.getCmp());
             cursor.open(ctx.getCursorInitialState(), diskOrderScanPred);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             page.releaseReadLatch();
             bufferCache.unpin(page);
             throw HyracksDataException.create(e);
@@ -202,8 +202,7 @@ public class BTree extends AbstractTreeIndex {
         }
         // we use this loop to deal with possibly multiple operation restarts
         // due to ongoing structure modifications during the descent
-        boolean repeatOp = true;
-        while (repeatOp && ctx.getOpRestarts() < MAX_RESTARTS) {
+        while (true) {
             performOp(rootPage, null, true, ctx);
             // if we reach this stage then we need to restart from the (possibly
             // new) root
@@ -211,7 +210,7 @@ public class BTree extends AbstractTreeIndex {
                 ctx.getPageLsns().removeLast(); // pop the restart op indicator
                 continue;
             }
-            repeatOp = false;
+            break;
         }
         cursor.setBufferCache(bufferCache);
         cursor.setFileId(getFileId());
@@ -231,12 +230,8 @@ public class BTree extends AbstractTreeIndex {
                 bufferCache.unpin(smPage);
             }
         }
-        if (ctx.getSmPages().size() > 0) {
-            if (ctx.getSmoCount() == Integer.MAX_VALUE) {
-                smoCounter.set(0);
-            } else {
-                smoCounter.incrementAndGet();
-            }
+        if (!ctx.getSmPages().isEmpty()) {
+            smoCounter.updateAndGet(i -> i == Integer.MAX_VALUE ? 0 : i + 1);
             treeLatch.writeLock().unlock();
             ctx.getSmPages().clear();
         }
@@ -599,8 +594,7 @@ public class BTree extends AbstractTreeIndex {
                     // We use this loop to deal with possibly multiple operation
                     // restarts due to ongoing structure modifications during
                     // the descent.
-                    boolean repeatOp = true;
-                    while (repeatOp && ctx.getOpRestarts() < MAX_RESTARTS) {
+                    while (true) {
                         int childPageId = ctx.getInteriorFrame().getChildPageId(ctx.getPred());
                         performOp(childPageId, node, isReadLatched, ctx);
                         node = null;
@@ -615,6 +609,10 @@ public class BTree extends AbstractTreeIndex {
                                 if (node != null) {
                                     isReadLatched = true;
                                     // Descend the tree again.
+                                    if (ctx.getOpRestarts() >= MAX_RESTARTS) {
+                                        throw HyracksDataException.create(ErrorCode.OPERATION_EXCEEDED_MAX_RESTARTS,
+                                                MAX_RESTARTS);
+                                    }
                                     continue;
                                 } else {
                                     // Pop pageLsn of this page (version seen by this op during descent).
@@ -662,7 +660,7 @@ public class BTree extends AbstractTreeIndex {
                             }
                         }
                         // Operation completed.
-                        repeatOp = false;
+                        break;
                     } // end while
                 } else { // smFlag
                     ctx.setOpRestarts(ctx.getOpRestarts() + 1);
@@ -734,21 +732,8 @@ public class BTree extends AbstractTreeIndex {
                     ctx.getPageLsns().add(FULL_RESTART_OP);
                 }
             }
-        } catch (HyracksDataException e) {
-            if (!ctx.isExceptionHandled()) {
-                if (node != null) {
-                    if (isReadLatched) {
-                        node.releaseReadLatch();
-                    } else {
-                        node.releaseWriteLatch(true);
-                    }
-                    bufferCache.unpin(node);
-                    ctx.setExceptionHandled(true);
-                }
-            }
-            throw e;
-        } catch (Exception e) {
-            if (node != null) {
+        } catch (Throwable e) {
+            if (!ctx.isExceptionHandled() && node != null) {
                 if (isReadLatched) {
                     node.releaseReadLatch();
                 } else {
@@ -756,9 +741,8 @@ public class BTree extends AbstractTreeIndex {
                 }
                 bufferCache.unpin(node);
             }
-            HyracksDataException wrappedException = HyracksDataException.create(e);
             ctx.setExceptionHandled(true);
-            throw wrappedException;
+            throw HyracksDataException.create(e);
         }
     }
 
@@ -785,7 +769,7 @@ public class BTree extends AbstractTreeIndex {
         ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
         node.acquireReadLatch();
         try {
-            if (parent != null && unpin == true) {
+            if (parent != null && unpin) {
                 parent.releaseReadLatch();
                 bufferCache.unpin(parent);
             }

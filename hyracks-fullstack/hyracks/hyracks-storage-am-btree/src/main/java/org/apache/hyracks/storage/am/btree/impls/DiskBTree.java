@@ -143,19 +143,12 @@ public class DiskBTree extends BTree {
             ctx.getCursorInitialState().setPageId(childPageId);
             ctx.getLeafFrame().setPage(currentPage);
             cursor.open(ctx.getCursorInitialState(), ctx.getPred());
-        } catch (HyracksDataException e) {
+        } catch (Exception e) {
             if (!ctx.isExceptionHandled() && currentPage != null) {
                 bufferCache.unpin(currentPage);
-                ctx.setExceptionHandled(true);
             }
-            throw e;
-        } catch (Exception e) {
-            if (currentPage != null) {
-                bufferCache.unpin(currentPage);
-            }
-            HyracksDataException wrappedException = HyracksDataException.create(e);
             ctx.setExceptionHandled(true);
-            throw wrappedException;
+            throw HyracksDataException.create(e);
         }
     }
 

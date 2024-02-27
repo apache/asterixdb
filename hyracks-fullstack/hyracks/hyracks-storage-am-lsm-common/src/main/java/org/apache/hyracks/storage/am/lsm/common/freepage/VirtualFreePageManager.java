@@ -104,10 +104,13 @@ public class VirtualFreePageManager implements IPageManager {
         page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId.get()), true);
         if (leafFrameFactory != null) {
             page.acquireWriteLatch();
-            ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
-            leafFrame.setPage(page);
-            leafFrame.initBuffer((byte) 0);
-            page.releaseWriteLatch(true);
+            try {
+                ITreeIndexFrame leafFrame = leafFrameFactory.createFrame();
+                leafFrame.setPage(page);
+                leafFrame.initBuffer((byte) 0);
+            } finally {
+                page.releaseWriteLatch(true);
+            }
         }
         bufferCache.unpin(page);
     }
