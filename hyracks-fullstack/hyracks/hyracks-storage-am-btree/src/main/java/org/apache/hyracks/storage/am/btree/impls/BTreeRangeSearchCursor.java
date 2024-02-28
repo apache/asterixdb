@@ -110,8 +110,13 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
 
     protected void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
         do {
-            ICachedPage nextLeaf = acquirePage(nextLeafPage);
-            releasePage();
+            ICachedPage nextLeaf;
+            try {
+                nextLeaf = acquirePage(nextLeafPage);
+            } finally {
+                // release page in finally, don't leak lock on pin failure
+                releasePage();
+            }
             page = nextLeaf;
             isPageDirty = false;
             frame.setPage(page);
