@@ -20,6 +20,7 @@ package org.apache.hyracks.util;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,5 +103,11 @@ public class ReflectionUtils {
             LOGGER.warn("exception updating field '{}' object of type {} to {}", f.getName(), objClass, newValue, e);
             throw new IOException(e);
         }
+    }
+
+    public static Method getAccessibleMethod(Class<?> clazz, String methodName) throws NoSuchMethodException {
+        Method m = clazz.getDeclaredMethod(methodName);
+        m.setAccessible(true);
+        return m;
     }
 }

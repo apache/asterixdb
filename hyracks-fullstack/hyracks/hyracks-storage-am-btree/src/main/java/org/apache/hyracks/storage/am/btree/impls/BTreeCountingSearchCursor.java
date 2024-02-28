@@ -119,13 +119,21 @@ public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements IT
 
     private void fetchNextLeafPage(int nextLeafPage) throws HyracksDataException {
         do {
-            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
-            if (exclusiveLatchNodes) {
-                nextLeaf.acquireWriteLatch();
-                page.releaseWriteLatch(isPageDirty);
-            } else {
-                nextLeaf.acquireReadLatch();
-                page.releaseReadLatch();
+            final ICachedPage nextLeaf;
+            try {
+                nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
+                if (exclusiveLatchNodes) {
+                    nextLeaf.acquireWriteLatch();
+                } else {
+                    nextLeaf.acquireReadLatch();
+                }
+            } finally {
+                // release latches in finally, don't leak locks on pin failure
+                if (exclusiveLatchNodes) {
+                    page.releaseWriteLatch(isPageDirty);
+                } else {
+                    page.releaseReadLatch();
+                }
             }
             bufferCache.unpin(page);
             page = nextLeaf;
