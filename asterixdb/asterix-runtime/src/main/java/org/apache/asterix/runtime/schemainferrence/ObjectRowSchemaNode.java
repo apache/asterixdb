@@ -166,6 +166,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
                 .sorted(Comparator.comparingInt(Entry::getIntValue)).mapToInt(Entry::getIntKey));
     }
 
+    //TODO Calvin Dani To utilize
     public boolean containsField(int fieldNameIndex) {
         return fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex);
     }

@@ -30,7 +30,6 @@ import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.exceptions.ExceptionUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
-// import org.apache.asterix.runtime.schemainferrence.*;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -59,9 +58,22 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+//import org.apache.logging.log4j.LogManager;
+//import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateFunction {
 
+    public void setFirstHalfTimer(long firstHalfTimer) {
+        this.firstHalfTimer = firstHalfTimer;
+    }
+
+    public void setSecondHalfTimer(long firstHalfTimer) {
+        this.firstHalfTimer = firstHalfTimer;
+    }
+
+    private long firstHalfTimer = 0;
+    private long secondHalfTimer = 0;
+//    private static final Logger logger = LogManager.getLogger(AbstractSchemaAggregateFunction.class);
     private final IEvaluatorContext context;
 
     // Warning flag to warn only once in case of non-numeric data
@@ -122,9 +134,12 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
     public abstract void finishPartial(IPointable result) throws HyracksDataException;
 
     protected abstract void processNull();
-
+    // TODO : CALVIN DANI
     protected void processDataValues(IFrameTupleReference tuple) throws HyracksDataException {
+        long startTime = System.nanoTime();
         if (skipStep()) {
+//            long endTime = System.nanoTime();
+//            logger.warn("processDataValues took " + (endTime - startTime) + " nanoseconds to complete.");
             return;
         }
         //print thread and thread id
@@ -133,9 +148,10 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
                 tuple.getFieldLength(recordFieldId));
         transformer.transform(inputVal);
         //        (FrameTupleAccessor)(tuple.getFrameTupleAccessor())
-        eval.evaluate(tuple, inputVal);
+        eval.evaluate(tuple, inputVal); // CONFIRM TODO : CALVIN DANI
         byte[] data = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
+        long endTimeFirstHalf = System.nanoTime();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
         ATypeTag aggTypeTag = aggType;
@@ -156,9 +172,17 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
             aggTypeTag = typeTag;
         }
         aggType = aggTypeTag;
+        long endTimeSecondHalf = System.nanoTime();
+        setFirstHalfTimer(firstHalfTimer + (endTimeFirstHalf - startTime));
+        setSecondHalfTimer(secondHalfTimer + (endTimeSecondHalf - endTimeFirstHalf));
+//        logger.warn("processDataValues took " + (endTime - startTime) + " milliseconds to complete.");
+
     }
 
     protected void finishPartialResults(IPointable result) throws HyracksDataException {
+
+        System.out.println("TIME TAKEN BY processDataValues FH, SH , TT : " + firstHalfTimer + " " + secondHalfTimer+ " " + (firstHalfTimer + secondHalfTimer));
+//        long startTime = System.nanoTime();
         resultStorage.reset();
 
         try {
@@ -171,18 +195,26 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
                 resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_SYSTEM_NULL_TYPE_TAG);
                 result.set(resultStorage);
             } else if (aggType == ATypeTag.NULL) {
+                // TODO : CALVIN DANI Check size of serialization of data
                 resultStorage.getDataOutput().writeByte(ATypeTag.SERIALIZED_NULL_TYPE_TAG);
                 result.set(resultStorage);
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+//        long endTime = System.nanoTime();
+//        logger.warn("finishPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
+
     }
 
     protected void processPartialResults(IFrameTupleReference tuple) throws HyracksDataException {
+//        long startTime = System.nanoTime();
         if (skipStep()) {
+//            long endTime = System.nanoTime();
+//            logger.warn("processPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
             return;
         }
+        // TODO : Calvin Dani Clean up overhead
         eval.evaluate(tuple, inputVal);
 
         byte[] serBytes = tuple.getFrameTupleAccessor().getBuffer().array();
@@ -197,7 +229,7 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         DataInput input = new DataInputStream(new ByteArrayInputStream(serBytes, fieldNamesStart, length));
 
         try {
-            //FieldNames
+            //FieldNames //TODO CALVIN DANI check fieldNamesDictionary if it is required
             RowFieldNamesDictionary fieldNamesDictionary = RowFieldNamesDictionary.deserialize(input);
             //Schema
             ObjectRowSchemaNode root = (ObjectRowSchemaNode) AbstractRowSchemaNode.deserialize(input, null);
@@ -208,10 +240,13 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+//        long endTime = System.nanoTime();
+//        logger.warn("processPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
 
     }
 
     protected void finishFinalResults(IPointable result) throws HyracksDataException {
+//        long startTime = System.nanoTime();
         resultStorage.reset();
         //        IRecordDataParser<LosslessADMJSONPrinterFactoryProvider> dataParser;
         try {
@@ -235,6 +270,9 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
             throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
+//        long endTime = System.nanoTime();
+//        logger.warn("finishFinalResults took " + (endTime - startTime) + " milliseconds to complete.");
+
     }
 
     protected boolean skipStep() {

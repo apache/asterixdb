@@ -268,6 +268,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         collectionNode.incrementCounter();
     }
 
+    //TODO : CALVIN_DANI remove overhead
     /**
      * Needed by {@link AbstractRowCollectionSchemaNode} to add the definition level for each item
      *
