@@ -92,7 +92,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 acceptActualNode(new GenericListRowSchemaNode(childTypeTag, child), childNode);
             }
         }
-//        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
+//        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary()); TODO: CALVIN REMOVE
         rowMetadata.exitNode(mainRoot);
         currentParent = previousParent;
         return null;
