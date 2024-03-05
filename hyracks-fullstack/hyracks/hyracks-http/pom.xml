@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.hyracks</groupId>
     <artifactId>hyracks</artifactId>
-    <version>0.3.8.2</version>
+    <version>0.3.8.3-SNAPSHOT</version>
   </parent>
   <artifactId>hyracks-http</artifactId>
   <properties>
