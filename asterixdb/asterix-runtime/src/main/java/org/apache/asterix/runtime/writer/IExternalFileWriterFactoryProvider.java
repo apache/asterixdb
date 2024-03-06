@@ -19,7 +19,7 @@
 package org.apache.asterix.runtime.writer;
 
 public interface IExternalFileWriterFactoryProvider {
-    IExternalFileWriterFactory create(ExternalWriterConfiguration configuration);
+    IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration);
 
     char getSeparator();
 }

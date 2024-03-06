@@ -23,7 +23,7 @@ import java.io.File;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
-import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
+import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
@@ -38,7 +38,7 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
     private static final char SEPARATOR = File.separatorChar;
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
         @Override
-        public IExternalFileWriterFactory create(ExternalWriterConfiguration configuration) {
+        public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
             return new LocalFSExternalFileWriterFactory(configuration);
         }
 
@@ -54,7 +54,7 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
     private final String staticPath;
     private boolean validated;
 
-    private LocalFSExternalFileWriterFactory(ExternalWriterConfiguration externalConfig) {
+    private LocalFSExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
         pathSourceLocation = externalConfig.getPathSourceLocation();
         singleNodeCluster = externalConfig.isSingleNodeCluster();
         staticPath = externalConfig.getStaticPath();

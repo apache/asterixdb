@@ -21,18 +21,26 @@ package org.apache.asterix.external.writer.printer;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
+import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
+import org.apache.asterix.external.writer.compressor.NoOpExternalFileCompressStreamFactory;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-final class TextualExternalPrinter implements IExternalPrinter {
-    private final IPrinter printer;
-    private TextualOutputStreamDelegate delegate;
-    private PrintStream printStream;
+public abstract class AbstractTextualExternalPrinter implements IExternalPrinter {
+    final IPrinter printer;
+    final IExternalFileCompressStreamFactory compressStreamFactory;
+    TextualOutputStreamDelegate delegate;
+    PrintStream printStream;
 
-    TextualExternalPrinter(IPrinter printer) {
+    AbstractTextualExternalPrinter(IPrinter printer) {
+        this(printer, NoOpExternalFileCompressStreamFactory.INSTANCE);
+    }
+
+    AbstractTextualExternalPrinter(IPrinter printer, final IExternalFileCompressStreamFactory compressStreamFactory) {
         this.printer = printer;
+        this.compressStreamFactory = compressStreamFactory;
     }
 
     @Override
@@ -41,16 +49,22 @@ final class TextualExternalPrinter implements IExternalPrinter {
     }
 
     @Override
-    public void newStream(OutputStream outputStream) {
-        delegate = new TextualOutputStreamDelegate(outputStream);
+    public void newStream(OutputStream outputStream) throws HyracksDataException {
+        if (printStream != null) {
+            close();
+        }
+        delegate = new TextualOutputStreamDelegate(compressStreamFactory.createStream(outputStream));
         printStream = new PrintStream(delegate);
     }
 
     @Override
     public void print(IValueReference value) throws HyracksDataException {
         printer.print(value.getByteArray(), value.getStartOffset(), value.getLength(), printStream);
+        afterPrint();
         delegate.checkError();
     }
+
+    abstract void afterPrint() throws HyracksDataException;
 
     @Override
     public void close() throws HyracksDataException {

@@ -30,7 +30,7 @@ import org.apache.asterix.external.writer.compressor.IExternalFileCompressStream
 import org.apache.asterix.external.writer.compressor.NoOpExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.printer.TextualExternalFilePrinterFactory;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
-import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
+import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
@@ -83,12 +83,12 @@ public class ExternalWriterProvider {
         return Integer.parseInt(maxResultString);
     }
 
-    private static ExternalWriterConfiguration createConfiguration(ICcApplicationContext appCtx, IWriteDataSink sink,
-            String staticPath, SourceLocation pathExpressionLocation) {
+    private static ExternalFileWriterConfiguration createConfiguration(ICcApplicationContext appCtx,
+            IWriteDataSink sink, String staticPath, SourceLocation pathExpressionLocation) {
         Map<String, String> params = sink.getConfiguration();
         boolean singleNodeCluster = isSingleNodeCluster(appCtx);
 
-        return new ExternalWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster);
+        return new ExternalFileWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster);
     }
 
     private static boolean isSingleNodeCluster(ICcApplicationContext appCtx) {

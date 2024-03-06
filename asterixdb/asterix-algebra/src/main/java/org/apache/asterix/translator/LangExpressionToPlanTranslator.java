@@ -361,7 +361,7 @@ abstract class LangExpressionToPlanTranslator
         return translate(expr, outputDatasetName, (ICompiledDmlStatement) stmt, null, resultMetadata);
     }
 
-    public ILogicalPlan translateCopyTo(Query expr, CompiledStatements.ICompiledStatement stmt,
+    private ILogicalPlan translateCopyTo(Query expr, CompiledStatements.ICompiledStatement stmt,
             IResultMetadata resultMetadata) throws AlgebricksException {
         CompiledStatements.CompiledCopyToStatement copyTo = (CompiledStatements.CompiledCopyToStatement) stmt;
         MutableObject<ILogicalOperator> base = new MutableObject<>(new EmptyTupleSourceOperator());
@@ -423,7 +423,7 @@ abstract class LangExpressionToPlanTranslator
         // astPathExpressions has at least one expression see CopyToStatement constructor
         List<Expression> astPathExpressions = copyTo.getPathExpressions();
         ILogicalExpression fullPathExpr = null;
-        String separator = getExternalWriterSeparator(copyTo.getAdapter());
+        String separator = getSeparator(copyTo.getAdapter(), copyTo.isFileStoreSink());
         List<Mutable<ILogicalExpression>> pathExprs = new ArrayList<>(astPathExpressions.size());
         Pair<ILogicalExpression, Mutable<ILogicalOperator>> pathExprPair;
         for (int i = 0; i < astPathExpressions.size(); i++) {
@@ -483,8 +483,8 @@ abstract class LangExpressionToPlanTranslator
         return new ALogicalPlanImpl(globalPlanRoots);
     }
 
-    protected String getExternalWriterSeparator(String adapter) {
-        return String.valueOf(ExternalWriterProvider.getSeparator(adapter));
+    private String getSeparator(String adapter, boolean isFileStore) {
+        return isFileStore ? String.valueOf(ExternalWriterProvider.getSeparator(adapter)) : "";
     }
 
     public ILogicalPlan translate(Query expr, String outputDatasetName, ICompiledDmlStatement stmt,

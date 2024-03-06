@@ -36,7 +36,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
-import org.apache.asterix.runtime.writer.ExternalWriterConfiguration;
+import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
@@ -61,7 +61,7 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     static final char SEPARATOR = '/';
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
         @Override
-        public IExternalFileWriterFactory create(ExternalWriterConfiguration configuration) {
+        public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
             return new S3ExternalFileWriterFactory(configuration);
         }
 
@@ -75,7 +75,7 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
     private final String staticPath;
     private transient S3CloudClient cloudClient;
 
-    private S3ExternalFileWriterFactory(ExternalWriterConfiguration externalConfig) {
+    private S3ExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
         configuration = externalConfig.getConfiguration();
         pathSourceLocation = externalConfig.getPathSourceLocation();
         staticPath = externalConfig.getStaticPath();

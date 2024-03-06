@@ -22,13 +22,13 @@ import java.util.Map;
 
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public final class ExternalWriterConfiguration {
+public final class ExternalFileWriterConfiguration {
     private final Map<String, String> configuration;
     private final SourceLocation pathSourceLocation;
     private final String staticPath;
     private final boolean singleNodeCluster;
 
-    public ExternalWriterConfiguration(Map<String, String> configuration, SourceLocation pathSourceLocation,
+    public ExternalFileWriterConfiguration(Map<String, String> configuration, SourceLocation pathSourceLocation,
             String staticPath, boolean singleNodeCluster) {
         this.configuration = configuration;
         this.pathSourceLocation = pathSourceLocation;
