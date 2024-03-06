@@ -133,7 +133,7 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
                     new NcResultPrinter(appCtx, responseMsg, getResultSet(), delivery, sessionOutput, stats));
         }
         warnings.addAll(responseMsg.getWarnings());
-        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings);
+        buildResponseResults(responsePrinter, sessionOutput, responseMsg.getExecutionPlans(), warnings, executionState);
     }
 
     protected void ensureOptionalParameters(Map<String, String> optionalParameters) throws HyracksDataException {

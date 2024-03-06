@@ -347,7 +347,8 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
     }
 
     protected void buildResponseResults(ResponsePrinter responsePrinter, SessionOutput sessionOutput,
-            ExecutionPlans plans, List<Warning> warnings) throws HyracksDataException {
+            ExecutionPlans plans, List<Warning> warnings, RequestExecutionState executionState)
+            throws HyracksDataException {
         responsePrinter.addResultPrinter(new PlansPrinter(plans, sessionOutput.config().getPlanFormat()));
         if (!warnings.isEmpty()) {
             List<ICodedMessage> codedWarnings = new ArrayList<>();
@@ -423,7 +424,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
         executionState.end();
         translator.getWarnings(warnings, maxWarnings - warnings.size());
         stats.updateTotalWarningsCount(parserTotalWarningsCount);
-        buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings);
+        buildResponseResults(responsePrinter, sessionOutput, translator.getExecutionPlans(), warnings, executionState);
     }
 
     protected boolean handleIFormattedException(IError error, IFormattedException ex,
