@@ -82,6 +82,11 @@ public class ExternalDataConstants {
     public static final String KEY_EXPRESSION = "expression";
     public static final String KEY_LOCAL_SOCKET_PATH = "local-socket-path";
     public static final String KEY_FORMAT = "format";
+    public static final String KEY_SCHEMA = "schema";
+    public static final String KEY_PARQUET_ROW_GROUP_SIZE = "row-group-size";
+    public static final String PARQUET_DEFAULT_ROW_GROUP_SIZE = "10MB";
+    public static final String KEY_PARQUET_PAGE_SIZE = "page-size";
+    public static final String PARQUET_DEFAULT_PAGE_SIZE = "8KB";
     public static final String KEY_INCLUDE = "include";
     public static final String KEY_EXCLUDE = "exclude";
     public static final String KEY_QUOTE = "quote";
@@ -161,6 +166,8 @@ public class ExternalDataConstants {
     public static final String CLASS_NAME_PARQUET_INPUT_FORMAT =
             "org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat";
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
+    public static final String S3A_CHANGE_DETECTION_REQUIRED = "requireVersionChangeDetection";
+    public static final String S3A_CHANGE_DETECTION_REQUIRED_CONFIG_KEY = "fs.s3a.change.detection.version.required";
     /**
      * input formats aliases
      */
@@ -306,6 +313,8 @@ public class ExternalDataConstants {
      * Compression constants
      */
     public static final String KEY_COMPRESSION_GZIP = "gzip";
+    public static final String KEY_COMPRESSION_SNAPPY = "snappy";
+    public static final String KEY_COMPRESSION_ZSTD = "zstd";
     public static final String KEY_COMPRESSION_GZIP_COMPRESSION_LEVEL = "gzipCompressionLevel";
 
     /**
@@ -318,13 +327,17 @@ public class ExternalDataConstants {
     public static final int WRITER_MAX_RESULT_MINIMUM = 1000;
     public static final Set<String> WRITER_SUPPORTED_FORMATS;
     public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
-    public static final Set<String> WRITER_SUPPORTED_COMPRESSION;
+    public static final Set<String> TEXTUAL_WRITER_SUPPORTED_COMPRESSION;
+    public static final Set<String> PARQUET_WRITER_SUPPORTED_COMPRESSION;
+    public static final int PARQUET_DICTIONARY_PAGE_SIZE = 1048576;
 
     static {
-        WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE);
+        WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE, FORMAT_PARQUET);
         WRITER_SUPPORTED_ADAPTERS = Set.of(ALIAS_LOCALFS_ADAPTER.toLowerCase(), KEY_ADAPTER_NAME_AWS_S3.toLowerCase(),
                 KEY_ADAPTER_NAME_GCS.toLowerCase());
-        WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
+        TEXTUAL_WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
+        PARQUET_WRITER_SUPPORTED_COMPRESSION =
+                Set.of(KEY_COMPRESSION_GZIP, KEY_COMPRESSION_SNAPPY, KEY_COMPRESSION_ZSTD);
     }
 
     public static class ParquetOptions {

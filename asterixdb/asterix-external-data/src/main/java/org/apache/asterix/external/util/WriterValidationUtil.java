@@ -20,6 +20,10 @@ package org.apache.asterix.external.util;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.MINIMUM_VALUE_ALLOWED_FOR_PARAM;
+import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_JSON_LOWER_CASE;
+import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQUET;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_PAGE_SIZE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_ROW_GROUP_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_RESULT;
 import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_RESULT_MINIMUM;
 
@@ -31,6 +35,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.util.StorageUtil;
 
 public class WriterValidationUtil {
 
@@ -41,7 +46,6 @@ public class WriterValidationUtil {
             Map<String, String> configuration, SourceLocation sourceLocation) throws CompilationException {
         validateAdapter(adapter, supportedAdapters, sourceLocation);
         validateFormat(configuration, sourceLocation);
-        validateCompression(configuration, sourceLocation);
         validateMaxResult(configuration, sourceLocation);
     }
 
@@ -56,14 +60,66 @@ public class WriterValidationUtil {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         checkSupported(ExternalDataConstants.KEY_FORMAT, format, ExternalDataConstants.WRITER_SUPPORTED_FORMATS,
                 ErrorCode.UNSUPPORTED_WRITING_FORMAT, sourceLocation, false);
+        switch (format.toLowerCase()) {
+            case FORMAT_JSON_LOWER_CASE:
+                validateJSON(configuration, sourceLocation);
+                break;
+            case FORMAT_PARQUET:
+                validateParquet(configuration, sourceLocation);
+                break;
+        }
     }
 
-    private static void validateCompression(Map<String, String> configuration, SourceLocation sourceLocation)
+    private static void validateParquet(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        validateParquetCompression(configuration, sourceLocation);
+        validateParquetRowGroupSize(configuration);
+        validateParquetPageSize(configuration);
+    }
+
+    private static void validateParquetRowGroupSize(Map<String, String> configuration) throws CompilationException {
+        String rowGroupSize = configuration.get(KEY_PARQUET_ROW_GROUP_SIZE);
+        if (rowGroupSize == null)
+            return;
+        try {
+            StorageUtil.getByteValue(rowGroupSize);
+        } catch (IllegalArgumentException e) {
+            throw CompilationException.create(ErrorCode.ILLEGAL_SIZE_PROVIDED, KEY_PARQUET_ROW_GROUP_SIZE,
+                    rowGroupSize);
+        }
+    }
+
+    private static void validateParquetPageSize(Map<String, String> configuration) throws CompilationException {
+        String pageSize = configuration.get(KEY_PARQUET_PAGE_SIZE);
+        if (pageSize == null)
+            return;
+        try {
+            StorageUtil.getByteValue(pageSize);
+        } catch (IllegalArgumentException e) {
+            throw CompilationException.create(ErrorCode.ILLEGAL_SIZE_PROVIDED, KEY_PARQUET_PAGE_SIZE, pageSize);
+        }
+    }
+
+    private static void validateJSON(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        validateTextualCompression(configuration, sourceLocation);
+    }
+
+    private static void validateParquetCompression(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         String compression = configuration.get(ExternalDataConstants.KEY_WRITER_COMPRESSION);
-        checkSupported(ExternalDataConstants.KEY_WRITER_COMPRESSION, compression,
-                ExternalDataConstants.WRITER_SUPPORTED_COMPRESSION, ErrorCode.UNKNOWN_COMPRESSION_SCHEME,
-                sourceLocation, true);
+        checkCompressionSupported(ExternalDataConstants.KEY_WRITER_COMPRESSION, compression,
+                ExternalDataConstants.PARQUET_WRITER_SUPPORTED_COMPRESSION,
+                ErrorCode.UNSUPPORTED_WRITER_COMPRESSION_SCHEME, sourceLocation, FORMAT_PARQUET, true);
+    }
+
+    private static void validateTextualCompression(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        String compression = configuration.get(ExternalDataConstants.KEY_WRITER_COMPRESSION);
+        checkCompressionSupported(ExternalDataConstants.KEY_WRITER_COMPRESSION, compression,
+                ExternalDataConstants.TEXTUAL_WRITER_SUPPORTED_COMPRESSION,
+                ErrorCode.UNSUPPORTED_WRITER_COMPRESSION_SCHEME, sourceLocation,
+                configuration.get(ExternalDataConstants.KEY_FORMAT), true);
         if (ExternalDataUtils.isGzipCompression(compression)) {
             validateGzipCompressionLevel(configuration, sourceLocation);
         }
@@ -118,6 +174,24 @@ public class WriterValidationUtil {
             }
         } catch (NumberFormatException e) {
             throw CompilationException.create(ErrorCode.INTEGER_VALUE_EXPECTED, sourceLocation, compressionLevelStr);
+        }
+    }
+
+    private static void checkCompressionSupported(String paramKey, String value, Set<String> supportedSet,
+            ErrorCode errorCode, SourceLocation sourceLocation, String format, boolean optional)
+            throws CompilationException {
+        if (optional && value == null) {
+            return;
+        }
+
+        if (value == null) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, sourceLocation, paramKey);
+        }
+
+        String normalizedValue = value.toLowerCase();
+        if (!supportedSet.contains(normalizedValue)) {
+            List<String> sorted = supportedSet.stream().sorted().collect(Collectors.toList());
+            throw CompilationException.create(errorCode, sourceLocation, value, format, sorted.toString());
         }
     }
 

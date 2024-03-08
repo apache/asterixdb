@@ -1,0 +1,240 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE test;
+
+COPY (
+   SELECT c.* FROM DummyTweetDataset c
+) toWriter
+TO S3
+PATH ("copy-to-result", "parquet-tweet")
+WITH {
+    "accessKeyId":"dummyAccessKey",
+    "secretAccessKey":"dummySecretKey",
+    "region":"us-west-2",
+    "serviceEndpoint":"http://127.0.0.1:8001",
+    "container":"playground",
+    "format":"parquet",
+    "schema":"message schema {
+                optional group coordinates {
+                  optional group coordinates (LIST) {
+                    repeated group list {
+                      optional double element;
+                    }
+                  }
+                  optional binary type (UTF8);
+                }
+                optional binary created_at (UTF8);
+                optional group entities {
+                  optional group urls (LIST) {
+                    repeated group list {
+                      optional group element {
+                        optional binary display_url (UTF8);
+                        optional binary expanded_url (UTF8);
+                        optional group indices (LIST) {
+                          repeated group list {
+                            optional int64 element;
+                          }
+                        }
+                        optional binary url (UTF8);
+                      }
+                    }
+                  }
+                  optional group user_mentions (LIST) {
+                    repeated group list {
+                      optional group element {
+                        optional int64 id;
+                        optional binary id_str (UTF8);
+                        optional group indices (LIST) {
+                          repeated group list {
+                            optional int64 element;
+                          }
+                        }
+                        optional binary name (UTF8);
+                        optional binary screen_name (UTF8);
+                      }
+                    }
+                  }
+                }
+                optional int64 favorite_count;
+                optional boolean favorited;
+                optional binary filter_level (UTF8);
+                optional group geo {
+                  optional group coordinates (LIST) {
+                    repeated group list {
+                      optional double element;
+                    }
+                  }
+                  optional binary type (UTF8);
+                }
+                optional binary id (UTF8);
+                optional binary id_str (UTF8);
+                optional binary in_reply_to_screen_name (UTF8);
+                optional int64 in_reply_to_status_id;
+                optional binary in_reply_to_status_id_str (UTF8);
+                optional int64 in_reply_to_user_id;
+                optional binary in_reply_to_user_id_str (UTF8);
+                optional boolean is_quote_status;
+                optional binary lang (UTF8);
+                optional group place {
+                  optional group bounding_box {
+                    optional group coordinates (LIST) {
+                      repeated group list {
+                        optional group element (LIST) {
+                          repeated group list {
+                            optional group element (LIST) {
+                              repeated group list {
+                                optional double element;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                    optional binary type (UTF8);
+                  }
+                  optional binary country (UTF8);
+                  optional binary country_code (UTF8);
+                  optional binary full_name (UTF8);
+                  optional binary id (UTF8);
+                  optional binary name (UTF8);
+                  optional binary place_type (UTF8);
+                  optional binary url (UTF8);
+                }
+                optional boolean possibly_sensitive;
+                optional group quoted_status {
+                  optional binary created_at (UTF8);
+                  optional group entities {
+                    optional group user_mentions (LIST) {
+                      repeated group list {
+                        optional group element {
+                          optional int64 id;
+                          optional binary id_str (UTF8);
+                          optional group indices (LIST) {
+                            repeated group list {
+                              optional int64 element;
+                            }
+                          }
+                          optional binary name (UTF8);
+                          optional binary screen_name (UTF8);
+                        }
+                      }
+                    }
+                  }
+                  optional int64 favorite_count;
+                  optional boolean favorited;
+                  optional binary filter_level (UTF8);
+                  optional int64 id;
+                  optional binary id_str (UTF8);
+                  optional binary in_reply_to_screen_name (UTF8);
+                  optional int64 in_reply_to_status_id;
+                  optional binary in_reply_to_status_id_str (UTF8);
+                  optional int64 in_reply_to_user_id;
+                  optional binary in_reply_to_user_id_str (UTF8);
+                  optional boolean is_quote_status;
+                  optional binary lang (UTF8);
+                  optional int64 retweet_count;
+                  optional boolean retweeted;
+                  optional binary source (UTF8);
+                  optional binary text (UTF8);
+                  optional boolean truncated;
+                  optional group user {
+                    optional boolean contributors_enabled;
+                    optional binary created_at (UTF8);
+                    optional boolean default_profile;
+                    optional boolean default_profile_image;
+                    optional binary description (UTF8);
+                    optional int64 favourites_count;
+                    optional int64 followers_count;
+                    optional int64 friends_count;
+                    optional boolean geo_enabled;
+                    optional int64 id;
+                    optional binary id_str (UTF8);
+                    optional boolean is_translator;
+                    optional binary lang (UTF8);
+                    optional int64 listed_count;
+                    optional binary name (UTF8);
+                    optional binary profile_background_color (UTF8);
+                    optional binary profile_background_image_url (UTF8);
+                    optional binary profile_background_image_url_https (UTF8);
+                    optional boolean profile_background_tile;
+                    optional binary profile_banner_url (UTF8);
+                    optional binary profile_image_url (UTF8);
+                    optional binary profile_image_url_https (UTF8);
+                    optional binary profile_link_color (UTF8);
+                    optional binary profile_sidebar_border_color (UTF8);
+                    optional binary profile_sidebar_fill_color (UTF8);
+                    optional binary profile_text_color (UTF8);
+                    optional boolean profile_use_background_image;
+                    optional boolean protected;
+                    optional binary screen_name (UTF8);
+                    optional int64 statuses_count;
+                    optional boolean verified;
+                  }
+                }
+                optional int64 quoted_status_id;
+                optional binary quoted_status_id_str (UTF8);
+                optional int64 retweet_count;
+                optional boolean retweeted;
+                optional binary source (UTF8);
+                optional binary text (UTF8);
+                optional binary timestamp_ms (UTF8);
+                optional boolean truncated;
+                optional group user {
+                  optional boolean contributors_enabled;
+                  optional binary created_at (UTF8);
+                  optional boolean default_profile;
+                  optional boolean default_profile_image;
+                  optional binary description (UTF8);
+                  optional int64 favourites_count;
+                  optional int64 followers_count;
+                  optional int64 friends_count;
+                  optional boolean geo_enabled;
+                  optional int64 id;
+                  optional binary id_str (UTF8);
+                  optional boolean is_translator;
+                  optional binary lang (UTF8);
+                  optional int64 listed_count;
+                  optional binary location (UTF8);
+                  optional binary name (UTF8);
+                  optional binary profile_background_color (UTF8);
+                  optional binary profile_background_image_url (UTF8);
+                  optional binary profile_background_image_url_https (UTF8);
+                  optional boolean profile_background_tile;
+                  optional binary profile_banner_url (UTF8);
+                  optional binary profile_image_url (UTF8);
+                  optional binary profile_image_url_https (UTF8);
+                  optional binary profile_link_color (UTF8);
+                  optional binary profile_sidebar_border_color (UTF8);
+                  optional binary profile_sidebar_fill_color (UTF8);
+                  optional binary profile_text_color (UTF8);
+                  optional boolean profile_use_background_image;
+                  optional boolean protected;
+                  optional binary screen_name (UTF8);
+                  optional int64 statuses_count;
+                  optional binary time_zone (UTF8);
+                  optional binary url (UTF8);
+                  optional int64 utc_offset;
+                  optional boolean verified;
+                }
+              }"
+};
+
+
+

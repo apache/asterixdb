@@ -218,6 +218,11 @@ public class HDFSUtils {
             configureParquet(configuration, conf);
         }
 
+        if (configuration.containsKey(ExternalDataConstants.S3A_CHANGE_DETECTION_REQUIRED)) {
+            conf.set(ExternalDataConstants.S3A_CHANGE_DETECTION_REQUIRED_CONFIG_KEY,
+                    configuration.get(ExternalDataConstants.S3A_CHANGE_DETECTION_REQUIRED));
+        }
+
         return conf;
     }
 
