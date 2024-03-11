@@ -50,6 +50,7 @@ public class StorageConstants {
     public static final String DEFAULT_FILTERED_DATASET_COMPACTION_POLICY_NAME = "correlated-prefix";
     public static final Map<String, String> DEFAULT_COMPACTION_POLICY_PROPERTIES;
     public static final int METADATA_PARTITION = -1;
+    public static final String BOOTSTRAP_FILE_NAME = ".bootstrap";
 
     /**
      * The storage version of AsterixDB related artifacts (e.g. log files, checkpoint files, etc..).

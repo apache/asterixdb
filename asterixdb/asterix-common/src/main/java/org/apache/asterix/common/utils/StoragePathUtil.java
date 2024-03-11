@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.utils;
 
+import static org.apache.asterix.common.utils.StorageConstants.METADATA_PARTITION;
 import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
@@ -26,8 +27,11 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.MetadataConstants;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -40,6 +44,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.MappedFileSplit;
 import org.apache.hyracks.dataflow.std.file.ConstantFileSplitProvider;
 import org.apache.hyracks.dataflow.std.file.IFileSplitProvider;
+import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -225,5 +230,15 @@ public class StoragePathUtil {
 
     public static boolean isRelativeParent(FileReference parent, FileReference child) {
         return child.getRelativePath().startsWith(parent.getRelativePath());
+    }
+
+    public static String getNamespacePath(INamespacePathResolver nsPathResolver, Namespace namespace, int partition) {
+        return FileUtil.joinPath(prepareStoragePartitionPath(partition), nsPathResolver.resolve(namespace));
+    }
+
+    public static String getBootstrapMarkerRelativePath(INamespacePathResolver namespacePathResolver) {
+        String metadataNamespacePath = StoragePathUtil.getNamespacePath(namespacePathResolver,
+                MetadataConstants.METADATA_NAMESPACE, METADATA_PARTITION);
+        return FileUtil.joinPath(metadataNamespacePath, StorageConstants.BOOTSTRAP_FILE_NAME);
     }
 }

@@ -21,8 +21,11 @@ package org.apache.asterix.app.nc.task;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.service.IControllerService;
 
 public class MetadataBootstrapTask implements INCLifecycleTask {
@@ -40,10 +43,31 @@ public class MetadataBootstrapTask implements INCLifecycleTask {
         try {
             appContext.getReplicaManager().promote(partitionId);
             SystemState state = appContext.getTransactionSubsystem().getRecoveryManager().getSystemState();
-            appContext.initializeMetadata(state == SystemState.PERMANENT_DATA_LOSS, partitionId);
+            boolean firstBootstrap = state == SystemState.PERMANENT_DATA_LOSS;
+            if (firstBootstrap) {
+                writeBootstrapMarker(appContext);
+            }
+            appContext.initializeMetadata(firstBootstrap, partitionId);
+            if (firstBootstrap) {
+                deleteBootstrapMarker(appContext);
+            }
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    private void writeBootstrapMarker(INcApplicationContext appContext) throws HyracksDataException {
+        IIOManager persistenceIoManager = appContext.getPersistenceIoManager();
+        FileReference bootstrapMarker = persistenceIoManager
+                .resolve(StoragePathUtil.getBootstrapMarkerRelativePath(appContext.getNamespacePathResolver()));
+        persistenceIoManager.overwrite(bootstrapMarker, new byte[0]);
+    }
+
+    private void deleteBootstrapMarker(INcApplicationContext appContext) throws HyracksDataException {
+        IIOManager persistenceIoManager = appContext.getPersistenceIoManager();
+        FileReference bootstrapMarker = persistenceIoManager
+                .resolve(StoragePathUtil.getBootstrapMarkerRelativePath(appContext.getNamespacePathResolver()));
+        persistenceIoManager.delete(bootstrapMarker);
     }
 
     @Override

@@ -47,7 +47,6 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.util.file.FileUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,21 +55,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper {
     private static final Logger LOGGER = LogManager.getLogger();
-    //TODO(DB): change
-    private final String metadataNamespacePath;
     protected final ICloudClient cloudClient;
     protected final IWriteBufferProvider writeBufferProvider;
     protected final String bucket;
     protected final Set<Integer> partitions;
     protected final List<FileReference> partitionPaths;
     protected final IOManager localIoManager;
+    protected final INamespacePathResolver nsPathResolver;
 
     public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
             INamespacePathResolver nsPathResolver) throws HyracksDataException {
         super(ioManager.getIODevices(), ioManager.getDeviceComputer(), ioManager.getIOParallelism(),
                 ioManager.getQueueSize());
-        this.metadataNamespacePath = FileUtil.joinPath(STORAGE_ROOT_DIR_NAME, PARTITION_DIR_PREFIX + METADATA_PARTITION,
-                nsPathResolver.resolve(MetadataConstants.METADATA_NAMESPACE));
+        this.nsPathResolver = nsPathResolver;
         this.bucket = cloudProperties.getStorageBucket();
         cloudClient = CloudClientProvider.getClient(cloudProperties);
         int numOfThreads = getIODevices().size() * getIOParallelism();
@@ -88,7 +85,9 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public IRecoveryManager.SystemState getSystemStateOnMissingCheckpoint() {
-        if (cloudClient.listObjects(bucket, metadataNamespacePath, IoUtil.NO_OP_FILTER).isEmpty()) {
+        Set<String> existingMetadataFiles = getCloudMetadataPartitionFiles();
+        String bootstrapMarkerPath = StoragePathUtil.getBootstrapMarkerRelativePath(nsPathResolver);
+        if (existingMetadataFiles.isEmpty() || existingMetadataFiles.contains(bootstrapMarkerPath)) {
             LOGGER.info("First time to initialize this cluster: systemState = PERMANENT_DATA_LOSS");
             return IRecoveryManager.SystemState.PERMANENT_DATA_LOSS;
         } else {
@@ -99,11 +98,15 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public final void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions,
-            boolean metadataNode, int metadataPartition, boolean cleanup) throws HyracksDataException {
+            boolean metadataNode, int metadataPartition, boolean cleanup, boolean ensureCompleteBootstrap)
+            throws HyracksDataException {
         partitions.clear();
         partitions.addAll(activePartitions);
         if (metadataNode) {
             partitions.add(metadataPartition);
+            if (ensureCompleteBootstrap) {
+                ensureCompleteMetadataBootstrap();
+            }
         }
 
         partitionPaths.clear();
@@ -290,4 +293,26 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         cloudClient.write(bucket, key, bytes);
     }
 
+    private Set<String> getCloudMetadataPartitionFiles() {
+        String metadataNamespacePath = StoragePathUtil.getNamespacePath(nsPathResolver,
+                MetadataConstants.METADATA_NAMESPACE, METADATA_PARTITION);
+        return cloudClient.listObjects(bucket, metadataNamespacePath, IoUtil.NO_OP_FILTER);
+    }
+
+    private void ensureCompleteMetadataBootstrap() throws HyracksDataException {
+        Set<String> metadataPartitionFiles = getCloudMetadataPartitionFiles();
+        boolean foundBootstrapMarker =
+                metadataPartitionFiles.contains(StoragePathUtil.getBootstrapMarkerRelativePath(nsPathResolver));
+        // if the bootstrap file exists, we failed to bootstrap --> delete all partial files in metadata partition
+        if (foundBootstrapMarker) {
+            LOGGER.info(
+                    "detected failed bootstrap attempted, deleting all existing files in the metadata partition: {}",
+                    metadataPartitionFiles);
+            IIOBulkOperation deleteBulkOperation = createDeleteBulkOperation();
+            for (String file : metadataPartitionFiles) {
+                deleteBulkOperation.add(resolve(file));
+            }
+            performBulkOperation(deleteBulkOperation);
+        }
+    }
 }

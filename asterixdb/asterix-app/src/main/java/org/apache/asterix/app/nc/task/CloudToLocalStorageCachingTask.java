@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.asterix.common.api.INCLifecycleTask;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
+import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.transaction.management.resource.PersistentLocalResourceRepository;
 import org.apache.hyracks.api.control.CcId;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -58,9 +59,10 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
         String nodeId = applicationContext.getServiceContext().getNodeId();
         LOGGER.info("Initializing Node {} with storage partitions: {}", nodeId, storagePartitions);
 
+        Checkpoint latestCheckpoint = applicationContext.getTransactionSubsystem().getCheckpointManager().getLatest();
         IPartitionBootstrapper bootstrapper = applicationContext.getPartitionBootstrapper();
-        bootstrapper.bootstrap(storagePartitions, lrs.getOnDiskPartitions(), metadataNode, metadataPartitionId,
-                cleanup);
+        bootstrapper.bootstrap(storagePartitions, lrs.getOnDiskPartitions(), metadataNode, metadataPartitionId, cleanup,
+                latestCheckpoint == null);
     }
 
     @Override
