@@ -31,11 +31,12 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.junit.Test;
 
 public class AvroFileExampleGeneratorUtil {
     private static final String SCHEMA_STRING = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"SimpleRecord\",\n"
             + "  \"namespace\": \"com.example\",\n" + "  \"fields\": [\n" + "    {\n"
-            + "      \"name\": \"unionField\",\n" + "      \"type\": [\"int\", \"string\"],\n"
+            + "      \"name\": \"unionField\",\n" + "      \"type\": [\"int\", \"string\", \"bytes\"],\n"
             + "      \"doc\": \"This field can be either an int or a string.\"\n" + "    },\n" + "    {\n"
             + "      \"name\": \"mapField\",\n" + "      \"type\": {\n" + "        \"type\": \"map\",\n"
             + "        \"values\": \"int\",\n" + "        \"doc\": \"This is a map of string keys to int values.\"\n"
@@ -96,7 +97,7 @@ public class AvroFileExampleGeneratorUtil {
 
             //second record to be added
             GenericRecord record2 = new GenericData.Record(schema);
-            record2.put("unionField", "Example string");
+            record2.put("unionField", ByteBuffer.wrap(new byte[] { 0x01, 0x05 }));
             Map<String, Integer> map2 = new HashMap<>();
             map2.put("key3", 3);
             map2.put("key4", 4);
@@ -114,5 +115,10 @@ public class AvroFileExampleGeneratorUtil {
             System.err.println("Failed to write AVRO file: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Test
+    public void main() throws IOException {
+        writeExample();
     }
 }

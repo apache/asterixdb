@@ -91,19 +91,26 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
     }
 
     private void parseMap(Schema mapSchema, Map<String, ?> map, DataOutput out) throws IOException {
-        Schema valueSchema = mapSchema.getValueType();
-        final IMutableValueStorage valueBuffer = parserContext.enterCollection();
-        final IMutableValueStorage keyBuffer = parserContext.enterCollection();
+        final IMutableValueStorage item = parserContext.enterCollection();
+        final IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        IAsterixListBuilder listBuilder =
+                parserContext.getCollectionBuilder(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
         for (Map.Entry<String, ?> entry : map.entrySet()) {
-            keyBuffer.reset();
+            objectBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
             valueBuffer.reset();
-            serializeString(entry.getKey(), Schema.Type.STRING, keyBuffer.getDataOutput());
-            parseValue(valueSchema, entry.getValue(), valueBuffer.getDataOutput());
-            objectBuilder.addField(keyBuffer, valueBuffer);
+            serializeString(entry.getKey(), Schema.Type.STRING, valueBuffer.getDataOutput());
+            objectBuilder.addField(parserContext.getSerializedFieldName("key"), valueBuffer);
+            valueBuffer.reset();
+            parseValue(mapSchema.getValueType(), entry.getValue(), valueBuffer.getDataOutput());
+            objectBuilder.addField(parserContext.getSerializedFieldName("value"), valueBuffer);
+            item.reset();
+            objectBuilder.write(item.getDataOutput(), true);
+            listBuilder.addItem(item);
         }
-        objectBuilder.write(out, true);
+        listBuilder.write(out, true);
         parserContext.exitObject(valueBuffer, null, objectBuilder);
+        parserContext.exitCollection(item, listBuilder);
     }
 
     private final void parseUnion(Schema unionSchema, Object value, DataOutput out) throws IOException {
@@ -134,7 +141,7 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             case BOOLEAN:
                 return value instanceof Boolean;
             case BYTES:
-                return value instanceof Byte;
+                return value instanceof ByteBuffer;
             case RECORD:
                 return value instanceof GenericData.Record;
             default:

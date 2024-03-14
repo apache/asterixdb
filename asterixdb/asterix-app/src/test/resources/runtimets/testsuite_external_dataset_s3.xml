@@ -365,7 +365,7 @@
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">none</output-dir>
         <source-location>false</source-location>
-        <expected-error>Not an Avro data file.</expected-error>
+        <expected-error>Malformed input stream</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">

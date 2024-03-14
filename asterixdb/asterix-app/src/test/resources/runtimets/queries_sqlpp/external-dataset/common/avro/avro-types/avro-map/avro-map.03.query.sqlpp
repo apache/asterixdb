@@ -24,6 +24,6 @@
 
 USE test;
 
-SELECT RAW a.mapField.key1
+SELECT RAW a.mapField[0]
 FROM AvroDataset a
 ORDER BY a.id;

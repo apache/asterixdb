@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.AsterixInputStream;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.dataflow.AbstractFeedDataFlowController;
@@ -35,6 +37,7 @@ import org.apache.asterix.external.input.stream.DiscretizedMultipleInputStream;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.IFeedLogManager;
+import org.apache.avro.InvalidAvroMagicException;
 import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
@@ -133,12 +136,15 @@ public class AvroRecordReader extends AbstractStreamRecordReader<GenericRecord> 
     }
 
     private boolean advance() throws IOException {
-        if (inputStream.advance()) {
-            DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
-            dataFileStream = new DataFileStream<>(inputStream, datumReader);
-            return true;
+        try {
+            if (inputStream.advance()) {
+                DatumReader<GenericRecord> datumReader = new GenericDatumReader<>();
+                dataFileStream = new DataFileStream<>(inputStream, datumReader);
+                return true;
+            }
+        } catch (InvalidAvroMagicException e) {
+            throw new RuntimeDataException(ErrorCode.RECORD_READER_MALFORMED_INPUT_STREAM, e);
         }
-
         return false;
     }
 

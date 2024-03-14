@@ -1,2 +1,2 @@
-{ "key1": 1, "key2": 2 }
-{ "key3": 3, "key4": 4 }
+[ { "key": "key1", "value": 1 }, { "key": "key2", "value": 2 } ]
+[ { "key": "key3", "value": 3 }, { "key": "key4", "value": 4 } ]

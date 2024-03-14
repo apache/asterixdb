@@ -132,11 +132,9 @@ public class StreamRecordReaderFactory implements IRecordReaderFactory<Object> {
             streamRecordReader.configure(context.getTaskContext(), streamFactory.createInputStream(context),
                     configuration);
             return streamRecordReader;
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException
-                | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException
+                | IOException e) {
             throw HyracksDataException.create(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
     }
 }
