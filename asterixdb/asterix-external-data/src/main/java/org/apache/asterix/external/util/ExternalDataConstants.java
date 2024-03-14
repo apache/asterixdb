@@ -310,7 +310,7 @@ public class ExternalDataConstants {
      */
     public static final String KEY_WRITER_MAX_RESULT = "max-objects-per-file";
     public static final String KEY_WRITER_COMPRESSION = "compression";
-    public static final int WRITER_MAX_RESULT_DEFAULT = 1000;
+    public static final int WRITER_MAX_RESULT_DEFAULT = 10000;
     public static final Set<String> WRITER_SUPPORTED_FORMATS;
     public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
     public static final Set<String> WRITER_SUPPORTED_COMPRESSION;
