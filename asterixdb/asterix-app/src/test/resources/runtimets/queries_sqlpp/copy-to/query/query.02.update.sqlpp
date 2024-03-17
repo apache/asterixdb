@@ -36,7 +36,8 @@ WITH {
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
     "format":"json",
-    "compression":"gzip"
+    "compression":"gzip",
+    "gzipCompressionLevel": "1"
 }
 
 

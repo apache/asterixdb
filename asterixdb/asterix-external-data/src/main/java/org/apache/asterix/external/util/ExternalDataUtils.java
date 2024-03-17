@@ -1085,4 +1085,8 @@ public class ExternalDataUtils {
                 return ExternalDataConstants.KEY_PATH;
         }
     }
+
+    public static boolean isGzipCompression(String compression) {
+        return ExternalDataConstants.KEY_COMPRESSION_GZIP.equalsIgnoreCase(compression);
+    }
 }

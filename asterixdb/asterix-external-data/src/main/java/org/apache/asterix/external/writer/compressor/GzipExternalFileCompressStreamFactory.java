@@ -22,19 +22,30 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipParameters;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class GzipExternalFileCompressStreamFactory implements IExternalFileCompressStreamFactory {
     private static final long serialVersionUID = -7364595253362922025L;
-    public static IExternalFileCompressStreamFactory INSTANCE = new GzipExternalFileCompressStreamFactory();
+    private final int compressionLevel;
+    private final int bufferSize;
 
-    private GzipExternalFileCompressStreamFactory() {
+    public static GzipExternalFileCompressStreamFactory create(int compressionLevel, int bufferSize) {
+        return new GzipExternalFileCompressStreamFactory(compressionLevel, bufferSize);
+    }
+
+    private GzipExternalFileCompressStreamFactory(int compressionLevel, int bufferSize) {
+        this.compressionLevel = compressionLevel;
+        this.bufferSize = bufferSize;
     }
 
     @Override
     public OutputStream createStream(OutputStream outputStream) throws HyracksDataException {
         try {
-            return new GzipCompressorOutputStream(outputStream);
+            GzipParameters gzipParam = new GzipParameters();
+            gzipParam.setCompressionLevel(compressionLevel);
+            gzipParam.setBufferSize(bufferSize);
+            return new GzipCompressorOutputStream(outputStream, gzipParam);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

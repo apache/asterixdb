@@ -20,10 +20,12 @@ package org.apache.asterix.metadata.provider;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.Deflater;
 
 import org.apache.asterix.cloud.writer.S3ExternalFileWriterFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.writer.LocalFSExternalFileWriterFactory;
 import org.apache.asterix.external.writer.compressor.GzipExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
@@ -41,7 +43,6 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 
 public class ExternalWriterProvider {
     private static final Map<String, IExternalFileWriterFactoryProvider> CREATOR_MAP;
-    private static final Map<String, IExternalFileCompressStreamFactory> STREAM_COMPRESSORS;
 
     private ExternalWriterProvider() {
     }
@@ -50,10 +51,6 @@ public class ExternalWriterProvider {
         CREATOR_MAP = new HashMap<>();
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS, LocalFSExternalFileWriterFactory.PROVIDER);
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3, S3ExternalFileWriterFactory.PROVIDER);
-
-        STREAM_COMPRESSORS = new HashMap<>();
-        STREAM_COMPRESSORS.put(ExternalDataConstants.KEY_COMPRESSION_GZIP,
-                GzipExternalFileCompressStreamFactory.INSTANCE);
     }
 
     public static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,
@@ -105,7 +102,8 @@ public class ExternalWriterProvider {
         CREATOR_MAP.put(adapterName.toLowerCase(), creator);
     }
 
-    public static IExternalPrinterFactory createPrinter(IWriteDataSink sink, Object sourceType) {
+    public static IExternalPrinterFactory createPrinter(ICcApplicationContext appCtx, IWriteDataSink sink,
+            Object sourceType) {
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
 
@@ -116,8 +114,7 @@ public class ExternalWriterProvider {
 
         String compression = getCompression(configuration);
         IExternalFileCompressStreamFactory compressStreamFactory =
-                STREAM_COMPRESSORS.getOrDefault(compression, NoOpExternalFileCompressStreamFactory.INSTANCE);
-
+                createCompressionStreamFactory(appCtx, compression, configuration);
         IPrinterFactory printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
         return new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
     }
@@ -138,5 +135,24 @@ public class ExternalWriterProvider {
         }
 
         return creator.getSeparator();
+    }
+
+    private static IExternalFileCompressStreamFactory createCompressionStreamFactory(ICcApplicationContext appCtx,
+            String compression, Map<String, String> configuration) {
+        if (ExternalDataUtils.isGzipCompression(compression)) {
+            return createGzipStreamFactory(appCtx, configuration);
+        }
+        return NoOpExternalFileCompressStreamFactory.INSTANCE;
+    }
+
+    private static GzipExternalFileCompressStreamFactory createGzipStreamFactory(ICcApplicationContext appCtx,
+            Map<String, String> configuration) {
+        int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+        String gzipCompressionLevel = configuration.get(ExternalDataConstants.KEY_COMPRESSION_GZIP_COMPRESSION_LEVEL);
+        if (gzipCompressionLevel != null) {
+            compressionLevel = Integer.parseInt(gzipCompressionLevel);
+        }
+        return GzipExternalFileCompressStreamFactory.create(compressionLevel,
+                appCtx.getCompilerProperties().getFrameSize());
     }
 }
