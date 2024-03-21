@@ -48,6 +48,7 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,6 +82,7 @@ import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.CommonPrefix;
 import software.amazon.awssdk.services.s3.model.ListObjectsRequest;
 import software.amazon.awssdk.services.s3.model.ListObjectsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
@@ -88,6 +90,7 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.S3Response;
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 public class S3Utils {
     private S3Utils() {
@@ -518,5 +521,59 @@ public class S3Utils {
                 filesOnly.add(object);
             }
         }
+    }
+
+    public static Map<String, List<String>> S3ObjectsOfSingleDepth(Map<String, String> configuration, String container,
+            String prefix) throws CompilationException, HyracksDataException {
+        // create s3 client
+        S3Client s3Client = buildAwsS3Client(configuration);
+        // fetch all the s3 objects
+        return listS3ObjectsOfSingleDepth(s3Client, container, prefix);
+    }
+
+    /**
+     * Uses the latest API to retrieve the objects from the storage of a single level.
+     *
+     * @param s3Client              S3 client
+     * @param container             container name
+     * @param prefix                definition prefix
+     */
+    private static Map<String, List<String>> listS3ObjectsOfSingleDepth(S3Client s3Client, String container,
+            String prefix) throws HyracksDataException {
+        Map<String, List<String>> allObjects = new HashMap<>();
+        ListObjectsV2Iterable listObjectsInterable;
+        ListObjectsV2Request.Builder listObjectsBuilder =
+                ListObjectsV2Request.builder().bucket(container).prefix(prefix).delimiter("/");
+        listObjectsBuilder.prefix(prefix);
+        List<String> files = new ArrayList<>();
+        List<String> folders = new ArrayList<>();
+        // to skip the prefix as a file from the response
+        boolean checkPrefixInFile = true;
+        listObjectsInterable = s3Client.listObjectsV2Paginator(listObjectsBuilder.build());
+        for (ListObjectsV2Response response : listObjectsInterable) {
+            // put all the files
+            for (S3Object object : response.contents()) {
+                String fileName = object.key();
+                fileName = fileName.substring(prefix.length(), fileName.length());
+                if (checkPrefixInFile) {
+                    if (prefix.equals(object.key()))
+                        checkPrefixInFile = false;
+                    else {
+                        files.add(fileName);
+                    }
+                } else {
+                    files.add(fileName);
+                }
+            }
+            // put all the folders
+            for (CommonPrefix object : response.commonPrefixes()) {
+                String folderName = object.prefix();
+                folderName = folderName.substring(prefix.length(), folderName.length());
+                folders.add(folderName.endsWith("/") ? folderName.substring(0, folderName.length() - 1) : folderName);
+            }
+        }
+        allObjects.put("files", files);
+        allObjects.put("folders", folders);
+        return allObjects;
     }
 }

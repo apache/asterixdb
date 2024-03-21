@@ -147,6 +147,7 @@ public class AwsS3ExternalDatasetTest {
     protected TestCaseContext tcCtx;
 
     public static final String PLAYGROUND_CONTAINER = "playground";
+    public static final String BROWSE_CONTAINER = "browse";
     public static final String DYNAMIC_PREFIX_AT_START_CONTAINER = "dynamic-prefix-at-start-container";
     public static final String FIXED_DATA_CONTAINER = "fixed-data"; // Do not use, has fixed data
     public static final String INCLUDE_EXCLUDE_CONTAINER = "include-exclude";

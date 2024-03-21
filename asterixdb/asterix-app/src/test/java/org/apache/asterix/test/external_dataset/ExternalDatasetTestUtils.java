@@ -20,6 +20,7 @@ package org.apache.asterix.test.external_dataset;
 
 import static org.apache.asterix.test.external_dataset.avro.AvroFileConverterUtil.AVRO_GEN_BASEDIR;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BOM_FILE_CONTAINER;
+import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.BROWSE_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.DYNAMIC_PREFIX_AT_START_CONTAINER;
 import static org.apache.asterix.test.external_dataset.aws.AwsS3ExternalDatasetTest.FIXED_DATA_CONTAINER;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.BINARY_GEN_BASEDIR;
@@ -78,6 +79,7 @@ public class ExternalDatasetTestUtils {
     private static Uploader fixedDataLoader;
     private static Uploader mixedDataLoader;
     private static Uploader bomFileLoader;
+    private static Uploader browseDataLoader;
 
     protected TestCaseContext tcCtx;
 
@@ -148,6 +150,16 @@ public class ExternalDatasetTestUtils {
         ExternalDatasetTestUtils.bomFileLoader = bomFileLoader;
     }
 
+    public static void setUploaders(Uploader playgroundDataLoader, Uploader dynamicPrefixAtStartDataLoader,
+            Uploader fixedDataLoader, Uploader mixedDataLoader, Uploader bomFileLoader, Uploader browseDataLoader) {
+        ExternalDatasetTestUtils.playgroundDataLoader = playgroundDataLoader;
+        ExternalDatasetTestUtils.dynamicPrefixAtStartDataLoader = dynamicPrefixAtStartDataLoader;
+        ExternalDatasetTestUtils.fixedDataLoader = fixedDataLoader;
+        ExternalDatasetTestUtils.mixedDataLoader = mixedDataLoader;
+        ExternalDatasetTestUtils.bomFileLoader = bomFileLoader;
+        ExternalDatasetTestUtils.browseDataLoader = browseDataLoader;
+    }
+
     /**
      * Creates a bucket and fills it with some files for testing purpose.
      */
@@ -181,6 +193,32 @@ public class ExternalDatasetTestUtils {
         LOGGER.info("Avro files added successfully");
 
         LOGGER.info("Files added successfully");
+    }
+
+    public static void prepareBrowseContainer() {
+        /*
+        file hierarchy inside browse container
+        browse/1.json
+        browse/2.json
+        browse/level1/3.json
+        browse/level1/4.json
+        browse/level1/level2/5.json
+        browse/level2/level3/6.json
+         */
+        // -- todo:Utsav add a test for Browse S3 path which returns multiple folders, skipped for now as S3 mock server does not support this.
+        LOGGER.info("Adding JSON files to " + BROWSE_CONTAINER);
+        browseDataLoader.upload("1.json", "{\"id\":" + 1 + "}");
+        browseDataLoader.upload("2.json", "{\"id\":" + 2 + "}");
+        browseDataLoader.upload("level1/3.json", "{\"id\":" + 3 + "}");
+        browseDataLoader.upload("level1/4.json", "{\"id\":" + 4 + "}");
+        browseDataLoader.upload("level1/level2/5.json", "{\"id\":" + 5 + "}");
+        browseDataLoader.upload("level2/level3/6.json", "{\"id\":" + 6 + "}");
+
+        //Adding 1000+ files
+        for (int i = 1; i <= 1500; i++) {
+            browseDataLoader.upload("level3/" + i + ".json", "{\"id\":" + i + "}");
+        }
+        LOGGER.info("JSON Files added successfully");
     }
 
     /**
