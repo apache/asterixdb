@@ -99,7 +99,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             throw e;
         } catch (Exception e) {
             if (isSdkException(e)) {
-                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
             }
             throw e;
         }
@@ -116,7 +116,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             throw e;
         } catch (Exception e) {
             if (isSdkException(e)) {
-                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
             }
             throw HyracksDataException.create(e);
         }
@@ -130,7 +130,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             throw e;
         } catch (Exception e) {
             if (isSdkException(e)) {
-                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
             }
             throw HyracksDataException.create(e);
         }

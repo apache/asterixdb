@@ -129,11 +129,11 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
             if (e.getCause() instanceof NoSuchBucketException) {
                 throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, bucket);
             } else {
-                throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR,
                         ExceptionUtils.getMessageOrToString(e));
             }
         } catch (SdkException e) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
+            throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, e, getMessageOrToString(e));
         }
     }
 
