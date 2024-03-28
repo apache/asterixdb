@@ -116,6 +116,9 @@ public final class FunctionTypeInferers {
         }
     };
 
+    public static final IFunctionTypeInferer MEDIAN_MEMORY =
+            (expr, fd, context, compilerProps) -> fd.setImmutableStates(compilerProps.getSortMemoryFrames());
+
     public static final class CastTypeInferer implements IFunctionTypeInferer {
         @Override
         public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,

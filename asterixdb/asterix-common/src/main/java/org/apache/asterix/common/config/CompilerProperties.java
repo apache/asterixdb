@@ -286,4 +286,9 @@ public class CompilerProperties extends AbstractProperties {
             return AlgebricksConfig.QUERY_PLAN_SHAPE_DEFAULT;
         return queryPlanShapeMode;
     }
+
+    public int getSortMemoryFrames() {
+        int numFrames = (int) getSortMemorySize() / getFrameSize();
+        return Math.max(numFrames, OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_SORT);
+    }
 }

@@ -20,6 +20,7 @@ package org.apache.hyracks.test.support;
 
 import java.nio.ByteBuffer;
 import java.time.ZoneId;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.context.IHyracksJobletContext;
@@ -42,6 +43,7 @@ public class TestJobletContext implements IHyracksJobletContext {
     private final WorkspaceFileFactory fileFactory;
     private final long jobStartTime;
     private final String jobStartTimeZoneId;
+    private final AtomicLong ids;
 
     TestJobletContext(int frameSize, INCServiceContext serviceContext, JobId jobId) throws HyracksException {
         this.serviceContext = serviceContext;
@@ -50,6 +52,7 @@ public class TestJobletContext implements IHyracksJobletContext {
         this.frameManger = new FrameManager(frameSize);
         this.jobStartTime = System.currentTimeMillis();
         this.jobStartTimeZoneId = ZoneId.systemDefault().getId();
+        this.ids = new AtomicLong();
     }
 
     @Override
@@ -151,4 +154,8 @@ public class TestJobletContext implements IHyracksJobletContext {
         return this.getClass().getClassLoader();
     }
 
+    @Override
+    public long nextUniqueId() {
+        return ids.getAndIncrement();
+    }
 }

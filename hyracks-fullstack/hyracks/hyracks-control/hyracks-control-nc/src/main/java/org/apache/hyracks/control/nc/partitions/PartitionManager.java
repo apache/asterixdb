@@ -58,6 +58,8 @@ public class PartitionManager {
 
     private final Map<PartitionId, NetworkOutputChannel> partitionRequests = new HashMap<>();
 
+    private final Map<JobId, List<NetworkOutputChannel>> fileRequests = new HashMap<>();
+
     private final Cache<JobId, JobId> failedJobsCache;
 
     public PartitionManager(NodeControllerService ncs) {
@@ -122,8 +124,22 @@ public class PartitionManager {
         }
     }
 
+    public synchronized boolean registerFileRequest(JobId jid, NetworkOutputChannel noc) {
+        if (failedJobsCache.getIfPresent(jid) != null) {
+            noc.abort(AbstractChannelWriteInterface.REMOTE_ERROR_CODE);
+            return false;
+        }
+        List<NetworkOutputChannel> netOutChannels = fileRequests.computeIfAbsent(jid, k -> new ArrayList<>());
+        netOutChannels.add(noc);
+        return true;
+    }
+
     public IWorkspaceFileFactory getFileFactory() {
         return fileFactory;
+    }
+
+    public NodeControllerService getNodeControllerService() {
+        return ncs;
     }
 
     public void close() {
@@ -175,6 +191,10 @@ public class PartitionManager {
     }
 
     private List<NetworkOutputChannel> removePendingRequests(JobId jobId, JobStatus status) {
+        List<NetworkOutputChannel> jobFileRequests = null;
+        if (!fileRequests.isEmpty()) {
+            jobFileRequests = fileRequests.remove(jobId);
+        }
         if (status != JobStatus.FAILURE) {
             return Collections.emptyList();
         }
@@ -188,6 +208,9 @@ public class PartitionManager {
                 pendingRequests.add(entry.getValue());
                 requestsIterator.remove();
             }
+        }
+        if (jobFileRequests != null && !jobFileRequests.isEmpty()) {
+            pendingRequests.addAll(jobFileRequests);
         }
         return pendingRequests;
     }
