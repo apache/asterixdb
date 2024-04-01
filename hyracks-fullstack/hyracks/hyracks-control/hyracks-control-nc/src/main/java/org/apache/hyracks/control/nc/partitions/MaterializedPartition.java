@@ -57,7 +57,7 @@ public class MaterializedPartition implements IPartition {
 
     @Override
     public void writeTo(final IFrameWriter writer) {
-        executor.execute(new PartitionFileReader(ctx, partitionFile, ioManager, writer));
+        executor.execute(new PartitionFileReader(ctx, partitionFile, ioManager, writer, false));
     }
 
     @Override

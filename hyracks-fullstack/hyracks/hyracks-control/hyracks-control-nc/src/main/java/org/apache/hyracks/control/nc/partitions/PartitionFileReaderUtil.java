@@ -53,6 +53,6 @@ public class PartitionFileReaderUtil {
         }
         ExecutorService executor = ncs.getExecutor();
         noc.setFrameSize(joblet.getInitialFrameSize());
-        executor.execute(new PartitionFileReader(joblet, fileRef, ncs.getIoManager(), noc));
+        executor.execute(new PartitionFileReader(joblet, fileRef, ncs.getIoManager(), noc, true));
     }
 }

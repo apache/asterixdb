@@ -20,6 +20,7 @@ package org.apache.hyracks.control.nc.partitions;
 
 import java.nio.ByteBuffer;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -33,13 +34,15 @@ public class PartitionFileReader implements Runnable {
     private final FileReference partitionFile;
     private final IIOManager ioManager;
     private final IFrameWriter writer;
+    private final boolean deleteFile;
 
     public PartitionFileReader(IHyracksCommonContext ctx, FileReference partitionFile, IIOManager ioManager,
-            IFrameWriter writer) {
+            IFrameWriter writer, boolean deleteFile) {
         this.ctx = ctx;
         this.partitionFile = partitionFile;
         this.ioManager = ioManager;
         this.writer = writer;
+        this.deleteFile = deleteFile;
     }
 
     @Override
@@ -73,7 +76,13 @@ public class PartitionFileReader implements Runnable {
                     writer.close();
                 }
             } finally {
-                ioManager.close(fh);
+                try {
+                    ioManager.close(fh);
+                } finally {
+                    if (deleteFile) {
+                        FileUtils.deleteQuietly(partitionFile.getFile());
+                    }
+                }
             }
         } catch (HyracksDataException e) {
             throw new RuntimeException(e);

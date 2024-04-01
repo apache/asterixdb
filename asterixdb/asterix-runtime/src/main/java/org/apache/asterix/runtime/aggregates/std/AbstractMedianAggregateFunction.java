@@ -83,8 +83,12 @@ import org.apache.hyracks.dataflow.common.io.RunFileWriter;
 import org.apache.hyracks.dataflow.std.collectors.InputChannelFrameReader;
 import org.apache.hyracks.dataflow.std.sort.RunMergingFrameReader;
 import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractMedianAggregateFunction extends AbstractAggregateFunction {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     protected static final String MEDIAN = "median";
     private static final int COUNT_FIELD_ID = 0;
@@ -215,17 +219,21 @@ public abstract class AbstractMedianAggregateFunction extends AbstractAggregateF
             return;
         }
         try {
-            double medianVal = findMedian();
+            boolean medianFound = findMedian();
             resultStorage.reset();
-            aDouble.setValue(medianVal);
-            doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
-            result.set(resultStorage);
+            if (medianFound) {
+                doubleSerde.serialize(aDouble, resultStorage.getDataOutput());
+                result.set(resultStorage);
+            } else {
+                PointableHelper.setNull(result);
+                LOGGER.warn("median was not found");
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
     }
 
-    private double findMedian() throws HyracksDataException {
+    private boolean findMedian() throws HyracksDataException {
         RunMergingFrameReader merger = createRunsMergingFrameReader();
         return getMedian(merger);
     }
@@ -248,11 +256,11 @@ public abstract class AbstractMedianAggregateFunction extends AbstractAggregateF
                 doubleNkComputerFactory.createNormalizedKeyComputer(), recordDesc);
     }
 
-    private double getMedian(RunMergingFrameReader merger) throws HyracksDataException {
+    private boolean getMedian(RunMergingFrameReader merger) throws HyracksDataException {
         boolean isOdd = count % 2 != 0;
         long medianPosition = isOdd ? count / 2 : (count - 1) / 2;
         long currentTupleCount = 0;
-        double medianVal = -1;
+        boolean found = false;
         merger.open();
         try {
             while (merger.nextFrame(frame)) {
@@ -261,7 +269,8 @@ public abstract class AbstractMedianAggregateFunction extends AbstractAggregateF
                 if (currentTupleCount + tupleCount > medianPosition) {
                     int firstMedian = (int) (medianPosition - currentTupleCount);
                     ftr.reset(fta, firstMedian);
-                    medianVal = ADoubleSerializerDeserializer.getDouble(ftr.getFieldData(0), ftr.getFieldStart(0) + 1);
+                    double medianVal =
+                            ADoubleSerializerDeserializer.getDouble(ftr.getFieldData(0), ftr.getFieldStart(0) + 1);
                     if (!isOdd) {
                         if (firstMedian + 1 < tupleCount) {
                             // second median is in the same frame
@@ -276,14 +285,19 @@ public abstract class AbstractMedianAggregateFunction extends AbstractAggregateF
                                 (ADoubleSerializerDeserializer.getDouble(ftr.getFieldData(0), ftr.getFieldStart(0) + 1)
                                         + medianVal) / 2;
                     }
+                    aDouble.setValue(medianVal);
+                    found = true;
                     break;
                 }
                 currentTupleCount += tupleCount;
             }
+            while (merger.nextFrame(frame)) {
+                // consume the remaining frames to close the network channels gracefully
+            }
         } finally {
             merger.close();
         }
-        return medianVal;
+        return found;
     }
 
     protected void setPartialResult(IPointable result, long fileId, String address, int port)
