@@ -19,7 +19,9 @@
 package org.apache.asterix.external.util;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_FORMAT;
+import static org.apache.asterix.common.exceptions.ErrorCode.MINIMUM_VALUE_ALLOWED_FOR_PARAM;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_RESULT;
+import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_RESULT_MINIMUM;
 
 import java.util.List;
 import java.util.Map;
@@ -69,13 +71,17 @@ public class WriterValidationUtil {
 
     private static void validateMaxResult(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
-        String maxResult = configuration.get(ExternalDataConstants.KEY_WRITER_MAX_RESULT);
+        String maxResult = configuration.get(KEY_WRITER_MAX_RESULT);
         if (maxResult == null) {
             return;
         }
 
         try {
-            Integer.parseInt(maxResult);
+            int value = Integer.parseInt(maxResult);
+            if (value < WRITER_MAX_RESULT_MINIMUM) {
+                throw new CompilationException(MINIMUM_VALUE_ALLOWED_FOR_PARAM, KEY_WRITER_MAX_RESULT,
+                        WRITER_MAX_RESULT_MINIMUM, value);
+            }
         } catch (NumberFormatException e) {
             throw CompilationException.create(ErrorCode.INTEGER_VALUE_EXPECTED, sourceLocation, maxResult);
         }

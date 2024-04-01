@@ -90,6 +90,13 @@
         <expected-error>ASX1001: Syntax error: OVER-clause cannot be empty</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="bad-max-objects-per-file">
+        <output-dir compare="Text">bad-max-objects-per-file</output-dir>
+        <expected-error>Minimum value allowed for 'max-objects-per-file' is 1000. Found 2</expected-error>
+        <expected-error>Expected integer value, got hello</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aws-s3-external-dataset">
     <test-case FilePath="external-dataset">
