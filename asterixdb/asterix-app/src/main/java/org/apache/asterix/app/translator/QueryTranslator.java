@@ -448,16 +448,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case CREATE_SYNONYM:
-                        handleCreateSynonymStatement(metadataProvider, stmt);
+                        handleCreateSynonymStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case SYNONYM_DROP:
-                        handleDropSynonymStatement(metadataProvider, stmt);
+                        handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case CREATE_VIEW:
                         handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
                         break;
                     case VIEW_DROP:
-                        handleViewDropStatement(metadataProvider, stmt);
+                        handleViewDropStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case LOAD:
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
@@ -2963,7 +2963,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    public void handleViewDropStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    public void handleViewDropStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         ViewDropStatement stmtDrop = (ViewDropStatement) stmt;
         SourceLocation sourceLoc = stmtDrop.getSourceLocation();
         String viewName = stmtDrop.getViewName().getValue();
@@ -2976,14 +2977,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.dropDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, viewName);
         try {
-            doDropView(metadataProvider, stmtDrop, databaseName, dataverseName, viewName);
+            doDropView(metadataProvider, stmtDrop, databaseName, dataverseName, viewName, requestParameters);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doDropView(MetadataProvider metadataProvider, ViewDropStatement stmtViewDrop, String databaseName,
-            DataverseName dataverseName, String viewName) throws Exception {
+            DataverseName dataverseName, String viewName, IRequestParameters requestParameters) throws Exception {
         SourceLocation sourceLoc = stmtViewDrop.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -3787,7 +3788,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
         metadataProvider.validateDatabaseObjectName(css.getNamespace(), css.getSynonymName(), css.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(css.getNamespace());
@@ -3843,7 +3845,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt) throws Exception {
+    protected void handleDropSynonymStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
         SynonymDropStatement stmtSynDrop = (SynonymDropStatement) stmt;
         String synonymName = stmtSynDrop.getSynonymName();
         metadataProvider.validateDatabaseObjectName(stmtSynDrop.getNamespace(), synonymName,

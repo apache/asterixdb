@@ -25,10 +25,13 @@ import static org.apache.asterix.common.utils.IdentifierUtil.dataset;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INamespaceResolver;
@@ -76,6 +79,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.EntityDetails;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
 import org.apache.asterix.metadata.entities.FeedPolicyEntity;
@@ -200,6 +204,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final INamespaceResolver namespaceResolver;
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
+    private final Set<EntityDetails> getAccessedEntities;
+
     public static MetadataProvider createWithDefaultNamespace(ICcApplicationContext appCtx) {
         java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
                 ((ICCExtensionManager) appCtx.getExtensionManager()).getMetadataProviderFactory();
@@ -225,6 +231,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         dataPartitioningProvider = (DataPartitioningProvider) appCtx.getDataPartitioningProvider();
         locks = new LockList();
         config = new HashMap<>();
+        getAccessedEntities = new HashSet<>();
         setDefaultNamespace(MetadataConstants.DEFAULT_NAMESPACE);
     }
 
@@ -1943,6 +1950,14 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         if (namespaceResolver.isUsingDatabase()) {
             validateChars(objectName, sourceLoc);
         }
+    }
+
+    public void addAccessedEntity(EntityDetails entityDetails) {
+        getAccessedEntities.add(entityDetails);
+    }
+
+    public Set<EntityDetails> getGetAccessedEntities() {
+        return Collections.unmodifiableSet(getAccessedEntities);
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {
