@@ -121,7 +121,7 @@ public class BTreeCountingSearchCursor extends EnforcedIndexCursor implements IT
         do {
             final ICachedPage nextLeaf;
             try {
-                nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
+                nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage));
                 if (exclusiveLatchNodes) {
                     nextLeaf.acquireWriteLatch();
                 } else {

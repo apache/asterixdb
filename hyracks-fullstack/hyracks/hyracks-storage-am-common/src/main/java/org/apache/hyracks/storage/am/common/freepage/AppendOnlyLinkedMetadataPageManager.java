@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -52,7 +53,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
 
     @Override
     public void releasePage(ITreeIndexMetadataFrame metaFrame, int freePageNum) throws HyracksDataException {
-        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false);
+        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()));
         metaPage.acquireWriteLatch();
         try {
             metaFrame.setPage(metaPage);
@@ -64,7 +65,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
                     throw new HyracksDataException(
                             "Inconsistent Meta Page State. It has no space, but it also has no entries.");
                 }
-                ICachedPage newNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newPageNum), false);
+                ICachedPage newNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newPageNum));
                 newNode.acquireWriteLatch();
                 try {
                     int metaMaxPage = metaFrame.getMaxPage();
@@ -103,7 +104,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
             if (freePage < 0) { // no free page entry on this page
                 int nextPage = metaFrame.getNextMetadataPage();
                 if (nextPage > 0) { // sibling may have free pages
-                    ICachedPage nextNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextPage), false);
+                    ICachedPage nextNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextPage));
                     nextNode.acquireWriteLatch();
                     // we copy over the free space entries of nextpage into the
                     // first meta page (metaDataPage)
@@ -158,7 +159,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
             if (mdPage < 0) {
                 return IBufferCache.INVALID_PAGEID;
             }
-            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, mdPage), false);
+            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, mdPage));
         } else {
             metaNode = confiscatedPage;
         }
@@ -212,7 +213,8 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     @Override
     public void close(IPageWriteFailureCallback failureCallback) throws HyracksDataException {
         if (ready) {
-            IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback);
+            IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback,
+                    DefaultBufferCacheWriteContext.INSTANCE);
             ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
             confiscatedPage.acquireWriteLatch();
             try {
@@ -282,7 +284,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     public int getRootPageId() throws HyracksDataException {
         ICachedPage metaNode;
         if (confiscatedPage == null) {
-            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false);
+            metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()));
         } else {
             metaNode = confiscatedPage;
         }
@@ -320,8 +322,7 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     }
 
     private ICachedPage pinPage() throws HyracksDataException {
-        return confiscatedPage == null
-                ? bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()), false)
+        return confiscatedPage == null ? bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()))
                 : confiscatedPage;
     }
 

@@ -25,8 +25,8 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
 
 public class BufferCacheHeaderHelper {
-    private static final int FRAME_MULTIPLIER_OFF = 0;
-    private static final int EXTRA_BLOCK_PAGE_ID_OFF = FRAME_MULTIPLIER_OFF + 4; // 4
+    public static final int FRAME_MULTIPLIER_OFF = 0;
+    public static final int EXTRA_BLOCK_PAGE_ID_OFF = FRAME_MULTIPLIER_OFF + 4; // 4
 
     private final ByteBuffer[] array;
     private final int pageSizeWithHeader;
@@ -64,6 +64,10 @@ public class BufferCacheHeaderHelper {
         cPage.setFrameSizeMultiplier(buf.getInt(FRAME_MULTIPLIER_OFF));
         cPage.setExtraBlockPageId(buf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
         buf.position(RESERVED_HEADER_BYTES);
+        return buf;
+    }
+
+    public ByteBuffer getBuffer() {
         return buf;
     }
 

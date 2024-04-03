@@ -167,7 +167,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     }
 
     public byte getTreeHeight(ITreeIndexFrame frame) throws HyracksDataException {
-        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage), false);
+        ICachedPage rootNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, rootPage));
         rootNode.acquireReadLatch();
         try {
             frame.setPage(rootNode);

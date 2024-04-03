@@ -20,6 +20,7 @@ package org.apache.hyracks.test.support;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadFactory;
 
@@ -43,6 +44,7 @@ import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -147,7 +149,8 @@ public class TestStorageManagerComponentHolder {
         IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
         IFileMapProvider fileMapProvider = getFileMapProvider();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000),
-                (IFileMapManager) fileMapProvider, maxOpenFiles, 10, threadFactory);
+                (IFileMapManager) fileMapProvider, maxOpenFiles, 10, threadFactory, new HashMap<>(),
+                DefaultBufferCachePageOperationContextProvider.DEFAULT);
         return bufferCache;
     }
 }

@@ -308,7 +308,7 @@ public class BTreeRangeSearchCursor extends EnforcedIndexCursor implements ITree
     }
 
     protected ICachedPage acquirePage(int pageId) throws HyracksDataException {
-        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
         if (exclusiveLatchNodes) {
             nextPage.acquireWriteLatch();
         } else {

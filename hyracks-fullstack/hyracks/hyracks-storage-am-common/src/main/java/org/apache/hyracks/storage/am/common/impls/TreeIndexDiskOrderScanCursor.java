@@ -151,7 +151,7 @@ public class TreeIndexDiskOrderScanCursor extends EnforcedIndexCursor implements
     }
 
     protected ICachedPage acquireNextPage() throws HyracksDataException {
-        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
         nextPage.acquireReadLatch();
         return nextPage;
     }

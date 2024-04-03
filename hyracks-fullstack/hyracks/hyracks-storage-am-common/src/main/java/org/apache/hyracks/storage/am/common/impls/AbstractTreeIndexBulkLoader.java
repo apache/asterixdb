@@ -36,6 +36,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
@@ -76,7 +77,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
         interiorFrame = treeIndex.getInteriorFrameFactory().createFrame();
         metaFrame = freePageManager.createMetadataFrame();
 
-        pageWriter = bufferCache.createFIFOWriter(callback, this);
+        pageWriter = bufferCache.createFIFOWriter(callback, this, DefaultBufferCacheWriteContext.INSTANCE);
 
         if (!treeIndex.isEmptyTree(leafFrame)) {
             throw HyracksDataException.create(ErrorCode.CANNOT_BULK_LOAD_NON_EMPTY_TREE);

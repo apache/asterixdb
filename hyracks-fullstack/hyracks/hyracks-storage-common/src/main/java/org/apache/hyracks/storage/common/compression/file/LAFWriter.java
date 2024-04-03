@@ -35,6 +35,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPageInternal;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
@@ -65,7 +66,8 @@ class LAFWriter implements ICompressedPageWriter {
         recycledFrames = new ArrayDeque<>();
         this.fileId = compressedFileManager.getFileId();
         failureCallback = new PageWriteFailureCallback();
-        pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback);
+        pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback,
+                DefaultBufferCacheWriteContext.INSTANCE);
         maxNumOfEntries = bufferCache.getPageSize() / ENTRY_LENGTH;
         lastOffset = 0;
         totalNumOfPages = 0;

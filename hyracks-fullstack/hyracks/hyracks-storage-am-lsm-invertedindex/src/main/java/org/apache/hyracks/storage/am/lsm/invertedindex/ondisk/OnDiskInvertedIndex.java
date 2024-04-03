@@ -71,6 +71,7 @@ import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 /**
@@ -89,6 +90,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
 
     // Type traits to be appended to the token type trait which finally form the BTree field type traits.
     protected static final ITypeTraits[] btreeValueTypeTraits = new ITypeTraits[4];
+
     static {
         // startPageId
         btreeValueTypeTraits[0] = IntegerPointable.TYPE_TRAITS;
@@ -298,7 +300,7 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
             currentPageId = startPageId;
             currentPage = bufferCache.confiscatePage(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
             invListBuilder.setTargetBuffer(currentPage.getBuffer().array(), 0);
-            queue = bufferCache.createFIFOWriter(callback, this);
+            queue = bufferCache.createFIFOWriter(callback, this, DefaultBufferCacheWriteContext.INSTANCE);
         }
 
         protected void pinNextPage() throws HyracksDataException {

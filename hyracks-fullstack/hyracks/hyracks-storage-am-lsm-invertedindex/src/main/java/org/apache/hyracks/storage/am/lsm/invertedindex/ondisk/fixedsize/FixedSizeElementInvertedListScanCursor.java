@@ -119,7 +119,7 @@ public class FixedSizeElementInvertedListScanCursor extends AbstractInvertedList
             return;
         }
         unloadPages();
-        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId), false);
+        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, currentPageId));
         pinnedPageId = currentPageId;
         pinned = true;
         stats.getPageCounter().update(1);

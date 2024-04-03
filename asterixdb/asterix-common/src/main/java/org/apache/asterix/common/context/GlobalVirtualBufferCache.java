@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.context;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.VirtualPage;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.ExitUtil;
@@ -264,18 +268,18 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        ICachedPage page = vbc.pin(dpid, newPage);
-        if (newPage) {
+    public ICachedPage pin(long dpid) throws HyracksDataException {
+        return pin(dpid, DEFAULT);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
+        ICachedPage page = vbc.pin(dpid, context);
+        if (context.isNewPage()) {
             incrementFilteredMemoryComponentUsage(dpid, 1);
             checkAndNotifyFlushThread();
         }
         return page;
-    }
-
-    @Override
-    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
-        return pin(dpid, newPage);
     }
 
     private void incrementFilteredMemoryComponentUsage(long dpid, int pages) {
@@ -316,7 +320,12 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
 
     @Override
     public void unpin(ICachedPage page) throws HyracksDataException {
-        vbc.unpin(page);
+        unpin(page, DEFAULT);
+    }
+
+    @Override
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
+        vbc.unpin(page, context);
     }
 
     @Override
@@ -391,8 +400,9 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     }
 
     @Override
-    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
-        return vbc.createFIFOWriter(callback, failureCallback);
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context) {
+        return vbc.createFIFOWriter(callback, failureCallback, context);
     }
 
     @Override

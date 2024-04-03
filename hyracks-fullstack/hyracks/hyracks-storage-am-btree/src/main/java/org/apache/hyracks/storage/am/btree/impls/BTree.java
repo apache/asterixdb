@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.btree.impls;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -99,7 +101,7 @@ public class BTree extends AbstractTreeIndex {
         RangePredicate diskOrderScanPred = new RangePredicate(null, null, true, true, ctx.getCmp(), ctx.getCmp());
         int maxPageId = freePageManager.getMaxPageId(ctx.getMetaFrame());
         int currentPageId = bulkloadLeafStart;
-        final ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId), false);
+        final ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId));
         page.acquireReadLatch();
         try {
             cursor.setBufferCache(bufferCache);
@@ -131,7 +133,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private void validate(BTreeOpContext ctx, int pageId) throws HyracksDataException {
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         ctx.getInteriorFrame().setPage(page);
         PageValidationInfo currentPvi = ctx.getValidationInfos().peekFirst();
 
@@ -214,7 +216,7 @@ public class BTree extends AbstractTreeIndex {
         ICachedPage originalPage = ctx.getInteriorFrame().getPage();
         for (int i = 0; i < ctx.getSmPages().size(); i++) {
             int pageId = ctx.getSmPages().get(i);
-            ICachedPage smPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+            ICachedPage smPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
             smPage.acquireWriteLatch();
             try {
                 ctx.getInteriorFrame().setPage(smPage);
@@ -235,11 +237,11 @@ public class BTree extends AbstractTreeIndex {
     private void createNewRoot(BTreeOpContext ctx) throws HyracksDataException {
         // Make sure the root is always in the same page.
         ICachedPage leftNode =
-                bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), ctx.getSplitKey().getLeftPage()), false);
+                bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), ctx.getSplitKey().getLeftPage()));
         leftNode.acquireWriteLatch();
         try {
             int newLeftId = freePageManager.takePage(ctx.getMetaFrame());
-            ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), newLeftId), true);
+            ICachedPage newLeftNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), newLeftId), NEW);
             newLeftNode.acquireWriteLatch();
             try {
                 boolean largePage = false;
@@ -347,7 +349,7 @@ public class BTree extends AbstractTreeIndex {
             }
         }
         int rightPageId = freePageManager.takePage(ctx.getMetaFrame());
-        ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), true);
+        ICachedPage rightNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), NEW);
         rightNode.acquireWriteLatch();
         try {
             IBTreeLeafFrame rightFrame = ctx.createLeafFrame();
@@ -467,7 +469,7 @@ public class BTree extends AbstractTreeIndex {
             case INSUFFICIENT_SPACE: {
                 int rightPageId = freePageManager.takePage(ctx.getMetaFrame());
                 ICachedPage rightNode =
-                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), true);
+                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), NEW);
                 rightNode.acquireWriteLatch();
                 try {
                     IBTreeFrame rightFrame = ctx.createInteriorFrame();
@@ -546,7 +548,7 @@ public class BTree extends AbstractTreeIndex {
     }
 
     private ICachedPage isConsistent(int pageId, BTreeOpContext ctx) throws Exception {
-        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         node.acquireReadLatch();
         ctx.getInteriorFrame().setPage(node);
         boolean isConsistent = ctx.getPageLsns().getLast() == ctx.getInteriorFrame().getPageLsn();
@@ -560,7 +562,7 @@ public class BTree extends AbstractTreeIndex {
 
     private void performOp(int pageId, ICachedPage parent, boolean parentIsReadLatched, BTreeOpContext ctx)
             throws HyracksDataException {
-        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         ctx.getInteriorFrame().setPage(node);
         // this check performs an unprotected read in the page
         // the following could happen: TODO fill out
@@ -624,8 +626,8 @@ public class BTree extends AbstractTreeIndex {
                             case UPDATE: {
                                 // Is there a propagated split key?
                                 if (ctx.getSplitKey().getBuffer() != null) {
-                                    ICachedPage interiorNode = bufferCache
-                                            .pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                                    ICachedPage interiorNode =
+                                            bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                                     interiorNode.acquireWriteLatch();
                                     try {
                                         // Insert or update op. Both can cause split keys to propagate upwards.
@@ -760,7 +762,7 @@ public class BTree extends AbstractTreeIndex {
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IBTreeLeafFrame leafFrame,
             IBTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] keySerdes,
             StringBuilder strBuilder, MultiComparator cmp) throws Exception {
-        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         node.acquireReadLatch();
         try {
             if (parent != null && unpin) {

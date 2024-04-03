@@ -87,7 +87,7 @@ public class StorageFileAccessTest extends AbstractBTreeTest {
             }
 
             try {
-                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
                 LatchType latch = null;
 
                 switch (fta) {

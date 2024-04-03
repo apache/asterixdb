@@ -115,7 +115,7 @@ public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndex
             if (fileId < 0) {
                 throw new IllegalStateException();
             }
-            ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+            ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
             node.acquireReadLatch();
             stats.getPageCounter().update(1);
             readLatched = true;
@@ -154,7 +154,7 @@ public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndex
                 } else {
                     page = node;
                     this.pageId = pageId; // This is only needed for the
-                                          // LSMRTree flush operation
+                    // LSMRTree flush operation
                     leafFrame.setPage(page);
                     tupleIndex = 0;
                     succeeded = true;
@@ -191,15 +191,15 @@ public class RTreeSearchCursor extends EnforcedIndexCursor implements ITreeIndex
                     if (leafFrame.intersect(searchKey, i, cmp)) {
                         frameTuple.resetByTupleIndex(leafFrame, i);
                         currentTupleIndex = i; // This is only needed for the
-                                               // LSMRTree flush operation
+                        // LSMRTree flush operation
                         tupleIndexInc = i + 1;
                         return true;
                     }
                 } else {
                     frameTuple.resetByTupleIndex(leafFrame, i);
                     currentTupleIndex = i; // This is only needed for the
-                                           // LSMRTree
-                                           // flush operation
+                    // LSMRTree
+                    // flush operation
                     tupleIndexInc = i + 1;
                     return true;
                 }

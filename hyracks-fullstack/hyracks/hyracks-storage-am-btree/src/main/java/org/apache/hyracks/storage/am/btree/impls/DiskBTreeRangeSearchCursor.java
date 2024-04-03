@@ -73,7 +73,7 @@ public class DiskBTreeRangeSearchCursor extends BTreeRangeSearchCursor {
     @Override
     protected ICachedPage acquirePage(int pageId) throws HyracksDataException {
         stats.getPageCounter().update(1);
-        return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
     }
 
 }

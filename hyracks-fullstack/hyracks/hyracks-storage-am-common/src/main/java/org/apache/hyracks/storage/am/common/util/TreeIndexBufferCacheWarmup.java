@@ -53,7 +53,7 @@ public class TreeIndexBufferCacheWarmup {
         // scan entire file to determine pages in each level
         int maxPageId = freePageManager.getMaxPageId(metaFrame);
         for (int pageId = 0; pageId <= maxPageId; pageId++) {
-            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
             page.acquireReadLatch();
             try {
                 frame.setPage(page);
@@ -87,7 +87,7 @@ public class TreeIndexBufferCacheWarmup {
                         int pageId = remainingPageIds[index];
 
                         // pin & latch then immediately unlatch & unpin
-                        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+                        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
                         page.acquireReadLatch();
                         page.releaseReadLatch();
                         bufferCache.unpin(page);

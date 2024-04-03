@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.common;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
 import static org.junit.Assert.fail;
 
 import java.io.File;
@@ -95,7 +96,7 @@ public class BufferCacheRegressionTest {
 
         // Fill the first page with known data and make it dirty by write
         // latching it.
-        ICachedPage writePage = bufferCache.pin(BufferedFileHandle.getDiskPageId(firstFileId, 0), true);
+        ICachedPage writePage = bufferCache.pin(BufferedFileHandle.getDiskPageId(firstFileId, 0), NEW);
         writePage.acquireWriteLatch();
         try {
             ByteBuffer buf = writePage.getBuffer();

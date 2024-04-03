@@ -46,6 +46,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.SnappyCompressorDecompressorFactory;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
@@ -100,8 +101,8 @@ public class BufferCacheWithCompressionTest {
         final int numPages = 16;
         bufferCache.openFile(fileId);
         final ICompressedPageWriter writer = bufferCache.getCompressedPageWriter(fileId);
-        final IFIFOPageWriter pageWriter =
-                bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
+        final IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE,
+                HaltOnFailureCallback.INSTANCE, DefaultBufferCacheWriteContext.INSTANCE);
         for (int i = 0; i < numPages; i++) {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
             ICachedPage page = bufferCache.confiscatePage(dpid);
@@ -137,7 +138,7 @@ public class BufferCacheWithCompressionTest {
                         pageNumber = (pageNumber + 1) % numPages;
                         try {
                             long dpid = BufferedFileHandle.getDiskPageId(fileId, pageNumber);
-                            ICachedPage page = bufferCache.pin(dpid, false);
+                            ICachedPage page = bufferCache.pin(dpid);
                             successfulReads++;
                             bufferCache.unpin(page);
                         } catch (HyracksDataException hde) {
@@ -206,8 +207,8 @@ public class BufferCacheWithCompressionTest {
         for (int i = 0; i < num; i++) {
             page.getBuffer().putInt(i * 4, i);
         }
-        final IFIFOPageWriter pageWriter =
-                bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
+        final IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE,
+                HaltOnFailureCallback.INSTANCE, DefaultBufferCacheWriteContext.INSTANCE);
         pageWriter.write(page);
         writer.endWriting();
         bufferCache.closeFile(fileId);
@@ -216,7 +217,7 @@ public class BufferCacheWithCompressionTest {
         bufferCache.openFile(fileId);
 
         // tryPin should succeed because page should still be cached
-        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
+        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
         Assert.assertNotNull(page);
         try {
             // verify contents of page
@@ -260,8 +261,8 @@ public class BufferCacheWithCompressionTest {
                 values.add(x);
             }
             pageContents.put(fileId, values);
-            final IFIFOPageWriter pageWriter =
-                    bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE);
+            final IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE,
+                    HaltOnFailureCallback.INSTANCE, DefaultBufferCacheWriteContext.INSTANCE);
             pageWriter.write(page);
             writer.endWriting();
         }
@@ -323,7 +324,7 @@ public class BufferCacheWithCompressionTest {
 
             // pin first page and verify contents
             ICachedPage page = null;
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(closedFileId, testPageId), false);
+            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(closedFileId, testPageId));
             try {
                 ArrayList<Integer> values = pageContents.get(closedFileId);
                 for (int j = 0; j < values.size(); j++) {
@@ -359,7 +360,7 @@ public class BufferCacheWithCompressionTest {
             Thread interruptedReader = null;
             try {
                 for (int i = 0; i < expectedPinCount; i++) {
-                    ICachedPage aPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
+                    ICachedPage aPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
                     bufferCache.unpin(aPage);
                     ((CachedPage) aPage).invalidate();
                     actualPinCount.incrementAndGet();
@@ -368,7 +369,7 @@ public class BufferCacheWithCompressionTest {
                         interruptedReader = new Thread(() -> {
                             try {
                                 Thread.currentThread().interrupt();
-                                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId + 1), false);
+                                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId + 1));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

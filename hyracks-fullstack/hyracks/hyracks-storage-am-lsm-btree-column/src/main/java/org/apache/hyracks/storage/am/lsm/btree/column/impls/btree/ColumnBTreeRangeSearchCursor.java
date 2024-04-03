@@ -86,7 +86,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     private void fetchNextLeafPage(int leafPage) throws HyracksDataException {
         int nextLeafPage = leafPage;
         do {
-            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage), false);
+            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage));
             stats.getPageCounter().update(1);
             bufferCache.unpin(page0);
             page0 = nextLeaf;
@@ -285,7 +285,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     @Override
     public ICachedPage pin(int pageId) throws HyracksDataException {
         stats.getPageCounter().update(1);
-        return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId), false);
+        return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
     }
 
     @Override

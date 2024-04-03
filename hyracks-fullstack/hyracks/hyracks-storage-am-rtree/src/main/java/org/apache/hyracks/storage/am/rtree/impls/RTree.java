@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.rtree.impls;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -104,7 +106,7 @@ public class RTree extends AbstractTreeIndex {
     public void printTree(int pageId, ICachedPage parent, boolean unpin, IRTreeLeafFrame leafFrame,
             IRTreeInteriorFrame interiorFrame, byte treeHeight, ISerializerDeserializer[] keySerdes,
             StringBuilder strBuilder, MultiComparator cmp) throws Exception {
-        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+        ICachedPage node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
         node.acquireReadLatch();
         try {
             if (parent != null && unpin == true) {
@@ -174,7 +176,7 @@ public class RTree extends AbstractTreeIndex {
 
             while (true) {
                 if (!writeLatched) {
-                    node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                    node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                     ctx.getInteriorFrame().setPage(node);
                     isLeaf = ctx.getInteriorFrame().isLeaf();
                     if (isLeaf) {
@@ -232,7 +234,7 @@ public class RTree extends AbstractTreeIndex {
                             readLatched = false;
                             bufferCache.unpin(node);
 
-                            node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                            node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                             node.acquireWriteLatch();
                             writeLatched = true;
                             ctx.getInteriorFrame().setPage(node);
@@ -349,7 +351,7 @@ public class RTree extends AbstractTreeIndex {
             case INSUFFICIENT_SPACE: {
                 int rightPageId = freePageManager.takePage(ctx.getMetaFrame());
                 ICachedPage rightNode =
-                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), true);
+                        bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), rightPageId), NEW);
                 rightNode.acquireWriteLatch();
 
                 try {
@@ -394,7 +396,7 @@ public class RTree extends AbstractTreeIndex {
                 if (pageId == rootPage) {
                     int newLeftId = freePageManager.takePage(ctx.getMetaFrame());
                     ICachedPage newLeftNode =
-                            bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), newLeftId), true);
+                            bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), newLeftId), NEW);
                     newLeftNode.acquireWriteLatch();
                     succeeded = false;
                     try {
@@ -452,7 +454,7 @@ public class RTree extends AbstractTreeIndex {
         boolean succeeded = false;
         boolean writeLatched = false;
         int parentId = ctx.getPathList().getLastPageId();
-        ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), parentId), false);
+        ICachedPage parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), parentId));
         parentNode.acquireWriteLatch();
         writeLatched = true;
         ctx.getInteriorFrame().setPage(parentNode);
@@ -478,7 +480,7 @@ public class RTree extends AbstractTreeIndex {
                     }
 
                     parentId = rightPage;
-                    parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), parentId), false);
+                    parentNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), parentId));
                     parentNode.acquireWriteLatch();
                     writeLatched = true;
                     ctx.getInteriorFrame().setPage(parentNode);
@@ -532,7 +534,7 @@ public class RTree extends AbstractTreeIndex {
                 pageId = ctx.getTraverseList().getFirstPageId();
                 parentIndex = ctx.getTraverseList().getFirstPageIndex();
 
-                node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                 node.acquireReadLatch();
                 readLatched = true;
                 ctx.getInteriorFrame().setPage(node);
@@ -615,7 +617,7 @@ public class RTree extends AbstractTreeIndex {
                 int pageId = ctx.getPathList().getLastPageId();
                 long parentLsn = ctx.getPathList().getLastPageLsn();
                 ctx.getPathList().moveLast();
-                node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                 node.acquireReadLatch();
                 readLatched = true;
                 ctx.getInteriorFrame().setPage(node);
@@ -648,7 +650,7 @@ public class RTree extends AbstractTreeIndex {
                         readLatched = false;
                         bufferCache.unpin(node);
 
-                        node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId), false);
+                        node = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), pageId));
                         node.acquireWriteLatch();
                         writeLatched = true;
                         ctx.getLeafFrame().setPage(node);
@@ -737,7 +739,7 @@ public class RTree extends AbstractTreeIndex {
         int currentPageId = bulkloadLeafStart;
         int maxPageId = freePageManager.getMaxPageId(ctx.getMetaFrame());
 
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId), false);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(getFileId(), currentPageId));
         page.acquireReadLatch();
         try {
             cursor.setBufferCache(bufferCache);

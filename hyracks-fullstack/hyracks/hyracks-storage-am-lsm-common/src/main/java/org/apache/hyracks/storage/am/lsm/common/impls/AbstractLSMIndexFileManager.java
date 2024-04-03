@@ -115,8 +115,7 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 return TreeIndexState.INVALID;
             }
             ITreeIndexMetadataFrame metadataFrame = treeIndex.getPageManager().createMetadataFrame();
-            ICachedPage page =
-                    bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage), false);
+            ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(treeIndex.getFileId(), metadataPage));
             page.acquireReadLatch();
             try {
                 metadataFrame.setPage(page);

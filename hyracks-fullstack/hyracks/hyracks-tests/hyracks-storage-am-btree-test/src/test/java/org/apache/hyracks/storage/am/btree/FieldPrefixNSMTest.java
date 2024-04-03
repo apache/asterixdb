@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.btree;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+
 import java.io.DataOutput;
 import java.util.Random;
 
@@ -128,7 +130,7 @@ public class FieldPrefixNSMTest extends AbstractBTreeTest {
         bufferCache.createFile(harness.getFileReference());
         int btreeFileId = bufferCache.openFile(harness.getFileReference());
         IHyracksTaskContext ctx = harness.getHyracksTaskContext();
-        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), true);
+        ICachedPage page = bufferCache.pin(BufferedFileHandle.getDiskPageId(btreeFileId, 0), NEW);
         try {
 
             BTreeTypeAwareTupleWriter tupleWriter = new BTreeTypeAwareTupleWriter(typeTraits, false, null, null);

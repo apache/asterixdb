@@ -76,8 +76,7 @@ public class TreeTupleSorter extends EnforcedIndexCursor implements ITreeIndexCu
         // We don't latch pages since this code is only used by flush () before
         // bulk-loading the r-tree to disk and flush is not concurrent.
         //
-        ICachedPage node1 =
-                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, tPointers[currentTupleIndex * 2]), false);
+        ICachedPage node1 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, tPointers[currentTupleIndex * 2]));
         try {
             leafFrame1.setPage(node1);
             frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), tPointers[currentTupleIndex * 2 + 1]);
@@ -183,10 +182,10 @@ public class TreeTupleSorter extends EnforcedIndexCursor implements ITreeIndexCu
         int j1 = tPointers[tp1 * 2 + 1];
         int i2 = tp2i;
         int j2 = tp2j;
-        ICachedPage node1 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i1), false);
+        ICachedPage node1 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i1));
         try {
             leafFrame1.setPage(node1);
-            ICachedPage node2 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i2), false);
+            ICachedPage node2 = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i2));
             try {
                 leafFrame2.setPage(node2);
                 frameTuple1.resetByTupleOffset(leafFrame1.getBuffer().array(), j1);

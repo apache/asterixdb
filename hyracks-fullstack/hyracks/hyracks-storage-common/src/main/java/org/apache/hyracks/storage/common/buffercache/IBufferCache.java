@@ -21,6 +21,8 @@ package org.apache.hyracks.storage.common.buffercache;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 
 public interface IBufferCache {
@@ -32,52 +34,42 @@ public interface IBufferCache {
     /**
      * Create file on disk
      *
-     * @param fileRef
-     *            the file to create
+     * @param fileRef the file to create
      * @return the file id
-     * @throws HyracksDataException
-     *             if the file already exists or attempt to create the file failed
+     * @throws HyracksDataException if the file already exists or attempt to create the file failed
      */
     int createFile(FileReference fileRef) throws HyracksDataException;
 
     /**
      * Open the file and register it (if not registered) with the file map manager
      *
-     * @param fileRef
-     *            the file to open
+     * @param fileRef the file to open
      * @return the file id
-     * @throws HyracksDataException
-     *             if the file doesn't exist or buffer cache failed to open the file
+     * @throws HyracksDataException if the file doesn't exist or buffer cache failed to open the file
      */
     int openFile(FileReference fileRef) throws HyracksDataException;
 
     /**
      * Open the mapped file with the passed file id
      *
-     * @param fileId
-     *            the file id
-     * @throws HyracksDataException
-     *             if the file doesn't exist or buffer cache fails to open the file
+     * @param fileId the file id
+     * @throws HyracksDataException if the file doesn't exist or buffer cache fails to open the file
      */
     void openFile(int fileId) throws HyracksDataException;
 
     /**
      * close the file
      *
-     * @param fileId
-     *            the file id
-     * @throws HyracksDataException
-     *             if file doesn't exist or is not open
+     * @param fileId the file id
+     * @throws HyracksDataException if file doesn't exist or is not open
      */
     void closeFile(int fileId) throws HyracksDataException;
 
     /**
      * delete the file from memory and disk
      *
-     * @param fileId
-     *            the file id
-     * @throws HyracksDataException
-     *             if the file doesn't exist or if a failure to delete takes place
+     * @param fileId the file id
+     * @throws HyracksDataException if the file doesn't exist or if a failure to delete takes place
      */
     void deleteFile(int fileId) throws HyracksDataException;
 
@@ -90,56 +82,44 @@ public interface IBufferCache {
     void deleteFile(FileReference file) throws HyracksDataException;
 
     /**
-     * Pin the page so it can't be evicted from the buffer cache...
+     * Pin a page to indicate it is not evictable
+     * Note: this will use the default {@link IBufferCacheReadContext}
      *
-     * @param dpid
-     *            page id is a unique id that is a combination of file id and page id
-     * @param newPage
-     *            whether this page is expected to be new.
-     *            NOTE: undefined:
-     *            -- what if the flag is true but the page exists?
-     *            -- what if the flag is false but the page doesn't exist
+     * @param dpid page id is a unique id that is a combination of file id and page id
      * @return the pinned page
-     * @throws HyracksDataException
      */
-    ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException;
+    ICachedPage pin(long dpid) throws HyracksDataException;
 
     /**
-     * Pin the page so it can't be evicted from the buffer cache...
+     * Pin a page to indicate it is not evictable
      *
-     * @param dpid
-     *            page id is a unique id that is a combination of file id and page id
-     * @param newPage
-     *            whether this page is expected to be new.
-     *            NOTE: undefined:
-     *            -- what if the flag is true but the page exists?
-     *            -- what if the flag is false but the page doesn't exist
-     *
-     * @param incrementStats
-     *            whether to increment the coldRead and pinCount counters when
-     *            the page is pinned. this is to not bias the count when using
-     *            accessors that cause nested pins due to wrapping file handles,
-     *            like compression
-     *
+     * @param dpid    page id is a unique id that is a combination of file id and page id
+     * @param context read context
      * @return the pinned page
-     * @throws HyracksDataException
      */
-    ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException;
+    ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException;
 
     /**
-     * Unpin a pinned page so its buffer can be recycled
+     * Unpin a page to indicate can be evicted
+     * Note: this will use the default {@link IBufferCacheReadContext}
      *
-     * @param page
-     *            the page
-     * @throws HyracksDataException
+     * @param page the page
      */
     void unpin(ICachedPage page) throws HyracksDataException;
 
     /**
+     * Unpin a page to indicate can be evicted
+     * Note: this will use the default {@link IBufferCacheReadContext}
+     *
+     * @param page    the page
+     * @param context read context
+     */
+    void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException;
+
+    /**
      * Flush the page if it is dirty
      *
-     * @param page
-     *            the page to flush
+     * @param page the page to flush
      * @throws HyracksDataException
      */
     void flush(ICachedPage page) throws HyracksDataException;
@@ -148,10 +128,8 @@ public interface IBufferCache {
      * Force bits that have been already flushed to disk
      * This method doesn't flush all dirty pages to disk but simply calls the sync method on the filesystem api
      *
-     * @param fileId
-     *            the file id
-     * @param metadata
-     *            whether metadata should be synced as well
+     * @param fileId   the file id
+     * @param metadata whether metadata should be synced as well
      * @throws HyracksDataException
      */
     void force(int fileId, boolean metadata) throws HyracksDataException;
@@ -159,8 +137,7 @@ public interface IBufferCache {
     /**
      * Take a page such that no one else has access to it
      *
-     * @param dpid
-     *            the unique (fileId,pageId)
+     * @param dpid the unique (fileId,pageId)
      * @return the confiscated page or null if no page is available
      * @throws HyracksDataException
      */
@@ -174,14 +151,10 @@ public interface IBufferCache {
     /**
      * Take a large page such that no one else has access to it
      *
-     * @param dpid
-     *            the unique (fileId,pageId)
-     * @param multiplier
-     *            how many multiples of the original page size
-     * @param extraBlockPageId
-     *            the page id where the large block comes from
-     * @return
-     *         the confiscated page or null if a large page couldn't be found
+     * @param dpid             the unique (fileId,pageId)
+     * @param multiplier       how many multiples of the original page size
+     * @param extraBlockPageId the page id where the large block comes from
+     * @return the confiscated page or null if a large page couldn't be found
      * @throws HyracksDataException
      */
     ICachedPage confiscateLargePage(long dpid, int multiplier, int extraBlockPageId) throws HyracksDataException;
@@ -189,18 +162,15 @@ public interface IBufferCache {
     /**
      * Return and re-insert a confiscated page
      *
-     * @param page
-     *            the confiscated page
+     * @param page the confiscated page
      */
     void returnPage(ICachedPage page);
 
     /**
      * Return a confiscated page
      *
-     * @param page
-     *            the confiscated page
-     * @param reinsert
-     *            if true, return the page to the cache, otherwise, destroy
+     * @param page     the confiscated page
+     * @param reinsert if true, return the page to the cache, otherwise, destroy
      */
     void returnPage(ICachedPage page, boolean reinsert);
 
@@ -226,8 +196,7 @@ public interface IBufferCache {
     /**
      * Get the number of pages used for a file
      *
-     * @param fileId
-     *            the file id
+     * @param fileId the file id
      * @return the number of pages used for the file
      * @throws HyracksDataException
      */
@@ -236,8 +205,7 @@ public interface IBufferCache {
     /**
      * Get the reference count for a file (num of open - num of close)
      *
-     * @param fileId
-     *            the file
+     * @param fileId the file
      * @return the reference count
      */
     int getFileReferenceCount(int fileId);
@@ -251,11 +219,18 @@ public interface IBufferCache {
     void close() throws HyracksDataException;
 
     /**
+     * A sequential page writer
+     *
+     * @param callback        call back when a page is successfully written
+     * @param failureCallback call back when a page is failed to be written
+     * @param context         write context
      * @return an instance of {@link IFIFOPageWriter} that can be used to write pages to the file
      */
-    IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback);
+    IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context);
 
     // TODO: remove the replication out of the buffer cache interface
+
     /**
      * @return true if replication is enabled, false otherwise
      */
@@ -268,7 +243,7 @@ public interface IBufferCache {
 
     /**
      * Deletes the file and recycle all of its pages without flushing them.
-     *
+     * <p>
      * ONLY call this if you absolutely, positively know this file has no dirty pages in the cache!
      * Bypasses the normal lifecycle of a file handle and evicts all references to it immediately.
      */
@@ -277,12 +252,9 @@ public interface IBufferCache {
     /**
      * Resize the page
      *
-     * @param page
-     *            the page to resize
-     * @param multiplier
-     *            how many multiples of the original page size
-     * @param extraPageBlockHelper
-     *            helper to determine the location of the resize block
+     * @param page                 the page to resize
+     * @param multiplier           how many multiples of the original page size
+     * @param extraPageBlockHelper helper to determine the location of the resize block
      * @throws HyracksDataException
      */
     void resizePage(ICachedPage page, int multiplier, IExtraPageBlockHelper extraPageBlockHelper)

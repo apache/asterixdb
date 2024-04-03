@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +41,8 @@ import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.VirtualPage;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
@@ -228,7 +232,13 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
+    public ICachedPage pin(long dpid) throws HyracksDataException {
+        return pin(dpid, DEFAULT);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
+        boolean newPage = context.isNewPage();
         VirtualPage page;
         int hash = hash(dpid);
         CacheBucket bucket = buckets[hash];
@@ -258,11 +268,6 @@ public class VirtualBufferCache implements IVirtualBufferCache {
         }
 
         return page;
-    }
-
-    @Override
-    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
-        return pin(dpid, newPage);
     }
 
     private int hash(long dpid) {
@@ -323,6 +328,10 @@ public class VirtualBufferCache implements IVirtualBufferCache {
 
     @Override
     public void unpin(ICachedPage page) throws HyracksDataException {
+    }
+
+    @Override
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
     }
 
     @Override
@@ -400,7 +409,8 @@ public class VirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context) {
         throw new UnsupportedOperationException("Virtual buffer caches don't have FIFO writers");
     }
 

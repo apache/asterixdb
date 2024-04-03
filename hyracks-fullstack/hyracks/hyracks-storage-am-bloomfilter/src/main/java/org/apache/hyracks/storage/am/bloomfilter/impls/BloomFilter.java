@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class BloomFilter {
@@ -92,7 +93,7 @@ public class BloomFilter {
                 pages = new ICachedPage[numPages];
             }
             for (int i = 0; i < numPages; i++) {
-                pages[i] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i + 1), false);
+                pages[i] = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i + 1));
             }
             pagesPinned = true;
         }
@@ -155,7 +156,7 @@ public class BloomFilter {
         if (pagesPinned) {
             page = pages[pageId];
         } else {
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId + 1), false);
+            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId + 1));
             unpinWhenExit = true;
         }
         ByteBuffer buffer = page.getBuffer();
@@ -186,7 +187,7 @@ public class BloomFilter {
 
             // we increment the page id by one, since the metadata page id of the filter is 0.
             ICachedPage page =
-                    bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, (int) (hash / numBitsPerPage) + 1), false);
+                    bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, (int) (hash / numBitsPerPage) + 1));
             page.acquireReadLatch();
             try {
                 ByteBuffer buffer = page.getBuffer();
@@ -235,7 +236,7 @@ public class BloomFilter {
             version = DEFAULT_BLOOM_FILTER_VERSION;
             return;
         }
-        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID), false);
+        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, METADATA_PAGE_ID));
         metaPage.acquireReadLatch();
         try {
             numPages = metaPage.getBuffer().getInt(NUM_PAGES_OFFSET);
@@ -302,7 +303,7 @@ public class BloomFilter {
             if (!isActivated) {
                 throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_BLOOM_FILTER_BUILDER_FOR_INACTIVE_FILTER);
             }
-            pageWriter = bufferCache.createFIFOWriter(callback, this);
+            pageWriter = bufferCache.createFIFOWriter(callback, this, DefaultBufferCacheWriteContext.INSTANCE);
             this.estimatedNumElements = estimatedNumElemenets;
             this.numHashes = numHashes;
             numBits = this.estimatedNumElements * numBitsPerElement;

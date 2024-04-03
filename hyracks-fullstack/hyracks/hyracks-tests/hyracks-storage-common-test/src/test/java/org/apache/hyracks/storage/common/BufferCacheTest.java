@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.common;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ import org.apache.hyracks.storage.common.buffercache.HaltOnFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.NoOpPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.test.support.TestStorageManagerComponentHolder;
 import org.apache.hyracks.test.support.TestUtils;
@@ -97,7 +100,8 @@ public class BufferCacheTest {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, i);
             ICachedPage page = bufferCache.confiscatePage(dpid);
             page.getBuffer().putInt(0, i);
-            bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE).write(page);
+            bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, HaltOnFailureCallback.INSTANCE,
+                    DefaultBufferCacheWriteContext.INSTANCE).write(page);
         }
         bufferCache.closeFile(fileId);
         ExecutorService executor = Executors.newFixedThreadPool(bufferCacheNumPages);
@@ -126,7 +130,7 @@ public class BufferCacheTest {
                         pageNumber = (pageNumber + 1) % numPages;
                         try {
                             long dpid = BufferedFileHandle.getDiskPageId(fileId, pageNumber);
-                            ICachedPage page = bufferCache.pin(dpid, false);
+                            ICachedPage page = bufferCache.pin(dpid);
                             successfulReads++;
                             bufferCache.unpin(page);
                         } catch (HyracksDataException hde) {
@@ -186,7 +190,7 @@ public class BufferCacheTest {
         ICachedPage page = null;
 
         // pin page should succeed
-        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), true);
+        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), NEW);
         page.acquireWriteLatch();
         try {
             for (int i = 0; i < num; i++) {
@@ -203,7 +207,7 @@ public class BufferCacheTest {
         bufferCache.openFile(fileId);
 
         // tryPin should succeed because page should still be cached
-        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
+        page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
         Assert.assertNotNull(page);
         page.acquireReadLatch();
         try {
@@ -298,7 +302,7 @@ public class BufferCacheTest {
             fileIds.add(fileId);
 
             ICachedPage page = null;
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), true);
+            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), NEW);
             page.acquireWriteLatch();
             try {
                 ArrayList<Integer> values = new ArrayList<>();
@@ -373,7 +377,7 @@ public class BufferCacheTest {
 
             // pin first page and verify contents
             ICachedPage page = null;
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(closedFileId, testPageId), false);
+            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(closedFileId, testPageId));
             page.acquireReadLatch();
             try {
                 ArrayList<Integer> values = pageContents.get(closedFileId);
@@ -411,7 +415,7 @@ public class BufferCacheTest {
             Thread interruptedReader = null;
             try {
                 for (int i = 0; i < expectedPinCount; i++) {
-                    ICachedPage aPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId), false);
+                    ICachedPage aPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId));
                     bufferCache.unpin(aPage);
                     ((CachedPage) aPage).invalidate();
                     actualPinCount.incrementAndGet();
@@ -420,7 +424,7 @@ public class BufferCacheTest {
                         interruptedReader = new Thread(() -> {
                             try {
                                 Thread.currentThread().interrupt();
-                                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId + 1), false);
+                                bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, testPageId + 1));
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }

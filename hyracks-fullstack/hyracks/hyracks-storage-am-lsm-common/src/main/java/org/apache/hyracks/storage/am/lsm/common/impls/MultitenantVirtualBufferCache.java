@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +33,8 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.JSONUtil;
 
@@ -65,18 +69,23 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        return vbc.pin(dpid, newPage);
+    public ICachedPage pin(long dpid) throws HyracksDataException {
+        return pin(dpid, DEFAULT);
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
-        return vbc.pin(dpid, newPage);
+    public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
+        return vbc.pin(dpid, context);
     }
 
     @Override
     public void unpin(ICachedPage page) throws HyracksDataException {
-        vbc.unpin(page);
+        unpin(page, DEFAULT);
+    }
+
+    @Override
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
+        vbc.unpin(page, context);
     }
 
     @Override
@@ -160,8 +169,9 @@ public class MultitenantVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
-        return vbc.createFIFOWriter(callback, failureCallback);
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context) {
+        return vbc.createFIFOWriter(callback, failureCallback, context);
     }
 
     @Override

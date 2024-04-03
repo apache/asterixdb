@@ -19,11 +19,15 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 
 /**
  * Implementation of an IBufferCache that counts the number of pins/unpins,
@@ -77,20 +81,25 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
-        ICachedPage page = bufferCache.pin(dpid, newPage, incrementStats);
+    public ICachedPage pin(long dpid) throws HyracksDataException {
+        return pin(dpid, DEFAULT);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
+        ICachedPage page = bufferCache.pin(dpid, context);
         pinCount.addAndGet(1);
         return page;
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        return pin(dpid, newPage, true);
+    public void unpin(ICachedPage page) throws HyracksDataException {
+        unpin(page, DEFAULT);
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
-        bufferCache.unpin(page);
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
+        bufferCache.unpin(page, context);
         unpinCount.addAndGet(1);
     }
 
@@ -199,8 +208,9 @@ public class DebugBufferCache implements IBufferCache {
     }
 
     @Override
-    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
-        return bufferCache.createFIFOWriter(callback, failureCallback);
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context) {
+        return bufferCache.createFIFOWriter(callback, failureCallback, context);
     }
 
     @Override

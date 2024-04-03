@@ -130,7 +130,8 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
 
     /**
      * Tries to allocate enough buffers to read the inverted list at once. If memory budget is not enough, this method
-     * stops allocating buffers. */
+     * stops allocating buffers.
+     */
     protected void allocateBuffers() throws HyracksDataException {
         do {
             ByteBuffer tmpBuffer = bufferManagerForSearch.acquireFrame(bufferCache.getPageSize());
@@ -205,7 +206,7 @@ public abstract class AbstractOnDiskInvertedListCursor extends AbstractInvertedL
         int currentBufferIdx = 0;
         ByteBuffer tmpBuffer;
         for (int i = bufferStartPageId; i <= endPageId; i++) {
-            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i), false);
+            page = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, i));
             stats.getPageCounter().update(1);
             // Copies the content to the buffer (working memory).
             // Assumption: processing inverted list takes time; so, we don't want to keep them on the buffer cache.

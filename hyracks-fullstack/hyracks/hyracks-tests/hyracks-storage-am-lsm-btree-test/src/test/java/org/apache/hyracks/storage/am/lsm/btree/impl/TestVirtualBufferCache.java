@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,9 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class TestVirtualBufferCache implements IVirtualBufferCache {
@@ -89,8 +94,13 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage) throws HyracksDataException {
-        ICachedPage page = vbc.pin(dpid, newPage);
+    public ICachedPage pin(long dpid) throws HyracksDataException {
+        return pin(dpid, DEFAULT);
+    }
+
+    @Override
+    public ICachedPage pin(long dpid, IBufferCacheReadContext context) throws HyracksDataException {
+        ICachedPage page = vbc.pin(dpid, context);
         // the memory component can be full after each but, but isFull may not be called by the memory component
         // for correctness, we call isFull here after each pin
         for (ILSMMemoryComponent component : isFullMap.keySet()) {
@@ -101,13 +111,13 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public ICachedPage pin(long dpid, boolean newPage, boolean incrementStats) throws HyracksDataException {
-        return pin(dpid, newPage);
+    public void unpin(ICachedPage page) throws HyracksDataException {
+        unpin(page, DEFAULT);
     }
 
     @Override
-    public void unpin(ICachedPage page) throws HyracksDataException {
-        vbc.unpin(page);
+    public void unpin(ICachedPage page, IBufferCacheReadContext context) throws HyracksDataException {
+        vbc.unpin(page, context);
     }
 
     @Override
@@ -172,8 +182,9 @@ public class TestVirtualBufferCache implements IVirtualBufferCache {
     }
 
     @Override
-    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback) {
-        return vbc.createFIFOWriter(callback, failureCallback);
+    public IFIFOPageWriter createFIFOWriter(IPageWriteCallback callback, IPageWriteFailureCallback failureCallback,
+            IBufferCacheWriteContext context) {
+        return vbc.createFIFOWriter(callback, failureCallback, DefaultBufferCacheWriteContext.INSTANCE);
     }
 
     @Override

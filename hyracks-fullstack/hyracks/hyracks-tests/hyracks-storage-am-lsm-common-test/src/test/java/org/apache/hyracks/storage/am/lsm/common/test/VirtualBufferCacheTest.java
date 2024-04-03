@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.test;
 
+import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
@@ -71,7 +72,7 @@ public class VirtualBufferCacheTest {
         }
 
         public void pin(VirtualBufferCache vbc, int multiplier) throws HyracksDataException {
-            ICachedPage p = vbc.pin(BufferedFileHandle.getDiskPageId(fileId, pinCount), true);
+            ICachedPage p = vbc.pin(BufferedFileHandle.getDiskPageId(fileId, pinCount), NEW);
             pinnedPages.add(p);
             pinCount++;
             totalNumPages++;
@@ -148,7 +149,7 @@ public class VirtualBufferCacheTest {
                 switch (req.getType()) {
                     case PIN_PAGE:
                         ICachedPage p = vbc.pin(
-                                BufferedFileHandle.getDiskPageId(fileState.fileId, fileState.helper.pinCount), true);
+                                BufferedFileHandle.getDiskPageId(fileState.fileId, fileState.helper.pinCount), NEW);
                         fileState.helper.pinnedPages.add(p);
                         ++fileState.helper.pinCount;
                         break;

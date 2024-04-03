@@ -15,6 +15,7 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,12 +28,14 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
 
     private final IPageWriteCallback callback;
     private final IPageWriteFailureCallback failureCallback;
+    private final IBufferCacheWriteContext context;
 
     public FIFOLocalWriter(BufferCache bufferCache, IPageWriteCallback callback,
-            IPageWriteFailureCallback failureCallback) {
+            IPageWriteFailureCallback failureCallback, IBufferCacheWriteContext context) {
         this.bufferCache = bufferCache;
         this.callback = callback;
         this.failureCallback = failureCallback;
+        this.context = context;
     }
 
     @SuppressWarnings("squid:S1181") // System must halt on all IO errors
@@ -41,7 +44,7 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
         CachedPage cPage = (CachedPage) page;
         try {
             callback.beforeWrite(cPage);
-            bufferCache.write(cPage);
+            bufferCache.write(cPage, context);
             callback.afterWrite(cPage);
         } catch (Exception e) {
             handleWriteFailure(page, e);
