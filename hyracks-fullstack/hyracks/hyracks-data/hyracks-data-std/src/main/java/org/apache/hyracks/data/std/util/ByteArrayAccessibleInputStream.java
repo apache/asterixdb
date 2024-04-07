@@ -29,7 +29,7 @@ public class ByteArrayAccessibleInputStream extends ByteArrayInputStream {
     public void setContent(byte[] buf, int offset, int length) {
         this.buf = buf;
         this.pos = offset;
-        this.count = Math.min(offset + length, buf.length);
+        this.count = Math.min(offset + length, buf == null ? 0 : buf.length);
         this.mark = offset;
     }
 

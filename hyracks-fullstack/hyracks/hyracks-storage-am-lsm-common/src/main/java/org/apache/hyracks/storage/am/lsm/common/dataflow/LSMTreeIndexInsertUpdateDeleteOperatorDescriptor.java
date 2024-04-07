@@ -67,4 +67,8 @@ public class LSMTreeIndexInsertUpdateDeleteOperatorDescriptor extends AbstractSi
                 recordDescProvider.getInputRecordDescriptor(getActivityId(), 0), op, modCallbackFactory,
                 tupleFilterFactory, tuplePartitionerFactory, partitionsMap);
     }
+
+    public int[] getFieldPermutation() {
+        return fieldPermutation;
+    }
 }
