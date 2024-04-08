@@ -57,11 +57,17 @@ final class ExternalFileWriter implements IExternalWriter {
             // Ignore writing values for unresolvable partition paths
             return;
         }
-        writer.write(value);
-        tupleCounter++;
+
+        // create a new file only when we reach the maximum tuples and we know a new tuple is incoming
+        // e.g., if max is 1000, we hit tuple 1001, we will upload and create a new file, if we only have 1000
+        // we will stop here, and calling the close/finish will upload whatever is written. This is to avoid
+        // creating and uploading empty files
         if (tupleCounter >= maxResultPerFile) {
             newFile();
         }
+
+        writer.write(value);
+        tupleCounter++;
     }
 
     @Override
