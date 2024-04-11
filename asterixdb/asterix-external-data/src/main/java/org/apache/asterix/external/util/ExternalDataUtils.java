@@ -212,7 +212,7 @@ public class ExternalDataUtils {
     }
 
     public static String getDatasetDatabase(Map<String, String> configuration) throws AsterixException {
-        return configuration.get(ExternalDataConstants.KEY_DATABASE_DATAVERSE);
+        return configuration.get(ExternalDataConstants.KEY_DATASET_DATABASE);
     }
 
     public static DataverseName getDatasetDataverse(Map<String, String> configuration) throws AsterixException {
@@ -353,8 +353,8 @@ public class ExternalDataUtils {
         if (!configuration.containsKey(ExternalDataConstants.KEY_IS_FEED)) {
             configuration.put(ExternalDataConstants.KEY_IS_FEED, ExternalDataConstants.TRUE);
         }
-        configuration.computeIfAbsent(ExternalDataConstants.KEY_LOG_INGESTION_EVENTS, k -> ExternalDataConstants.TRUE);
-        configuration.put(ExternalDataConstants.KEY_DATABASE_DATAVERSE, databaseName);
+        configuration.putIfAbsent(ExternalDataConstants.KEY_LOG_INGESTION_EVENTS, ExternalDataConstants.TRUE);
+        configuration.put(ExternalDataConstants.KEY_DATASET_DATABASE, databaseName);
         configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE, dataverseName.getCanonicalForm());
         configuration.put(ExternalDataConstants.KEY_FEED_NAME, feedName);
     }

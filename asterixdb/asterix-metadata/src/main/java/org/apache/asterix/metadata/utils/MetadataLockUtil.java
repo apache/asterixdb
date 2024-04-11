@@ -29,6 +29,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -68,8 +69,8 @@ public class MetadataLockUtil implements IMetadataLockUtil {
             DataverseName itemTypeDataverseName, String itemTypeName, boolean itemTypeAnonymous,
             String metaItemTypeDatabase, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
             boolean metaItemTypeAnonymous, String nodeGroupName, String compactionPolicyName,
-            boolean isDefaultCompactionPolicy, DatasetConfig.DatasetType datasetType, Object datasetDetails)
-            throws AlgebricksException {
+            boolean isDefaultCompactionPolicy, DatasetConfig.DatasetType datasetType, Object datasetDetails,
+            IMetadataProvider metadataProvider) throws AlgebricksException {
         createDatasetBeginPre(lockMgr, locks, database, dataverseName, itemTypeDatabase, itemTypeDataverseName,
                 itemTypeName, itemTypeAnonymous, metaItemTypeDatabase, metaItemTypeDataverseName, metaItemTypeName,
                 metaItemTypeAnonymous, nodeGroupName, compactionPolicyName, isDefaultCompactionPolicy);

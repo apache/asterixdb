@@ -539,7 +539,7 @@ public class IOManager implements IIOManager {
             if (file.exists()) {
                 delete(fileRef);
             } else {
-                FileUtils.createParentDirectories(file);
+                file.getParentFile().mkdirs();
             }
             FileUtil.writeAndForce(file.toPath(), bytes);
         } catch (IOException e) {

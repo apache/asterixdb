@@ -830,7 +830,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, datasetName,
                 itemTypeDatabase, itemTypeDataverseName, itemTypeName, itemTypeAnonymous, metaItemTypeDatabase,
                 metaItemTypeDataverseName, metaItemTypeName, metaItemTypeAnonymous, nodegroupName, compactionPolicy,
-                defaultCompactionPolicy, dd.getDatasetType(), dd.getDatasetDetailsDecl());
+                defaultCompactionPolicy, dd.getDatasetType(), dd.getDatasetDetailsDecl(), metadataProvider);
         try {
             doCreateDatasetStatement(metadataProvider, dd, stmtActiveNamespace, datasetName, itemTypeNamespace,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeNamespace, metaItemTypeName, hcc,
@@ -998,7 +998,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
                     validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
-                            appCtx);
+                            appCtx, metadataProvider);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -2763,7 +2763,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, viewName,
                 itemTypeDatabaseName, viewItemTypeDataverseName, viewItemTypeName, viewItemTypeAnonymous, null, null,
-                null, false, null, null, true, DatasetType.VIEW, null);
+                null, false, null, null, true, DatasetType.VIEW, null, metadataProvider);
         try {
             doCreateView(metadataProvider, cvs, databaseName, dataverseName, viewName, itemTypeDatabaseName,
                     viewItemTypeDataverseName, viewItemTypeName, stmtRewriter, requestParameters);
@@ -3982,7 +3982,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ExternalDataUtils.normalize(properties);
             ExternalDataUtils.validate(properties);
             validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,
-                    appCtx);
+                    appCtx, metadataProvider);
             CompiledCopyFromFileStatement cls = new CompiledCopyFromFileStatement(databaseName, dataverseName,
                     copyStmt.getDatasetName(), itemType, externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
@@ -5664,7 +5664,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
             Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx,
-            IApplicationContext appCtx) throws AlgebricksException, HyracksDataException {
+            IApplicationContext appCtx, MetadataProvider metadataProvider)
+            throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);

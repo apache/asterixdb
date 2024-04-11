@@ -166,8 +166,8 @@ public class NCApplication extends BaseNCApplication {
         boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
         NamespaceResolver namespaceResolver = new NamespaceResolver(useDatabaseResolution);
         NamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
-        ncExtensionManager =
-                new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment, namespaceResolver);
+        ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment,
+                namespaceResolver, ncServiceCtx);
         runtimeContext = createNCApplicationContext(ncServiceCtx, ncExtensionManager, getPropertiesFactory(),
                 namespaceResolver, namespacePathResolver);
         MetadataProperties metadataProperties = runtimeContext.getMetadataProperties();

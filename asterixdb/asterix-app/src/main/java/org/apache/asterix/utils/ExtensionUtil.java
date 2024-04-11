@@ -31,6 +31,7 @@ import org.apache.asterix.metadata.bootstrap.MetadataIndexesProvider;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.translator.IStatementExecutorFactory;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.application.INCServiceContext;
 
 /**
  * Provide util methods dealing with extensions
@@ -108,22 +109,21 @@ public class ExtensionUtil {
     /**
      * Validates no extension conflict and extends tuple translator provider
      *
-     * @param metadataExtension
-     *         place holder for tuple translator provider extension
-     * @param mde
-     *         user defined metadata extension
+     * @param metadataExtension       place holder for tuple translator provider extension
+     * @param mde                     user defined metadata extension
      * @param metadataIndexesProvider
+     * @param ncServiceCtx
      * @return the metadata extension if the extension defines a metadata tuple translator, null otherwise
-     * @throws RuntimeDataException
-     *         if an extension conflict was detected
+     * @throws RuntimeDataException if an extension conflict was detected
      */
     public static IMetadataExtension extendTupleTranslatorProvider(IMetadataExtension metadataExtension,
-            IMetadataExtension mde, MetadataIndexesProvider metadataIndexesProvider) throws RuntimeDataException {
+            IMetadataExtension mde, MetadataIndexesProvider metadataIndexesProvider, INCServiceContext ncServiceCtx)
+            throws RuntimeDataException {
         if (metadataExtension != null) {
             throw new RuntimeDataException(ErrorCode.EXTENSION_COMPONENT_CONFLICT, metadataExtension.getId(),
                     mde.getId(), IMetadataExtension.class.getSimpleName());
         }
-        return mde.getMetadataTupleTranslatorProvider(metadataIndexesProvider) == null ? null : mde;
+        return mde.getMetadataTupleTranslatorProvider(metadataIndexesProvider, ncServiceCtx) == null ? null : mde;
     }
 
     /**

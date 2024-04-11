@@ -176,7 +176,7 @@ public class CCApplication extends BaseCCApplication {
         boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
         INamespaceResolver namespaceResolver = new NamespaceResolver(useDatabaseResolution);
         INamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
-        ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()), namespaceResolver);
+        ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()), namespaceResolver, ccServiceCtx);
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
         final CCConfig ccConfig = controllerService.getCCConfig();
 

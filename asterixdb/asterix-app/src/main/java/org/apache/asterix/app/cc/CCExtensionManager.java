@@ -68,15 +68,16 @@ public class CCExtensionManager implements ICCExtensionManager {
     /**
      * Initialize {@link org.apache.asterix.app.cc.CCExtensionManager} from configuration
      *
-     * @param list
-     *         a list of extensions
+     * @param list              a list of extensions
      * @param namespaceResolver
+     * @param ccServiceCtx
      * @throws InstantiationException
      * @throws IllegalAccessException
      * @throws ClassNotFoundException
      * @throws HyracksDataException
      */
-    public CCExtensionManager(List<AsterixExtension> list, INamespaceResolver namespaceResolver)
+    public CCExtensionManager(List<AsterixExtension> list, INamespaceResolver namespaceResolver,
+            ICCServiceContext ccServiceCtx)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         Pair<ExtensionId, IFunctionManager> fm = null;
@@ -87,7 +88,7 @@ public class CCExtensionManager implements ICCExtensionManager {
             Set<ExtensionId> extensionIds = new HashSet<>();
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
-                extension.configure(extensionConf.getArgs());
+                extension.configure(extensionConf.getArgs(), ccServiceCtx);
                 if (!extensionIds.add(extension.getId())) {
                     throw new RuntimeDataException(ErrorCode.EXTENSION_ID_CONFLICT, extension.getId());
                 }

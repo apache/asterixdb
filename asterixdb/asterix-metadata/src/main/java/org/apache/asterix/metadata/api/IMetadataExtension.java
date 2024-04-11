@@ -46,7 +46,8 @@ public interface IMetadataExtension extends IExtension {
      * @return The tuple translator provider that must be used by the {@code IMetadataNode } to read and write core
      *         {@code IMetadataEntity} objects
      */
-    MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider(MetadataIndexesProvider metadataIndexesProvider);
+    MetadataTupleTranslatorProvider getMetadataTupleTranslatorProvider(MetadataIndexesProvider metadataIndexesProvider,
+            INCServiceContext ncServiceCtx);
 
     MetadataIndexesProvider getMetadataIndexesProvider(boolean usingDatabase);
 

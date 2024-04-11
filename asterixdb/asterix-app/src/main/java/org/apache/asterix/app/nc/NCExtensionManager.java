@@ -53,18 +53,15 @@ public class NCExtensionManager implements INCExtensionManager {
     /**
      * Initialize {@code CCExtensionManager} from configuration
      *
-     * @param list
-     *         list of user configured extensions
-     * @throws InstantiationException
-     *         if an extension couldn't be created
-     * @throws IllegalAccessException
-     *         if user doesn't have enough acess priveleges
-     * @throws ClassNotFoundException
-     *         if a class was not found
-     * @throws HyracksDataException
-     *         if two extensions conlict with each other
+     * @param list         list of user configured extensions
+     * @param ncServiceCtx
+     * @throws InstantiationException if an extension couldn't be created
+     * @throws IllegalAccessException if user doesn't have enough acess priveleges
+     * @throws ClassNotFoundException if a class was not found
+     * @throws HyracksDataException   if two extensions conlict with each other
      */
-    public NCExtensionManager(List<AsterixExtension> list, boolean usingDatabase, INamespaceResolver namespaceResolver)
+    public NCExtensionManager(List<AsterixExtension> list, boolean usingDatabase, INamespaceResolver namespaceResolver,
+            INCServiceContext ncServiceCtx)
             throws InstantiationException, IllegalAccessException, ClassNotFoundException, HyracksDataException {
         Pair<ExtensionId, ILangCompilationProvider> sqlppcp = null;
         IMetadataExtension tupleTranslatorProviderExtension = null;
@@ -73,7 +70,7 @@ public class NCExtensionManager implements INCExtensionManager {
         if (list != null) {
             for (AsterixExtension extensionConf : list) {
                 IExtension extension = (IExtension) Class.forName(extensionConf.getClassName()).newInstance();
-                extension.configure(extensionConf.getArgs());
+                extension.configure(extensionConf.getArgs(), ncServiceCtx);
                 switch (extension.getExtensionKind()) {
                     case LANG:
                         ILangExtension le = (ILangExtension) extension;
@@ -85,7 +82,7 @@ public class NCExtensionManager implements INCExtensionManager {
                         mdExtensions.add(mde);
                         //TODO(DB) clean up
                         tupleTranslatorProviderExtension = ExtensionUtil.extendTupleTranslatorProvider(
-                                tupleTranslatorProviderExtension, mde, mdIndexesProvider);
+                                tupleTranslatorProviderExtension, mde, mdIndexesProvider, ncServiceCtx);
                         break;
                     default:
                         break;
@@ -99,8 +96,8 @@ public class NCExtensionManager implements INCExtensionManager {
             this.tupleTranslatorProvider = new MetadataTupleTranslatorProvider(metadataIndexesProvider);
         } else {
             this.metadataIndexesProvider = tupleTranslatorProviderExtension.getMetadataIndexesProvider(usingDatabase);
-            this.tupleTranslatorProvider =
-                    tupleTranslatorProviderExtension.getMetadataTupleTranslatorProvider(metadataIndexesProvider);
+            this.tupleTranslatorProvider = tupleTranslatorProviderExtension
+                    .getMetadataTupleTranslatorProvider(metadataIndexesProvider, ncServiceCtx);
         }
     }
 

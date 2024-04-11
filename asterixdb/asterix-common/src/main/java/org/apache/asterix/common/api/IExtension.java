@@ -21,6 +21,7 @@ package org.apache.asterix.common.api;
 import java.util.List;
 
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.application.IServiceContext;
 
 /**
  * an interface for an extension that provides a mechanism to override system behaviour
@@ -57,8 +58,9 @@ public interface IExtension {
      * This method is called on system boot
      *
      * @param args
+     * @param serviceCtx
      */
-    void configure(List<Pair<String, String>> args);
+    void configure(List<Pair<String, String>> args, IServiceContext serviceCtx);
 
     /**
      * @return The extension point implemented by this extension
