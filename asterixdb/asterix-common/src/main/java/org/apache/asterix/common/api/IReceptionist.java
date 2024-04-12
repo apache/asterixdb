@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.api;
 
+import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.http.api.IServletRequest;
 
@@ -47,4 +48,14 @@ public interface IReceptionist {
      * @throws HyracksDataException
      */
     void ensureSchedulable(ISchedulableClientRequest schedulableRequest) throws HyracksDataException;
+
+    /**
+     * Ensures a client's request is authorized
+     *
+     * @param requestParameters
+     * @param metadataProvider
+     * @throws HyracksDataException
+     */
+    void ensureAuthorized(ICommonRequestParameters requestParameters, IMetadataProvider metadataProvider)
+            throws HyracksDataException;
 }

@@ -43,6 +43,7 @@ import org.apache.asterix.lang.common.literal.StringLiteral;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
+import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.utils.TypeUtil;
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -78,8 +79,9 @@ public final class ViewUtil {
         }
     }
 
-    public static List<List<DependencyFullyQualifiedName>> getViewDependencies(ViewDecl viewDecl,
-            List<ViewDetails.ForeignKey> foreignKeys, IQueryRewriter rewriter) throws CompilationException {
+    public static List<List<DependencyFullyQualifiedName>> getViewDependencies(MetadataProvider metadataProvider,
+            ViewDecl viewDecl, List<ViewDetails.ForeignKey> foreignKeys, IQueryRewriter rewriter)
+            throws CompilationException {
         Expression normBody = viewDecl.getNormalizedViewBody();
         if (normBody == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, viewDecl.getSourceLocation(),
@@ -90,8 +92,8 @@ public final class ViewUtil {
         List<DependencyFullyQualifiedName> datasetDependencies = new ArrayList<>();
         List<DependencyFullyQualifiedName> synonymDependencies = new ArrayList<>();
         List<DependencyFullyQualifiedName> functionDependencies = new ArrayList<>();
-        ExpressionUtils.collectDependencies(normBody, rewriter, datasetDependencies, synonymDependencies,
-                functionDependencies);
+        ExpressionUtils.collectDependencies(metadataProvider, normBody, rewriter, datasetDependencies,
+                synonymDependencies, functionDependencies);
 
         if (foreignKeys != null) {
             DatasetFullyQualifiedName viewName = viewDecl.getViewName();

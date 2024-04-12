@@ -2935,7 +2935,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     Collections.emptyList());
 
             List<List<DependencyFullyQualifiedName>> dependencies =
-                    ViewUtil.getViewDependencies(viewDecl, foreignKeys, queryRewriter);
+                    ViewUtil.getViewDependencies(metadataProvider, viewDecl, foreignKeys, queryRewriter);
+            appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
 
             ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(),
                     primaryKeyFields, foreignKeys, datetimeFormat, dateFormat, timeFormat);
@@ -3238,7 +3239,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         Collections.emptyList());
 
                 List<List<DependencyFullyQualifiedName>> dependencies =
-                        FunctionUtil.getFunctionDependencies(fd, queryRewriter);
+                        FunctionUtil.getFunctionDependencies(metadataProvider, fd, queryRewriter);
+                appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
 
                 newInlineTypes = Collections.emptyMap();
                 function = new Function(functionSignature, paramNames, null, null, cfs.getFunctionBody(),
@@ -4221,6 +4223,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             clfrqs.setSourceLocation(stmt.getSourceLocation());
             JobSpecification jobSpec =
                     rewriteCompileQuery(hcc, metadataProvider, clfrqs.getQuery(), clfrqs, stmtParams, null);
+            appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
             afterCompile();
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);

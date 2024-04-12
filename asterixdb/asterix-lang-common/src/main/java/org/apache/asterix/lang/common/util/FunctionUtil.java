@@ -228,8 +228,8 @@ public class FunctionUtil {
         };
     }
 
-    public static List<List<DependencyFullyQualifiedName>> getFunctionDependencies(FunctionDecl fd,
-            IQueryRewriter rewriter) throws CompilationException {
+    public static List<List<DependencyFullyQualifiedName>> getFunctionDependencies(MetadataProvider metadataProvider,
+            FunctionDecl fd, IQueryRewriter rewriter) throws CompilationException {
         Expression normBody = fd.getNormalizedFuncBody();
         if (normBody == null) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, fd.getSourceLocation(),
@@ -240,8 +240,8 @@ public class FunctionUtil {
         List<DependencyFullyQualifiedName> datasetDependencies = new ArrayList<>();
         List<DependencyFullyQualifiedName> synonymDependencies = new ArrayList<>();
         List<DependencyFullyQualifiedName> functionDependencies = new ArrayList<>();
-        ExpressionUtils.collectDependencies(normBody, rewriter, datasetDependencies, synonymDependencies,
-                functionDependencies);
+        ExpressionUtils.collectDependencies(metadataProvider, normBody, rewriter, datasetDependencies,
+                synonymDependencies, functionDependencies);
 
         List<DependencyFullyQualifiedName> typeDependencies = Collections.emptyList();
         return Function.createDependencies(datasetDependencies, functionDependencies, typeDependencies,

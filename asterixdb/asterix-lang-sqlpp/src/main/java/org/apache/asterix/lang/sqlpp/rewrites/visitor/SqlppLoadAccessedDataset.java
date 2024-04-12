@@ -24,13 +24,14 @@ import java.util.Map;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.functions.FunctionSignature;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.lang.common.base.Expression;
 import org.apache.asterix.lang.common.base.ILangExpression;
 import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
-import org.apache.asterix.lang.common.statement.CopyToStatement;
-import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
+import org.apache.asterix.lang.common.statement.FunctionDecl;
+import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.util.ExpressionUtils;
 import org.apache.asterix.lang.sqlpp.visitor.base.AbstractSqlppSimpleExpressionVisitor;
 import org.apache.asterix.metadata.entities.EntityDetails;
@@ -45,33 +46,15 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
     }
 
     @Override
-    public Expression visit(CopyToStatement stmtCopy, ILangExpression arg) throws CompilationException {
-        ExternalDetailsDecl externalDetailsDecl = stmtCopy.getExternalDetailsDecl();
-        Map<String, String> properties = externalDetailsDecl.getProperties();
-        String databaseName = properties.getOrDefault("database", "Default");
-        String dataverseNameString = properties.getOrDefault("dataverse", "Default");
-        String linkName = properties.getOrDefault("name", "");
-        DataverseName dataverseName;
-        try {
-            dataverseName = DataverseName.createFromCanonicalForm(dataverseNameString);
-        } catch (AsterixException e) {
-            throw new IllegalStateException(e);
-        }
-
-        context.getMetadataProvider().addAccessedEntity(
-                new EntityDetails(databaseName, dataverseName, linkName, EntityDetails.EntityType.LINK));
-        return super.visit(stmtCopy, arg);
+    public Expression visit(CallExpr expression, ILangExpression arg) throws CompilationException {
+        addAccessedEntities(expression);
+        return super.visit(expression, arg);
     }
 
-    @Override
-    public Expression visit(CallExpr expression, ILangExpression arg) {
+    private void addAccessedEntities(CallExpr expression) {
         if (BuiltinFunctions.DATASET.equals(expression.getFunctionSignature().createFunctionIdentifier())) {
             List<Expression> exprs = expression.getExprList();
             String databaseName, dataverseNameArg, datasetName;
-            EntityDetails.EntityType entityType;
-            entityType = exprs.size() > 3 && Boolean.TRUE.equals(ExpressionUtils.getBooleanLiteral(exprs.get(3)))
-                    ? EntityDetails.EntityType.VIEW : EntityDetails.EntityType.DATASET;
-
             databaseName = ExpressionUtils.getStringLiteral(exprs.get(0));
             dataverseNameArg = ExpressionUtils.getStringLiteral(exprs.get(1));
             DataverseName dataverseName;
@@ -82,14 +65,28 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
             }
             datasetName = ExpressionUtils.getStringLiteral(exprs.get(2));
 
+            EntityDetails.EntityType entityType = EntityDetails.EntityType.DATASET;
+            if (exprs.size() > 3 && Boolean.TRUE.equals(ExpressionUtils.getBooleanLiteral(exprs.get(3)))) {
+                DatasetFullyQualifiedName viewDatasetName =
+                        new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName);
+                Map<DatasetFullyQualifiedName, ViewDecl> declaredViews = context.getDeclaredViews();
+                if (declaredViews.containsKey(viewDatasetName)) {
+                    return;
+                }
+                entityType = EntityDetails.EntityType.VIEW;
+            }
+
             context.getMetadataProvider()
                     .addAccessedEntity(new EntityDetails(databaseName, dataverseName, datasetName, entityType));
         } else {
             FunctionSignature signature = expression.getFunctionSignature();
+            Map<FunctionSignature, FunctionDecl> declaredFunctions = context.getDeclaredFunctions();
+            if (declaredFunctions.containsKey(signature)) {
+                return;
+            }
             String functionName = signature.getName() + "(" + signature.getArity() + ")";
             context.getMetadataProvider().addAccessedEntity(new EntityDetails(signature.getDatabaseName(),
                     signature.getDataverseName(), functionName, EntityDetails.EntityType.FUNCTION));
         }
-        return expression;
     }
 }

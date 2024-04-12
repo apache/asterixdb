@@ -204,7 +204,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     private final INamespaceResolver namespaceResolver;
     private IDataFormat dataFormat = FormatUtils.getDefaultFormat();
 
-    private final Set<EntityDetails> getAccessedEntities;
+    private final Set<EntityDetails> accessedEntities;
 
     public static MetadataProvider createWithDefaultNamespace(ICcApplicationContext appCtx) {
         java.util.function.Function<ICcApplicationContext, IMetadataProvider<?, ?>> factory =
@@ -231,7 +231,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         dataPartitioningProvider = (DataPartitioningProvider) appCtx.getDataPartitioningProvider();
         locks = new LockList();
         config = new HashMap<>();
-        getAccessedEntities = new HashSet<>();
+        accessedEntities = new HashSet<>();
         setDefaultNamespace(MetadataConstants.DEFAULT_NAMESPACE);
     }
 
@@ -1953,11 +1953,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public void addAccessedEntity(EntityDetails entityDetails) {
-        getAccessedEntities.add(entityDetails);
+        accessedEntities.add(entityDetails);
     }
 
-    public Set<EntityDetails> getGetAccessedEntities() {
-        return Collections.unmodifiableSet(getAccessedEntities);
+    public Set<EntityDetails> getAccessedEntities() {
+        return Collections.unmodifiableSet(accessedEntities);
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {

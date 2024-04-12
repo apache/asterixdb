@@ -25,19 +25,18 @@ public class EntityDetails {
     public enum EntityType {
         DATASET,
         VIEW,
-        FUNCTION,
-        LINK
+        FUNCTION
     }
 
     private final String databaseName;
     private final DataverseName dataverseName;
-    private final String datasetName;
+    private final String entityName;
     private final EntityType entityType;
 
-    public EntityDetails(String databaseName, DataverseName dataverseName, String datasetName, EntityType entityType) {
+    public EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType) {
         this.databaseName = databaseName;
         this.dataverseName = dataverseName;
-        this.datasetName = datasetName;
+        this.entityName = entityName;
         this.entityType = entityType;
     }
 
@@ -49,8 +48,8 @@ public class EntityDetails {
         return dataverseName;
     }
 
-    public String getDatasetName() {
-        return datasetName;
+    public String getEntityName() {
+        return entityName;
     }
 
     public EntityType getEntityType() {
