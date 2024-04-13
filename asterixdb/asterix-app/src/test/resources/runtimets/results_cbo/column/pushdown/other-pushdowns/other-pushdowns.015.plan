@@ -1,22 +1,22 @@
-distribute result [$$52] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+distribute result [$$52] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+  exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$52]) [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+    project ([$$52]) [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$52] <- [{"$1": $$57}] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+      assign [$$52] <- [{"$1": $$57}] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$57] <- [agg-sql-sum($$60)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+        aggregate [$$57] <- [agg-sql-sum($$60)] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+          exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$60] <- [agg-sql-count($$50)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+            aggregate [$$60] <- [agg-sql-count($$50)] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
             -- AGGREGATE  |PARTITIONED|
-              project ([$$50]) [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+              project ([$$50]) [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+                exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$55, $$56)) [cardinality: 2.1, op-cost: 4.0, total-cost: 12.0]
+                  join (eq($$55, $$56)) [cardinality: 2.67, op-cost: 4.0, total-cost: 12.0]
                   -- HYBRID_HASH_JOIN [$$55][$$56]  |PARTITIONED|
                     exchange [cardinality: 2.0, op-cost: 2.0, total-cost: 4.0]
                     -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|

@@ -1,30 +1,30 @@
-distribute result [$$101] [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+distribute result [$$101] [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+  exchange [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$101]) [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+    project ([$$101]) [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$101] <- [{"$1": $$111}] [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+      assign [$$101] <- [{"$1": $$111}] [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
       -- ASSIGN  |PARTITIONED|
-        project ([$$111]) [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+        project ([$$111]) [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037.6]
+          exchange [cardinality: 1004.25, op-cost: 0.0, total-cost: 18055.78]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
             group by ([$$l_partkey := $$115; $$o_orderstatus := $$116; $$c_nationkey := $$117]) decor ([]) {
                       aggregate [$$111] <- [sql-sum-serial($$114)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 1002.74, op-cost: 6016.3, total-cost: 18037.6]
+                   } [cardinality: 1004.25, op-cost: 6025.39, total-cost: 18055.78]
             -- EXTERNAL_GROUP_BY[$$115, $$116, $$117]  |PARTITIONED|
-              exchange [cardinality: 1002.74, op-cost: 0.0, total-cost: 12021.3]
+              exchange [cardinality: 1004.25, op-cost: 0.0, total-cost: 12030.39]
               -- HASH_PARTITION_EXCHANGE [$$115, $$116, $$117]  |PARTITIONED|
                 group by ([$$115 := $$102; $$116 := $$103; $$117 := $$104]) decor ([]) {
                           aggregate [$$114] <- [sql-count-serial(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- AGGREGATE  |LOCAL|
                             nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                       } [cardinality: 1002.74, op-cost: 6016.3, total-cost: 12021.3]
+                       } [cardinality: 1004.25, op-cost: 6025.39, total-cost: 12030.39]
                 -- EXTERNAL_GROUP_BY[$$102, $$103, $$104]  |PARTITIONED|
                   exchange [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -44,7 +44,7 @@ distribute result [$$101] [cardinality: 1002.74, op-cost: 0.0, total-cost: 18037
                                 -- STREAM_PROJECT  |PARTITIONED|
                                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    join (eq($$109, $$108)) [cardinality: 1501.41, op-cost: 2101.41, total-cost: 4351.41]
+                                    join (eq($$109, $$108)) [cardinality: 1503.21, op-cost: 2101.41, total-cost: 4351.41]
                                     -- HYBRID_HASH_JOIN [$$109][$$108]  |PARTITIONED|
                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

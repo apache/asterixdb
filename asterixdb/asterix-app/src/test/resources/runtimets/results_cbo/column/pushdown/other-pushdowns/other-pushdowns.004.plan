@@ -1,26 +1,26 @@
-distribute result [$$61] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+distribute result [$$61] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+  exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$61]) [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+    project ([$$61]) [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
     -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$61] <- [{"$1": $$66, "$2": $$67}] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+      assign [$$61] <- [{"$1": $$66, "$2": $$67}] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
       -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$66, $$67] <- [agg-global-sql-sum($$70), agg-global-sql-sum($$71)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+        aggregate [$$66, $$67] <- [agg-global-sql-sum($$70), agg-global-sql-sum($$71)] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
         -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+          exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$70, $$71] <- [agg-local-sql-sum($$54), agg-local-sql-sum($$59)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+            aggregate [$$70, $$71] <- [agg-local-sql-sum($$54), agg-local-sql-sum($$59)] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
             -- AGGREGATE  |PARTITIONED|
-              project ([$$54, $$59]) [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+              project ([$$54, $$59]) [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$59, $$54] <- [object-length($$p2), object-length($$p1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+                assign [$$59, $$54] <- [object-length($$p2), object-length($$p1)] [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$p1, $$p2]) [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+                  project ([$$p1, $$p2]) [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+                    exchange [cardinality: 2.67, op-cost: 0.0, total-cost: 12.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      join (eq($$63, $$62)) [cardinality: 2.1, op-cost: 4.0, total-cost: 12.0]
+                      join (eq($$63, $$62)) [cardinality: 2.67, op-cost: 4.0, total-cost: 12.0]
                       -- HYBRID_HASH_JOIN [$$62][$$63]  |PARTITIONED|
                         exchange [cardinality: 2.0, op-cost: 2.0, total-cost: 4.0]
                         -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|

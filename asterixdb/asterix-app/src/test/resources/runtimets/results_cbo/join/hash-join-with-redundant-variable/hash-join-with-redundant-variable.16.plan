@@ -1,22 +1,22 @@
-distribute result [$$51] [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
+distribute result [$$51] [cardinality: 62.1, op-cost: 0.0, total-cost: 821.69]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
+  exchange [cardinality: 62.1, op-cost: 0.0, total-cost: 821.69]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$51]) [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
+    project ([$$51]) [cardinality: 62.1, op-cost: 0.0, total-cost: 821.69]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$51] <- [{"n_nationkey": $$59, "s_nationkey": $$56, "c_nationkey": $$55}] [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
+      assign [$$51] <- [{"n_nationkey": $$59, "s_nationkey": $$56, "c_nationkey": $$55}] [cardinality: 62.1, op-cost: 0.0, total-cost: 821.69]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
+        exchange [cardinality: 62.1, op-cost: 0.0, total-cost: 821.69]
         -- SORT_MERGE_EXCHANGE [$$59(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
-          order (ASC, $$59) (ASC, $$56) (ASC, $$55) [cardinality: 150.0, op-cost: 1084.32, total-cost: 1639.32]
+          order (ASC, $$59) (ASC, $$56) (ASC, $$55) [cardinality: 62.1, op-cost: 369.9, total-cost: 821.69]
           -- STABLE_SORT [$$59(ASC), $$56(ASC), $$55(ASC)]  |PARTITIONED|
-            exchange [cardinality: 150.0, op-cost: 0.0, total-cost: 555.0]
+            exchange [cardinality: 62.1, op-cost: 0.0, total-cost: 451.79]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$59, $$56, $$55]) [cardinality: 150.0, op-cost: 0.0, total-cost: 555.0]
+              project ([$$59, $$56, $$55]) [cardinality: 62.1, op-cost: 0.0, total-cost: 451.79]
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 150.0, op-cost: 0.0, total-cost: 555.0]
+                exchange [cardinality: 62.1, op-cost: 0.0, total-cost: 451.79]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (and(eq($$55, $$59), eq($$56, $$66))) [cardinality: 150.0, op-cost: 225.0, total-cost: 555.0]
+                  join (and(eq($$55, $$59), eq($$56, $$66))) [cardinality: 62.1, op-cost: 180.77, total-cost: 451.79]
                   -- HYBRID_HASH_JOIN [$$55, $$66][$$59, $$56]  |PARTITIONED|
                     exchange [cardinality: 150.0, op-cost: 0.0, total-cost: 150.0]
                     -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
@@ -36,17 +36,17 @@ distribute result [$$51] [cardinality: 150.0, op-cost: 0.0, total-cost: 1639.32]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    exchange [cardinality: 25.0, op-cost: 75.0, total-cost: 180.0]
+                    exchange [cardinality: 10.26, op-cost: 30.77, total-cost: 121.03]
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                      project ([$$56, $$59]) [cardinality: 25.0, op-cost: 0.0, total-cost: 105.0]
+                      project ([$$56, $$59]) [cardinality: 10.26, op-cost: 0.0, total-cost: 90.26]
                       -- STREAM_PROJECT  |PARTITIONED|
-                        exchange [cardinality: 25.0, op-cost: 75.0, total-cost: 180.0]
+                        exchange [cardinality: 10.26, op-cost: 30.77, total-cost: 121.03]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "Default", "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 25.0, op-cost: 65.0, total-cost: 105.0]
+                          unnest-map [$$59, $$n] <- index-search("Nation", 0, "Default", "tpch", "Nation", true, true, 1, $$56, 1, $$56, true, true, true) [cardinality: 10.26, op-cost: 50.26, total-cost: 90.26]
                           -- BTREE_SEARCH  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              order (ASC, $$56) [cardinality: 25.0, op-cost: 65.0, total-cost: 105.0]
+                              order (ASC, $$56) [cardinality: 10.26, op-cost: 50.26, total-cost: 90.26]
                               -- STABLE_SORT [$$56(ASC)]  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|

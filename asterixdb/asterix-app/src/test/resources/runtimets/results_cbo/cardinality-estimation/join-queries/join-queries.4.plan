@@ -1,22 +1,22 @@
-distribute result [$$34] [cardinality: 1400.38, op-cost: 0.0, total-cost: 166792.72]
+distribute result [$$34] [cardinality: 1400.81, op-cost: 0.0, total-cost: 166845.41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1400.38, op-cost: 0.0, total-cost: 166792.72]
+  exchange [cardinality: 1400.81, op-cost: 0.0, total-cost: 166845.41]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    distinct ([$$34]) [cardinality: 1400.38, op-cost: 73635.39, total-cost: 166792.72]
+    distinct ([$$34]) [cardinality: 1400.81, op-cost: 73660.8, total-cost: 166845.41]
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-      exchange [cardinality: 5880.6, op-cost: 0.0, total-cost: 93157.33]
+      exchange [cardinality: 5882.42, op-cost: 0.0, total-cost: 93184.61]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        order (ASC, $$34) [cardinality: 5880.6, op-cost: 73635.39, total-cost: 93157.33]
+        order (ASC, $$34) [cardinality: 5882.42, op-cost: 73660.8, total-cost: 93184.61]
         -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
-          exchange [cardinality: 5880.6, op-cost: 0.0, total-cost: 19521.94]
+          exchange [cardinality: 5882.42, op-cost: 0.0, total-cost: 19523.81]
           -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
-            project ([$$34]) [cardinality: 5880.6, op-cost: 0.0, total-cost: 19521.94]
+            project ([$$34]) [cardinality: 5882.42, op-cost: 0.0, total-cost: 19523.81]
             -- STREAM_PROJECT  |PARTITIONED|
-              assign [$$34] <- [{"l_orderkey": $$36, "o_custkey": $$o.getField(1)}] [cardinality: 5880.6, op-cost: 0.0, total-cost: 19521.94]
+              assign [$$34] <- [{"l_orderkey": $$36, "o_custkey": $$o.getField(1)}] [cardinality: 5882.42, op-cost: 0.0, total-cost: 19523.81]
               -- ASSIGN  |PARTITIONED|
-                project ([$$o, $$36]) [cardinality: 5880.6, op-cost: 0.0, total-cost: 19521.94]
+                project ([$$o, $$36]) [cardinality: 5882.42, op-cost: 0.0, total-cost: 19523.81]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  select (gt($$l.getField(1), 5)) [cardinality: 5880.6, op-cost: 12016.29, total-cost: 19521.94]
+                  select (gt($$l.getField(1), 5)) [cardinality: 5882.42, op-cost: 12018.16, total-cost: 19523.81]
                   -- STREAM_SELECT  |PARTITIONED|
                     project ([$$o, $$36, $$l]) [cardinality: 5875.07, op-cost: 0.0, total-cost: 6005.0]
                     -- STREAM_PROJECT  |PARTITIONED|

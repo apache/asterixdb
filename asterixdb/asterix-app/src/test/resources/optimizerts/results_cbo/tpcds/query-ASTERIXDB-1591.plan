@@ -69,7 +69,7 @@
                                                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                       -- HYBRID_HASH_JOIN [$$161][$$151]  |PARTITIONED|
-                                                                                        -- HASH_PARTITION_EXCHANGE [$$161]  |PARTITIONED|
+                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               -- HYBRID_HASH_JOIN [$$150][$$167]  |PARTITIONED|
@@ -99,7 +99,7 @@
                                                                                                                     -- DATASOURCE_SCAN (tpcds.date_dim)  |PARTITIONED|
                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                                                        -- HASH_PARTITION_EXCHANGE [$$151]  |PARTITIONED|
+                                                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
                                                                                           -- DATASOURCE_SCAN (tpcds.customer_address)  |PARTITIONED|
                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -53,6 +53,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractLogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AggregateFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.JoinProductivityAnnotation;
@@ -162,11 +163,19 @@ public class Stats {
                 return productivity / card1;
             }
         } else {
-            if (card1 < card2) {
-                // we are assuming that the smaller side is the primary side and that the join is Pk-Fk join.
-                return 1.0 / card1;
+            ILogicalOperator leafInput = joinEnum.leafInputs.get(idx2 - 1); // we arbitrarily pick one side
+            Index index = findIndex(leafInput);
+            if (index == null) {
+                return 1.0;
             }
-            return 1.0 / card2;
+            List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput, exprUsedVars.get(1), index);
+            if (result == null) {
+                return 1.0;
+            }
+
+            double estDistinctCardinalityFromSample = findPredicateCardinality(result, false);
+            double numDistincts = distinctEstimator2(estDistinctCardinalityFromSample, index);
+            return 1.0 / numDistincts; // this is the expected selectivity for joins.
         }
     }
 
@@ -576,6 +585,101 @@ public class Stats {
         return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 
+    protected Index findIndex(ILogicalOperator logOp) throws AlgebricksException {
+        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(logOp);
+        if (parent == null) {
+            return null;
+        }
+        DataSourceScanOperator scanOp;
+        if (parent instanceof DataSourceScanOperator) {
+            scanOp = (DataSourceScanOperator) parent;
+        } else {
+            scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
+        }
+
+        if (scanOp == null) {
+            return null;
+        }
+        Index index = findSampleIndex(scanOp, optCtx);
+        if (index == null) {
+            return null;
+        }
+        return index;
+    }
+
+    protected List<List<IAObject>> runSamplingQueryDistinct(IOptimizationContext ctx, ILogicalOperator logOp,
+            LogicalVariable var, Index index) throws AlgebricksException {
+        LOGGER.info("***running sample query***");
+
+        IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
+
+        ILogicalOperator newLogOp = OperatorManipulationUtil.bottomUpCopyOperators(logOp);
+        storeSelectConditionsAndMakeThemTrue(newLogOp, null);
+        // by passing in null, all select expression will become true.
+        // no need to restore them either as this is dne on a copy of the logOp.
+
+        ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(newLogOp);
+        DataSourceScanOperator scanOp;
+        if (parent instanceof DataSourceScanOperator) {
+            scanOp = (DataSourceScanOperator) parent;
+        } else {
+            scanOp = (DataSourceScanOperator) parent.getInputs().get(0).getValue();
+        }
+        Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+        double origDatasetCard = idxDetails.getSourceCardinality();
+        double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+        if (sampleCard == 0) {
+            sampleCard = 1;
+            IWarningCollector warningCollector = optCtx.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
+                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+            }
+        }
+
+        // replace the dataScanSourceOperator with the sampling source
+        SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
+        DataSourceScanOperator deepCopyofScan =
+                (DataSourceScanOperator) OperatorManipulationUtil.bottomUpCopyOperators(scanOp);
+
+        if (!(parent instanceof DataSourceScanOperator)) {
+            deepCopyofScan.setDataSource(sampledatasource);
+            parent.getInputs().get(0).setValue(deepCopyofScan);
+        } else {
+            scanOp.setDataSource(sampledatasource);
+        }
+
+        List<Mutable<ILogicalExpression>> aggFunArgs = new ArrayList<>(1);
+        aggFunArgs.add(new MutableObject<>(ConstantExpression.TRUE));
+
+        AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(var, newLogOp.getSourceLocation());
+        List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
+        fields.add(new MutableObject<>(inputVarRef));
+
+        BuiltinFunctionInfo countFn = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SQL_COUNT_DISTINCT);
+        AggregateFunctionCallExpression aggExpr = new AggregateFunctionCallExpression(countFn, false, fields);
+
+        List<Mutable<ILogicalExpression>> aggExprList = new ArrayList<>(1);
+        aggExprList.add(new MutableObject<>(aggExpr));
+
+        List<LogicalVariable> aggVarList = new ArrayList<>(1);
+        LogicalVariable aggVar = newCtx.newVar();
+        aggVarList.add(aggVar);
+
+        AggregateOperator newAggOp = new AggregateOperator(aggVarList, aggExprList);
+        newAggOp.getInputs().add(new MutableObject<>(newLogOp));
+
+        Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
+
+        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx);
+        LOGGER.info("***returning from sample query***");
+
+        String viewInPlan = new ALogicalPlanImpl(newAggOpRef).toString(); //useful when debugging
+        LOGGER.trace("viewInPlan");
+        LOGGER.trace(viewInPlan);
+        return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+    }
+
     // This one gets the cardinality and also projection sizes
     protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp,
             int dataset, LogicalVariable primaryKey) throws AlgebricksException {
@@ -776,6 +880,41 @@ public class Stats {
         }
         estDistCardinality = Math.max(0.0, estDistCardinality);
         return Math.round(estDistCardinality);
+    }
+
+    // Formula is d = D (1 - e^(-sampleCard/D))
+    double DistinctFormula(double sampleCard, double D) {
+        double a, b, c;
+
+        a = -sampleCard / D;
+        b = Math.exp(a);
+        c = 1.0 - b;
+        double x = D * c;
+        return x;
+    }
+
+    private double distinctEstimator2(double estDistinctCardinalityFromSample, Index index) throws AlgebricksException {
+
+        Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
+        double origDatasetCardinality = idxDetails.getSourceCardinality();
+        double sampleCard = idxDetails.getSampleCardinalityTarget();
+
+        double D, Dmin, Dmax;
+
+        Dmin = 1;
+        Dmax = origDatasetCardinality; // initial estimate. Binary search follows
+        D = estDistinctCardinalityFromSample;
+        int i = 0;
+        while ((Dmin < Dmax) && i < 100) { // just being very cautious to avoid infinite loops.
+            i++;
+            D = (Dmax + Dmin) / 2.0;
+            double x = DistinctFormula(sampleCard, D);
+            if (x < estDistinctCardinalityFromSample)
+                Dmin = D + 1;
+            else
+                Dmax = D - 1;
+        }
+        return D;
     }
 
     // Use the Newton-Raphson method for distinct cardinality estimation.
