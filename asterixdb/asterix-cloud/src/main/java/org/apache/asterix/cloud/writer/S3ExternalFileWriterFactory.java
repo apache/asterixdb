@@ -151,6 +151,13 @@ public final class S3ExternalFileWriterFactory implements IExternalFileWriterFac
             }
         }
 
+        // do not validate write permissions if specified by the user not to do so
+        String validateWritePermissions = configuration
+                .getOrDefault(ExternalDataConstants.KEY_VALIDATE_WRITE_PERMISSION, Boolean.TRUE.toString());
+        if (!Boolean.parseBoolean(validateWritePermissions)) {
+            return;
+        }
+
         Random random = new Random();
         String pathPrefix = "testFile";
         String path = pathPrefix + random.nextInt();
