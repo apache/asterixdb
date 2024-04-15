@@ -30,6 +30,7 @@ import java.util.Set;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
+import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.metadata.declared.DataSource;
@@ -382,6 +383,29 @@ public class JoinEnum {
             }
         }
         return false;
+    }
+
+    public SkipSecondaryIndexSearchExpressionAnnotation findSkipIndexHint(AbstractFunctionCallExpression condition) {
+        if (condition.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
+            for (int i = 0; i < condition.getArguments().size(); i++) {
+                ILogicalExpression expr = condition.getArguments().get(i).getValue();
+                if (expr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+                    AbstractFunctionCallExpression AFCexpr = (AbstractFunctionCallExpression) expr;
+                    SkipSecondaryIndexSearchExpressionAnnotation skipAnno =
+                            AFCexpr.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+                    if (skipAnno != null) {
+                        return skipAnno;
+                    }
+                }
+            }
+        } else if (condition.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
+            SkipSecondaryIndexSearchExpressionAnnotation skipAnno =
+                    condition.getAnnotation(SkipSecondaryIndexSearchExpressionAnnotation.class);
+            if (skipAnno != null) {
+                return skipAnno;
+            }
+        }
+        return null;
     }
 
     protected int findJoinNodeIndexByName(String name) {

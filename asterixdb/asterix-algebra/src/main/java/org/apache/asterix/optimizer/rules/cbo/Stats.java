@@ -446,33 +446,41 @@ public class Stats {
 
         List<List<IAObject>> result;
         parent.getInputs().get(0).setValue(deepCopyofScan);
-        if (numSubplans == 1 && nonSubplanSelects == 0) {
-            AggregateOperator aggOp = findAggOp(selOp, exp);
-            if (aggOp.getExpressions().size() > 1) {
-                // ANY and EVERY IN query; for selectivity purposes, we need to transform this into a ANY IN query
-                SelectOperator newSelOp = (SelectOperator) OperatorManipulationUtil.bottomUpCopyOperators(selOp);
-                aggOp = findAggOp(newSelOp, exp);
-                ILogicalOperator input = aggOp.getInputs().get(0).getValue();
-                SelectOperator condition = (SelectOperator) OperatorManipulationUtil
-                        .bottomUpCopyOperators(AbstractOperatorFromSubplanRewrite.getSelectFromPlan(aggOp));
-                //push this condition below aggOp.
-                aggOp.getInputs().get(0).setValue(condition);
-                condition.getInputs().get(0).setValue(input);
-                ILogicalExpression newExp2 = newSelOp.getCondition().getValue();
-                if (newExp2.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
-                    AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newExp2;
-                    afce.getArguments().get(1).setValue(ConstantExpression.TRUE);
-                }
-                result = runSamplingQuery(optCtx, newSelOp); // no need to switch anything
-            } else {
-                result = runSamplingQuery(optCtx, selOp);
-            }
-        } else {
-            SelectOperator selOp2 = findSelectOpWithExpr(selOp, exp);
-            List<ILogicalExpression> selExprs;
-            selExprs = storeSelectConditionsAndMakeThemTrue(selOp, selOp2); // all these will be marked true and will be resorted later.
+
+        if (numSelects == 1 && numSubplans == 0) { // just switch the predicates; the simplest case. There should be no other case if subplans were canonical
+            ILogicalExpression saveExprs = selOp.getCondition().getValue();
+            selOp.getCondition().setValue(exp);
             result = runSamplingQuery(optCtx, selOp);
-            restoreAllSelectConditions(selOp, selExprs, selOp2);
+            selOp.getCondition().setValue(saveExprs);
+        } else {
+            if (numSubplans == 1 && nonSubplanSelects == 0) {
+                AggregateOperator aggOp = findAggOp(selOp, exp);
+                if (aggOp.getExpressions().size() > 1) {
+                    // ANY and EVERY IN query; for selectivity purposes, we need to transform this into a ANY IN query
+                    SelectOperator newSelOp = (SelectOperator) OperatorManipulationUtil.bottomUpCopyOperators(selOp);
+                    aggOp = findAggOp(newSelOp, exp);
+                    ILogicalOperator input = aggOp.getInputs().get(0).getValue();
+                    SelectOperator condition = (SelectOperator) OperatorManipulationUtil
+                            .bottomUpCopyOperators(AbstractOperatorFromSubplanRewrite.getSelectFromPlan(aggOp));
+                    //push this condition below aggOp.
+                    aggOp.getInputs().get(0).setValue(condition);
+                    condition.getInputs().get(0).setValue(input);
+                    ILogicalExpression newExp2 = newSelOp.getCondition().getValue();
+                    if (newExp2.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        AbstractFunctionCallExpression afce = (AbstractFunctionCallExpression) newExp2;
+                        afce.getArguments().get(1).setValue(ConstantExpression.TRUE);
+                    }
+                    result = runSamplingQuery(optCtx, newSelOp); // no need to switch anything
+                } else {
+                    result = runSamplingQuery(optCtx, selOp);
+                }
+            } else {
+                SelectOperator selOp2 = findSelectOpWithExpr(selOp, exp);
+                List<ILogicalExpression> selExprs;
+                selExprs = storeSelectConditionsAndMakeThemTrue(selOp, selOp2); // all these will be marked true and will be resorted later.
+                result = runSamplingQuery(optCtx, selOp);
+                restoreAllSelectConditions(selOp, selExprs, selOp2);
+            }
         }
 
         double predicateCardinality = findPredicateCardinality(result, false);

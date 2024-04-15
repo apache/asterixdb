@@ -21,8 +21,10 @@ package org.apache.asterix.optimizer.rules.cbo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -546,9 +548,20 @@ public class JoinNode {
         for (int i = 0; i < IndexCostInfo.size(); i++) {
             if (IndexCostInfo.get(i).second == -1.0) {
                 AbstractFunctionCallExpression afce = IndexCostInfo.get(i).third;
-                // this index has to be skipped, so find the corresponding expression
-                EnumerateJoinsRule.setAnnotation(afce, SkipSecondaryIndexSearchExpressionAnnotation
-                        .newInstance(Collections.singleton(IndexCostInfo.get(i).first.getIndexName())));
+                SkipSecondaryIndexSearchExpressionAnnotation skipAnno = joinEnum.findSkipIndexHint(afce);
+                Collection<String> indexNames = new HashSet<>();
+                if (skipAnno != null && skipAnno.getIndexNames() != null) {
+                    indexNames.addAll(skipAnno.getIndexNames());
+                }
+                if (indexNames.isEmpty()) {
+                    // this index has to be skipped, so find the corresponding expression
+                    EnumerateJoinsRule.setAnnotation(afce, SkipSecondaryIndexSearchExpressionAnnotation
+                            .newInstance(Collections.singleton(IndexCostInfo.get(i).first.getIndexName())));
+                } else {
+                    indexNames.add(IndexCostInfo.get(i).first.getIndexName());
+                    EnumerateJoinsRule.setAnnotation(afce,
+                            SkipSecondaryIndexSearchExpressionAnnotation.newInstance(indexNames));
+                }
             }
         }
     }
