@@ -20,6 +20,8 @@ package org.apache.asterix.cloud.clients;
 
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
+import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig;
+import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.config.CloudProperties;
@@ -30,6 +32,7 @@ public class CloudClientProvider {
     private static final boolean UNSTABLE = isUnstable();
     public static final String S3 = "s3";
     public static final String GCS = "gs";
+    public static final String AZ_BLOB = "azblob";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
@@ -45,6 +48,9 @@ public class CloudClientProvider {
         } else if (GCS.equalsIgnoreCase(storageScheme)) {
             GCSClientConfig config = GCSClientConfig.of(cloudProperties);
             cloudClient = new GCSCloudClient(config, guardian);
+        } else if (AZ_BLOB.equalsIgnoreCase(storageScheme)) {
+            AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(cloudProperties);
+            cloudClient = new AzBlobStorageCloudClient(config, guardian);
         } else {
             throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
         }
