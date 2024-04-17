@@ -33,6 +33,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 
 public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOperatorDescriptor {
@@ -47,6 +48,7 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
     protected final IMissingWriterFactory missingWriterFactory;
     protected final boolean hasSecondaries;
     private final ITupleProjectorFactory projectorFactory;
+    private final ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory;
 
     public LSMPrimaryUpsertOperatorDescriptor(IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc,
             int[] fieldPermutation, IIndexDataflowHelperFactory indexHelperFactory,
@@ -55,8 +57,8 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             ISearchOperationCallbackFactory searchOpCallbackFactory,
             IFrameOperationCallbackFactory frameOpCallbackFactory, int numPrimaryKeys, Integer filterSourceIndicator,
             ARecordType filterItemType, int filterIndex, boolean hasSecondaries,
-            ITupleProjectorFactory projectorFactory, ITuplePartitionerFactory partitionerFactory,
-            int[][] partitionsMap) {
+            ITupleProjectorFactory projectorFactory, ITuplePartitionerFactory partitionerFactory, int[][] partitionsMap,
+            ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory) {
         super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, null, true,
                 modificationOpCallbackFactory, partitionerFactory, partitionsMap);
         this.frameOpCallbackFactory = frameOpCallbackFactory;
@@ -68,6 +70,7 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
         this.filterIndex = filterIndex;
         this.hasSecondaries = hasSecondaries;
         this.projectorFactory = projectorFactory;
+        this.tupleFilterCallbackFactory = tupleFilterCallbackFactory;
     }
 
     @Override
@@ -77,6 +80,6 @@ public class LSMPrimaryUpsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
         return new LSMPrimaryUpsertOperatorNodePushable(ctx, partition, indexHelperFactory, fieldPermutation,
                 intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numPrimaryKeys, filterSourceIndicator,
                 filterItemType, filterIndex, frameOpCallbackFactory, missingWriterFactory, hasSecondaries,
-                projectorFactory, tuplePartitionerFactory, partitionsMap);
+                projectorFactory, tuplePartitionerFactory, partitionsMap, tupleFilterCallbackFactory);
     }
 }

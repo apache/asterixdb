@@ -116,6 +116,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallbackFacto
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTrackerFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -876,5 +877,9 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
     public DatasetFormatInfo getDatasetFormatInfo() {
         return datasetFormatInfo;
+    }
+
+    public ILSMTupleFilterCallbackFactory getTupleFilterCallbackFactory() {
+        return NoOpLSMTupleFilterCallbackFactory.INSTANCE;
     }
 }

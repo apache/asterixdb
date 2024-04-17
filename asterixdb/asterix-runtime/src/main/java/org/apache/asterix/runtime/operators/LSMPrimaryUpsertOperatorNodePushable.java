@@ -77,6 +77,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallback;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMIndexInsertUpdateDeleteOperatorNodePushable;
 import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
@@ -131,6 +133,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private final int metaFieldIndex;
     protected final ISearchOperationCallback[] searchCallbacks;
     protected final IFrameOperationCallback[] frameOpCallbacks;
+    protected final ILSMTupleFilterCallback[] tupleFilterCallbacks;
     private final IFrameOperationCallbackFactory frameOpCallbackFactory;
     private final ISearchOperationCallbackFactory searchCallbackFactory;
     private final IFrameTupleProcessor[] processors;
@@ -140,6 +143,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private long lastRecordInTimeStamp = 0L;
     private final Int2ObjectMap<IntSet> partition2TuplesMap = new Int2ObjectOpenHashMap<>();
     private final boolean hasSecondaries;
+    private final ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory;
+    private final int[] fieldPermutation;
 
     public LSMPrimaryUpsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, int[] fieldPermutation, RecordDescriptor inputRecDesc,
@@ -147,12 +152,15 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, Integer filterSourceIndicator,
             ARecordType filterItemType, int filterFieldIndex, IFrameOperationCallbackFactory frameOpCallbackFactory,
             IMissingWriterFactory missingWriterFactory, boolean hasSecondaries, ITupleProjectorFactory projectorFactory,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) throws HyracksDataException {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap,
+            ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory) throws HyracksDataException {
         super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
                 modCallbackFactory, null, tuplePartitionerFactory, partitionsMap);
+        this.fieldPermutation = fieldPermutation;
         this.hasSecondaries = hasSecondaries;
         this.frameOpCallbacks = new IFrameOperationCallback[partitions.length];
         this.searchCallbacks = new ISearchOperationCallback[partitions.length];
+        this.tupleFilterCallbacks = new ILSMTupleFilterCallback[partitions.length];
         this.cursors = new IIndexCursor[partitions.length];
         this.processors = new IFrameTupleProcessor[partitions.length];
         this.key = new PermutingFrameTupleReference();
@@ -179,6 +187,7 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         tracer = ctx.getJobletContext().getServiceContext().getTracer();
         traceCategory = tracer.getRegistry().get(TraceUtils.LATENCY);
         tupleProjector = projectorFactory.createTupleProjector(ctx);
+        this.tupleFilterCallbackFactory = tupleFilterCallbackFactory;
     }
 
     protected void beforeModification(ITupleReference tuple) {
@@ -305,6 +314,8 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 indexHelpersOpen[i] = true;
                 indexHelper.open();
                 indexes[i] = indexHelper.getIndexInstance();
+                tupleFilterCallbacks[i] = tupleFilterCallbackFactory.createTupleFilterCallback(fieldPermutation);
+                tupleFilterCallbacks[i].initialize((ILSMIndex) indexes[i]);
                 if (((ILSMIndex) indexes[i]).isAtomic()) {
                     ((PrimaryIndexOperationTracker) ((ILSMIndex) indexes[i]).getOperationTracker()).clear();
                 }
@@ -410,6 +421,9 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
         int itemCount = accessor.getTupleCount();
         for (int i = 0; i < itemCount; i++) {
             int storagePartition = tuplePartitioner.partition(accessor, i);
+            if (tupleFilterCallbacks[storagePartitionId2Index.get(storagePartition)].filter(accessor, i)) {
+                continue;
+            }
             int pIdx = storagePartitionId2Index.get(storagePartition);
             IntSet tupleIndexes = partition2TuplesMap.computeIfAbsent(pIdx, k -> new IntOpenHashSet());
             tupleIndexes.add(i);

@@ -52,6 +52,7 @@ import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.entities.NoOpLSMTupleFilterCallbackFactory;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
@@ -843,7 +844,7 @@ public class TestNodeController {
                         frameOpCallbackFactory == null ? dataset.getFrameOpCallbackFactory(mdProvider)
                                 : frameOpCallbackFactory,
                         MissingWriterFactory.INSTANCE, hasSecondaries, NoOpTupleProjectorFactory.INSTANCE,
-                        tuplePartitionerFactory, partitionsMap);
+                        tuplePartitionerFactory, partitionsMap, NoOpLSMTupleFilterCallbackFactory.INSTANCE);
         RecordDescriptor upsertOutRecDesc = getUpsertOutRecDesc(primaryIndexInfo.rDesc, dataset,
                 filterFields == null ? 0 : filterFields.length, recordType, metaType);
         // fix pk fields

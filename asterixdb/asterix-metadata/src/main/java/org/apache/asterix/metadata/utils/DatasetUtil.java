@@ -104,6 +104,7 @@ import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 import org.apache.hyracks.storage.common.IResourceFactory;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
@@ -532,6 +533,9 @@ public class DatasetUtil {
         }
         RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
 
+        // get the Tuple filter callback
+        ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory = dataset.getTupleFilterCallbackFactory();
+
         // This allows to project only the indexed fields instead of the entirety of the record
         ARecordType requestedType = getPrevRecordType(metadataProvider, dataset, itemType);
         ITupleProjectorFactory projectorFactory = IndexUtil.createUpsertTupleProjectorFactory(
@@ -543,7 +547,7 @@ public class DatasetUtil {
                 missingWriterFactory, modificationCallbackFactory, searchCallbackFactory,
                 dataset.getFrameOpCallbackFactory(metadataProvider), numKeys, filterSourceIndicator, filterItemType,
                 fieldIdx, hasSecondaries, projectorFactory, tuplePartitionerFactory,
-                partitioningProperties.getComputeStorageMap());
+                partitioningProperties.getComputeStorageMap(), tupleFilterCallbackFactory);
         return new Pair<>(op, partitioningProperties.getConstraints());
     }
 
