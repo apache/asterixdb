@@ -693,6 +693,25 @@ class SQLPPParser extends ScopeChecker implements IParser {
       }
     }
 
+    private List<Token> fetchHints(Token token, SqlppHint... expectedHints) {
+          Token hintToken = token.specialToken;
+          List<Token> hintTokenList = new ArrayList<Token>();
+          while (hintToken != null) {
+              SourceLocation sourceLoc = getSourceLocation(hintToken);
+              hintCollector.remove(sourceLoc);
+              if (hintToken.hint == null) {
+                warnUnexpectedHint(hintToken.hintParams, sourceLoc, expectedHints);
+              } else if (!ArrayUtils.contains(expectedHints, hintToken.hint)) {
+                warnUnexpectedHint(hintToken.hint.getIdentifier(), sourceLoc, expectedHints);
+              } else {
+                hintTokenList.add(hintToken);
+              }
+              hintToken = hintToken.specialToken;
+          }
+          return hintTokenList;
+        }
+
+
     private void reportUnclaimedHints() {
         for (Map.Entry<SourceLocation, String> me : hintCollector.entrySet()) {
             warnUnexpectedHint(me.getValue(), me.getKey(), "None");
@@ -3996,21 +4015,16 @@ Expression RelExpr() throws ParseException:
           if (opToken == null) {
             opToken = token;
           }
-          Token hintToken = fetchHint(token,
+          List<Token> hintTokens = fetchHints(token,
             SqlppHint.HASH_BROADCAST_JOIN_HINT, SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT,
             SqlppHint.HASH_JOIN_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT,
             SqlppHint.SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT, SqlppHint.JOIN_PREDICATE_PRODUCTIVITY_HINT
           );
-          while (hintToken != null) {
+          for (Token hintToken : hintTokens) {
             annotation = parseExpressionAnnotation(hintToken);
             if (annotation != null) {
                 // annotation may be null if hints are malformed
                 annotationList.add(annotation);
-            }
-            hintToken = hintToken.specialToken;
-            if (hintToken != null) {
-                SourceLocation sourceLoc = getSourceLocation(hintToken);
-                hintCollector.remove(sourceLoc);
             }
           }
           String operator = opToken.image.toLowerCase();
@@ -4040,7 +4054,7 @@ Expression RelExpr() throws ParseException:
     )?
 
      {
-       if (annotation != null) {
+       if (annotationList.size() > 0) {
          op.addHints(annotationList);
        }
        return op==null? operand: op;
@@ -4053,6 +4067,7 @@ Expression BetweenExpr() throws ParseException:
   OperatorExpr op = null;
   Expression operand = null;
   IExpressionAnnotation annotation = null;
+  List<IExpressionAnnotation> annotationList = new ArrayList<IExpressionAnnotation>();
 }
 {
     operand = IsExpr()
@@ -4060,13 +4075,18 @@ Expression BetweenExpr() throws ParseException:
       LOOKAHEAD(2)
       (<NOT> { not = true; })? <BETWEEN>
         {
-          Token hintToken = fetchHint(token,
+          List<Token> hintTokens = fetchHints(token,
             SqlppHint.INDEXED_NESTED_LOOP_JOIN_HINT, SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.HASH_JOIN_HINT,
             SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT
           );
-          if (hintToken != null) {
-            annotation = parseExpressionAnnotation(hintToken);
+          for (Token hintToken : hintTokens) {
+             annotation = parseExpressionAnnotation(hintToken);
+             if (annotation != null) {
+                // annotation may be null if hints are malformed
+                annotationList.add(annotation);
+             }
           }
+
           String operator = token.image.toLowerCase();
           if(not){
             operator = "not_" + operator;
@@ -4098,8 +4118,8 @@ Expression BetweenExpr() throws ParseException:
     )?
 
     {
-       if (annotation != null) {
-         op.addHint(annotation);
+       if (annotationList.size() > 0) {
+         op.addHints(annotationList);
        }
        return op==null ? operand: op;
     }
