@@ -27,6 +27,8 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
@@ -65,42 +67,37 @@ public abstract class AbstractBufferedFileIOManager {
     /**
      * Read the CachedPage from disk
      *
-     * @param cPage
-     *            CachedPage in {@link BufferCache}
-     * @throws HyracksDataException
+     * @param cPage   CachedPage in {@link BufferCache}
+     * @param context read context
      */
-    public abstract void read(CachedPage cPage) throws HyracksDataException;
+    public abstract void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException;
 
     /**
      * Write the CachedPage into disk
      *
-     * @param cPage
-     *            CachedPage in {@link BufferCache}
-     * @throws HyracksDataException
+     * @param cPage   CachedPage in {@link BufferCache}
+     * @param context write context
      */
-    public void write(CachedPage cPage) throws HyracksDataException {
+    public void write(CachedPage cPage, IBufferCacheWriteContext context) throws HyracksDataException {
         final int totalPages = cPage.getFrameSizeMultiplier();
         final int extraBlockPageId = cPage.getExtraBlockPageId();
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
-        write(cPage, header, totalPages, extraBlockPageId);
+        write(cPage, header, totalPages, extraBlockPageId, context);
     }
 
     /**
-     * Write the CachedPage into disk called by {@link AbstractBufferedFileIOManager#write(CachedPage)}
+     * Write the CachedPage into disk called by
+     * {@link AbstractBufferedFileIOManager#write(CachedPage, IBufferCacheWriteContext)}
      * Note: It is the responsibility of the caller to return {@link BufferCacheHeaderHelper}
      *
-     * @param cPage
-     *            CachedPage that will be written
-     * @param header
-     *            HeaderHelper to add into the written page
-     * @param totalPages
-     *            Number of pages to be written
-     * @param extraBlockPageId
-     *            Extra page ID in case it has more than one page
-     * @throws HyracksDataException
+     * @param cPage            CachedPage that will be written
+     * @param header           HeaderHelper to add into the written page
+     * @param totalPages       Number of pages to be written
+     * @param extraBlockPageId Extra page ID in case it has more than one page
+     * @param context          write context
      */
     protected abstract void write(CachedPage cPage, BufferCacheHeaderHelper header, int totalPages,
-            int extraBlockPageId) throws HyracksDataException;
+            int extraBlockPageId, IBufferCacheWriteContext context) throws HyracksDataException;
 
     /* ********************************
      * File operations' methods
@@ -133,16 +130,27 @@ public abstract class AbstractBufferedFileIOManager {
         ioManager.close(fileHandle);
     }
 
+    public IFileHandle getFileHandle() {
+        return fileHandle;
+    }
+
     /**
      * Force the file into disk
      *
-     * @param metadata
-     *            see {@link java.nio.channels.FileChannel#force(boolean)}
+     * @param metadata see {@link java.nio.channels.FileChannel#force(boolean)}
      * @throws HyracksDataException
      */
     public void force(boolean metadata) throws HyracksDataException {
         ioManager.sync(fileHandle, metadata);
     }
+
+    /**
+     * Return start offset of a page
+     *
+     * @param pageId page ID
+     * @return offset
+     */
+    public abstract long getStartPageOffset(int pageId) throws HyracksDataException;
 
     /**
      * Get the number of pages in the file
@@ -158,8 +166,7 @@ public abstract class AbstractBufferedFileIOManager {
     /**
      * Check whether the file has been deleted
      *
-     * @return
-     *         true if has been deleted, false o.w
+     * @return true if has been deleted, false o.w
      */
     public boolean hasBeenDeleted() {
         return fileHandle == null;
@@ -168,8 +175,7 @@ public abstract class AbstractBufferedFileIOManager {
     /**
      * Check whether the file has ever been opened
      *
-     * @return
-     *         true if has ever been opened, false otherwise
+     * @return true if has ever been opened, false otherwise
      */
     public final boolean hasBeenOpened() {
         return hasOpen;
@@ -235,6 +241,15 @@ public abstract class AbstractBufferedFileIOManager {
 
     public abstract ICompressedPageWriter getCompressedPageWriter();
 
+    /**
+     * Compute the total size of pages
+     *
+     * @param startPageId   page ID to start from
+     * @param numberOfPages the number of pages
+     * @return total size of pages in bytes
+     */
+    public abstract long getPagesTotalSize(int startPageId, int numberOfPages) throws HyracksDataException;
+
     /* ********************************
      * Common helper methods
      * ********************************
@@ -243,20 +258,16 @@ public abstract class AbstractBufferedFileIOManager {
     /**
      * Get the offset for the first page
      *
-     * @param cPage
-     *            CachedPage for which the offset is needed
-     * @return
-     *         page offset in the file
+     * @param cPage CachedPage for which the offset is needed
+     * @return page offset in the file
      */
     protected abstract long getFirstPageOffset(CachedPage cPage);
 
     /**
      * Get the offset for the extra page
      *
-     * @param cPage
-     *            CachedPage for which the offset is needed
-     * @return
-     *         page offset in the file
+     * @param cPage CachedPage for which the offset is needed
+     * @return page offset in the file
      */
     protected abstract long getExtraPageOffset(CachedPage cPage);
 
@@ -276,11 +287,11 @@ public abstract class AbstractBufferedFileIOManager {
         return ioManager.syncRead(fileHandle, offset, buf);
     }
 
-    protected final long writeToFile(ByteBuffer buf, long offset) throws HyracksDataException {
+    protected final long writeExtraToFile(ByteBuffer buf, long offset) throws HyracksDataException {
         return ioManager.doSyncWrite(fileHandle, offset, buf);
     }
 
-    protected final long writeToFile(ByteBuffer[] buf, long offset) throws HyracksDataException {
+    protected final long writeExtraToFile(ByteBuffer[] buf, long offset) throws HyracksDataException {
         return ioManager.doSyncWrite(fileHandle, offset, buf);
     }
 

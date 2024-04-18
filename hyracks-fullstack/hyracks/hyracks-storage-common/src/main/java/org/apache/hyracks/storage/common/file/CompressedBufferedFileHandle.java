@@ -24,11 +24,14 @@ import java.util.concurrent.BlockingQueue;
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileManager;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
@@ -45,16 +48,18 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     }
 
     @Override
-    public void read(CachedPage cPage) throws HyracksDataException {
+    public void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
         try {
             compressedFileManager.setCompressedPageInfo(cPage);
-            long bytesRead = readToBuffer(header.prepareRead(cPage.getCompressedPageSize()), getFirstPageOffset(cPage));
-
+            IFileHandle handle = getFileHandle();
+            int size = cPage.getCompressedPageSize();
+            long bytesRead = header.readFromFile(ioManager, handle, getFirstPageOffset(cPage), size);
             if (!verifyBytesRead(cPage.getCompressedPageSize(), bytesRead)) {
                 return;
             }
-            final ByteBuffer cBuffer = header.processHeader(cPage);
+
+            final ByteBuffer cBuffer = context.processHeader(ioManager, this, header, cPage);
             final ByteBuffer uBuffer = cPage.getBuffer();
             fixBufferPointers(uBuffer, 0);
             if (cPage.getCompressedPageSize() < bufferCache.getPageSizeWithHeader()) {
@@ -93,9 +98,10 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     }
 
     @Override
-    protected void write(CachedPage cPage, BufferCacheHeaderHelper header, int totalPages, int extraBlockPageId)
-            throws HyracksDataException {
+    protected void write(CachedPage cPage, BufferCacheHeaderHelper header, int totalPages, int extraBlockPageId,
+            IBufferCacheWriteContext context) throws HyracksDataException {
         try {
+            IFileHandle handle = getFileHandle();
             final ByteBuffer cBuffer = header.prepareWrite(cPage, getRequiredBufferSize());
             final ByteBuffer uBuffer = cPage.getBuffer();
             final long pageId = cPage.getDiskPageId();
@@ -103,18 +109,22 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
             final long bytesWritten;
             final long expectedBytesWritten;
 
-            fixBufferPointers(uBuffer, 0);
+            if (cPage.isLargePage()) {
+                fixBufferPointers(uBuffer, 0);
+            } else {
+                uBuffer.position(0);
+            }
             if (compressToWriteBuffer(uBuffer, cBuffer) < bufferCache.getPageSize()) {
                 cBuffer.position(0);
                 final long offset = compressedFileManager.writePageInfo(pageId, cBuffer.remaining());
                 expectedBytesWritten = cBuffer.limit();
-                bytesWritten = writeToFile(cBuffer, offset);
+                bytesWritten = context.write(ioManager, handle, offset, cBuffer);
             } else {
                 //Compression did not gain any savings
                 final ByteBuffer[] buffers = header.prepareWrite(cPage);
                 final long offset = compressedFileManager.writePageInfo(pageId, bufferCache.getPageSizeWithHeader());
                 expectedBytesWritten = buffers[0].limit() + (long) buffers[1].limit();
-                bytesWritten = writeToFile(buffers, offset);
+                bytesWritten = context.write(ioManager, handle, offset, buffers);
             }
 
             verifyBytesWritten(expectedBytesWritten, bytesWritten);
@@ -147,7 +157,7 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
             final int length = writeBuffer.remaining();
             final long offset = compressedFileManager.writeExtraPageInfo(extraBlockPageId, length, i - 1);
             expectedBytesWritten += length;
-            bytesWritten += writeToFile(writeBuffer, offset);
+            bytesWritten += writeExtraToFile(writeBuffer, offset);
         }
 
         verifyBytesWritten(expectedBytesWritten, bytesWritten);
@@ -199,6 +209,11 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     }
 
     @Override
+    public long getStartPageOffset(int pageId) throws HyracksDataException {
+        return compressedFileManager.getPageOffset(pageId);
+    }
+
+    @Override
     public int getNumberOfPages() {
         return compressedFileManager.getNumberOfPages();
     }
@@ -218,6 +233,11 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
         return compressedFileManager.getCompressedPageWriter();
     }
 
+    @Override
+    public long getPagesTotalSize(int startPageId, int numberOfPages) throws HyracksDataException {
+        return compressedFileManager.getTotalCompressedSize(startPageId, numberOfPages);
+    }
+
     /* ********************************
      * Compression methods
      * ********************************
@@ -233,7 +253,6 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
     private void uncompressToPageBuffer(ByteBuffer cBuffer, ByteBuffer uBuffer) throws HyracksDataException {
         final ICompressorDecompressor compDecomp = compressedFileManager.getCompressorDecompressor();
         compDecomp.uncompress(cBuffer, uBuffer);
-        verifyUncompressionSize(bufferCache.getPageSize(), uBuffer.remaining());
     }
 
     private int compressToWriteBuffer(ByteBuffer uBuffer, ByteBuffer cBuffer) throws HyracksDataException {
@@ -246,11 +265,4 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
         final ICompressorDecompressor compDecomp = compressedFileManager.getCompressorDecompressor();
         return compDecomp.computeCompressedBufferSize(bufferCache.getPageSize());
     }
-
-    private void verifyUncompressionSize(int expected, int actual) {
-        if (expected != actual) {
-            throwException("Uncompressed", expected, actual);
-        }
-    }
-
 }

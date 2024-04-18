@@ -68,6 +68,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
+import org.apache.hyracks.storage.am.lsm.common.cloud.DefaultIndexDiskCacheManager;
+import org.apache.hyracks.storage.am.lsm.common.cloud.IIndexDiskCacheManager;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 import org.apache.hyracks.storage.common.IIndexBulkLoader;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -957,4 +959,8 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         return mergePolicy;
     }
 
+    @Override
+    public IIndexDiskCacheManager getDiskCacheManager() {
+        return DefaultIndexDiskCacheManager.INSTANCE;
+    }
 }

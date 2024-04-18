@@ -32,10 +32,12 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.annotations.TestOnly;
 
 /**
  * @deprecated This class must not be used. Instead, use {@link AppendOnlyLinkedMetadataPageManager}
  */
+@TestOnly
 @Deprecated
 public class LinkedMetaDataPageManager implements IMetadataPageManager {
     private final IBufferCache bufferCache;

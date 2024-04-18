@@ -297,13 +297,20 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
 
     protected FileReference getCompressedFileReferenceIfAny(String name) {
         final ICompressorDecompressor compDecomp = compressorDecompressorFactory.createInstance();
+        FileReference treeFileRef;
         //Avoid creating LAF file for NoOpCompressorDecompressor
         if (compDecomp != NoOpCompressorDecompressor.INSTANCE && isCompressible(name)) {
             final String path = baseDir.getChildPath(name);
-            return new CompressedFileReference(baseDir.getDeviceHandle(), compDecomp, path, path + LAF_SUFFIX);
+            treeFileRef = new CompressedFileReference(baseDir.getDeviceHandle(), compDecomp, path, path + LAF_SUFFIX);
+        } else {
+            treeFileRef = baseDir.getChild(name);
         }
 
-        return baseDir.getChild(name);
+        if (areHolesAllowed()) {
+            treeFileRef.setHolesAllowed();
+        }
+
+        return treeFileRef;
     }
 
     protected void cleanLookAsideFiles(Set<String> groundTruth, IBufferCache bufferCache) throws HyracksDataException {
@@ -319,6 +326,10 @@ public abstract class AbstractLSMIndexFileManager implements ILSMIndexFileManage
                 delete(bufferCache, laf.getFileRef());
             }
         }
+    }
+
+    protected boolean areHolesAllowed() {
+        return false;
     }
 
     private boolean isCompressible(String fileName) {

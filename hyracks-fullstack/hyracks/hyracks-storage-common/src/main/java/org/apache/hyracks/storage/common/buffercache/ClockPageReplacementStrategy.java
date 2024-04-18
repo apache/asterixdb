@@ -32,16 +32,19 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
     private static final int MAX_UNSUCCESSFUL_CYCLE_COUNT = 3;
 
     private IBufferCacheInternal bufferCache;
-    private AtomicInteger clockPtr;
-    private ICacheMemoryAllocator allocator;
-    private AtomicInteger numPages;
-    private AtomicInteger cpIdCounter;
+    private final AtomicInteger clockPtr;
+    private final ICacheMemoryAllocator allocator;
+    private final AtomicInteger numPages;
+    private final AtomicInteger cpIdCounter;
+    private final IDiskCachedPageAllocator pageAllocator;
     private final int pageSize;
     private final int maxAllowedNumPages;
     private final ConcurrentLinkedQueue<Integer> cpIdFreeList;
 
-    public ClockPageReplacementStrategy(ICacheMemoryAllocator allocator, int pageSize, int maxAllowedNumPages) {
+    public ClockPageReplacementStrategy(ICacheMemoryAllocator allocator, IDiskCachedPageAllocator pageAllocator,
+            int pageSize, int maxAllowedNumPages) {
         this.allocator = allocator;
+        this.pageAllocator = pageAllocator;
         this.pageSize = pageSize;
         this.maxAllowedNumPages = maxAllowedNumPages;
         this.clockPtr = new AtomicInteger(0);
@@ -154,7 +157,7 @@ public class ClockPageReplacementStrategy implements IPageReplacementStrategy {
         if (cpId == null) {
             cpId = cpIdCounter.getAndIncrement();
         }
-        CachedPage cPage = new CachedPage(cpId, allocator.allocate(pageSize * multiplier, 1)[0], this);
+        CachedPage cPage = pageAllocator.allocate(cpId, allocator.allocate(pageSize * multiplier, 1)[0], this);
         cPage.setFrameSizeMultiplier(multiplier);
         bufferCache.addPage(cPage);
         numPages.getAndAdd(multiplier);

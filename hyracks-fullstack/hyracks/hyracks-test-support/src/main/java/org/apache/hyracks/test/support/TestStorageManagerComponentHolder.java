@@ -39,6 +39,7 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.DefaultDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -146,7 +147,8 @@ public class TestStorageManagerComponentHolder {
             return bufferCache;
         }
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, pageSize, numPages);
+        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator,
+                DefaultDiskCachedPageAllocator.INSTANCE, pageSize, numPages);
         IFileMapProvider fileMapProvider = getFileMapProvider();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000),
                 (IFileMapManager) fileMapProvider, maxOpenFiles, 10, threadFactory, new HashMap<>(),

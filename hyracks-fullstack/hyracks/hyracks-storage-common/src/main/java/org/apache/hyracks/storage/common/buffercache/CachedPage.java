@@ -31,12 +31,12 @@ public class CachedPage implements ICachedPageInternal {
     ByteBuffer buffer;
     public final AtomicInteger pinCount;
     final AtomicBoolean dirty;
-    final ReentrantReadWriteLock latch;
+    protected final ReentrantReadWriteLock latch;
     private final Object replacementStrategyObject;
     private final IPageReplacementStrategy pageReplacementStrategy;
     volatile long dpid; // disk page id (composed of file id and page id)
     CachedPage next;
-    volatile boolean valid;
+    protected volatile boolean valid;
     final AtomicBoolean confiscated;
     private int multiplier;
     private int extraBlockPageId;
@@ -190,6 +190,7 @@ public class CachedPage implements ICachedPageInternal {
         return multiplier > 1;
     }
 
+    @Override
     public void setCompressedPageOffset(long offset) {
         this.compressedOffset = offset;
     }

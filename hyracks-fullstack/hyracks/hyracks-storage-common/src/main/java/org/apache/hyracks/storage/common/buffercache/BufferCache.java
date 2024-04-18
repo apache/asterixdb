@@ -568,7 +568,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
-        fInfo.read(cPage);
+        fInfo.read(cPage, context);
         final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
         if (threadStats != null && context.incrementStats()) {
             threadStats.coldRead();
@@ -588,7 +588,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             if (fInfo.hasBeenDeleted()) {
                 return;
             }
-            fInfo.write(cPage);
+            fInfo.write(cPage, context);
         }
 
     }

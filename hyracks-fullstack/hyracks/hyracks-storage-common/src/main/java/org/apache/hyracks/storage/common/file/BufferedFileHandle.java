@@ -26,12 +26,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.common.buffercache.AbstractBufferedFileIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.compression.file.NoOpLAFWriter;
@@ -68,23 +71,30 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     }
 
     @Override
-    public void read(CachedPage cPage) throws HyracksDataException {
+    public void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
         try {
-            long bytesRead =
-                    readToBuffer(header.prepareRead(bufferCache.getPageSizeWithHeader()), getFirstPageOffset(cPage));
+            setPageInfo(cPage);
+            IFileHandle handle = getFileHandle();
+            int pageSize = bufferCache.getPageSizeWithHeader();
+            long bytesRead = header.readFromFile(ioManager, handle, getFirstPageOffset(cPage), pageSize);
 
             if (!verifyBytesRead(bufferCache.getPageSizeWithHeader(), bytesRead)) {
                 return;
             }
 
-            final ByteBuffer buf = header.processHeader(cPage);
+            final ByteBuffer buf = context.processHeader(ioManager, this, header, cPage);
             cPage.getBuffer().put(buf);
         } finally {
             returnHeaderHelper(header);
         }
 
         readExtraPages(cPage);
+    }
+
+    private void setPageInfo(CachedPage cPage) {
+        cPage.setCompressedPageOffset(getFirstPageOffset(cPage));
+        cPage.setCompressedPageSize(bufferCache.getPageSize());
     }
 
     private void readExtraPages(CachedPage cPage) throws HyracksDataException {
@@ -98,26 +108,33 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     }
 
     @Override
-    protected void write(CachedPage cPage, BufferCacheHeaderHelper header, int totalPages, int extraBlockPageId)
-            throws HyracksDataException {
+    protected void write(CachedPage cPage, BufferCacheHeaderHelper header, int totalPages, int extraBlockPageId,
+            IBufferCacheWriteContext context) throws HyracksDataException {
         final ByteBuffer buf = cPage.getBuffer();
         final boolean contiguousLargePages = getPageId(cPage.getDiskPageId()) + 1 == extraBlockPageId;
+        IFileHandle handle = getFileHandle();
         long bytesWritten;
         try {
             buf.limit(contiguousLargePages ? bufferCache.getPageSize() * totalPages : bufferCache.getPageSize());
             buf.position(0);
-            bytesWritten = writeToFile(header.prepareWrite(cPage), getFirstPageOffset(cPage));
+            ByteBuffer[] buffers = header.prepareWrite(cPage);
+            bytesWritten = context.write(ioManager, handle, getFirstPageOffset(cPage), buffers);
         } finally {
             returnHeaderHelper(header);
         }
 
         if (totalPages > 1 && !contiguousLargePages) {
             buf.limit(totalPages * bufferCache.getPageSize());
-            bytesWritten += writeToFile(buf, getExtraPageOffset(cPage));
+            bytesWritten += writeExtraToFile(buf, getExtraPageOffset(cPage));
         }
 
         final int expectedWritten = bufferCache.getPageSizeWithHeader() + bufferCache.getPageSize() * (totalPages - 1);
         verifyBytesWritten(expectedWritten, bytesWritten);
+    }
+
+    @Override
+    public long getStartPageOffset(int pageId) throws HyracksDataException {
+        return (long) pageId * bufferCache.getPageSizeWithHeader();
     }
 
     @Override
@@ -134,6 +151,12 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     }
 
     @Override
+    public long getPagesTotalSize(int startPageId, int numberOfPages) throws HyracksDataException {
+        // This could be an overestimate as we cannot determine for sure as extra pages do not have a header
+        return (long) numberOfPages * bufferCache.getPageSizeWithHeader();
+    }
+
+    @Override
     protected long getFirstPageOffset(CachedPage cPage) {
         return getPageOffset(getPageId(cPage.getDiskPageId()));
     }
@@ -141,10 +164,6 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     @Override
     protected long getExtraPageOffset(CachedPage cPage) {
         return getPageOffset(cPage.getExtraBlockPageId());
-    }
-
-    private long getPageOffset(long pageId) {
-        return pageId * bufferCache.getPageSizeWithHeader();
     }
 
     public static long getDiskPageId(int fileId, int pageId) {
@@ -168,5 +187,9 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
                     headerPageCache, pageReplacementStrategy);
         }
         return new BufferedFileHandle(fileId, bufferCache, ioManager, headerPageCache, pageReplacementStrategy);
+    }
+
+    private long getPageOffset(int pageId) {
+        return (long) pageId * bufferCache.getPageSizeWithHeader();
     }
 }

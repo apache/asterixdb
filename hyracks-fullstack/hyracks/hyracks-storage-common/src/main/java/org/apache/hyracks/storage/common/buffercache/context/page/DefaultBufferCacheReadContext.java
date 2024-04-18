@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.common.buffercache.context.page;
 
-public final class DefaultBufferCacheReadContext extends AbstractBufferCacheReadContext {
+final class DefaultBufferCacheReadContext extends AbstractBufferCacheReadContext {
     @Override
     public boolean isNewPage() {
         return false;

@@ -23,17 +23,19 @@ import static org.apache.hyracks.storage.common.buffercache.IBufferCache.RESERVE
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.control.nc.io.IOManager;
 
 public class BufferCacheHeaderHelper {
     public static final int FRAME_MULTIPLIER_OFF = 0;
     public static final int EXTRA_BLOCK_PAGE_ID_OFF = FRAME_MULTIPLIER_OFF + 4; // 4
 
     private final ByteBuffer[] array;
-    private final int pageSizeWithHeader;
     private ByteBuffer buf;
 
     public BufferCacheHeaderHelper(int pageSize) {
-        this.pageSizeWithHeader = RESERVED_HEADER_BYTES + pageSize;
+        int pageSizeWithHeader = RESERVED_HEADER_BYTES + pageSize;
         buf = ByteBuffer.allocate(pageSizeWithHeader);
         array = new ByteBuffer[] { buf, null };
     }
@@ -54,16 +56,29 @@ public class BufferCacheHeaderHelper {
         return buf;
     }
 
+    public int writeToFile(IOManager ioManager, IFileHandle handle, ByteBuffer buffer, long offset)
+            throws HyracksDataException {
+        // TODO include CRC32?
+        return ioManager.doSyncWrite(handle, offset, buffer);
+    }
+
+    public long writeToFile(IOManager ioManager, IFileHandle handle, ByteBuffer[] buffers, long offset)
+            throws HyracksDataException {
+        // TODO include CRC32?
+        return ioManager.doSyncWrite(handle, offset, buffers);
+    }
+
+    public int readFromFile(IOManager ioManager, IFileHandle handle, long offset, int size)
+            throws HyracksDataException {
+        buf.position(0);
+        buf.limit(size);
+        // TODO check whether the CRC32 is valid or not
+        return ioManager.syncRead(handle, offset, buf);
+    }
+
     public ByteBuffer prepareRead(int size) {
         buf.position(0);
         buf.limit(size);
-        return buf;
-    }
-
-    public ByteBuffer processHeader(CachedPage cPage) {
-        cPage.setFrameSizeMultiplier(buf.getInt(FRAME_MULTIPLIER_OFF));
-        cPage.setExtraBlockPageId(buf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
-        buf.position(RESERVED_HEADER_BYTES);
         return buf;
     }
 
@@ -73,15 +88,15 @@ public class BufferCacheHeaderHelper {
 
     private void setPageInfo(CachedPage cPage) {
         buf.putInt(FRAME_MULTIPLIER_OFF, cPage.getFrameSizeMultiplier());
+        // TODO EXTRA_BLOCK_PAGE_ID_OFF is always going to be the following page, use it for CRC32 instead?
         buf.putInt(EXTRA_BLOCK_PAGE_ID_OFF, cPage.getExtraBlockPageId());
     }
 
     /**
-     * {@link ICompressorDecompressor#compress(byte[], int, int, byte[], int)} may require additional
-     * space to do the compression. see {@link ICompressorDecompressor#computeCompressedBufferSize(int)}.
+     * {@link ICompressorDecompressor} may require additional space to do the compression.
      *
-     * @param compressor
-     * @param size
+     * @param size required size
+     * @see ICompressorDecompressor#computeCompressedBufferSize(int)
      */
     private void ensureBufferCapacity(int size) {
         final int requiredSize = size + RESERVED_HEADER_BYTES;

@@ -38,7 +38,7 @@ public interface IBufferCacheReadContext {
      *
      * @param page that will be pinned
      */
-    void onPin(ICachedPage page);
+    void onPin(ICachedPage page) throws HyracksDataException;
 
     /**
      * Signals that a page will be unpinned

@@ -28,16 +28,21 @@ import java.util.Date;
  * Only used for files which are stored inside an IO device.
  */
 public class FileReference implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final File file;
     private final IODeviceHandle dev;
     private final String path;
     private long registrationTime = 0L;
+    /**
+     * Used to determine if holes can exist in this file
+     */
+    private boolean holesAllowed;
 
     public FileReference(IODeviceHandle dev, String path) {
         file = new File(dev.getMount(), path);
         this.dev = dev;
         this.path = path;
+        holesAllowed = false;
     }
 
     public File getFile() {
@@ -131,5 +136,16 @@ public class FileReference implements Serializable {
         }
         String parentPath = path.substring(0, parentIndex);
         return new FileReference(dev, parentPath);
+    }
+
+    public boolean areHolesAllowed() {
+        return holesAllowed;
+    }
+
+    /**
+     * Set the file to allow holes. Once set, it cannot be changed.
+     */
+    public void setHolesAllowed() {
+        this.holesAllowed = true;
     }
 }

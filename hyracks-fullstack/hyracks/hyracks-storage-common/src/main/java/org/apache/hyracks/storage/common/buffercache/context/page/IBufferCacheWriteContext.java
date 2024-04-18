@@ -23,9 +23,33 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 
+/**
+ * This context allows for providing different implementations on {@link IFIFOPageWriter#write(ICachedPage)}
+ */
 public interface IBufferCacheWriteContext {
+    /**
+     * Write to a file managed by {@link IBufferCache}
+     *
+     * @param ioManager ioManager
+     * @param handle    file handle
+     * @param offset    starting offset
+     * @param data      to be written
+     * @return number of written bytes
+     */
     int write(IOManager ioManager, IFileHandle handle, long offset, ByteBuffer data) throws HyracksDataException;
 
+    /**
+     * Write to a file managed by {@link IBufferCache}
+     *
+     * @param ioManager ioManager
+     * @param handle    file handle
+     * @param offset    starting offset
+     * @param data      to be written
+     * @return number of written bytes
+     */
     long write(IOManager ioManager, IFileHandle handle, long offset, ByteBuffer[] data) throws HyracksDataException;
 }

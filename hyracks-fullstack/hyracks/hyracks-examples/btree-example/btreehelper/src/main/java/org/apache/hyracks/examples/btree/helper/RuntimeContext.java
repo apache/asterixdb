@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ClockPageReplacementStrategy;
+import org.apache.hyracks.storage.common.buffercache.DefaultDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.DelayPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -44,7 +45,9 @@ import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 import org.apache.hyracks.storage.common.file.ResourceIdFactoryProvider;
 import org.apache.hyracks.storage.common.file.TransientLocalResourceRepositoryFactory;
+import org.apache.hyracks.util.annotations.TestOnly;
 
+@TestOnly
 public class RuntimeContext {
     private final IIOManager ioManager;
     private final IBufferCache bufferCache;
@@ -56,7 +59,8 @@ public class RuntimeContext {
     public RuntimeContext(INCServiceContext appCtx) throws HyracksDataException {
         fileMapManager = new FileMapManager();
         ICacheMemoryAllocator allocator = new HeapBufferAllocator();
-        IPageReplacementStrategy prs = new ClockPageReplacementStrategy(allocator, 32768, 50);
+        IPageReplacementStrategy prs =
+                new ClockPageReplacementStrategy(allocator, DefaultDiskCachedPageAllocator.INSTANCE, 32768, 50);
         ThreadFactory threadFactory = Thread::new;
         this.ioManager = appCtx.getIoManager();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000), fileMapManager, 100, 10,
