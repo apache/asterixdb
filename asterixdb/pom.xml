@@ -1015,6 +1015,7 @@
     <module>asterix-maven-plugins</module>
     <module>asterix-server</module>
     <module>asterix-podman</module>
+    <module>asterix-helm</module>
     <module>asterix-doc</module>
     <module>asterix-fuzzyjoin</module>
     <module>asterix-replication</module>
@@ -1767,6 +1768,11 @@
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers</artifactId>
+        <version>${testcontainers.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>k3s</artifactId>
         <version>${testcontainers.version}</version>
       </dependency>
       <dependency>

@@ -57,10 +57,16 @@
             <artifactId>testcontainers</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>k3s</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
   <properties>
     <root.dir>${basedir}/..</root.dir>
+    <itest.excludes>${global.itest.excludes},**/HelmChartIT.java</itest.excludes>
   </properties>
 
   <licenses>
@@ -171,6 +177,39 @@
                                         </resource>
                                     </resources>
                                 </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>helm.tests</id>
+            <properties>
+                <test.excludes>**/*.java</test.excludes>
+                <itest.includes>**/HelmChartIT.java</itest.includes>
+                <itest.excludes>${global.itest.excludes}</itest.excludes>
+                <failIfNoTests>false</failIfNoTests>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>io.kokuwa.maven</groupId>
+                        <artifactId>helm-maven-plugin</artifactId>
+                        <version>6.17.0</version>
+                        <configuration>
+                            <chartDirectory>${project.basedir}/../asterix-helm/src/main</chartDirectory>
+                            <appVersion>${project.version}</appVersion>
+                            <helmVersion>4.3.1</helmVersion>
+                            <autoDetectLocalHelmBinary>false</autoDetectLocalHelmBinary>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>init</goal>
+                                    <goal>lint</goal>
+                                    <goal>package</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>

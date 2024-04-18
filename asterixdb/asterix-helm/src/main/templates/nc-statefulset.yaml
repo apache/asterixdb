@@ -1,0 +1,128 @@
+# ------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ------------------------------------------------------------
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-nc
+  labels:
+    {{- include "asterixdb.labels" . | nindent 4 }}
+    app.kubernetes.io/component: nc
+spec:
+  replicas: {{ .Values.numNodes }}
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      {{- include "asterixdb.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: nc
+  serviceName: {{ .Release.Name }}-svc
+  template:
+    metadata:
+      labels:
+        {{- include "asterixdb.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: nc
+      annotations:
+        kubectl.kubernetes.io/default-container: log
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/auth: {{ toJson .Values.auth | sha256sum }}
+    spec:
+      initContainers:
+        - name: create-bucket
+          image: "{{ .Values.bucketInit.image.repository }}:{{ .Values.bucketInit.image.tag }}"
+          imagePullPolicy: {{ .Values.bucketInit.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf "$ENDPOINT/health" > /dev/null; do sleep 2; done
+              status=$(curl -s -o /dev/null -w '%{http_code}' -X PUT --aws-sigv4 "aws:amz:$REGION:s3" \
+                --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" "$ENDPOINT/$BUCKET")
+              case "$status" in
+                200|409) ;;
+                *) echo "creating bucket $BUCKET failed with HTTP $status"; exit 1 ;;
+              esac
+          env:
+            - name: ENDPOINT
+              value: {{ include "asterixdb.rustfsEndpoint" . }}
+            - name: REGION
+              value: {{ .Values.rustfs.region }}
+            - name: BUCKET
+              value: {{ .Values.rustfs.bucket }}
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}-s3-credentials
+      containers:
+        - name: nc
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [ "/opt/apache-asterixdb/bin/asterixnc" ]
+          args: [ "-config-file", "/etc/asterixdb/cc.conf", "-node-id", "$(POD_NAME)", "-address", "$(POD_IP)",
+                  "-public-address", "$(POD_IP)" ]
+          workingDir: /var/lib/asterix
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: JAVA_OPTS
+              value: {{ .Values.nc.javaOpts | quote }}
+          envFrom:
+            - secretRef:
+                name: {{ .Release.Name }}-s3-credentials
+          ports:
+            - containerPort: 19004
+              name: nc-api
+          volumeMounts:
+            - name: cache
+              mountPath: /var/lib/asterix
+            - name: config
+              mountPath: /etc/asterixdb/
+        - name: log
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [ "tail", "-n", "+1", "-F", "/var/lib/asterix/logs/nc-$(POD_NAME).log" ]
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: cache
+              mountPath: /var/lib/asterix
+      volumes:
+        - name: cache
+          {{- if .Values.nc.cacheSizeLimit }}
+          emptyDir:
+            sizeLimit: {{ .Values.nc.cacheSizeLimit }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: config
+          projected:
+            sources:
+              - configMap:
+                  name: {{ .Release.Name }}-configmap
+              - secret:
+                  name: {{ include "asterixdb.authSecretName" . }}
+                  items:
+                    - key: passwd
+                      path: passwd
