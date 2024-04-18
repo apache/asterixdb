@@ -248,16 +248,7 @@ public abstract class AbstractJsonDataParser extends AbstractNestedDataParser<AD
             checkOptionalConstraints(recordType, nullBitMap);
         }
 
-        if (valueEmbedder.isMissingEmbeddedValues()) {
-            String[] embeddedFieldNames = valueEmbedder.getEmbeddedFieldNames();
-            for (int i = 0; i < embeddedFieldNames.length; i++) {
-                String embeddedFieldName = embeddedFieldNames[i];
-                if (valueEmbedder.isMissing(embeddedFieldName)) {
-                    IValueReference embeddedValue = valueEmbedder.getEmbeddedValue();
-                    objectBuilder.addField(parserContext.getSerializedFieldName(embeddedFieldName), embeddedValue);
-                }
-            }
-        }
+        embedMissingValues(objectBuilder, parserContext, valueEmbedder);
         valueEmbedder.exitObject();
         parserContext.exitObject(valueBuffer, nullBitMap, objectBuilder);
         objectBuilder.write(out, true);

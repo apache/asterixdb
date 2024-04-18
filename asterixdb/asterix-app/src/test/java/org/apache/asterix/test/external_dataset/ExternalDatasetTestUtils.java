@@ -384,7 +384,6 @@ public class ExternalDatasetTestUtils {
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), PARQUET_FILTER);
         for (File file : files) {
             String fileName = file.getName();
-            String fileParent = file.getParent();
             String externalFilterDefinition = file.getParent().substring(generatedDataBasePath.length() + 1) + "/";
             loadData(file.getParent(), "", fileName, "parquet-data/" + externalFilterDefinition, "", false, false);
         }
@@ -408,11 +407,9 @@ public class ExternalDatasetTestUtils {
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), AVRO_FILTER);
         for (File file : files) {
             String fileName = file.getName();
-            String fileParent = file.getParent();
             String externalFilterDefinition = file.getParent().substring(generatedDataBasePath.length() + 1) + "/";
             loadData(file.getParent(), "", fileName, "avro-data/" + externalFilterDefinition, "", false, false);
         }
-        return;
     }
 
     private static void loadDirectory(String dataBasePath, String rootPath, FilenameFilter filter) {

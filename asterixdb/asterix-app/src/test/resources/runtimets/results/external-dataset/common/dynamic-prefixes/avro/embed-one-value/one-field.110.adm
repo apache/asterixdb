@@ -1,0 +1,9 @@
+{ "id": 1, "department": "accounting", "name": { "first": "John", "last": "smith" } }
+{ "id": 2, "department": "accounting", "name": { "first": "Mike", "last": "Jones" } }
+{ "id": 3, "department": "accounting", "name": { "first": "Alex", "last": "miller" } }
+{ "id": 4, "department": "engineering", "name": { "first": "Tom", "last": "smith" } }
+{ "id": 5, "department": "engineering", "name": { "first": "Alice", "last": "Jones" } }
+{ "id": 6, "department": "engineering", "name": { "last": "miller" } }
+{ "id": 7, "department": "hr", "name": { "first": "James", "last": "smith" } }
+{ "id": 8, "department": "hr", "name": { "last": "Jones" } }
+{ "id": 9, "department": "hr", "name": { "last": "miller" } }

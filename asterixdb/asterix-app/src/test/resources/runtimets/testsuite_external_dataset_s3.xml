@@ -371,8 +371,8 @@
       <compilation-unit name="common/avro/invalid-avro-files">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">none</output-dir>
-        <source-location>false</source-location>
         <expected-error>Malformed input stream</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
@@ -632,6 +632,54 @@
         <output-dir compare="Text">computed-field-unsupported-type</output-dir>
         <expected-error>Unsupported computed field type: 'polygon'</expected-error>
         <expected-error>Unsupported computed field type: 'zft'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="one-field">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="query">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-one-value">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-one-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-multiple-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-multiple-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-flat">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-flat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-with-nested-values">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">embed-with-nested-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="using-limit">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">using-limit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="views">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">views</output-dir>
       </compilation-unit>
     </test-case>
     <!-- Dynamic prefixes tests end -->

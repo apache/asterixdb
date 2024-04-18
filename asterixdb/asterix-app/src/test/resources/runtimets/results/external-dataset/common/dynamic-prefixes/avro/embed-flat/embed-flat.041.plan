@@ -1,0 +1,24 @@
+distribute result [$$n] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$n]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$19(ASC) ]  |PARTITIONED|
+        order (ASC, $$19) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (eq(lowercase($$n.getField("name").getField("first")), "john")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              assign [$$19] <- [$$n.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$n] <- test.Name embed-filter-value: true [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

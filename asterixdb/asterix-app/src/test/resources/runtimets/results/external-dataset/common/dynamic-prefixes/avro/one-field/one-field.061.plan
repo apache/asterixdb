@@ -1,0 +1,36 @@
+distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$d]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
+        order (ASC, $$24) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$d, $$24]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$22, $$21)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- HYBRID_HASH_JOIN [$$21][$$22]  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    assign [$$21, $$24] <- [lowercase($$d.getField("department")), $$d.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$d] <- test.Department prefix-filter on: or(eq(lowercase($$d.getField("department")), "hr"), eq(lowercase($$d.getField("department")), "accounting")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    unnest $$22 <- scan-collection(array: [ "hr", "accounting" ]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- UNNEST  |UNPARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

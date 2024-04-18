@@ -1,0 +1,76 @@
+distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$d]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- SORT_MERGE_EXCHANGE [$$45(ASC) ]  |PARTITIONED|
+        order (ASC, $$45) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$d, $$45]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$44, $$34)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- HYBRID_HASH_JOIN [$$34][$$44]  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$d, $$45, $$34]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (eq($$43, $$39)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- HYBRID_HASH_JOIN [$$39][$$43]  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$d, $$45, $$34, $$39]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$39, $$34] <- [lowercase($$48), lowercase($$d.getField("department"))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$d, $$45, $$48]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (eq($$45, $$46)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- HYBRID_HASH_JOIN [$$45][$$46]  |PARTITIONED|
+                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                                        assign [$$45] <- [$$d.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ASSIGN  |PARTITIONED|
+                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            data-scan []<-[$$d] <- test.Department prefix-filter on: or(eq(lowercase($$d.getField("department")), "hr"), eq(lowercase($$d.getField("department")), "accounting")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                                        project ([$$48, $$46]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$48, $$46] <- [$$l.getField("name").getField("last"), $$l.getField("id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- ASSIGN  |PARTITIONED|
+                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              data-scan []<-[$$l] <- test.LastName prefix-filter on: or(eq(lowercase($$l.getField("name").getField("last")), "miller"), eq(lowercase($$l.getField("name").getField("last")), "smith")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            unnest $$43 <- scan-collection(array: [ "miller", "smith" ]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- UNNEST  |UNPARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    unnest $$44 <- scan-collection(array: [ "hr", "accounting" ]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- UNNEST  |UNPARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

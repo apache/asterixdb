@@ -21,9 +21,12 @@ package org.apache.asterix.external.parser;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.external.api.IDataParser;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
+import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.ABinary;
 import org.apache.asterix.om.base.ABoolean;
@@ -84,6 +87,7 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.runtime.evaluators.common.NumberUtils;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.StringUtil;
 import org.apache.hyracks.util.bytes.Base64Parser;
 import org.apache.hyracks.util.bytes.HexParser;
@@ -429,6 +433,20 @@ public abstract class AbstractDataParser implements IDataParser {
             untaggedStringSerde.serialize(buffer, begin, length, out);
         } catch (IOException e) {
             throw new ParseException(e);
+        }
+    }
+
+    protected static void embedMissingValues(IARecordBuilder objectBuilder, ParserContext parserContext,
+            IExternalFilterValueEmbedder valueEmbedder) throws IOException {
+        if (valueEmbedder.isMissingEmbeddedValues()) {
+            String[] embeddedFieldNames = valueEmbedder.getEmbeddedFieldNames();
+            for (int i = 0; i < embeddedFieldNames.length; i++) {
+                String embeddedFieldName = embeddedFieldNames[i];
+                if (valueEmbedder.isMissing(embeddedFieldName)) {
+                    IValueReference embeddedValue = valueEmbedder.getEmbeddedValue();
+                    objectBuilder.addField(parserContext.getSerializedFieldName(embeddedFieldName), embeddedValue);
+                }
+            }
         }
     }
 }

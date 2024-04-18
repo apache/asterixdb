@@ -33,12 +33,9 @@ public class AvroDataParserFactory extends AbstractGenericDataParserFactory<Gene
     private static final long serialVersionUID = 1L;
     private static final List<String> PARSER_FORMAT = List.of(ExternalDataConstants.FORMAT_AVRO);
 
-    public AvroDataParserFactory() {
-    }
-
     @Override
     public IStreamDataParser createInputStreamParser(IExternalDataRuntimeContext context) {
-        throw new UnsupportedOperationException("jkghdfkgd");
+        throw new UnsupportedOperationException("Stream parser is not supported");
     }
 
     @Override

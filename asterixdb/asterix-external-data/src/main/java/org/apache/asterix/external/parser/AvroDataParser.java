@@ -34,49 +34,72 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.parser.jackson.ParserContext;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
+import org.apache.hyracks.data.std.api.IValueReference;
 
 public class AvroDataParser extends AbstractDataParser implements IRecordDataParser<GenericRecord> {
     private final ParserContext parserContext;
+    private final IExternalFilterValueEmbedder valueEmbedder;
 
     public AvroDataParser(IExternalDataRuntimeContext context) {
         parserContext = new ParserContext();
+        valueEmbedder = context.getValueEmbedder();
     }
 
     @Override
     public boolean parse(IRawRecord<? extends GenericRecord> record, DataOutput out) throws HyracksDataException {
         try {
             parseObject(record.get(), out);
+            valueEmbedder.reset();
             return true;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
     }
 
-    private final void parseObject(GenericRecord record, DataOutput out) throws IOException {
+    private void parseObject(GenericRecord record, DataOutput out) throws IOException {
         IMutableValueStorage valueBuffer = parserContext.enterObject();
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         Schema schema = record.getSchema();
+        valueEmbedder.enterObject();
         for (Schema.Field field : schema.getFields()) {
-            if (record.get(field.name()) != null) {
+            Schema fieldSchema = field.schema();
+            String fieldName = field.name();
+            Object fieldValue = record.get(fieldName);
+            ATypeTag typeTag = getTypeTag(fieldSchema, fieldValue);
+
+            IValueReference value = null;
+            if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
+                value = valueEmbedder.getEmbeddedValue();
+            } else if (fieldValue != null) {
                 valueBuffer.reset();
-                parseValue(field.schema(), record.get(field.name()), valueBuffer.getDataOutput());
-                objectBuilder.addField(parserContext.getSerializedFieldName(field.name()), valueBuffer);
+                parseValue(fieldSchema, fieldValue, valueBuffer.getDataOutput());
+                value = valueBuffer;
+            }
+
+            if (value != null) {
+                // Ignore missing values
+                objectBuilder.addField(parserContext.getSerializedFieldName(fieldName), value);
             }
         }
+
+        embedMissingValues(objectBuilder, parserContext, valueEmbedder);
         objectBuilder.write(out, true);
+        valueEmbedder.exitObject();
         parserContext.exitObject(valueBuffer, null, objectBuilder);
     }
 
-    private final void parseArray(Schema arraySchema, Collection<?> elements, DataOutput out) throws IOException {
+    private void parseArray(Schema arraySchema, Collection<?> elements, DataOutput out) throws IOException {
         Schema elementSchema = arraySchema.getElementType();
         final IMutableValueStorage valueBuffer = parserContext.enterCollection();
         final IAsterixListBuilder arrayBuilder =
@@ -96,10 +119,11 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         IARecordBuilder objectBuilder = parserContext.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         IAsterixListBuilder listBuilder =
                 parserContext.getCollectionBuilder(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
+
         for (Map.Entry<String, ?> entry : map.entrySet()) {
             objectBuilder.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
             valueBuffer.reset();
-            serializeString(entry.getKey(), Schema.Type.STRING, valueBuffer.getDataOutput());
+            serializeString(entry.getKey(), valueBuffer.getDataOutput());
             objectBuilder.addField(parserContext.getSerializedFieldName("key"), valueBuffer);
             valueBuffer.reset();
             parseValue(mapSchema.getValueType(), entry.getValue(), valueBuffer.getDataOutput());
@@ -108,22 +132,32 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             objectBuilder.write(item.getDataOutput(), true);
             listBuilder.addItem(item);
         }
+
         listBuilder.write(out, true);
         parserContext.exitObject(valueBuffer, null, objectBuilder);
         parserContext.exitCollection(item, listBuilder);
     }
 
-    private final void parseUnion(Schema unionSchema, Object value, DataOutput out) throws IOException {
+    private void parseUnion(Schema unionSchema, Object value, DataOutput out) throws IOException {
+        Schema actualSchema = getActualSchema(unionSchema, value);
+        if (actualSchema != null) {
+            parseValue(actualSchema, value, out);
+        } else {
+            throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, unionSchema.getType());
+        }
+    }
+
+    private Schema getActualSchema(Schema unionSchema, Object value) {
         List<Schema> possibleTypes = unionSchema.getTypes();
         for (Schema possibleType : possibleTypes) {
             Schema.Type schemaType = possibleType.getType();
-            if (possibleType.getType() != NULL) {
+            if (schemaType != NULL) {
                 if (matchesType(value, schemaType)) {
-                    parseValue(possibleType, value, out);
-                    return;
+                    return possibleType;
                 }
             }
         }
+        return null;
     }
 
     private boolean matchesType(Object value, Schema.Type schemaType) {
@@ -149,6 +183,44 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
+    private ATypeTag getTypeTag(Schema schema, Object value) throws HyracksDataException {
+        Schema.Type schemaType = schema.getType();
+        if (value == null) {
+            // The 'value' is missing
+            return ATypeTag.MISSING;
+        }
+
+        switch (schemaType) {
+            case NULL:
+                return ATypeTag.NULL;
+            case BOOLEAN:
+                return ATypeTag.BOOLEAN;
+            case INT:
+            case LONG:
+                return ATypeTag.BIGINT;
+            case FLOAT:
+            case DOUBLE:
+                return ATypeTag.DOUBLE;
+            case STRING:
+                return ATypeTag.STRING;
+            case BYTES:
+                return ATypeTag.BINARY;
+            case RECORD:
+                return ATypeTag.OBJECT;
+            case ARRAY:
+            case MAP:
+                return ATypeTag.ARRAY;
+            case UNION:
+                Schema actualSchema = getActualSchema(schema, value);
+                if (actualSchema != null) {
+                    return getTypeTag(actualSchema, value);
+                }
+            default:
+                throw createUnsupportedException(schema);
+
+        }
+    }
+
     private void parseValue(Schema schema, Object value, DataOutput out) throws IOException {
         Schema.Type type = schema.getType();
         switch (type) {
@@ -164,22 +236,23 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             case MAP:
                 parseMap(schema, (Map<String, ?>) value, out);
                 break;
-            case ENUM:
-            case FIXED:
             case NULL:
                 nullSerde.serialize(ANull.NULL, out);
                 break;
             case INT:
             case LONG:
+                serializeLong(value, out);
+                break;
             case FLOAT:
             case DOUBLE:
-                serializeNumeric(value, type, out);
+                serializeDouble(value, out);
                 break;
             case STRING:
-                serializeString(value, type, out);
+                serializeString(value, out);
                 break;
             case BYTES:
-                serializeBinary(value, type, out);
+                aBinary.setValue(((ByteBuffer) value).array(), 0, ((ByteBuffer) value).array().length);
+                binarySerde.serialize(aBinary, out);
                 break;
             case BOOLEAN:
                 if ((Boolean) value) {
@@ -189,52 +262,28 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
                 }
                 break;
             default:
-                throw new RuntimeDataException(ErrorCode.PARSE_ERROR, value.toString());
+                throw createUnsupportedException(schema);
         }
     }
 
-    private void serializeNumeric(Object value, Schema.Type type, DataOutput out) throws IOException {
-        switch (type) {
-            case INT:
-                aInt32.setValue((Integer) value);
-                int32Serde.serialize(aInt32, out);
-                break;
-            case LONG:
-                aInt64.setValue((Long) value);
-                int64Serde.serialize(aInt64, out);
-                break;
-            case FLOAT:
-                aFloat.setValue((Float) value);
-                floatSerde.serialize(aFloat, out);
-                break;
-            case DOUBLE:
-                aDouble.setValue((Double) value);
-                doubleSerde.serialize(aDouble, out);
-                break;
-            default:
-                throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Error");
-        }
+    private void serializeLong(Object value, DataOutput out) throws HyracksDataException {
+        long intValue = ((Number) value).longValue();
+        aInt64.setValue(intValue);
+        int64Serde.serialize(aInt64, out);
     }
 
-    private void serializeString(Object value, Schema.Type type, DataOutput out) throws IOException {
-        switch (type) {
-            case STRING:
-                aString.setValue(value.toString());
-                stringSerde.serialize(aString, out);
-                break;
-            default:
-                throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Error");
-        }
+    private void serializeDouble(Object value, DataOutput out) throws HyracksDataException {
+        double doubleValue = ((Number) value).doubleValue();
+        aDouble.setValue(doubleValue);
+        doubleSerde.serialize(aDouble, out);
     }
 
-    private void serializeBinary(Object value, Schema.Type type, DataOutput out) throws IOException {
-        switch (type) {
-            case BYTES:
-                aBinary.setValue(((ByteBuffer) value).array(), 0, ((ByteBuffer) value).array().length);
-                binarySerde.serialize(aBinary, out);
-                break;
-            default:
-                throw new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Error");
-        }
+    private void serializeString(Object value, DataOutput out) throws IOException {
+        aString.setValue(value.toString());
+        stringSerde.serialize(aString, out);
+    }
+
+    private static HyracksDataException createUnsupportedException(Schema schema) throws HyracksDataException {
+        return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Avro Parser", schema);
     }
 }
