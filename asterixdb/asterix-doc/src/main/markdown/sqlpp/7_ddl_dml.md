@@ -697,3 +697,77 @@ The following examples illustrate single-object deletions.
 
     DELETE FROM customers WHERE custid = "C47";
 
+### <a id="Copy">Copy Statement</a>
+
+##### CopyStmnt
+![](../images/diagrams/CopyStmnt.png)
+
+The `COPY` statement is used to load data in bulk from an external source into a dataset. It differs from `LOAD` in that
+it can be performed multiple times, to upsert new data into the dataset that may have changed in the source.
+
+For example, this statement would copy the contents of the JSON file `customerData.json` residing on the NC named `asterix_nc1`
+into the Customers dataset.
+
+##### Example
+
+    COPY Customers
+    FROM localfs
+    PATH ("asterix_nc1://data/nontagged/customerData.json")
+    WITH {
+    "format": "json"
+    };
+
+
+### <a id="CopyTo">Copy To Statement</a>
+
+##### CopyToStmnt
+![](../images/diagrams/CopyToStmnt.png)
+
+The `COPY TO` statement allows easy export of the result of a query, or an entire dataset, into a file or set of files on
+an external source. This can be any source that has an adapter. 
+
+For example, this statement would create a copy of `ColumnDataset` on an S3 bucket, myBucket:
+
+##### Example
+
+    COPY ColumnDataset
+    TO s3
+    PATH("CopyToResult/")
+    WITH {
+    "format" : "json"
+    "container": "myBucket",
+    "accessKeyId": "<access-key>",
+    "secretAccessKey": "<secret-key>",
+    "region": "us-west-2"
+    };
+
+The statement allows for much more precise exports than this, however. A typical pattern of data accessed via object stores
+like S3 is for it to be partitioned into files, with each folder containing some of those files representing a key. The use
+of `OVER` and `PARTITION BY` allow exports to match this. For example:
+
+##### Example
+
+    COPY (SELECT cd.uid uid,
+    cd.sensor_info.name name,
+    to_bigint(cd.sensor_info.battery_status) battery_status
+    FROM ColumnDataset cd
+    ) toWrite
+    TO s3
+    PATH("CopyToResult", to_string(b))
+    OVER (
+    PARTITION BY toWrite.battery_status b
+    ORDER BY toWrite.name
+    )
+    WITH {
+    "format" : "json",
+    "compression": "gzip",
+    "max-objects-per-file": 1000,
+    "container": "myBucket",
+    "accessKeyId": "<access-key>",
+    "secretAccessKey": "<secret-key>",
+    "region": "us-west-2"
+    };
+
+This query will be exported as partitions into a set of folders, with one folder for each value of `battery_status`. 
+Each partition itself will also be sorted by the `name` field, and compressed with `gzip` and divided into files of 100
+objects or fewer per file. 

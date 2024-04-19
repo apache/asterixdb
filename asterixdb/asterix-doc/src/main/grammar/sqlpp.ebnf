@@ -258,4 +258,9 @@ InsertStmnt ::= "INSERT" "INTO" QualifiedName ("AS" Variable)? Query ("RETURNING
 
 UpsertStmnt ::= "UPSERT" "INTO" QualifiedName ("AS" Variable)? Query ("RETURNING" Expr)?
 
+
+CopyStmnt ::= "COPY" "INTO"? QualifiedName ("AS" Variable)? "FROM" Identifier "AT" QualifiedName ("PATH" StringLiteral)? (WITH ObjectConstructor)?
+
+CopyToStmnt ::= "COPY" ( QualifiedName | "(" Query ")" ) "TO" AdapterName "PATH" ParenthesizedArrayConstructor ("OVER" "(" ("PARTITION" "BY" Expr ("AS" Variable)? ("," Expr ("AS" Variable)? )? )? OrderbyClause ")" )? WITH ObjectConstructor
+
 DeleteStmnt ::= "DELETE" "FROM" QualifiedName (("AS")? Variable)? ("WHERE" Expr)?
