@@ -4170,6 +4170,8 @@
         <output-dir compare="Clean-JSON">create-dataset-negative</output-dir>
         <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
         <expected-error>ASX1001: Syntax error: Invalid primary key specification</expected-error>
+        <expected-error>ASX1198: Duplicate field 'id' in primary key</expected-error>
+        <expected-error>ASX1199: Fields 'a' and 'a.b' are incompatible for primary key</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="ddl">
