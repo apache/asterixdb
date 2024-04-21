@@ -26,14 +26,13 @@ import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
 public interface ILSMTupleFilterCallback extends Serializable {
     /**
-     * Populates the state within the filter callback by fetching the state from the provided "index"
-     * and mapping it with the storage partition index, which will be utilized for filtering
-     * the tuple directed to the index "storagePartitionIdx".
+     * Initializes the filter callback
      */
     void initialize(ILSMIndex index) throws HyracksDataException;
 
     /**
-     * Filter the received record based on the initialized ingestion state.
+     * This method is called on a tuple to evaluate whether the tuple meets the criteria
+     * for filtration based on the specified filter condition.
      */
     boolean filter(FrameTupleAccessor accessor, int tupleIdx);
 }

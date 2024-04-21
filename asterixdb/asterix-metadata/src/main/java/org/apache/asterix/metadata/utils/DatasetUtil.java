@@ -533,7 +533,6 @@ public class DatasetUtil {
         }
         RecordDescriptor outputRecordDesc = new RecordDescriptor(outputSerDes, outputTypeTraits);
 
-        // get the Tuple filter callback
         ILSMTupleFilterCallbackFactory tupleFilterCallbackFactory = dataset.getTupleFilterCallbackFactory();
 
         // This allows to project only the indexed fields instead of the entirety of the record

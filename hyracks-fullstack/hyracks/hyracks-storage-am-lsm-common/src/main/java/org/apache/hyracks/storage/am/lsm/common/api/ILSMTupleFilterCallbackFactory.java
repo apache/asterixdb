@@ -24,8 +24,6 @@ import java.io.Serializable;
 public interface ILSMTupleFilterCallbackFactory extends Serializable {
     /**
      * Creates a callback function that utilizes the field permutation of the incoming tuple.
-     * The field tuple contains information about the position of the record, meta, and primary key,
-     * facilitating the extraction of relevant information for filtering purposes.
      */
     ILSMTupleFilterCallback createTupleFilterCallback(int[] fieldPermutation);
 }
