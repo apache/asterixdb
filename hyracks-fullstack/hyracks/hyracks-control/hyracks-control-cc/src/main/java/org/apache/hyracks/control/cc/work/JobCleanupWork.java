@@ -34,11 +34,11 @@ import org.apache.logging.log4j.Logger;
 public class JobCleanupWork extends AbstractWork {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private IJobManager jobManager;
-    private JobId jobId;
-    private JobStatus status;
-    private List<Exception> exceptions;
-    private IResultCallback<Void> callback;
+    private final IJobManager jobManager;
+    private final JobId jobId;
+    private final JobStatus status;
+    private final List<Exception> exceptions;
+    private final IResultCallback<Void> callback;
 
     public JobCleanupWork(IJobManager jobManager, JobId jobId, JobStatus status, List<Exception> exceptions,
             IResultCallback<Void> callback) {
@@ -51,9 +51,6 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Cleanup for job: {}", jobId);
-        }
         final JobRun jobRun = jobManager.get(jobId);
         if (jobRun == null) {
             LOGGER.debug("Ignoring cleanup for unknown job: {}", jobId);

@@ -129,7 +129,7 @@ public class JobManager implements IJobManager {
         if (activeRunMap.containsKey(jobId)) {
             JobRun jobRun = activeRunMap.get(jobId);
             // The following call will abort all ongoing tasks and then consequently
-            // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecyle of the job.
+            // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecycle of the job.
             // Therefore, we do not remove the job out of activeRunMap here.
             jobRun.getExecutor().cancelJob(callback);
             return;
@@ -139,7 +139,7 @@ public class JobManager implements IJobManager {
         if (jobRun != null) {
             List<Exception> exceptions =
                     Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId));
-            // Since the job has not been executed, we only need to update its status and lifecyle here.
+            // Since the job has not been executed, we only need to update its status and lifecycle here.
             jobRun.setStatus(JobStatus.FAILURE_BEFORE_EXECUTION, exceptions);
             runMapArchive.put(jobId, jobRun);
             runMapHistory.put(jobId, exceptions);
@@ -170,7 +170,6 @@ public class JobManager implements IJobManager {
             return;
         }
         if (run.getPendingStatus() != null) {
-            LOGGER.warn("Ignoring duplicate cleanup for JobRun with id: {}", run::getJobId);
             return;
         }
         Set<String> targetNodes = run.getParticipatingNodeIds();
