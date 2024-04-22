@@ -22,6 +22,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
+import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
@@ -124,7 +125,11 @@ public class CompilerProperties extends AbstractProperties {
                 AlgebricksConfig.COLUMN_FILTER_DEFAULT,
                 "Enable/disable the use of column min/max filters"),
         //TODO(DB): remove after
-        COMPILER_ENABLE_DB_RESOLUTION(BOOLEAN, true, "Enable/disable the resolution of namespaces to database");
+        COMPILER_ENABLE_DB_RESOLUTION(BOOLEAN, true, "Enable/disable the resolution of namespaces to database"),
+        COMPILER_RUNTIME_MEMORY_OVERHEAD(
+                NONNEGATIVE_INTEGER,
+                5,
+                "A percentage of the job's required memory to be added to account for runtime memory overhead");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -206,8 +211,6 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_QUERY_PLAN_SHAPE_KEY = Option.COMPILER_QUERYPLANSHAPE.ini();
 
     public static final String COMPILER_COLUMN_FILTER_KEY = Option.COMPILER_COLUMN_FILTER.ini();
-
-    public static final String COMPILER_ENABLE_DB_RESOLUTION_KEY = Option.COMPILER_ENABLE_DB_RESOLUTION.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -312,7 +315,7 @@ public class CompilerProperties extends AbstractProperties {
         return accessor.getBoolean(Option.COMPILER_COLUMN_FILTER);
     }
 
-    public boolean isDbResolutionEnabled() {
-        return accessor.getBoolean(Option.COMPILER_ENABLE_DB_RESOLUTION);
+    public int getRuntimeMemoryOverheadPercentage() {
+        return accessor.getInt(Option.COMPILER_RUNTIME_MEMORY_OVERHEAD);
     }
 }

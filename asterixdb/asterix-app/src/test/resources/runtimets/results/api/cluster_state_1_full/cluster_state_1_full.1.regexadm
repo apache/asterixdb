@@ -32,6 +32,7 @@
     "compiler\.min\.memory\.allocation" : true,
     "compiler\.parallelism" : -1,
     "compiler.queryplanshape" : "zigzag",
+    "compiler.runtime.memory.overhead" : 5,
     "compiler\.sort\.parallel" : true,
     "compiler\.sort\.samples" : 100,
     "compiler\.sortmemory" : 327680,

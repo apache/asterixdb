@@ -342,6 +342,7 @@ public class APIFramework {
                             getJobLocations(spec, nodeJobTracker, computationLocations);
                     final IClusterCapacity jobRequiredCapacity =
                             ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
+                    addRuntimeMemoryOverhead(jobRequiredCapacity, compilerProperties);
                     spec.setRequiredClusterCapacity(jobRequiredCapacity);
                 }
             }
@@ -599,5 +600,15 @@ public class APIFramework {
         final Set<String> jobParticipatingNodes = jobTracker.getJobParticipatingNodes(spec, null);
         return new AlgebricksAbsolutePartitionConstraint(Arrays.stream(clusterLocations.getLocations())
                 .filter(jobParticipatingNodes::contains).toArray(String[]::new));
+    }
+
+    private static void addRuntimeMemoryOverhead(IClusterCapacity jobRequiredCapacity,
+            CompilerProperties compilerProperties) {
+        int runtimeMemoryOverheadPercentage = compilerProperties.getRuntimeMemoryOverheadPercentage();
+        if (runtimeMemoryOverheadPercentage > 0) {
+            double multiplier = 1 + runtimeMemoryOverheadPercentage / 100.0;
+            long aggregatedMemoryByteSize = jobRequiredCapacity.getAggregatedMemoryByteSize();
+            jobRequiredCapacity.setAggregatedMemoryByteSize((long) (aggregatedMemoryByteSize * multiplier));
+        }
     }
 }
