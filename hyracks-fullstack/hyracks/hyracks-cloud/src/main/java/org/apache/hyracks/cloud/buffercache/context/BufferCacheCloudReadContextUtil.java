@@ -27,8 +27,8 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 
-public class ContextUtil {
-    private ContextUtil() {
+public class BufferCacheCloudReadContextUtil {
+    private BufferCacheCloudReadContextUtil() {
     }
 
     public static boolean isEmpty(BufferCacheHeaderHelper header) {

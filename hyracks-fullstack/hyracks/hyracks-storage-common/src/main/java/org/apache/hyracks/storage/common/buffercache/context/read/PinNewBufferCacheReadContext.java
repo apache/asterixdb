@@ -16,24 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache.context.page;
+package org.apache.hyracks.storage.common.buffercache.context.read;
 
-public class DefaultBufferCachePageOperationContextProvider {
-    private DefaultBufferCachePageOperationContextProvider() {
+final class PinNewBufferCacheReadContext extends AbstractBufferCacheReadContext {
+
+    @Override
+    public boolean isNewPage() {
+        return true;
     }
 
-    /**
-     * Pin a page and increment stats
-     */
-    public static final IBufferCacheReadContext DEFAULT = new DefaultBufferCacheReadContext();
-
-    /**
-     * Pin a new page
-     */
-    public static final IBufferCacheReadContext NEW = new PinNewBufferCacheReadContext();
-
-    /**
-     * Pin a page and do not increment the stats of the pinned page
-     */
-    public static final IBufferCacheReadContext NO_STATS = new NoStatsBufferCacheReadContext();
+    @Override
+    public boolean incrementStats() {
+        return true;
+    }
 }

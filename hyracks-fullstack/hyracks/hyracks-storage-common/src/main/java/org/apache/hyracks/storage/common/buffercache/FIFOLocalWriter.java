@@ -15,7 +15,7 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

@@ -27,7 +27,7 @@ import org.apache.hyracks.cloud.cache.unit.IndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.ISweepContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 

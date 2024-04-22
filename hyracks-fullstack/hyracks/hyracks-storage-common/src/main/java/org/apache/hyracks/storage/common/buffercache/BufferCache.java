@@ -43,10 +43,10 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.api.replication.IIOReplicationManager;
 import org.apache.hyracks.api.util.ExceptionUtils;
-import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider;
-import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
+import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
@@ -134,7 +134,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             ThreadFactory threadFactory, IIOReplicationManager ioReplicationManager,
             Map<Integer, BufferedFileHandle> fileInfoMap) {
         this(ioManager, pageReplacementStrategy, pageCleanerPolicy, fileMapManager, maxOpenFiles, ioQueueLen,
-                threadFactory, fileInfoMap, DefaultBufferCachePageOperationContextProvider.DEFAULT);
+                threadFactory, fileInfoMap, DefaultBufferCacheReadContextProvider.DEFAULT);
         this.ioReplicationManager = ioReplicationManager;
     }
 

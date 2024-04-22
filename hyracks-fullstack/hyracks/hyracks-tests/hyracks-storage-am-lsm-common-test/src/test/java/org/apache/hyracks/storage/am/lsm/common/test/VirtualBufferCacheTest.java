@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.common.test;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;

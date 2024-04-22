@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.common.context;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.DEFAULT;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,8 +51,8 @@ import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
 import org.apache.hyracks.storage.common.buffercache.VirtualPage;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.ExitUtil;

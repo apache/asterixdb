@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.common;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 import static org.junit.Assert.fail;
 
 import java.io.File;

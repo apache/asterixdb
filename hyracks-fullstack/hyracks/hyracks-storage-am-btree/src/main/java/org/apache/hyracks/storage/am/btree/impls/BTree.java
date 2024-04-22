@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.btree.impls;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 
 import java.util.ArrayList;
 import java.util.List;

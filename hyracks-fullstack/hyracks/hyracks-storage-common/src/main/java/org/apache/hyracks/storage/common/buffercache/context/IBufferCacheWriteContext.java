@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache.context.page;
+package org.apache.hyracks.storage.common.buffercache.context;
 
 import java.nio.ByteBuffer;
 

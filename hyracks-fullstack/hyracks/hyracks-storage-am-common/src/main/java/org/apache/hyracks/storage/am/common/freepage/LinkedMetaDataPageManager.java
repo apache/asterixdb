@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;

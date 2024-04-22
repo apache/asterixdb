@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache.context.page;
+package org.apache.hyracks.storage.common.buffercache.context.read;
 
-final class PinNewBufferCacheReadContext extends AbstractBufferCacheReadContext {
-
+final class NoStatsBufferCacheReadContext extends AbstractBufferCacheReadContext {
     @Override
     public boolean isNewPage() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean incrementStats() {
-        return true;
+        return false;
     }
 }

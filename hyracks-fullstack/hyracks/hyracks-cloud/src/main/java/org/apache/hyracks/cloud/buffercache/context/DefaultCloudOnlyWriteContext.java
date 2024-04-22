@@ -24,7 +24,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.control.nc.io.IOManager;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 
 public final class DefaultCloudOnlyWriteContext implements IBufferCacheWriteContext {
     public static final IBufferCacheWriteContext INSTANCE = new DefaultCloudOnlyWriteContext();

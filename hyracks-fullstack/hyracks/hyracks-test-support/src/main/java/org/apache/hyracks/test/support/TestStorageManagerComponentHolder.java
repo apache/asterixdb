@@ -45,7 +45,7 @@ import org.apache.hyracks.storage.common.buffercache.HeapBufferAllocator;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider;
+import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.storage.common.file.IFileMapProvider;
@@ -152,7 +152,7 @@ public class TestStorageManagerComponentHolder {
         IFileMapProvider fileMapProvider = getFileMapProvider();
         bufferCache = new BufferCache(ioManager, prs, new DelayPageCleanerPolicy(1000),
                 (IFileMapManager) fileMapProvider, maxOpenFiles, 10, threadFactory, new HashMap<>(),
-                DefaultBufferCachePageOperationContextProvider.DEFAULT);
+                DefaultBufferCacheReadContextProvider.DEFAULT);
         return bufferCache;
     }
 }

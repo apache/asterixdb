@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.impl;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.DEFAULT;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.DEFAULT;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,9 +35,9 @@ import org.apache.hyracks.storage.common.buffercache.IExtraPageBlockHelper;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
-import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCacheWriteContext;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 
 public class TestVirtualBufferCache implements IVirtualBufferCache {

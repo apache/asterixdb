@@ -31,7 +31,7 @@ import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.ThreadSafe;
@@ -100,7 +100,7 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
     private static ByteBuffer readAndPersistIfEmpty(IOManager ioManager, IFileHandle fileHandle,
             BufferCacheHeaderHelper header, CachedPage cPage, boolean persist) throws HyracksDataException {
         ByteBuffer headerBuf = header.getBuffer();
-        if (ContextUtil.isEmpty(header)) {
+        if (BufferCacheCloudReadContextUtil.isEmpty(header)) {
             // header indicates the page is empty
             // reset the buffer position to 0. Limit should be already set before the call of processHeader
             headerBuf.position(0);
@@ -111,7 +111,7 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
             headerBuf.flip();
 
             if (persist) {
-                ContextUtil.persist(cloudIOManager, fileHandle, headerBuf, offset);
+                BufferCacheCloudReadContextUtil.persist(cloudIOManager, fileHandle, headerBuf, offset);
             }
         }
 

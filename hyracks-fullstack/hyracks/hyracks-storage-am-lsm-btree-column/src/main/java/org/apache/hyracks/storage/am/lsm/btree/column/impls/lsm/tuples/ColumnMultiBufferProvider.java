@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getColumnStartOffset;
+import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfPages;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -26,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnBufferProvider;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeReadLeafFrame;
+import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 
@@ -55,17 +59,19 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
             length = 0;
             return;
         }
+        int pageSize = multiPageOp.getPageSize();
 
         int offset = frame.getColumnOffset(columnIndex);
         startPage = frame.getPageId() + getColumnPageIndex(offset);
-        startOffset = offset % multiPageOp.getPageSize();
-        //Duplicate as the buffer could be shared by more than one column
+        startOffset = getColumnStartOffset(offset, pageSize);
+        // Duplicate as the buffer could be shared by more than one column
         ByteBuffer firstPage = readNext().duplicate();
-        firstPage.position(startOffset);
-        //Read the length
-        length = firstPage.getInt();
+        // Read the column's length
+        length = ColumnUtil.readColumnLength(firstPage, startOffset, pageSize);
+        // Get the remaining length of the column
         int remainingLength = length - firstPage.remaining();
-        numberOfPages = (int) Math.ceil((double) remainingLength / multiPageOp.getPageSize());
+        // Get the number of pages this column occupies
+        numberOfPages = getNumberOfPages(remainingLength, pageSize);
         //+4-bytes after reading the length
         startOffset += Integer.BYTES;
         //-4-bytes after reading the length
@@ -117,6 +123,6 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
     }
 
     private int getColumnPageIndex(int columnOffset) {
-        return (int) Math.floor((double) columnOffset / multiPageOp.getPageSize());
+        return ColumnUtil.getColumnPageIndex(columnOffset, multiPageOp.getPageSize());
     }
 }

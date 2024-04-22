@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.storage.am.lsm.btree.column.utils;
 
+import java.nio.ByteBuffer;
+
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -51,6 +53,53 @@ public class ColumnUtil {
     public static void putColumnsMetadataValue(IValueReference columnsMetadataValue, IComponentMetadata dest)
             throws HyracksDataException {
         dest.put(COLUMNS_METADATA_KEY, columnsMetadataValue);
+    }
+
+    public static int getColumnPageIndex(int columnOffset, int pageSize) {
+        return (int) Math.floor((double) columnOffset / pageSize);
+    }
+
+    /**
+     * Get the column starting offset within the first page
+     *
+     * @param offset   absolute column offset as reported by Page0
+     * @param pageSize disk buffer cache page size
+     * @return start offset
+     */
+    public static int getColumnStartOffset(int offset, int pageSize) {
+        return offset % pageSize;
+    }
+
+    /**
+     * Reads and returns the columns length in bytes
+     * NOTE: calling this method will set the firstPage position and limit appropriately
+     *
+     * @param firstPage   first page of the column
+     * @param startOffset starting offset of the column in firstPage see {{@link #getColumnStartOffset(int, int)}}
+     * @param pageSize    disk buffer cache page size
+     * @return column's length
+     */
+    public static int readColumnLength(ByteBuffer firstPage, int startOffset, int pageSize) {
+        // Set the limit to read the length of the column
+        firstPage.limit(startOffset + Integer.BYTES);
+        // Set position at the start of column
+        firstPage.position(startOffset);
+        // Read the length of this column
+        int length = firstPage.getInt();
+        // Ensure the page limit to at most a full page
+        firstPage.limit(Math.min(length, pageSize));
+        return length;
+    }
+
+    /**
+     * Returns the number of pages a column occupies
+     *
+     * @param remainingLength columns remaining length. see {@link #readColumnLength(ByteBuffer, int, int)}
+     * @param pageSize        disk buffer cache page size
+     * @return number of pages the column occupies
+     */
+    public static int getNumberOfPages(int remainingLength, int pageSize) {
+        return (int) Math.ceil((double) remainingLength / pageSize);
     }
 
     public static IColumnTupleProjector getTupleProjector(IIndexAccessParameters iap,

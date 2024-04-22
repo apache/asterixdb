@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.storage.common.compression.file;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NO_STATS;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NO_STATS;
 
 import java.nio.ByteBuffer;
 import java.util.EnumSet;

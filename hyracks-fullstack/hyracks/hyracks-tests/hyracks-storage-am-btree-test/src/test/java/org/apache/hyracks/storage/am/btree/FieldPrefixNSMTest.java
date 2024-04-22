@@ -19,7 +19,7 @@
 
 package org.apache.hyracks.storage.am.btree;
 
-import static org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider.NEW;
+import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.NEW;
 
 import java.io.DataOutput;
 import java.util.Random;

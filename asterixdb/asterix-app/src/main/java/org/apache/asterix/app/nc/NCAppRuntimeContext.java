@@ -120,8 +120,8 @@ import org.apache.hyracks.storage.common.buffercache.ICacheMemoryAllocator;
 import org.apache.hyracks.storage.common.buffercache.IDiskCachedPageAllocator;
 import org.apache.hyracks.storage.common.buffercache.IPageCleanerPolicy;
 import org.apache.hyracks.storage.common.buffercache.IPageReplacementStrategy;
-import org.apache.hyracks.storage.common.buffercache.context.page.DefaultBufferCachePageOperationContextProvider;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.FileMapManager;
 import org.apache.hyracks.storage.common.file.ILocalResourceRepositoryFactory;
@@ -212,7 +212,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
             boolean initialRun) throws IOException {
         ioManager = getServiceContext().getIoManager();
         IDiskCachedPageAllocator pageAllocator = DefaultDiskCachedPageAllocator.INSTANCE;
-        IBufferCacheReadContext defaultContext = DefaultBufferCachePageOperationContextProvider.DEFAULT;
+        IBufferCacheReadContext defaultContext = DefaultBufferCacheReadContextProvider.DEFAULT;
         if (isCloudDeployment()) {
             persistenceIOManager =
                     CloudManagerProvider.createIOManager(cloudProperties, ioManager, namespacePathResolver);

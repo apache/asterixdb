@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache.context.page;
+package org.apache.hyracks.storage.common.buffercache.context.read;
 
 import static org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper.EXTRA_BLOCK_PAGE_ID_OFF;
 import static org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper.FRAME_MULTIPLIER_OFF;
@@ -28,6 +28,7 @@ import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 abstract class AbstractBufferCacheReadContext implements IBufferCacheReadContext {

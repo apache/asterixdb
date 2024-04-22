@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.storage.common.buffercache.context.page;
+package org.apache.hyracks.storage.common.buffercache.context.read;
 
-final class NoStatsBufferCacheReadContext extends AbstractBufferCacheReadContext {
+final class DefaultBufferCacheReadContext extends AbstractBufferCacheReadContext {
     @Override
     public boolean isNewPage() {
         return false;
@@ -26,6 +26,6 @@ final class NoStatsBufferCacheReadContext extends AbstractBufferCacheReadContext
 
     @Override
     public boolean incrementStats() {
-        return false;
+        return true;
     }
 }

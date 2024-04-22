@@ -21,7 +21,7 @@ package org.apache.hyracks.storage.common.disk;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.context.page.IBufferCacheReadContext;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 
 /**
  * Provides the necessary {@link IBufferCache} functionalities for a sweep operation
