@@ -9,7 +9,7 @@
                 -- STREAM_PROJECT  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- HYBRID_HASH_JOIN [$$53][$$57]  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
                         -- STREAM_PROJECT  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
@@ -21,7 +21,7 @@
                                 -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                      -- BROADCAST_EXCHANGE  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
                         -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

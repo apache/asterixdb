@@ -413,9 +413,7 @@ public class JoinNode {
 
         double productJoinSels = 1.0;
         for (int idx : this.applicableJoinConditions) {
-            if (!joinConditions.get(idx).partOfComposite) {
-                productJoinSels *= joinConditions.get(idx).selectivity;
-            }
+            productJoinSels *= joinConditions.get(idx).selectivity;
         }
         joinCard = productJoinCardinality * productJoinSels;
 

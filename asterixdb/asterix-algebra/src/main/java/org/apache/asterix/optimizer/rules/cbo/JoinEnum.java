@@ -514,10 +514,24 @@ public class JoinEnum {
         for (int i = 0; i < joinConditions.size() - 1; i++) {
             for (int j = i + 1; j < joinConditions.size(); j++) {
                 if (joinConditions.get(i).datasetBits == joinConditions.get(j).datasetBits) {
+                    joinConditions.get(i).selectivity = 1.0 / smallerDatasetSize(joinConditions.get(i).datasetBits);
+                    // 1/P will be the selectivity of the composite clause
                     joinConditions.get(j).partOfComposite = true;
+                    joinConditions.get(j).selectivity = 1.0;
                 }
             }
         }
+    }
+
+    private double smallerDatasetSize(int datasetBits) {
+        double size = Cost.MAX_CARD;
+        for (JoinNode jn : this.jnArray)
+            if ((jn.datasetBits & datasetBits) > 0) {
+                if (jn.origCardinality < size) {
+                    size = jn.origCardinality;
+                }
+            }
+        return size;
     }
 
     private boolean verticesMatch(JoinCondition jc1, JoinCondition jc2) {

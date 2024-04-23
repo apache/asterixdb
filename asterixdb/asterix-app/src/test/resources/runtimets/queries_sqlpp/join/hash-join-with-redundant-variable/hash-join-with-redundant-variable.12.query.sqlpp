@@ -24,7 +24,7 @@ SET `compiler.sort.parallel` "false";
 -- To ensure that Nation's key is hash partitioned
 SET `compiler.parallelism` "-1";
 -- To disable reordering joins
-SET `compiler.cbo` "true";
+SET `compiler.forcejoinorder` "true";
 
 EXPLAIN
 SELECT n.n_nationkey, s.s_nationkey, c.c_nationkey
