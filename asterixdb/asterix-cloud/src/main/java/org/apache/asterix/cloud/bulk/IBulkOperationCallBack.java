@@ -20,8 +20,9 @@ package org.apache.asterix.cloud.bulk;
 
 import java.util.List;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
 public interface IBulkOperationCallBack {
-    void call(List<FileReference> fileReferences);
+    void call(List<FileReference> fileReferences) throws HyracksDataException;
 }

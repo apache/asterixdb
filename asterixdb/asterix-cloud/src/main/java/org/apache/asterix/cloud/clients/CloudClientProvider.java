@@ -20,7 +20,10 @@ package org.apache.asterix.cloud.clients;
 
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
+import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
+import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CloudClientProvider {
 
@@ -28,11 +31,14 @@ public class CloudClientProvider {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(CloudProperties cloudProperties) {
+    public static ICloudClient getClient(CloudProperties cloudProperties) throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
         if ("s3".equalsIgnoreCase(storageScheme)) {
             S3ClientConfig config = S3ClientConfig.of(cloudProperties);
             return new S3CloudClient(config);
+        } else if ("gcs".equalsIgnoreCase(storageScheme)) {
+            GCSClientConfig config = GCSClientConfig.of(cloudProperties);
+            return new GCSCloudClient(config);
         }
         throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
     }

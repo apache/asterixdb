@@ -31,7 +31,7 @@ public interface ICloudBufferedWriter {
      * @param length length
      * @return amount uploaded
      */
-    int upload(InputStream stream, int length);
+    int upload(InputStream stream, int length) throws HyracksDataException;
 
     /**
      * Checks whether the writer has not written anything

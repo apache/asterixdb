@@ -43,5 +43,5 @@ public interface IParallelDownloader {
     /**
      * Close the downloader and release all of its resources
      */
-    void close();
+    void close() throws HyracksDataException;
 }

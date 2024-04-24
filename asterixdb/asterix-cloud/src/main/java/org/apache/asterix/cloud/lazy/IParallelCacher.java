@@ -73,5 +73,5 @@ public interface IParallelCacher {
     /**
      * Close cacher resources
      */
-    void close();
+    void close() throws HyracksDataException;
 }

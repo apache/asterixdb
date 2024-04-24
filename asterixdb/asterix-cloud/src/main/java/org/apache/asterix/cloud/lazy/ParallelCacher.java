@@ -157,7 +157,7 @@ public final class ParallelCacher implements IParallelCacher {
     }
 
     @Override
-    public void close() {
+    public void close() throws HyracksDataException {
         downloader.close();
         LOGGER.info("Parallel cacher was closed");
     }

@@ -84,6 +84,9 @@
     <azurite.npm.install.stage>none</azurite.npm.install.stage>
     <azurite.install.stage>none</azurite.install.stage>
     <azurite.stage>none</azurite.stage>
+    <gcs.download.stage>none</gcs.download.stage>
+    <gcs.install.stage>none</gcs.install.stage>
+    <gcs.stage>none</gcs.stage>
 
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.10-SNAPSHOT</algebricks.version>
@@ -753,6 +756,22 @@
         <azurite.npm.install.stage>process-classes</azurite.npm.install.stage>
         <azurite.install.stage>generate-test-resources</azurite.install.stage>
         <azurite.stage>process-test-resources</azurite.stage>
+      </properties>
+    </profile>
+    <profile>
+      <id>gcs-tests</id>
+      <activation>
+        <os>
+          <family>unix</family>
+        </os>
+        <property>
+          <name>!skipTests</name>
+        </property>
+      </activation>
+      <properties>
+        <gcs.download.stage>process-classes</gcs.download.stage>
+        <gcs.install.stage>generate-test-resources</gcs.install.stage>
+        <gcs.stage>process-test-resources</gcs.stage>
       </properties>
     </profile>
     <profile>

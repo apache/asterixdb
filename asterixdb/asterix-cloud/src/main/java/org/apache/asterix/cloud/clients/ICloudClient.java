@@ -139,7 +139,7 @@ public interface ICloudClient {
      * @param ioManager local {@link IOManager}
      * @return an instance of a new parallel downloader
      */
-    IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager);
+    IParallelDownloader createParallelDownloader(String bucket, IOManager ioManager) throws HyracksDataException;
 
     /**
      * Produces a {@link JsonNode} that contains information about the stored objects in the cloud
@@ -153,5 +153,5 @@ public interface ICloudClient {
     /**
      * Performs any necessary closing and cleaning up
      */
-    void close();
+    void close() throws HyracksDataException;
 }

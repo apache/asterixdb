@@ -175,7 +175,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         return partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(path));
     }
 
-    private void replace() {
+    private void replace() throws HyracksDataException {
         cacher.close();
         replacer.replace();
     }

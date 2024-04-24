@@ -79,7 +79,7 @@
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="supported-adapter-format-compression">
         <output-dir compare="Text">supported-adapter-format-compression</output-dir>
-        <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [localfs, s3]</expected-error>
+        <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [gcs, localfs, s3]</expected-error>
         <expected-error>ASX1189: Unsupported writing format 'csv'. Supported formats: [json]</expected-error>
         <expected-error>ASX1096: Unknown compression scheme rar. Supported schemes are [gzip]</expected-error>
       </compilation-unit>

@@ -61,6 +61,77 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>com.googlecode.maven-download-plugin</groupId>
+        <artifactId>download-maven-plugin</artifactId>
+        <version>1.4.2</version>
+        <executions>
+          <execution>
+            <id>install-fake-gcs</id>
+            <phase>${gcs.download.stage}</phase>
+            <goals>
+              <goal>wget</goal>
+            </goals>
+            <configuration>
+              <url>https://github.com/fsouza/fake-gcs-server/releases/download/v1.48.0/fake-gcs-server_1.48.0_Linux_amd64.tar.gz</url>
+              <outputFileName>fake-gcs-server_1.48.0_Linux_amd64.tar.gz</outputFileName>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>extract-gcs</id>
+            <phase>${gcs.install.stage}</phase>
+            <configuration>
+              <target>
+                <echo message="Extracting fake-gcs-server" />
+                <mkdir dir="${project.build.directory}/fake-gcs-server" />
+                <gunzip src="${project.build.directory}/fake-gcs-server_1.48.0_Linux_amd64.tar.gz" dest="${project.build.directory}/fake-gcs-server_1.48.0_Linux_amd64.tar" />
+                <untar src="${project.build.directory}/fake-gcs-server_1.48.0_Linux_amd64.tar" dest="${project.build.directory}/fake-gcs-server" />
+                <chmod file="${project.build.directory}/fake-gcs-server/fake-gcs-server" perm="ugo+rx" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+          <id>fake-gcs-server</id>
+          <phase>${gcs.stage}</phase>
+          <goals>
+            <goal>exec</goal>
+          </goals>
+          <configuration>
+            <executable>${project.build.directory}/fake-gcs-server/fake-gcs-server</executable>
+            <workingDirectory>${project.build.directory}/fake-gcs-server</workingDirectory>
+            <arguments>
+              <argument>-port</argument>
+              <argument>4443</argument>
+              <argument>-scheme</argument>
+              <argument>http</argument>
+              <argument>-host</argument>
+              <argument>127.0.0.1</argument>
+              <argument>-log-level</argument>
+              <argument>error</argument>
+              <argument>-filesystem-root</argument>
+              <argument>${project.build.directory}/fake-gcs-server/storage</argument>
+            </arguments>
+            <async>true</async>
+          </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
