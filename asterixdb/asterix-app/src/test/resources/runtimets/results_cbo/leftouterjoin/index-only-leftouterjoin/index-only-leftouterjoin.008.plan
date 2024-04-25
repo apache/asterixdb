@@ -1,20 +1,20 @@
-distribute result [$$52] [cardinality: 3.0, op-cost: 0.0, total-cost: 25.75]
+distribute result [$$52] [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 25.75]
+  exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$52]) [cardinality: 3.0, op-cost: 0.0, total-cost: 25.75]
+    project ([$$52]) [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] [cardinality: 3.0, op-cost: 0.0, total-cost: 25.75]
+      assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
       -- ASSIGN  |PARTITIONED|
-        exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 25.75]
+        exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
         -- SORT_MERGE_EXCHANGE [$$73(ASC), $$54(ASC) ]  |PARTITIONED|
-          order (ASC, $$73) (ASC, $$54) [cardinality: 3.0, op-cost: 4.75, total-cost: 25.75]
+          order (ASC, $$73) (ASC, $$54) [cardinality: 4.0, op-cost: 8.0, total-cost: 30.0]
           -- STABLE_SORT [$$73(ASC), $$54(ASC)]  |PARTITIONED|
-            exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 21.0]
+            exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 22.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$73, $$54]) [cardinality: 3.0, op-cost: 0.0, total-cost: 21.0]
+              project ([$$73, $$54]) [cardinality: 4.0, op-cost: 0.0, total-cost: 22.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                select ($$74) [cardinality: 3.0, op-cost: 11.0, total-cost: 21.0]
+                select ($$74) [cardinality: 4.0, op-cost: 12.0, total-cost: 22.0]
                 -- STREAM_SELECT  |PARTITIONED|
                   window-aggregate [$$74] <- [win-mark-first-missing-impl($$54)] partition [$$73] order (DESC, $$54) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                   -- WINDOW_STREAM  |PARTITIONED|

@@ -1,24 +1,24 @@
-distribute result [$$31] [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+distribute result [$$31] [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+  exchange [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$31]) [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+    project ([$$31]) [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$31] <- [{"age": $$38, "name": $$39}] [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+      assign [$$31] <- [{"age": $$38, "name": $$39}] [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
       -- ASSIGN  |PARTITIONED|
-        project ([$$38, $$39]) [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+        project ([$$38, $$39]) [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 7.11, op-cost: 0.0, total-cost: 65.12]
+          exchange [cardinality: 9.33, op-cost: 0.0, total-cost: 75.06]
           -- SORT_MERGE_EXCHANGE [$$34(ASC) ]  |PARTITIONED|
-            order (ASC, $$34) [cardinality: 7.11, op-cost: 20.12, total-cost: 65.12]
+            order (ASC, $$34) [cardinality: 9.33, op-cost: 30.06, total-cost: 75.06]
             -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
-              exchange [cardinality: 7.11, op-cost: 0.0, total-cost: 45.0]
+              exchange [cardinality: 9.33, op-cost: 0.0, total-cost: 45.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$38, $$39, $$34]) [cardinality: 7.11, op-cost: 0.0, total-cost: 45.0]
+                project ([$$38, $$39, $$34]) [cardinality: 9.33, op-cost: 0.0, total-cost: 45.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 7.11, op-cost: 0.0, total-cost: 45.0]
+                  exchange [cardinality: 9.33, op-cost: 0.0, total-cost: 45.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    join (eq($$33, $$34)) [cardinality: 7.11, op-cost: 15.0, total-cost: 45.0]
+                    join (eq($$33, $$34)) [cardinality: 9.33, op-cost: 15.0, total-cost: 45.0]
                     -- HYBRID_HASH_JOIN [$$34][$$33]  |PARTITIONED|
                       exchange [cardinality: 8.0, op-cost: 8.0, total-cost: 16.0]
                       -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|

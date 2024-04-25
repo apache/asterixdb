@@ -163,12 +163,21 @@ public class Stats {
                 return productivity / card1;
             }
         } else {
-            ILogicalOperator leafInput = joinEnum.leafInputs.get(idx2 - 1); // we arbitrarily pick one side
+            ILogicalOperator leafInput;
+            LogicalVariable var;
+            // choose the smaller side sample; better results this way for sure!
+            if (card1 < card2) {
+                leafInput = joinEnum.leafInputs.get(idx1 - 1);
+                var = exprUsedVars.get(0);
+            } else {
+                leafInput = joinEnum.leafInputs.get(idx2 - 1);
+                var = exprUsedVars.get(1);
+            }
             Index index = findIndex(leafInput);
             if (index == null) {
                 return 1.0;
             }
-            List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput, exprUsedVars.get(1), index);
+            List<List<IAObject>> result = runSamplingQueryDistinct(this.optCtx, leafInput, var, index);
             if (result == null) {
                 return 1.0;
             }
