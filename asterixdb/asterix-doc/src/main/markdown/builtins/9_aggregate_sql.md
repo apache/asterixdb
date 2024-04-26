@@ -48,8 +48,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
         * or, a `missing` value.
  * Return Value:
     * a `bigint` value representing the number of non-null and non-missing items in the given collection,
-    * `null` is returned if the input is `null` or `missing`,
-    * any other non-array and non-multiset input value will cause an error.
+    * `0` is returned if the input is `null` or `missing`,
+    * `0` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -77,8 +77,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the average of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
-    * any other non-numeric value in the input collection will cause a type error.
+    * `null` is returned if the input is not an array or a multiset,
+    * any other non-numeric value in the input collection will be ignored.
 
  * Example:
 
@@ -107,8 +107,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
-    * any other non-numeric value in the input collection will cause a type error.
+    * `null` is returned if the input is not an array or a multiset,
+    * any other non-numeric value in the input collection will be ignored.
 
  * Example:
 
@@ -136,8 +136,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       type promotion order (`tinyint`-> `smallint`->`integer`->`bigint`->`float`->`double`) among numeric items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * multiple incomparable items in the input array or multiset will cause a type error,
-    * any other non-array and non-multiset input value will cause a type error.
+    * `null` is returned if there are incomparable items in the input array or multiset,
+    * `null` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -165,8 +165,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       type promotion order (`tinyint`-> `smallint`->`integer`->`bigint`->`float`->`double`) among numeric items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * multiple incomparable items in the input array or multiset will cause a type error,
-    * any other non-array and non-multiset input value will cause a type error.
+    * `null` is returned if there are incomparable items in the input array or multiset,
+    * `null` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -175,6 +175,44 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
  * The expected result is:
 
         3.4
+
+
+### array_median ###
+ * Syntax:
+
+        array_median(num_collection)
+
+ * Gets the median value of the numeric items in the given collection, ignoring null, missing, and non-numeric items.
+
+   The function starts by sorting the numeric items.
+
+     - If there is an odd number of numeric items, the function returns the item that is exactly in the middle of the range: that is, it has the same number of items before and after.
+     - If there is an even number of numeric items, the function returns the mean of the two items that are exactly in the middle of the range.
+
+ * Note: You cannot use the `DISTINCT` keyword with this function, or with the `median` aggregation pseudo-function.
+   The `median` aggregation pseudo-function does support the `FILTER` clause.
+   There is no `strict_median` function corresponding to this function.
+ * Arguments:
+    * `num_collection` could be:
+        * an `array` or `multiset` of numbers,
+        * or, a `null` value,
+        * or, a `missing` value.
+ * Clauses: When used as a window function, this function supports the [Window Partition Clause](manual.html#Window_partition_clause), but not the [Window Order Clause](manual.html#Window_order_clause) or the [Window Frame Clause](manual.html#Window_frame_clause).
+ * Return Value:
+    * a `double` value representing the median of the numeric items in the given collection,
+    * `null` is returned if the input is `null` or `missing`,
+    * `null` is returned if the given collection does not contain any numeric items,
+    * `null` is returned if the input is not an array or a multiset,
+    * any other non-numeric value in the input collection will be ignored.
+ * Example:
+
+       { "v1": array_median( [1.2, 2.3, 3.4, 0, null, missing],
+         "v2": array_median( [1.2, 2.3, 3.4, 4.5, 0, null, missing] ) };
+
+ * The expected result is:
+
+       { "v1": 1.75,
+         "v2": 2.3 }
 
 
 ### array_stddev_samp ###
@@ -193,7 +231,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the sample standard deviation of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -220,7 +258,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the population standard deviation of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -247,7 +285,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the sample variance of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -274,7 +312,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the population variance of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -301,7 +339,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the skewness of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -328,7 +366,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the kurtosis from a normal distribution of the non-null and non-missing numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if the given collection does not contain any non-null and non-missing items,
-    * any other non-array and non-multiset input value will cause a type error,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -352,7 +390,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
         * or a `missing` value.
  * Return Value:
     * a `bigint` value representing the number of items in the given collection,
-    * `null` is returned if the input is `null` or `missing`.
+    * `0` is returned if the input is `null` or `missing`,
+    * `0` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -377,7 +416,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the average of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
-    * any other non-numeric value in the input collection will cause a type error.
+    * `null` is returned if the input is not an array or a multiset,
+    * `null` is returned if there are any other non-numeric values in the input collection.
 
  * Example:
 
@@ -404,7 +444,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
-    * any other non-numeric value in the input collection will cause a type error.
+    * `null` is returned if the input is not an array or a multiset,
+    * `null` is returned if there are any other non-numeric values in the input collection.
 
  * Example:
 
@@ -431,8 +472,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       (`tinyint`-> `smallint`->`integer`->`bigint`->`float`->`double`) among numeric items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
-    * multiple incomparable items in the input array or multiset will cause a type error,
-    * any other non-array and non-multiset input value will cause a type error.
+    * `null` is returned if there are incomparable items in the input array or multiset,
+    * `null` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -460,8 +501,8 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
       (`tinyint`-> `smallint`->`integer`->`bigint`->`float`->`double`) among numeric items.
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
-    * multiple incomparable items in the input array or multiset will cause a type error,
-    * any other non-array and non-multiset input value will cause a type error.
+    * `null` is returned if there are incomparable items in the input array or multiset,
+    * `null` is returned if the input is not an array or a multiset.
 
  * Example:
 
@@ -536,6 +577,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the sample variance of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -561,6 +603,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the population variance of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -586,6 +629,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the skewness of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
@@ -611,6 +655,7 @@ Refer to [OVER Clauses](manual.html#Over_clauses) for details.
     * a `double` value representing the kurtosis from a normal distribution of the numbers in the given collection,
     * `null` is returned if the input is `null` or `missing`,
     * `null` is returned if there is a `null` or `missing` in the input collection,
+    * `null` is returned if the input is not an array or a multiset,
     * any other non-numeric value in the input collection will cause a type error.
 
  * Example:
