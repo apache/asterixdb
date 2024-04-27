@@ -51,6 +51,8 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
         DatasetUnit datasetUnit = datasets.get(datasetId);
         if (datasetUnit != null && datasetUnit.dropIndex(resourceId)) {
             datasets.remove(datasetId);
+
+            // TODO invalidate eviction plans if the disk is not pressured
         }
     }
 

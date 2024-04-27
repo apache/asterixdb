@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleRea
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 
 public class ColumnBTreeLeafFrameFactory implements ITreeIndexFrameFactory {
     private static final long serialVersionUID = 4136035898137820322L;
@@ -51,9 +52,11 @@ public class ColumnBTreeLeafFrameFactory implements ITreeIndexFrameFactory {
         return rowTupleWriterFactory;
     }
 
-    public ColumnBTreeWriteLeafFrame createWriterFrame(IColumnMetadata columnMetadata) {
+    public ColumnBTreeWriteLeafFrame createWriterFrame(IColumnMetadata columnMetadata,
+            IColumnWriteContext writeContext) {
         ITreeIndexTupleWriter rowTupleWriter = rowTupleWriterFactory.createTupleWriter();
-        AbstractColumnTupleWriter columnTupleWriter = columnTupleWriterFactory.createColumnWriter(columnMetadata);
+        AbstractColumnTupleWriter columnTupleWriter =
+                columnTupleWriterFactory.createColumnWriter(columnMetadata, writeContext);
         return new ColumnBTreeWriteLeafFrame(rowTupleWriter, columnTupleWriter);
     }
 

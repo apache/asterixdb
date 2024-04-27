@@ -403,7 +403,7 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
             }
             btree = (BTree) component.getIndex();
             if (btreeAccessors[i] == null || destroyIncompatible(component, i)) {
-                btreeAccessors[i] = createAccessor(type, btree, i);
+                btreeAccessors[i] = createAccessor(component, i);
                 rangeCursors[i] = createCursor(type, btreeAccessors[i]);
             } else {
                 // re-use
@@ -444,7 +444,8 @@ public class LSMBTreeRangeSearchCursor extends LSMIndexSearchCursor {
         return resultOfSearchCallbackProceed;
     }
 
-    protected BTreeAccessor createAccessor(LSMComponentType type, BTree btree, int index) throws HyracksDataException {
+    protected BTreeAccessor createAccessor(ILSMComponent component, int index) throws HyracksDataException {
+        BTree btree = (BTree) component.getIndex();
         return btree.createAccessor(iap);
     }
 

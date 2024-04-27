@@ -58,6 +58,11 @@ public final class ColumnManager implements IColumnManager {
     }
 
     @Override
+    public int getNumberOfPrimaryKeys() {
+        return primaryKeys.size();
+    }
+
+    @Override
     public IColumnMetadata activate() throws HyracksDataException {
         Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
         IColumnValuesWriterFactory factory = new ColumnValuesWriterFactory(multiPageOpRef);

@@ -36,6 +36,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IFIFOPageWriter;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
 import org.apache.hyracks.storage.common.buffercache.PageWriteFailureCallback;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -64,11 +65,12 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
 
     protected AbstractTreeIndexBulkLoader(float fillFactor, IPageWriteCallback callback, ITreeIndex index)
             throws HyracksDataException {
-        this(fillFactor, callback, index, index.getLeafFrameFactory().createFrame());
+        this(fillFactor, callback, index, index.getLeafFrameFactory().createFrame(),
+                DefaultBufferCacheWriteContext.INSTANCE);
     }
 
     protected AbstractTreeIndexBulkLoader(float fillFactor, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame) throws HyracksDataException {
+            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
         this.bufferCache = index.getBufferCache();
         this.freePageManager = index.getPageManager();
         this.fileId = index.getFileId();
@@ -77,7 +79,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
         interiorFrame = treeIndex.getInteriorFrameFactory().createFrame();
         metaFrame = freePageManager.createMetadataFrame();
 
-        pageWriter = bufferCache.createFIFOWriter(callback, this, DefaultBufferCacheWriteContext.INSTANCE);
+        pageWriter = bufferCache.createFIFOWriter(callback, this, writeContext);
 
         if (!treeIndex.isEmptyTree(leafFrame)) {
             throw HyracksDataException.create(ErrorCode.CANNOT_BULK_LOAD_NON_EMPTY_TREE);

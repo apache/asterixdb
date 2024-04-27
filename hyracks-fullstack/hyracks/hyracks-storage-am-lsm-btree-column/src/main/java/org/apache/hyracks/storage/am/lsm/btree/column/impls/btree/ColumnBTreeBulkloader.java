@@ -33,10 +33,12 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleReference;
 import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,6 +50,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private final ColumnBTreeWriteLeafFrame columnarFrame;
     private final AbstractColumnTupleWriter columnWriter;
     private final ISplitKey lowKey;
+    private final IColumnWriteContext columnWriteContext;
     private boolean setLowKey;
     private int tupleCount;
 
@@ -59,10 +62,11 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     private int maxTupleCount;
 
     public ColumnBTreeBulkloader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame) throws HyracksDataException {
-        super(fillFactor, verifyInput, callback, index, leafFrame);
+            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
+        super(fillFactor, verifyInput, callback, index, leafFrame, writeContext);
         columnsPages = new ArrayList<>();
         tempConfiscatedPages = new ArrayList<>();
+        columnWriteContext = (IColumnWriteContext) writeContext;
         columnarFrame = (ColumnBTreeWriteLeafFrame) leafFrame;
         columnWriter = columnarFrame.getColumnTupleWriter();
         columnWriter.init(this);
@@ -128,7 +132,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     public void end() throws HyracksDataException {
         if (tupleCount > 0) {
             splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
-            columnarFrame.flush(columnWriter, tupleCount, this, lowKey.getTuple(), splitKey.getTuple());
+            columnarFrame.flush(columnWriter, tupleCount, lowKey.getTuple(), splitKey.getTuple());
         }
         columnWriter.close();
         //We are done, return any temporary confiscated pages
@@ -152,7 +156,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         splitKey.setLeftPage(leafFrontier.pageId);
         if (tupleCount > 0) {
             //We need to flush columns to confiscate all columns pages first before calling propagateBulk
-            columnarFrame.flush(columnWriter, tupleCount, this, lowKey.getTuple(), splitKey.getTuple());
+            columnarFrame.flush(columnWriter, tupleCount, lowKey.getTuple(), splitKey.getTuple());
         }
 
         propagateBulk(1, pagesToWrite);
@@ -209,6 +213,8 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         numberOfPagesInCurrentLeafNode += numberOfPagesInPersistedColumn;
 
         columnsPages.clear();
+        // Indicate to the columnWriteContext that all columns were persisted
+        columnWriteContext.columnsPersisted();
     }
 
     @Override

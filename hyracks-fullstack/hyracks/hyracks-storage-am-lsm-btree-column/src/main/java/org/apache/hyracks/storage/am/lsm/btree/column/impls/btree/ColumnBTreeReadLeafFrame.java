@@ -45,6 +45,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         if (getTupleCount() == 0) {
             return null;
         }
+
         leftMostTuple.setFieldCount(cmp.getKeyFieldCount());
         leftMostTuple.resetByTupleOffset(buf.array(), buf.getInt(LEFT_MOST_KEY_OFFSET));
         return leftMostTuple;
@@ -55,6 +56,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         if (getTupleCount() == 0) {
             return null;
         }
+
         rightMostTuple.setFieldCount(cmp.getKeyFieldCount());
         rightMostTuple.resetByTupleOffset(buf.array(), buf.getInt(RIGHT_MOST_KEY_OFFSET));
         return rightMostTuple;
@@ -84,12 +86,20 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return columnarTupleReader.getColumnOffset(buf, columnIndex);
     }
 
-    AbstractColumnTupleReader getColumnarTupleReader() {
-        return columnarTupleReader;
+    public int getNextLeaf() {
+        return buf.getInt(NEXT_LEAF_OFFSET);
     }
 
-    int getNextLeaf() {
-        return buf.getInt(NEXT_LEAF_OFFSET);
+    public long getMegaLeafNodeLengthInBytes() {
+        return buf.getInt(MEGA_LEAF_NODE_LENGTH);
+    }
+
+    public int getMegaLeafNodeNumberOfPages() {
+        return (int) Math.ceil((double) getMegaLeafNodeLengthInBytes() / buf.capacity());
+    }
+
+    public ColumnBTreeReadLeafFrame createCopy() {
+        return new ColumnBTreeReadLeafFrame(rowTupleWriter, columnarTupleReader);
     }
 
     @Override

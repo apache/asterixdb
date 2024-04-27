@@ -35,12 +35,7 @@ public final class DefaultIndexDiskCacheManager implements IIndexDiskCacheManage
     }
 
     @Override
-    public boolean isSweepRequirePlanning() {
-        throw new IllegalStateException(NOT_SWEEPABLE_ERR_MSG);
-    }
-
-    @Override
-    public void prepareSweepPlan() {
+    public boolean prepareSweepPlan() {
         throw new IllegalStateException(NOT_SWEEPABLE_ERR_MSG);
     }
 

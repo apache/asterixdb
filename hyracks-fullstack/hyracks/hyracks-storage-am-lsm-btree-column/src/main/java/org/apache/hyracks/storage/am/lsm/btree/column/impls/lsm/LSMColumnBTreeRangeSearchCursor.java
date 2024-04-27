@@ -22,13 +22,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
+import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTree;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeRangeSearchCursor;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples.ColumnAwareDiskOnlyMultiComparator;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeRangeSearchCursor;
+import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexOperationContext;
 import org.apache.hyracks.storage.common.IIndexCursor;
@@ -52,13 +55,16 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
     }
 
     @Override
-    protected BTreeAccessor createAccessor(LSMComponentType type, BTree btree, int index) throws HyracksDataException {
-        if (type == LSMComponentType.MEMORY) {
-            return super.createAccessor(type, btree, index);
+    protected BTreeAccessor createAccessor(ILSMComponent component, int index) throws HyracksDataException {
+        if (component.getType() == LSMComponentType.MEMORY) {
+            return super.createAccessor(component, index);
         }
-        ColumnBTree columnBTree = (ColumnBTree) btree;
+
+        ColumnBTree columnBTree = (ColumnBTree) component.getIndex();
         LSMColumnBTreeOpContext columnOpCtx = (LSMColumnBTreeOpContext) opCtx;
-        return columnBTree.createAccessor(iap, index, columnOpCtx.createProjectionInfo());
+        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo();
+        IColumnReadContext context = columnOpCtx.createPageZeroContext(projectionInfo);
+        return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index, projectionInfo, context);
     }
 
     @Override

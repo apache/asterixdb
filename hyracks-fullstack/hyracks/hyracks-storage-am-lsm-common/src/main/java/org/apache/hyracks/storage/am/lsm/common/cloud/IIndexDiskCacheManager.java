@@ -39,14 +39,11 @@ public interface IIndexDiskCacheManager {
     boolean isSweepable();
 
     /**
-     * @return whether a sweep operation requires planning
-     */
-    boolean isSweepRequirePlanning();
-
-    /**
      * Prepare a sweep plan
+     *
+     * @return true if the plan determines a sweep can be performed
      */
-    void prepareSweepPlan();
+    boolean prepareSweepPlan();
 
     /**
      * Sweep an index to make space in {@link IPhysicalDrive}

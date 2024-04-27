@@ -52,6 +52,6 @@ public class FileSystemOperationDispatcherUtil {
 
     public static boolean isLinux() {
         String os = getOSName();
-        return os.contains("linux");
+        return os.toLowerCase().contains("linux");
     }
 }

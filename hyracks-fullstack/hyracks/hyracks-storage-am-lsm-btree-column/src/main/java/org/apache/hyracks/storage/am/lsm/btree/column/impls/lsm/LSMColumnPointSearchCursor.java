@@ -22,6 +22,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.btree.impls.BTree.BTreeAccessor;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreePointSearchCursor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent.LSMComponentType;
@@ -40,7 +42,8 @@ public class LSMColumnPointSearchCursor extends LSMBTreePointSearchCursor {
         }
         ColumnBTree columnBTree = (ColumnBTree) btree;
         LSMColumnBTreeOpContext columnOpCtx = (LSMColumnBTreeOpContext) opCtx;
-        return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index,
-                columnOpCtx.createProjectionInfo());
+        IColumnProjectionInfo projectionInfo = columnOpCtx.createProjectionInfo();
+        IColumnReadContext context = columnOpCtx.createPageZeroContext(projectionInfo);
+        return columnBTree.createAccessor(NoOpIndexAccessParameters.INSTANCE, index, projectionInfo, context);
     }
 }

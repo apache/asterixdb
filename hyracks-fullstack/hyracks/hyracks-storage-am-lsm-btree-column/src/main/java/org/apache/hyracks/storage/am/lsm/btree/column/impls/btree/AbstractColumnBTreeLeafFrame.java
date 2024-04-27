@@ -59,10 +59,10 @@ public abstract class AbstractColumnBTreeLeafFrame implements ITreeIndexFrame {
      * @see AbstractColumnTupleWriter#getColumnOffsetsSize()
      */
     public static final int SIZE_OF_COLUMNS_OFFSETS_OFFSET = RIGHT_MOST_KEY_OFFSET + 4;
-    //Total number of columns pages
-    public static final int NUMBER_OF_COLUMN_PAGES = SIZE_OF_COLUMNS_OFFSETS_OFFSET + 4;
-    //A flag (used in NSM to indicate small and large pages). We can reuse it as explained above
-    public static final int FLAG_OFFSET = NUMBER_OF_COLUMN_PAGES + 4;
+    // Length of the mega leaf node in bytes (including pageZero)
+    public static final int MEGA_LEAF_NODE_LENGTH = SIZE_OF_COLUMNS_OFFSETS_OFFSET + 4;
+    // A flag (used in NSM to indicate small and large pages). We can reuse it as explained above
+    public static final int FLAG_OFFSET = MEGA_LEAF_NODE_LENGTH + 4;
     public static final int NEXT_LEAF_OFFSET = FLAG_OFFSET + 1;
     public static final int HEADER_SIZE = NEXT_LEAF_OFFSET + 4;
 

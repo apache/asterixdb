@@ -160,13 +160,10 @@ public final class Sweeper implements ISweeper {
                     return;
                 }
 
-                if (diskCacheManager.isSweepRequirePlanning()) {
-                    // Manager require planning
-                    diskCacheManager.prepareSweepPlan();
+                if (diskCacheManager.prepareSweepPlan()) {
+                    // The Index sweep planner determined that a sweep can be performed. Sweep.
+                    diskCacheManager.sweep(context);
                 }
-                // Currently, we always sweep.
-                // But we in the future we can only do a planning and sweep with another request
-                diskCacheManager.sweep(context);
             } finally {
                 indexUnit.finishedSweeping();
             }

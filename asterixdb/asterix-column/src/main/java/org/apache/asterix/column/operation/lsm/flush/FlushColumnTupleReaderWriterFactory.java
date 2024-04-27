@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleRea
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 
 public class FlushColumnTupleReaderWriterFactory extends AbstractColumnTupleReaderWriterFactory {
     private static final long serialVersionUID = -9197679192729634493L;
@@ -34,7 +35,8 @@ public class FlushColumnTupleReaderWriterFactory extends AbstractColumnTupleRead
     }
 
     @Override
-    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata) {
+    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata,
+            IColumnWriteContext writeContext) {
         FlushColumnMetadata flushColumnMetadata = (FlushColumnMetadata) columnMetadata;
         if (flushColumnMetadata.getMetaType() == null) {
             //no meta

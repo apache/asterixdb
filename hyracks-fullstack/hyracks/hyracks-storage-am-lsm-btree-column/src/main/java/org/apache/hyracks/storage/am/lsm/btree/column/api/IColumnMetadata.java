@@ -34,6 +34,11 @@ public interface IColumnMetadata {
     IValueReference serializeColumnsMetadata() throws HyracksDataException;
 
     /**
+     * @return number of columns
+     */
+    int getNumberOfColumns();
+
+    /**
      * abort in case of an error. This should clean up any artifact
      */
     void abort() throws HyracksDataException;

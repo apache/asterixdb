@@ -19,12 +19,16 @@
 package org.apache.hyracks.cloud.filesystem;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileStore;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.util.StorageUtil;
@@ -35,15 +39,16 @@ import org.apache.logging.log4j.Logger;
 @ThreadSafe
 public final class PhysicalDrive implements IPhysicalDrive {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final List<File> drivePaths;
+    private final List<FileStore> drivePaths;
     private final long pressureSize;
     private final AtomicBoolean pressured;
 
     public PhysicalDrive(List<IODeviceHandle> deviceHandles, double pressureThreshold, double storagePercentage,
-            long pressureDebugSize) {
+            long pressureDebugSize) throws HyracksDataException {
         drivePaths = getDrivePaths(deviceHandles);
         pressureSize = getPressureSize(drivePaths, pressureThreshold, storagePercentage, pressureDebugSize);
-        pressured = new AtomicBoolean(getUsedSpace() <= pressureSize);
+        pressured = new AtomicBoolean();
+        computeAndCheckIsPressured();
     }
 
     @Override
@@ -64,20 +69,25 @@ public final class PhysicalDrive implements IPhysicalDrive {
     private long getUsedSpace() {
         long totalUsedSpace = 0;
         for (int i = 0; i < drivePaths.size(); i++) {
-            File device = drivePaths.get(i);
-            totalUsedSpace += device.getTotalSpace() - device.getFreeSpace();
+            FileStore device = drivePaths.get(i);
+            try {
+                totalUsedSpace += getTotalSpace(device) - getUsableSpace(device);
+            } catch (HyracksDataException e) {
+                LOGGER.warn("Cannot get used space", e);
+            }
         }
         return totalUsedSpace;
     }
 
-    private static long getPressureSize(List<File> drivePaths, double pressureThreshold, double storagePercentage,
-            long pressureDebugSize) {
+    private static long getPressureSize(List<FileStore> drivePaths, double pressureThreshold, double storagePercentage,
+            long pressureDebugSize) throws HyracksDataException {
 
         long totalCapacity = 0;
         long totalUsedSpace = 0;
-        for (File drive : drivePaths) {
-            totalCapacity += drive.getTotalSpace();
-            totalUsedSpace += drive.getTotalSpace() - drive.getFreeSpace();
+        for (FileStore drive : drivePaths) {
+            long totalSpace = getTotalSpace(drive);
+            totalCapacity += totalSpace;
+            totalUsedSpace += totalSpace - getUsableSpace(drive);
         }
 
         long allocatedCapacity = (long) (totalCapacity * storagePercentage);
@@ -92,19 +102,41 @@ public final class PhysicalDrive implements IPhysicalDrive {
         return pressureCapacity;
     }
 
-    private static List<File> getDrivePaths(List<IODeviceHandle> deviceHandles) {
-        File[] roots = File.listRoots();
-        Set<File> distinctUsedRoots = new HashSet<>();
+    private static List<FileStore> getDrivePaths(List<IODeviceHandle> deviceHandles) throws HyracksDataException {
+        Set<String> distinctDrives = new HashSet<>();
+        List<FileStore> fileStores = new ArrayList<>();
         for (IODeviceHandle handle : deviceHandles) {
-            File handlePath = handle.getMount();
-            for (File root : roots) {
-                if (handlePath.getAbsolutePath().startsWith(root.getAbsolutePath())
-                        && !distinctUsedRoots.contains(root)) {
-                    distinctUsedRoots.add(root);
-                    break;
-                }
+            FileStore fileStore = createFileStore(handle.getMount());
+            String driveName = fileStore.name();
+            if (!distinctDrives.contains(driveName)) {
+                fileStores.add(fileStore);
+                distinctDrives.add(driveName);
             }
         }
-        return new ArrayList<>(distinctUsedRoots);
+        return fileStores;
+    }
+
+    private static FileStore createFileStore(File root) throws HyracksDataException {
+        try {
+            return Files.getFileStore(root.toPath());
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private static long getTotalSpace(FileStore fileStore) throws HyracksDataException {
+        try {
+            return fileStore.getTotalSpace();
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    private static long getUsableSpace(FileStore fileStore) throws HyracksDataException {
+        try {
+            return fileStore.getUsableSpace();
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }

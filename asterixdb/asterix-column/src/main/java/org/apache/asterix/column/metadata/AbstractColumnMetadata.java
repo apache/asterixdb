@@ -61,5 +61,6 @@ public abstract class AbstractColumnMetadata implements IColumnMetadata {
         return recordFieldIndex + 1;
     }
 
+    @Override
     public abstract int getNumberOfColumns();
 }

@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnReadMultiPageOp;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.common.EnforcedIndexCursor;
 import org.apache.hyracks.storage.common.ICursorInitialState;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
@@ -41,6 +42,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         implements ITreeIndexCursor, IColumnReadMultiPageOp {
 
     protected final ColumnBTreeReadLeafFrame frame;
+    private final IColumnReadContext context;
     protected final IColumnTupleIterator frameTuple;
 
     protected IBufferCache bufferCache = null;
@@ -64,8 +66,10 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
 
     protected final IIndexCursorStats stats;
 
-    public ColumnBTreeRangeSearchCursor(ColumnBTreeReadLeafFrame frame, IIndexCursorStats stats, int index) {
+    public ColumnBTreeRangeSearchCursor(ColumnBTreeReadLeafFrame frame, IIndexCursorStats stats, int index,
+            IColumnReadContext context) {
         this.frame = frame;
+        this.context = context;
         this.frameTuple = frame.createTupleReference(index, this);
         this.reusablePredicate = new RangePredicate();
         this.stats = stats;
@@ -83,14 +87,12 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         return frameTuple;
     }
 
-    private void fetchNextLeafPage(int leafPage) throws HyracksDataException {
-        int nextLeafPage = leafPage;
+    private void fetchNextLeafPage() throws HyracksDataException {
+        int nextLeafPage;
         do {
-            ICachedPage nextLeaf = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeafPage));
+            page0 = context.pinNext(frame, bufferCache, fileId);
             stats.getPageCounter().update(1);
-            bufferCache.unpin(page0);
-            page0 = nextLeaf;
-            frame.setPage(page0);
+            context.prepareColumns(frame, bufferCache, fileId);
             frameTuple.newPage();
             setCursorPosition();
             nextLeafPage = frame.getNextLeaf();
@@ -104,7 +106,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
             frameTuple.lastTupleReached();
             nextLeafPage = frame.getNextLeaf();
             if (nextLeafPage >= 0) {
-                fetchNextLeafPage(nextLeafPage);
+                fetchNextLeafPage();
             } else {
                 return false;
             }
@@ -129,6 +131,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
         frame.setPage(page0);
         frame.setMultiComparator(originalKeyCmp);
         if (frame.getTupleCount() > 0) {
+            context.prepareColumns(frame, bufferCache, fileId);
             frameTuple.newPage();
             initCursorPosition(searchPred);
         } else {
@@ -181,9 +184,10 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
 
     protected void releasePages() throws HyracksDataException {
         //Unpin all column pages first
+        context.release(bufferCache);
         frameTuple.unpinColumnsPages();
         if (page0 != null) {
-            bufferCache.unpin(page0);
+            bufferCache.unpin(page0, context);
         }
     }
 
@@ -258,6 +262,7 @@ public class ColumnBTreeRangeSearchCursor extends EnforcedIndexCursor
     public void doClose() throws HyracksDataException {
         releasePages();
         frameTuple.close();
+        context.close(bufferCache);
         page0 = null;
         pred = null;
     }

@@ -33,6 +33,8 @@ import org.apache.hyracks.storage.am.common.impls.NodeFrontier;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteCallback;
+import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
+import org.apache.hyracks.storage.common.buffercache.context.write.DefaultBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.JSONUtil;
 import org.apache.logging.log4j.LogManager;
@@ -48,12 +50,13 @@ public class BTreeNSMBulkLoader extends AbstractTreeIndexBulkLoader {
 
     public BTreeNSMBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index)
             throws HyracksDataException {
-        this(fillFactor, verifyInput, callback, index, index.getLeafFrameFactory().createFrame());
+        this(fillFactor, verifyInput, callback, index, index.getLeafFrameFactory().createFrame(),
+                DefaultBufferCacheWriteContext.INSTANCE);
     }
 
     protected BTreeNSMBulkLoader(float fillFactor, boolean verifyInput, IPageWriteCallback callback, ITreeIndex index,
-            ITreeIndexFrame leafFrame) throws HyracksDataException {
-        super(fillFactor, callback, index, leafFrame);
+            ITreeIndexFrame leafFrame, IBufferCacheWriteContext writeContext) throws HyracksDataException {
+        super(fillFactor, callback, index, leafFrame, writeContext);
         this.verifyInput = verifyInput;
         splitKey = new BTreeSplitKey(tupleWriter.createTupleReference());
         splitKey.getTuple().setFieldCount(cmp.getKeyFieldCount());

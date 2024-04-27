@@ -23,6 +23,7 @@ import org.apache.asterix.column.operation.lsm.flush.FlushColumnTupleReaderWrite
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LoadColumnTupleReaderWriterFactory extends FlushColumnTupleReaderWriterFactory {
@@ -36,7 +37,8 @@ public class LoadColumnTupleReaderWriterFactory extends FlushColumnTupleReaderWr
     }
 
     @Override
-    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata) {
+    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata,
+            IColumnWriteContext writeContext) {
         return new LoadColumnTupleWriter((FlushColumnMetadata) columnMetadata, pageSize, maxNumberOfTuples, tolerance,
                 maxLeafNodeSize, MultiComparator.create(cmpFactories));
     }

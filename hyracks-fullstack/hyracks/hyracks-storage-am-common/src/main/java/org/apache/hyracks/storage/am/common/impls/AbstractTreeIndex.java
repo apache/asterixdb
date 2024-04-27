@@ -226,6 +226,10 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
         return cmpFactories;
     }
 
+    public int getBulkloadLeafStart() {
+        return bulkloadLeafStart;
+    }
+
     @Override
     public String toString() {
         return "{\"class\":\"" + getClass().getSimpleName() + "\",\"file\":\"" + file.getRelativePath() + "\"}";

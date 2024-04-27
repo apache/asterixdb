@@ -32,7 +32,10 @@ import org.apache.hyracks.storage.am.btree.frames.BTreeNSMLeafFrameFactory;
 import org.apache.hyracks.storage.am.common.api.IMetadataPageManagerFactory;
 import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IColumnIndexDiskCacheManager;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.NoOpColumnIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTree;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTreeLeafFrameFactory;
@@ -65,6 +68,9 @@ public class LSMColumnBTreeUtil {
             ICompressorDecompressorFactory compressorDecompressorFactory, ITypeTraits nullTypeTraits,
             INullIntrospector nullIntrospector, IColumnManagerFactory columnManagerFactory, boolean atomic)
             throws HyracksDataException {
+        // Initialize managers
+        IColumnManager columnManager = columnManagerFactory.createColumnManager();
+        IColumnIndexDiskCacheManager diskCacheManager = NoOpColumnIndexDiskCacheManager.INSTANCE;
 
         //Tuple writers
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -111,6 +117,6 @@ public class LSMColumnBTreeUtil {
                 deleteLeafFrameFactory, diskBufferCache, fileNameManager, flushComponentFactory, mergeComponentFactory,
                 bulkLoadComponentFactory, bloomFilterFalsePositiveRate, typeTraits.length, cmpFactories, mergePolicy,
                 opTracker, ioScheduler, ioOpCallbackFactory, pageWriteCallbackFactory, btreeFields, tracer,
-                columnManagerFactory.createColumnManager(), atomic);
+                columnManager, atomic, diskCacheManager);
     }
 }

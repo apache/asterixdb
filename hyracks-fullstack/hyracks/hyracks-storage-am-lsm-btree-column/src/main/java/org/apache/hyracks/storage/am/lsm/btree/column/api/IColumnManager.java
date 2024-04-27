@@ -25,6 +25,12 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
 
 public interface IColumnManager {
+
+    /**
+     * @return number of primary keys
+     */
+    int getNumberOfPrimaryKeys();
+
     /**
      * Activate the columnar manager for an empty dataset
      *

@@ -25,6 +25,8 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.storage.am.bloomfilter.impls.BloomFilter;
 import org.apache.hyracks.storage.am.btree.impls.BTree;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IColumnIndexDiskCacheManager;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTree;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeMergeOperation;
@@ -86,7 +88,11 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
             columnMetadata = lsmColumnBTree.getColumnManager().createMergeColumnMetadata(columnMetadataValue,
                     cursor.getComponentTupleList());
         }
-        IIndexBulkLoader bulkLoader = columnBTree.createBulkLoader(fillFactor, verifyInput, callback, columnMetadata);
+        int numberOfColumns = columnMetadata.getNumberOfColumns();
+        IColumnIndexDiskCacheManager diskCacheManager = lsmColumnBTree.getDiskCacheManager();
+        IColumnWriteContext writeContext = diskCacheManager.createWriteContext(numberOfColumns, operationType);
+        IIndexBulkLoader bulkLoader =
+                columnBTree.createBulkLoader(fillFactor, verifyInput, callback, columnMetadata, writeContext);
         return new LSMColumnIndexBulkloader(bulkLoader, columnMetadata, getMetadata());
     }
 }

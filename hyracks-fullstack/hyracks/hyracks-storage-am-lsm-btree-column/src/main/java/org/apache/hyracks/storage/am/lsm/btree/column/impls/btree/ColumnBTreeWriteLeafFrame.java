@@ -22,7 +22,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
-import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
 
 public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
     private final AbstractColumnTupleWriter columnTupleWriter;
@@ -41,31 +40,30 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
         buf.putInt(LEFT_MOST_KEY_OFFSET, -1);
         buf.putInt(RIGHT_MOST_KEY_OFFSET, -1);
         buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, 0);
-        buf.putInt(NUMBER_OF_COLUMN_PAGES, 0);
+        buf.putInt(MEGA_LEAF_NODE_LENGTH, 0);
         buf.put(FLAG_OFFSET, (byte) 0);
         buf.putInt(NEXT_LEAF_OFFSET, -1);
     }
 
-    void flush(AbstractColumnTupleWriter columnWriter, int numberOfTuples, IColumnWriteMultiPageOp multiPageOp,
-            ITupleReference minKey, ITupleReference maxKey) throws HyracksDataException {
-        //Prepare the space for writing the columns' information such as the primary keys
+    void flush(AbstractColumnTupleWriter columnWriter, int numberOfTuples, ITupleReference minKey,
+            ITupleReference maxKey) throws HyracksDataException {
+        // Prepare the space for writing the columns' information such as the primary keys
         buf.position(HEADER_SIZE);
-        //Write the columns' information including the columns' offsets and the primary keys
-        columnWriter.flush(buf);
+        // Flush the columns to persistence pages and write the length of the mega leaf node in pageZero
+        buf.putInt(MEGA_LEAF_NODE_LENGTH, columnWriter.flush(buf));
 
-        //Write min and max keys
+        // Write min and max keys
         int offset = buf.position();
         buf.putInt(LEFT_MOST_KEY_OFFSET, offset);
         offset += rowTupleWriter.writeTuple(minKey, buf.array(), offset);
         buf.putInt(RIGHT_MOST_KEY_OFFSET, offset);
         rowTupleWriter.writeTuple(maxKey, buf.array(), offset);
 
-        //Write page information
+        // Write page information
         int numberOfColumns = columnWriter.getNumberOfColumns();
         buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
         buf.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumns);
         buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, columnWriter.getColumnOffsetsSize());
-        buf.putInt(NUMBER_OF_COLUMN_PAGES, multiPageOp.getNumberOfPersistentBuffers());
     }
 
     public AbstractColumnTupleWriter getColumnTupleWriter() {

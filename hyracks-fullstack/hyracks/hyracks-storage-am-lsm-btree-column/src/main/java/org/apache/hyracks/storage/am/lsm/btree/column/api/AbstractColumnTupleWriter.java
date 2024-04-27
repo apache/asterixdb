@@ -84,7 +84,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
     /**
      * Flush all columns from the internal buffers to the page buffer
      *
-     * @return the allocated space used to write tuples
+     * @return total flushed length (including page zero)
      */
     public abstract int flush(ByteBuffer pageZero) throws HyracksDataException;
 

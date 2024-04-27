@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleRea
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 
 public class MergeColumnTupleReaderWriterFactory extends AbstractColumnTupleReaderWriterFactory {
     private static final long serialVersionUID = -2131401304338796428L;
@@ -34,7 +35,8 @@ public class MergeColumnTupleReaderWriterFactory extends AbstractColumnTupleRead
     }
 
     @Override
-    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata) {
+    public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata,
+            IColumnWriteContext writeContext) {
         MergeColumnWriteMetadata mergeWriteMetadata = (MergeColumnWriteMetadata) columnMetadata;
         return new MergeColumnTupleWriter(mergeWriteMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
     }

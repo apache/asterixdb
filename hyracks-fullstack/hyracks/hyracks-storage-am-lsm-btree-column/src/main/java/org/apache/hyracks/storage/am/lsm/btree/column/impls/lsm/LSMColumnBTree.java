@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnMetadata;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IColumnIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTree;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeBatchPointSearchCursor;
@@ -52,6 +53,7 @@ import org.apache.hyracks.util.trace.ITracer;
 public class LSMColumnBTree extends LSMBTree {
     private static final ICursorFactory CURSOR_FACTORY = LSMColumnBTreeSearchCursor::new;
     private final IColumnManager columnManager;
+    private final IColumnIndexDiskCacheManager diskCacheManager;
     private final ILSMDiskComponentFactory mergeComponentFactory;
     /**
      * This column metadata only used during flush and dataset bulkload operations. We cannot have more than one
@@ -70,8 +72,8 @@ public class LSMColumnBTree extends LSMBTree {
             double bloomFilterFalsePositiveRate, int fieldCount, IBinaryComparatorFactory[] cmpFactories,
             ILSMMergePolicy mergePolicy, ILSMOperationTracker opTracker, ILSMIOOperationScheduler ioScheduler,
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
-            int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic)
-            throws HyracksDataException {
+            int[] btreeFields, ITracer tracer, IColumnManager columnManager, boolean atomic,
+            IColumnIndexDiskCacheManager diskCacheManager) throws HyracksDataException {
         super(ioManager, virtualBufferCaches, interiorFrameFactory, insertLeafFrameFactory, deleteLeafFrameFactory,
                 diskBufferCache, fileManager, componentFactory, bulkloadComponentFactory, null, null, null,
                 bloomFilterFalsePositiveRate, fieldCount, cmpFactories, mergePolicy, opTracker, ioScheduler,
@@ -79,6 +81,7 @@ public class LSMColumnBTree extends LSMBTree {
                 atomic);
         this.columnManager = columnManager;
         this.mergeComponentFactory = mergeComponentFactory;
+        this.diskCacheManager = diskCacheManager;
     }
 
     @Override
@@ -90,6 +93,8 @@ public class LSMColumnBTree extends LSMBTree {
             IComponentMetadata componentMetadata = diskComponents.get(0).getMetadata();
             columnMetadata = columnManager.activate(ColumnUtil.getColumnMetadataCopy(componentMetadata));
         }
+
+        diskCacheManager.activate(columnMetadata.getNumberOfColumns(), diskComponents, diskBufferCache);
     }
 
     @Override
@@ -124,12 +129,17 @@ public class LSMColumnBTree extends LSMBTree {
     }
 
     @Override
-    protected ILSMDiskComponentFactory getMergeComponentFactory() {
+    public ILSMDiskComponentFactory getMergeComponentFactory() {
         return mergeComponentFactory;
     }
 
     @Override
     public ICursorFactory getCursorFactory() {
         return CURSOR_FACTORY;
+    }
+
+    @Override
+    public IColumnIndexDiskCacheManager getDiskCacheManager() {
+        return diskCacheManager;
     }
 }

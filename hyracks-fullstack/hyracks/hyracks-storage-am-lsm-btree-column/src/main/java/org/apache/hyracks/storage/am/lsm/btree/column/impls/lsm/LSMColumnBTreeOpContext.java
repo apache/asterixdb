@@ -28,6 +28,7 @@ import org.apache.hyracks.storage.am.common.api.IExtendedModificationOperationCa
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples.ColumnAwareMultiComparator;
 import org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil;
 import org.apache.hyracks.storage.am.lsm.btree.impls.LSMBTreeOpContext;
@@ -80,5 +81,9 @@ public class LSMColumnBTreeOpContext extends LSMBTreeOpContext {
             comparators[i] = cmpFactories[i].createBinaryComparator();
         }
         return new ColumnAwareMultiComparator(comparators);
+    }
+
+    public IColumnReadContext createPageZeroContext(IColumnProjectionInfo projectionInfo) {
+        return ((LSMColumnBTree) index).getDiskCacheManager().createReadContext(projectionInfo);
     }
 }

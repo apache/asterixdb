@@ -22,6 +22,7 @@ import java.io.FileDescriptor;
 import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 import jnr.ffi.LibraryLoader;
@@ -52,7 +53,7 @@ class LinuxFileSystemOperator implements IFileSystemOperator {
     @Override
     public int getFileDescriptor(FileChannel fileChannel) throws HyracksDataException {
         FileDescriptor fd = getField(fileChannel, "fd", FileDescriptor.class);
-        return getField(fd, "fd", int.class);
+        return getField(fd, "fd", Integer.class);
     }
 
     @Override
@@ -74,40 +75,25 @@ class LinuxFileSystemOperator implements IFileSystemOperator {
         assert offset >= 0;
         assert length > 0;
 
-        if (length < blockSize) {
-            return 0;
+        /*
+         * Punching a hole for anything less than a blockSize (usually 4KB) will not free any space. However,
+         * we have to punch a hole regardless, as readers expect certain range in the file to be either 'empty' or
+         * 'filled' and cannot be half-empty.
+         */
+        int res = libc.fallocate(fileDescriptor, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, offset, length);
+        if (res != 0) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_STATE,
+                    "Failed to punch a hole: FALLOCATE(" + res + ")");
         }
 
-        long off = offset;
-        long len = length;
-        // TODO maybe optimize for power of 2
-        if (off % blockSize != 0) {
-            long end = off + len;
-            off = (off / blockSize + 1) * blockSize;
-            len = end - off;
-
-            if (len <= 0) {
-                return 0;
-            }
-        }
-
-        len = len / blockSize * blockSize;
-
-        if (len > 0) {
-            int res = libc.fallocate(fileDescriptor, FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE, off, len);
-            if (res != 0) {
-                throw new HyracksDataException("error");
-            }
-        }
-
-        return len;
+        return length;
     }
 
     private <T> T getField(Object object, String name, Class<T> clazz) throws HyracksDataException {
         try {
             Field field = object.getClass().getDeclaredField(name);
             field.setAccessible(true);
-            return clazz.cast(field.get(field));
+            return clazz.cast(field.get(object));
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw HyracksDataException.create(e);
         }

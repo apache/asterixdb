@@ -24,6 +24,7 @@ import org.apache.hyracks.storage.am.btree.impls.RangePredicate;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrame;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleMode;
 import org.apache.hyracks.storage.am.common.ophelpers.FindTupleNoExactMatchPolicy;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.common.IIndexCursorStats;
 import org.apache.hyracks.storage.common.ISearchPredicate;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
@@ -31,8 +32,9 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 public class ColumnBTreePointSearchCursor extends ColumnBTreeRangeSearchCursor
         implements IDiskBTreeStatefulPointSearchCursor {
 
-    public ColumnBTreePointSearchCursor(ColumnBTreeReadLeafFrame frame, IIndexCursorStats stats, int index) {
-        super(frame, stats, index);
+    public ColumnBTreePointSearchCursor(ColumnBTreeReadLeafFrame frame, IIndexCursorStats stats, int index,
+            IColumnReadContext context) {
+        super(frame, stats, index, context);
     }
 
     @Override
