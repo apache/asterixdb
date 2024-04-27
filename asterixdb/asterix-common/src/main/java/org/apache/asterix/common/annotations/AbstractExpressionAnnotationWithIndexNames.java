@@ -34,4 +34,6 @@ public abstract class AbstractExpressionAnnotationWithIndexNames implements IExp
     public Collection<String> getIndexNames() {
         return indexNames;
     }
+
+    public abstract String getHintString();
 }

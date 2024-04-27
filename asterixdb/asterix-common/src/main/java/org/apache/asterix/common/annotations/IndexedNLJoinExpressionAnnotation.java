@@ -38,6 +38,10 @@ public final class IndexedNLJoinExpressionAnnotation extends AbstractExpressionA
         return new IndexedNLJoinExpressionAnnotation(indexNames);
     }
 
+    public String getHintString() {
+        return HINT_STRING;
+    }
+
     @Override
     public String toString() {
         return indexNames == null ? HINT_STRING : HINT_STRING + indexNames;

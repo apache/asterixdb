@@ -20,13 +20,16 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -73,6 +76,8 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperat
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypingContext;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
+import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 
 import com.google.common.base.Strings;
 
@@ -488,7 +493,7 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                         foundKeyField = true;
                         matchedExpressions.add(exprAndVarIdx.first);
                         hasIndexPreferences =
-                                hasIndexPreferences || accessMethod.getSecondaryIndexPreferences(optFuncExpr) != null;
+                                hasIndexPreferences || accessMethod.getSecondaryIndexAnnotation(optFuncExpr) != null;
                     }
                 }
                 if (foundKeyField) {
@@ -546,12 +551,68 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
         }
 
         if (hasIndexPreferences) {
-            Collection<Index> preferredSecondaryIndexes = fetchSecondaryIndexPreferences(accessMethod, analysisCtx);
-            if (preferredSecondaryIndexes != null) {
-                // if we have preferred indexes then remove all non-preferred indexes
-                removeNonPreferredSecondaryIndexes(analysisCtx, preferredSecondaryIndexes);
+            Map<IOptimizableFuncExpr, Set<Index>> exprAndApplicableIndexes =
+                    createExprAndApplicableIndexesMap(analysisCtx);
+            // First validate the index preference hints. Warn and remove any inapplicable hints.
+            boolean annotationRemoved =
+                    warnAndRemoveInapplicableSecondaryIndexHints(exprAndApplicableIndexes, accessMethod, context);
+            Collection<String> preferredSecondaryIndexNames =
+                    fetchPreferredSecondaryIndexNames(exprAndApplicableIndexes, accessMethod);
+            if (preferredSecondaryIndexNames != null) {
+                // If we have preferred indexes then remove all non-preferred indexes.
+                // Non preferred indexes are (applicableIndexes - preferredIndexes).
+                removeNonPreferredSecondaryIndexes(analysisCtx, preferredSecondaryIndexNames);
+            } else if (annotationRemoved && (this instanceof IntroduceJoinAccessMethodRule)) {
+                // ONE OR MORE INAPPLICABLE ANNOTATIONS HAS BEEN REMOVED AND THERE ARE NO preferredIndexes LEFT.
+                // IT IS AS IF NO HINT WAS SPECIFIED BY THE USER.
+                // THIS CODE WILL ONLY BE TRIGGERED FOR JOINS AND NOT FOR SCANS
+                // TO PRESERVE CURRENT FUNCTIONALITY IN THE ABSENCE OF HINTS.
+                //
+                // In the case of joins, we want to REMOVE all applicable indexes from consideration,
+                // so that the indexnl join will not be applicable.
+                // RBO will not pick an indexnl join and default to a hash join.
+                // CBO will enumerate all possible join methods and pick the cheapest one.
+                //
+                // In the case of scans, we DO NOT want to REMOVE any applicable indexes from consideration.
+                // RBO will default to an intersection of all applicable indexes.
+                // CBO will make a cost based selection and intersection of the chosen indexes.
+
+                // We pass in an empty list for preferredIndexNames,
+                // which means that all applicable indexes are non-preferred and will be removed from consideration.
+                removeNonPreferredSecondaryIndexes(analysisCtx, Collections.EMPTY_LIST);
             }
         }
+
+    }
+
+    // Used to keep track of applicable indexes for each expression. Since index hints
+    // are specific to an expression, it is useful to have this mapping to validate
+    // index hints against the applicable indexes for each expression.
+    private Map<IOptimizableFuncExpr, Set<Index>> createExprAndApplicableIndexesMap(
+            AccessMethodAnalysisContext analysisCtx) {
+        Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
+                analysisCtx.getIteratorForIndexExprsAndVars();
+
+        Map<IOptimizableFuncExpr, Set<Index>> exprAndApplicableIndexes = new HashMap<>();
+        while (indexExprAndVarIt.hasNext()) {
+            Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
+            Index index = indexExprAndVarEntry.getKey();
+            if (!index.isSecondaryIndex()) {
+                continue;
+            }
+            Iterator<Pair<Integer, Integer>> exprsAndVarIter = indexExprAndVarEntry.getValue().iterator();
+            while (exprsAndVarIter.hasNext()) {
+                final Pair<Integer, Integer> exprAndVarIdx = exprsAndVarIter.next();
+                final IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprAndVarIdx.first);
+                Set<Index> applicableIndexes = exprAndApplicableIndexes.get(optFuncExpr);
+                if (applicableIndexes == null) {
+                    applicableIndexes = new HashSet<>();
+                }
+                applicableIndexes.add(index);
+                exprAndApplicableIndexes.put(optFuncExpr, applicableIndexes);
+            }
+        }
+        return exprAndApplicableIndexes;
     }
 
     private boolean isMatched(IAType type1, IAType type2, boolean useListDomain) throws AlgebricksException {
@@ -567,37 +628,62 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
                 Index.getNonNullableType(type2).first.getTypeTag());
     }
 
-    private Set<Index> fetchSecondaryIndexPreferences(IAccessMethod accessMethod,
-            AccessMethodAnalysisContext analysisCtx) {
-        Set<Index> preferredSecondaryIndexes = null;
-        for (Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
-                analysisCtx.getIteratorForIndexExprsAndVars(); indexExprAndVarIt.hasNext();) {
-            Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
-            Index index = indexExprAndVarEntry.getKey();
-            if (index.isSecondaryIndex()) {
-                for (Pair<Integer, Integer> exprVarPair : indexExprAndVarEntry.getValue()) {
-                    IOptimizableFuncExpr optFuncExpr = analysisCtx.getMatchedFuncExpr(exprVarPair.first);
-                    Collection<String> preferredIndexNames = accessMethod.getSecondaryIndexPreferences(optFuncExpr);
-                    if (preferredIndexNames != null && preferredIndexNames.contains(index.getIndexName())) {
-                        if (preferredSecondaryIndexes == null) {
-                            preferredSecondaryIndexes = new HashSet<>();
-                        }
-                        preferredSecondaryIndexes.add(index);
-                        break;
-                    }
+    private boolean warnAndRemoveInapplicableSecondaryIndexHints(
+            Map<IOptimizableFuncExpr, Set<Index>> exprAndApplicableIndexes, IAccessMethod accessMethod,
+            IOptimizationContext context) {
+        boolean retVal = false;
+        for (Map.Entry<IOptimizableFuncExpr, Set<Index>> mapElement : exprAndApplicableIndexes.entrySet()) {
+            IOptimizableFuncExpr optFuncExpr = mapElement.getKey();
+            AbstractExpressionAnnotationWithIndexNames anno = accessMethod.getSecondaryIndexAnnotation(optFuncExpr);
+            Collection<String> preferredIndexNames = anno == null ? null : anno.getIndexNames();
+            Set<Index> applicableIndexes = mapElement.getValue();
+            Set<String> applicableIndexNames =
+                    applicableIndexes.stream().map(Index::getIndexName).collect(Collectors.toSet());
+            if (preferredIndexNames != null) {
+                if (!applicableIndexNames.containsAll(preferredIndexNames)) {
+                    inapplicableHintWarning(anno, optFuncExpr, context);
+                    optFuncExpr.getFuncExpr().removeAnnotation(anno.getClass());
+                    // Indicates that we removed an inapplicable hint.
+                    retVal = true;
                 }
             }
         }
-        return preferredSecondaryIndexes;
+        return retVal;
+    }
+
+    private void inapplicableHintWarning(AbstractExpressionAnnotationWithIndexNames anno,
+            IOptimizableFuncExpr optFuncExpr, IOptimizationContext context) {
+        IWarningCollector warningCollector = context.getWarningCollector();
+        if (warningCollector.shouldWarn()) {
+            warningCollector.warn(Warning.of(optFuncExpr.getFuncExpr().getSourceLocation(),
+                    org.apache.hyracks.api.exceptions.ErrorCode.INAPPLICABLE_HINT, anno.getHintString(), "ignored"));
+        }
+    }
+
+    private Collection<String> fetchPreferredSecondaryIndexNames(
+            Map<IOptimizableFuncExpr, Set<Index>> exprAndApplicableIndexes, IAccessMethod accessMethod) {
+        Collection<String> preferredSecondaryIndexNames = null;
+        for (Map.Entry<IOptimizableFuncExpr, Set<Index>> mapElement : exprAndApplicableIndexes.entrySet()) {
+            IOptimizableFuncExpr optFuncExpr = mapElement.getKey();
+            AbstractExpressionAnnotationWithIndexNames anno = accessMethod.getSecondaryIndexAnnotation(optFuncExpr);
+            Collection<String> preferredIndexNames = anno == null ? null : anno.getIndexNames();
+            if (preferredIndexNames != null) {
+                if (preferredSecondaryIndexNames == null) {
+                    preferredSecondaryIndexNames = new HashSet<>();
+                }
+                preferredSecondaryIndexNames.addAll(preferredIndexNames);
+            }
+        }
+        return preferredSecondaryIndexNames;
     }
 
     private void removeNonPreferredSecondaryIndexes(AccessMethodAnalysisContext analysisCtx,
-            Collection<Index> preferredIndexes) {
+            Collection<String> preferredIndexNames) {
         for (Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexExprAndVarIt =
                 analysisCtx.getIteratorForIndexExprsAndVars(); indexExprAndVarIt.hasNext();) {
             Map.Entry<Index, List<Pair<Integer, Integer>>> indexExprAndVarEntry = indexExprAndVarIt.next();
             Index index = indexExprAndVarEntry.getKey();
-            if (index.isSecondaryIndex() && !preferredIndexes.contains(index)) {
+            if (index.isSecondaryIndex() && !preferredIndexNames.contains(index.getIndexName())) {
                 indexExprAndVarIt.remove();
             }
         }

@@ -2923,10 +2923,10 @@ public class AccessMethodUtils {
         return ann != null && (ann.getIndexNames() == null || ann.getIndexNames().contains(index.getIndexName()));
     }
 
-    static Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr,
+    static AbstractExpressionAnnotationWithIndexNames getSecondaryIndexAnnotation(IOptimizableFuncExpr optFuncExpr,
             Class<? extends AbstractExpressionAnnotationWithIndexNames> annClass) {
         AbstractExpressionAnnotationWithIndexNames ann = optFuncExpr.getFuncExpr().getAnnotation(annClass);
-        return ann == null ? null : ann.getIndexNames();
+        return ann == null ? null : ann;
     }
 
     public static Pair<List<String>, Integer> getFieldNameSetStepsFromSubTree(IOptimizableFuncExpr optFuncExpr,

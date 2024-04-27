@@ -24,7 +24,6 @@ import static org.apache.asterix.optimizer.rules.am.AccessMethodUtils.CAST_NULL_
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1049,7 +1048,7 @@ public class BTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
+    public AbstractExpressionAnnotationWithIndexNames getSecondaryIndexAnnotation(IOptimizableFuncExpr optFuncExpr) {
         // If we are optimizing a join, check for the indexed nested-loop join hint.
         Class<? extends AbstractExpressionAnnotationWithIndexNames> annotationClass;
         if (optFuncExpr.getNumLogicalVars() == 2) {
@@ -1064,7 +1063,8 @@ public class BTreeAccessMethod implements IAccessMethod {
             // We are in the select case
             annotationClass = SecondaryIndexSearchPreferenceAnnotation.class;
         }
-        return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr, annotationClass);
+
+        return AccessMethodUtils.getSecondaryIndexAnnotation(optFuncExpr, annotationClass);
     }
 
     @Override

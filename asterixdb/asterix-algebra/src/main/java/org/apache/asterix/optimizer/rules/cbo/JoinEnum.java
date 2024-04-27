@@ -367,6 +367,9 @@ public class JoinEnum {
     }
 
     public boolean findUseIndexHint(AbstractFunctionCallExpression condition) {
+        if (condition == null) {
+            return false;
+        }
         if (condition.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
             for (int i = 0; i < condition.getArguments().size(); i++) {
                 ILogicalExpression expr = condition.getArguments().get(i).getValue();

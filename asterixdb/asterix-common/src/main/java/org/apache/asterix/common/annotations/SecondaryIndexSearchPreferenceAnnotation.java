@@ -36,6 +36,10 @@ public final class SecondaryIndexSearchPreferenceAnnotation extends AbstractExpr
         return new SecondaryIndexSearchPreferenceAnnotation(indexNames);
     }
 
+    public String getHintString() {
+        return HINT_STRING;
+    }
+
     @Override
     public String toString() {
         return HINT_STRING + indexNames;

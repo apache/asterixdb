@@ -554,7 +554,7 @@ public class IntroduceSelectAccessMethodRule extends AbstractIntroduceAccessMeth
                 fillSubTreeIndexExprs(subTree, analyzedAMs, context, false);
 
                 // Prune the access methods based on the function expression and access methods.
-                pruneIndexCandidates(analyzedAMs, context, typeEnvironment, false);
+                pruneIndexCandidates(analyzedAMs, context, typeEnvironment, checkApplicableOnly);
 
                 // Choose all indexes that will be applied.
                 chooseAllIndexes(analyzedAMs, chosenIndexes);

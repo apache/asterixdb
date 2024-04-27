@@ -20,10 +20,10 @@ package org.apache.asterix.optimizer.rules.am;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.asterix.common.annotations.AbstractExpressionAnnotationWithIndexNames;
 import org.apache.asterix.common.annotations.SecondaryIndexSearchPreferenceAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.DatasetConfig.IndexType;
@@ -391,8 +391,8 @@ public class RTreeAccessMethod implements IAccessMethod {
     }
 
     @Override
-    public Collection<String> getSecondaryIndexPreferences(IOptimizableFuncExpr optFuncExpr) {
-        return AccessMethodUtils.getSecondaryIndexPreferences(optFuncExpr,
+    public AbstractExpressionAnnotationWithIndexNames getSecondaryIndexAnnotation(IOptimizableFuncExpr optFuncExpr) {
+        return AccessMethodUtils.getSecondaryIndexAnnotation(optFuncExpr,
                 SecondaryIndexSearchPreferenceAnnotation.class);
     }
 

@@ -1279,8 +1279,19 @@ public class JoinNode {
         int nljPlan, commutativeNljPlan;
         nljPlan = commutativeNljPlan = PlanNode.NO_PLAN;
         nljPlan = buildNLJoinPlan(leftPlan, rightPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
+
+        // The indexnl hint may have been removed during applicability checking
+        // and is no longer available for a hintedNL plan.
+        if (joinEnum.findNLJoinHint(newJoinConditions) == null) {
+            return false;
+        }
         if (!joinEnum.forceJoinOrderMode || level <= joinEnum.cboFullEnumLevel) {
             commutativeNljPlan = buildNLJoinPlan(rightPlan, leftPlan, nestedLoopJoinExpr, hintNLJoin, outerJoin);
+            // The indexnl hint may have been removed during applicability checking
+            // and is no longer available for a hintedNL plan.
+            if (joinEnum.findNLJoinHint(newJoinConditions) == null) {
+                return false;
+            }
         }
 
         return handleHints(nljPlan, commutativeNljPlan, hintNLJoin, newJoinConditions);

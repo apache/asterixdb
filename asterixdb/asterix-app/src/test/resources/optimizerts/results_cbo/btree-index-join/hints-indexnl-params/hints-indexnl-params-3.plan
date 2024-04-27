@@ -1,6 +1,6 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  -- SORT_MERGE_EXCHANGE [$$37(ASC) ]  |PARTITIONED|
-    -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
+  -- SORT_MERGE_EXCHANGE [$$39(ASC) ]  |PARTITIONED|
+    -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         -- STREAM_PROJECT  |PARTITIONED|
           -- STREAM_SELECT  |PARTITIONED|
@@ -9,11 +9,11 @@
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   -- BTREE_SEARCH (test.tenk2.tenk2)  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                      -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STREAM_PROJECT  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.tenk2.idx_tenk2_1k)  |PARTITIONED|
+                              -- BTREE_SEARCH (test.tenk2.idx_tenk2_1k_2k)  |PARTITIONED|
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ASSIGN  |PARTITIONED|
