@@ -60,7 +60,7 @@ public class PartitionManagerTest {
     public void failedJobPartitionRequestTest() throws Exception {
         final NodeControllerService nc1 = integrationUtil.ncs[0];
         final NodeControllerService nc2 = integrationUtil.ncs[1];
-        final JobId failedJob = new JobId(-1);
+        final JobId failedJob = new JobId(10);
         nc2.getPartitionManager().jobCompleted(failedJob, JobStatus.FAILURE);
         final NetworkAddress localNetworkAddress = nc2.getNetworkManager().getPublicNetworkAddress();
         final InetSocketAddress nc2Address =

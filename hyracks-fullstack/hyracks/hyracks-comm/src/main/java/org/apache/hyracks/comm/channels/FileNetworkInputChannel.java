@@ -30,39 +30,30 @@ import org.apache.hyracks.api.comm.IChannelControlBlock;
 import org.apache.hyracks.api.comm.ICloseableBufferAcceptor;
 import org.apache.hyracks.api.context.IHyracksCommonContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.partitions.PartitionId;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
-public class NetworkInputChannel implements IInputChannel {
-    private static final Logger LOGGER = LogManager.getLogger();
+public class FileNetworkInputChannel implements IInputChannel {
 
-    private static final int INITIAL_MSG_FILLER = -1;
-    public static final int INITIAL_MESSAGE_SIZE = 24;
+    private static final int NUM_READ_BUFFERS = 1;
+    public static final long FILE_CHANNEL_CODE = -1;
 
     private final IChannelConnectionFactory netManager;
-
     private final SocketAddress remoteAddress;
-
-    private final PartitionId partitionId;
-
+    private final long jobId;
+    private final long fileId;
     private final Queue<ByteBuffer> fullQueue;
-
     private final int nBuffers;
-
     private IChannelControlBlock ccb;
-
     private IInputChannelMonitor monitor;
-
     private Object attachment;
 
-    public NetworkInputChannel(IChannelConnectionFactory netManager, SocketAddress remoteAddress,
-            PartitionId partitionId, int nBuffers) {
+    public FileNetworkInputChannel(IChannelConnectionFactory netManager, SocketAddress remoteAddress, long jobId,
+            long fileId) {
         this.netManager = netManager;
         this.remoteAddress = remoteAddress;
-        this.partitionId = partitionId;
-        fullQueue = new ArrayDeque<ByteBuffer>(nBuffers);
-        this.nBuffers = nBuffers;
+        this.jobId = jobId;
+        this.fileId = fileId;
+        this.fullQueue = new ArrayDeque<>(NUM_READ_BUFFERS);
+        this.nBuffers = NUM_READ_BUFFERS;
     }
 
     @Override
@@ -99,19 +90,16 @@ public class NetworkInputChannel implements IInputChannel {
             throw HyracksDataException.create(e);
         }
         ccb.getReadInterface().setFullBufferAcceptor(new ReadFullBufferAcceptor());
-        ccb.getWriteInterface().setEmptyBufferAcceptor(new WriteEmptyBufferAcceptor());
+        ccb.getWriteInterface().setEmptyBufferAcceptor(WriteEmptyBufferAcceptor.INSTANCE);
         ccb.getReadInterface().setBufferFactory(new ReadBufferFactory(nBuffers, ctx), nBuffers,
                 ctx.getInitialFrameSize());
-        ByteBuffer writeBuffer = ByteBuffer.allocate(INITIAL_MESSAGE_SIZE);
-        writeBuffer.putLong(partitionId.getJobId().getId());
-        writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
-        writeBuffer.putInt(partitionId.getSenderIndex());
-        writeBuffer.putInt(partitionId.getReceiverIndex());
-        writeBuffer.putInt(INITIAL_MSG_FILLER);
+
+        ByteBuffer writeBuffer = ByteBuffer.allocate(NetworkInputChannel.INITIAL_MESSAGE_SIZE);
+        writeBuffer.putLong(FILE_CHANNEL_CODE);
+        writeBuffer.putLong(jobId);
+        writeBuffer.putLong(fileId);
         writeBuffer.flip();
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Sending partition request: " + partitionId + " on channel: " + ccb);
-        }
+
         ccb.getWriteInterface().getFullBufferAcceptor().accept(writeBuffer);
         ccb.getWriteInterface().getFullBufferAcceptor().close();
     }
@@ -130,21 +118,24 @@ public class NetworkInputChannel implements IInputChannel {
         @Override
         public void accept(ByteBuffer buffer) {
             fullQueue.add(buffer);
-            monitor.notifyDataAvailability(NetworkInputChannel.this, 1);
+            monitor.notifyDataAvailability(FileNetworkInputChannel.this, 1);
         }
 
         @Override
         public void close() {
-            monitor.notifyEndOfStream(NetworkInputChannel.this);
+            monitor.notifyEndOfStream(FileNetworkInputChannel.this);
         }
 
         @Override
         public void error(int ecode) {
-            monitor.notifyFailure(NetworkInputChannel.this, ecode);
+            monitor.notifyFailure(FileNetworkInputChannel.this, ecode);
         }
     }
 
-    private class WriteEmptyBufferAcceptor implements IBufferAcceptor {
+    private static class WriteEmptyBufferAcceptor implements IBufferAcceptor {
+
+        static final WriteEmptyBufferAcceptor INSTANCE = new WriteEmptyBufferAcceptor();
+
         @Override
         public void accept(ByteBuffer buffer) {
             // do nothing

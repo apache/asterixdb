@@ -108,7 +108,7 @@ If omitted, all tuples are united in a single partition.
 
 The *window order clause* determines how tuples are ordered within each partition. The window function works on tuples in the order specified by this clause.
 
-This clause may be used with any [window function](builtins.html#WindowFunctions), or any [aggregate function](builtins.html#AggregateFunctions) used as a window function.
+This clause may be used with any [window function](builtins.html#WindowFunctions), and most [aggregate functions](builtins.html#AggregateFunctions) &mdash; refer to the descriptions of individual functions for more details.
 
 This clause is optional. If omitted, all tuples are considered peers, i.e. their order is tied. When tuples in the window partition are tied, each window function behaves differently.
 
@@ -130,7 +130,7 @@ This clause is optional. If omitted, all tuples are considered peers, i.e. their
 ##### WindowFrameClause
 ![](../images/diagrams/WindowFrameClause.png)
 
-The *window frame clause* defines the window frame. It can be used with all [aggregate functions](builtins.html#AggregateFunctions) and some [window functions](builtins.html#WindowFunctions) &mdash; refer to the descriptions of individual functions for more details.  It is optional and allowed only when the [window order clause](#Window_order_clause) is present.
+The *window frame clause* defines the window frame. It can be used with some [window functions](builtins.html#WindowFunctions) and most [aggregate functions](builtins.html#AggregateFunctions) &mdash; refer to the descriptions of individual functions for more details. It is optional and allowed only when the [window order clause](#Window_order_clause) is present.
 
 * If this clause is omitted and there is no [window order clause](#Window_order_clause), the window frame is the entire partition.
 

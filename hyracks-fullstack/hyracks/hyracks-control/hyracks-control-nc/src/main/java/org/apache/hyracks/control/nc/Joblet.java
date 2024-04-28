@@ -108,6 +108,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
     private final String jobStartTimeZoneId;
 
     private final long maxWarnings;
+    private final AtomicLong uniqueIds;
 
     public Joblet(NodeControllerService nodeController, DeploymentId deploymentId, JobId jobId,
             INCServiceContext serviceCtx, ActivityClusterGraph acg,
@@ -140,6 +141,7 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
         this.jobStartTime = jobStartTime;
         this.jobStartTimeZoneId = jobStartTimeZoneId;
         this.maxWarnings = acg.getMaxWarnings();
+        this.uniqueIds = new AtomicLong();
     }
 
     @Override
@@ -158,6 +160,11 @@ public class Joblet implements IHyracksJobletContext, ICounterContext {
 
     public IOperatorEnvironment getEnvironment() {
         return env;
+    }
+
+    @Override
+    public long nextUniqueId() {
+        return uniqueIds.getAndIncrement();
     }
 
     @Override

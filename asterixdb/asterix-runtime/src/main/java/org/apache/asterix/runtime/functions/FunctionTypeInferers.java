@@ -116,6 +116,9 @@ public final class FunctionTypeInferers {
         }
     };
 
+    public static final IFunctionTypeInferer MEDIAN_MEMORY =
+            (expr, fd, context, compilerProps) -> fd.setImmutableStates(compilerProps.getSortMemoryFrames());
+
     public static final IFunctionTypeInferer RECORD_MODIFY_INFERER = (expr, fd, context, compilerProps) -> {
         AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
         IAType outType = (IAType) context.getType(expr);

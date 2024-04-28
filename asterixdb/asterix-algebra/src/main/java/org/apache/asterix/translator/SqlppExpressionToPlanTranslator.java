@@ -1227,10 +1227,14 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
         boolean isWin = BuiltinFunctions.isWindowFunction(fi);
         boolean isWinAgg = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.HAS_LIST_ARG);
-        boolean prohibitOrderClause = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
-                BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE);
-        boolean prohibitFrameClause = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
-                BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE);
+        boolean prohibitOrderClause = (isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.NO_ORDER_CLAUSE))
+                || (!isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                        BuiltinFunctions.AggregateFunctionProperty.NO_ORDER_CLAUSE));
+        boolean prohibitFrameClause = (isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                BuiltinFunctions.WindowFunctionProperty.NO_FRAME_CLAUSE))
+                || (!isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
+                        BuiltinFunctions.AggregateFunctionProperty.NO_FRAME_CLAUSE));
         boolean allowRespectIgnoreNulls = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,
                 BuiltinFunctions.WindowFunctionProperty.ALLOW_RESPECT_IGNORE_NULLS);
         boolean allowFromFirstLast = isWin && BuiltinFunctions.builtinFunctionHasProperty(fi,

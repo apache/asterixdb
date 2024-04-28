@@ -31,8 +31,12 @@ import org.apache.hyracks.api.exceptions.NetException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.network.ISocketChannelFactory;
 import org.apache.hyracks.api.partitions.PartitionId;
+import org.apache.hyracks.comm.channels.FileNetworkInputChannel;
 import org.apache.hyracks.comm.channels.IChannelConnectionFactory;
+import org.apache.hyracks.comm.channels.NetworkInputChannel;
 import org.apache.hyracks.comm.channels.NetworkOutputChannel;
+import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.control.nc.partitions.PartitionFileReaderUtil;
 import org.apache.hyracks.control.nc.partitions.PartitionManager;
 import org.apache.hyracks.net.protocols.muxdemux.ChannelControlBlock;
 import org.apache.hyracks.net.protocols.muxdemux.IChannelOpenListener;
@@ -46,8 +50,6 @@ public class NetworkManager implements IChannelConnectionFactory {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MAX_CONNECTION_ATTEMPTS = 5;
-
-    static final int INITIAL_MESSAGE_SIZE = 20;
 
     private final PartitionManager partitionManager;
 
@@ -113,7 +115,8 @@ public class NetworkManager implements IChannelConnectionFactory {
         @Override
         public void channelOpened(ChannelControlBlock channel) {
             channel.getReadInterface().setFullBufferAcceptor(new InitialBufferAcceptor(channel));
-            channel.getReadInterface().getEmptyBufferAcceptor().accept(ByteBuffer.allocate(INITIAL_MESSAGE_SIZE));
+            channel.getReadInterface().getEmptyBufferAcceptor()
+                    .accept(ByteBuffer.allocate(NetworkInputChannel.INITIAL_MESSAGE_SIZE));
         }
     }
 
@@ -128,12 +131,13 @@ public class NetworkManager implements IChannelConnectionFactory {
 
         @Override
         public void accept(ByteBuffer buffer) {
-            PartitionId pid = readInitialMessage(buffer);
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("Received initial partition request: " + pid + " on channel: " + ccb);
-            }
             noc = new NetworkOutputChannel(ccb, nBuffers);
-            partitionManager.registerPartitionRequest(pid, noc);
+            long id = buffer.getLong();
+            if (id == FileNetworkInputChannel.FILE_CHANNEL_CODE) {
+                handleFileRequest(buffer);
+            } else {
+                handlePartitionRequest(buffer, id);
+            }
         }
 
         @Override
@@ -147,14 +151,35 @@ public class NetworkManager implements IChannelConnectionFactory {
                 noc.abort(ecode);
             }
         }
+
+        private void handlePartitionRequest(ByteBuffer buffer, long jid) {
+            PartitionId pid = readInitialMessage(buffer, jid);
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("Received initial partition request: " + pid + " on channel: " + ccb);
+            }
+            partitionManager.registerPartitionRequest(pid, noc);
+        }
+
+        private void handleFileRequest(ByteBuffer buffer) {
+            JobId jobId = new JobId(buffer.getLong());
+            long fileId = buffer.getLong();
+            if (partitionManager.registerFileRequest(jobId, noc)) {
+                writeFileToChannel(partitionManager.getNodeControllerService(), noc, jobId, fileId);
+            }
+        }
     }
 
-    private static PartitionId readInitialMessage(ByteBuffer buffer) {
-        JobId jobId = new JobId(buffer.getLong());
+    private static PartitionId readInitialMessage(ByteBuffer buffer, long jid) {
+        JobId jobId = new JobId(jid);
         ConnectorDescriptorId cdid = new ConnectorDescriptorId(buffer.getInt());
         int senderIndex = buffer.getInt();
         int receiverIndex = buffer.getInt();
         return new PartitionId(jobId, cdid, senderIndex, receiverIndex);
+    }
+
+    private static void writeFileToChannel(NodeControllerService ncs, NetworkOutputChannel noc, JobId jobId,
+            long fileId) {
+        PartitionFileReaderUtil.writeFileToChannel(ncs, noc, jobId, fileId);
     }
 
     public MuxDemuxPerformanceCounters getPerformanceCounters() {
