@@ -140,6 +140,7 @@ public class RecoveryTask {
                         if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
                             listener.setState(ActivityState.RECOVERING);
                             listener.doRecover(metadataProvider);
+                            listener.setRunning(metadataProvider, true);
                         }
                         LOGGER.log(level, "Recovery completed successfully");
                         return null;
