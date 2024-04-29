@@ -4009,10 +4009,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 final ClientRequest clientRequest =
                         (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
                 clientRequest.setJobId(jobId);
+                clientRequest.markCancellable();
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
+                    ensureNotCancelled(clientRequest);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4151,7 +4153,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqParams.getRequestReference().getUuid());
         if (stmtInsertUpsert.getReturnExpression() != null) {
             deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
-                    reqParams, false, stmt, clientRequest);
+                    reqParams, true, stmt, clientRequest);
         } else {
             locker.lock();
             JobId jobId = null;
@@ -4176,10 +4178,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
                 clientRequest.setJobId(jobId);
+                clientRequest.markCancellable();
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
+                    ensureNotCancelled(clientRequest);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }
@@ -4246,10 +4250,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 final ClientRequest clientRequest =
                         (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
                 clientRequest.setJobId(jobId);
+                clientRequest.markCancellable();
                 String nameBefore = Thread.currentThread().getName();
                 try {
                     Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
                     hcc.waitForCompletion(jobId);
+                    ensureNotCancelled(clientRequest);
                 } finally {
                     Thread.currentThread().setName(nameBefore);
                 }

@@ -215,6 +215,7 @@ public class GlobalTxManager implements IGlobalTxManager {
     @Override
     public void abortTransaction(JobId jobId) throws Exception {
         IGlobalTransactionContext context = getTransactionContext(jobId);
+        context.resetAcksReceived();
         if (context.getTxnStatus() == TransactionStatus.PREPARED) {
             sendJobRollbackMessages(context);
         }

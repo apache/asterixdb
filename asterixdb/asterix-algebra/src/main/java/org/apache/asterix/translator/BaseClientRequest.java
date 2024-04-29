@@ -54,9 +54,9 @@ public abstract class BaseClientRequest implements IClientRequest {
         if (complete) {
             return;
         }
-        complete();
-        state = State.CANCELLED;
         if (cancellable) {
+            complete();
+            state = State.CANCELLED;
             doCancel(appCtx);
         }
     }

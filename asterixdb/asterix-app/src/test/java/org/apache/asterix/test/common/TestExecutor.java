@@ -692,7 +692,7 @@ public class TestExecutor {
         return checkResponse(executeBasicAuthHttpRequest(method, credentials), responseCodeValidator);
     }
 
-    protected HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
+    public HttpResponse executeHttpRequest(HttpUriRequest method) throws Exception {
         // https://issues.apache.org/jira/browse/ASTERIXDB-2315
         ExecutorService executor = Executors.newSingleThreadExecutor();
         CloseableHttpClient client = HttpClients.custom().addInterceptorFirst(new PreemptiveAuthInterceptor())
@@ -933,7 +933,7 @@ public class TestExecutor {
         return false;
     }
 
-    protected List<Parameter> upsertParam(List<Parameter> params, String name, ParameterTypeEnum type, String value) {
+    public List<Parameter> upsertParam(List<Parameter> params, String name, ParameterTypeEnum type, String value) {
         boolean replaced = false;
         List<Parameter> result = new ArrayList<>();
         for (Parameter param : params) {
@@ -2983,7 +2983,7 @@ public class TestExecutor {
     }
 
     // adapted from https://stackoverflow.com/questions/2014700/preemptive-basic-authentication-with-apache-httpclient-4
-    static class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
+    public static class PreemptiveAuthInterceptor implements HttpRequestInterceptor {
 
         public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
             AuthState authState = (AuthState) context.getAttribute(HttpClientContext.TARGET_AUTH_STATE);
