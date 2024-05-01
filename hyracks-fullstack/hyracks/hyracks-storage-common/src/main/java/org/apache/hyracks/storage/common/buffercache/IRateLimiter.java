@@ -24,5 +24,5 @@ public interface IRateLimiter {
 
     void setRate(double ratePerSecond);
 
-    void request(int permits) throws HyracksDataException;
+    void request(int numOfPermits) throws HyracksDataException;
 }

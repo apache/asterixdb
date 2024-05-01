@@ -33,7 +33,7 @@ public class NoOpRateLimiter implements IRateLimiter {
     }
 
     @Override
-    public void request(int tokens) throws HyracksDataException {
+    public void request(int numOfPermits) throws HyracksDataException {
         // no op
     }
 

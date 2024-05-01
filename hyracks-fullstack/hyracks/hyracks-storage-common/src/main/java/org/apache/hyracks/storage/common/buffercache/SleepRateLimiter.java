@@ -26,7 +26,6 @@ import com.google.common.util.concurrent.RateLimiter;
 
 /**
  * A wrapper of the RateLimiter implementation from {@link RateLimiter}
- *
  */
 public class SleepRateLimiter implements IRateLimiter {
     /**
@@ -55,8 +54,8 @@ public class SleepRateLimiter implements IRateLimiter {
     }
 
     @Override
-    public void request(int permits) throws HyracksDataException {
-        rateLimiterImpl.acquire(permits);
+    public void request(int numOfPermits) throws HyracksDataException {
+        rateLimiterImpl.acquire(numOfPermits);
     }
 
 }
