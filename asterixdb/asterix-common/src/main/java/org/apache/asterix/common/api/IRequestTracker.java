@@ -81,4 +81,14 @@ public interface IRequestTracker {
      * @return the total number of requests since cluster start/restart
      */
     long getTotalNumberOfRequests();
+
+    /**
+     * increments total number of failed requests
+     */
+    void incrementFailedRequests();
+
+    /**
+     * @return the total number of failed requests
+     */
+    long getTotalNumberOfFailedRequests();
 }

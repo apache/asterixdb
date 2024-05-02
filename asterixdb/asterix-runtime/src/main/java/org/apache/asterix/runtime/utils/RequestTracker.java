@@ -39,11 +39,13 @@ public class RequestTracker implements IRequestTracker {
     private final CircularFifoQueue<IClientRequest> completedRequests;
     private final ICcApplicationContext ccAppCtx;
     private final AtomicLong numRequests;
+    private final AtomicLong numOfFailedRequests;
 
     public RequestTracker(ICcApplicationContext ccAppCtx) {
         this.ccAppCtx = ccAppCtx;
         completedRequests = new CircularFifoQueue<>(ccAppCtx.getExternalProperties().getRequestsArchiveSize());
         numRequests = new AtomicLong(0);
+        numOfFailedRequests = new AtomicLong(0);
     }
 
     @Override
@@ -119,5 +121,15 @@ public class RequestTracker implements IRequestTracker {
 
     public long getTotalNumberOfRequests() {
         return numRequests.get();
+    }
+
+    @Override
+    public void incrementFailedRequests() {
+        numOfFailedRequests.incrementAndGet();
+    }
+
+    @Override
+    public long getTotalNumberOfFailedRequests() {
+        return numOfFailedRequests.get();
     }
 }

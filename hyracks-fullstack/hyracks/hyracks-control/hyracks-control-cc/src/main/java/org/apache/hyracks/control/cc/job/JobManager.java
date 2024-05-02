@@ -30,10 +30,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
@@ -66,11 +68,19 @@ public class JobManager implements IJobManager {
     private final Map<JobId, JobRun> runMapArchive;
     private final Map<JobId, List<Exception>> runMapHistory;
     private final IJobCapacityController jobCapacityController;
+    private final AtomicLong successfulJobs;
+    private final AtomicLong totalFailedJobs;
+    private final AtomicLong totalCancelledJobs;
+    private final AtomicLong totalRejectedJobs;
     private IJobQueue jobQueue;
 
     public JobManager(CCConfig ccConfig, ClusterControllerService ccs, IJobCapacityController jobCapacityController) {
         this.ccs = ccs;
         this.jobCapacityController = jobCapacityController;
+        this.successfulJobs = new AtomicLong();
+        this.totalFailedJobs = new AtomicLong();
+        this.totalCancelledJobs = new AtomicLong();
+        this.totalRejectedJobs = new AtomicLong();
         try {
             Constructor<?> jobQueueConstructor = this.getClass().getClassLoader().loadClass(ccConfig.getJobQueueClass())
                     .getConstructor(IJobManager.class, IJobCapacityController.class);
@@ -84,7 +94,7 @@ public class JobManager implements IJobManager {
             jobQueue = new FIFOJobQueue(this, jobCapacityController);
         }
         activeRunMap = new HashMap<>();
-        runMapArchive = new LinkedHashMap<JobId, JobRun>() {
+        runMapArchive = new LinkedHashMap<>() {
             private static final long serialVersionUID = -1406441385508773629L;
 
             @Override
@@ -92,7 +102,7 @@ public class JobManager implements IJobManager {
                 return size() > ccConfig.getJobHistorySize();
             }
         };
-        runMapHistory = new LinkedHashMap<JobId, List<Exception>>() {
+        runMapHistory = new LinkedHashMap<>() {
             private static final long serialVersionUID = 7572062687032652986L;
             /** history size + 1 is for the case when history size = 0 */
             private final int allowedSize = 100 * (ccConfig.getJobHistorySize() + 1);
@@ -108,18 +118,24 @@ public class JobManager implements IJobManager {
     public void add(JobRun jobRun) throws HyracksException {
         checkJob(jobRun);
         JobSpecification job = jobRun.getJobSpecification();
-        IJobCapacityController.JobSubmissionStatus status = jobCapacityController.allocate(job);
-        CCServiceContext serviceCtx = ccs.getContext();
-        serviceCtx.notifyJobCreation(jobRun.getJobId(), job);
-        switch (status) {
-            case QUEUE:
-                queueJob(jobRun);
-                break;
-            case EXECUTE:
-                executeJob(jobRun);
-                break;
-            default:
-                throw new IllegalStateException("unknown submission status: " + status);
+        IJobCapacityController.JobSubmissionStatus status;
+        try {
+            status = jobCapacityController.allocate(job);
+            CCServiceContext serviceCtx = ccs.getContext();
+            serviceCtx.notifyJobCreation(jobRun.getJobId(), job);
+            switch (status) {
+                case QUEUE:
+                    queueJob(jobRun);
+                    break;
+                case EXECUTE:
+                    executeJob(jobRun);
+                    break;
+                default:
+                    throw new IllegalStateException("unknown submission status: " + status);
+            }
+        } catch (HyracksDataException ex) {
+            handleException(ex);
+            throw ex;
         }
     }
 
@@ -132,11 +148,13 @@ public class JobManager implements IJobManager {
             // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecyle of the job.
             // Therefore, we do not remove the job out of activeRunMap here.
             jobRun.getExecutor().cancelJob(callback);
+            incrementCancelledJobs();
             return;
         }
         // Removes a pending job.
         JobRun jobRun = jobQueue.remove(jobId);
         if (jobRun != null) {
+            incrementCancelledJobs();
             List<Exception> exceptions =
                     Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId));
             // Since the job has not been executed, we only need to update its status and lifecyle here.
@@ -219,6 +237,12 @@ public class JobManager implements IJobManager {
     @Override
     public void finalComplete(JobRun run) throws HyracksException {
         checkJob(run);
+        if (run.getPendingStatus() == JobStatus.FAILURE) {
+            incrementFailedJobs();
+        } else if (run.getPendingStatus() == JobStatus.TERMINATED) {
+            incrementSuccessfulJobs();
+        }
+
         JobId jobId = run.getJobId();
         Throwable caughtException = null;
         CCServiceContext serviceCtx = ccs.getContext();
@@ -301,6 +325,26 @@ public class JobManager implements IJobManager {
         return ccs.getCCConfig().getJobQueueCapacity();
     }
 
+    @Override
+    public long getSuccessfulJobs() {
+        return successfulJobs.get();
+    }
+
+    @Override
+    public long getTotalFailedJobs() {
+        return totalFailedJobs.get();
+    }
+
+    @Override
+    public long getTotalCancelledJobs() {
+        return totalCancelledJobs.get();
+    }
+
+    @Override
+    public long getTotalRejectedJobs() {
+        return totalRejectedJobs.get();
+    }
+
     private void pickJobsToRun() throws HyracksException {
         List<JobRun> selectedRuns = jobQueue.pull();
         for (JobRun run : selectedRuns) {
@@ -355,5 +399,32 @@ public class JobManager implements IJobManager {
     private void releaseJobCapacity(JobRun jobRun) {
         final JobSpecification job = jobRun.getJobSpecification();
         jobCapacityController.release(job);
+    }
+
+    private void handleException(HyracksException ex) {
+        if (ex.getError().isPresent()) {
+            IError error = ex.getError().get();
+            switch ((ErrorCode) error) {
+                case JOB_QUEUE_FULL:
+                case JOB_REQUIREMENTS_EXCEED_CAPACITY:
+                    incrementRejectedJobs();
+            }
+        }
+    }
+
+    private void incrementSuccessfulJobs() {
+        successfulJobs.incrementAndGet();
+    }
+
+    private void incrementFailedJobs() {
+        totalFailedJobs.incrementAndGet();
+    }
+
+    private void incrementCancelledJobs() {
+        totalCancelledJobs.incrementAndGet();
+    }
+
+    private void incrementRejectedJobs() {
+        totalRejectedJobs.incrementAndGet();
     }
 }
