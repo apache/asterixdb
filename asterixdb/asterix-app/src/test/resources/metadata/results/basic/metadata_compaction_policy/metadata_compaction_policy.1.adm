@@ -3,3 +3,4 @@
 { "DataverseName": "Metadata", "CompactionPolicy": "correlated-prefix", "Classname": "org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory" }
 { "DataverseName": "Metadata", "CompactionPolicy": "no-merge", "Classname": "org.apache.hyracks.storage.am.lsm.common.impls.NoMergePolicyFactory" }
 { "DataverseName": "Metadata", "CompactionPolicy": "prefix", "Classname": "org.apache.hyracks.storage.am.lsm.common.impls.PrefixMergePolicyFactory" }
+{ "DataverseName": "Metadata", "CompactionPolicy": "size-bounded-concurrent", "Classname": "org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicyFactory" }

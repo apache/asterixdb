@@ -69,7 +69,8 @@ public class StorageProperties extends AbstractProperties {
         STORAGE_COLUMN_MAX_LEAF_NODE_SIZE(INTEGER_BYTE_UNIT, StorageUtil.getIntSizeInBytes(10, MEGABYTE)),
         STORAGE_FORMAT(STRING, "row"),
         STORAGE_PARTITIONING(STRING, "dynamic"),
-        STORAGE_PARTITIONS_COUNT(INTEGER, 8);
+        STORAGE_PARTITIONS_COUNT(INTEGER, 8),
+        STORAGE_MAX_COMPONENT_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, StorageUtil.StorageUnit.TERABYTE));
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -159,6 +160,8 @@ public class StorageProperties extends AbstractProperties {
                 case STORAGE_PARTITIONS_COUNT:
                     return "The number of storage partitions to use for static partitioning. This value should not be"
                             + " changed after any dataset has been created";
+                case STORAGE_MAX_COMPONENT_SIZE:
+                    return "The resultant disk component after a merge must not exceed the specified maximum size.";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -318,5 +321,9 @@ public class StorageProperties extends AbstractProperties {
 
     public int getStoragePartitionsCount() {
         return accessor.getInt(Option.STORAGE_PARTITIONS_COUNT);
+    }
+
+    public long getStorageMaxComponentSize() {
+        return accessor.getLong(Option.STORAGE_MAX_COMPONENT_SIZE);
     }
 }

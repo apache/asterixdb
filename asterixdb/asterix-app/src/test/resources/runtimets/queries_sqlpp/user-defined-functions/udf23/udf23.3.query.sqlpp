@@ -25,7 +25,20 @@
 use test;
 
 
-select element l
+select   l.DatabaseName,
+         l.DataverseName,
+         l.DatasetName,
+         l.DatatypeDataverseName,
+         l.DatatypeName,
+         l.DatasetType,
+         l.GroupName,
+         l.InternalDetails,
+         l.`Hints`,
+         l.Timestamp,
+         l.DatasetId,
+         l.PendingOp,
+         l.DatatypeDatabaseName,
+         l.DatasetFormat
 from  `Metadata`.`Dataset` as l
 where (l.DataverseName = 'Metadata')
 order by l.DatasetName

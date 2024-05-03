@@ -1,7 +1,76 @@
 DataverseUse test
 Query:
-SELECT ELEMENT [
-Variable [ Name=$l ]
+SELECT [
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatabaseName
+]
+DatabaseName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DataverseName
+]
+DataverseName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatasetName
+]
+DatasetName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatatypeDataverseName
+]
+DatatypeDataverseName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatatypeName
+]
+DatatypeName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatasetType
+]
+DatasetType
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=GroupName
+]
+GroupName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=InternalDetails
+]
+InternalDetails
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=Hints
+]
+Hints
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=Timestamp
+]
+Timestamp
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatasetId
+]
+DatasetId
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=PendingOp
+]
+PendingOp
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatatypeDatabaseName
+]
+DatatypeDatabaseName
+FieldAccessor [
+  Variable [ Name=$l ]
+  Field=DatasetFormat
+]
+DatasetFormat
 ]
 FROM [  FunctionCall asterix.dataset@1[
     LiteralExpr [STRING] [Metadata.Dataset]

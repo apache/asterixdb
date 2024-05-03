@@ -32,16 +32,6 @@ FieldAccessor [
 GroupName
 FieldAccessor [
   Variable [ Name=$l ]
-  Field=CompactionPolicy
-]
-CompactionPolicy
-FieldAccessor [
-  Variable [ Name=$l ]
-  Field=CompactionPolicyProperties
-]
-CompactionPolicyProperties
-FieldAccessor [
-  Variable [ Name=$l ]
   Field=InternalDetails
 ]
 InternalDetails

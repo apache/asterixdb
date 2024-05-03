@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.asterix.common.api.ILSMComponentIdGeneratorFactory;
 import org.apache.asterix.common.api.INamespacePathResolver;
@@ -43,6 +44,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactor
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
+import org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicyFactory;
 import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.adapter.factory.GenericAdapterFactory;
@@ -285,7 +287,8 @@ public class MetadataBootstrap {
             throws AlgebricksException {
         String[] builtInCompactionPolicyClassNames = new String[] { ConstantMergePolicyFactory.class.getName(),
                 PrefixMergePolicyFactory.class.getName(), ConcurrentMergePolicyFactory.class.getName(),
-                NoMergePolicyFactory.class.getName(), CorrelatedPrefixMergePolicyFactory.class.getName() };
+                NoMergePolicyFactory.class.getName(), CorrelatedPrefixMergePolicyFactory.class.getName(),
+                SizeBoundedConcurrentMergePolicyFactory.class.getName() };
         for (String policyClassName : builtInCompactionPolicyClassNames) {
             CompactionPolicy compactionPolicy = getCompactionPolicyEntity(policyClassName);
             MetadataManager.INSTANCE.addCompactionPolicy(mdTxnCtx, compactionPolicy);
@@ -303,6 +306,13 @@ public class MetadataBootstrap {
         if (MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
                 MetadataConstants.METADATA_DATAVERSE_NAME, ConcurrentMergePolicyFactory.NAME) == null) {
             CompactionPolicy compactionPolicy = getCompactionPolicyEntity(ConcurrentMergePolicyFactory.class.getName());
+            MetadataManager.INSTANCE.addCompactionPolicy(mdTxnCtx, compactionPolicy);
+        }
+
+        if (MetadataManager.INSTANCE.getCompactionPolicy(mdTxnCtx, MetadataConstants.SYSTEM_DATABASE,
+                MetadataConstants.METADATA_DATAVERSE_NAME, SizeBoundedConcurrentMergePolicyFactory.NAME) == null) {
+            CompactionPolicy compactionPolicy =
+                    getCompactionPolicyEntity(SizeBoundedConcurrentMergePolicyFactory.class.getName());
             MetadataManager.INSTANCE.addCompactionPolicy(mdTxnCtx, compactionPolicy);
         }
     }
@@ -436,15 +446,18 @@ public class MetadataBootstrap {
         if (createMetadataDataset) {
             final double bloomFilterFalsePositiveRate =
                     appContext.getStorageProperties().getBloomFilterFalsePositiveRate();
+            Map<String, String> defaultCompactionPolicyProperties =
+                    StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES;
+
             LSMBTreeLocalResourceFactory lsmBtreeFactory =
                     new LSMBTreeLocalResourceFactory(storageComponentProvider.getStorageManager(), typeTraits,
                             cmpFactories, null, null, null, opTrackerFactory, ioOpCallbackFactory,
                             pageWriteCallbackFactory, storageComponentProvider.getMetadataPageManagerFactory(),
                             new AsterixVirtualBufferCacheProvider(datasetId),
                             storageComponentProvider.getIoOperationSchedulerProvider(),
-                            appContext.getMetadataMergePolicyFactory(),
-                            StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, true, bloomFilterKeyFields,
-                            bloomFilterFalsePositiveRate, true, null, NoOpCompressorDecompressorFactory.INSTANCE, true,
+                            appContext.getMetadataMergePolicyFactory(), defaultCompactionPolicyProperties, true,
+                            bloomFilterKeyFields, bloomFilterFalsePositiveRate, true, null,
+                            NoOpCompressorDecompressorFactory.INSTANCE, true,
                             TypeTraitProvider.INSTANCE.getTypeTrait(BuiltinType.ANULL), NullIntrospector.INSTANCE,
                             false, appContext.isCloudDeployment());
             DatasetLocalResourceFactory dsLocalResourceFactory =

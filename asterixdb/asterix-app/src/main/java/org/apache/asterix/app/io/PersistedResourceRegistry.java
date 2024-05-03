@@ -35,6 +35,7 @@ import org.apache.asterix.common.ioopcallbacks.AtomicLSMIndexIOOperationCallback
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.library.LibraryDescriptor;
+import org.apache.asterix.common.storage.SizeBoundedConcurrentMergePolicyFactory;
 import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.dataflow.data.common.AListElementTokenFactory;
 import org.apache.asterix.dataflow.data.common.AOrderedListBinaryTokenizerFactory;
@@ -165,6 +166,7 @@ public class PersistedResourceRegistry implements IPersistedResourceRegistry {
         registeredClasses.put("NoMergePolicyFactory", NoMergePolicyFactory.class);
         registeredClasses.put("PrefixMergePolicyFactory", PrefixMergePolicyFactory.class);
         registeredClasses.put("ConcurrentMergePolicyFactory", ConcurrentMergePolicyFactory.class);
+        registeredClasses.put("SizeBoundedConcurrentMergePolicy", SizeBoundedConcurrentMergePolicyFactory.class);
         registeredClasses.put("ConstantMergePolicyFactory", ConstantMergePolicyFactory.class);
         registeredClasses.put("CorrelatedPrefixMergePolicyFactory", CorrelatedPrefixMergePolicyFactory.class);
 

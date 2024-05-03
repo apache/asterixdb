@@ -22,6 +22,19 @@
  * Date         : Sep 17 2012
  */
 
-SELECT VALUE ds
-FROM Metadata.`Dataset` ds
-WHERE ds.DataverseName='test' and ds.DatasetName='t1';
+SELECT l.DataverseName,
+        l.DatasetName,
+        l.DatatypeDataverseName,
+        l.DatatypeName,
+        l.DatasetType,
+        l.GroupName,
+        l.ExternalDetails,
+        l.InternalDetails,
+        l.`Hints`,
+        l.Timestamp,
+        l.DatasetId,
+        l.PendingOp,
+        l.BlockLevelStorageCompression,
+        l.DatasetFormat
+FROM Metadata.`Dataset` l
+WHERE l.DataverseName='test' and l.DatasetName='t1';
