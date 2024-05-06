@@ -67,6 +67,10 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
         return outColumns;
     }
 
+    public boolean isFlushFramesRapidly() {
+        return flushFramesRapidly;
+    }
+
     public IScalarEvaluatorFactory[] getEvalFactories() {
         return evalFactories;
     }
