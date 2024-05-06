@@ -65,7 +65,7 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
-    protected void onOpen(CloudFileHandle fileHandle, FileReadWriteMode rwMode, FileSyncMode syncMode) {
+    protected void onOpen(CloudFileHandle fileHandle) {
         // NoOp
     }
 

@@ -35,8 +35,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.cloud.CloudResettableInputStream;
+import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfiler;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
@@ -69,7 +72,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @ThreadSafe
-public class S3CloudClient implements ICloudClient {
+public final class S3CloudClient implements ICloudClient {
     private final S3ClientConfig config;
     private final S3Client s3Client;
     private final IRequestProfiler profiler;
@@ -90,8 +93,14 @@ public class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public ICloudBufferedWriter createBufferedWriter(String bucket, String path) {
-        return new S3BufferedWriter(s3Client, profiler, bucket, path);
+    public int getWriteBufferSize() {
+        return S3ClientConfig.WRITE_BUFFER_SIZE;
+    }
+
+    @Override
+    public ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
+        ICloudBufferedWriter bufferedWriter = new S3BufferedWriter(s3Client, profiler, bucket, path);
+        return new CloudResettableInputStream(bufferedWriter, bufferProvider);
     }
 
     @Override

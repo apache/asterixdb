@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud.gcs;
 
-import org.apache.asterix.cloud.LSMTest;
+import org.apache.asterix.cloud.AbstractLSMTest;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.junit.AfterClass;
@@ -31,7 +31,7 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageClass;
 import com.google.cloud.storage.StorageOptions;
 
-public class LSMGCSTest extends LSMTest {
+public class LSMGCSTest extends AbstractLSMTest {
     private static Storage client;
     private static final int MOCK_SERVER_PORT = 4443;
     private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;

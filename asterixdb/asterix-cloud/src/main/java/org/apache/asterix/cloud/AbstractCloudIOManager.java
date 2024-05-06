@@ -34,6 +34,7 @@ import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
 import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.util.CloudFileUtil;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
@@ -71,7 +72,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         this.bucket = cloudProperties.getStorageBucket();
         cloudClient = CloudClientProvider.getClient(cloudProperties);
         int numOfThreads = getIODevices().size() * getIOParallelism();
-        writeBufferProvider = new WriteBufferProvider(numOfThreads);
+        writeBufferProvider = new WriteBufferProvider(numOfThreads, cloudClient.getWriteBufferSize());
         partitions = new HashSet<>();
         partitionPaths = new ArrayList<>();
         this.localIoManager = ioManager;
@@ -165,8 +166,9 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public final IFileHandle open(FileReference fileRef, FileReadWriteMode rwMode, FileSyncMode syncMode)
             throws HyracksDataException {
-        CloudFileHandle fHandle = new CloudFileHandle(cloudClient, bucket, fileRef, writeBufferProvider);
-        onOpen(fHandle, rwMode, syncMode);
+        ICloudWriter cloudWriter = cloudClient.createdWriter(bucket, fileRef.getRelativePath(), writeBufferProvider);
+        CloudFileHandle fHandle = new CloudFileHandle(fileRef, cloudWriter);
+        onOpen(fHandle);
         try {
             fHandle.open(rwMode, syncMode);
         } catch (IOException e) {
@@ -180,18 +182,17 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      *
      * @param fileHandle file to open
      */
-    protected abstract void onOpen(CloudFileHandle fileHandle, FileReadWriteMode rwMode, FileSyncMode syncMode)
-            throws HyracksDataException;
+    protected abstract void onOpen(CloudFileHandle fileHandle) throws HyracksDataException;
 
     @Override
     public final long doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray)
             throws HyracksDataException {
         long writtenBytes = localIoManager.doSyncWrite(fHandle, offset, dataArray);
-        CloudResettableInputStream inputStream = ((CloudFileHandle) fHandle).getInputStream();
+        ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
         try {
-            inputStream.write(dataArray[0], dataArray[1]);
+            cloudWriter.write(dataArray[0], dataArray[1]);
         } catch (HyracksDataException e) {
-            inputStream.abort();
+            cloudWriter.abort();
             throw e;
         }
         return writtenBytes;
@@ -200,11 +201,11 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public final int doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer dataArray) throws HyracksDataException {
         int writtenBytes = localIoManager.doSyncWrite(fHandle, offset, dataArray);
-        CloudResettableInputStream inputStream = ((CloudFileHandle) fHandle).getInputStream();
+        ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
         try {
-            inputStream.write(dataArray);
+            cloudWriter.write(dataArray);
         } catch (HyracksDataException e) {
-            inputStream.abort();
+            cloudWriter.abort();
             throw e;
         }
         return writtenBytes;
@@ -231,16 +232,16 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         if (metadata) {
             // only finish writing if metadata == true to prevent write limiter from finishing the stream and
             // completing the upload.
-            CloudResettableInputStream stream = ((CloudFileHandle) fileHandle).getInputStream();
+            ICloudWriter cloudWriter = ((CloudFileHandle) fileHandle).getCloudWriter();
             try {
-                stream.finish();
+                cloudWriter.finish();
             } catch (HyracksDataException e) {
                 savedEx = e;
             }
 
             if (savedEx != null) {
                 try {
-                    stream.abort();
+                    cloudWriter.abort();
                 } catch (HyracksDataException e) {
                     savedEx.addSuppressed(e);
                 }
@@ -286,7 +287,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     /**
      * Writes the bytes to the specified key in the bucket
      *
-     * @param key the key where the bytes will be written
+     * @param key   the key where the bytes will be written
      * @param bytes the bytes to write
      */
     public final void put(String key, byte[] bytes) {

@@ -32,8 +32,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
+import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfiler;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
@@ -60,7 +61,6 @@ import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 
 public class GCSCloudClient implements ICloudClient {
-
     private final Storage gcsClient;
     private final GCSClientConfig config;
     private final IRequestProfiler profiler;
@@ -80,18 +80,14 @@ public class GCSCloudClient implements ICloudClient {
         this(config, buildClient(config));
     }
 
-    private static Storage buildClient(GCSClientConfig config) throws HyracksDataException {
-        StorageOptions.Builder builder = StorageOptions.newBuilder().setCredentials(config.createCredentialsProvider());
-
-        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
-            builder.setHost(config.getEndpoint());
-        }
-        return builder.build().getService();
+    @Override
+    public int getWriteBufferSize() {
+        return GCSClientConfig.WRITE_BUFFER_SIZE;
     }
 
     @Override
-    public ICloudBufferedWriter createBufferedWriter(String bucket, String path) {
-        return new GCSBufferedWriter(bucket, path, gcsClient, profiler);
+    public ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
+        return new GCSWriter(bucket, path, gcsClient, profiler);
     }
 
     @Override
@@ -115,12 +111,10 @@ public class GCSCloudClient implements ICloudClient {
         BlobId blobId = BlobId.of(bucket, path);
         long readTo = offset + buffer.remaining();
         int totalRead = 0;
-        int read = 0;
         try (ReadChannel from = gcsClient.reader(blobId).limit(readTo)) {
             while (buffer.remaining() > 0) {
                 from.seek(offset + totalRead);
-                read = from.read(buffer);
-                totalRead += read;
+                totalRead += from.read(buffer);
             }
         } catch (IOException | StorageException ex) {
             throw HyracksDataException.create(ex);
@@ -247,5 +241,14 @@ public class GCSCloudClient implements ICloudClient {
         } catch (Exception ex) {
             throw HyracksDataException.create(ex);
         }
+    }
+
+    private static Storage buildClient(GCSClientConfig config) throws HyracksDataException {
+        StorageOptions.Builder builder = StorageOptions.newBuilder().setCredentials(config.createCredentialsProvider());
+
+        if (config.getEndpoint() != null && !config.getEndpoint().isEmpty()) {
+            builder.setHost(config.getEndpoint());
+        }
+        return builder.build().getService();
     }
 }

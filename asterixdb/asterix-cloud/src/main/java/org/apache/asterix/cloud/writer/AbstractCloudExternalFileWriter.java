@@ -21,11 +21,10 @@ package org.apache.asterix.cloud.writer;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import org.apache.asterix.cloud.CloudOutputStream;
-import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.WriterSingleBufferProvider;
-import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
@@ -46,7 +45,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     private final IWarningCollector warningCollector;
     private final SourceLocation pathSourceLocation;
     private final IWriteBufferProvider bufferProvider;
-    private ICloudBufferedWriter bufferedWriter;
+    private ICloudWriter cloudWriter;
 
     AbstractCloudExternalFileWriter(IExternalPrinter printer, ICloudClient cloudClient, String bucket,
             boolean partitionedPath, IWarningCollector warningCollector, SourceLocation pathSourceLocation) {
@@ -56,7 +55,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
         this.partitionedPath = partitionedPath;
         this.warningCollector = warningCollector;
         this.pathSourceLocation = pathSourceLocation;
-        bufferProvider = new WriterSingleBufferProvider();
+        bufferProvider = new WriterSingleBufferProvider(cloudClient.getWriteBufferSize());
     }
 
     @Override
@@ -82,10 +81,8 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             return false;
         }
 
-        bufferedWriter = cloudClient.createBufferedWriter(bucket, fullPath);
-        CloudResettableInputStream inputStream = new CloudResettableInputStream(bufferedWriter, bufferProvider);
-
-        CloudOutputStream outputStream = new CloudOutputStream(inputStream);
+        cloudWriter = cloudClient.createdWriter(bucket, fullPath, bufferProvider);
+        CloudOutputStream outputStream = new CloudOutputStream(cloudWriter);
         printer.newStream(outputStream);
 
         return true;
@@ -108,8 +105,8 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
     @Override
     public final void abort() throws HyracksDataException {
         try {
-            if (bufferedWriter != null) {
-                bufferedWriter.abort();
+            if (cloudWriter != null) {
+                cloudWriter.abort();
             }
             printer.close();
         } catch (HyracksDataException e) {

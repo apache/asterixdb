@@ -26,6 +26,8 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CloudClientProvider {
+    private static final String S3 = "s3";
+    private static final String GCS = "gcs";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
@@ -33,10 +35,10 @@ public class CloudClientProvider {
 
     public static ICloudClient getClient(CloudProperties cloudProperties) throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
-        if ("s3".equalsIgnoreCase(storageScheme)) {
+        if (S3.equalsIgnoreCase(storageScheme)) {
             S3ClientConfig config = S3ClientConfig.of(cloudProperties);
             return new S3CloudClient(config);
-        } else if ("gcs".equalsIgnoreCase(storageScheme)) {
+        } else if (GCS.equalsIgnoreCase(storageScheme)) {
             GCSClientConfig config = GCSClientConfig.of(cloudProperties);
             return new GCSCloudClient(config);
         }

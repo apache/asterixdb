@@ -27,7 +27,6 @@ import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 /**
@@ -50,8 +49,7 @@ public class LocalAccessor extends AbstractLazyAccessor {
     }
 
     @Override
-    public void doOnOpen(CloudFileHandle fileHandle, IIOManager.FileReadWriteMode rwMode,
-            IIOManager.FileSyncMode syncMode) throws HyracksDataException {
+    public void doOnOpen(CloudFileHandle fileHandle) throws HyracksDataException {
         // NoOp
     }
 

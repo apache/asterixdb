@@ -30,7 +30,6 @@ import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -70,8 +69,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
     }
 
     @Override
-    public void doOnOpen(CloudFileHandle fileHandle, IIOManager.FileReadWriteMode rwMode,
-            IIOManager.FileSyncMode syncMode) throws HyracksDataException {
+    public void doOnOpen(CloudFileHandle fileHandle) throws HyracksDataException {
         FileReference fileRef = fileHandle.getFileReference();
         if (!localIoManager.exists(fileRef) && cloudClient.exists(bucket, fileRef.getRelativePath())) {
             if (cacher.downloadData(fileRef)) {

@@ -25,12 +25,14 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.util.StorageUtil;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.NoCredentials;
 
 public class GCSClientConfig {
+    public static final int WRITE_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(1, StorageUtil.StorageUnit.MEGABYTE);
     // The maximum number of files that can be deleted (GCS restriction): https://cloud.google.com/storage/quotas#json-requests
     static final int DELETE_BATCH_SIZE = 100;
     private final String region;

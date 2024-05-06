@@ -136,9 +136,8 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
-    protected void onOpen(CloudFileHandle fileHandle, FileReadWriteMode rwMode, FileSyncMode syncMode)
-            throws HyracksDataException {
-        accessor.doOnOpen(fileHandle, rwMode, syncMode);
+    protected void onOpen(CloudFileHandle fileHandle) throws HyracksDataException {
+        accessor.doOnOpen(fileHandle);
     }
 
     /*

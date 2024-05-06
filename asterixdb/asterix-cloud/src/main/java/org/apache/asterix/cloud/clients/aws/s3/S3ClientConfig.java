@@ -22,12 +22,14 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.hyracks.util.StorageUtil;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 
 public final class S3ClientConfig {
+    static final int WRITE_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
     // The maximum number of file that can be deleted (AWS restriction)
     static final int DELETE_BATCH_SIZE = 1000;
     private final String region;

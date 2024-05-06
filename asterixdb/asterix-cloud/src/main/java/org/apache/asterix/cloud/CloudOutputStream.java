@@ -21,29 +21,31 @@ package org.apache.asterix.cloud;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public final class CloudOutputStream extends OutputStream {
-    private final CloudResettableInputStream inputStream;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 
-    public CloudOutputStream(CloudResettableInputStream inputStream) {
-        this.inputStream = inputStream;
+public final class CloudOutputStream extends OutputStream {
+    private final ICloudWriter cloudWriter;
+
+    public CloudOutputStream(ICloudWriter cloudWriter) {
+        this.cloudWriter = cloudWriter;
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
-        inputStream.write(b, off, len);
+        cloudWriter.write(b, off, len);
     }
 
     @Override
     public void write(int b) throws IOException {
-        inputStream.write(b);
+        cloudWriter.write(b);
     }
 
     @Override
     public void close() throws IOException {
-        inputStream.finish();
+        cloudWriter.finish();
     }
 
     public void abort() throws IOException {
-        inputStream.abort();
+        cloudWriter.abort();
     }
 }

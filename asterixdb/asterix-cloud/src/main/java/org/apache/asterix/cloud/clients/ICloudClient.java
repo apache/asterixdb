@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -35,15 +36,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Interface containing methods to perform IO operation on the Cloud Storage
  */
 public interface ICloudClient {
+    /**
+     * @return write buffer size
+     */
+    int getWriteBufferSize();
 
     /**
      * Creates a cloud buffered writer
      *
-     * @param bucket bucket to write to
-     * @param path   path to write to
-     * @return buffered writer
+     * @param bucket         bucket to write to
+     * @param path           path to write to
+     * @param bufferProvider buffer provider
+     * @return cloud writer
      */
-    ICloudBufferedWriter createBufferedWriter(String bucket, String path);
+    ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider);
 
     /**
      * Lists objects at the specified bucket and path, and applies the file name filter on the returned objects

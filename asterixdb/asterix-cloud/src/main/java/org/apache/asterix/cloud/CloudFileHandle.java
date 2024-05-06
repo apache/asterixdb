@@ -20,20 +20,17 @@ package org.apache.asterix.cloud;
 
 import java.io.IOException;
 
-import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
-import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.control.nc.io.FileHandle;
 
 public class CloudFileHandle extends FileHandle {
-    private final CloudResettableInputStream inputStream;
+    private final ICloudWriter cloudWriter;
 
-    public CloudFileHandle(ICloudClient cloudClient, String bucket, FileReference fileRef,
-            IWriteBufferProvider bufferProvider) {
+    public CloudFileHandle(FileReference fileRef, ICloudWriter cloudWriter) {
         super(fileRef);
-        ICloudBufferedWriter bufferedWriter = cloudClient.createBufferedWriter(bucket, fileRef.getRelativePath());
-        inputStream = new CloudResettableInputStream(bufferedWriter, bufferProvider);
+        this.cloudWriter = cloudWriter;
     }
 
     @Override
@@ -43,13 +40,7 @@ public class CloudFileHandle extends FileHandle {
         }
     }
 
-    @Override
-    public synchronized void close() throws IOException {
-        inputStream.close();
-        super.close();
-    }
-
-    public CloudResettableInputStream getInputStream() {
-        return inputStream;
+    public ICloudWriter getCloudWriter() {
+        return cloudWriter;
     }
 }

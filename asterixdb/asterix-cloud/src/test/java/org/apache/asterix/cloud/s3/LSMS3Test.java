@@ -20,7 +20,7 @@ package org.apache.asterix.cloud.s3;
 
 import java.net.URI;
 
-import org.apache.asterix.cloud.LSMTest;
+import org.apache.asterix.cloud.AbstractLSMTest;
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.junit.AfterClass;
@@ -34,7 +34,7 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteBucketRequest;
 
-public class LSMS3Test extends LSMTest {
+public class LSMS3Test extends AbstractLSMTest {
 
     private static S3Client client;
     private static S3Mock s3MockServer;

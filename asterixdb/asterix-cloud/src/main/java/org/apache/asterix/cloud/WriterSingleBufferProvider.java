@@ -18,19 +18,16 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.cloud.CloudResettableInputStream.MIN_BUFFER_SIZE;
-
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
 @NotThreadSafe
-public class WriterSingleBufferProvider implements IWriteBufferProvider {
-
+public final class WriterSingleBufferProvider implements IWriteBufferProvider {
     private final ByteBuffer buffer;
 
-    public WriterSingleBufferProvider() {
-        buffer = ByteBuffer.allocate(MIN_BUFFER_SIZE);
+    public WriterSingleBufferProvider(int size) {
+        buffer = ByteBuffer.allocate(size);
     }
 
     @Override

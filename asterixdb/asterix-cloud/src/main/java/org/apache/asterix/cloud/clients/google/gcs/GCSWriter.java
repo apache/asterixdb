@@ -18,13 +18,12 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
-import static org.apache.asterix.cloud.CloudResettableInputStream.MIN_BUFFER_SIZE;
+import static org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig.WRITE_BUFFER_SIZE;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
@@ -35,17 +34,16 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 
-public class GCSBufferedWriter implements ICloudBufferedWriter {
+public class GCSWriter implements ICloudWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     private final String bucket;
     private final String path;
     private final IRequestProfiler profiler;
     private final Storage gcsClient;
     private boolean uploadStarted = false;
-    private int partNumber;
     private WriteChannel writer = null;
 
-    public GCSBufferedWriter(String bucket, String path, Storage gcsClient, IRequestProfiler profiler) {
+    public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfiler profiler) {
         this.bucket = bucket;
         this.path = path;
         this.profiler = profiler;
@@ -53,30 +51,39 @@ public class GCSBufferedWriter implements ICloudBufferedWriter {
     }
 
     @Override
-    public int upload(InputStream stream, int length) throws HyracksDataException {
+    public int write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
+        return write(header) + write(page);
+    }
+
+    @Override
+    public int write(ByteBuffer page) throws HyracksDataException {
         profiler.objectMultipartUpload();
         setUploadId();
+        int written = 0;
         try {
-            ByteBuffer buffer = ByteBuffer.wrap(stream.readNBytes(length));
-            while (buffer.hasRemaining()) {
-                writer.write(buffer);
+            while (page.hasRemaining()) {
+                written += writer.write(page);
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-        return partNumber++;
+
+        return written;
     }
 
     @Override
-    public boolean isEmpty() {
-        return !uploadStarted;
+    public int write(byte[] b, int off, int len) throws HyracksDataException {
+        return write(ByteBuffer.wrap(b, off, len));
+    }
+
+    @Override
+    public void write(int b) throws HyracksDataException {
+        write(ByteBuffer.wrap(new byte[] { (byte) b }));
     }
 
     @Override
     public void finish() throws HyracksDataException {
-        if (!uploadStarted) {
-            throw new IllegalStateException("Cannot finish without writing any bytes");
-        }
+        setUploadId();
         profiler.objectMultipartUpload();
         try {
             writer.close();
@@ -99,9 +106,8 @@ public class GCSBufferedWriter implements ICloudBufferedWriter {
     private void setUploadId() {
         if (!uploadStarted) {
             uploadStarted = true;
-            partNumber = 1;
             writer = gcsClient.writer(BlobInfo.newBuilder(BlobId.of(bucket, path)).build());
-            writer.setChunkSize(MIN_BUFFER_SIZE);
+            writer.setChunkSize(WRITE_BUFFER_SIZE);
             log("STARTED");
         }
     }

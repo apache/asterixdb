@@ -23,8 +23,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
 
-import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.FixMethodOrder;
@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public abstract class LSMTest {
+public abstract class AbstractLSMTest {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final String BTREE_SUFFIX = "b";
@@ -53,28 +53,23 @@ public abstract class LSMTest {
 
     @Test
     public void a1writeToS3Test() throws IOException {
-        CloudResettableInputStream stream = null;
+        IWriteBufferProvider bufferProvider = new WriterSingleBufferProvider(CLOUD_CLIENT.getWriteBufferSize());
+        ICloudWriter cloudWriter =
+                CLOUD_CLIENT.createdWriter(PLAYGROUND_CONTAINER, BUCKET_STORAGE_ROOT + "/0_b", bufferProvider);
 
         try {
-            ICloudBufferedWriter s3BufferedWriter =
-                    CLOUD_CLIENT.createBufferedWriter(PLAYGROUND_CONTAINER, BUCKET_STORAGE_ROOT + "/0_b");
-            stream = new CloudResettableInputStream(s3BufferedWriter, new WriteBufferProvider(1));
             ByteBuffer content = createContent(BUFFER_SIZE);
             int size = 0;
             for (int i = 0; i < 10; i++) {
                 content.clear();
-                size += stream.write(content);
+                size += cloudWriter.write(content);
             }
-            stream.finish();
+            cloudWriter.finish();
             System.err.println(size);
         } catch (Exception e) {
             e.printStackTrace();
-            if (stream != null) {
-                stream.abort();
-            }
-        } finally {
-            if (stream != null) {
-                stream.close();
+            if (cloudWriter != null) {
+                cloudWriter.abort();
             }
         }
     }
