@@ -31,6 +31,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,12 @@ public class NCService {
      */
     private static OperatingSystemMXBean osMXBean;
 
+    public static final String[] DEFAULT_ADD_OPENS =
+            { "--add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED",
+                    "--add-opens=java.management/sun.management=ALL-UNNAMED",
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.nio=ALL-UNNAMED",
+                    "--add-opens=java.base/java.util.concurrent.locks=ALL-UNNAMED" };
+
     private static List<String> buildCommand() throws IOException {
         List<String> cList = new ArrayList<>();
 
@@ -134,12 +141,20 @@ public class NCService {
         // Sets up memory parameter if it is not specified.
         if (!jvmargs.contains("-Xmx")) {
             long ramSize = ((com.sun.management.OperatingSystemMXBean) osMXBean).getTotalPhysicalMemorySize();
-            int proportionalRamSize = (int) Math.ceil(0.6 * ramSize / (1024 * 1024));
+            int proportionalRamSize = (int) Math.ceil(0.5 * ramSize / (1024 * 1024));
             //if under 32bit JVM, use less than 1GB heap by default. otherwise use proportional ramsize.
             int heapSize = "32".equals(System.getProperty("sun.arch.data.model"))
                     ? (proportionalRamSize <= 1024 ? proportionalRamSize : 1024) : proportionalRamSize;
             jvmargs = jvmargs + " -Xmx" + heapSize + "m";
         }
+
+        // Squelch some module access warnings and errors from JDK9+
+        if (!jvmargs.contains("-add-opens")) {
+            StringBuilder jvmArgsBuilder = new StringBuilder(jvmargs);
+            Arrays.stream(DEFAULT_ADD_OPENS).map(s -> jvmArgsBuilder.append(s));
+            jvmargs = jvmArgsBuilder.toString();
+        }
+
         env.put("JAVA_OPTS", jvmargs.trim());
         LOGGER.info("Setting JAVA_OPTS to " + jvmargs);
     }

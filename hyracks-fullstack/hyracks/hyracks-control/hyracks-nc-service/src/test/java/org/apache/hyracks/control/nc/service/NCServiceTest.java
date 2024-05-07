@@ -42,7 +42,7 @@ public class NCServiceTest {
         String sizeStr = prefix.substring(0, prefix.length() - 1);
         int size = Integer.parseInt(sizeStr);
         long ramSize = ((com.sun.management.OperatingSystemMXBean) osMXBean).getTotalPhysicalMemorySize();
-        int base = 1024 * 1024 * 5;
-        Assert.assertTrue(size == ramSize * 3 / base + ((ramSize * 3) % base == 0 ? 0 : 1));
+        int base = 1024 * 1024;
+        Assert.assertTrue(size == (ramSize / 2) / base + (((ramSize / 2) % base) == 0 ? 0 : 1));
     }
 }
