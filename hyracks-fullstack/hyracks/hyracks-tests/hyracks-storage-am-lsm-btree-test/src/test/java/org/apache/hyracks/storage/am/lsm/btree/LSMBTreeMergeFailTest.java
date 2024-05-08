@@ -20,7 +20,6 @@
 package org.apache.hyracks.storage.am.lsm.btree;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -139,9 +138,6 @@ public class LSMBTreeMergeFailTest {
             }
             Field field = MergeOperation.class.getDeclaredField("cursor");
             field.setAccessible(true);
-            Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
             LSMBTreeRangeSearchCursor originalCursor = (LSMBTreeRangeSearchCursor) field.get(operation);
             field.set(operation, new TestCursor(originalCursor.getOpCtx()));
         }

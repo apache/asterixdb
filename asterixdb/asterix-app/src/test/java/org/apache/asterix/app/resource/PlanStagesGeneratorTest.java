@@ -340,7 +340,7 @@ public class PlanStagesGeneratorTest {
             }
         }
         final IClusterCapacity clusterCapacity =
-                ResourceUtils.getStageBasedRequiredCapacity(stages, PARALLELISM, FRAME_SIZE);
+                ResourceUtils.getStageBasedRequiredCapacity(stages, PARALLELISM, FRAME_SIZE, null);
         Assert.assertEquals(clusterCapacity.getAggregatedMemoryByteSize(), expectedMemory);
     }
 }

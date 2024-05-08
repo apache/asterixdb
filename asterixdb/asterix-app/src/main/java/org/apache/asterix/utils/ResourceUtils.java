@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.asterix.app.resource.OperatorResourcesComputer;
 import org.apache.asterix.app.resource.PlanStage;
 import org.apache.asterix.app.resource.PlanStagesGenerator;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -38,25 +39,28 @@ public class ResourceUtils {
     }
 
     /**
-     * Calculates the required cluster capacity from a given query plan, the computation locations,
-     * the operator memory budgets, and frame size.
+     * Calculates the required cluster capacity from a given query plan, the computation locations, the operator memory
+     * budgets, and frame size.
      *
      * @param plan,
-     *            a given query plan.
+     *         a given query plan.
      * @param computationLocations,
-     *            the partitions for computation.
+     *         the partitions for computation.
      * @param physicalOptimizationConfig,
-     *            a PhysicalOptimizationConfig.
+     *         a PhysicalOptimizationConfig.
+     * @param compilerProperties
      * @return the required cluster capacity for executing the query.
      * @throws AlgebricksException
-     *             if the query plan is malformed.
+     *         if the query plan is malformed.
      */
     public static IClusterCapacity getRequiredCapacity(ILogicalPlan plan,
             AlgebricksAbsolutePartitionConstraint computationLocations,
-            PhysicalOptimizationConfig physicalOptimizationConfig) throws AlgebricksException {
+            PhysicalOptimizationConfig physicalOptimizationConfig, CompilerProperties compilerProperties)
+            throws AlgebricksException {
         final int frameSize = physicalOptimizationConfig.getFrameSize();
         final List<PlanStage> planStages = getStages(plan);
-        return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, frameSize);
+        return getStageBasedRequiredCapacity(planStages, computationLocations.getLocations().length, frameSize,
+                compilerProperties);
     }
 
     public static List<PlanStage> getStages(ILogicalPlan plan) throws AlgebricksException {
@@ -68,8 +72,9 @@ public class ResourceUtils {
     }
 
     public static IClusterCapacity getStageBasedRequiredCapacity(List<PlanStage> stages, int computationLocations,
-            int frameSize) {
-        final OperatorResourcesComputer computer = new OperatorResourcesComputer(computationLocations, frameSize);
+            int frameSize, CompilerProperties compilerProperties) {
+        final OperatorResourcesComputer computer =
+                new OperatorResourcesComputer(computationLocations, frameSize, compilerProperties);
         final IClusterCapacity clusterCapacity = new ClusterCapacity();
         final long maxRequiredMemory = stages.stream().mapToLong(stage -> stage.getRequiredMemory(computer)).max()
                 .orElseThrow(IllegalStateException::new);

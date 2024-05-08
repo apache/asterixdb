@@ -29,7 +29,6 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.JobRun;
-import org.apache.hyracks.util.StorageUtil;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -124,14 +123,14 @@ public class ClientRequest extends BaseClientRequest {
         putTime(json, jobRun.getCreateTime(), "jobCreateTime", dateTime);
         putTime(json, jobRun.getStartTime(), "jobStartTime", dateTime);
         putTime(json, jobRun.getEndTime(), "jobEndTime", dateTime);
-        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(jobRun.getQueueWaitTimeInMillis()) + "s");
+        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(jobRun.getQueueWaitTimeInMillis()));
     }
 
     private static void putJobRequiredResources(ObjectNode json, JobRun jobRun) {
         IClusterCapacity jobCapacity = jobRun.getJobSpecification().getRequiredClusterCapacity();
         if (jobCapacity != null) {
             json.put("jobRequiredCPUs", jobCapacity.getAggregatedCores());
-            json.put("jobRequiredMemory", StorageUtil.toHumanReadableSize(jobCapacity.getAggregatedMemoryByteSize()));
+            json.put("jobRequiredMemory", jobCapacity.getAggregatedMemoryByteSize());
         }
     }
 

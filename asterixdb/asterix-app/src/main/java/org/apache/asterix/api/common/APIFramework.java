@@ -341,7 +341,7 @@ public class APIFramework {
                     final AlgebricksAbsolutePartitionConstraint jobLocations =
                             getJobLocations(spec, nodeJobTracker, computationLocations);
                     final IClusterCapacity jobRequiredCapacity =
-                            ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf);
+                            ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf, compilerProperties);
                     addRuntimeMemoryOverhead(jobRequiredCapacity, compilerProperties);
                     spec.setRequiredClusterCapacity(jobRequiredCapacity);
                 }

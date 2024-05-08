@@ -18,14 +18,11 @@
  */
 package org.apache.hyracks.control.nc.partitions;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.Executor;
 
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
-import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.partitions.IPartition;
 
@@ -60,45 +57,7 @@ public class MaterializedPartition implements IPartition {
 
     @Override
     public void writeTo(final IFrameWriter writer) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (partitionFile == null) {
-                        writer.open();
-                        writer.close();
-                        return;
-                    }
-                    IFileHandle fh = ioManager.open(partitionFile, IIOManager.FileReadWriteMode.READ_ONLY,
-                            IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
-                    try {
-                        writer.open();
-                        try {
-                            long offset = 0;
-                            ByteBuffer buffer = ctx.allocateFrame();
-                            while (true) {
-                                buffer.clear();
-                                long size = ioManager.syncRead(fh, offset, buffer);
-                                if (size < 0) {
-                                    break;
-                                } else if (size < buffer.capacity()) {
-                                    throw new HyracksDataException("Premature end of file");
-                                }
-                                offset += size;
-                                buffer.flip();
-                                writer.nextFrame(buffer);
-                            }
-                        } finally {
-                            writer.close();
-                        }
-                    } finally {
-                        ioManager.close(fh);
-                    }
-                } catch (HyracksDataException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        executor.execute(new PartitionFileReader(ctx, partitionFile, ioManager, writer, false));
     }
 
     @Override

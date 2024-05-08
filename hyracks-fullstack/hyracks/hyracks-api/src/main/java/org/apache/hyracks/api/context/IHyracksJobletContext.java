@@ -44,4 +44,6 @@ public interface IHyracksJobletContext extends IWorkspaceFileFactory, IDeallocat
     Class<?> loadClass(String className) throws HyracksException;
 
     ClassLoader getClassLoader() throws HyracksException;
+
+    long nextUniqueId();
 }

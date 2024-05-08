@@ -1241,20 +1241,21 @@ The aggregation pseudo-function `COUNT` has a special form in which its operand 
 
 For example, `SELECT COUNT(*) FROM customers` simply returns the total number of customers, whereas `SELECT COUNT(rating) FROM customers` returns the number of customers who have known ratings (that is, their ratings are not `null` or `missing`).
 
-Because the aggregation pseudo-functions sometimes restructure their operands, they can be used only in query blocks where (explicit or implicit) grouping is being done. Therefore the pseudo-functions cannot operate directly on arrays or multisets. For operating directly on JSON collections, SQL++ provides a set of ordinary functions for computing aggregations. Each ordinary aggregation function (except the ones corresponding to `COUNT` and `ARRAY_AGG`) has two versions: one that ignores `null` and `missing` values and one that returns `null` if a `null` or `missing` value is encountered anywhere in the collection. The names of the aggregation functions are as follows:
+Because the aggregation pseudo-functions sometimes restructure their operands, they can be used only in query blocks where (explicit or implicit) grouping is being done. Therefore the pseudo-functions cannot operate directly on arrays or multisets. For operating directly on JSON collections, SQL++ provides a set of ordinary functions for computing aggregations. Each ordinary aggregation function (except as noted below) has two versions: one that ignores `null` and `missing` values, and one that returns `null` if a `null` or `missing` value is encountered anywhere in the collection. The names of the aggregation functions are as follows:
 
 | Aggregation pseudo-function; operates on groups only | Ordinary function: Ignores NULL or MISSING values | Ordinary function: Returns NULL if NULL or MISSING are encountered|
 |----------|----------|--------|
-|SUM| ARRAY_SUM| STRICT_SUM |
-| AVG |ARRAY_MAX| STRICT_MAX |
-| MAX | ARRAY_MIN| STRICT_MIN |
-| MIN | ARRAY_AVG| STRICT_AVG |
+| SUM | ARRAY_SUM| STRICT_SUM |
+| AVG | ARRAY_AVG| STRICT_AVG |
+| MAX | ARRAY_MAX| STRICT_MAX |
+| MIN | ARRAY_MIN| STRICT_MIN |
 | COUNT |ARRAY_COUNT|STRICT_COUNT (see exception below) |
+| MEDIAN | ARRAY_MEDIAN | |
 |STDDEV_SAMP|ARRAY_STDDEV_SAMP| STRICT_STDDEV_SAMP |
 |STDDEV_POP|ARRAY_STDDEV_POP| STRICT_STDDEV_POP |
 |VAR_SAMP|ARRAY_VAR_SAMP| STRICT_VAR_SAMP |
 |VAR_POP|ARRAY_VAR_POP| STRICT_VAR_POP |
-|SKEWENESS|ARRAY_SKEWNESS| STRICT_SKEWNESS |
+|SKEWNESS|ARRAY_SKEWNESS| STRICT_SKEWNESS |
 |KURTOSIS|ARRAY_KURTOSIS| STRICT_KURTOSIS |
 | |ARRAY_AGG| |
 

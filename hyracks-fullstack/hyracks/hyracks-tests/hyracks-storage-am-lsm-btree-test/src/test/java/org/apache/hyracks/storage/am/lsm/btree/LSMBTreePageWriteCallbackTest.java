@@ -70,8 +70,8 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
         }
 
         @Override
-        public void request(int permits) throws HyracksDataException {
-            limiter.request(permits);
+        public void request(int numOfPermits) throws HyracksDataException {
+            limiter.request(numOfPermits);
             pageCounter++;
         }
     };

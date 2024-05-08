@@ -37,7 +37,8 @@ import org.apache.logging.log4j.Logger;
 public class NetworkInputChannel implements IInputChannel {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    static final int INITIAL_MESSAGE_SIZE = 20;
+    private static final int INITIAL_MSG_FILLER = -1;
+    public static final int INITIAL_MESSAGE_SIZE = 24;
 
     private final IChannelConnectionFactory netManager;
 
@@ -106,6 +107,7 @@ public class NetworkInputChannel implements IInputChannel {
         writeBuffer.putInt(partitionId.getConnectorDescriptorId().getId());
         writeBuffer.putInt(partitionId.getSenderIndex());
         writeBuffer.putInt(partitionId.getReceiverIndex());
+        writeBuffer.putInt(INITIAL_MSG_FILLER);
         writeBuffer.flip();
         if (LOGGER.isTraceEnabled()) {
             LOGGER.trace("Sending partition request: " + partitionId + " on channel: " + ccb);

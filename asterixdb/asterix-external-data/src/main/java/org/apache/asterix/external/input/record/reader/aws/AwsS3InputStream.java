@@ -38,6 +38,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.util.LogRedactionUtil;
 
+import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -49,6 +50,7 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
     // Configuration
     private final String bucket;
     private final S3Client s3Client;
+    private ResponseInputStream<?> s3InStream;
     private static final int MAX_RETRIES = 5; // We will retry 5 times in case of internal error from AWS S3 service
 
     public AwsS3InputStream(Map<String, String> configuration, List<String> filePaths,
@@ -84,7 +86,8 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
         int retries = 0;
         while (retries < MAX_RETRIES) {
             try {
-                in = s3Client.getObject(request);
+                s3InStream = s3Client.getObject(request);
+                in = s3InStream;
                 break;
             } catch (NoSuchKeyException ex) {
                 LOGGER.debug(() -> "Key " + LogRedactionUtil.userData(request.key()) + " was not found in bucket "
@@ -116,6 +119,9 @@ public class AwsS3InputStream extends AbstractExternalInputStream {
     @Override
     public void close() throws IOException {
         if (in != null) {
+            if (s3InStream != null) {
+                s3InStream.abort();
+            }
             CleanupUtils.close(in, null);
         }
         if (s3Client != null) {

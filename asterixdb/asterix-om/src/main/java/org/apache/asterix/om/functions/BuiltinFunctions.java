@@ -95,6 +95,7 @@ import org.apache.asterix.om.typecomputer.impl.IfNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.InjectFailureTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.Int64ArrayToStringTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalAvgTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.LocalMedianTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.LocalSingleVarStatisticsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MinMaxAggTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.MissingIfTypeComputer;
@@ -429,6 +430,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier GLOBAL_AVG = FunctionConstants.newAsterix("agg-global-avg", 1);
     public static final FunctionIdentifier INTERMEDIATE_AVG = FunctionConstants.newAsterix("agg-intermediate-avg", 1);
     public static final FunctionIdentifier LOCAL_AVG = FunctionConstants.newAsterix("agg-local-avg", 1);
+    public static final FunctionIdentifier MEDIAN = FunctionConstants.newAsterix("agg-median", 1);
     public static final FunctionIdentifier FIRST_ELEMENT = FunctionConstants.newAsterix("agg-first-element", 1);
     public static final FunctionIdentifier LOCAL_FIRST_ELEMENT =
             FunctionConstants.newAsterix("agg-local-first-element", 1);
@@ -481,6 +483,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SUM = FunctionConstants.newAsterix("sum", 1);
     public static final FunctionIdentifier SCALAR_MAX = FunctionConstants.newAsterix("max", 1);
     public static final FunctionIdentifier SCALAR_MIN = FunctionConstants.newAsterix("min", 1);
+    public static final FunctionIdentifier SCALAR_MEDIAN = FunctionConstants.newAsterix("median", 1);
     public static final FunctionIdentifier SCALAR_FIRST_ELEMENT = FunctionConstants.newAsterix("first-element", 1);
     public static final FunctionIdentifier SCALAR_LOCAL_FIRST_ELEMENT =
             FunctionConstants.newAsterix("local-first-element", 1);
@@ -605,6 +608,11 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier GLOBAL_SQL_MIN = FunctionConstants.newAsterix("agg-global-sql-min", 1);
     public static final FunctionIdentifier GLOBAL_SQL_AVG = FunctionConstants.newAsterix("agg-global-sql-avg", 1);
     public static final FunctionIdentifier LOCAL_SQL_AVG = FunctionConstants.newAsterix("agg-local-sql-avg", 1);
+    public static final FunctionIdentifier SQL_MEDIAN = FunctionConstants.newAsterix("agg-sql-median", 1);
+    public static final FunctionIdentifier LOCAL_SQL_MEDIAN = FunctionConstants.newAsterix("agg-local-sql-median", 1);
+    public static final FunctionIdentifier INTERMEDIATE_SQL_MEDIAN =
+            FunctionConstants.newAsterix("agg-intermediate-sql-median", 1);
+    public static final FunctionIdentifier GLOBAL_SQL_MEDIAN = FunctionConstants.newAsterix("agg-global-sql-median", 1);
     public static final FunctionIdentifier SQL_STDDEV_SAMP = FunctionConstants.newAsterix("agg-sql-stddev_samp", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_STDDEV_SAMP =
             FunctionConstants.newAsterix("intermediate-agg-sql-stddev_samp", 1);
@@ -659,6 +667,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_SQL_SUM = FunctionConstants.newAsterix("sql-sum", 1);
     public static final FunctionIdentifier SCALAR_SQL_MAX = FunctionConstants.newAsterix("sql-max", 1);
     public static final FunctionIdentifier SCALAR_SQL_MIN = FunctionConstants.newAsterix("sql-min", 1);
+    public static final FunctionIdentifier SCALAR_SQL_MEDIAN = FunctionConstants.newAsterix("sql-median", 1);
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_SAMP = FunctionConstants.newAsterix("sql-stddev_samp", 1);
     public static final FunctionIdentifier SCALAR_SQL_STDDEV_POP = FunctionConstants.newAsterix("sql-stddev_pop", 1);
     public static final FunctionIdentifier SCALAR_SQL_VAR_SAMP = FunctionConstants.newAsterix("sql-var_samp", 1);
@@ -1714,6 +1723,13 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_UNION_MBR, ARectangleTypeComputer.INSTANCE, true);
 
+        addFunction(SQL_MEDIAN, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_MEDIAN, NullableDoubleTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_MEDIAN, NullableDoubleTypeComputer.INSTANCE, true);
+        addPrivateFunction(LOCAL_SQL_MEDIAN, LocalMedianTypeComputer.INSTANCE, true);
+        addPrivateFunction(INTERMEDIATE_SQL_MEDIAN, LocalMedianTypeComputer.INSTANCE, true);
+        addPrivateFunction(GLOBAL_SQL_MEDIAN, NullableDoubleTypeComputer.INSTANCE, true);
+
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
@@ -2745,6 +2761,25 @@ public class BuiltinFunctions {
         addDistinctAgg(SQL_SUM_DISTINCT, SQL_SUM);
         addScalarAgg(SQL_SUM_DISTINCT, SCALAR_SQL_SUM_DISTINCT);
 
+        // SQL MEDIAN
+        addAgg(SQL_MEDIAN);
+        addAgg(LOCAL_SQL_MEDIAN);
+        addAgg(GLOBAL_SQL_MEDIAN);
+
+        addLocalAgg(SQL_MEDIAN, LOCAL_SQL_MEDIAN);
+
+        addIntermediateAgg(SQL_MEDIAN, INTERMEDIATE_SQL_MEDIAN);
+        addIntermediateAgg(LOCAL_SQL_MEDIAN, INTERMEDIATE_SQL_MEDIAN);
+        addIntermediateAgg(GLOBAL_SQL_MEDIAN, INTERMEDIATE_SQL_MEDIAN);
+
+        addGlobalAgg(SQL_MEDIAN, GLOBAL_SQL_MEDIAN);
+
+        addScalarAgg(MEDIAN, SCALAR_MEDIAN);
+        addScalarAgg(SQL_MEDIAN, SCALAR_SQL_MEDIAN);
+
+        registerAggFunctionProperties(SCALAR_SQL_MEDIAN, AggregateFunctionProperty.NO_FRAME_CLAUSE,
+                AggregateFunctionProperty.NO_ORDER_CLAUSE);
+
         // SPATIAL AGGREGATES
 
         addAgg(ST_UNION_AGG);
@@ -2777,6 +2812,13 @@ public class BuiltinFunctions {
     }
 
     interface BuiltinFunctionProperty {
+    }
+
+    public enum AggregateFunctionProperty implements BuiltinFunctionProperty {
+        /** Whether the order clause is prohibited */
+        NO_ORDER_CLAUSE,
+        /** Whether the frame clause is prohibited */
+        NO_FRAME_CLAUSE
     }
 
     public enum WindowFunctionProperty implements BuiltinFunctionProperty {
@@ -2957,6 +2999,11 @@ public class BuiltinFunctions {
 
     private static void addFunction(BuiltinFunctionInfo functionInfo) {
         registeredFunctions.put(functionInfo.getFunctionIdentifier(), functionInfo);
+    }
+
+    private static <T extends Enum<T> & BuiltinFunctionProperty> void registerAggFunctionProperties(
+            FunctionIdentifier fid, AggregateFunctionProperty... properties) {
+        registerFunctionProperties(fid, AggregateFunctionProperty.class, properties);
     }
 
     private static <T extends Enum<T> & BuiltinFunctionProperty> void registerFunctionProperties(FunctionIdentifier fid,
