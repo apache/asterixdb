@@ -37,6 +37,7 @@ import java.util.Set;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
+import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudWriter;
@@ -98,13 +99,13 @@ public final class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
+    public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         ICloudBufferedWriter bufferedWriter = new S3BufferedWriter(s3Client, profiler, bucket, path);
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
     }
 
     @Override
-    public Set<String> listObjects(String bucket, String path, FilenameFilter filter) {
+    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
         profiler.objectsList();
         path = config.isLocalS3Provider() ? encodeURI(path) : path;
         return filterAndGet(listS3Objects(s3Client, bucket, path), filter);
@@ -152,9 +153,11 @@ public final class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public InputStream getObjectStream(String bucket, String path) {
+    public InputStream getObjectStream(String bucket, String path, long offset, long length) {
         profiler.objectGet();
-        GetObjectRequest getReq = GetObjectRequest.builder().bucket(bucket).key(path).build();
+        long readTo = offset + length;
+        GetObjectRequest getReq =
+                GetObjectRequest.builder().range("bytes=" + offset + "-" + readTo).bucket(bucket).key(path).build();
         try {
             return s3Client.getObject(getReq);
         } catch (NoSuchKeyException e) {
@@ -167,8 +170,6 @@ public final class S3CloudClient implements ICloudClient {
     public void write(String bucket, String path, byte[] data) {
         profiler.objectWrite();
         PutObjectRequest putReq = PutObjectRequest.builder().bucket(bucket).key(path).build();
-
-        // TODO(htowaileb): add retry logic here
         s3Client.putObject(putReq, RequestBody.fromBytes(data));
     }
 
@@ -281,12 +282,12 @@ public final class S3CloudClient implements ICloudClient {
         return builder.build();
     }
 
-    private Set<String> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
-        Set<String> files = new HashSet<>();
+    private Set<CloudFile> filterAndGet(List<S3Object> contents, FilenameFilter filter) {
+        Set<CloudFile> files = new HashSet<>();
         for (S3Object s3Object : contents) {
             String path = config.isLocalS3Provider() ? S3ClientUtils.decodeURI(s3Object.key()) : s3Object.key();
             if (filter.accept(null, IoUtil.getFileNameFromPath(path))) {
-                files.add(path);
+                files.add(CloudFile.of(path, s3Object.size()));
             }
         }
         return files;

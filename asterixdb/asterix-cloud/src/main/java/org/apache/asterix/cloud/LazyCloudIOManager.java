@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.cloud;
 
-import static org.apache.asterix.cloud.lazy.ParallelCacher.METADATA_FILTER;
+import static org.apache.asterix.cloud.util.CloudFileUtil.METADATA_FILTER;
 import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
 
@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
+import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.lazy.ParallelCacher;
 import org.apache.asterix.cloud.lazy.accessor.ILazyAccessor;
@@ -44,6 +45,7 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
@@ -85,17 +87,17 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     protected synchronized void downloadPartitions(boolean metadataNode, int metadataPartition)
             throws HyracksDataException {
         // Get the files in all relevant partitions from the cloud
-        Set<String> cloudFiles = cloudClient.listObjects(bucket, STORAGE_ROOT_DIR_NAME, IoUtil.NO_OP_FILTER).stream()
-                .filter(f -> partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(f)))
+        Set<CloudFile> cloudFiles = cloudClient.listObjects(bucket, STORAGE_ROOT_DIR_NAME, IoUtil.NO_OP_FILTER).stream()
+                .filter(f -> partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(f.getPath())))
                 .collect(Collectors.toSet());
 
         // Get all files stored locally
-        Set<String> localFiles = new HashSet<>();
+        Set<CloudFile> localFiles = new HashSet<>();
         for (IODeviceHandle deviceHandle : getIODevices()) {
             FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
             Set<FileReference> deviceFiles = localIoManager.list(storageRoot, IoUtil.NO_OP_FILTER);
             for (FileReference fileReference : deviceFiles) {
-                localFiles.add(fileReference.getRelativePath());
+                localFiles.add(CloudFile.of(fileReference.getRelativePath()));
             }
         }
 
@@ -113,7 +115,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             // Download all metadata files to avoid (List) calls to the cloud when listing/reading these files
             downloadMetadataFiles(downloader, uncachedFiles);
             // Create a parallel cacher which download and monitor all uncached files
-            ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles);
+            ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles, true);
             // Local cache misses some files, cloud-based accessor is needed for read operations
             accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);
         } else {
@@ -183,12 +185,29 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         log("WRITE", fileRef);
     }
 
-    private List<FileReference> resolve(Set<String> cloudFiles) throws HyracksDataException {
+    @Override
+    public int punchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
+        // TODO implement for Selective accessor
+        return -1;
+    }
+
+    @Override
+    public void evict(FileReference directory) throws HyracksDataException {
+        // TODO implement for Selective accessor
+    }
+
+    private List<FileReference> resolve(Set<CloudFile> cloudFiles) throws HyracksDataException {
         List<FileReference> fileReferences = new ArrayList<>();
-        for (String file : cloudFiles) {
+        for (CloudFile file : cloudFiles) {
             fileReferences.add(resolve(file));
         }
         return fileReferences;
+    }
+
+    private FileReference resolve(CloudFile file) throws HyracksDataException {
+        String path = file.getPath();
+        IODeviceHandle devHandle = getDeviceComputer().resolve(path, getIODevices());
+        return new UncachedFileReference(devHandle, path, file.getSize());
     }
 
     private void log(String op, FileReference fileReference) {
@@ -199,7 +218,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
 
     private void downloadMetadataFiles(IParallelDownloader downloader, List<FileReference> uncachedFiles)
             throws HyracksDataException {
-        Set<FileReference> uncachedMetadataFiles = ParallelCacher.getFiles(uncachedFiles, METADATA_FILTER);
+        Set<FileReference> uncachedMetadataFiles = ParallelCacher.getFiles(uncachedFiles, METADATA_FILTER).keySet();
         if (!uncachedMetadataFiles.isEmpty()) {
             LOGGER.debug("Downloading metadata files for all partitions; current uncached files: {}", uncachedFiles);
             downloader.downloadFiles(uncachedMetadataFiles);

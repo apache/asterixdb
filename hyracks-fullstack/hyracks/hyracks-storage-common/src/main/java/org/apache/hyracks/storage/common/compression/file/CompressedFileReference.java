@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.storage.common.compression.file;
 
-import java.util.Objects;
-
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IODeviceHandle;
@@ -55,19 +53,6 @@ public class CompressedFileReference extends FileReference {
     @Override
     public boolean isCompressed() {
         return true;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof CompressedFileReference)) {
-            return false;
-        }
-        return super.equals(o) && lafPath.equals(((CompressedFileReference) o).lafPath);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(super.getRelativePath(), lafPath);
     }
 
     /**

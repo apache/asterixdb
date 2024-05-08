@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.cloud.lazy.accessor;
 
+@FunctionalInterface
 public interface ILazyAccessorReplacer {
+    /**
+     * Replace the {@link ILazyAccessor}
+     */
     void replace();
 }

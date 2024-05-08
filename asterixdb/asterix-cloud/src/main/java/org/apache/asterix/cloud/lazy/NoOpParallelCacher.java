@@ -23,13 +23,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
 public class NoOpParallelCacher implements IParallelCacher {
     public static final IParallelCacher INSTANCE = new NoOpParallelCacher();
 
     @Override
-    public boolean isCached(FileReference indexDir) {
+    public boolean isCacheable(FileReference fileReference) {
         return false;
     }
 
@@ -39,12 +40,27 @@ public class NoOpParallelCacher implements IParallelCacher {
     }
 
     @Override
-    public boolean downloadData(FileReference indexFile) {
+    public long getSize(FileReference fileReference) {
+        return 0L;
+    }
+
+    @Override
+    public long getUncachedTotalSize() {
+        return 0L;
+    }
+
+    @Override
+    public boolean createEmptyDataFiles(FileReference indexFile) throws HyracksDataException {
         return false;
     }
 
     @Override
-    public boolean downloadMetadata(FileReference indexFile) {
+    public boolean downloadDataFiles(FileReference indexFile) {
+        return false;
+    }
+
+    @Override
+    public boolean downloadMetadataFiles(FileReference indexFile) {
         return false;
     }
 
@@ -54,8 +70,13 @@ public class NoOpParallelCacher implements IParallelCacher {
     }
 
     @Override
-    public boolean remove(FileReference deletedFile) {
+    public boolean remove(FileReference fileReference) {
         return false;
+    }
+
+    @Override
+    public void add(Collection<FileReference> files) {
+        // NoOp
     }
 
     @Override

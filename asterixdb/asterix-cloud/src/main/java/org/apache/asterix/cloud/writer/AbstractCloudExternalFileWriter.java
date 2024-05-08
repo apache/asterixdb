@@ -81,7 +81,7 @@ abstract class AbstractCloudExternalFileWriter implements IExternalFileWriter {
             return false;
         }
 
-        cloudWriter = cloudClient.createdWriter(bucket, fullPath, bufferProvider);
+        cloudWriter = cloudClient.createWriter(bucket, fullPath, bufferProvider);
         CloudOutputStream outputStream = new CloudOutputStream(cloudWriter);
         printer.newStream(outputStream);
 

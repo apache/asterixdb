@@ -49,7 +49,7 @@ public interface ICloudClient {
      * @param bufferProvider buffer provider
      * @return cloud writer
      */
-    ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider);
+    ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider);
 
     /**
      * Lists objects at the specified bucket and path, and applies the file name filter on the returned objects
@@ -59,7 +59,7 @@ public interface ICloudClient {
      * @param filter filter to apply
      * @return file names returned after applying the file name filter
      */
-    Set<String> listObjects(String bucket, String path, FilenameFilter filter);
+    Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter);
 
     /**
      * Performs a range-read from the specified bucket and path starting at the offset. The amount read is equal to the
@@ -88,9 +88,11 @@ public interface ICloudClient {
      *
      * @param bucket bucket
      * @param path   path
-     * @return inputstream
+     * @param offset offset
+     * @param length length
+     * @return input stream of requested range
      */
-    InputStream getObjectStream(String bucket, String path);
+    InputStream getObjectStream(String bucket, String path, long offset, long length);
 
     /**
      * Writes the content of the byte array into the bucket at the specified path

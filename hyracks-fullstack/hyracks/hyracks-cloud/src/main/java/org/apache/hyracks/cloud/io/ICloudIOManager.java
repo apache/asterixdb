@@ -62,21 +62,19 @@ public interface ICloudIOManager {
      * Write to cloud only
      *
      * @param fHandle file handle
-     * @param offset  starting offset
      * @param data    to write
      * @return number of written bytes
      */
-    int cloudWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException;
+    int cloudWrite(IFileHandle fHandle, ByteBuffer data) throws HyracksDataException;
 
     /**
      * Write to cloud only
      *
      * @param fHandle file handle
-     * @param offset  starting offset
      * @param data    to write
      * @return number of written bytes
      */
-    long cloudWrite(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException;
+    long cloudWrite(IFileHandle fHandle, ByteBuffer[] data) throws HyracksDataException;
 
     /**
      * Punch a hole in a file

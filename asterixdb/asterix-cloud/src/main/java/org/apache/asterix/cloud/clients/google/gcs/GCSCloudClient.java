@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
+import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
@@ -86,20 +87,20 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public ICloudWriter createdWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
+    public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         return new GCSWriter(bucket, path, gcsClient, profiler);
     }
 
     @Override
-    public Set<String> listObjects(String bucket, String path, FilenameFilter filter) {
+    public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
         profiler.objectsList();
         Page<Blob> blobs =
                 gcsClient.list(bucket, BlobListOption.prefix(path), BlobListOption.fields(Storage.BlobField.SIZE));
 
-        Set<String> files = new HashSet<>();
+        Set<CloudFile> files = new HashSet<>();
         for (Blob blob : blobs.iterateAll()) {
             if (filter.accept(null, IoUtil.getFileNameFromPath(blob.getName()))) {
-                files.add(blob.getName());
+                files.add(CloudFile.of(blob.getName(), blob.getSize()));
             }
         }
         return files;
@@ -138,12 +139,13 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public InputStream getObjectStream(String bucket, String path) {
+    public InputStream getObjectStream(String bucket, String path, long offset, long length) {
         profiler.objectGet();
-        try (ReadChannel reader = gcsClient.reader(bucket, path)) {
+        try (ReadChannel reader = gcsClient.reader(bucket, path).limit(offset + length)) {
+            reader.seek(offset);
             return Channels.newInputStream(reader);
-        } catch (StorageException ex) {
-            throw new IllegalStateException(ex);
+        } catch (StorageException | IOException e) {
+            throw new IllegalStateException(e);
         }
     }
 

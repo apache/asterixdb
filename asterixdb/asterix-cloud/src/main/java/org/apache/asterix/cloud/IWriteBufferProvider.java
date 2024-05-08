@@ -20,8 +20,19 @@ package org.apache.asterix.cloud;
 
 import java.nio.ByteBuffer;
 
+/**
+ * Buffer provider and recycler
+ */
 public interface IWriteBufferProvider {
+    /**
+     * @return a buffer
+     */
     ByteBuffer getBuffer();
 
+    /**
+     * Return the buffer to reused
+     *
+     * @param buffer to recycle
+     */
     void recycle(ByteBuffer buffer);
 }

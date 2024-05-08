@@ -30,6 +30,7 @@ import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
@@ -93,5 +94,15 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
         // Write here will overwrite the older object if exists
         cloudClient.write(bucket, fileRef.getRelativePath(), bytes);
         localIoManager.overwrite(fileRef, bytes);
+    }
+
+    @Override
+    public int punchHole(IFileHandle fHandle, long offset, long length) {
+        throw new UnsupportedOperationException("punchHole is not supported with Eager caching");
+    }
+
+    @Override
+    public void evict(FileReference directory) {
+        throw new UnsupportedOperationException("evict is not supported with Eager caching");
     }
 }

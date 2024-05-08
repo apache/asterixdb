@@ -18,22 +18,33 @@
  */
 package org.apache.asterix.cloud.util;
 
+import java.io.FilenameFilter;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.asterix.cloud.clients.CloudFile;
+import org.apache.asterix.common.utils.StorageConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CloudFileUtil {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    // TODO Should we consider bloomfilter and LAF files as metadata files so that they are downloaded on bootstrap?
+    public static final FilenameFilter METADATA_FILTER =
+            ((dir, name) -> name.startsWith(StorageConstants.INDEX_NON_DATA_FILES_PREFIX)
+                    || name.endsWith(AbstractLSMIndexFileManager.LAF_SUFFIX)
+                    || name.endsWith(AbstractLSMIndexFileManager.BLOOM_FILTER_SUFFIX));
+    public static final FilenameFilter DATA_FILTER = ((dir, name) -> !METADATA_FILTER.accept(dir, name));
+
     private CloudFileUtil() {
     }
 
-    public static void cleanDirectoryFiles(IOManager ioManager, Set<String> cloudFiles, FileReference partitionPath)
+    public static void cleanDirectoryFiles(IOManager ioManager, Set<CloudFile> cloudFiles, FileReference partitionPath)
             throws HyracksDataException {
         // First get the set of local files
         Set<FileReference> localFiles = ioManager.list(partitionPath);
@@ -47,7 +58,7 @@ public class CloudFileUtil {
                 continue;
             }
 
-            String path = file.getRelativePath();
+            CloudFile path = CloudFile.of(file.getRelativePath());
             if (!cloudFiles.contains(path)) {
                 // Delete local files that do not exist in cloud storage (the ground truth for valid files)
                 logDeleteFile(file);
@@ -60,12 +71,13 @@ public class CloudFileUtil {
         }
 
         // Add the remaining files that are not stored locally (if any)
-        for (String cloudFile : cloudFiles) {
-            if (!cloudFile.contains(partitionPath.getRelativePath())) {
+        for (CloudFile cloudFile : cloudFiles) {
+            String cloudFilePath = cloudFile.getPath();
+            if (!cloudFilePath.contains(partitionPath.getRelativePath())) {
                 continue;
             }
             localFiles.add(new FileReference(partitionPath.getDeviceHandle(),
-                    cloudFile.substring(cloudFile.indexOf(partitionPath.getRelativePath()))));
+                    cloudFilePath.substring(cloudFilePath.indexOf(partitionPath.getRelativePath()))));
         }
     }
 

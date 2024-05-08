@@ -135,7 +135,7 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
         byte[] data = new byte[Long.BYTES];
         LongPointable.setLong(data, 0, writeValue);
         IWriteBufferProvider bufferProvider = new WriterSingleBufferProvider(testClient.getWriteBufferSize());
-        ICloudWriter writer = testClient.createdWriter(bucket, path, bufferProvider);
+        ICloudWriter writer = testClient.createWriter(bucket, path, bufferProvider);
         boolean aborted = false;
         try {
             writer.write(data, 0, data.length);

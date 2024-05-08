@@ -55,7 +55,7 @@ public abstract class AbstractLSMTest {
     public void a1writeToS3Test() throws IOException {
         IWriteBufferProvider bufferProvider = new WriterSingleBufferProvider(CLOUD_CLIENT.getWriteBufferSize());
         ICloudWriter cloudWriter =
-                CLOUD_CLIENT.createdWriter(PLAYGROUND_CONTAINER, BUCKET_STORAGE_ROOT + "/0_b", bufferProvider);
+                CLOUD_CLIENT.createWriter(PLAYGROUND_CONTAINER, BUCKET_STORAGE_ROOT + "/0_b", bufferProvider);
 
         try {
             ByteBuffer content = createContent(BUFFER_SIZE);

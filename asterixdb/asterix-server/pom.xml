@@ -131,8 +131,16 @@
               <url>http://asm.objectweb.org/license.html</url>
             </override>
             <override>
+              <gav>asm:asm:3.1</gav>
+              <url>https://asm.ow2.io/license.html</url>
+            </override>
+            <override>
               <gav>com.thoughtworks.paranamer:paranamer:2.3</gav>
               <url>https://github.com/codehaus/paranamer-git/blob/paranamer-2.3/LICENSE.txt</url>
+            </override>
+            <override>
+              <gav>com.github.jnr:jnr-posix:3.1.19</gav>
+              <url>https://www.eclipse.org/legal/epl-2.0</url>
             </override>
             <override>
               <gav>org.codehaus.jettison:jettison:1.1</gav>
