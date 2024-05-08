@@ -40,7 +40,6 @@ public class GCSWriter implements ICloudWriter {
     private final String path;
     private final IRequestProfiler profiler;
     private final Storage gcsClient;
-    private boolean uploadStarted = false;
     private WriteChannel writer = null;
 
     public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfiler profiler) {
@@ -88,7 +87,6 @@ public class GCSWriter implements ICloudWriter {
         try {
             writer.close();
             writer = null;
-            uploadStarted = false;
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -104,8 +102,7 @@ public class GCSWriter implements ICloudWriter {
     }
 
     private void setUploadId() {
-        if (!uploadStarted) {
-            uploadStarted = true;
+        if (writer == null) {
             writer = gcsClient.writer(BlobInfo.newBuilder(BlobId.of(bucket, path)).build());
             writer.setChunkSize(WRITE_BUFFER_SIZE);
             log("STARTED");

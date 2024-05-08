@@ -239,14 +239,17 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     public final long doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray)
             throws HyracksDataException {
         long writtenBytes = localIoManager.doSyncWrite(fHandle, offset, dataArray);
+        dataArray[0].flip();
+        dataArray[1].flip();
         cloudWrite(fHandle, dataArray);
         return writtenBytes;
     }
 
     @Override
-    public final int doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer dataArray) throws HyracksDataException {
-        int writtenBytes = localIoManager.doSyncWrite(fHandle, offset, dataArray);
-        cloudWrite(fHandle, dataArray);
+    public final int doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        int writtenBytes = localIoManager.doSyncWrite(fHandle, offset, data);
+        data.flip();
+        cloudWrite(fHandle, data);
         return writtenBytes;
     }
 

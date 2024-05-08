@@ -27,7 +27,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CloudClientProvider {
     private static final String S3 = "s3";
-    private static final String GCS = "gcs";
+    private static final String GCS = "gs";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");

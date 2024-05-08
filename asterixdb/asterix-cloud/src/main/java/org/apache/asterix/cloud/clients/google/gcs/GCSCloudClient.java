@@ -204,7 +204,7 @@ public class GCSCloudClient implements ICloudClient {
     public boolean exists(String bucket, String path) {
         profiler.objectGet();
         Blob blob = gcsClient.get(bucket, path, Storage.BlobGetOption.fields(Storage.BlobField.values()));
-        return blob != null;
+        return blob != null && blob.exists();
     }
 
     @Override
