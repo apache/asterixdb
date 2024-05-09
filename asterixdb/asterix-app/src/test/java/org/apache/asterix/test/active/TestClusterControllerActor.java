@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.mockito.Mockito;
 
 public class TestClusterControllerActor extends Actor {
@@ -49,8 +50,8 @@ public class TestClusterControllerActor extends Actor {
                 JobSpecification jobSpecification = Mockito.mock(JobSpecification.class);
                 Mockito.when(jobSpecification.getProperty(ActiveNotificationHandler.ACTIVE_ENTITY_PROPERTY_NAME))
                         .thenReturn(entityId);
-                handler.notifyJobCreation(jobId, jobSpecification);
-                handler.notifyJobStart(jobId);
+                handler.notifyJobCreation(jobId, jobSpecification, IJobCapacityController.JobSubmissionStatus.EXECUTE);
+                handler.notifyJobStart(jobId, null);
             }
         };
         add(startJob);
@@ -72,7 +73,7 @@ public class TestClusterControllerActor extends Actor {
         Action delivery = new Action() {
             @Override
             protected void doExecute(MetadataProvider actorMdProvider) throws Exception {
-                handler.notifyJobFinish(jobId, jobStatus, exceptions);
+                handler.notifyJobFinish(jobId, null, jobStatus, exceptions);
             }
         };
         add(delivery);

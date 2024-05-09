@@ -21,6 +21,7 @@ package org.apache.hyracks.api.job;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
 /**
  * A listener for job related events
@@ -29,27 +30,33 @@ public interface IJobLifecycleListener {
     /**
      * Notify the listener that a job has been created
      *
-     * @param jobId
-     * @param spec
-     * @throws HyracksException
+     * @param jobId the job id
+     * @param spec the job specification
+     * @param status the status of the job; whether it will be executed or queued
+     * @throws HyracksException HyracksException
      */
-    void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException;
+    void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
+            throws HyracksException;
 
     /**
      * Notify the listener that the job has started on the cluster controller
      *
-     * @param jobId
-     * @throws HyracksException
+     * @param jobId the job id
+     * @param spec the job specification
+     *
+     * @throws HyracksException HyracksException
      */
-    void notifyJobStart(JobId jobId) throws HyracksException;
+    void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException;
 
     /**
      * Notify the listener that the job has been terminated, passing exceptions in case of failure
      *
-     * @param jobId
-     * @param jobStatus
-     * @param exceptions
-     * @throws HyracksException
+     * @param jobId the job id
+     * @param spec the job specification
+     * @param jobStatus the job status
+     * @param exceptions the job exceptions
+     * @throws HyracksException HyracksException
      */
-    void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) throws HyracksException;
+    void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
+            throws HyracksException;
 }
