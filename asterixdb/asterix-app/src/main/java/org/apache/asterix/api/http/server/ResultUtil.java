@@ -110,6 +110,10 @@ public class ResultUtil {
         printFieldInternal(pw, name, String.valueOf(value), comma);
     }
 
+    public static void printField(PrintWriter pw, String name, boolean value, boolean comma) {
+        printFieldInternal(pw, name, String.valueOf(value), comma);
+    }
+
     protected static void printFieldInternal(PrintWriter pw, String name, String value, boolean comma) {
         pw.print("\t\"");
         pw.print(name);

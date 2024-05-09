@@ -52,4 +52,9 @@ public class ExecutionError implements ICodedMessage {
     public String getMessage() {
         return message;
     }
+
+    @Override
+    public boolean isRetriable() {
+        return false;
+    }
 }

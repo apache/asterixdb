@@ -33,4 +33,6 @@ public interface ICodedMessage {
      * @return the message
      */
     String getMessage();
+
+    boolean isRetriable();
 }
