@@ -2376,6 +2376,8 @@ public class TestExecutor {
                     str = applyS3Substitution(str, placeholders);
                 } else if (placeholder.getValue().equalsIgnoreCase("AzureBlob")) {
                     str = applyAzureSubstitution(str, placeholders);
+                } else if (placeholder.getValue().equalsIgnoreCase("GCS")) {
+                    str = applyGCSSubstitution(str, placeholders);
                 }
             } else {
                 // Any other place holders, just replace with the value
@@ -2481,12 +2483,21 @@ public class TestExecutor {
         return str;
     }
 
+    protected String applyGCSSubstitution(String str, List<Placeholder> placeholders) {
+        str = setGCSTemplateDefault(str);
+        return str;
+    }
+
     protected String setAzureTemplate(String str) {
         return str.replace("%template%", TEMPLATE);
     }
 
     protected String setAzureTemplateDefault(String str) {
         return str.replace("%template%", TEMPLATE_DEFAULT);
+    }
+
+    protected String setGCSTemplateDefault(String str) {
+        return str;
     }
 
     protected void fail(boolean runDiagnostics, TestCaseContext testCaseCtx, CompilationUnit cUnit,
