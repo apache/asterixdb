@@ -25,6 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.PointableTupleReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.common.MultiComparator;
 
 public class LoadColumnTupleWriter extends FlushColumnTupleWriter {
@@ -32,8 +33,8 @@ public class LoadColumnTupleWriter extends FlushColumnTupleWriter {
     private final MultiComparator comparator;
 
     public LoadColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance, int maxLeafNodeSize, MultiComparator comparator) {
-        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
+            double tolerance, int maxLeafNodeSize, MultiComparator comparator, IColumnWriteContext writeContext) {
+        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize, writeContext);
         prevTupleKeys =
                 PointableTupleReference.create(columnMetadata.getNumberOfPrimaryKeys(), ArrayBackedValueStorage::new);
         this.comparator = comparator;

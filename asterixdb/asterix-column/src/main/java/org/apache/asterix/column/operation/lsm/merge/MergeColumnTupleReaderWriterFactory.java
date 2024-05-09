@@ -38,7 +38,8 @@ public class MergeColumnTupleReaderWriterFactory extends AbstractColumnTupleRead
     public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata,
             IColumnWriteContext writeContext) {
         MergeColumnWriteMetadata mergeWriteMetadata = (MergeColumnWriteMetadata) columnMetadata;
-        return new MergeColumnTupleWriter(mergeWriteMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
+        return new MergeColumnTupleWriter(mergeWriteMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize,
+                writeContext);
     }
 
     @Override

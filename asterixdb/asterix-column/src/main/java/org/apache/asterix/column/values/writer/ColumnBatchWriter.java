@@ -31,6 +31,7 @@ import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 
 /**
  * A writer for a batch columns' values
@@ -40,17 +41,19 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
     private final MultiPersistentBufferBytesOutputStream columns;
     private final int pageSize;
     private final double tolerance;
+    private final IColumnWriteContext writeContext;
     private final IReservedPointer columnLengthPointer;
-
     private ByteBuffer pageZero;
     private int columnsOffset;
     private int filtersOffset;
     private int primaryKeysOffset;
     private int nonKeyColumnStartOffset;
 
-    public ColumnBatchWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int pageSize, double tolerance) {
+    public ColumnBatchWriter(Mutable<IColumnWriteMultiPageOp> multiPageOpRef, int pageSize, double tolerance,
+            IColumnWriteContext writeContext) {
         this.pageSize = pageSize;
         this.tolerance = tolerance;
+        this.writeContext = writeContext;
         primaryKeys = new ByteBufferOutputStream();
         columns = new MultiPersistentBufferBytesOutputStream(multiPageOpRef);
         columnLengthPointer = columns.createPointer();
@@ -74,39 +77,48 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
     }
 
     @Override
-    public int writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException {
-        int allocatedSpace = 0;
+    public void writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException {
         for (int i = 0; i < primaryKeyWriters.length; i++) {
             IColumnValuesWriter writer = primaryKeyWriters[i];
             setColumnOffset(i, primaryKeysOffset + primaryKeys.size());
             writer.flush(primaryKeys);
-            allocatedSpace += writer.getAllocatedSpace();
         }
-        return allocatedSpace;
     }
 
     @Override
     public int writeColumns(PriorityQueue<IColumnValuesWriter> nonKeysColumnWriters) throws HyracksDataException {
-        int allocatedSpace = 0;
         columns.reset();
         while (!nonKeysColumnWriters.isEmpty()) {
             IColumnValuesWriter writer = nonKeysColumnWriters.poll();
             writeColumn(writer);
-            allocatedSpace += writer.getAllocatedSpace();
         }
-        return allocatedSpace;
+
+        // compute the final length
+        int totalLength = nonKeyColumnStartOffset + columns.size();
+        // reset to ensure the last buffer's position and limit are set appropriately
+        columns.reset();
+        return totalLength;
+    }
+
+    @Override
+    public void close() {
+        writeContext.close();
     }
 
     private void writeColumn(IColumnValuesWriter writer) throws HyracksDataException {
+        boolean overlapping = true;
         if (!hasEnoughSpace(columns.getCurrentBufferPosition(), writer)) {
             /*
              * We reset the columns stream to write all pages and confiscate a new buffer to minimize splitting
              * the columns value into multiple pages.
              */
+            overlapping = false;
             nonKeyColumnStartOffset += columns.capacity();
             columns.reset();
         }
 
+        int columnIndex = writer.getColumnIndex();
+        writeContext.startWritingColumn(columnIndex, overlapping);
         int columnRelativeOffset = columns.size();
         columns.reserveInteger(columnLengthPointer);
         setColumnOffset(writer.getColumnIndex(), nonKeyColumnStartOffset + columnRelativeOffset);
@@ -116,10 +128,19 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
 
         int length = columns.size() - columnRelativeOffset;
         columnLengthPointer.setInteger(length);
+        writeContext.endWritingColumn(columnIndex, length);
     }
 
     private boolean hasEnoughSpace(int bufferPosition, IColumnValuesWriter columnWriter) {
-        //Estimated size mostly overestimate the size
+        if (bufferPosition == 0) {
+            // if the current buffer is empty, then use it
+            return true;
+        } else if (tolerance == 1.0d) {
+            // if tolerance is 100%, then it should avoid doing any calculations and start a with a new page
+            return false;
+        }
+
+        // Estimated size mostly overestimate the size
         int columnSize = columnWriter.getEstimatedSize();
         float remainingPercentage = (pageSize - bufferPosition) / (float) pageSize;
         if (columnSize > pageSize) {

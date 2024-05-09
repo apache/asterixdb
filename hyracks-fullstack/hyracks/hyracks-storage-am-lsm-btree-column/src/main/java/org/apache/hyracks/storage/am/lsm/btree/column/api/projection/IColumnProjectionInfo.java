@@ -48,4 +48,9 @@ public interface IColumnProjectionInfo {
      * @return number of filtered columns
      */
     int getNumberOfFilteredColumns();
+
+    /**
+     * @return the type of {@link IColumnTupleProjector} that created this projection info
+     */
+    ColumnProjectorType getProjectorType();
 }

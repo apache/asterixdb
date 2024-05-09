@@ -41,10 +41,10 @@ public class FlushColumnTupleReaderWriterFactory extends AbstractColumnTupleRead
         if (flushColumnMetadata.getMetaType() == null) {
             //no meta
             return new FlushColumnTupleWriter(flushColumnMetadata, pageSize, maxNumberOfTuples, tolerance,
-                    maxLeafNodeSize);
+                    maxLeafNodeSize, writeContext);
         }
         return new FlushColumnTupleWithMetaWriter(flushColumnMetadata, pageSize, maxNumberOfTuples, tolerance,
-                maxLeafNodeSize);
+                maxLeafNodeSize, writeContext);
     }
 
     @Override

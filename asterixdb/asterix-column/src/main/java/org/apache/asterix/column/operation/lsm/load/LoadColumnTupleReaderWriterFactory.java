@@ -40,6 +40,6 @@ public class LoadColumnTupleReaderWriterFactory extends FlushColumnTupleReaderWr
     public AbstractColumnTupleWriter createColumnWriter(IColumnMetadata columnMetadata,
             IColumnWriteContext writeContext) {
         return new LoadColumnTupleWriter((FlushColumnMetadata) columnMetadata, pageSize, maxNumberOfTuples, tolerance,
-                maxLeafNodeSize, MultiComparator.create(cmpFactories));
+                maxLeafNodeSize, MultiComparator.create(cmpFactories), writeContext);
     }
 }

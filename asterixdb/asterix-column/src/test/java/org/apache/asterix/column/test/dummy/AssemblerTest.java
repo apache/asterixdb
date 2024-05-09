@@ -49,6 +49,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -99,7 +100,7 @@ public class AssemblerTest extends AbstractDummyTest {
                 columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.serializeColumnsMetadata(), readerFactory,
                 DummyValueGetterFactory.INSTANCE, ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, Collections.emptyMap(),
                 NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpColumnFilterEvaluatorFactory.INSTANCE,
-                NoOpWarningCollector.INSTANCE, null);
+                NoOpWarningCollector.INSTANCE, null, ColumnProjectorType.QUERY);
         AbstractBytesInputStream[] streams = new AbstractBytesInputStream[columnMetadata.getNumberOfColumns()];
         Arrays.fill(streams, DummyBytesInputStream.INSTANCE);
 

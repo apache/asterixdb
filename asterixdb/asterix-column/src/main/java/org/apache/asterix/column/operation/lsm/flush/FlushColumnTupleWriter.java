@@ -29,6 +29,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
@@ -45,11 +46,11 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     protected int primaryKeysEstimatedSize;
 
     public FlushColumnTupleWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance, int maxLeafNodeSize) {
+            double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
         this.columnMetadata = columnMetadata;
         transformer = new ColumnTransformer(columnMetadata, columnMetadata.getRoot());
         finalizer = new BatchFinalizerVisitor(columnMetadata);
-        writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance);
+        writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance, writeContext);
         this.maxNumberOfTuples = maxNumberOfTuples;
         this.maxLeafNodeSize = maxLeafNodeSize;
         pointable = new TypedRecordLazyVisitablePointable(columnMetadata.getDatasetType());
@@ -105,6 +106,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     @Override
     public final void close() {
         columnMetadata.close();
+        writer.close();
     }
 
     @Override

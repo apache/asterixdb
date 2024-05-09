@@ -33,16 +33,21 @@ public class NoOpColumnBatchWriter implements IColumnBatchWriter {
 
     @Override
     public void setPageZeroBuffer(ByteBuffer pageZeroBuffer, int numberOfColumns, int numberOfPrimaryKeys) {
-
+        // NoOp
     }
 
     @Override
-    public int writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException {
-        return 0;
+    public void writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException {
+        // NoOp
     }
 
     @Override
     public int writeColumns(PriorityQueue<IColumnValuesWriter> nonKeysColumnWriters) throws HyracksDataException {
         return 0;
+    }
+
+    @Override
+    public void close() {
+        // NoOp
     }
 }

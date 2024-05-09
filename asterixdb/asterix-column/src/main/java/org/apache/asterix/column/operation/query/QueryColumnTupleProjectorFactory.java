@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.query;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
+
 import java.util.Map;
 
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
@@ -61,7 +63,7 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
         if (requestedMetaType == null) {
             // The dataset does not contain a meta part
             return new QueryColumnTupleProjector(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfo,
-                    rangeFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context);
+                    rangeFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context, QUERY);
         }
         // The dataset has a meta part
         return new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,

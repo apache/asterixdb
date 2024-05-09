@@ -62,6 +62,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.write.DefaultColumnWriteContext;
 import org.apache.hyracks.util.StorageUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -151,7 +152,7 @@ public abstract class AbstractBytesTest extends TestBase {
             int numberOfTuplesToWrite) throws IOException {
         IColumnWriteMultiPageOp multiPageOp = columnMetadata.getMultiPageOpRef().getValue();
         FlushColumnTupleWriter writer = new FlushColumnTupleWriter(columnMetadata, PAGE_SIZE, MAX_NUMBER_OF_TUPLES,
-                TOLERANCE, MAX_LEAF_NODE_SIZE);
+                TOLERANCE, MAX_LEAF_NODE_SIZE, DefaultColumnWriteContext.INSTANCE);
 
         try {
             return writeTuples(fileId, writer, records, numberOfTuplesToWrite, multiPageOp);

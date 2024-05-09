@@ -59,9 +59,8 @@ public final class BatchFinalizerVisitor implements ISchemaNodeVisitor<Void, Abs
             columnMetadata.getMetaRoot().accept(this, null);
         }
 
-        int allocatedSpace = batchWriter.writePrimaryKeyColumns(primaryKeyWriters);
-        allocatedSpace += batchWriter.writeColumns(orderedColumns);
-        return allocatedSpace;
+        batchWriter.writePrimaryKeyColumns(primaryKeyWriters);
+        return batchWriter.writeColumns(orderedColumns);
     }
 
     @Override

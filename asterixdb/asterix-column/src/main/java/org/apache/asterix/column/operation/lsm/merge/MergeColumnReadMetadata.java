@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.lsm.merge;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MERGE;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -43,7 +45,7 @@ public final class MergeColumnReadMetadata extends AbstractColumnImmutableReadMe
 
     private MergeColumnReadMetadata(ARecordType datasetType, ARecordType metaType, int numberOfPrimaryKeys,
             IColumnValuesReader[] columnReaders, IValueReference serializedMetadata) {
-        super(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata, columnReaders.length);
+        super(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata, columnReaders.length, MERGE);
         this.columnReaders = columnReaders;
     }
 

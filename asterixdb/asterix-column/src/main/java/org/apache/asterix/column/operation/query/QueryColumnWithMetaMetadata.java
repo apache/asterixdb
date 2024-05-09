@@ -51,6 +51,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 
 /**
  * Query column metadata (with metaRecord)
@@ -63,10 +64,11 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory,
             IColumnFilterEvaluator filterEvaluator, List<IColumnRangeFilterValueAccessor> filterValueAccessors,
-            IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders)
-            throws HyracksDataException {
+            IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders,
+            ColumnProjectorType projectorType) throws HyracksDataException {
         super(datasetType, metaType, primaryKeyReaders, serializedMetadata, fieldNamesDictionary, root, readerFactory,
-                valueGetterFactory, filterEvaluator, filterValueAccessors, columnFilterEvaluator, filterColumnReaders);
+                valueGetterFactory, filterEvaluator, filterValueAccessors, columnFilterEvaluator, filterColumnReaders,
+                projectorType);
         metaAssembler = new ColumnAssembler(metaRoot, metaType, this, readerFactory, valueGetterFactory);
     }
 
@@ -121,7 +123,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
             Map<String, FunctionCallInformation> functionCallInfo, ARecordType metaRequestedType,
             IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
-            IHyracksTaskContext context) throws IOException {
+            IHyracksTaskContext context, ColumnProjectorType projectorType) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
         int offset = serializedMetadata.getStartOffset();
         int length = serializedMetadata.getLength();
@@ -179,6 +181,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
 
         return new QueryColumnWithMetaMetadata(datasetType, metaType, primaryKeyReaders, serializedMetadata,
                 fieldNamesDictionary, clippedRoot, metaClippedRoot, readerFactory, valueGetterFactory,
-                normalizedFilterEvaluator, filterValueAccessors, columnFilterEvaluator, filterColumnReaders);
+                normalizedFilterEvaluator, filterValueAccessors, columnFilterEvaluator, filterColumnReaders,
+                projectorType);
     }
 }

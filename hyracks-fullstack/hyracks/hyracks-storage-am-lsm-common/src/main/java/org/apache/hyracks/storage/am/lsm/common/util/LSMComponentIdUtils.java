@@ -55,15 +55,17 @@ public class LSMComponentIdUtils {
     }
 
     public static void persist(ILSMComponentId id, IComponentMetadata metadata) throws HyracksDataException {
-        LSMComponentId componentId = (LSMComponentId) id;
-        metadata.put(COMPONENT_ID_MIN_KEY, LongPointable.FACTORY.createPointable(componentId.getMinId()));
-        metadata.put(COMPONENT_ID_MAX_KEY, LongPointable.FACTORY.createPointable(componentId.getMaxId()));
+        metadata.put(COMPONENT_ID_MIN_KEY, LongPointable.FACTORY.createPointable(id.getMinId()));
+        metadata.put(COMPONENT_ID_MAX_KEY, LongPointable.FACTORY.createPointable(id.getMaxId()));
     }
 
     public static ILSMComponentId union(ILSMComponentId id1, ILSMComponentId id2) {
-        long minId = Long.min(((LSMComponentId) id1).getMinId(), ((LSMComponentId) id2).getMinId());
-        long maxId = Long.max(((LSMComponentId) id1).getMaxId(), ((LSMComponentId) id2).getMaxId());
+        long minId = Long.min(id1.getMinId(), id2.getMinId());
+        long maxId = Long.max(id1.getMaxId(), id2.getMaxId());
         return new LSMComponentId(minId, maxId);
     }
 
+    public static boolean isMergedComponent(ILSMComponentId id) {
+        return id.getMinId() < id.getMaxId();
+    }
 }

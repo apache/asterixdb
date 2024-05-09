@@ -37,6 +37,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
 
@@ -47,6 +48,7 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
     protected final Map<String, FunctionCallInformation> functionCallInfoMap;
     protected final IWarningCollector warningCollector;
     protected final IHyracksTaskContext context;
+    protected final ColumnProjectorType projectorType;
     protected final IColumnRangeFilterEvaluatorFactory normalizedFilterEvaluatorFactory;
     protected final IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory;
     private final AssembledTupleReference assembledTupleReference;
@@ -55,7 +57,7 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
             Map<String, FunctionCallInformation> functionCallInfoMap,
             IColumnRangeFilterEvaluatorFactory normalizedFilterEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
-            IHyracksTaskContext context) {
+            IHyracksTaskContext context, ColumnProjectorType projectorType) {
         this.datasetType = datasetType;
         this.numberOfPrimaryKeys = numberOfPrimaryKeys;
         this.requestedType = requestedType;
@@ -64,6 +66,7 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
         this.columnFilterEvaluatorFactory = columnFilterEvaluatorFactory;
         this.warningCollector = warningCollector;
         this.context = context;
+        this.projectorType = projectorType;
         assembledTupleReference = new AssembledTupleReference(getNumberOfTupleFields());
     }
 
@@ -72,7 +75,8 @@ public class QueryColumnTupleProjector implements IColumnTupleProjector {
         try {
             return QueryColumnMetadata.create(datasetType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
-                    normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context);
+                    normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector, context,
+                    projectorType);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

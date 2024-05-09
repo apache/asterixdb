@@ -55,6 +55,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.IntegerPointable;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleReader;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -78,9 +79,9 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator normalizedFilterEvaluator,
             List<IColumnRangeFilterValueAccessor> filterValueAccessors,
-            IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders)
-            throws HyracksDataException {
-        super(datasetType, metaType, primaryKeyReaders.length, serializedMetadata, -1);
+            IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders,
+            ColumnProjectorType projectorType) throws HyracksDataException {
+        super(datasetType, metaType, primaryKeyReaders.length, serializedMetadata, -1, projectorType);
         this.fieldNamesDictionary = fieldNamesDictionary;
         this.primaryKeyReaders = primaryKeyReaders;
         this.normalizedFilterEvaluator = normalizedFilterEvaluator;
@@ -175,7 +176,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
             Map<String, FunctionCallInformation> functionCallInfoMap,
             IColumnRangeFilterEvaluatorFactory normalizedEvaluatorFactory,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
-            IHyracksTaskContext context) throws IOException {
+            IHyracksTaskContext context, ColumnProjectorType projectorType) throws IOException {
         byte[] bytes = serializedMetadata.getByteArray();
         int offset = serializedMetadata.getStartOffset();
         int length = serializedMetadata.getLength();
@@ -230,7 +231,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
 
         return new QueryColumnMetadata(datasetType, null, primaryKeyReaders, serializedMetadata, fieldNamesDictionary,
                 clippedRoot, readerFactory, valueGetterFactory, normalizedFilterEvaluator, filterValueAccessors,
-                columnFilterEvaluator, filterColumnReaders);
+                columnFilterEvaluator, filterColumnReaders, projectorType);
     }
 
     protected static ObjectSchemaNode clip(ARecordType requestedType, ObjectSchemaNode root,

@@ -34,6 +34,7 @@ import org.apache.asterix.common.exceptions.NoOpWarningCollector;
 import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -63,12 +64,12 @@ public class FlushLargeTest extends AbstractBytesTest {
         FlushColumnMetadata columnMetadata = prepareNewFile(fileId);
         List<IValueReference> record = getParsedRecords();
         List<DummyPage> pageZeros = transform(fileId, columnMetadata, record, numberOfTuplesToWrite);
-        QueryColumnMetadata readMetadata =
-                QueryColumnMetadata.create(columnMetadata.getDatasetType(), columnMetadata.getNumberOfPrimaryKeys(),
-                        columnMetadata.serializeColumnsMetadata(), new ColumnValueReaderFactory(),
-                        ValueGetterFactory.INSTANCE, ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE,
-                        Collections.emptyMap(), NoOpColumnFilterEvaluatorFactory.INSTANCE,
-                        NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
+        QueryColumnMetadata readMetadata = QueryColumnMetadata.create(columnMetadata.getDatasetType(),
+                columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.serializeColumnsMetadata(),
+                new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE,
+                ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE, Collections.emptyMap(),
+                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpColumnFilterEvaluatorFactory.INSTANCE,
+                NoOpWarningCollector.INSTANCE, null, ColumnProjectorType.QUERY);
         writeResult(fileId, readMetadata, pageZeros);
         testCase.compareRepeated(numberOfTuplesToWrite);
     }

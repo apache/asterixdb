@@ -30,15 +30,19 @@ public interface IColumnBatchWriter {
      * Writes the primary keys' values to Page0
      *
      * @param primaryKeyWriters primary keys' writers
-     * @return the allocated space for the primary keys' writers
      */
-    int writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException;
+    void writePrimaryKeyColumns(IColumnValuesWriter[] primaryKeyWriters) throws HyracksDataException;
 
     /**
      * Writes the non-key values to multiple pages
      *
      * @param nonKeysColumnWriters non-key values' writers
-     * @return the allocated space for the non-key values' writers
+     * @return length of all columns (that includes pageZero)
      */
     int writeColumns(PriorityQueue<IColumnValuesWriter> nonKeysColumnWriters) throws HyracksDataException;
+
+    /**
+     * Close the writer
+     */
+    void close();
 }

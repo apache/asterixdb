@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.query;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
@@ -47,7 +49,7 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
             IHyracksTaskContext context) {
         super(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfoMap, filterEvaluator,
-                columnFilterEvaluatorFactory, warningCollector, context);
+                columnFilterEvaluatorFactory, warningCollector, context, QUERY);
         this.metaType = metaType;
         this.requestedMetaType = requestedMetaType;
     }
@@ -58,7 +60,7 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
             return QueryColumnWithMetaMetadata.create(datasetType, metaType, numberOfPrimaryKeys, serializedMetadata,
                     new ColumnValueReaderFactory(), ValueGetterFactory.INSTANCE, requestedType, functionCallInfoMap,
                     requestedMetaType, normalizedFilterEvaluatorFactory, columnFilterEvaluatorFactory, warningCollector,
-                    context);
+                    context, projectorType);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

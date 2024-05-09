@@ -21,6 +21,7 @@ package org.apache.asterix.column.operation.lsm.flush;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
@@ -28,8 +29,8 @@ public class FlushColumnTupleWithMetaWriter extends FlushColumnTupleWriter {
     private final RecordLazyVisitablePointable metaPointable;
 
     public FlushColumnTupleWithMetaWriter(FlushColumnMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance, int maxLeafNodeSize) {
-        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize);
+            double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
+        super(columnMetadata, pageSize, maxNumberOfTuples, tolerance, maxLeafNodeSize, writeContext);
         metaColumnTransformer = new ColumnTransformer(columnMetadata, columnMetadata.getMetaRoot());
         metaPointable = new TypedRecordLazyVisitablePointable(columnMetadata.getMetaType());
     }

@@ -34,6 +34,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnTupleIterator;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnWriteMultiPageOp;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.error.ColumnarValueException;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -52,7 +53,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     private int numberOfAntiMatter;
 
     public MergeColumnTupleWriter(MergeColumnWriteMetadata columnMetadata, int pageSize, int maxNumberOfTuples,
-            double tolerance, int maxLeafNodeSize) {
+            double tolerance, int maxLeafNodeSize, IColumnWriteContext writeContext) {
         this.columnMetadata = columnMetadata;
         this.maxLeafNodeSize = maxLeafNodeSize;
         List<IColumnTupleIterator> componentsTuplesList = columnMetadata.getComponentsTuples();
@@ -68,7 +69,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
         }
         this.maxNumberOfTuples = getMaxNumberOfTuples(maxNumberOfTuples, totalNumberOfTuples, totalLength);
         this.writtenComponents = new RunLengthIntArray();
-        writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance);
+        writer = new ColumnBatchWriter(columnMetadata.getMultiPageOpRef(), pageSize, tolerance, writeContext);
         writtenComponents.reset();
         primaryKeyWriters = new IColumnValuesWriter[columnMetadata.getNumberOfPrimaryKeys()];
         for (int i = 0; i < primaryKeyWriters.length; i++) {
@@ -142,16 +143,17 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             orderedColumns.add(columnMetadata.getWriter(i));
         }
         writer.setPageZeroBuffer(pageZero, numberOfColumns, numberOfPrimaryKeys);
-        int allocatedSpace = writer.writePrimaryKeyColumns(primaryKeyWriters);
-        allocatedSpace += writer.writeColumns(orderedColumns);
+        writer.writePrimaryKeyColumns(primaryKeyWriters);
+        int totalLength = writer.writeColumns(orderedColumns);
 
         numberOfAntiMatter = 0;
-        return allocatedSpace;
+        return totalLength;
     }
 
     @Override
     public void close() {
         columnMetadata.close();
+        writer.close();
     }
 
     private void writePrimaryKeys(MergeColumnTupleReference columnTuple) throws HyracksDataException {
