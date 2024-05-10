@@ -877,8 +877,11 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // this annotation is needed for the physical optimizer to replace this with the unnest operator later
             AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) expr;
             removeJoinAnnotations(afcExpr);
-            setAnnotation(afcExpr,
-                    plan.joinHint != null ? plan.joinHint : IndexedNLJoinExpressionAnnotation.INSTANCE_ANY_INDEX);
+            if (plan.joinHint != null) {
+                setAnnotation(afcExpr, plan.joinHint);
+            } else {
+                setAnnotation(plan.exprAndHint.first, plan.exprAndHint.second);
+            }
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("Added IndexedNLJoinExpressionAnnotation to " + afcExpr.toString());
             }

@@ -848,37 +848,46 @@ public class JoinNode {
         return true;
     }
 
-    private boolean nestedLoopsApplicable(ILogicalExpression joinExpr) throws AlgebricksException {
-
-        List<LogicalVariable> usedVarList = new ArrayList<>();
-        joinExpr.getUsedVariables(usedVarList);
-        if (usedVarList.size() != 2) {
-            return false;
-        }
+    private boolean nestedLoopsApplicable(ILogicalExpression joinExpr, boolean outerJoin,
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
+            throws AlgebricksException {
 
         if (joinExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
             return false;
         }
-
-        LogicalVariable var0 = usedVarList.get(0);
-        LogicalVariable var1 = usedVarList.get(1);
-
+        List<LogicalVariable> usedVarList = new ArrayList<>();
+        joinExpr.getUsedVariables(usedVarList);
+        if (usedVarList.size() != 2 && outerJoin) {
+            return false;
+        }
+        ILogicalOperator joinLeafInput0 = null;
+        ILogicalOperator joinLeafInput1 = null;
         // Find which joinLeafInput these vars belong to.
-        // go thru the leaf inputs and see where these variables came from
-        ILogicalOperator joinLeafInput0 = joinEnum.findLeafInput(Collections.singletonList(var0));
-        if (joinLeafInput0 == null) {
-            return false; // this should not happen unless an assignment is between two joins.
+        // go through the leaf inputs and see where these variables came from
+        for (LogicalVariable usedVar : usedVarList) {
+            ILogicalOperator joinLeafInput = joinEnum.findLeafInput(Collections.singletonList(usedVar));
+            if (joinLeafInput0 == null) {
+                joinLeafInput0 = joinLeafInput;
+            } else if (joinLeafInput1 == null && joinLeafInput != joinLeafInput0) {
+                joinLeafInput1 = joinLeafInput;
+            }
+            // This check ensures that the used variables in the join expression
+            // refer to not more than two leaf inputs.
+            if (joinLeafInput != joinLeafInput0 && joinLeafInput != joinLeafInput1) {
+                return false;
+            }
         }
 
-        ILogicalOperator joinLeafInput1 = joinEnum.findLeafInput(Collections.singletonList(var1));
-        if (joinLeafInput1 == null) {
+        // This check ensures that the used variables in the join expression
+        // refer to not less than two leaf inputs.
+        if (joinLeafInput0 == null || joinLeafInput1 == null) {
             return false;
         }
 
         ILogicalOperator innerLeafInput = this.leafInput;
 
         // This must equal one of the two joinLeafInputsHashMap found above. check for sanity!!
-        if (innerLeafInput != joinLeafInput1 && innerLeafInput != joinLeafInput0) {
+        if (innerLeafInput != joinLeafInput0 && innerLeafInput != joinLeafInput1) {
             return false; // This should not happen. So debug to find out why this happened.
         }
 
@@ -896,13 +905,15 @@ public class JoinNode {
 
         // Now call the rewritePre code
         IntroduceJoinAccessMethodRule tmp = new IntroduceJoinAccessMethodRule();
-        boolean retVal = tmp.checkApplicable(new MutableObject<>(joinEnum.localJoinOp), joinEnum.optCtx);
+        boolean retVal = tmp.checkApplicable(new MutableObject<>(joinEnum.localJoinOp), joinEnum.optCtx, chosenIndexes,
+                analyzedAMs);
 
         return retVal;
     }
 
     private boolean NLJoinApplicable(JoinNode leftJn, JoinNode rightJn, boolean outerJoin,
-            ILogicalExpression nestedLoopJoinExpr) throws AlgebricksException {
+            ILogicalExpression nestedLoopJoinExpr, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         if (nullExtendingSide(leftJn.datasetBits, outerJoin)) {
             return false;
         }
@@ -912,7 +923,8 @@ public class JoinNode {
             return false; // nested loop plan not possible.
         }
 
-        if (nestedLoopJoinExpr == null || !rightJn.nestedLoopsApplicable(nestedLoopJoinExpr)) {
+        if (nestedLoopJoinExpr == null
+                || !rightJn.nestedLoopsApplicable(nestedLoopJoinExpr, outerJoin, chosenIndexes, analyzedAMs)) {
             return false;
         }
 
@@ -958,7 +970,7 @@ public class JoinNode {
             totalCost = hjCost.costAdd(leftExchangeCost).costAdd(rightExchangeCost).costAdd(childCosts);
             if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
                 pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-                pn.setJoinAndHintInfo(PlanNode.JoinMethod.HYBRID_HASH_JOIN, hashJoinExpr,
+                pn.setJoinAndHintInfo(PlanNode.JoinMethod.HYBRID_HASH_JOIN, hashJoinExpr, null,
                         HashJoinExpressionAnnotation.BuildSide.RIGHT, hintHashJoin);
                 pn.setJoinCosts(hjCost, totalCost, leftExchangeCost, rightExchangeCost);
                 planIndexesArray.add(pn.allPlansIndex);
@@ -998,7 +1010,7 @@ public class JoinNode {
             totalCost = bcastHjCost.costAdd(rightExchangeCost).costAdd(childCosts);
             if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
                 pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-                pn.setJoinAndHintInfo(PlanNode.JoinMethod.BROADCAST_HASH_JOIN, hashJoinExpr,
+                pn.setJoinAndHintInfo(PlanNode.JoinMethod.BROADCAST_HASH_JOIN, hashJoinExpr, null,
                         HashJoinExpressionAnnotation.BuildSide.RIGHT, hintBroadcastHashJoin);
                 pn.setJoinCosts(bcastHjCost, totalCost, leftExchangeCost, rightExchangeCost);
                 planIndexesArray.add(pn.allPlansIndex);
@@ -1024,11 +1036,39 @@ public class JoinNode {
         this.leftJn = leftJn;
         this.rightJn = rightJn;
 
-        if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr)) {
+        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
+        if (!NLJoinApplicable(leftJn, rightJn, outerJoin, nestedLoopJoinExpr, chosenIndexes, analyzedAMs)) {
+            return PlanNode.NO_PLAN;
+        }
+        if (chosenIndexes.isEmpty()) {
             return PlanNode.NO_PLAN;
         }
 
-        nljCost = joinEnum.getCostMethodsHandle().costIndexNLJoin(this);
+        Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint = new Pair<>(null, null);
+        nljCost = joinEnum.getCostHandle().maxCost();
+        ICost curNljCost;
+        for (Map.Entry<IAccessMethod, AccessMethodAnalysisContext> amEntry : analyzedAMs.entrySet()) {
+            AccessMethodAnalysisContext analysisCtx = amEntry.getValue();
+            Iterator<Map.Entry<Index, List<Pair<Integer, Integer>>>> indexIt =
+                    analysisCtx.getIteratorForIndexExprsAndVars();
+            List<IOptimizableFuncExpr> exprs = analysisCtx.getMatchedFuncExprs();
+            while (indexIt.hasNext()) {
+                Collection<String> indexNames = new ArrayList<>();
+                Map.Entry<Index, List<Pair<Integer, Integer>>> indexEntry = indexIt.next();
+                Index index = indexEntry.getKey();
+                AbstractFunctionCallExpression afce = buildExpr(exprs, indexEntry.getValue());
+                curNljCost = joinEnum.getCostMethodsHandle().costIndexNLJoin(this, index);
+                if (curNljCost.costLE(nljCost)) {
+                    nljCost = curNljCost;
+                    indexNames.add(index.getIndexName());
+                    exprAndHint = new Pair<>(afce, IndexedNLJoinExpressionAnnotation.newInstance(indexNames));
+                }
+            }
+        }
+        if (exprAndHint.first == null) {
+            return PlanNode.NO_PLAN;
+        }
         leftExchangeCost = joinEnum.getCostMethodsHandle().computeNLJOuterExchangeCost(this);
         rightExchangeCost = joinEnum.getCostHandle().zeroCost();
         childCosts = allPlans.get(leftPlan.allPlansIndex).totalCost;
@@ -1037,8 +1077,8 @@ public class JoinNode {
                 hintNLJoin != null || joinEnum.forceJoinOrderMode || outerJoin || level <= joinEnum.cboFullEnumLevel;
         if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
             pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
-
-            pn.setJoinAndHintInfo(PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN, nestedLoopJoinExpr, null, hintNLJoin);
+            pn.setJoinAndHintInfo(PlanNode.JoinMethod.INDEX_NESTED_LOOP_JOIN, nestedLoopJoinExpr, exprAndHint, null,
+                    hintNLJoin);
             pn.setJoinCosts(nljCost, totalCost, leftExchangeCost, rightExchangeCost);
             planIndexesArray.add(pn.allPlansIndex);
             allPlans.add(pn);
@@ -1093,7 +1133,7 @@ public class JoinNode {
         if (this.cheapestPlanIndex == PlanNode.NO_PLAN || totalCost.costLT(this.cheapestPlanCost) || forceEnum) {
             pn = new PlanNode(allPlans.size(), joinEnum, this, leftPlan, rightPlan, outerJoin);
             pn.setJoinAndHintInfo(PlanNode.JoinMethod.CARTESIAN_PRODUCT_JOIN,
-                    Objects.requireNonNullElse(cpJoinExpr, ConstantExpression.TRUE), null, null);
+                    Objects.requireNonNullElse(cpJoinExpr, ConstantExpression.TRUE), null, null, null);
             pn.setJoinCosts(cpCost, totalCost, leftExchangeCost, rightExchangeCost);
             planIndexesArray.add(pn.allPlansIndex);
             allPlans.add(pn);

@@ -267,12 +267,22 @@ public class JoinEnum {
     }
 
     protected ILogicalExpression getNestedLoopJoinExpr(List<Integer> newJoinConditions) {
-        if (newJoinConditions.size() != 1) {
-            // may remove this restriction later if possible
-            return null;
+        if (newJoinConditions.size() == 0) {
+            // this is a cartesian product
+            return ConstantExpression.TRUE;
         }
-        JoinCondition jc = joinConditions.get(newJoinConditions.get(0));
-        return jc.joinCondition;
+        if (newJoinConditions.size() == 1) {
+            JoinCondition jc = joinConditions.get(newJoinConditions.get(0));
+            return jc.joinCondition;
+        }
+        ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
+                BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
+        for (int joinNum : newJoinConditions) {
+            // need to AND all the expressions.
+            JoinCondition jc = joinConditions.get(joinNum);
+            andExpr.getArguments().add(new MutableObject<>(jc.joinCondition));
+        }
+        return andExpr;
     }
 
     protected ILogicalExpression getHashJoinExpr(List<Integer> newJoinConditions) {

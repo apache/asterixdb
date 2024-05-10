@@ -199,9 +199,11 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
      * Simply picks the first index that it finds. TODO: Improve this decision
      * process by making it more systematic.
      */
-    protected Pair<IAccessMethod, Index> chooseBestIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) {
+    protected Pair<IAccessMethod, Index> chooseBestIndex(Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs,
+            List<Pair<IAccessMethod, Index>> chosenIndexes) {
         List<Pair<IAccessMethod, Index>> list = new ArrayList<>();
         chooseAllIndexes(analyzedAMs, list);
+        chosenIndexes.addAll(list);
         return list.isEmpty() ? null : list.get(0);
     }
 

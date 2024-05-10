@@ -19,6 +19,7 @@
 
 package org.apache.asterix.optimizer.cost;
 
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.cbo.JoinNode;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
@@ -36,7 +37,7 @@ public interface ICostMethods {
 
     Cost costBroadcastHashJoin(JoinNode currentJn);
 
-    Cost costIndexNLJoin(JoinNode currentJn);
+    Cost costIndexNLJoin(JoinNode currentJn, Index index);
 
     Cost costCartesianProductJoin(JoinNode currentJn);
 

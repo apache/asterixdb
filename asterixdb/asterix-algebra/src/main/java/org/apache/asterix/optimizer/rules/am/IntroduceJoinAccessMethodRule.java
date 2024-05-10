@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
@@ -140,7 +141,9 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         afterJoinRefs = new ArrayList<>();
         // Recursively checks the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, false);
+        List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
+        Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
+        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, false, chosenIndexes, analyzedAMs);
 
         if (joinOp != null) {
             // We found an optimization here. Don't need to optimize this operator again.
@@ -156,7 +159,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         return planTransformed;
     }
 
-    public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+    public boolean checkApplicable(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
             throws AlgebricksException {
         clear();
         setMetadataDeclarations(context);
@@ -166,7 +170,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         afterJoinRefs = new ArrayList<>();
         // Recursively checks the given plan whether the desired pattern exists in it.
         // If so, try to optimize the plan.
-        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, true);
+        boolean planTransformed = checkAndApplyJoinTransformation(opRef, context, true, chosenIndexes, analyzedAMs);
 
         if (!planTransformed) {
             return false;
@@ -256,7 +260,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
      * if it is not already optimized.
      */
     protected boolean checkAndApplyJoinTransformation(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            boolean checkApplicableOnly) throws AlgebricksException {
+            boolean checkApplicableOnly, List<Pair<IAccessMethod, Index>> chosenIndexes,
+            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         boolean joinFoundAndOptimizationApplied;
 
@@ -267,7 +272,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
         // Recursively check the plan and try to optimize it. We first check the children of the given operator
         // to make sure an earlier join in the path is optimized first.
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
-            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context, checkApplicableOnly);
+            joinFoundAndOptimizationApplied = checkAndApplyJoinTransformation(inputOpRef, context, checkApplicableOnly,
+                    chosenIndexes, analyzedAMs);
             if (joinFoundAndOptimizationApplied) {
                 return true;
             }
@@ -321,8 +327,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
             // For each access method, this contains the information about
             // whether an available index can be applicable or not.
-            Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = null;
-            if (continueCheck) {
+            if (!checkApplicableOnly && continueCheck) {
                 analyzedAMs = new HashMap<>();
             }
 
@@ -334,7 +339,8 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
                 // the subplan into the index branch and giving the join a condition for this rule to optimize.
                 // *No nodes* from this rewrite will be used beyond this point.
                 joinFromSubplanRewrite.findAfterSubplanSelectOperator(afterJoinRefs);
-                if (rewriteLocallyAndTransform(joinRef, context, joinFromSubplanRewrite, checkApplicableOnly)) {
+                if (rewriteLocallyAndTransform(joinRef, context, joinFromSubplanRewrite, checkApplicableOnly,
+                        chosenIndexes, analyzedAMs)) {
                     // Connect the after-join operators to the index subtree root before this rewrite. This also avoids
                     // performing the secondary index validation step twice.
                     ILogicalOperator lastAfterJoinOp = afterJoinRefs.get(afterJoinRefs.size() - 1).getValue();
@@ -393,7 +399,7 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
 
                 // We are going to use indexes from the inner branch.
                 // If no index is available, then we stop here.
-                Pair<IAccessMethod, Index> chosenIndex = chooseBestIndex(analyzedAMs);
+                Pair<IAccessMethod, Index> chosenIndex = chooseBestIndex(analyzedAMs, chosenIndexes);
                 if (chosenIndex == null) {
                     context.addToDontApplySet(this, joinOp);
                     continueCheck = false;
@@ -512,13 +518,15 @@ public class IntroduceJoinAccessMethodRule extends AbstractIntroduceAccessMethod
     }
 
     private boolean rewriteLocallyAndTransform(Mutable<ILogicalOperator> opRef, IOptimizationContext context,
-            IIntroduceAccessMethodRuleLocalRewrite<AbstractBinaryJoinOperator> rewriter, boolean checkApplicableOnly)
+            IIntroduceAccessMethodRuleLocalRewrite<AbstractBinaryJoinOperator> rewriter, boolean checkApplicableOnly,
+            List<Pair<IAccessMethod, Index>> chosenIndexes, Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs)
             throws AlgebricksException {
         AbstractBinaryJoinOperator joinRewrite = rewriter.createOperator(joinOp, context);
         boolean transformationResult = false;
         if (joinRewrite != null) {
             Mutable<ILogicalOperator> joinRuleInput = new MutableObject<>(joinRewrite);
-            transformationResult = checkAndApplyJoinTransformation(joinRuleInput, context, checkApplicableOnly);
+            transformationResult = checkAndApplyJoinTransformation(joinRuleInput, context, checkApplicableOnly,
+                    chosenIndexes, analyzedAMs);
         }
 
         // Restore our state, so we can look for more optimizations if this transformation failed.

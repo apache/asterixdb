@@ -22,6 +22,7 @@ package org.apache.asterix.optimizer.cost;
 import java.util.Map;
 
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.rules.cbo.JoinNode;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
@@ -129,7 +130,7 @@ public class CostMethods implements ICostMethods {
         return new Cost(DOP * rightJn.getCardinality());
     }
 
-    public Cost costIndexNLJoin(JoinNode jn) {
+    public Cost costIndexNLJoin(JoinNode jn, Index index) {
         JoinNode leftJn = jn.getLeftJn();
         JoinNode rightJn = jn.getRightJn();
         double origRightCard = rightJn.getOrigCardinality();

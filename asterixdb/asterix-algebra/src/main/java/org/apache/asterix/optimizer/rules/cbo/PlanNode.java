@@ -21,6 +21,7 @@ package org.apache.asterix.optimizer.rules.cbo;
 
 import java.util.List;
 
+import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.optimizer.cost.ICost;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -38,7 +39,6 @@ public class PlanNode {
     private final JoinEnum joinEnum;
 
     protected String datasetName;
-
     protected ILogicalOperator leafInput;
 
     protected JoinNode jn;
@@ -53,6 +53,8 @@ public class PlanNode {
     protected JoinMethod joinOp;
 
     protected ILogicalExpression joinExpr;
+
+    Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint;
 
     // Used to indicate which side to build for HJ and which side to broadcast for BHJ.
     protected HashJoinExpressionAnnotation.BuildSide side;
@@ -291,9 +293,11 @@ public class PlanNode {
     }
 
     protected void setJoinAndHintInfo(JoinMethod joinMethod, ILogicalExpression joinExpr,
+            Pair<AbstractFunctionCallExpression, IndexedNLJoinExpressionAnnotation> exprAndHint,
             HashJoinExpressionAnnotation.BuildSide side, IExpressionAnnotation hint) {
         joinOp = joinMethod;
         this.joinExpr = joinExpr;
+        this.exprAndHint = exprAndHint;
         this.side = side;
         joinHint = hint;
         numHintsUsed = joinEnum.allPlans.get(getLeftPlanIndex()).numHintsUsed
