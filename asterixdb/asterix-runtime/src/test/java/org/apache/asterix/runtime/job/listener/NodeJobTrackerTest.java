@@ -26,6 +26,7 @@ import org.apache.hyracks.api.constraints.expressions.LValueConstraintExpression
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -50,18 +51,18 @@ public class NodeJobTrackerTest {
         jobSpec.getUserConstraints().add(new Constraint(lValueMock, unknownLocation));
 
         JobId jobId = new JobId(1);
-        nodeJobTracker.notifyJobCreation(jobId, jobSpec);
+        nodeJobTracker.notifyJobCreation(jobId, jobSpec, IJobCapacityController.JobSubmissionStatus.EXECUTE);
         // make sure nc1 has a pending job
         Assert.assertTrue(nodeJobTracker.getPendingJobs(nc1).size() == 1);
         Assert.assertTrue(nodeJobTracker.getPendingJobs(unknown).isEmpty());
         Assert.assertTrue(nodeJobTracker.getPendingJobs(nc2).isEmpty());
-        nodeJobTracker.notifyJobFinish(jobId, JobStatus.TERMINATED, null);
+        nodeJobTracker.notifyJobFinish(jobId, jobSpec, JobStatus.TERMINATED, null);
         // make sure nc1 doesn't have pending jobs anymore
         Assert.assertTrue(nodeJobTracker.getPendingJobs(nc1).isEmpty());
 
         // make sure node doesn't have pending jobs after failure
         jobId = new JobId(2);
-        nodeJobTracker.notifyJobCreation(jobId, jobSpec);
+        nodeJobTracker.notifyJobCreation(jobId, jobSpec, IJobCapacityController.JobSubmissionStatus.EXECUTE);
         Assert.assertTrue(nodeJobTracker.getPendingJobs(nc1).size() == 1);
         nodeJobTracker.notifyNodeFailure(Collections.singleton(nc1));
         Assert.assertTrue(nodeJobTracker.getPendingJobs(nc1).isEmpty());

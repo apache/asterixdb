@@ -166,7 +166,7 @@ public class QueryServiceServlet extends AbstractQueryApiServlet {
             return resultStatus;
         }
 
-        HttpResponseStatus getHttpStatus() {
+        public HttpResponseStatus getHttpStatus() {
             return httpResponseStatus;
         }
 

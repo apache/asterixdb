@@ -40,6 +40,7 @@ import org.apache.hyracks.api.dataflow.OperatorDescriptorId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
 @ThreadSafe
@@ -48,17 +49,19 @@ public class NodeJobTracker implements INodeJobTracker {
     private final Map<String, Set<JobId>> nodeJobs = new HashMap<>();
 
     @Override
-    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) {
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec,
+            IJobCapacityController.JobSubmissionStatus status) {
         getJobParticipatingNodes(spec, null).stream().map(nodeJobs::get).forEach(jobsSet -> jobsSet.add(jobId));
     }
 
     @Override
-    public synchronized void notifyJobStart(JobId jobId) {
+    public synchronized void notifyJobStart(JobId jobId, JobSpecification spec) {
         // nothing to do
     }
 
     @Override
-    public synchronized void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) {
+    public synchronized void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus,
+            List<Exception> exceptions) {
         nodeJobs.values().forEach(jobsSet -> jobsSet.remove(jobId));
     }
 

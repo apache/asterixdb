@@ -21,6 +21,7 @@ package org.apache.asterix.runtime.utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,11 @@ import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
 public class RequestTracker implements IRequestTracker {
 
@@ -39,11 +45,13 @@ public class RequestTracker implements IRequestTracker {
     private final CircularFifoQueue<IClientRequest> completedRequests;
     private final ICcApplicationContext ccAppCtx;
     private final AtomicLong numRequests;
+    private final AtomicLong numOfFailedRequests;
 
     public RequestTracker(ICcApplicationContext ccAppCtx) {
         this.ccAppCtx = ccAppCtx;
         completedRequests = new CircularFifoQueue<>(ccAppCtx.getExternalProperties().getRequestsArchiveSize());
         numRequests = new AtomicLong(0);
+        numOfFailedRequests = new AtomicLong(0);
     }
 
     @Override
@@ -119,5 +127,49 @@ public class RequestTracker implements IRequestTracker {
 
     public long getTotalNumberOfRequests() {
         return numRequests.get();
+    }
+
+    @Override
+    public void incrementFailedRequests() {
+        numOfFailedRequests.incrementAndGet();
+    }
+
+    @Override
+    public long getTotalNumberOfFailedRequests() {
+        return numOfFailedRequests.get();
+    }
+
+    public void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
+            throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest clientRequest = runningRequests.get(requestId);
+            if (clientRequest != null) {
+                clientRequest.jobCreated(jobId, spec.getRequiredClusterCapacity(), status);
+            }
+        }
+    }
+
+    @Override
+    public void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest clientRequest = runningRequests.get(requestId);
+            if (clientRequest != null) {
+                clientRequest.jobStarted(jobId);
+            }
+        }
+    }
+
+    @Override
+    public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
+            throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest clientRequest = runningRequests.get(requestId);
+            if (clientRequest != null) {
+                clientRequest.jobFinished(jobId, jobStatus, exceptions);
+            }
+        }
     }
 }
