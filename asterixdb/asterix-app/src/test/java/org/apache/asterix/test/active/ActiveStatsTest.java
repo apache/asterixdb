@@ -54,6 +54,7 @@ import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartit
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -137,8 +138,9 @@ public class ActiveStatsTest {
         TestUserActor user = new TestUserActor("Xikui", mdProvider, null);
         Action start = user.startActivity(eventsListener);
         startingSubscriber.sync();
-        activeJobNotificationHandler.notifyJobCreation(jobId, jobSpec);
-        activeJobNotificationHandler.notifyJobStart(jobId);
+        activeJobNotificationHandler.notifyJobCreation(jobId, jobSpec,
+                IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        activeJobNotificationHandler.notifyJobStart(jobId, jobSpec);
         try {
             eventsListener.refreshStats(1000);
         } catch (HyracksDataException e) {

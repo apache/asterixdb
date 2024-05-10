@@ -82,6 +82,8 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     private long maxWarnings;
 
+    private String requestId;
+
     private IJobletEventListenerFactory jobletEventListenerFactory;
 
     private IGlobalJobDataFactory globalJobDataFactory;
@@ -256,6 +258,14 @@ public class JobSpecification implements Serializable, IOperatorDescriptorRegist
 
     public void setConnectorPolicyAssignmentPolicy(IConnectorPolicyAssignmentPolicy connectorPolicyAssignmentPolicy) {
         this.connectorPolicyAssignmentPolicy = connectorPolicyAssignmentPolicy;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     public void setFrameSize(int frameSize) {

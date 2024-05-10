@@ -41,6 +41,7 @@ import org.apache.hyracks.api.job.IJobLifecycleListener;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.util.SingleThreadEventProcessor;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.Level;
@@ -89,7 +90,8 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     // *** IJobLifecycleListener
 
     @Override
-    public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification) throws HyracksDataException {
+    public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification,
+            IJobCapacityController.JobSubmissionStatus status) throws HyracksDataException {
         Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
         if (!(property instanceof EntityId)) {
             if (property != null) {
@@ -119,7 +121,7 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     }
 
     @Override
-    public synchronized void notifyJobStart(JobId jobId) throws HyracksException {
+    public synchronized void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
         EntityId entityId = jobId2EntityId.get(jobId);
         if (entityId != null) {
             add(new ActiveEvent(jobId, Kind.JOB_STARTED, entityId, null));
@@ -128,8 +130,8 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
     }
 
     @Override
-    public synchronized void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions)
-            throws HyracksException {
+    public synchronized void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus,
+            List<Exception> exceptions) throws HyracksException {
         EntityId entityId = jobId2EntityId.get(jobId);
         if (entityId != null) {
             LOGGER.debug("notified of ingestion job finish {}", jobId);

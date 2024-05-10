@@ -34,6 +34,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.result.IJobResultCallback;
 import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.IResultStateRecord;
@@ -78,7 +79,8 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
-    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
+    public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec,
+            IJobCapacityController.JobSubmissionStatus status) throws HyracksException {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug(getClass().getSimpleName() + " notified of new job " + jobId);
         }
@@ -89,12 +91,13 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     }
 
     @Override
-    public synchronized void notifyJobStart(JobId jobId) throws HyracksException {
+    public synchronized void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
         jobResultLocations.get(jobId).getRecord().start();
     }
 
     @Override
-    public void notifyJobFinish(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) throws HyracksException {
+    public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
+            throws HyracksException {
         if (exceptions == null || exceptions.isEmpty()) {
             final ResultJobRecord resultJobRecord = getResultJobRecord(jobId);
             if (resultJobRecord == null) {

@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.hyracks.api.job.resource.IJobCapacityController.JobSubmissionStatus.QUEUE;
+
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.ICommonRequestParameters;
@@ -26,9 +29,10 @@ import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
-import org.apache.hyracks.api.job.resource.IClusterCapacity;
-import org.apache.hyracks.control.cc.ClusterControllerService;
-import org.apache.hyracks.control.cc.job.JobRun;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
+import org.apache.hyracks.api.util.ExceptionUtils;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -37,17 +41,17 @@ public class ClientRequest extends BaseClientRequest {
     protected final long creationTime = System.nanoTime();
     protected final Thread executor;
     protected final String statement;
-    protected final ClusterControllerService ccService;
     protected final String clientContextId;
+    protected final JobState jobState;
     protected volatile JobId jobId;
-    private String plan; // can be null
+    private volatile String plan; // can be null
 
-    public ClientRequest(ICommonRequestParameters requestParameters, ICcApplicationContext appCtx) {
+    public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
         this.clientContextId = requestParameters.getClientContextId();
         this.statement = requestParameters.getStatement();
         this.executor = Thread.currentThread();
-        this.ccService = (ClusterControllerService) appCtx.getServiceContext().getControllerService();
+        this.jobState = new JobState();
     }
 
     @Override
@@ -100,37 +104,55 @@ public class ClientRequest extends BaseClientRequest {
         return json;
     }
 
-    private void putJobDetails(ObjectNode json) {
-        if (jobId == null) {
-            json.putNull("jobId");
-        } else {
-            try {
-                json.put("jobId", jobId.toString());
-                JobRun jobRun = ccService.getJobManager().get(jobId);
-                if (jobRun != null) {
-                    json.put("jobStatus", String.valueOf(jobRun.getStatus()));
-                    putJobRequiredResources(json, jobRun);
-                    putTimes(json, jobRun);
-                }
-            } catch (Throwable th) {
-                // ignore
-            }
+    @Override
+    public void jobCreated(JobId jobId, IReadOnlyClusterCapacity requiredClusterCapacity,
+            IJobCapacityController.JobSubmissionStatus status) {
+        jobState.createTime = System.currentTimeMillis();
+        jobState.status = status == QUEUE ? JobStatus.PENDING : JobStatus.RUNNING;
+        jobState.requiredCPUs = requiredClusterCapacity.getAggregatedCores();
+        jobState.requiredMemoryInBytes = requiredClusterCapacity.getAggregatedMemoryByteSize();
+    }
+
+    @Override
+    public void jobStarted(JobId jobId) {
+        jobState.startTime = System.currentTimeMillis();
+        jobState.status = JobStatus.RUNNING;
+    }
+
+    @Override
+    public void jobFinished(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) {
+        jobState.endTime = System.currentTimeMillis();
+        jobState.status = jobStatus;
+        if (exceptions != null && !exceptions.isEmpty()) {
+            jobState.errorMsg = processException(exceptions.get(0));
         }
     }
 
-    private static void putTimes(ObjectNode json, JobRun jobRun) {
-        AMutableDateTime dateTime = new AMutableDateTime(0);
-        putTime(json, jobRun.getCreateTime(), "jobCreateTime", dateTime);
-        putTime(json, jobRun.getStartTime(), "jobStartTime", dateTime);
-        putTime(json, jobRun.getEndTime(), "jobEndTime", dateTime);
-        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(jobRun.getQueueWaitTimeInMillis()));
+    protected String processException(Exception e) {
+        return ExceptionUtils.unwrap(e).getMessage();
     }
 
-    private static void putJobRequiredResources(ObjectNode json, JobRun jobRun) {
-        IClusterCapacity jobCapacity = jobRun.getJobSpecification().getRequiredClusterCapacity();
-        if (jobCapacity != null) {
-            json.put("jobRequiredCPUs", jobCapacity.getAggregatedCores());
-            json.put("jobRequiredMemory", jobCapacity.getAggregatedMemoryByteSize());
+    private void putJobDetails(ObjectNode json) {
+        try {
+            json.put("jobId", jobId != null ? jobId.toString() : null);
+            putJobState(json, jobState);
+        } catch (Throwable th) {
+            // ignore
+        }
+    }
+
+    private static void putJobState(ObjectNode json, JobState state) {
+        AMutableDateTime dateTime = new AMutableDateTime(0);
+        putTime(json, state.createTime, "jobCreateTime", dateTime);
+        putTime(json, state.startTime, "jobStartTime", dateTime);
+        putTime(json, state.endTime, "jobEndTime", dateTime);
+        long queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
+        json.put("jobStatus", String.valueOf(state.status));
+        json.put("jobRequiredCPUs", state.requiredCPUs);
+        json.put("jobRequiredMemory", state.requiredMemoryInBytes);
+        if (state.errorMsg != null) {
+            json.put("error", state.errorMsg);
         }
     }
 
@@ -139,5 +161,15 @@ public class ClientRequest extends BaseClientRequest {
             dateTime.setValue(time);
             json.put(label, dateTime.toSimpleString());
         }
+    }
+
+    static class JobState {
+        volatile long createTime;
+        volatile long startTime;
+        volatile long endTime;
+        volatile long requiredMemoryInBytes;
+        volatile int requiredCPUs;
+        volatile JobStatus status;
+        volatile String errorMsg;
     }
 }

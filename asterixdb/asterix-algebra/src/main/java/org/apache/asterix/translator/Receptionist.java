@@ -27,7 +27,6 @@ import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.api.ISchedulableClientRequest;
 import org.apache.asterix.common.api.RequestReference;
-import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.http.HttpHeaders;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -48,9 +47,8 @@ public class Receptionist implements IReceptionist {
     }
 
     @Override
-    public IClientRequest requestReceived(ICommonRequestParameters requestParameters, ICcApplicationContext appCtx)
-            throws HyracksDataException {
-        return new ClientRequest(requestParameters, appCtx);
+    public IClientRequest requestReceived(ICommonRequestParameters requestParameters) throws HyracksDataException {
+        return new ClientRequest(requestParameters);
     }
 
     @Override
