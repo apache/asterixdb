@@ -46,7 +46,6 @@ import org.apache.hyracks.api.result.ResultSetMetaData;
 import org.apache.hyracks.control.common.result.AbstractResultManager;
 import org.apache.hyracks.control.common.result.ResultStateSweeper;
 import org.apache.hyracks.control.common.work.IResultCallback;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -81,9 +80,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
     @Override
     public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec,
             IJobCapacityController.JobSubmissionStatus status) throws HyracksException {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug(getClass().getSimpleName() + " notified of new job " + jobId);
-        }
+        LOGGER.debug("{} notified of new job {}", getClass().getSimpleName(), jobId);
         if (jobResultLocations.get(jobId) != null) {
             throw HyracksDataException.create(ErrorCode.MORE_THAN_ONE_RESULT, jobId);
         }
@@ -160,15 +157,14 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public synchronized void reportJobFailure(JobId jobId, List<Exception> exceptions) {
-        Exception ex = exceptions.isEmpty() ? null : exceptions.get(0);
-        Level logLevel = Level.DEBUG;
-        if (LOGGER.isEnabled(logLevel)) {
-            LOGGER.log(logLevel, "job " + jobId + " failed and is being reported to " + getClass().getSimpleName(), ex);
-        }
         ResultJobRecord rjr = getResultJobRecord(jobId);
+        if (logFailure(rjr)) {
+            LOGGER.debug("job {} failed and is being reported to {}", jobId, getClass().getSimpleName());
+        }
         if (rjr != null) {
             rjr.fail(exceptions);
         }
+        Exception ex = exceptions.isEmpty() ? null : exceptions.get(0);
         final JobResultInfo jobResultInfo = jobResultLocations.get(jobId);
         if (jobResultInfo != null) {
             jobResultInfo.setException(ex);
@@ -212,6 +208,15 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
         } else {
             callback.setValue(updatedRecords);
         }
+    }
+
+    private static boolean logFailure(ResultJobRecord rjr) {
+        if (rjr == null) {
+            return true;
+        }
+        // don't re-log if the state is already failed
+        ResultJobRecord.Status status = rjr.getStatus();
+        return status == null || status.getState() != State.FAILED;
     }
 
     /**
@@ -267,7 +272,7 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
 class JobResultInfo {
 
-    private ResultJobRecord record;
+    private final ResultJobRecord record;
     private Waiters waiters;
     private Exception exception;
 

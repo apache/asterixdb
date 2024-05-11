@@ -28,6 +28,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.PartitionDescriptor;
 import org.apache.hyracks.control.common.job.PartitionRequest;
@@ -43,14 +44,13 @@ public class PartitionMatchMaker {
     private final Map<PartitionId, List<PartitionRequest>> partitionRequests;
 
     public PartitionMatchMaker() {
-        partitionDescriptors = new HashMap<PartitionId, List<PartitionDescriptor>>();
-        partitionRequests = new HashMap<PartitionId, List<PartitionRequest>>();
+        partitionDescriptors = new HashMap<>();
+        partitionRequests = new HashMap<>();
     }
 
     public List<Pair<PartitionDescriptor, PartitionRequest>> registerPartitionDescriptor(
             PartitionDescriptor partitionDescriptor) {
-        List<Pair<PartitionDescriptor, PartitionRequest>> matches =
-                new ArrayList<Pair<PartitionDescriptor, PartitionRequest>>();
+        List<Pair<PartitionDescriptor, PartitionRequest>> matches = new ArrayList<>();
         PartitionId pid = partitionDescriptor.getPartitionId();
         boolean matched = false;
         List<PartitionRequest> requests = partitionRequests.get(pid);
@@ -73,11 +73,7 @@ public class PartitionMatchMaker {
         }
 
         if (!matched) {
-            List<PartitionDescriptor> descriptors = partitionDescriptors.get(pid);
-            if (descriptors == null) {
-                descriptors = new ArrayList<PartitionDescriptor>();
-                partitionDescriptors.put(pid, descriptors);
-            }
+            List<PartitionDescriptor> descriptors = partitionDescriptors.computeIfAbsent(pid, k -> new ArrayList<>());
             descriptors.add(partitionDescriptor);
         }
 
@@ -108,11 +104,7 @@ public class PartitionMatchMaker {
         }
 
         if (match == null) {
-            List<PartitionRequest> requests = partitionRequests.get(pid);
-            if (requests == null) {
-                requests = new ArrayList<PartitionRequest>();
-                partitionRequests.put(pid, requests);
-            }
+            List<PartitionRequest> requests = partitionRequests.computeIfAbsent(pid, k -> new ArrayList<>());
             requests.add(partitionRequest);
         }
 
@@ -133,17 +125,11 @@ public class PartitionMatchMaker {
     }
 
     private interface IEntryFilter<T> {
-        public boolean matches(T o);
+        boolean matches(T o);
     }
 
     private static <T> void removeEntries(List<T> list, IEntryFilter<T> filter) {
-        Iterator<T> j = list.iterator();
-        while (j.hasNext()) {
-            T o = j.next();
-            if (filter.matches(o)) {
-                j.remove();
-            }
-        }
+        list.removeIf(filter::matches);
     }
 
     private static <T> void removeEntries(Map<PartitionId, List<T>> map, IEntryFilter<T> filter) {
@@ -159,30 +145,16 @@ public class PartitionMatchMaker {
     }
 
     public void notifyNodeFailures(final Collection<String> deadNodes) {
-        removeEntries(partitionDescriptors, new IEntryFilter<PartitionDescriptor>() {
-            @Override
-            public boolean matches(PartitionDescriptor o) {
-                return deadNodes.contains(o.getNodeId());
-            }
-        });
-        removeEntries(partitionRequests, new IEntryFilter<PartitionRequest>() {
-            @Override
-            public boolean matches(PartitionRequest o) {
-                return deadNodes.contains(o.getNodeId());
-            }
-        });
+        removeEntries(partitionDescriptors, o -> deadNodes.contains(o.getNodeId()));
+        removeEntries(partitionRequests, o -> deadNodes.contains(o.getNodeId()));
     }
 
-    public void removeUncommittedPartitions(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Removing uncommitted partitions: " + partitionIds);
+    public void removeUncommittedPartitions(Set<PartitionId> partitionIds, Set<TaskAttemptId> taIds, JobId jobId) {
+        if (!partitionIds.isEmpty()) {
+            LOGGER.debug("Removing uncommitted partitions {}: {}", jobId, partitionIds);
         }
-        IEntryFilter<PartitionDescriptor> filter = new IEntryFilter<PartitionDescriptor>() {
-            @Override
-            public boolean matches(PartitionDescriptor o) {
-                return o.getState() != PartitionState.COMMITTED && taIds.contains(o.getProducingTaskAttemptId());
-            }
-        };
+        IEntryFilter<PartitionDescriptor> filter =
+                o -> o.getState() != PartitionState.COMMITTED && taIds.contains(o.getProducingTaskAttemptId());
         for (PartitionId pid : partitionIds) {
             List<PartitionDescriptor> descriptors = partitionDescriptors.get(pid);
             if (descriptors != null) {
@@ -194,16 +166,11 @@ public class PartitionMatchMaker {
         }
     }
 
-    public void removePartitionRequests(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Removing partition requests: " + partitionIds);
+    public void removePartitionRequests(Set<PartitionId> partitionIds, Set<TaskAttemptId> taIds, JobId jobId) {
+        if (!partitionIds.isEmpty()) {
+            LOGGER.debug("Removing partition requests {}: {}", jobId, partitionIds);
         }
-        IEntryFilter<PartitionRequest> filter = new IEntryFilter<PartitionRequest>() {
-            @Override
-            public boolean matches(PartitionRequest o) {
-                return taIds.contains(o.getRequestingTaskAttemptId());
-            }
-        };
+        IEntryFilter<PartitionRequest> filter = o -> taIds.contains(o.getRequestingTaskAttemptId());
         for (PartitionId pid : partitionIds) {
             List<PartitionRequest> requests = partitionRequests.get(pid);
             if (requests != null) {
