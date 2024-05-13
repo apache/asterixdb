@@ -115,15 +115,32 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
         }
     }
 
-    // getMergableIndexesRange gives the [startComponentIndex, endComponentIndex] which can be merged based on the provided condition
-    // 1. localMinMergeComponentCount <= range(startComponentIndex, endComponentIndex) <= maxMergeComponentCount
-    // 2. sumOfComponents(startComponentIndex, endComponentIndex) < maxComponentSize
-    // In order to satisfy range(startComponentIndex, endComponentIndex) <= maxMergeComponentCount, the search range is bounded by leftBoundary, and if we reach the maxComponentSize before
-    // reaching the leftBoundary, we get our boundary where startIndex > leftBoundary.
-    // but in case the components in the range does not contribute enough to exceed maxComponentSize then the candidate range
-    // will be [leftBoundary, endComponentIndex] which satisfies both 1 & 2.
+    /**
+     * <p>
+     * getMergableIndexesRange gives the [startComponentIndex, endComponentIndex] which can be merged based on the
+     * provided condition.
+     * </p>
+     * <ol>
+     *     <li>localMinMergeComponentCount <= range(startComponentIndex, endComponentIndex) <= maxMergeComponentCount</li>
+     *     <li>sumOfComponents(startComponentIndex, endComponentIndex) < maxComponentSize</li>
+     * </ol>
+     *
+     *<p>
+     * In order to satisfy range(startComponentIndex, endComponentIndex) <= maxMergeComponentCount,
+     * search range is bounded by leftBoundary, and if we reach the maxComponentSize before reaching the leftBoundary,
+     * we get our boundary where startIndex > leftBoundary.
+     *</p>
+     * <p>
+     * but in case the components in the range does not contribute enough to exceed maxComponentSize then the candidate
+     * range will be [leftBoundary, endComponentIndex] which satisfies both 1 & 2.
+     *</p>
+     * @param diskComponents The disk components within an Index
+     * @param localMinMergeComponentCount The min count of contiguous components required to call a mergable range.
+     * @param countFlag if enabled, will count all the components that can be merged, else will return on first found range
+     * @return MergableSolution
+     */
     private MergableSolution getMergableIndexesRange(List<ILSMDiskComponent> diskComponents,
-            int localMinMergeComponentCount, boolean getMergableComponentsCount) {
+            int localMinMergeComponentCount, boolean countFlag) {
         int numComponents = diskComponents.size();
         int candidateComponentsCount = 0;
         for (; candidateComponentsCount < numComponents; candidateComponentsCount++) {
@@ -134,7 +151,7 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
         }
 
         if (candidateComponentsCount < localMinMergeComponentCount) {
-            return new MergableSolution(null, 0);
+            return MergableSolution.NO_SOLUTION;
         }
 
         // count the total number of non-overlapping components that can be merged.
@@ -165,13 +182,13 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
                             (resultantComponentSize - currentComponentSize - lastComponentSize), sizeRatio,
                             lastComponentSize)) {
                         int mergableRangeCount = endComponentIndex - probableStartIndex;
-                        if (!getMergableComponentsCount) {
-                            return new MergableSolution(new Range(probableStartIndex + 1, endComponentIndex),
-                                    mergableRangeCount);
-                        } else {
+                        if (countFlag) {
                             aRangeFound = true;
                             endComponentIndex = probableStartIndex;
                             totalMergableComponentsCount += mergableRangeCount;
+                        } else {
+                            return new MergableSolution(new Range(probableStartIndex + 1, endComponentIndex),
+                                    mergableRangeCount);
                         }
                     }
                     // break as we already exceeded the maxComponentSize, and still haven't found the suitable range,
@@ -185,13 +202,13 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
                 if (isRangeMergable(leftBoundaryIndex, endComponentIndex, localMinMergeComponentCount,
                         (resultantComponentSize - lastComponentSize), sizeRatio, lastComponentSize)) {
                     int mergableRangeCount = endComponentIndex - leftBoundaryIndex + 1;
-                    if (!getMergableComponentsCount) {
-                        return new MergableSolution(new Range(leftBoundaryIndex, endComponentIndex),
-                                mergableRangeCount);
-                    } else {
+                    if (countFlag) {
                         aRangeFound = true;
                         endComponentIndex = probableStartIndex;
                         totalMergableComponentsCount += mergableRangeCount;
+                    } else {
+                        return new MergableSolution(new Range(leftBoundaryIndex, endComponentIndex),
+                                mergableRangeCount);
                     }
                 }
             }
@@ -201,7 +218,7 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
             }
         }
 
-        return new MergableSolution(null, totalMergableComponentsCount);
+        return new MergableSolution(totalMergableComponentsCount);
     }
 
     private void triggerScheduleMerge(ILSMIndex index, List<ILSMDiskComponent> diskComponents, int startIndex,
@@ -211,8 +228,14 @@ public class SizeBoundedConcurrentMergePolicy implements ILSMMergePolicy {
     }
 
     static class MergableSolution {
+        public static final MergableSolution NO_SOLUTION = new MergableSolution(null, 0);
         private final Range range;
         private final int componentsCount;
+
+        MergableSolution(int componentsCount) {
+            range = null;
+            this.componentsCount = componentsCount;
+        }
 
         MergableSolution(Range range, int componentsCount) {
             this.range = range;
