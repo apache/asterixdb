@@ -33,6 +33,7 @@ import org.apache.hyracks.api.job.JobStatus;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -95,11 +96,21 @@ public class ClientRequest extends BaseClientRequest {
     @Override
     public ObjectNode asJson() {
         ObjectNode json = super.asJson();
-        putJobDetails(json);
-        json.put("statement", statement);
+        return asJson(json, false);
+    }
+
+    @Override
+    public ObjectNode asRedactedJson() {
+        ObjectNode json = super.asRedactedJson();
+        return asJson(json, true);
+    }
+
+    private ObjectNode asJson(ObjectNode json, boolean redact) {
+        putJobDetails(json, redact);
+        json.put("statement", redact ? LogRedactionUtil.statement(statement) : statement);
         json.put("clientContextID", clientContextId);
         if (plan != null) {
-            json.put("plan", plan);
+            json.put("plan", redact ? LogRedactionUtil.userData(plan) : plan);
         }
         return json;
     }
@@ -132,16 +143,16 @@ public class ClientRequest extends BaseClientRequest {
         return ExceptionUtils.unwrap(e).getMessage();
     }
 
-    private void putJobDetails(ObjectNode json) {
+    private void putJobDetails(ObjectNode json, boolean redact) {
         try {
             json.put("jobId", jobId != null ? jobId.toString() : null);
-            putJobState(json, jobState);
+            putJobState(json, jobState, redact);
         } catch (Throwable th) {
             // ignore
         }
     }
 
-    private static void putJobState(ObjectNode json, JobState state) {
+    private static void putJobState(ObjectNode json, JobState state, boolean redact) {
         AMutableDateTime dateTime = new AMutableDateTime(0);
         putTime(json, state.createTime, "jobCreateTime", dateTime);
         putTime(json, state.startTime, "jobStartTime", dateTime);
@@ -152,7 +163,7 @@ public class ClientRequest extends BaseClientRequest {
         json.put("jobRequiredCPUs", state.requiredCPUs);
         json.put("jobRequiredMemory", state.requiredMemoryInBytes);
         if (state.errorMsg != null) {
-            json.put("error", state.errorMsg);
+            json.put("error", redact ? LogRedactionUtil.userData(state.errorMsg) : state.errorMsg);
         }
     }
 

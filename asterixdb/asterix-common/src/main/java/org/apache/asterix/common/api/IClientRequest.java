@@ -104,6 +104,11 @@ public interface IClientRequest {
     ObjectNode asJson();
 
     /**
+     * @return A redacted json node representation of this request
+     */
+    ObjectNode asRedactedJson();
+
+    /**
      * Called when the job is created.
      *
      * @param jobId the job id
