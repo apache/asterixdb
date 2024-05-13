@@ -25,6 +25,7 @@ import org.apache.asterix.cloud.CloudFileHandle;
 import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 
 /**
  * An abstraction for lazy I/O operations
@@ -94,4 +95,20 @@ public interface ILazyAccessor {
      * @param bytes         to be written
      */
     void doOverwrite(FileReference fileReference, byte[] bytes) throws HyracksDataException;
+
+    /**
+     * Punch a hole in a sweepable file (only)
+     *
+     * @param fileHandle file handle
+     * @param offset     starting offset
+     * @param length     length
+     */
+    int doPunchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException;
+
+    /**
+     * Evicts a directory deletes it only in the local drive
+     *
+     * @param directory to evict
+     */
+    void doEvict(FileReference directory) throws HyracksDataException;
 }

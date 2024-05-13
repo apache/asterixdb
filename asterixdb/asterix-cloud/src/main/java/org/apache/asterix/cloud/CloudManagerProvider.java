@@ -34,7 +34,7 @@ public class CloudManagerProvider {
             INamespacePathResolver nsPathResolver) throws HyracksDataException {
         IOManager localIoManager = (IOManager) ioManager;
         if (cloudProperties.getCloudCachePolicy() == CloudCachePolicy.LAZY) {
-            return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver);
+            return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver, false);
         }
 
         return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver);

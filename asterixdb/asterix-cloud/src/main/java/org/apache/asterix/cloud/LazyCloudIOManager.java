@@ -40,6 +40,9 @@ import org.apache.asterix.cloud.lazy.accessor.ILazyAccessorReplacer;
 import org.apache.asterix.cloud.lazy.accessor.InitialCloudAccessor;
 import org.apache.asterix.cloud.lazy.accessor.LocalAccessor;
 import org.apache.asterix.cloud.lazy.accessor.ReplaceableCloudAccessor;
+import org.apache.asterix.cloud.lazy.accessor.SelectiveCloudAccessor;
+import org.apache.asterix.cloud.lazy.filesystem.HolePuncherProvider;
+import org.apache.asterix.cloud.lazy.filesystem.IHolePuncher;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.utils.StoragePathUtil;
@@ -61,20 +64,26 @@ import org.apache.logging.log4j.Logger;
 final class LazyCloudIOManager extends AbstractCloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ILazyAccessorReplacer replacer;
+    private final IHolePuncher puncher;
     private ILazyAccessor accessor;
 
     public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, boolean replaceableAccessor) throws HyracksDataException {
         super(ioManager, cloudProperties, nsPathResolver);
         accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager);
-        replacer = () -> {
-            synchronized (this) {
-                if (!accessor.isLocalAccessor()) {
-                    LOGGER.warn("Replacing cloud-accessor to local-accessor");
-                    accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+        puncher = HolePuncherProvider.get(this, cloudProperties, writeBufferProvider);
+        if (replaceableAccessor) {
+            replacer = InitialCloudAccessor.NO_OP_REPLACER;
+        } else {
+            replacer = () -> {
+                synchronized (this) {
+                    if (!accessor.isLocalAccessor()) {
+                        LOGGER.warn("Replacing cloud-accessor to local-accessor");
+                        accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+                    }
                 }
-            }
-        };
+            };
+        }
     }
 
     /*
@@ -104,7 +113,11 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
         // Keep uncached files list (i.e., files exists in cloud only)
         cloudFiles.removeAll(localFiles);
         int remainingUncachedFiles = cloudFiles.size();
-        if (remainingUncachedFiles > 0) {
+        boolean canReplaceAccessor = replacer != InitialCloudAccessor.NO_OP_REPLACER;
+        if (remainingUncachedFiles == 0 && canReplaceAccessor) {
+            // Everything is cached, no need to invoke cloud-based accessor for read operations
+            accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+        } else {
             LOGGER.debug("The number of uncached files: {}. Uncached files: {}", remainingUncachedFiles, cloudFiles);
             // Get list of FileReferences from the list of cloud (i.e., resolve each path's string to FileReference)
             List<FileReference> uncachedFiles = resolve(cloudFiles);
@@ -115,13 +128,17 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             // Download all metadata files to avoid (List) calls to the cloud when listing/reading these files
             downloadMetadataFiles(downloader, uncachedFiles);
             // Create a parallel cacher which download and monitor all uncached files
-            ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles, true);
-            // Local cache misses some files, cloud-based accessor is needed for read operations
-            accessor = new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);
-        } else {
-            // Everything is cached, no need to invoke cloud-based accessor for read operations
-            accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
+            ParallelCacher cacher = new ParallelCacher(downloader, uncachedFiles, canReplaceAccessor);
+            // Local cache misses some files or SELECTIVE policy is used, cloud-based accessor is needed
+            accessor = createAccessor(cacher, canReplaceAccessor);
         }
+    }
+
+    private ILazyAccessor createAccessor(ParallelCacher cacher, boolean canReplaceAccessor) {
+        if (canReplaceAccessor) {
+            return new ReplaceableCloudAccessor(cloudClient, bucket, localIoManager, partitions, replacer, cacher);
+        }
+        return new SelectiveCloudAccessor(cloudClient, bucket, localIoManager, partitions, puncher, cacher);
     }
 
     private void downloadMetadataPartition(IParallelDownloader downloader, List<FileReference> uncachedFiles,
@@ -187,13 +204,12 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
 
     @Override
     public int punchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
-        // TODO implement for Selective accessor
-        return -1;
+        return accessor.doPunchHole(fileHandle, offset, length);
     }
 
     @Override
     public void evict(FileReference directory) throws HyracksDataException {
-        // TODO implement for Selective accessor
+        accessor.doEvict(directory);
     }
 
     private List<FileReference> resolve(Set<CloudFile> cloudFiles) throws HyracksDataException {

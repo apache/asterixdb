@@ -21,12 +21,16 @@ package org.apache.asterix.cloud;
 import java.io.IOException;
 
 import org.apache.asterix.cloud.clients.ICloudWriter;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
+import org.apache.hyracks.cloud.filesystem.FileSystemOperationDispatcherUtil;
 import org.apache.hyracks.control.nc.io.FileHandle;
 
 public class CloudFileHandle extends FileHandle {
     private final ICloudWriter cloudWriter;
+    private int blockSize;
+    private int fileDescriptor;
 
     public CloudFileHandle(FileReference fileRef, ICloudWriter cloudWriter) {
         super(fileRef);
@@ -38,9 +42,19 @@ public class CloudFileHandle extends FileHandle {
         if (fileRef.getFile().exists()) {
             super.open(rwMode, syncMode);
         }
+        fileDescriptor = FileSystemOperationDispatcherUtil.getFileDescriptor(getFileChannel());
+        blockSize = FileSystemOperationDispatcherUtil.getBlockSize(fileDescriptor);
     }
 
     public ICloudWriter getCloudWriter() {
         return cloudWriter;
+    }
+
+    public int getBlockSize() throws HyracksDataException {
+        return blockSize;
+    }
+
+    public int getFileDescriptor() throws HyracksDataException {
+        return fileDescriptor;
     }
 }

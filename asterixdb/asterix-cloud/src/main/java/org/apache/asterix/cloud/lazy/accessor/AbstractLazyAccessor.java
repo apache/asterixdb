@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 
@@ -60,5 +61,15 @@ abstract class AbstractLazyAccessor implements ILazyAccessor {
             cloudClient.deleteObjects(bucket, paths);
         }
         return deletedFiles;
+    }
+
+    @Override
+    public int doPunchHole(IFileHandle sweeperFile, long offset, long length) throws HyracksDataException {
+        throw new UnsupportedOperationException("PunchHole is not supported");
+    }
+
+    @Override
+    public void doEvict(FileReference directory) throws HyracksDataException {
+        throw new UnsupportedOperationException("Uncache is not supported");
     }
 }

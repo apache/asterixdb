@@ -26,7 +26,8 @@ import java.util.stream.Collectors;
 
 public enum CloudCachePolicy {
     EAGER("eager"),
-    LAZY("lazy");
+    LAZY("lazy"),
+    SELECTIVE("selective");
     private static final Map<String, CloudCachePolicy> partitioningSchemes =
             Collections.unmodifiableMap(Arrays.stream(CloudCachePolicy.values())
                     .collect(Collectors.toMap(CloudCachePolicy::getPolicyName, Function.identity())));

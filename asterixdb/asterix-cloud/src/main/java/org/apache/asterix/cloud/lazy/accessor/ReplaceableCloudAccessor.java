@@ -72,8 +72,10 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
     @Override
     public void doOnOpen(CloudFileHandle fileHandle) throws HyracksDataException {
         FileReference fileRef = fileHandle.getFileReference();
-        if (!localIoManager.exists(fileRef) && cloudClient.exists(bucket, fileRef.getRelativePath())) {
-            if (cacher.downloadDataFiles(fileRef)) {
+        if (!localIoManager.exists(fileRef) && cacher.isCacheable(fileRef)) {
+            boolean shouldReplace = fileRef.areHolesAllowed() ? cacher.createEmptyDataFiles(fileRef)
+                    : cacher.downloadDataFiles(fileRef);
+            if (shouldReplace) {
                 replace();
             }
         }
@@ -134,6 +136,11 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         }
     }
 
+    @Override
+    public void doEvict(FileReference directory) throws HyracksDataException {
+        throw new UnsupportedOperationException("evict is not supported");
+    }
+
     private Set<FileReference> cloudBackedList(FileReference dir, FilenameFilter filter) throws HyracksDataException {
         LOGGER.debug("CLOUD LIST: {}", dir);
         Set<CloudFile> cloudFiles = cloudClient.listObjects(bucket, dir.getRelativePath(), filter);
@@ -169,7 +176,7 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
         return partitions.contains(StoragePathUtil.getPartitionNumFromRelativePath(path));
     }
 
-    private void replace() throws HyracksDataException {
+    protected void replace() throws HyracksDataException {
         cacher.close();
         replacer.replace();
     }

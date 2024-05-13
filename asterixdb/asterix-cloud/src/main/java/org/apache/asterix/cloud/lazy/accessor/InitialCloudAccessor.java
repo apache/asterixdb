@@ -22,6 +22,8 @@ import java.util.Collections;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.lazy.NoOpParallelCacher;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 /**
@@ -29,10 +31,23 @@ import org.apache.hyracks.control.nc.io.IOManager;
  * initializing the NC's partitions
  */
 public class InitialCloudAccessor extends ReplaceableCloudAccessor {
-    private static final ILazyAccessorReplacer NO_OP_REPLACER = () -> {
+    public static final ILazyAccessorReplacer NO_OP_REPLACER = () -> {
     };
 
     public InitialCloudAccessor(ICloudClient cloudClient, String bucket, IOManager localIoManager) {
         super(cloudClient, bucket, localIoManager, Collections.emptySet(), NO_OP_REPLACER, NoOpParallelCacher.INSTANCE);
+    }
+
+    @Override
+    public boolean doExists(FileReference fileRef) throws HyracksDataException {
+        return localIoManager.exists(fileRef) || cloudClient.exists(bucket, fileRef.getRelativePath());
+    }
+
+    @Override
+    public long doGetSize(FileReference fileReference) throws HyracksDataException {
+        if (localIoManager.exists(fileReference)) {
+            return localIoManager.getSize(fileReference);
+        }
+        return cloudClient.getObjectSize(bucket, fileReference.getRelativePath());
     }
 }

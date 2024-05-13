@@ -47,6 +47,7 @@ import org.apache.logging.log4j.Logger;
  * A parallel cacher that maintains and downloads (in parallel) all uncached files
  *
  * @see org.apache.asterix.cloud.lazy.accessor.ReplaceableCloudAccessor
+ * @see org.apache.asterix.cloud.lazy.accessor.SelectiveCloudAccessor
  */
 public final class ParallelCacher implements IParallelCacher {
     private static final Logger LOGGER = LogManager.getLogger();
