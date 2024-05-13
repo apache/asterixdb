@@ -35,6 +35,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 
 public abstract class AbstractRequestsServlet extends AbstractServlet {
 
+    public static final String REDACT_PARAM = "redact";
     protected final ICcApplicationContext appCtx;
 
     public AbstractRequestsServlet(ConcurrentMap<String, Object> ctx, ICcApplicationContext appCtx, String... paths) {
@@ -46,8 +47,15 @@ public abstract class AbstractRequestsServlet extends AbstractServlet {
     protected void get(IServletRequest request, IServletResponse response) throws Exception {
         ArrayNode requestsJson = JSONUtil.createArray();
         Collection<IClientRequest> requests = getRequests();
-        for (IClientRequest req : requests) {
-            requestsJson.add(req.asJson());
+        String redact = request.getParameter(REDACT_PARAM);
+        if (Boolean.parseBoolean(redact)) {
+            for (IClientRequest req : requests) {
+                requestsJson.add(req.asRedactedJson());
+            }
+        } else {
+            for (IClientRequest req : requests) {
+                requestsJson.add(req.asJson());
+            }
         }
         HttpUtil.setContentType(response, HttpUtil.ContentType.APPLICATION_JSON, request);
         response.setStatus(HttpResponseStatus.OK);

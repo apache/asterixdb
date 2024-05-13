@@ -52,7 +52,6 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.info("cleaning up {} on NCs, status={}", jobId, status);
         final JobRun jobRun = jobManager.get(jobId);
         if (jobRun == null) {
             LOGGER.debug("ignoring cleanup for unknown {}", jobId);

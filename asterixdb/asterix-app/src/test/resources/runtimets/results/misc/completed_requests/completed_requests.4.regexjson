@@ -1,0 +1,19 @@
+{
+    "cancellable": true,
+    "clientContextID": "completed_requests_query",
+    "elapsedTime": "R{.*}",
+    "jobCreateTime": "R{.*}",
+    "jobEndTime": "R{.*}",
+    "jobId": "R{.*}",
+    "jobQueueTime": "R{.*}",
+    "jobRequiredCPUs": "R{.*}",
+    "jobRequiredMemory": "R{.*}",
+    "jobStartTime": "R{.*}",
+    "jobStatus": "TERMINATED",
+    "node": "R{.*}",
+    "remoteAddr": "R{.*}",
+    "requestTime": "R{.*}",
+    "state": "completed",
+    "userAgent": "R{.*}",
+    "uuid": "R{.*}"
+}

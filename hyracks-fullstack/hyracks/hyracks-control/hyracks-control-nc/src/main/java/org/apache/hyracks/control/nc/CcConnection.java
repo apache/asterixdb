@@ -70,6 +70,8 @@ public class CcConnection {
             InvokeUtil.runWithTimeout(() -> {
                 this.wait(REGISTRATION_RESPONSE_POLL_PERIOD); // NOSONAR while loop in timeout call
             }, () -> !registrationPending, 1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            throw e;
         } catch (Exception e) {
             registrationException = e;
         }
