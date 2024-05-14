@@ -1176,7 +1176,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     }
 
     private ICachedPage confiscateInner(long dpid, int multiplier) {
-        ICachedPage returnPage = null;
+        CachedPage returnPage = null;
         CachedPage victim = (CachedPage) pageReplacementStrategy.findVictim(multiplier);
         if (victim == null) {
             return victim;
@@ -1197,7 +1197,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 return null;
             }
             returnPage = victim;
-            ((CachedPage) returnPage).dpid = dpid;
+            returnPage.dpid = dpid;
         } else {
             // Case 2a/b
             int pageHash = hash(victim.getDiskPageId());
@@ -1240,7 +1240,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 }
                 if (found) {
                     returnPage = victim;
-                    ((CachedPage) returnPage).dpid = dpid;
+                    returnPage.dpid = dpid;
                 } //otherwise, someone took the same victim before we acquired the lock. try again!
             } finally {
                 bucket.bucketLock.unlock();
@@ -1248,12 +1248,17 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         }
         // if we found a page after all that, go ahead and finish
         if (returnPage != null) {
-            ((CachedPage) returnPage).confiscated.set(true);
+            int pinCount = returnPage.pinCount.get();
+            if (!returnPage.confiscated.compareAndSet(false, true)) {
+                throw new IllegalStateException("Returned page is already confiscated");
+            } else if (pinCount != 1) {
+                throw new IllegalStateException("Returned page's pinCount is not 1. It is " + pinCount);
+            }
             if (DEBUG) {
                 confiscateLock.lock();
                 try {
-                    confiscatedPages.add((CachedPage) returnPage);
-                    confiscatedPagesOwner.put((CachedPage) returnPage, Thread.currentThread().getStackTrace());
+                    confiscatedPages.add(returnPage);
+                    confiscatedPagesOwner.put(returnPage, Thread.currentThread().getStackTrace());
                 } finally {
                     confiscateLock.unlock();
                 }
