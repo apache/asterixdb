@@ -59,8 +59,7 @@ public class AnyExpectedSchemaNode extends AbstractExpectedSchemaNode {
         AbstractComplexExpectedSchemaNode parent = getParent();
         AbstractComplexExpectedSchemaNode nestedNode = AbstractComplexExpectedSchemaNode
                 .createNestedNode(expectedNodeType, parent, getSourceLocation(), functionName);
-        parent.replaceChild(this, nestedNode);
-        return nestedNode;
+        return parent.replaceChild(this, nestedNode);
     }
 
     @Override

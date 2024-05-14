@@ -21,8 +21,6 @@ package org.apache.asterix.optimizer.rules.pushdown.schema;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
@@ -57,9 +55,19 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
     }
 
     @Override
-    public void replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
+    public IExpectedSchemaNode replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
         String fieldName = getChildFieldName(oldNode);
-        children.replace(fieldName, newNode);
+        IExpectedSchemaNode child = children.get(fieldName);
+        if (child.getType() == newNode.getType()) {
+            // We are trying to replace with the same node type
+            return child;
+        } else if (isChildReplaceable(child, newNode)) {
+            children.replace(fieldName, newNode);
+            return newNode;
+        }
+
+        // This should never happen, but safeguard against unexpected behavior
+        throw new IllegalStateException("Cannot replace " + child.getType() + " with " + newNode.getType());
     }
 
     public String getChildFieldName(IExpectedSchemaNode requestedChild) {
@@ -76,13 +84,5 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
             throw new IllegalStateException("Node " + requestedChild.getType() + " is not a child");
         }
         return key;
-    }
-
-    protected IAType getType(IAType childType, IExpectedSchemaNode childNode, String typeName) {
-        String key = getChildFieldName(childNode);
-        IAType[] fieldTypes = { childType };
-        String[] fieldNames = { key };
-
-        return new ARecordType("typeName", fieldNames, fieldTypes, false);
     }
 }

@@ -113,7 +113,7 @@ public class ExpressionToExpectedSchemaNodeVisitor implements ILogicalExpression
         AbstractComplexExpectedSchemaNode newParent = replaceIfNeeded(parent, expr);
         IExpectedSchemaNode myNode =
                 new AnyExpectedSchemaNode(newParent, expr.getSourceLocation(), expr.getFunctionIdentifier().getName());
-        ExpectedSchemaBuilder.addChild(expr, typeEnv, newParent, myNode);
+        ExpectedSchemaBuilder.addOrReplaceChild(expr, typeEnv, newParent, myNode);
         return myNode;
     }
 

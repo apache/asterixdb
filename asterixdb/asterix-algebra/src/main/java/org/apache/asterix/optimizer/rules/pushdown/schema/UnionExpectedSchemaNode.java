@@ -38,7 +38,7 @@ public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
      * replace a child of a UNION type to ANY. We can only replace the union itself to ANY.
      */
     @Override
-    protected void replaceChild(IExpectedSchemaNode oldChildNode, IExpectedSchemaNode newChildNode) {
+    protected IExpectedSchemaNode replaceChild(IExpectedSchemaNode oldChildNode, IExpectedSchemaNode newChildNode) {
         throw new UnsupportedOperationException("Cannot replace a child of UNION");
     }
 

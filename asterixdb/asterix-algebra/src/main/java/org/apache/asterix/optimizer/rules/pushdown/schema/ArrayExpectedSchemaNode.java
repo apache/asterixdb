@@ -47,11 +47,16 @@ public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     }
 
     @Override
-    public void replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
-        if (oldNode != child) {
-            //this should not happen
-            throw new IllegalStateException("Node " + oldNode.getType() + " is not a child");
+    public IExpectedSchemaNode replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
+        if (child.getType() == newNode.getType()) {
+            // We are trying to replace with the same node type
+            return child;
+        } else if (isChildReplaceable(child, newNode)) {
+            child = newNode;
+            return child;
         }
-        child = newNode;
+
+        // This should never happen, but safeguard against unexpected behavior
+        throw new IllegalStateException("Cannot replace " + child.getType() + " with " + newNode.getType());
     }
 }

@@ -61,12 +61,13 @@ public class ExpectedSchemaBuilder {
         if (parent != null) {
             IExpectedSchemaNode leaf =
                     new AnyExpectedSchemaNode(parent, expr.getSourceLocation(), expr.getFunctionIdentifier().getName());
-            addChild(expr, typeEnv, parent, leaf);
+            IExpectedSchemaNode actualNode = addOrReplaceChild(expr, typeEnv, parent, leaf);
             if (producedVar != null) {
                 //Register the node if a variable is produced
-                varToNode.put(producedVar, leaf);
+                varToNode.put(producedVar, actualNode);
             }
         }
+
         return parent != null;
     }
 
@@ -135,9 +136,8 @@ public class ExpectedSchemaBuilder {
              */
             AbstractComplexExpectedSchemaNode myNode = AbstractComplexExpectedSchemaNode.createNestedNode(myType,
                     newParent, myExpr.getSourceLocation(), myExpr.getFunctionIdentifier().getName());
-            //Add myNode to the parent
-            addChild(parentFuncExpr, typeEnv, newParent, myNode);
-            return myNode;
+            // Add (or replace old child with) myNode to the parent
+            return addOrReplaceChild(parentFuncExpr, typeEnv, newParent, myNode);
         }
         return null;
     }
@@ -166,18 +166,16 @@ public class ExpectedSchemaBuilder {
         return newNode;
     }
 
-    public static void addChild(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
-            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
+    public static IExpectedSchemaNode addOrReplaceChild(AbstractFunctionCallExpression parentExpr,
+            IVariableTypeEnvironment typeEnv, AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child)
+            throws AlgebricksException {
         switch (parent.getType()) {
             case OBJECT:
-                handleObject(parentExpr, typeEnv, parent, child);
-                break;
+                return handleObject(parentExpr, typeEnv, parent, child);
             case ARRAY:
-                handleArray(parent, child);
-                break;
+                return handleArray(parent, child);
             case UNION:
-                handleUnion(parentExpr, parent, child);
-                break;
+                return handleUnion(parentExpr, parent, child);
             default:
                 throw new IllegalStateException("Node " + parent.getType() + " is not nested");
 
@@ -194,25 +192,43 @@ public class ExpectedSchemaBuilder {
         throw new IllegalStateException("Function " + fid + " should not be pushed down");
     }
 
-    private static void handleObject(AbstractFunctionCallExpression parentExpr, IVariableTypeEnvironment typeEnv,
-            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
+    private static IExpectedSchemaNode handleObject(AbstractFunctionCallExpression parentExpr,
+            IVariableTypeEnvironment typeEnv, AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child)
+            throws AlgebricksException {
         String fieldName = PushdownUtil.getFieldName(parentExpr, typeEnv);
         ObjectExpectedSchemaNode objectNode = (ObjectExpectedSchemaNode) parent;
-        objectNode.addChild(fieldName, child);
+        IExpectedSchemaNode actualChild = objectNode.getChildren().get(fieldName);
+        if (actualChild == null) {
+            objectNode.addChild(fieldName, child);
+            actualChild = child;
+        } else {
+            actualChild = objectNode.replaceChild(actualChild, child);
+        }
+
+        return actualChild;
     }
 
-    private static void handleArray(AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) {
+    private static IExpectedSchemaNode handleArray(AbstractComplexExpectedSchemaNode parent,
+            IExpectedSchemaNode child) {
         ArrayExpectedSchemaNode arrayNode = (ArrayExpectedSchemaNode) parent;
-        arrayNode.addChild(child);
+        IExpectedSchemaNode actualChild = arrayNode.getChild();
+        if (actualChild == null) {
+            arrayNode.addChild(child);
+            actualChild = child;
+        } else {
+            actualChild = arrayNode.replaceChild(actualChild, child);
+        }
+
+        return actualChild;
     }
 
-    private static void handleUnion(AbstractFunctionCallExpression parentExpr, AbstractComplexExpectedSchemaNode parent,
-            IExpectedSchemaNode child) throws AlgebricksException {
+    private static IExpectedSchemaNode handleUnion(AbstractFunctionCallExpression parentExpr,
+            AbstractComplexExpectedSchemaNode parent, IExpectedSchemaNode child) throws AlgebricksException {
         UnionExpectedSchemaNode unionNode = (UnionExpectedSchemaNode) parent;
         ExpectedSchemaNodeType parentType = getExpectedNestedNodeType(parentExpr);
         AbstractComplexExpectedSchemaNode actualParent = unionNode.getChild(parentType);
         child.setParent(actualParent);
-        addChild(parentExpr, null, actualParent, child);
+        return addOrReplaceChild(parentExpr, null, actualParent, child);
     }
 
     private static boolean isVariable(ILogicalExpression expr) {

@@ -1,0 +1,60 @@
+distribute result [$$65] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$65]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$65] <- [{"$1": $$67}] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+      -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$67] <- [agg-sql-sum($$72)] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$72] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+            -- AGGREGATE  |PARTITIONED|
+              select (or($$53, $$57)) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+              -- STREAM_SELECT  |PARTITIONED|
+                project ([$$53, $$57]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  subplan {
+                            aggregate [$$57] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- AGGREGATE  |LOCAL|
+                              select (eq($$71, 2)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_SELECT  |LOCAL|
+                                assign [$$71] <- [$$e.getField("y")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ASSIGN  |LOCAL|
+                                  unnest $$e <- scan-collection($$70) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- UNNEST  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                         } [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                  -- SUBPLAN  |PARTITIONED|
+                    project ([$$70, $$53]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      subplan {
+                                aggregate [$$53] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- AGGREGATE  |LOCAL|
+                                  select (eq($$69, 1)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- STREAM_SELECT  |LOCAL|
+                                    assign [$$69] <- [$$e.getField("x")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ASSIGN  |LOCAL|
+                                      unnest $$e <- scan-collection($$68) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- UNNEST  |LOCAL|
+                                        nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                             } [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                      -- SUBPLAN  |PARTITIONED|
+                        project ([$$70, $$68]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$70, $$68] <- [$$c.getField("val2"), $$c.getField("val1")] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                          -- ASSIGN  |PARTITIONED|
+                            project ([$$c]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                data-scan []<-[$$66, $$c] <- test.ColumnDataset project ({val2:[{y:any}],val1:[{x:any}]}) filter on: or(eq(scan-collection($$c.getField("val1")).getField("x"), 1), eq(scan-collection($$c.getField("val2")).getField("y"), 2)) range-filter on: or(eq(scan-collection($$c.getField("val1")).getField("x"), 1), eq(scan-collection($$c.getField("val2")).getField("y"), 2)) [cardinality: 2.0, op-cost: 2.0, total-cost: 2.0]
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
