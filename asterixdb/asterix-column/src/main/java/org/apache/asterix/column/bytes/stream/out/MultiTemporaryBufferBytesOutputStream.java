@@ -55,14 +55,30 @@ public final class MultiTemporaryBufferBytesOutputStream extends AbstractMultiBu
     @Override
     public void writeTo(OutputStream outputStream) throws IOException {
         int writtenSize = 0;
-        for (int i = 0; i < currentBufferIndex + 1; i++) {
+        int numberOfUsedBuffers = currentBufferIndex + 1;
+        for (int i = 0; i < numberOfUsedBuffers; i++) {
             ByteBuffer buffer = buffers.get(i);
             outputStream.write(buffer.array(), 0, buffer.position());
             writtenSize += buffer.position();
         }
+
         if (writtenSize != position) {
-            //Sanity check
-            throw new IllegalStateException("Size is different");
+            // Sanity check
+            StringBuilder builder = new StringBuilder();
+            builder.append('[');
+            for (int i = 0; i < numberOfUsedBuffers; i++) {
+                ByteBuffer buffer = buffers.get(i);
+                builder.append("{Buffer index: ").append(i);
+                builder.append(" Position: ").append(buffer.position());
+                builder.append(" Limit: ").append(buffer.limit());
+                builder.append(" Capacity: ").append(buffer.capacity());
+                builder.append("}, ");
+            }
+            builder.setLength(builder.length() - 2);
+            builder.append(']');
+            throw new IllegalStateException("Size is different (written: " + writtenSize + ", position: " + position
+                    + ", allocatedBytes: " + allocatedBytes + ", currentBufferIndex: " + currentBufferIndex
+                    + ", buffers: " + builder + ")");
         }
     }
 }

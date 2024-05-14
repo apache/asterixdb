@@ -34,10 +34,13 @@ import org.apache.asterix.column.values.writer.filters.NoOpColumnFilterWriter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.bytes.BytesUtils;
 
 public abstract class AbstractColumnValuesWriter implements IColumnValuesWriter {
+    private static final Logger LOGGER = LogManager.getLogger();
     // For 3 integers (count, defSize, and valueSize)
     private static final int COUNT_DEF_SIZE_VALUE_SIZE = Integer.BYTES * 3;
     protected final AbstractColumnFilterWriter filterWriter;
@@ -188,7 +191,8 @@ public abstract class AbstractColumnValuesWriter implements IColumnValuesWriter 
                  */
                 BytesUtils.writeZigZagVarInt(0, out);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
+            LOGGER.error("Error while flushing columnIndex {}", columnIndex);
             throw HyracksDataException.create(e);
         }
         reset();
