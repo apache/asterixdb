@@ -87,6 +87,7 @@ public class JoinNode {
     protected List<String> datasetNames;
     protected List<String> aliases;
     protected int cheapestPlanIndex;
+    protected PlanNode cheapestPlanNode;
     private ICost cheapestPlanCost;
     protected double origCardinality; // without any selections
     protected double cardinality;
@@ -119,6 +120,7 @@ public class JoinNode {
         this.jnArrayIndex = i;
         planIndexesArray = new ArrayList<>();
         cheapestPlanIndex = PlanNode.NO_PLAN;
+        cheapestPlanNode = null;
         size = 1; // for now, will be the size of the doc for this joinNode
     }
 
@@ -147,6 +149,10 @@ public class JoinNode {
 
     public double getOrigCardinality() {
         return origCardinality;
+    }
+
+    public PlanNode getCheapestPlanNode() {
+        return cheapestPlanNode;
     }
 
     protected void setOrigCardinality(double card, boolean setMinCard) {
@@ -707,7 +713,7 @@ public class JoinNode {
         boolean forceEnum = mandatoryIndexesInfo.size() > 0 || level <= joinEnum.cboFullEnumLevel;
         if (opCost.costLT(this.cheapestPlanCost) || forceEnum) {
             pn = new PlanNode(allPlans.size(), joinEnum, this, datasetNames.get(0), leafInput);
-            pn.setScanAndHintInfo(PlanNode.ScanMethod.INDEX_SCAN, mandatoryIndexesInfo);
+            pn.setScanAndHintInfo(PlanNode.ScanMethod.INDEX_SCAN, mandatoryIndexesInfo, optionalIndexesInfo);
             pn.setScanCosts(totalCost);
             planIndexesArray.add(pn.allPlansIndex);
             allPlans.add(pn);
@@ -1443,6 +1449,7 @@ public class JoinNode {
         PlanNode cheapestPlan = forceEnum ? findCheapestPlan() : pn;
         cheapestPlanCost = cheapestPlan.totalCost;
         cheapestPlanIndex = cheapestPlan.allPlansIndex;
+        cheapestPlanNode = cheapestPlan;
     }
 
     @Override

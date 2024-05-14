@@ -49,6 +49,7 @@ public class PlanNode {
 
     protected ScanMethod scanOp;
     protected boolean indexHint;
+    Index indexUsed;
 
     protected JoinMethod joinOp;
 
@@ -79,6 +80,10 @@ public class PlanNode {
 
     public int getIndex() {
         return allPlansIndex;
+    }
+
+    public Index getSoleAccessIndex() {
+        return indexUsed;
     }
 
     private int[] getPlanIndexes() {
@@ -143,7 +148,7 @@ public class PlanNode {
         return getLeftPlanIndex() == NO_PLAN && getRightPlanIndex() == NO_PLAN;
     }
 
-    protected boolean IsJoinNode() {
+    public boolean IsJoinNode() {
         return getLeftPlanIndex() != NO_PLAN && getRightPlanIndex() != NO_PLAN;
     }
 
@@ -231,6 +236,7 @@ public class PlanNode {
         jn = null;
         planIndexes = new int[2]; // 0 is for left, 1 is for right
         jnIndexes = new int[2]; // join node index(es)
+        indexUsed = null;
         setLeftJoinIndex(JoinNode.NO_JN);
         setRightJoinIndex(JoinNode.NO_JN);
         setLeftPlanIndex(PlanNode.NO_PLAN);
@@ -251,6 +257,7 @@ public class PlanNode {
         this.leafInput = leafInput;
         planIndexes = new int[2]; // 0 is for left, 1 is for right
         jnIndexes = new int[2]; // join node index(es)
+        indexUsed = null;
         setLeftJoinIndex(jn.jnArrayIndex);
         setRightJoinIndex(JoinNode.NO_JN);
         setLeftPlanIndex(PlanNode.NO_PLAN); // There ane no plans below this plan.
@@ -269,6 +276,7 @@ public class PlanNode {
         this.outerJoin = outerJoin;
         planIndexes = new int[2]; // 0 is for left, 1 is for right
         jnIndexes = new int[2]; // join node index(es)
+        indexUsed = null; // used for NL costing
         setLeftJoinIndex(leftPlan.jn.jnArrayIndex);
         setRightJoinIndex(rightPlan.jn.jnArrayIndex);
         setLeftPlanIndex(leftPlan.allPlansIndex);
@@ -279,11 +287,21 @@ public class PlanNode {
     }
 
     protected void setScanAndHintInfo(ScanMethod scanMethod,
-            List<Triple<Index, Double, AbstractFunctionCallExpression>> mandatoryIndexesInfo) {
+            List<Triple<Index, Double, AbstractFunctionCallExpression>> mandatoryIndexesInfo,
+            List<Triple<Index, Double, AbstractFunctionCallExpression>> optionalIndexesInfo) {
         setScanMethod(scanMethod);
         if (mandatoryIndexesInfo.size() > 0) {
             indexHint = true;
             numHintsUsed = 1;
+        }
+        // keeping things simple. When multiple indexes are used, we cannot be sure of the order.
+        // So seeing if only index is used.
+        if (optionalIndexesInfo.size() + mandatoryIndexesInfo.size() == 1) {
+            if (optionalIndexesInfo.size() == 1) {
+                indexUsed = optionalIndexesInfo.get(0).first;
+            } else {
+                indexUsed = mandatoryIndexesInfo.get(0).first;
+            }
         }
     }
 
