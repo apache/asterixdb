@@ -63,6 +63,8 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
         IPartitionBootstrapper bootstrapper = applicationContext.getPartitionBootstrapper();
         bootstrapper.bootstrap(storagePartitions, lrs.getOnDiskPartitions(), metadataNode, metadataPartitionId, cleanup,
                 latestCheckpoint == null);
+        // Report all local resources
+        applicationContext.getDiskCacheService().reportLocalResources(lrs.loadAndGetAllResources());
     }
 
     @Override

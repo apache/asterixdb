@@ -18,67 +18,151 @@
  */
 package org.apache.hyracks.cloud.cache.service;
 
-import org.apache.hyracks.cloud.cache.unit.DatasetUnit;
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.hyracks.cloud.cache.unit.AbstractIndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
+import org.apache.hyracks.cloud.cache.unit.UnsweepableIndexUnit;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.common.IIndex;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.disk.IDiskResourceCacheLockNotifier;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
-// TODO locking should be revised
 public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCacheLockNotifier {
-    private final Int2ObjectMap<DatasetUnit> datasets;
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final int metadataPartition;
+    private final Long2ObjectMap<LocalResource> inactiveResources;
+    private final Long2ObjectMap<UnsweepableIndexUnit> unsweepableIndexes;
+    private final Long2ObjectMap<SweepableIndexUnit> sweepableIndexes;
+    private final ReentrantReadWriteLock evictionLock;
 
-    public CloudDiskResourceCacheLockNotifier() {
-        datasets = Int2ObjectMaps.synchronize(new Int2ObjectOpenHashMap<>());
+    public CloudDiskResourceCacheLockNotifier(int metadataPartition) {
+        this.metadataPartition = metadataPartition;
+        inactiveResources = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+        unsweepableIndexes = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+        sweepableIndexes = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+        evictionLock = new ReentrantReadWriteLock();
     }
 
     @Override
-    public void onRegister(int datasetId, LocalResource localResource, IIndex index) {
+    public void onRegister(LocalResource localResource, IIndex index, int partition) {
         ILSMIndex lsmIndex = (ILSMIndex) index;
-        if (lsmIndex.getDiskCacheManager().isSweepable()) {
-            DatasetUnit datasetUnit = datasets.computeIfAbsent(datasetId, DatasetUnit::new);
-            datasetUnit.addIndex(localResource.getId(), lsmIndex);
-        }
-    }
-
-    @Override
-    public void onUnregister(int datasetId, long resourceId) {
-        DatasetUnit datasetUnit = datasets.get(datasetId);
-        if (datasetUnit != null && datasetUnit.dropIndex(resourceId)) {
-            datasets.remove(datasetId);
-
-            // TODO invalidate eviction plans if the disk is not pressured
-        }
-    }
-
-    @Override
-    public void onOpen(int datasetId, long resourceId) {
-        DatasetUnit datasetUnit = datasets.get(datasetId);
-        if (datasetUnit != null) {
-            IndexUnit indexUnit = datasetUnit.getIndex(resourceId);
-            if (indexUnit != null) {
-                indexUnit.readLock();
+        evictionLock.readLock().lock();
+        try {
+            if (partition != metadataPartition) {
+                long resourceId = localResource.getId();
+                if (lsmIndex.getDiskCacheManager().isSweepable()) {
+                    sweepableIndexes.put(resourceId, new SweepableIndexUnit(localResource, lsmIndex));
+                } else {
+                    unsweepableIndexes.put(resourceId, new UnsweepableIndexUnit(localResource));
+                }
             }
+            inactiveResources.remove(localResource.getId());
+        } finally {
+            evictionLock.readLock().unlock();
         }
     }
 
     @Override
-    public void onClose(int datasetId, long resourceId) {
-        DatasetUnit datasetUnit = datasets.get(datasetId);
-        if (datasetUnit != null) {
-            IndexUnit indexUnit = datasetUnit.getIndex(resourceId);
+    public void onUnregister(long resourceId) {
+        evictionLock.readLock().lock();
+        try {
+            AbstractIndexUnit indexUnit = getUnit(resourceId);
             if (indexUnit != null) {
-                indexUnit.readUnlock();
+                indexUnit.drop();
+            } else {
+                inactiveResources.remove(resourceId);
             }
+        } finally {
+            evictionLock.readLock().unlock();
         }
     }
 
-    Int2ObjectMap<DatasetUnit> getDatasets() {
-        return datasets;
+    private AbstractIndexUnit getUnit(long resourceId) {
+        AbstractIndexUnit indexUnit = sweepableIndexes.get(resourceId);
+        if (indexUnit == null) {
+            indexUnit = unsweepableIndexes.get(resourceId);
+        }
+        return indexUnit;
+    }
+
+    @Override
+    public void onOpen(long resourceId) {
+        evictionLock.readLock().lock();
+        try {
+            AbstractIndexUnit indexUnit = getUnit(resourceId);
+            if (indexUnit == null) {
+                // Metadata resource
+                return;
+            }
+            indexUnit.open();
+        } finally {
+            evictionLock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void onClose(long resourceId) {
+        evictionLock.readLock().lock();
+        try {
+            AbstractIndexUnit indexUnit = getUnit(resourceId);
+            if (indexUnit == null) {
+                // Metadata resource
+                return;
+            }
+            indexUnit.close();
+        } finally {
+            evictionLock.readLock().unlock();
+        }
+
+    }
+
+    ReentrantReadWriteLock getEvictionLock() {
+        return evictionLock;
+    }
+
+    void reportLocalResources(Map<Long, LocalResource> localResources) {
+        inactiveResources.clear();
+        // First check whatever we had already
+        for (LocalResource lr : localResources.values()) {
+            if (unsweepableIndexes.containsKey(lr.getId()) || sweepableIndexes.containsKey(lr.getId())) {
+                // We already have this resource
+                continue;
+            }
+
+            // Probably a new resource or an old resource that wasn't registered before
+            inactiveResources.put(lr.getId(), lr);
+        }
+
+        removeUnassignedResources(unsweepableIndexes, localResources);
+        removeUnassignedResources(sweepableIndexes, localResources);
+
+        LOGGER.info("Retained active {unsweepable: {}, sweepable: {}} and inactive: {}", unsweepableIndexes,
+                sweepableIndexes, inactiveResources.values().stream()
+                        .map(x -> "(id: " + x.getId() + ",  path: " + x.getPath() + ")").toList());
+    }
+
+    private void removeUnassignedResources(Long2ObjectMap<?> indexes, Map<Long, LocalResource> localResources) {
+        indexes.long2ObjectEntrySet().removeIf(x -> !localResources.containsKey(x.getLongKey()));
+    }
+
+    Collection<LocalResource> getInactiveResources() {
+        return inactiveResources.values();
+    }
+
+    Collection<UnsweepableIndexUnit> getUnsweepableIndexes() {
+        return unsweepableIndexes.values();
+    }
+
+    void getSweepableIndexes(Collection<SweepableIndexUnit> indexes) {
+        indexes.addAll(sweepableIndexes.values());
     }
 }

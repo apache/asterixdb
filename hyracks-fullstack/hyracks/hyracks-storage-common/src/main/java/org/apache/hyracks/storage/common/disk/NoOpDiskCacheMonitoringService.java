@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.storage.common.disk;
 
+import java.util.Map;
+
+import org.apache.hyracks.storage.common.LocalResource;
+
 public final class NoOpDiskCacheMonitoringService implements IDiskCacheMonitoringService {
     public static final IDiskCacheMonitoringService INSTANCE = new NoOpDiskCacheMonitoringService();
 
@@ -37,6 +41,11 @@ public final class NoOpDiskCacheMonitoringService implements IDiskCacheMonitorin
     @Override
     public boolean isEnabled() {
         return false;
+    }
+
+    @Override
+    public void reportLocalResources(Map<Long, LocalResource> localResources) {
+        // NoOp
     }
 
     @Override

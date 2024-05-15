@@ -45,18 +45,20 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
             (dir, name) -> !name.startsWith(".") && name.endsWith(BTREE_SUFFIX);
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
     private final boolean hasBloomFilter;
-
-    public LSMBTreeFileManager(IIOManager ioManager, FileReference file,
-            TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter,
-            ICompressorDecompressorFactory compressorDecompressorFactory) {
-        super(ioManager, file, null, compressorDecompressorFactory);
-        this.btreeFactory = btreeFactory;
-        this.hasBloomFilter = hasBloomFilter;
-    }
+    private final boolean allowHoles;
 
     public LSMBTreeFileManager(IIOManager ioManager, FileReference file,
             TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter) {
-        this(ioManager, file, btreeFactory, hasBloomFilter, NoOpCompressorDecompressorFactory.INSTANCE);
+        this(ioManager, file, btreeFactory, hasBloomFilter, NoOpCompressorDecompressorFactory.INSTANCE, false);
+    }
+
+    public LSMBTreeFileManager(IIOManager ioManager, FileReference file,
+            TreeIndexFactory<? extends ITreeIndex> btreeFactory, boolean hasBloomFilter,
+            ICompressorDecompressorFactory compressorDecompressorFactory, boolean allowHoles) {
+        super(ioManager, file, null, compressorDecompressorFactory);
+        this.btreeFactory = btreeFactory;
+        this.hasBloomFilter = hasBloomFilter;
+        this.allowHoles = allowHoles;
     }
 
     @Override
@@ -179,5 +181,10 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
         }
 
         return validFiles;
+    }
+
+    @Override
+    protected boolean areHolesAllowed() {
+        return allowHoles;
     }
 }

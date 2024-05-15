@@ -68,11 +68,11 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     private ILazyAccessor accessor;
 
     public LazyCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver, boolean replaceableAccessor) throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, boolean selective) throws HyracksDataException {
         super(ioManager, cloudProperties, nsPathResolver);
         accessor = new InitialCloudAccessor(cloudClient, bucket, localIoManager);
         puncher = HolePuncherProvider.get(this, cloudProperties, writeBufferProvider);
-        if (replaceableAccessor) {
+        if (selective) {
             replacer = InitialCloudAccessor.NO_OP_REPLACER;
         } else {
             replacer = () -> {
@@ -208,8 +208,8 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
-    public void evict(FileReference directory) throws HyracksDataException {
-        accessor.doEvict(directory);
+    public void evict(String resourcePath) throws HyracksDataException {
+        accessor.doEvict(resolve(resourcePath));
     }
 
     private List<FileReference> resolve(Set<CloudFile> cloudFiles) throws HyracksDataException {

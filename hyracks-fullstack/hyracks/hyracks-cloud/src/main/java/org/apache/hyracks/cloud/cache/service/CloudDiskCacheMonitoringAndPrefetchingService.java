@@ -18,9 +18,11 @@
  */
 package org.apache.hyracks.cloud.cache.service;
 
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.disk.prefetch.AbstractPrefetchRequest;
@@ -52,6 +54,11 @@ public final class CloudDiskCacheMonitoringAndPrefetchingService
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public void reportLocalResources(Map<Long, LocalResource> localResources) {
+        monitorThread.reportLocalResources(localResources);
     }
 
     @Override

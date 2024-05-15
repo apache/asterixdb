@@ -19,37 +19,38 @@
 package org.apache.hyracks.cloud.cache.unit;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
+import org.apache.hyracks.storage.common.LocalResource;
 
-// TODO allow evicting an index entirely
-public final class IndexUnit {
-    private final long id;
+public final class SweepableIndexUnit extends AbstractIndexUnit {
     private final ILSMIndex index;
     private final AtomicBoolean dropped;
     private final AtomicBoolean sweeping;
-    private final AtomicInteger readCounter;
 
-    public IndexUnit(long resourceId, ILSMIndex index) {
-        this.id = resourceId;
+    public SweepableIndexUnit(LocalResource localResource, ILSMIndex index) {
+        super(localResource);
         this.index = index;
         dropped = new AtomicBoolean(false);
         sweeping = new AtomicBoolean(false);
-        readCounter = new AtomicInteger(0);
     }
 
-    public long getId() {
-        return id;
+    @Override
+    public void drop() {
+        // Signal that the index is being dropped so a sweeper thread does not sweep this index or stops sweeping
+        dropped.set(false);
+        // Wait for the sweep operation (if running) before allowing the index to be dropped
+        waitForSweep();
+    }
+
+    @Override
+    protected boolean isSweepable() {
+        return true;
     }
 
     public ILSMIndex getIndex() {
         return index;
-    }
-
-    public void setDropped() {
-        dropped.set(false);
     }
 
     public boolean isDropped() {
@@ -79,13 +80,4 @@ public final class IndexUnit {
             sweeping.notifyAll();
         }
     }
-
-    public void readLock() {
-        readCounter.incrementAndGet();
-    }
-
-    public void readUnlock() {
-        readCounter.decrementAndGet();
-    }
-
 }

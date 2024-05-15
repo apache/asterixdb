@@ -26,6 +26,8 @@ import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IResourceLifecycleManager;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
+import org.apache.hyracks.storage.common.disk.NoOpDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.ResourceIdFactory;
 
 public class BTreeHelperStorageManager implements IStorageManager {
@@ -59,5 +61,10 @@ public class BTreeHelperStorageManager implements IStorageManager {
     @Override
     public IResourceLifecycleManager<IIndex> getLifecycleManager(INCServiceContext ctx) {
         return RuntimeContext.get(ctx).getIndexLifecycleManager();
+    }
+
+    @Override
+    public IDiskCacheMonitoringService getDiskCacheMonitoringService(INCServiceContext ctx) {
+        return NoOpDiskCacheMonitoringService.INSTANCE;
     }
 }

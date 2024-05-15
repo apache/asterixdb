@@ -24,6 +24,7 @@ import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 /**
@@ -59,4 +60,10 @@ public interface IStorageManager extends Serializable, IJsonSerializable {
      * @return the resource lifecycle manager
      */
     IResourceLifecycleManager<IIndex> getLifecycleManager(INCServiceContext ctx);
+
+    /**
+     * @param ctx the nc service context
+     * @return disk cache monitoring service
+     */
+    IDiskCacheMonitoringService getDiskCacheMonitoringService(INCServiceContext ctx);
 }

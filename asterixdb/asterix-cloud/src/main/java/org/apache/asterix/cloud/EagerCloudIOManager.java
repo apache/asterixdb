@@ -102,7 +102,7 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
-    public void evict(FileReference directory) {
+    public void evict(String resourcePath) {
         throw new UnsupportedOperationException("evict is not supported with Eager caching");
     }
 }

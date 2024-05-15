@@ -16,20 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.cloud.sweeper;
+package org.apache.hyracks.cloud.cache.unit;
 
-import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
-import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
+import org.apache.hyracks.storage.common.LocalResource;
 
-/**
- * Sweeps an index to relieve the pressure on a local {@link IPhysicalDrive}
- */
-@FunctionalInterface
-public interface ISweeper {
-    /**
-     * Sweep an index
-     *
-     * @param indexUnit to sweep
-     */
-    void sweep(SweepableIndexUnit indexUnit) throws InterruptedException;
+public final class UnsweepableIndexUnit extends AbstractIndexUnit {
+    public UnsweepableIndexUnit(LocalResource localResource) {
+        super(localResource);
+    }
+
+    @Override
+    public void drop() {
+        // NoOp
+    }
+
+    @Override
+    protected boolean isSweepable() {
+        return false;
+    }
+
+    public String getPath() {
+        return localResource.getPath();
+    }
 }

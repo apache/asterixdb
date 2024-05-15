@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationSchedulerProv
 import org.apache.hyracks.storage.common.ILocalResourceRepository;
 import org.apache.hyracks.storage.common.IStorageManager;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.storage.common.file.IResourceIdFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -45,37 +46,47 @@ public class RuntimeComponentsProvider implements IStorageManager, ILSMIOOperati
 
     @Override
     public ILSMIOOperationScheduler getIoScheduler(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getLSMIOScheduler();
+        return getAppCtx(ctx).getLSMIOScheduler();
     }
 
     @Override
     public IIOManager getIoManager(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getPersistenceIoManager();
+        return getAppCtx(ctx).getPersistenceIoManager();
     }
 
     @Override
     public IBufferCache getBufferCache(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getBufferCache();
+        return getAppCtx(ctx).getBufferCache();
     }
 
     @Override
     public ILocalResourceRepository getLocalResourceRepository(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getLocalResourceRepository();
+        return getAppCtx(ctx).getLocalResourceRepository();
     }
 
     @Override
     public IDatasetLifecycleManager getLifecycleManager(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getDatasetLifecycleManager();
+        return getAppCtx(ctx).getDatasetLifecycleManager();
     }
 
     @Override
     public IResourceIdFactory getResourceIdFactory(INCServiceContext ctx) {
-        return ((INcApplicationContext) ctx.getApplicationContext()).getResourceIdFactory();
+        return getAppCtx(ctx).getResourceIdFactory();
     }
 
     @Override
     public JsonNode toJson(IPersistedResourceRegistry registry) throws HyracksDataException {
         return registry.getClassIdentifier(getClass(), serialVersionUID);
+    }
+
+    @Override
+    public IDiskCacheMonitoringService getDiskCacheMonitoringService(INCServiceContext ctx) {
+        return getAppCtx(ctx).getDiskCacheService();
+
+    }
+
+    private INcApplicationContext getAppCtx(INCServiceContext ctx) {
+        return ((INcApplicationContext) ctx.getApplicationContext());
     }
 
     @SuppressWarnings("squid:S1172") // unused parameter

@@ -180,8 +180,8 @@ public final class ParallelCacher implements IParallelCacher {
     @Override
     public synchronized void add(Collection<FileReference> files) {
         LOGGER.info("Uncache {}", files);
+        // We only can 'uncache' data files
         uncachedDataFiles.putAll(getFiles(files, DATA_FILTER));
-        uncachedMetadataFiles.putAll(getFiles(files, METADATA_FILTER));
     }
 
     @Override

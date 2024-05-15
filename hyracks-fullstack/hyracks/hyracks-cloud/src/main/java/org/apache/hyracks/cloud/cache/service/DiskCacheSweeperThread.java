@@ -20,6 +20,7 @@ package org.apache.hyracks.cloud.cache.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -27,11 +28,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IDiskSpaceMaker;
-import org.apache.hyracks.cloud.cache.unit.DatasetUnit;
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
+import org.apache.hyracks.cloud.cache.unit.UnsweepableIndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.cloud.sweeper.ISweeper;
 import org.apache.hyracks.cloud.sweeper.Sweeper;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
@@ -44,19 +46,27 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
     private final long waitTime;
     private final CloudDiskResourceCacheLockNotifier resourceManager;
     private final IPhysicalDrive physicalDrive;
-    private final List<IndexUnit> indexes;
+    private final List<SweepableIndexUnit> indexes;
+    private final ICloudIOManager cloudIOManager;
     private final ISweeper sweeper;
+    private final long inactiveTimeThreshold;
 
     public DiskCacheSweeperThread(ExecutorService executorService, long waitTime,
             CloudDiskResourceCacheLockNotifier resourceManager, ICloudIOManager cloudIOManager, int numOfSweepThreads,
             int sweepQueueSize, IPhysicalDrive physicalDrive, BufferCache bufferCache,
-            Map<Integer, BufferedFileHandle> fileInfoMap) {
+            Map<Integer, BufferedFileHandle> fileInfoMap, long inactiveTimeThreshold) {
         this.waitTime = TimeUnit.SECONDS.toMillis(waitTime);
         this.resourceManager = resourceManager;
         this.physicalDrive = physicalDrive;
+        this.inactiveTimeThreshold = inactiveTimeThreshold;
         indexes = new ArrayList<>();
+        this.cloudIOManager = cloudIOManager;
         sweeper = new Sweeper(executorService, cloudIOManager, bufferCache, fileInfoMap, numOfSweepThreads,
                 sweepQueueSize);
+    }
+
+    public void reportLocalResources(Map<Long, LocalResource> localResources) {
+        resourceManager.reportLocalResources(localResources);
     }
 
     @Override
@@ -83,7 +93,7 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
         while (true) {
             synchronized (this) {
                 try {
-                    sweep();
+                    makeSpace();
                     wait(waitTime);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -94,20 +104,66 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
         }
     }
 
-    private void sweep() {
+    private void makeSpace() {
         if (physicalDrive.computeAndCheckIsPressured()) {
-            for (DatasetUnit dataset : resourceManager.getDatasets().values()) {
-                indexes.clear();
-                dataset.getIndexes(indexes);
-                sweepIndexes(sweeper, indexes);
+            boolean shouldSweep;
+            resourceManager.getEvictionLock().writeLock().lock();
+            try {
+                shouldSweep = evictInactive();
+            } finally {
+                resourceManager.getEvictionLock().writeLock().unlock();
+            }
+
+            if (shouldSweep) {
+                // index eviction didn't help. Sweep!
+                sweep();
             }
         }
     }
 
+    private boolean evictInactive() {
+        long now = System.nanoTime();
+        Collection<LocalResource> inactiveResources = resourceManager.getInactiveResources();
+        Collection<UnsweepableIndexUnit> unsweepableIndexes = resourceManager.getUnsweepableIndexes();
+        if (inactiveResources.isEmpty() && unsweepableIndexes.isEmpty()) {
+            // return true to run sweep as nothing will be evicted
+            return true;
+        }
+
+        // First evict all resources that were never been registered
+        for (LocalResource resource : inactiveResources) {
+            try {
+                cloudIOManager.evict(resource.getPath());
+            } catch (HyracksDataException e) {
+                LOGGER.error("Failed to evict resource " + resource.getPath(), e);
+            }
+        }
+
+        // Next evict all inactive indexes
+        for (UnsweepableIndexUnit index : unsweepableIndexes) {
+            if (now - index.getLastAccessTime() >= inactiveTimeThreshold) {
+                try {
+                    cloudIOManager.evict(index.getPath());
+                } catch (HyracksDataException e) {
+                    LOGGER.error("Failed to evict resource " + index.getPath(), e);
+                }
+            }
+        }
+
+        // If disk is still pressured, proceed with sweep
+        return physicalDrive.computeAndCheckIsPressured();
+    }
+
+    private void sweep() {
+        indexes.clear();
+        resourceManager.getSweepableIndexes(indexes);
+        sweepIndexes(sweeper, indexes);
+    }
+
     @CriticalPath
-    private static void sweepIndexes(ISweeper sweeper, List<IndexUnit> indexes) {
+    private static void sweepIndexes(ISweeper sweeper, List<SweepableIndexUnit> indexes) {
         for (int i = 0; i < indexes.size(); i++) {
-            IndexUnit index = indexes.get(i);
+            SweepableIndexUnit index = indexes.get(i);
             if (!index.isSweeping()) {
                 try {
                     sweeper.sweep(index);

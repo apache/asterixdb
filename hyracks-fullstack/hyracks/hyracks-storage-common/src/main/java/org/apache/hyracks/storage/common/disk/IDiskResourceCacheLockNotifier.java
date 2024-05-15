@@ -31,34 +31,31 @@ public interface IDiskResourceCacheLockNotifier {
      * Notify registering a new resource
      * Note: this method is not thread-safe outside {@link org.apache.hyracks.storage.common.IResourceLifecycleManager}
      *
-     * @param datasetId     dataset ID
      * @param localResource resource to be registered
      * @param index         of the resource
+     * @param partition     partition
      */
-    void onRegister(int datasetId, LocalResource localResource, IIndex index);
+    void onRegister(LocalResource localResource, IIndex index, int partition);
 
     /**
      * Notify unregistering an existing resource
      * Note: this method is not thread-safe outside {@link org.apache.hyracks.storage.common.IResourceLifecycleManager}
      *
-     * @param datasetId  dataset ID
      * @param resourceId resource ID
      */
-    void onUnregister(int datasetId, long resourceId);
+    void onUnregister(long resourceId);
 
     /**
      * Notify opening a resource
      *
-     * @param datasetId  dataset ID
      * @param resourceId resource ID
      */
-    void onOpen(int datasetId, long resourceId);
+    void onOpen(long resourceId);
 
     /**
      * Notify closing a resource
      *
-     * @param datasetId  dataset ID
      * @param resourceId resource ID
      */
-    void onClose(int datasetId, long resourceId);
+    void onClose(long resourceId);
 }

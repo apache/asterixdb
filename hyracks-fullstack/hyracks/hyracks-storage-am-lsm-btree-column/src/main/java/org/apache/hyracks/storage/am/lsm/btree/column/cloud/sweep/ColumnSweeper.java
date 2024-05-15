@@ -27,7 +27,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 import org.apache.hyracks.cloud.sweeper.SweepContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
@@ -59,7 +59,7 @@ public final class ColumnSweeper {
 
     public long sweep(BitSet plan, SweepContext context, IColumnTupleProjector sweepProjector)
             throws HyracksDataException {
-        IndexUnit indexUnit = context.getIndexUnit();
+        SweepableIndexUnit indexUnit = context.getIndexUnit();
         LSMColumnBTree lsmColumnBTree = (LSMColumnBTree) indexUnit.getIndex();
         IColumnProjectionInfo projectionInfo = captureSweepableComponents(lsmColumnBTree, sweepProjector);
         if (projectionInfo == null) {

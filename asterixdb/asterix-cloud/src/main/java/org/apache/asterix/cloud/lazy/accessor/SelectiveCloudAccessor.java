@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.cloud.lazy.accessor;
 
+import static org.apache.asterix.cloud.util.CloudFileUtil.DATA_FILTER;
+
 import java.util.Collection;
 import java.util.Set;
 
@@ -50,10 +52,21 @@ public class SelectiveCloudAccessor extends ReplaceableCloudAccessor {
             throw new IllegalStateException(directory + " is not a directory");
         }
 
-        // TODO only delete data files?
-        Collection<FileReference> uncachedFiles = UncachedFileReference.toUncached(localIoManager.list(directory));
+        // Get a list of all data files
+        Collection<FileReference> files = localIoManager.list(directory, DATA_FILTER);
+        if (files.isEmpty()) {
+            // Nothing to evict
+            return;
+        }
+
+        // Convert file references to uncached ones
+        Collection<FileReference> uncachedFiles = UncachedFileReference.toUncached(files);
+        // Add all data files to the cacher to indicate they are in a 'cacheable' state (i.e., not downloaded)
         cacher.add(uncachedFiles);
-        localIoManager.delete(directory);
+        // Delete all data files from the local drive
+        for (FileReference uncachedFile : uncachedFiles) {
+            localIoManager.delete(uncachedFile);
+        }
     }
 
     @Override

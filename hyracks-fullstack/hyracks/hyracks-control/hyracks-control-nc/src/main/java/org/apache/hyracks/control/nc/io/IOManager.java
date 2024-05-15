@@ -45,6 +45,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IDiskSpaceMaker;
 import org.apache.hyracks.api.io.IFileDeviceResolver;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
@@ -82,6 +83,8 @@ public class IOManager implements IIOManager {
      * Mutables
      */
     private int workspaceIndex;
+    // TODO use space make on write
+    private IDiskSpaceMaker spaceMaker;
 
     public IOManager(List<IODeviceHandle> devices, IFileDeviceResolver deviceComputer, int ioParallelism, int queueSize)
             throws HyracksDataException {
@@ -112,6 +115,7 @@ public class IOManager implements IIOManager {
         for (int i = 0; i < numIoThreads; i++) {
             executor.execute(new IoRequestHandler(i, submittedRequests));
         }
+        spaceMaker = NoOpDiskSpaceMaker.INSTANCE;
     }
 
     public int getQueueSize() {
@@ -595,5 +599,9 @@ public class IOManager implements IIOManager {
     @Override
     public void performBulkOperation(IIOBulkOperation bulkOperation) throws HyracksDataException {
         ((AbstractBulkOperation) bulkOperation).performOperation();
+    }
+
+    public void setSpaceMaker(IDiskSpaceMaker spaceMaker) {
+        this.spaceMaker = spaceMaker;
     }
 }

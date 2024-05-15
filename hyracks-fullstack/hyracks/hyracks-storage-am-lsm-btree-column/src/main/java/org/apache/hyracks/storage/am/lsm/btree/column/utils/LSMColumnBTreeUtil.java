@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.common.api.INullIntrospector;
 import org.apache.hyracks.storage.am.common.api.ITreeIndexFrameFactory;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManagerFactory;
+import org.apache.hyracks.storage.am.lsm.btree.column.cloud.CloudColumnIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.IColumnIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.NoOpColumnIndexDiskCacheManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.impls.btree.ColumnBTree;
@@ -55,6 +56,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMPageWriteCallbackFactory
 import org.apache.hyracks.storage.am.lsm.common.api.IVirtualBufferCache;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
+import org.apache.hyracks.storage.common.disk.IDiskCacheMonitoringService;
 import org.apache.hyracks.util.trace.ITracer;
 
 public class LSMColumnBTreeUtil {
@@ -66,13 +68,18 @@ public class LSMColumnBTreeUtil {
             ILSMIOOperationCallbackFactory ioOpCallbackFactory, ILSMPageWriteCallbackFactory pageWriteCallbackFactory,
             int[] btreeFields, IMetadataPageManagerFactory freePageManagerFactory, boolean updateAware, ITracer tracer,
             ICompressorDecompressorFactory compressorDecompressorFactory, ITypeTraits nullTypeTraits,
-            INullIntrospector nullIntrospector, IColumnManagerFactory columnManagerFactory, boolean atomic)
-            throws HyracksDataException {
-        // Initialize managers
-        IColumnManager columnManager = columnManagerFactory.createColumnManager();
-        IColumnIndexDiskCacheManager diskCacheManager = NoOpColumnIndexDiskCacheManager.INSTANCE;
+            INullIntrospector nullIntrospector, IColumnManagerFactory columnManagerFactory, boolean atomic,
+            IDiskCacheMonitoringService diskCacheService) throws HyracksDataException {
 
-        //Tuple writers
+        // Initialize managers
+        boolean diskCacheEnabled = diskCacheService.isEnabled();
+        IColumnManager columnManager = columnManagerFactory.createColumnManager();
+        IColumnIndexDiskCacheManager diskCacheManager = diskCacheEnabled
+                ? new CloudColumnIndexDiskCacheManager(columnManager.getNumberOfPrimaryKeys(),
+                        columnManager.getMergeColumnProjector(), diskCacheService.getPhysicalDrive())
+                : NoOpColumnIndexDiskCacheManager.INSTANCE;
+
+        // Tuple writers
         LSMBTreeTupleWriterFactory insertTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false, updateAware, nullTypeTraits, nullIntrospector);
         LSMBTreeTupleWriterFactory deleteTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
@@ -82,7 +89,7 @@ public class LSMColumnBTreeUtil {
         LSMBTreeTupleWriterFactory bulkLoadTupleWriterFactory = new LSMBTreeTupleWriterFactory(typeTraits,
                 cmpFactories.length, false, updateAware, nullTypeTraits, nullIntrospector);
 
-        //Leaf frames
+        // Leaf frames
         ITreeIndexFrameFactory flushLeafFrameFactory = new ColumnBTreeLeafFrameFactory(copyTupleWriterFactory,
                 columnManagerFactory.getFlushColumnTupleReaderWriterFactory());
         ITreeIndexFrameFactory mergeLeafFrameFactory = new ColumnBTreeLeafFrameFactory(copyTupleWriterFactory,
@@ -93,7 +100,7 @@ public class LSMColumnBTreeUtil {
         ITreeIndexFrameFactory deleteLeafFrameFactory = new BTreeNSMLeafFrameFactory(deleteTupleWriterFactory);
         ITreeIndexFrameFactory interiorFrameFactory = new BTreeNSMInteriorFrameFactory(insertTupleWriterFactory);
 
-        //BTree factory
+        // BTree factory
         TreeIndexFactory<ColumnBTree> flushBTreeFactory = new ColumnBTreeFactory(ioManager, diskBufferCache,
                 freePageManagerFactory, interiorFrameFactory, flushLeafFrameFactory, cmpFactories, typeTraits.length);
         TreeIndexFactory<ColumnBTree> mergeBTreeFactory = new ColumnBTreeFactory(ioManager, diskBufferCache,
@@ -102,8 +109,8 @@ public class LSMColumnBTreeUtil {
                 new ColumnBTreeFactory(ioManager, diskBufferCache, freePageManagerFactory, interiorFrameFactory,
                         bulkLoadLeafFrameFactory, cmpFactories, typeTraits.length);
 
-        ILSMIndexFileManager fileNameManager =
-                new LSMBTreeFileManager(ioManager, file, flushBTreeFactory, true, compressorDecompressorFactory);
+        ILSMIndexFileManager fileNameManager = new LSMBTreeFileManager(ioManager, file, flushBTreeFactory, true,
+                compressorDecompressorFactory, diskCacheEnabled);
 
         BloomFilterFactory bloomFilterFactory = new BloomFilterFactory(diskBufferCache, bloomFilterKeyFields);
         ILSMDiskComponentFactory flushComponentFactory =

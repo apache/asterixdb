@@ -16,20 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.cloud.sweeper;
+package org.apache.hyracks.control.nc.io;
 
-import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
-import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
+import java.io.IOException;
 
-/**
- * Sweeps an index to relieve the pressure on a local {@link IPhysicalDrive}
- */
-@FunctionalInterface
-public interface ISweeper {
-    /**
-     * Sweep an index
-     *
-     * @param indexUnit to sweep
-     */
-    void sweep(SweepableIndexUnit indexUnit) throws InterruptedException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IDiskSpaceMaker;
+
+final class NoOpDiskSpaceMaker implements IDiskSpaceMaker {
+    static final IDiskSpaceMaker INSTANCE = new NoOpDiskSpaceMaker();
+
+    private NoOpDiskSpaceMaker() {
+    }
+
+    @Override
+    public void makeSpaceOrThrow(IOException e) throws HyracksDataException {
+        throw HyracksDataException.create(e);
+    }
 }

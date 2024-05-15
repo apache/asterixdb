@@ -18,6 +18,10 @@
  */
 package org.apache.hyracks.storage.common.disk;
 
+import java.util.Map;
+
+import org.apache.hyracks.storage.common.LocalResource;
+
 /**
  * Disk cache monitoring service is responsible for monitor the local drives
  */
@@ -36,6 +40,13 @@ public interface IDiskCacheMonitoringService {
      * @return whether the monitoring service is enabled
      */
     boolean isEnabled();
+
+    /**
+     * Report all local resources
+     *
+     * @param localResources local resources
+     */
+    void reportLocalResources(Map<Long, LocalResource> localResources);
 
     /**
      * @return physical drive

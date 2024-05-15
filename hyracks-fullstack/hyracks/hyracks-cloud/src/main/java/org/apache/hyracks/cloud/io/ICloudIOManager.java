@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 
 /**
@@ -86,9 +85,9 @@ public interface ICloudIOManager {
     int punchHole(IFileHandle fHandle, long offset, long length) throws HyracksDataException;
 
     /**
-     * Evict a directory from the local disk cache
+     * Evict a resource from the local disk cache
      *
-     * @param directory to evict
+     * @param resourcePath to evict
      */
-    void evict(FileReference directory) throws HyracksDataException;
+    void evict(String resourcePath) throws HyracksDataException;
 }

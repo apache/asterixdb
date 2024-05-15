@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
@@ -36,7 +36,7 @@ public final class SweepContext implements ISweepContext {
     private final BufferCache bufferCache;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
     private final AtomicBoolean shutdown;
-    private IndexUnit indexUnit;
+    private SweepableIndexUnit indexUnit;
     private BufferedFileHandle handle;
 
     public SweepContext(ICloudIOManager cloudIOManager, BufferCache bufferCache,
@@ -74,11 +74,11 @@ public final class SweepContext implements ISweepContext {
         bufferCache.unpin(page, bcOpCtx);
     }
 
-    public void setIndexUnit(IndexUnit indexUnit) {
+    public void setIndexUnit(SweepableIndexUnit indexUnit) {
         this.indexUnit = indexUnit;
     }
 
-    public IndexUnit getIndexUnit() {
+    public SweepableIndexUnit getIndexUnit() {
         return indexUnit;
     }
 

@@ -19,8 +19,12 @@
 package org.apache.asterix.common.config;
 
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
+import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
+import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
+import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,6 +32,7 @@ import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
 import org.apache.hyracks.api.config.Section;
+import org.apache.hyracks.util.StorageUtil;
 
 public class CloudProperties extends AbstractProperties {
 
@@ -43,6 +48,14 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
         CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
         CLOUD_STORAGE_CACHE_POLICY(STRING, "lazy"),
+        // 80% of the total disk space
+        CLOUD_STORAGE_ALLOCATION_PERCENTAGE(DOUBLE, 0.8d),
+        // 90% of the allocated space for storage (i.e., 90% of the 80% of the total disk space)
+        CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE(DOUBLE, 0.9d),
+        CLOUD_STORAGE_DISK_MONITOR_INTERVAL(POSITIVE_INTEGER, 60),
+        CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD(POSITIVE_INTEGER, 6),
+        CLOUD_STORAGE_DEBUG_MODE_ENABLED(BOOLEAN, false),
+        CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, GIGABYTE)),
         CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 0);
 
         private final IOptionType interpreter;
@@ -63,6 +76,12 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_ENDPOINT:
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                 case CLOUD_STORAGE_CACHE_POLICY:
+                case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
+                case CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE:
+                case CLOUD_STORAGE_DISK_MONITOR_INTERVAL:
+                case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
+                case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
+                case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
                 case CLOUD_PROFILER_LOG_INTERVAL:
                     return Section.COMMON;
                 default:
@@ -86,9 +105,36 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_ANONYMOUS_AUTH:
                     return "Indicates whether or not anonymous auth should be used for the cloud storage";
                 case CLOUD_STORAGE_CACHE_POLICY:
-                    return "The caching policy (either eager or lazy). 'Eager' caching will download all partitions"
-                            + " upon booting, whereas lazy caching will download a file upon request to open it."
+                    return "The caching policy (either eager, lazy or selective). 'eager' caching will download"
+                            + "all partitions upon booting, whereas 'lazy' caching will download a file upon"
+                            + " request to open it. 'selective' caching will act as the 'lazy' policy; however, "
+                            + " it allows to use the local disk(s) as a cache, where pages and indexes can be "
+                            + " cached or evicted according to the pressure imposed on the local disks."
                             + " (default: 'lazy')";
+                case CLOUD_STORAGE_ALLOCATION_PERCENTAGE:
+                    return "The percentage of the total disk space that should be allocated for data storage when the"
+                            + " 'selective' caching policy is used. The remaining will act as a buffer for "
+                            + " query workspace (i.e., for query operations that require spilling to disk)."
+                            + " (default: 80% of the total disk space)";
+                case CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE:
+                    return "The percentage of the used storage space at which the disk sweeper starts freeing space by"
+                            + " punching holes in stored indexes or by evicting them entirely, "
+                            + " when the 'selective' caching policy is used."
+                            + " (default: 90% of the allocated space for storage)";
+                case CLOUD_STORAGE_DISK_MONITOR_INTERVAL:
+                    return "The disk monitoring interval time (in seconds): determines how often the system"
+                            + " checks for pressure on disk space when using the 'selective' caching policy."
+                            + " (default : 60 seconds)";
+                case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
+                    return "The duration in minutes to consider an index is inactive. (default: 360 or 6 hours)";
+                case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
+                    return "Whether or not the debug mode is enabled when using the 'selective' caching policy."
+                            + "(default: false)";
+                case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
+                    return "For debugging only. Pressure size will be the current used space + the additional bytes"
+                            + " provided by this configuration option instead of using "
+                            + " CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE."
+                            + " (default: 0. I.e., CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE will be used by default)";
                 case CLOUD_PROFILER_LOG_INTERVAL:
                     return "The waiting time (in minutes) to log cloud request statistics (default: 0, which means"
                             + " the profiler is disabled by default). The minimum is 1 minute."
@@ -136,6 +182,31 @@ public class CloudProperties extends AbstractProperties {
 
     public CloudCachePolicy getCloudCachePolicy() {
         return CloudCachePolicy.fromName(accessor.getString(Option.CLOUD_STORAGE_CACHE_POLICY));
+    }
+
+    public double getStorageAllocationPercentage() {
+        return accessor.getDouble(Option.CLOUD_STORAGE_ALLOCATION_PERCENTAGE);
+    }
+
+    public double getStorageSweepThresholdPercentage() {
+        return accessor.getDouble(Option.CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE);
+    }
+
+    public int getStorageDiskMonitorInterval() {
+        return accessor.getInt(Option.CLOUD_STORAGE_DISK_MONITOR_INTERVAL);
+    }
+
+    public long getStorageIndexInactiveDurationThreshold() {
+        int minutes = accessor.getInt(Option.CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD);
+        return TimeUnit.MINUTES.toNanos(minutes);
+    }
+
+    public boolean isStorageDebugModeEnabled() {
+        return accessor.getBoolean(Option.CLOUD_STORAGE_DEBUG_MODE_ENABLED);
+    }
+
+    public long getStorageDebugSweepThresholdSize() {
+        return isStorageDebugModeEnabled() ? accessor.getLong(Option.CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE) : 0L;
     }
 
     public long getProfilerLogInterval() {

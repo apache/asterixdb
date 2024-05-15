@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.InvokeUtil;
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.cloud.IIndexDiskCacheManager;
@@ -56,7 +56,7 @@ public final class Sweeper implements ISweeper {
     }
 
     @Override
-    public void sweep(IndexUnit indexUnit) throws InterruptedException {
+    public void sweep(SweepableIndexUnit indexUnit) throws InterruptedException {
         SweepRequest request = freeRequests.take();
         request.reset(indexUnit);
         requests.put(request);
@@ -131,7 +131,7 @@ public final class Sweeper implements ISweeper {
             this.context = context;
         }
 
-        void reset(IndexUnit indexUnit) {
+        void reset(SweepableIndexUnit indexUnit) {
             context.setIndexUnit(indexUnit);
         }
 
@@ -151,7 +151,7 @@ public final class Sweeper implements ISweeper {
                  */
                 return;
             }
-            IndexUnit indexUnit = context.getIndexUnit();
+            SweepableIndexUnit indexUnit = context.getIndexUnit();
             indexUnit.startSweeping();
             try {
                 ILSMIndex index = indexUnit.getIndex();

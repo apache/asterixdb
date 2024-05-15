@@ -61,7 +61,7 @@ import org.apache.asterix.app.config.ConfigValidator;
 import org.apache.asterix.app.io.PersistedResourceRegistry;
 import org.apache.asterix.app.replication.NcLifecycleCoordinator;
 import org.apache.asterix.app.result.JobResultCallback;
-import org.apache.asterix.cloud.CloudManagerProvider;
+import org.apache.asterix.cloud.CloudConfigurator;
 import org.apache.asterix.common.api.AsterixThreadFactory;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.INamespacePathResolver;
@@ -186,8 +186,7 @@ public class CCApplication extends BaseCCApplication {
         CloudProperties cloudProperties = null;
         if (cloudDeployment) {
             cloudProperties = new CloudProperties(PropertiesAccessor.getInstance(ccServiceCtx.getAppConfig()));
-            ioManager =
-                    (IOManager) CloudManagerProvider.createIOManager(cloudProperties, ioManager, namespacePathResolver);
+            ioManager = CloudConfigurator.createIOManager(ioManager, cloudProperties, namespacePathResolver);
         }
         IGlobalTxManager globalTxManager = createGlobalTxManager(ioManager);
         appCtx = createApplicationContext(null, globalRecoveryManager, lifecycleCoordinator, Receptionist::new,

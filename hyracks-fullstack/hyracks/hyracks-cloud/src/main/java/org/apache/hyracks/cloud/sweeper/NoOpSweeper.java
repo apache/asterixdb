@@ -18,7 +18,7 @@
  */
 package org.apache.hyracks.cloud.sweeper;
 
-import org.apache.hyracks.cloud.cache.unit.IndexUnit;
+import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 
 public final class NoOpSweeper implements ISweeper {
     public static final ISweeper INSTANCE = new NoOpSweeper();
@@ -27,7 +27,7 @@ public final class NoOpSweeper implements ISweeper {
     }
 
     @Override
-    public void sweep(IndexUnit indexUnit) {
+    public void sweep(SweepableIndexUnit indexUnit) {
         // NoOp
     }
 }
