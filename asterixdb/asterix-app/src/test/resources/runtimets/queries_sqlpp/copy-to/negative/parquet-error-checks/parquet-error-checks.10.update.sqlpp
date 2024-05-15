@@ -23,16 +23,17 @@ COPY (
    select c.* from TestCollection c
 ) toWriter
 TO S3
-PATH ("copy-to-result", "parquet-cover-data-types")
-TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime   } )
+PATH ("copy-to-result", "parquet-error-checks10")
+TYPE ( { name: } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet"
-};
+    "format":"parquet",
+    "schema":"message schema{"
+}
 
 
 

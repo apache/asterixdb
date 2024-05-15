@@ -25,6 +25,7 @@ import java.util.zip.Deflater;
 import org.apache.asterix.cloud.writer.GCSExternalFileWriterFactory;
 import org.apache.asterix.cloud.writer.S3ExternalFileWriterFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.writer.LocalFSExternalFileWriterFactory;
@@ -44,6 +45,7 @@ import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.util.StorageUtil;
+import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 public class ExternalWriterProvider {
@@ -111,7 +113,7 @@ public class ExternalWriterProvider {
     }
 
     public static IExternalPrinterFactory createPrinter(ICcApplicationContext appCtx, IWriteDataSink sink,
-            Object sourceType) {
+            Object sourceType) throws CompilationException {
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
 
@@ -130,11 +132,8 @@ public class ExternalWriterProvider {
                 IPrinterFactory printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
                 return new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
             case ExternalDataConstants.FORMAT_PARQUET:
+                String parquetSchemaString = configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY);
 
-                if (!configuration.containsKey(ExternalDataConstants.KEY_SCHEMA)) {
-                    throw new UnsupportedOperationException("Schema not provided for parquet");
-                }
-                String schema = configuration.get(ExternalDataConstants.KEY_SCHEMA);
                 CompressionCodecName compressionCodecName;
                 if (compression == null || compression.equals("") || compression.equals("none")) {
                     compressionCodecName = CompressionCodecName.UNCOMPRESSED;
@@ -148,11 +147,24 @@ public class ExternalWriterProvider {
                 long rowGroupSize = StorageUtil.getByteValue(rowGroupSizeString);
                 int pageSize = (int) StorageUtil.getByteValue(pageSizeString);
 
-                return new ParquetExternalFilePrinterFactory(compressionCodecName, schema, (IAType) sourceType,
-                        rowGroupSize, pageSize);
+                ParquetProperties.WriterVersion writerVersion = getParquetWriterVersion(configuration);
+
+                return new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchemaString,
+                        (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
             default:
                 throw new UnsupportedOperationException("Unsupported format " + format);
         }
+    }
+
+    private static ParquetProperties.WriterVersion getParquetWriterVersion(Map<String, String> configuration) {
+
+        if (configuration.get(ExternalDataConstants.PARQUET_WRITER_VERSION_KEY) == null) {
+            return ParquetProperties.WriterVersion.PARQUET_1_0;
+        } else if (configuration.get(ExternalDataConstants.PARQUET_WRITER_VERSION_KEY)
+                .equals(ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_2)) {
+            return ParquetProperties.WriterVersion.PARQUET_2_0;
+        } else
+            return ParquetProperties.WriterVersion.PARQUET_1_0;
     }
 
     private static String getRowGroupSize(Map<String, String> configuration) {

@@ -25,6 +25,7 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks8")
+TYPE ( {id:int} )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
@@ -32,6 +33,5 @@ WITH {
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
     "format":"parquet",
-    "schema":"message schema{}",
     "page-size":"random"
 }

@@ -25,6 +25,7 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks9")
+TYPE ( { name:string } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
@@ -32,6 +33,5 @@ WITH {
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
     "format":"parquet",
-    "compression":"rar",
-    "schema":""
+    "compression":"rar"
 }

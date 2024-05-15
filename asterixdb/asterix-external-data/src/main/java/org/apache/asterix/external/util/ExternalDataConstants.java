@@ -211,6 +211,13 @@ public class ExternalDataConstants {
     public static final String FORMAT_CSV = "csv";
     public static final String FORMAT_TSV = "tsv";
     public static final String FORMAT_PARQUET = "parquet";
+    public static final String PARQUET_SCHEMA_KEY = "parquet-schema";
+    public static final String PARQUET_WRITER_VERSION_KEY = "version";
+    public static final String PARQUET_WRITER_VERSION_VALUE_1 = "1";
+    public static final String PARQUET_WRITER_VERSION_VALUE_2 = "2";
+    public static final String DUMMY_DATABASE_NAME = "dbname";
+    public static final String DUMMY_TYPE_NAME = "typeName";
+    public static final String DUMMY_DATAVERSE_NAME = "a.b.c";
     public static final String FORMAT_APACHE_ICEBERG = "apache-iceberg";
     public static final Set<String> ALL_FORMATS;
     public static final Set<String> TEXTUAL_FORMATS;

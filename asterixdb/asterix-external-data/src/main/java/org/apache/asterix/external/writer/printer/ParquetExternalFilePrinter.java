@@ -19,8 +19,6 @@
 
 package org.apache.asterix.external.writer.printer;
 
-import static org.apache.parquet.schema.MessageTypeParser.parseMessageType;
-
 import java.io.IOException;
 import java.io.OutputStream;
 
@@ -30,40 +28,38 @@ import org.apache.asterix.external.writer.printer.parquet.AsterixParquetWriter;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.MessageType;
+import org.apache.parquet.schema.MessageTypeParser;
 
 public class ParquetExternalFilePrinter implements IExternalPrinter {
     private final IAType typeInfo;
     private final CompressionCodecName compressionCodecName;
-    private String schemaString;
     private MessageType schema;
     private ParquetOutputFile parquetOutputFile;
+    private String parquetSchemaString;
     private ParquetWriter<IValueReference> writer;
     private final long rowGroupSize;
     private final int pageSize;
+    private final ParquetProperties.WriterVersion writerVersion;
 
-    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, String schemaString, IAType typeInfo,
-            long rowGroupSize, int pageSize) {
+    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, String parquetSchemaString,
+            IAType typeInfo, long rowGroupSize, int pageSize, ParquetProperties.WriterVersion writerVersion) {
         this.compressionCodecName = compressionCodecName;
-        this.schemaString = schemaString.replace('\r', ' ');
+        this.parquetSchemaString = parquetSchemaString;
         this.typeInfo = typeInfo;
         this.rowGroupSize = rowGroupSize;
         this.pageSize = pageSize;
+        this.writerVersion = writerVersion;
     }
 
     @Override
     public void open() throws HyracksDataException {
-        try {
-            this.schema = parseMessageType(schemaString);
-        } catch (IllegalArgumentException e) {
-            throw new HyracksDataException(ErrorCode.ILLGEAL_PARQUET_SCHEMA);
-        }
+        schema = MessageTypeParser.parseMessageType(parquetSchemaString);
     }
 
     @Override
@@ -78,8 +74,8 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
             writer = AsterixParquetWriter.builder(parquetOutputFile).withCompressionCodec(compressionCodecName)
                     .withType(schema).withTypeInfo(typeInfo).withRowGroupSize(rowGroupSize).withPageSize(pageSize)
                     .withDictionaryPageSize(ExternalDataConstants.PARQUET_DICTIONARY_PAGE_SIZE)
-                    .enableDictionaryEncoding().withValidation(false)
-                    .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_1_0).withConf(conf).build();
+                    .enableDictionaryEncoding().withValidation(false).withWriterVersion(writerVersion).withConf(conf)
+                    .build();
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

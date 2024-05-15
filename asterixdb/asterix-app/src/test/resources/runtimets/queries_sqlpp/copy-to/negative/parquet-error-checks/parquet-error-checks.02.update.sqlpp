@@ -30,8 +30,7 @@ WITH {
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet",
-    "schema":"message schema{"
+    "format":"parquet"
 }
 
 

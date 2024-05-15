@@ -24,18 +24,14 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-utf8")
+TYPE ( { comment:string, id:bigint, name:string } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet",
-    "schema":"message spark_schema {
-                optional binary comment (UTF8);
-                optional int64 id;
-                optional binary name (UTF8);
-              }"
+    "format":"parquet"
 };
 
 

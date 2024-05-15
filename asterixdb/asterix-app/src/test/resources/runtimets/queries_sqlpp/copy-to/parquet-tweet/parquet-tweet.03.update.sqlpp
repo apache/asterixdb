@@ -24,216 +24,194 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-tweet")
+TYPE ( {
+               coordinates: {
+                 coordinates: [
+                   double
+                 ],
+                 `type` : string
+               },
+               created_at: string,
+               entities: {
+                 urls: [
+                   {
+                     display_url: string,
+                     expanded_url: string,
+                     indices: [
+                       int
+                     ],
+                     url: string
+                   }
+                 ],
+                 user_mentions: [
+                   {
+                     id: int,
+                     id_str: string,
+                     indices: [
+                       int
+                     ],
+                     name: string,
+                     screen_name: string
+                   }
+                 ]
+               },
+               favorite_count: int,
+               favorited: boolean,
+               filter_level: string,
+               geo: {
+                 coordinates: [
+                   double
+                 ],
+                 `type`: string
+               },
+               id: string,
+               id_str: string,
+               in_reply_to_screen_name: string,
+               in_reply_to_status_id: int,
+               in_reply_to_status_id_str: string,
+               in_reply_to_user_id: int,
+               in_reply_to_user_id_str: string,
+               is_quote_status: boolean,
+               lang: string,
+               place: {
+                 bounding_box: {
+                   coordinates: [
+                     [
+                       [
+                         double
+                       ]
+                     ]
+                   ],
+                   `type`: string
+                 },
+                 country: string,
+                 country_code: string,
+                 full_name: string,
+                 id: string,
+                 name: string,
+                 place_type: string,
+                 url: string
+               },
+               possibly_sensitive: boolean,
+               quoted_status: {
+                 created_at: string,
+                 entities: {
+                   user_mentions: [
+                     {
+                       id: int,
+                       id_str: string,
+                       indices: [
+                         int
+                       ],
+                       name: string,
+                       screen_name: string
+                     }
+                   ]
+                 },
+                 favorite_count: int,
+                 favorited: boolean,
+                 filter_level: string,
+                 id: int,
+                 id_str: string,
+                 in_reply_to_screen_name: string,
+                 in_reply_to_status_id: int,
+                 in_reply_to_status_id_str: string,
+                 in_reply_to_user_id: int,
+                 in_reply_to_user_id_str: string,
+                 is_quote_status: boolean,
+                 lang: string,
+                 retweet_count: int,
+                 retweeted: boolean,
+                 source: string,
+                 text: string,
+                 truncated: boolean,
+                 user: {
+                   contributors_enabled: boolean,
+                   created_at: string,
+                   default_profile: boolean,
+                   default_profile_image: boolean,
+                   description: string,
+                   favourites_count: int,
+                   followers_count: int,
+                   friends_count: int,
+                   geo_enabled: boolean,
+                   id: int,
+                   id_str: string,
+                   is_translator: boolean,
+                   lang: string,
+                   listed_count: int,
+                   name: string,
+                   profile_background_color: string,
+                   profile_background_image_url: string,
+                   profile_background_image_url_https: string,
+                   profile_background_tile: boolean,
+                   profile_banner_url: string,
+                   profile_image_url: string,
+                   profile_image_url_https: string,
+                   profile_link_color: string,
+                   profile_sidebar_border_color: string,
+                   profile_sidebar_fill_color: string,
+                   profile_text_color: string,
+                   profile_use_background_image: boolean,
+                   protected: boolean,
+                   screen_name: string,
+                   statuses_count: int,
+                   verified: boolean
+                 }
+               },
+               quoted_status_id: int,
+               quoted_status_id_str: string,
+               retweet_count: int,
+               retweeted: boolean,
+               source: string,
+               text: string,
+               timestamp_ms: string,
+               truncated: boolean,
+               user: {
+                 contributors_enabled: boolean,
+                 created_at: string,
+                 default_profile: boolean,
+                 default_profile_image: boolean,
+                 description: string,
+                 favourites_count: int,
+                 followers_count: int,
+                 friends_count: int,
+                 geo_enabled: boolean,
+                 id: int,
+                 id_str: string,
+                 is_translator: boolean,
+                 lang: string,
+                 listed_count: int,
+                 location: string,
+                 name: string,
+                 profile_background_color: string,
+                 profile_background_image_url: string,
+                 profile_background_image_url_https: string,
+                 profile_background_tile: boolean,
+                 profile_banner_url: string,
+                 profile_image_url: string,
+                 profile_image_url_https: string,
+                 profile_link_color: string,
+                 profile_sidebar_border_color: string,
+                 profile_sidebar_fill_color: string,
+                 profile_text_color: string,
+                 profile_use_background_image: boolean,
+                 protected: boolean,
+                 screen_name: string,
+                 statuses_count: int,
+                 time_zone: string,
+                 url: string,
+                 utc_offset: int,
+                 verified: boolean
+               }
+             } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet",
-    "schema":"message schema {
-                optional group coordinates {
-                  optional group coordinates (LIST) {
-                    repeated group list {
-                      optional double element;
-                    }
-                  }
-                  optional binary type (UTF8);
-                }
-                optional binary created_at (UTF8);
-                optional group entities {
-                  optional group urls (LIST) {
-                    repeated group list {
-                      optional group element {
-                        optional binary display_url (UTF8);
-                        optional binary expanded_url (UTF8);
-                        optional group indices (LIST) {
-                          repeated group list {
-                            optional int64 element;
-                          }
-                        }
-                        optional binary url (UTF8);
-                      }
-                    }
-                  }
-                  optional group user_mentions (LIST) {
-                    repeated group list {
-                      optional group element {
-                        optional int64 id;
-                        optional binary id_str (UTF8);
-                        optional group indices (LIST) {
-                          repeated group list {
-                            optional int64 element;
-                          }
-                        }
-                        optional binary name (UTF8);
-                        optional binary screen_name (UTF8);
-                      }
-                    }
-                  }
-                }
-                optional int64 favorite_count;
-                optional boolean favorited;
-                optional binary filter_level (UTF8);
-                optional group geo {
-                  optional group coordinates (LIST) {
-                    repeated group list {
-                      optional double element;
-                    }
-                  }
-                  optional binary type (UTF8);
-                }
-                optional binary id (UTF8);
-                optional binary id_str (UTF8);
-                optional binary in_reply_to_screen_name (UTF8);
-                optional int64 in_reply_to_status_id;
-                optional binary in_reply_to_status_id_str (UTF8);
-                optional int64 in_reply_to_user_id;
-                optional binary in_reply_to_user_id_str (UTF8);
-                optional boolean is_quote_status;
-                optional binary lang (UTF8);
-                optional group place {
-                  optional group bounding_box {
-                    optional group coordinates (LIST) {
-                      repeated group list {
-                        optional group element (LIST) {
-                          repeated group list {
-                            optional group element (LIST) {
-                              repeated group list {
-                                optional double element;
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                    optional binary type (UTF8);
-                  }
-                  optional binary country (UTF8);
-                  optional binary country_code (UTF8);
-                  optional binary full_name (UTF8);
-                  optional binary id (UTF8);
-                  optional binary name (UTF8);
-                  optional binary place_type (UTF8);
-                  optional binary url (UTF8);
-                }
-                optional boolean possibly_sensitive;
-                optional group quoted_status {
-                  optional binary created_at (UTF8);
-                  optional group entities {
-                    optional group user_mentions (LIST) {
-                      repeated group list {
-                        optional group element {
-                          optional int64 id;
-                          optional binary id_str (UTF8);
-                          optional group indices (LIST) {
-                            repeated group list {
-                              optional int64 element;
-                            }
-                          }
-                          optional binary name (UTF8);
-                          optional binary screen_name (UTF8);
-                        }
-                      }
-                    }
-                  }
-                  optional int64 favorite_count;
-                  optional boolean favorited;
-                  optional binary filter_level (UTF8);
-                  optional int64 id;
-                  optional binary id_str (UTF8);
-                  optional binary in_reply_to_screen_name (UTF8);
-                  optional int64 in_reply_to_status_id;
-                  optional binary in_reply_to_status_id_str (UTF8);
-                  optional int64 in_reply_to_user_id;
-                  optional binary in_reply_to_user_id_str (UTF8);
-                  optional boolean is_quote_status;
-                  optional binary lang (UTF8);
-                  optional int64 retweet_count;
-                  optional boolean retweeted;
-                  optional binary source (UTF8);
-                  optional binary text (UTF8);
-                  optional boolean truncated;
-                  optional group user {
-                    optional boolean contributors_enabled;
-                    optional binary created_at (UTF8);
-                    optional boolean default_profile;
-                    optional boolean default_profile_image;
-                    optional binary description (UTF8);
-                    optional int64 favourites_count;
-                    optional int64 followers_count;
-                    optional int64 friends_count;
-                    optional boolean geo_enabled;
-                    optional int64 id;
-                    optional binary id_str (UTF8);
-                    optional boolean is_translator;
-                    optional binary lang (UTF8);
-                    optional int64 listed_count;
-                    optional binary name (UTF8);
-                    optional binary profile_background_color (UTF8);
-                    optional binary profile_background_image_url (UTF8);
-                    optional binary profile_background_image_url_https (UTF8);
-                    optional boolean profile_background_tile;
-                    optional binary profile_banner_url (UTF8);
-                    optional binary profile_image_url (UTF8);
-                    optional binary profile_image_url_https (UTF8);
-                    optional binary profile_link_color (UTF8);
-                    optional binary profile_sidebar_border_color (UTF8);
-                    optional binary profile_sidebar_fill_color (UTF8);
-                    optional binary profile_text_color (UTF8);
-                    optional boolean profile_use_background_image;
-                    optional boolean protected;
-                    optional binary screen_name (UTF8);
-                    optional int64 statuses_count;
-                    optional boolean verified;
-                  }
-                }
-                optional int64 quoted_status_id;
-                optional binary quoted_status_id_str (UTF8);
-                optional int64 retweet_count;
-                optional boolean retweeted;
-                optional binary source (UTF8);
-                optional binary text (UTF8);
-                optional binary timestamp_ms (UTF8);
-                optional boolean truncated;
-                optional group user {
-                  optional boolean contributors_enabled;
-                  optional binary created_at (UTF8);
-                  optional boolean default_profile;
-                  optional boolean default_profile_image;
-                  optional binary description (UTF8);
-                  optional int64 favourites_count;
-                  optional int64 followers_count;
-                  optional int64 friends_count;
-                  optional boolean geo_enabled;
-                  optional int64 id;
-                  optional binary id_str (UTF8);
-                  optional boolean is_translator;
-                  optional binary lang (UTF8);
-                  optional int64 listed_count;
-                  optional binary location (UTF8);
-                  optional binary name (UTF8);
-                  optional binary profile_background_color (UTF8);
-                  optional binary profile_background_image_url (UTF8);
-                  optional binary profile_background_image_url_https (UTF8);
-                  optional boolean profile_background_tile;
-                  optional binary profile_banner_url (UTF8);
-                  optional binary profile_image_url (UTF8);
-                  optional binary profile_image_url_https (UTF8);
-                  optional binary profile_link_color (UTF8);
-                  optional binary profile_sidebar_border_color (UTF8);
-                  optional binary profile_sidebar_fill_color (UTF8);
-                  optional binary profile_text_color (UTF8);
-                  optional boolean profile_use_background_image;
-                  optional boolean protected;
-                  optional binary screen_name (UTF8);
-                  optional int64 statuses_count;
-                  optional binary time_zone (UTF8);
-                  optional binary url (UTF8);
-                  optional int64 utc_offset;
-                  optional boolean verified;
-                }
-              }"
+    "format":"parquet"
 };
 
 

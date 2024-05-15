@@ -107,15 +107,21 @@
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="parquet-error-checks">
         <output-dir compare="Text">parquet-error-checks</output-dir>
-        <expected-error>HYR0131: Invalid parquet schema provided</expected-error>
+        <expected-error>ASX1079: Compilation error: TYPE() Expression is required for parquet format</expected-error>
         <expected-error>ASX0037: Type mismatch: expected value of type integer, but got the value of type BINARY</expected-error>
-        <expected-error>HYR0133: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
-        <expected-error>HYR0132: Result does not follow the schema, group type expected but found primitive type at 'nested'</expected-error>
-        <expected-error>HYR0132: Result does not follow the schema, primitive type expected but found group type at 'name'</expected-error>
+        <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
+        <expected-error>HYR0131: Result does not follow the schema, group type expected but found primitive type at 'nested'</expected-error>
+        <expected-error>HYR0131: Result does not follow the schema, primitive type expected but found group type at 'name'</expected-error>
         <expected-error>ASX1201: Storage units expected for the field 'row-group-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
         <expected-error>ASX1201: Storage units expected for the field 'page-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
         <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for parquet are [gzip, snappy, zstd]</expected-error>
-      </compilation-unit>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1204: 'binary' type not supported in parquet format</expected-error>
+        <expected-error>ASX1205: Invalid Parquet Writer Version provided.Supported values: 1,2</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="empty-over">

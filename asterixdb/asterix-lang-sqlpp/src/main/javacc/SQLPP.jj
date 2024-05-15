@@ -2936,6 +2936,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   Namespace namespace = nameComponents == null ? null : nameComponents.first;
   String datasetName = nameComponents == null ? null : nameComponents.second.getValue();
   List<Expression> pathExprs;
+  RecordTypeDefinition typeExpr = null;
 
   List<Expression> partitionExprs = new ArrayList<Expression>();
   Map<Integer, VariableExpr> partitionVarExprs = new HashMap<Integer, VariableExpr>();
@@ -2947,6 +2948,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   <TO> adapterName = AdapterName()
   <PATH> <LEFTPAREN> pathExprs = ExpressionList() <RIGHTPAREN>
   (CopyToOverClause(partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList))?
+  (<TYPE>  <LEFTPAREN> typeExpr = RecordTypeDef() <RIGHTPAREN>)?
   <WITH> withRecord = RecordConstructor()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();
@@ -2961,8 +2963,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
           usedAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(datasetName));
        }
 
-       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs,
-            partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter());
+       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs, partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter(), typeExpr);
        return addSourceLocation(stmt, startToken);
     }
 }

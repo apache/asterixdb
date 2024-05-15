@@ -109,6 +109,7 @@ import org.apache.asterix.external.operators.FeedIntakeOperatorNodePushable;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.WriterValidationUtil;
+import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
 import org.apache.asterix.lang.common.base.IQueryRewriter;
 import org.apache.asterix.lang.common.base.IReturningStatement;
 import org.apache.asterix.lang.common.base.IRewriterFactory;
@@ -4092,6 +4093,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 edd.setProperties(createAndValidateAdapterConfigurationForCopyToStmt(edd,
                         ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx,
                         metadataProvider));
+
+                if (edd.getProperties().get(ExternalDataConstants.KEY_FORMAT)
+                        .equalsIgnoreCase(ExternalDataConstants.FORMAT_PARQUET)) {
+                    if (copyTo.getType() == null) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                "TYPE() Expression is required for parquet format");
+                    }
+
+                    DataverseName dataverseName =
+                            DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
+                    IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
+                            ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
+                    edd.getProperties().put(ExternalDataConstants.PARQUET_SCHEMA_KEY,
+                            SchemaConverterVisitor.convertToParquetSchemaString((ARecordType) iaType));
+                }
 
                 Map<VarIdentifier, IAObject> externalVars = createExternalVariables(copyTo, stmtParams);
                 // Query Rewriting (happens under the same ongoing metadata transaction)

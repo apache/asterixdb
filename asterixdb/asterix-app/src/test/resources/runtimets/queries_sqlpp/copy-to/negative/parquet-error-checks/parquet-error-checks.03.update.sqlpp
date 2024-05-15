@@ -27,22 +27,23 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks3")
+TYPE ( {
+            id : string,
+            name : string,
+            nested :
+            {
+             first : string,
+             second : string
+            }
+           }
+)
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet",
-    "schema":"message schema {
-                optional binary id (UTF8);
-                optional binary name (UTF8);
-                optional group nested {
-                  optional binary first (UTF8);
-                  optional binary second (UTF8);
-                }
-              }
-"
+    "format":"parquet"
 }
 
 
