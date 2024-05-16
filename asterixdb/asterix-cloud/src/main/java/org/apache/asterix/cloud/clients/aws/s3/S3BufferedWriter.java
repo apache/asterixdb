@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
@@ -45,6 +46,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     private final S3Client s3Client;
     private final IRequestProfiler profiler;
+    private final ICloudGuardian guardian;
     private final String bucket;
     private final String path;
     private final List<CompletedPart> partQueue;
@@ -52,9 +54,11 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     private String uploadId;
     private int partNumber;
 
-    public S3BufferedWriter(S3Client s3client, IRequestProfiler profiler, String bucket, String path) {
+    public S3BufferedWriter(S3Client s3client, IRequestProfiler profiler, ICloudGuardian guardian, String bucket,
+            String path) {
         this.s3Client = s3client;
         this.profiler = profiler;
+        this.guardian = guardian;
         this.bucket = bucket;
         this.path = path;
         partQueue = new ArrayList<>();
@@ -62,6 +66,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     @Override
     public int upload(InputStream stream, int length) {
+        guardian.checkIsolatedWriteAccess(bucket, path);
         profiler.objectMultipartUpload();
         setUploadId();
         UploadPartRequest upReq =
@@ -123,6 +128,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     }
 
     private void completeMultipartUpload(CompleteMultipartUploadRequest request) throws HyracksDataException {
+        guardian.checkWriteAccess(bucket, path);
         profiler.objectMultipartUpload();
         try {
             s3Client.completeMultipartUpload(request);

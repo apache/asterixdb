@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.s3;
 import java.net.URI;
 
 import org.apache.asterix.cloud.AbstractLSMTest;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.junit.AfterClass;
@@ -65,7 +66,7 @@ public class LSMS3Test extends AbstractLSMTest {
         client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
         LOGGER.info("Client created successfully");
         S3ClientConfig config = new S3ClientConfig(MOCK_SERVER_REGION, MOCK_SERVER_HOSTNAME, "", true, 0);
-        CLOUD_CLIENT = new S3CloudClient(config);
+        CLOUD_CLIENT = new S3CloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     private static void cleanup() {

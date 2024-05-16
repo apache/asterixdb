@@ -35,6 +35,7 @@ import org.apache.asterix.active.ActiveManager;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.cloud.CloudConfigurator;
 import org.apache.asterix.cloud.LocalPartitionBootstrapper;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
 import org.apache.asterix.common.api.ICoordinationService;
@@ -221,7 +222,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         IDiskCachedPageAllocator pageAllocator;
         IBufferCacheReadContext defaultContext;
         if (isCloudDeployment()) {
-            cloudConfigurator = CloudConfigurator.of(cloudProperties, ioManager, namespacePathResolver);
+            cloudConfigurator = CloudConfigurator.of(cloudProperties, ioManager, namespacePathResolver,
+                    getCloudGuardian(cloudProperties));
             persistenceIOManager = cloudConfigurator.getCloudIoManager();
             partitionBootstrapper = cloudConfigurator.getPartitionBootstrapper();
             lockNotifier = cloudConfigurator.getLockNotifier();
@@ -359,6 +361,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         lccm.register(libraryManager);
 
         diskWriteRateLimiterProvider = new DiskWriteRateLimiterProvider();
+    }
+
+    protected ICloudGuardian getCloudGuardian(CloudProperties cloudProperties) {
+        return ICloudGuardian.NoOpCloudGuardian.INSTANCE;
     }
 
     @Override

@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.writer;
 import java.io.IOException;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -62,7 +63,8 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     @Override
     ICloudClient createCloudClient() throws CompilationException {
         GCSClientConfig config = GCSClientConfig.of(configuration);
-        return new GCSCloudClient(config, GCSUtils.buildClient(configuration));
+        return new GCSCloudClient(config, GCSUtils.buildClient(configuration),
+                ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override

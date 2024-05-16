@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.config.CloudProperties;
@@ -47,8 +48,8 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public EagerCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
-        super(ioManager, cloudProperties, nsPathResolver);
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
+        super(ioManager, cloudProperties, nsPathResolver, guardian);
     }
 
     /*

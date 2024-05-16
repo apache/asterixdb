@@ -21,6 +21,7 @@ package org.apache.asterix.cloud.writer;
 import java.io.IOException;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -62,7 +63,8 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
     @Override
     ICloudClient createCloudClient() throws CompilationException {
         S3ClientConfig config = S3ClientConfig.of(configuration);
-        return new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration));
+        return new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration),
+                ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override

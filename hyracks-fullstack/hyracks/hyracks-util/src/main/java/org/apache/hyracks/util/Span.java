@@ -93,7 +93,6 @@ public class Span {
 
     private Span(long span, TimeUnit unit) {
         spanNanos = unit.toNanos(span);
-        reset();
     }
 
     public void reset() {
@@ -109,6 +108,12 @@ public class Span {
     }
 
     public static Span start(long span, TimeUnit unit) {
+        Span s = new Span(span, unit);
+        s.reset();
+        return s;
+    }
+
+    public static Span init(long span, TimeUnit unit) {
         return new Span(span, unit);
     }
 

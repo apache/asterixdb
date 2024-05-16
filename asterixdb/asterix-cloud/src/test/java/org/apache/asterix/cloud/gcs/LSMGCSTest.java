@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.gcs;
 
 import org.apache.asterix.cloud.AbstractLSMTest;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.junit.AfterClass;
@@ -48,7 +49,7 @@ public class LSMGCSTest extends AbstractLSMTest {
                 .setLocation(MOCK_SERVER_REGION).build());
         LOGGER.info("Client created successfully");
         GCSClientConfig config = new GCSClientConfig(MOCK_SERVER_REGION, MOCK_SERVER_HOSTNAME, "", true, 0);
-        CLOUD_CLIENT = new GCSCloudClient(config);
+        CLOUD_CLIENT = new GCSCloudClient(config, ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     private static void cleanup() {

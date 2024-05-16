@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
@@ -65,11 +66,11 @@ public final class CloudConfigurator {
     private final long diskCacheMonitoringInterval;
 
     private CloudConfigurator(CloudProperties cloudProperties, IIOManager ioManager,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         this.cloudProperties = cloudProperties;
         localIoManager = (IOManager) ioManager;
         diskCacheManagerRequired = cloudProperties.getCloudCachePolicy() == CloudCachePolicy.SELECTIVE;
-        cloudIOManager = createIOManager(ioManager, cloudProperties, nsPathResolver);
+        cloudIOManager = createIOManager(ioManager, cloudProperties, nsPathResolver, guardian);
         physicalDrive = createPhysicalDrive(diskCacheManagerRequired, cloudProperties, ioManager);
         lockNotifier = createLockNotifier(diskCacheManagerRequired);
         pageAllocator = createPageAllocator(diskCacheManagerRequired);
@@ -126,20 +127,20 @@ public final class CloudConfigurator {
     }
 
     public static CloudConfigurator of(CloudProperties cloudProperties, IIOManager ioManager,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
-        return new CloudConfigurator(cloudProperties, ioManager, nsPathResolver);
+            INamespacePathResolver nsPathResolver, ICloudGuardian cloudGuardian) throws HyracksDataException {
+        return new CloudConfigurator(cloudProperties, ioManager, nsPathResolver, cloudGuardian);
     }
 
     public static AbstractCloudIOManager createIOManager(IIOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         IOManager localIoManager = (IOManager) ioManager;
         CloudCachePolicy policy = cloudProperties.getCloudCachePolicy();
         if (policy == CloudCachePolicy.EAGER) {
-            return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver);
+            return new EagerCloudIOManager(localIoManager, cloudProperties, nsPathResolver, guardian);
         }
 
         boolean selective = policy == CloudCachePolicy.SELECTIVE;
-        return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver, selective);
+        return new LazyCloudIOManager(localIoManager, cloudProperties, nsPathResolver, selective, guardian);
     }
 
     private static IPhysicalDrive createPhysicalDrive(boolean diskCacheManagerRequired, CloudProperties cloudProperties,

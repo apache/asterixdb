@@ -26,21 +26,22 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class CloudClientProvider {
-    private static final String S3 = "s3";
-    private static final String GCS = "gs";
+    public static final String S3 = "s3";
+    public static final String GCS = "gs";
 
     private CloudClientProvider() {
         throw new AssertionError("do not instantiate");
     }
 
-    public static ICloudClient getClient(CloudProperties cloudProperties) throws HyracksDataException {
+    public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
+            throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
         if (S3.equalsIgnoreCase(storageScheme)) {
             S3ClientConfig config = S3ClientConfig.of(cloudProperties);
-            return new S3CloudClient(config);
+            return new S3CloudClient(config, guardian);
         } else if (GCS.equalsIgnoreCase(storageScheme)) {
             GCSClientConfig config = GCSClientConfig.of(cloudProperties);
-            return new GCSCloudClient(config);
+            return new GCSCloudClient(config, guardian);
         }
         throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
     }

@@ -36,6 +36,7 @@ import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.CloudClientProvider;
 import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.ICloudClient;
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.util.CloudFileUtil;
 import org.apache.asterix.common.api.INamespacePathResolver;
@@ -60,6 +61,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper, ICloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final ICloudClient cloudClient;
+    protected final ICloudGuardian guardian;
     protected final IWriteBufferProvider writeBufferProvider;
     protected final String bucket;
     protected final Set<Integer> partitions;
@@ -68,12 +70,13 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     protected final INamespacePathResolver nsPathResolver;
 
     public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
-            INamespacePathResolver nsPathResolver) throws HyracksDataException {
+            INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
         super(ioManager.getIODevices(), ioManager.getDeviceComputer(), ioManager.getIOParallelism(),
                 ioManager.getQueueSize());
         this.nsPathResolver = nsPathResolver;
         this.bucket = cloudProperties.getStorageBucket();
-        cloudClient = CloudClientProvider.getClient(cloudProperties);
+        cloudClient = CloudClientProvider.getClient(cloudProperties, guardian);
+        this.guardian = guardian;
         int numOfThreads = getIODevices().size() * getIOParallelism();
         writeBufferProvider = new WriteBufferProvider(numOfThreads, cloudClient.getWriteBufferSize());
         partitions = new HashSet<>();
