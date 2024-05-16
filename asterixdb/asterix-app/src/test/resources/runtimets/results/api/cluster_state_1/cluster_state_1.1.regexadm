@@ -19,7 +19,7 @@
     "cloud.storage.debug.sweep.threshold.size" : 1073741824,
     "cloud.storage.disk.monitor.interval" : 60,
     "cloud.storage.endpoint" : "",
-    "cloud.storage.index.inactive.duration.threshold" : 6,
+    "cloud.storage.index.inactive.duration.threshold" : 360,
     "cloud.storage.prefix" : "",
     "cloud.storage.region" : "",
     "cloud.storage.scheme" : "",
