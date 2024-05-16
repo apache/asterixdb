@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Collection;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -160,6 +161,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private ICacheManager cacheManager;
     private IConfigValidator configValidator;
     private IDiskWriteRateLimiterProvider diskWriteRateLimiterProvider;
+    private Integer metadataPartitionId;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
             IPropertiesFactory propertiesFactory) {
@@ -443,6 +445,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public void initializeMetadata(boolean newUniverse, int partitionId) throws Exception {
         LOGGER.info("Bootstrapping metadata");
+        metadataPartitionId = partitionId;
         MetadataNode.INSTANCE.initialize(this, ncExtensionManager.getMetadataTupleTranslatorProvider(),
                 ncExtensionManager.getMetadataExtensions(), partitionId);
 
@@ -635,5 +638,10 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     @Override
     public IDiskWriteRateLimiterProvider getDiskWriteRateLimiterProvider() {
         return diskWriteRateLimiterProvider;
+    }
+
+    @Override
+    public OptionalInt getMetadataPartitionId() {
+        return metadataPartitionId == null ? OptionalInt.empty() : OptionalInt.of(metadataPartitionId);
     }
 }
