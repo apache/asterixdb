@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.replication.messaging;
 
+import static org.apache.asterix.common.utils.StorageConstants.METADATA_PARTITION;
+
 import java.io.DataInput;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -51,6 +53,10 @@ public class PartitionResourcesListTask implements IReplicaTask {
     @Override
     public void perform(INcApplicationContext appCtx, IReplicationWorker worker) throws HyracksDataException {
         LOGGER.debug("processing {}", this);
+        if (METADATA_PARTITION == partition && appCtx.getReplicaManager().getPartitions().contains(partition)) {
+            LOGGER.warn("received request to get metadata files from non-master {}", worker.getRemoteAddress());
+            throw new IllegalStateException();
+        }
         final PersistentLocalResourceRepository localResourceRepository =
                 (PersistentLocalResourceRepository) appCtx.getLocalResourceRepository();
         localResourceRepository.cleanup(partition);
