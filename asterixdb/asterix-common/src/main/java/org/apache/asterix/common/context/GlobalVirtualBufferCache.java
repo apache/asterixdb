@@ -173,13 +173,16 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
             // 2. there are still some active readers and memory cannot be reclaimed.
             // But for both cases, we will notify all primary index op trackers to let their writers retry,
             // if they have been blocked. Moreover, we will check whether more flushes are needed.
+            List<ILSMOperationTracker> opTrackers = new ArrayList<>();
             synchronized (this) {
                 final int size = primaryIndexes.size();
                 for (int i = 0; i < size; i++) {
-                    ILSMOperationTracker opTracker = primaryIndexes.get(i).getOperationTracker();
-                    synchronized (opTracker) {
-                        opTracker.notifyAll();
-                    }
+                    opTrackers.add(primaryIndexes.get(i).getOperationTracker());
+                }
+            }
+            for (ILSMOperationTracker opTracker : opTrackers) {
+                synchronized (opTracker) {
+                    opTracker.notifyAll();
                 }
             }
             checkAndNotifyFlushThread();

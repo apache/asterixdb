@@ -20,6 +20,7 @@ package org.apache.asterix.common.api;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
+import java.util.OptionalInt;
 import java.util.concurrent.Executor;
 
 import org.apache.asterix.common.context.IStorageComponentProvider;
@@ -147,4 +148,6 @@ public interface INcApplicationContext extends IApplicationContext {
      * @return the disk write rate limiter provider
      */
     IDiskWriteRateLimiterProvider getDiskWriteRateLimiterProvider();
+
+    OptionalInt getMetadataPartitionId();
 }
