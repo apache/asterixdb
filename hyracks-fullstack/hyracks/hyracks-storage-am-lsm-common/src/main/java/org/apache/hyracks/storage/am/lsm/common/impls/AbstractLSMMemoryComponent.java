@@ -355,4 +355,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
                 + writerCount + ", \"readers\":" + readerCount + ", \"pendingFlushes\":" + pendingFlushes
                 + ", \"id\":\"" + componentId + "\", \"index\":" + getIndex() + "}";
     }
+
+    @Override
+    public String dumpState() {
+        return this + ", isCompFull=" + vbc.isFull(this) + ", isFull=" + vbc.isFull() + ", " + vbc.dumpState();
+    }
 }

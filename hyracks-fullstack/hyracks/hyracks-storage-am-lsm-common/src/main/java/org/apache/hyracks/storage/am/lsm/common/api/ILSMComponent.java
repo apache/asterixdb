@@ -155,4 +155,8 @@ public interface ILSMComponent {
      * @return the number of readers inside a component
      */
     int getReaderCount();
+
+    default String dumpState() {
+        return "";
+    }
 }

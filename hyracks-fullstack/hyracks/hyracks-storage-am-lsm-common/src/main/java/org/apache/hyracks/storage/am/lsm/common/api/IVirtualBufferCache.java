@@ -63,4 +63,8 @@ public interface IVirtualBufferCache extends IBufferCache {
      * @throws HyracksDataException
      */
     void flushed(ILSMMemoryComponent memoryComponent) throws HyracksDataException;
+
+    default String dumpState() {
+        return "";
+    }
 }

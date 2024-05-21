@@ -189,7 +189,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
                     opTracker.notifyAll();
                 }
             }
-            checkAndNotifyFlushThread();
+            checkAndNotifyFlushThread(false);
         }
         if (memoryComponent.getLsmIndex().getNumOfFilterFields() > 0
                 && memoryComponent.getLsmIndex().isPrimaryIndex()) {
@@ -210,7 +210,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     public boolean isFull() {
         boolean full = vbc.isFull();
         if (full) {
-            checkAndNotifyFlushThread();
+            checkAndNotifyFlushThread(true);
         }
         return full;
     }
@@ -280,7 +280,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         ICachedPage page = vbc.pin(dpid, context);
         if (context.isNewPage()) {
             incrementFilteredMemoryComponentUsage(dpid, 1);
-            checkAndNotifyFlushThread();
+            checkAndNotifyFlushThread(false);
         }
         return page;
     }
@@ -299,8 +299,12 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         }
     }
 
-    private void checkAndNotifyFlushThread() {
+    private void checkAndNotifyFlushThread(boolean log) {
         if (vbc.getUsage() < flushPageBudget) {
+            if (log) {
+                LOGGER.info("not notifying the flush thread vbcUsage({}) < flushPageBudget({})", vbc.getUsage(),
+                        flushPageBudget);
+            }
             return;
         }
         // Notify the flush thread to schedule flushes. This is used to avoid deadlocks because page pins can be
@@ -317,7 +321,7 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
         int delta = multiplier - cPage.getFrameSizeMultiplier();
         incrementFilteredMemoryComponentUsage(((VirtualPage) cPage).dpid(), delta);
         if (delta > 0) {
-            checkAndNotifyFlushThread();
+            checkAndNotifyFlushThread(false);
         }
     }
 
@@ -447,6 +451,11 @@ public class GlobalVirtualBufferCache implements IVirtualBufferCache, ILifeCycle
     @Override
     public String toString() {
         return vbc.toString();
+    }
+
+    @Override
+    public String dumpState() {
+        return "flushingComponents=" + flushingComponents + ", " + vbc.dumpState();
     }
 
     @Override

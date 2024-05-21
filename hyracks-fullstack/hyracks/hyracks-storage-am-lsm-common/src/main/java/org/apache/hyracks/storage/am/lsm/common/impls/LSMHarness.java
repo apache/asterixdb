@@ -22,6 +22,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 
@@ -100,13 +101,21 @@ public class LSMHarness implements ILSMHarness {
         }
         try {
             validateOperationEnterComponentsState(ctx);
+            long start = System.nanoTime();
+            boolean dumpState = false;
             synchronized (opTracker) {
                 while (true) {
                     lsmIndex.getOperationalComponents(ctx);
-                    if (enterComponents(ctx, opType)) {
+                    if (enterComponents(ctx, opType, dumpState)) {
                         return true;
                     } else if (isTryOperation) {
                         return false;
+                    }
+                    dumpState = false;
+                    long minutes = TimeUnit.NANOSECONDS.toMinutes(System.nanoTime() - start);
+                    if (minutes > 2) {
+                        start = System.nanoTime();
+                        dumpState = true;
                     }
                     try {
                         opTracker.wait(100);
@@ -124,7 +133,7 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @CriticalPath
-    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType)
+    protected boolean enterComponents(ILSMIndexOperationContext ctx, LSMOperationType opType, boolean dumpState)
             throws HyracksDataException {
         validateOperationEnterComponentsState(ctx);
         List<ILSMComponent> components = ctx.getComponentHolder();
@@ -136,6 +145,9 @@ public class LSMHarness implements ILSMHarness {
                 final ILSMComponent component = components.get(i);
                 boolean isMutableComponent = numEntered == 0 && component.getType() == LSMComponentType.MEMORY;
                 if (!component.threadEnter(opType, isMutableComponent)) {
+                    if (dumpState) {
+                        LOGGER.info("couldn't enter component: {}", component.dumpState());
+                    }
                     break;
                 }
                 numEntered++;
@@ -523,7 +535,7 @@ public class LSMHarness implements ILSMHarness {
     public void flush(ILSMIOOperation operation) throws HyracksDataException {
         LOGGER.debug("Started a flush operation for index: {}", lsmIndex);
         synchronized (opTracker) {
-            while (!enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.FLUSH)) {
+            while (!enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.FLUSH, false)) {
                 try {
                     opTracker.wait();
                 } catch (InterruptedException e) {
@@ -589,7 +601,7 @@ public class LSMHarness implements ILSMHarness {
                     mergeOp.getMergingComponents().size(), lsmIndex);
         }
         synchronized (opTracker) {
-            enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE);
+            enterComponents(operation.getAccessor().getOpContext(), LSMOperationType.MERGE, false);
         }
         ILSMDiskComponent newComponent;
         try {
@@ -914,7 +926,7 @@ public class LSMHarness implements ILSMHarness {
                 exitComponents(componentReplacementCtx, LSMOperationType.SEARCH, null, false);
                 // enter new component
                 componentReplacementCtx.prepareToEnter();
-                enterComponents(componentReplacementCtx, LSMOperationType.SEARCH);
+                enterComponents(componentReplacementCtx, LSMOperationType.SEARCH, false);
                 componentReplacementCtx.replace(ctx);
             }
         }
