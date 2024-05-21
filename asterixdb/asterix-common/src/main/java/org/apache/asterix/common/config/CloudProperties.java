@@ -47,7 +47,7 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_REGION(STRING, ""),
         CLOUD_STORAGE_ENDPOINT(STRING, ""),
         CLOUD_STORAGE_ANONYMOUS_AUTH(BOOLEAN, false),
-        CLOUD_STORAGE_CACHE_POLICY(STRING, "lazy"),
+        CLOUD_STORAGE_CACHE_POLICY(STRING, "selective"),
         // 80% of the total disk space
         CLOUD_STORAGE_ALLOCATION_PERCENTAGE(DOUBLE, 0.8d),
         // 90% of the allocated space for storage (i.e., 90% of the 80% of the total disk space)
