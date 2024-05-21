@@ -194,7 +194,7 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         AggregateOperator agg = (AggregateOperator) nestedPlanRoot;
         Mutable<ILogicalOperator> aggInputOpRef = agg.getInputs().get(0);
 
-        if (agg.getVariables().size() > 1) {
+        if (agg.getVariables().size() != 1) {
             return false;
         }
 
