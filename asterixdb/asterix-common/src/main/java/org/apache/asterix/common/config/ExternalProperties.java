@@ -50,7 +50,7 @@ public class ExternalProperties extends AbstractProperties {
                 POSITIVE_INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(200, StorageUtil.StorageUnit.MEGABYTE),
                 "The maximum accepted web request size in bytes"),
-        REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 50, "The maximum number of archived requests to maintain"),
+        REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 1000, "The maximum number of archived requests to maintain"),
         LIBRARY_DEPLOY_TIMEOUT(POSITIVE_INTEGER, 1800, "Timeout to upload a UDF in seconds"),
         AZURE_REQUEST_TIMEOUT(POSITIVE_INTEGER, 120, "Timeout for Azure client requests in seconds");
 

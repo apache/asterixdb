@@ -34,11 +34,14 @@ import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.util.LogRedactionUtil;
+import org.apache.hyracks.util.StorageUtil;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ClientRequest extends BaseClientRequest {
 
+    protected static final int MAX_STATEMENT_LENGTH =
+            StorageUtil.getIntSizeInBytes(64, StorageUtil.StorageUnit.KILOBYTE);
     protected final long creationTime = System.nanoTime();
     protected final Thread executor;
     protected final String statement;
@@ -50,7 +53,8 @@ public class ClientRequest extends BaseClientRequest {
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
         this.clientContextId = requestParameters.getClientContextId();
-        this.statement = requestParameters.getStatement();
+        String stmt = requestParameters.getStatement();
+        this.statement = stmt.length() > MAX_STATEMENT_LENGTH ? stmt.substring(0, MAX_STATEMENT_LENGTH) : stmt;
         this.executor = Thread.currentThread();
         this.jobState = new JobState();
     }
@@ -61,7 +65,9 @@ public class ClientRequest extends BaseClientRequest {
     }
 
     public void setPlan(String plan) {
-        this.plan = plan;
+        if (plan != null) {
+            this.plan = plan.length() > MAX_STATEMENT_LENGTH ? plan.substring(0, MAX_STATEMENT_LENGTH) : plan;
+        }
     }
 
     public synchronized void setJobId(JobId jobId) {

@@ -150,8 +150,9 @@ public abstract class AbstractFrameSorter implements IFrameSorter {
             return true;
         }
         if (getFrameCount() == 0) {
-            throw new HyracksDataException(
-                    "The input frame is too big for the sorting buffer, please allocate bigger buffer size");
+            throw new HyracksDataException("The required memory=" + requiredMemory + " for the frame data="
+                    + inputTupleAccessor.getBuffer().capacity() + " is too big for the sorting buffer. Used="
+                    + totalMemoryUsed + ", max=" + maxSortMemory + ", please allocate bigger buffer size");
         }
         return false;
     }

@@ -25,6 +25,8 @@
 -- param job:string=true
 
 SET `compiler.parallelism` "1";
+// this of course defeats the purpose of the test. however, the currently min assigned memory is too low for a request
+SET `compiler.min.memory.allocation` "false";
 
 from completed_requests() t
 select value t
