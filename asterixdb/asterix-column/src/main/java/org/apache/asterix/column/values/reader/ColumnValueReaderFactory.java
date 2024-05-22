@@ -33,6 +33,7 @@ import org.apache.asterix.column.values.reader.value.StringValueReader;
 import org.apache.asterix.column.values.reader.value.UUIDValueReader;
 import org.apache.asterix.column.values.reader.value.key.DoubleKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.FloatKeyValueReader;
+import org.apache.asterix.column.values.reader.value.key.LevelKeyReader;
 import org.apache.asterix.column.values.reader.value.key.LongKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.StringKeyValueReader;
 import org.apache.asterix.column.values.reader.value.key.UUIDKeyValueReader;
@@ -70,7 +71,7 @@ public class ColumnValueReaderFactory implements IColumnValuesReaderFactory {
         switch (typeTag) {
             case MISSING:
             case NULL:
-                return NoOpValueReader.INSTANCE;
+                return primaryKey ? LevelKeyReader.INSTANCE : NoOpValueReader.INSTANCE;
             case BOOLEAN:
                 return new BooleanValueReader();
             case TINYINT:

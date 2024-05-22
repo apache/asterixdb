@@ -16,17 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.iterable;
 
-import org.apache.asterix.column.filter.IColumnFilterEvaluator;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+DROP DATAVERSE test if exists;
+CREATE DATAVERSE test;
+USE test;
 
-public interface IColumnIterableFilterEvaluator extends IColumnFilterEvaluator {
-    void reset();
+CREATE TYPE ColumnType AS {
+    id: int
+};
 
-    int getTupleIndex();
-
-    int getValueIndex();
-
-    void setAt(int index) throws HyracksDataException;
-}
+CREATE DATASET ColumnDataset(ColumnType)
+PRIMARY KEY id WITH {
+    "storage-format": {"format" : "column"}
+};

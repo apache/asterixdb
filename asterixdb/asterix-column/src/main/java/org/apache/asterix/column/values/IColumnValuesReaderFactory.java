@@ -52,7 +52,7 @@ public interface IColumnValuesReaderFactory {
      *
      * @param input column metadata info
      * @return columnar reader
-     * @see PathInfoSerializer#writePathInfo(ATypeTag, int, boolean)  for more information on how the path info is serialized
+     * @see PathInfoSerializer#writePathInfo(ATypeTag, int, boolean) how it serializes the path info
      */
     IColumnValuesReader createValueReader(DataInput input) throws IOException;
 }

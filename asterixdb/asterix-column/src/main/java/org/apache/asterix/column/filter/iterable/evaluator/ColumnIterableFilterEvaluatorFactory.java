@@ -48,6 +48,9 @@ public class ColumnIterableFilterEvaluatorFactory implements IColumnIterableFilt
             throw new NullPointerException("Readers are empty");
         }
 
+        // Initialize column filter readers by including a primary key level reader
+        filterAccessorProvider.initializeFilterReaders();
+
         if (readers.stream().anyMatch(IColumnValuesReader::isRepeated)) {
             return new ColumnarRepeatedIterableFilterEvaluator(evaluator, readers);
         }

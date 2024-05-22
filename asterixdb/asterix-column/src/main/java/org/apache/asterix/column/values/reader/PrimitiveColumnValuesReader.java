@@ -39,7 +39,7 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
      */
     private final boolean primaryKey;
 
-    public PrimitiveColumnValuesReader(AbstractValueReader reader, int columnIndex, int maxLevel, boolean primaryKey) {
+    PrimitiveColumnValuesReader(AbstractValueReader reader, int columnIndex, int maxLevel, boolean primaryKey) {
         super(reader, columnIndex, maxLevel, primaryKey);
         this.primaryKey = primaryKey;
     }

@@ -16389,6 +16389,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="filter/delete">
+        <output-dir compare="Text">filter/delete</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="filter/not-in_every">
         <output-dir compare="Text">filter/not-in_every</output-dir>
       </compilation-unit>

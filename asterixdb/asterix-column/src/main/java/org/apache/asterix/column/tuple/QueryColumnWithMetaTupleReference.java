@@ -176,15 +176,18 @@ public final class QueryColumnWithMetaTupleReference extends AbstractAsterixColu
 
     private IValueReference getFilteredAssembledValue() throws HyracksDataException {
         int index = columnFilterEvaluator.getTupleIndex();
-        // index == -1 if the normalized filter indicated that a mega leaf node
-        // is filtered
+
+        // index == -1 if the normalized filter indicated that a mega leaf node is filtered
         if (index == tupleIndex) {
-            assembler.setAt(index);
-            metaAssembler.setAt(index);
+            // setAt in the assembler expect the value index (i.e., tupleCount - antiMatterCount)
+            int valueIndex = columnFilterEvaluator.getValueIndex();
+            assembler.setAt(valueIndex);
+            metaAssembler.setAt(valueIndex);
             // set the next tuple index that satisfies the filter
             columnFilterEvaluator.evaluate();
             return assembler.nextValue();
         }
+
         return MissingValueGetter.MISSING;
     }
 }

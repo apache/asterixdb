@@ -52,6 +52,7 @@ public class FilterAccessorProvider {
     private final ObjectSchemaNode root;
     private final ObjectSchemaNode metaRoot;
     private final SchemaClipperVisitor clipperVisitor;
+    private final IColumnValuesReaderFactory readerFactory;
     private final PathExtractorVisitor pathExtractorVisitor;
     private final Map<ARecordType, PrimitiveSchemaNode> cachedNodes;
     private final List<IColumnRangeFilterValueAccessor> filterAccessors;
@@ -68,6 +69,7 @@ public class FilterAccessorProvider {
         this.root = root;
         this.metaRoot = metaRoot;
         this.clipperVisitor = clipperVisitor;
+        this.readerFactory = readerFactory;
         this.valueGetterFactory = valueGetterFactory;
         pathExtractorVisitor = new PathExtractorVisitor(readerFactory);
         cachedNodes = new HashMap<>();
@@ -120,6 +122,12 @@ public class FilterAccessorProvider {
             valueGetters[i] = valueGetterFactory.createValueGetter(reader.getTypeTag());
         }
         return new UnionColumnFilterValueAccessorEvaluator(unionReaders, valueGetters);
+    }
+
+    public void initializeFilterReaders() {
+        // This primary key level reader will help us avoid skipping filter values when an anti-matter is encountered
+        IColumnValuesReader primaryKeyLevelReader = readerFactory.createValueReader(ATypeTag.MISSING, 0, 1, true);
+        filterColumnReaders.add(0, primaryKeyLevelReader);
     }
 
     public List<IColumnRangeFilterValueAccessor> getFilterAccessors() {

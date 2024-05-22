@@ -42,6 +42,11 @@ public class FalseColumnFilterEvaluator implements IColumnIterableFilterEvaluato
     }
 
     @Override
+    public int getValueIndex() {
+        return -1;
+    }
+
+    @Override
     public void setAt(int index) {
         // NoOp
     }

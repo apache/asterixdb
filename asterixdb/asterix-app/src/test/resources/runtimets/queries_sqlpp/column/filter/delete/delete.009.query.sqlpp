@@ -16,17 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.filter.iterable;
 
-import org.apache.asterix.column.filter.IColumnFilterEvaluator;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+USE test;
+SET `compiler.column.filter` "true";
 
-public interface IColumnIterableFilterEvaluator extends IColumnFilterEvaluator {
-    void reset();
 
-    int getTupleIndex();
 
-    int getValueIndex();
-
-    void setAt(int index) throws HyracksDataException;
-}
+SELECT VALUE d
+FROM ColumnDataset d
+WHERE a MOD 3 = 1
+ORDER by d.id;

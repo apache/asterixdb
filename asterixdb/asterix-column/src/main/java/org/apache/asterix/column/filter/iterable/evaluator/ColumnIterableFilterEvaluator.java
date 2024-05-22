@@ -25,11 +25,9 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ColumnIterableFilterEvaluator extends AbstractIterableFilterEvaluator {
-    private final List<IColumnValuesReader> readers;
 
     public ColumnIterableFilterEvaluator(IScalarEvaluator evaluator, List<IColumnValuesReader> readers) {
-        super(evaluator);
-        this.readers = readers;
+        super(evaluator, readers);
     }
 
     @Override
@@ -37,28 +35,12 @@ public class ColumnIterableFilterEvaluator extends AbstractIterableFilterEvaluat
         boolean result = false;
         while (!result && next()) {
             result = inspect();
-            index++;
         }
         if (!result) {
             // Last tuple does not satisfy the condition
-            index++;
+            tupleIndex++;
+            valueIndex++;
         }
         return result;
-    }
-
-    private boolean next() throws HyracksDataException {
-        for (int i = 0; i < readers.size(); i++) {
-            if (!readers.get(i).next()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public void skip(int count) throws HyracksDataException {
-        for (int i = 0; count > 0 && i < readers.size(); i++) {
-            readers.get(i).skip(count);
-        }
     }
 }

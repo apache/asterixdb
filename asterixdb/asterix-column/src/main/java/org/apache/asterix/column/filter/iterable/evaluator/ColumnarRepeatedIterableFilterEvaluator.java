@@ -26,12 +26,10 @@ import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFilterEvaluator {
-    private final List<IColumnValuesReader> readers;
     private final List<IColumnValuesReader> repeatedReaders;
 
     ColumnarRepeatedIterableFilterEvaluator(IScalarEvaluator evaluator, List<IColumnValuesReader> readers) {
-        super(evaluator);
-        this.readers = readers;
+        super(evaluator, readers);
         repeatedReaders = new ArrayList<>();
         for (IColumnValuesReader reader : readers) {
             if (reader.isRepeated()) {
@@ -47,11 +45,11 @@ public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFil
             // TODO handle nested repetition (x = unnest --> y = unnest --> select (x = 1 AND y = 3))
             // TODO we need a way to 'rewind' y for each x
             result = evaluateRepeated();
-            index++;
         }
         if (!result) {
             // Last tuple does not satisfy the condition
-            index++;
+            tupleIndex++;
+            valueIndex++;
         }
         return result;
     }
@@ -72,21 +70,5 @@ public class ColumnarRepeatedIterableFilterEvaluator extends AbstractIterableFil
             }
         } while (doNext);
         return result;
-    }
-
-    private boolean next() throws HyracksDataException {
-        for (int i = 0; i < readers.size(); i++) {
-            if (!readers.get(i).next()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    protected void skip(int count) throws HyracksDataException {
-        for (int i = 0; count > 0 && i < readers.size(); i++) {
-            readers.get(i).skip(count);
-        }
     }
 }
