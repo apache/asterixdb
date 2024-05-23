@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.cloud.lazy.filesystem;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -31,6 +34,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.filesystem.FileSystemOperationDispatcherUtil;
 
 public final class HolePuncherProvider {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final IHolePuncher UNSUPPORTED = HolePuncherProvider::unsupported;
     private static final IHolePuncher LINUX = HolePuncherProvider::linuxPunchHole;
 
@@ -45,13 +49,12 @@ public final class HolePuncherProvider {
 
         if (FileSystemOperationDispatcherUtil.isLinux()) {
             return LINUX;
-        } else if (cloudProperties.isStorageDebugModeEnabled()) {
-            // Running on debug mode on a non-Linux box
-            return new DebugHolePuncher(cloudIOManager, bufferProvider);
         }
 
-        throw new UnsupportedOperationException(
-                "Hole puncher is not supported using " + FileSystemOperationDispatcherUtil.getOSName());
+        // Running a debug hole puncher on a non-Linux box
+        String osName = FileSystemOperationDispatcherUtil.getOSName();
+        LOGGER.warn("Using 'DebugHolePuncher' as the OS '{}' does not support punishing holes", osName);
+        return new DebugHolePuncher(cloudIOManager, bufferProvider);
     }
 
     private static int unsupported(IFileHandle fileHandle, long offset, long length) {
