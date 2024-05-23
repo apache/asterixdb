@@ -116,9 +116,7 @@ public class DatasourceFactoryProvider {
             throw new NotImplementedException();
         }
 
-        if (factories == null) {
-            initFactories();
-        }
+        initFactories();
 
         if (factories.containsKey(adaptorName)) {
             Map<String, Class<?>> formatClassMap = factories.get(adaptorName);
@@ -134,7 +132,10 @@ public class DatasourceFactoryProvider {
         }
     }
 
-    protected static void initFactories() throws AsterixException {
+    protected static synchronized void initFactories() throws AsterixException {
+        if (factories != null) {
+            return;
+        }
         factories = new HashMap<>();
         ClassLoader cl = ParserFactoryProvider.class.getClassLoader();
         final Charset encoding = StandardCharsets.UTF_8;
