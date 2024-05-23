@@ -200,7 +200,7 @@ public class RemoveRedundantListifyRule implements IAlgebraicRewriteRule {
             return false;
         }
         AggregateOperator agg = (AggregateOperator) r;
-        if (agg.getVariables().size() > 1) {
+        if (agg.getVariables().size() != 1) {
             return false;
         }
         LogicalVariable aggVar = agg.getVariables().get(0);
