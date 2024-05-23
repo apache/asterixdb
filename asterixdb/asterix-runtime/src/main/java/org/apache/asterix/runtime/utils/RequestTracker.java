@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.runtime.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -109,7 +110,7 @@ public class RequestTracker implements IRequestTracker {
 
     @Override
     public synchronized Collection<IClientRequest> getCompletedRequests() {
-        return Collections.unmodifiableCollection(completedRequests.values());
+        return Collections.unmodifiableCollection(new ArrayList<>(completedRequests.values()));
     }
 
     private void cancel(IClientRequest request) throws HyracksDataException {
