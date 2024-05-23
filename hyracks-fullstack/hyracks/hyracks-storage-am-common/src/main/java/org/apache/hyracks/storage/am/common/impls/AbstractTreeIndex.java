@@ -72,6 +72,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void create() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot create already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_ACTIVE_INDEX);
         }
         fileId = bufferCache.createFile(file);
@@ -107,6 +108,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot activate already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_ACTIVATE_ACTIVE_INDEX);
         }
         if (fileId >= 0) {
@@ -135,6 +137,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public void purge() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot purge already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_PURGE_ACTIVE_INDEX);
         }
         bufferCache.purgeHandle(fileId);
@@ -145,6 +148,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void destroy() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot destroy already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_DESTROY_ACTIVE_INDEX);
         }
         bufferCache.deleteFile(file);
@@ -153,6 +157,7 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
     @Override
     public synchronized void clear() throws HyracksDataException {
         if (!isActive) {
+            LOGGER.warn("Cannot clear already inactive index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_CLEAR_INACTIVE_INDEX);
         }
         freePageManager.init(interiorFrameFactory, leafFrameFactory);

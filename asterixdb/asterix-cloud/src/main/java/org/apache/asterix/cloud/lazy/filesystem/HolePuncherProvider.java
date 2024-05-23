@@ -18,9 +18,6 @@
  */
 package org.apache.asterix.cloud.lazy.filesystem;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -32,6 +29,8 @@ import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.cloud.filesystem.FileSystemOperationDispatcherUtil;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class HolePuncherProvider {
     private static final Logger LOGGER = LogManager.getLogger();

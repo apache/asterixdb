@@ -184,6 +184,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void create() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot create already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_CREATE_ACTIVE_INDEX);
         }
         fileManager.createDirs();
@@ -193,6 +194,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void activate() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot activate already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_ACTIVATE_ACTIVE_INDEX);
         }
         loadDiskComponents();
@@ -270,6 +272,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void destroy() throws HyracksDataException {
         if (isActive) {
+            LOGGER.warn("Cannot destroy already active index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_DESTROY_ACTIVE_INDEX);
         }
         destroyDiskComponents();
@@ -288,6 +291,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void clear() throws HyracksDataException {
         if (!isActive) {
+            LOGGER.warn("Cannot clear already inactive index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_CLEAR_INACTIVE_INDEX);
         }
         resetMemoryComponents();
@@ -573,6 +577,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     @Override
     public synchronized void allocateMemoryComponents() throws HyracksDataException {
         if (!isActive) {
+            LOGGER.warn("Cannot allocate memory for already inactive index {}", this);
             throw HyracksDataException.create(ErrorCode.CANNOT_ALLOCATE_MEMORY_FOR_INACTIVE_INDEX);
         }
         if (memoryComponentsAllocated || memoryComponents == null) {
