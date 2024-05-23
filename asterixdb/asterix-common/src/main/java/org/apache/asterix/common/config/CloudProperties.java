@@ -52,7 +52,7 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_ALLOCATION_PERCENTAGE(DOUBLE, 0.8d),
         // 90% of the allocated space for storage (i.e., 90% of the 80% of the total disk space)
         CLOUD_STORAGE_SWEEP_THRESHOLD_PERCENTAGE(DOUBLE, 0.9d),
-        CLOUD_STORAGE_DISK_MONITOR_INTERVAL(POSITIVE_INTEGER, 60),
+        CLOUD_STORAGE_DISK_MONITOR_INTERVAL(POSITIVE_INTEGER, 120),
         CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD(POSITIVE_INTEGER, 360),
         CLOUD_STORAGE_DEBUG_MODE_ENABLED(BOOLEAN, false),
         CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, GIGABYTE)),
@@ -124,7 +124,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_DISK_MONITOR_INTERVAL:
                     return "The disk monitoring interval time (in seconds): determines how often the system"
                             + " checks for pressure on disk space when using the 'selective' caching policy."
-                            + " (default : 60 seconds)";
+                            + " (default : 120 seconds)";
                 case CLOUD_STORAGE_INDEX_INACTIVE_DURATION_THRESHOLD:
                     return "The duration in minutes to consider an index is inactive. (default: 360 or 6 hours)";
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:

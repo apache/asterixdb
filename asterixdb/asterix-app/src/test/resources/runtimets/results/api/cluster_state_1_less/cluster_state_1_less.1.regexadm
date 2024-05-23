@@ -17,7 +17,7 @@
     "cloud.storage.cache.policy" : "selective",
     "cloud.storage.debug.mode.enabled" : false,
     "cloud.storage.debug.sweep.threshold.size" : 1073741824,
-    "cloud.storage.disk.monitor.interval" : 60,
+    "cloud.storage.disk.monitor.interval" : 120,
     "cloud.storage.endpoint" : "",
     "cloud.storage.index.inactive.duration.threshold" : 360,
     "cloud.storage.prefix" : "",

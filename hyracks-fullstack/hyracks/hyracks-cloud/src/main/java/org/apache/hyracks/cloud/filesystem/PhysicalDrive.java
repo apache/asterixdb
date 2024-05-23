@@ -56,8 +56,15 @@ public final class PhysicalDrive implements IPhysicalDrive {
         long usedSpace = getUsedSpace();
         boolean isPressured = usedSpace > pressureSize;
         pressured.set(isPressured);
-        LOGGER.info("Used space: {}, pressureCapacity: {} (isPressured: {})",
-                StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureSize), isPressured);
+
+        if (isPressured) {
+            LOGGER.info("Used space: {}, pressureCapacity: {} (isPressured: {})",
+                    StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureSize), true);
+        } else {
+            LOGGER.debug("Used space: {}, pressureCapacity: {} (isPressured: {})",
+                    StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureSize), false);
+        }
+
         return isPressured;
     }
 
