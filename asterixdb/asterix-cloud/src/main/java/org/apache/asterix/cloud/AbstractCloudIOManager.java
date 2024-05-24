@@ -339,6 +339,10 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         cloudClient.write(bucket, key, bytes);
     }
 
+    public ICloudClient getCloudClient() {
+        return cloudClient;
+    }
+
     private Set<CloudFile> getCloudMetadataPartitionFiles() {
         String metadataNamespacePath = StoragePathUtil.getNamespacePath(nsPathResolver,
                 MetadataConstants.METADATA_NAMESPACE, METADATA_PARTITION);

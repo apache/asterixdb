@@ -78,7 +78,7 @@ public interface ICloudClient {
      *
      * @param bucket bucket
      * @param path   path
-     * @return bytes
+     * @return byte array containing the content, or <code>null</code> if the key does not exist
      * @throws HyracksDataException HyracksDataException
      */
     byte[] readAllBytes(String bucket, String path) throws HyracksDataException;
