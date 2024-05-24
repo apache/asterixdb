@@ -672,7 +672,11 @@ public class JoinNode {
                 // dataCost (0) will contain the dataScan cost with the first index
                 //dataCost (1) will contain the dataScan cost with the first index and the 2nd index and so on.
                 sel *= optionalIndexesInfo.get(i).second; // assuming selectivities are independent for now
-                dataCosts.add(joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel)); // D0; D01; D012; ...
+                if (optionalIndexesInfo.get(i).first.isPrimaryIndex()) {
+                    dataCosts.add(joinEnum.getCostHandle().zeroCost());
+                } else {
+                    dataCosts.add(joinEnum.getCostMethodsHandle().costIndexDataScan(this, sel)); // D0; D01; D012; ...
+                }
             }
 
             // At the of of the above loop, I0, I1, I2 ... have been computed
