@@ -92,16 +92,14 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     public void notifyJobCreation(JobId jobId, JobSpecification jobSpecification) throws HyracksDataException {
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "notifyJobCreation was called for job {}", jobId);
-        }
         Object property = jobSpecification.getProperty(ACTIVE_ENTITY_PROPERTY_NAME);
         if (!(property instanceof EntityId)) {
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, "Job {} is not of type active job. property found to be {}", jobId, property);
+            if (property != null) {
+                LOGGER.debug("{} is not an active job. job property={}", jobId, property);
             }
             return;
         }
+        LOGGER.debug("notified of ingestion job creation {}", jobId);
         EntityId entityId = (EntityId) property;
         monitorJob(jobId, entityId);
         boolean found = jobId2EntityId.get(jobId) != null;

@@ -49,4 +49,8 @@ public class CancelQueryResponse implements INcAddressedMessage {
         return status;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s(id=%s, status=%s)", getClass().getSimpleName(), reqId, status);
+    }
 }

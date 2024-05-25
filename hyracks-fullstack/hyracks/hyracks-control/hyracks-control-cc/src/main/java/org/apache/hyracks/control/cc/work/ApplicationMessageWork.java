@@ -25,6 +25,7 @@ import org.apache.hyracks.api.deployment.DeploymentId;
 import org.apache.hyracks.api.messages.IMessage;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,8 +35,8 @@ import org.apache.logging.log4j.Logger;
 public class ApplicationMessageWork extends AbstractHeartbeatWork {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private byte[] message;
-    private DeploymentId deploymentId;
+    private final byte[] message;
+    private final DeploymentId deploymentId;
 
     public ApplicationMessageWork(ClusterControllerService ccs, byte[] message, DeploymentId deploymentId,
             String nodeId) {
@@ -59,6 +60,11 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
     @Override
     public String toString() {
         return getName() + ": nodeID: " + nodeId;
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 
     private static void notifyMessageBroker(ICCServiceContext ctx, IMessage msg, String nodeId) {

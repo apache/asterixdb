@@ -30,10 +30,10 @@ import org.apache.logging.log4j.Logger;
 
 public class ApplicationMessageWork extends AbstractWork {
     private static final Logger LOGGER = LogManager.getLogger();
-    private byte[] message;
-    private DeploymentId deploymentId;
-    private String nodeId;
-    private NodeControllerService ncs;
+    private final byte[] message;
+    private final DeploymentId deploymentId;
+    private final String nodeId;
+    private final NodeControllerService ncs;
 
     public ApplicationMessageWork(NodeControllerService ncs, byte[] message, DeploymentId deploymentId, String nodeId) {
         this.ncs = ncs;
@@ -61,5 +61,10 @@ public class ApplicationMessageWork extends AbstractWork {
     @Override
     public String toString() {
         return getName() + ": nodeId: " + nodeId;
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }
