@@ -68,7 +68,7 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
     @Override
     public void onPin(ICachedPage page) throws HyracksDataException {
         CloudCachedPage cachedPage = (CloudCachedPage) page;
-        if (gapStream != null && cachedPage.skipCloudStream()) {
+        if (cachedPage.skipCloudStream()) {
             /*
              * This page is requested but the buffer cache has a valid copy in memory. Also, the page itself was
              * requested to be read from the cloud. Since this page is valid, no buffer cache read() will be performed.
@@ -76,14 +76,8 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
              * up writing the bytes of this page in the position of another page. Therefore, we should skip the bytes
              * for this particular page to avoid placing the bytes of this page into another page's position.
              */
-            try {
-                long remaining = cachedPage.getCompressedPageSize();
-                while (remaining > 0) {
-                    remaining -= gapStream.skip(remaining);
-                }
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
+            skipCloudBytes(cachedPage);
+            pageCounter++;
         }
     }
 
@@ -187,16 +181,32 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             return gapStream;
         }
 
-        LOGGER.info("Cloud stream read for {} pages", numberOfContiguousPages - pageCounter);
         int requiredNumOfPages = numberOfContiguousPages - pageCounter;
         long offset = cPage.getCompressedPageOffset();
         int pageId = BufferedFileHandle.getPageId(cPage.getDiskPageId());
         long length = fileHandle.getPagesTotalSize(pageId, requiredNumOfPages);
 
+        LOGGER.info("Cloud stream read for {} pages [{}, {}]", numberOfContiguousPages - pageCounter, pageId,
+                pageId + requiredNumOfPages);
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
         gapStream = cloudIOManager.cloudRead(fileHandle.getFileHandle(), offset, length);
 
         return gapStream;
+    }
+
+    private void skipCloudBytes(CloudCachedPage cachedPage) throws HyracksDataException {
+        if (gapStream == null) {
+            return;
+        }
+
+        try {
+            long remaining = cachedPage.getCompressedPageSize();
+            while (remaining > 0) {
+                remaining -= gapStream.skip(remaining);
+            }
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
 }

@@ -258,6 +258,10 @@ public class CompressedFileManager {
     }
 
     public long getTotalCompressedSize(int startPageId, int numberOfPages) throws HyracksDataException {
+        if (startPageId + numberOfPages > totalNumOfPages) {
+            throw new IndexOutOfBoundsException(startPageId + " + " + numberOfPages + " > " + totalNumOfPages);
+        }
+
         int lafPageId = -1;
         ICachedPage lafPage = null;
         long totalSize = 0;
