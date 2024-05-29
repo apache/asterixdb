@@ -52,5 +52,10 @@
       <artifactId>asterix-test-framework</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.trino.tpch</groupId>
+      <artifactId>tpch</artifactId>
+      <version>1.2</version>
+    </dependency>
   </dependencies>
 </project>

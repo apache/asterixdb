@@ -12073,6 +12073,11 @@
   </test-group>
   <test-group name="tpch">
     <test-case FilePath="tpch">
+      <compilation-unit name="query-plans">
+        <output-dir compare="Text">query-plans</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="tpch">
       <compilation-unit name="distinct_by">
         <output-dir compare="Text">distinct_by</output-dir>
       </compilation-unit>

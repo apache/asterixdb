@@ -1,0 +1,37 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+
+EXPLAIN
+SELECT 009,
+       COUNT(1)
+FROM part p, supplier s, lineitem l, partsupp ps, orders o, nation n
+WHERE s.s_suppkey = l.l_suppkey
+  AND ps.ps_suppkey = l.l_suppkey
+  AND s.s_suppkey = ps.ps_suppkey
+  AND ps.ps_partkey = l.l_partkey
+  AND p.p_partkey = l.l_partkey
+  AND p.p_partkey = ps.ps_partkey
+  AND o.o_orderkey = l.l_orderkey AND s.s_nationkey = n.n_nationkey
+  AND p.p_name  like '%green%';
+

@@ -1,0 +1,44 @@
+distribute result [$$134] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$134]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$134] <- [{"$1": 1, "l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$140, "sum_base_price": $$141, "sum_disc_price": $$142, "sum_charge": $$143, "avg_qty": $$144, "avg_price": $$145, "avg_disc": $$146, "count_order": $$147}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ASSIGN  |PARTITIONED|
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|
+          group by ([$$l_returnflag := $$160; $$l_linestatus := $$161]) decor ([]) {
+                    aggregate [$$140, $$141, $$142, $$143, $$144, $$145, $$146, $$147] <- [agg-global-sql-sum($$152), agg-global-sql-sum($$153), agg-global-sql-sum($$154), agg-global-sql-sum($$155), agg-global-sql-avg($$156), agg-global-sql-avg($$157), agg-global-sql-avg($$158), agg-sql-sum($$159)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- SORT_GROUP_BY[$$160, $$161]  |PARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- HASH_PARTITION_EXCHANGE [$$160, $$161]  |PARTITIONED|
+              group by ([$$160 := $$135; $$161 := $$136]) decor ([]) {
+                        aggregate [$$152, $$153, $$154, $$155, $$156, $$157, $$158, $$159] <- [agg-local-sql-sum($$88), agg-local-sql-sum($$93), agg-local-sql-sum(numeric-multiply($$93, numeric-subtract(1, $$149))), agg-local-sql-sum(numeric-multiply(numeric-multiply($$93, numeric-subtract(1, $$149)), numeric-add(1, $$151))), agg-local-sql-avg($$88), agg-local-sql-avg($$93), agg-local-sql-avg($$149), agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- SORT_GROUP_BY[$$135, $$136]  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$88, $$93, $$149, $$151, $$135, $$136]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    select (le($$l.getField(10), "1998-09-16")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_SELECT  |PARTITIONED|
+                      assign [$$136, $$135, $$88, $$149, $$151, $$93] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ASSIGN  |PARTITIONED|
+                        project ([$$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            data-scan []<-[$$138, $$139, $$l] <- tpch.lineitem [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

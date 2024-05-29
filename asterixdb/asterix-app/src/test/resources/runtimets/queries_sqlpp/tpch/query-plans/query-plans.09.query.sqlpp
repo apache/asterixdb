@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+
+EXPLAIN
+SELECT 008,
+       o_year, SUM(CASE WHEN nation = 'PERU' THEN volume ELSE 0 END)/SUM(volume) AS mkt_share
+FROM (SELECT GET_YEAR(DATE(o.o_orderdate)) AS o_year,
+             l.l_extendedprice * (1 - l.l_discount) AS volume,
+             n2.n_name AS nation
+      FROM part p, supplier s, lineitem l, orders o, customer c, nation n1, nation n2, region r
+      WHERE p.p_partkey = l.l_partkey
+        AND s.s_suppkey = l.l_suppkey
+        AND l.l_orderkey = o.o_orderkey
+        AND o.o_custkey = c.c_custkey
+        AND c.c_nationkey = n1.n_nationkey
+        AND n1.n_regionkey = r.r_regionkey
+        AND r.r_name  = 'AMERICA'
+        AND s.s_nationkey = n2.n_nationkey
+        AND o.o_orderdate BETWEEN '1995-01-01' AND '1996-12-31'
+        AND p.p_type = 'ECONOMY BURNISHED NICKEL') AS all_nations
+GROUP BY o_year;

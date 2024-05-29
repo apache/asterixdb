@@ -19,15 +19,21 @@
 package org.apache.hyracks.maven.plugin;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.apache.asterix.testframework.template.TemplateHelper;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.project.MavenProject;
 import org.apache.maven.shared.model.fileset.FileSet;
 import org.apache.maven.shared.model.fileset.util.FileSetManager;
+
+import io.trino.tpch.TpchEntity;
+import io.trino.tpch.TpchTable;
 
 /**
  * @goal generate-testdata
@@ -84,6 +90,27 @@ public class TestDataGeneratorMojo extends AbstractMojo {
                 e.printStackTrace();
                 throw new MojoExecutionException("failure", e);
             }
+        }
+
+        try {
+            makeSF01Tables();
+        } catch (IOException e) {
+            throw new MojoExecutionException(e);
+        }
+    }
+
+    private void makeSF01Tables() throws IOException {
+        File outPath = new File(outputDir, "tpch0.1");
+        for (TpchTable t : TpchTable.getTables()) {
+            dumpTableToFile(outPath, t);
+        }
+    }
+
+    private void dumpTableToFile(File outputDir, TpchTable<TpchEntity> t) throws IOException {
+        File outFile = new File(outputDir, t.getTableName() + ".tbl");
+        FileOutputStream os = FileUtils.openOutputStream(outFile);
+        for (TpchEntity r : t.createGenerator(0.1, 1, 1)) {
+            IOUtils.write(r.toLine() + "\n", os);
         }
     }
 }

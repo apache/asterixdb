@@ -1,0 +1,42 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+
+EXPLAIN
+SELECT 007,
+       supp_nation, cust_nation, l_year, SUM(volume) AS revenue
+FROM (SELECT n1.n_name AS supp_nation, n2.n_name AS cust_nation,
+             GET_YEAR(DATE(l.l_shipdate)) AS l_year,
+             l.l_extendedprice * (1 - l.l_discount) AS volume
+      FROM supplier s, lineitem l, orders o, customer c, nation n1, nation n2
+      WHERE s.s_suppkey = l.l_suppkey
+        AND o.o_orderkey = l.l_orderkey
+        AND c.c_custkey = o.o_custkey
+        AND s.s_nationkey = n1.n_nationkey
+        AND c.c_nationkey = n2.n_nationkey
+        AND ((n1.n_name = 'KENYA' AND n2.n_name  = 'PERU') OR
+             (n1.n_name  = 'PERU' AND n2.n_name  = 'KENYA'))
+        AND l.l_shipdate  >=  '1995-01-01'
+        AND l.l_shipdate  <= '1996-12-31') AS shipping
+GROUP BY supp_nation, cust_nation, l_year
+ORDER BY supp_nation, cust_nation, l_year;

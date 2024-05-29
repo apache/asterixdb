@@ -1,0 +1,192 @@
+distribute result [$$199] [cardinality: 2.0, op-cost: 0.0, total-cost: 1259139.68]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 1259139.68]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$199]) [cardinality: 2.0, op-cost: 0.0, total-cost: 1259139.68]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$199] <- [{"$1": 8, "o_year": $$o_year, "mkt_share": numeric-divide($$214, $$215)}] [cardinality: 2.0, op-cost: 0.0, total-cost: 1259139.68]
+      -- ASSIGN  |PARTITIONED|
+        exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 1259139.68]
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          group by ([$$o_year := $$238]) decor ([]) {
+                    aggregate [$$214, $$215] <- [global-sql-sum-serial($$236), global-sql-sum-serial($$237)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- AGGREGATE  |LOCAL|
+                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 } [cardinality: 2.0, op-cost: 193.7, total-cost: 1259139.68]
+          -- EXTERNAL_GROUP_BY[$$238]  |PARTITIONED|
+            exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 1258945.98]
+            -- HASH_PARTITION_EXCHANGE [$$238]  |PARTITIONED|
+              group by ([$$238 := $$200]) decor ([]) {
+                        aggregate [$$236, $$237] <- [local-sql-sum-serial(switch-case(true, eq($$232, "PERU"), numeric-multiply($$230, numeric-subtract(1, $$231)), 0)), local-sql-sum-serial(numeric-multiply($$230, numeric-subtract(1, $$231)))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     } [cardinality: 2.0, op-cost: 193.7, total-cost: 1258945.98]
+              -- EXTERNAL_GROUP_BY[$$200]  |PARTITIONED|
+                exchange [cardinality: 193.7, op-cost: 0.0, total-cost: 1258752.28]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$232, $$230, $$231, $$200]) [cardinality: 193.7, op-cost: 0.0, total-cost: 1258752.28]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$200] <- [get-year(date($$201))] [cardinality: 193.7, op-cost: 0.0, total-cost: 1258752.28]
+                    -- ASSIGN  |PARTITIONED|
+                      project ([$$230, $$231, $$201, $$232]) [cardinality: 193.7, op-cost: 0.0, total-cost: 1258752.28]
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange [cardinality: 193.7, op-cost: 0.0, total-cost: 1258752.28]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          join (eq($$216, $$209)) [cardinality: 193.7, op-cost: 288.86, total-cost: 1258752.28]
+                          -- HYBRID_HASH_JOIN [$$216][$$209]  |PARTITIONED|
+                            exchange [cardinality: 987.0, op-cost: 0.0, total-cost: 1000.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$230, $$231, $$201, $$216]) [cardinality: 987.0, op-cost: 0.0, total-cost: 1000.0]
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$216] <- [$$s.getField(3)] [cardinality: 987.0, op-cost: 0.0, total-cost: 1000.0]
+                                -- ASSIGN  |PARTITIONED|
+                                  project ([$$230, $$231, $$201, $$s]) [cardinality: 987.0, op-cost: 0.0, total-cost: 1000.0]
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange [cardinality: 987.0, op-cost: 0.0, total-cost: 1000.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      unnest-map [$$203, $$s] <- index-search("supplier", 0, "Default", "tpch", "supplier", true, true, 1, $$223, 1, $$223, true, true, true) [cardinality: 987.0, op-cost: 1000.0, total-cost: 1000.0]
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$223) [cardinality: 987.0, op-cost: 1000.0, total-cost: 1000.0]
+                                          -- STABLE_SORT [$$223(ASC)]  |PARTITIONED|
+                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- HASH_PARTITION_EXCHANGE [$$223]  |PARTITIONED|
+                                              project ([$$230, $$231, $$201, $$223]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  join (and(eq($$212, $$210), eq($$218, $$208))) [cardinality: 191.16, op-cost: 938.74, total-cost: 1256617.76]
+                                                  -- HYBRID_HASH_JOIN [$$210, $$218][$$212, $$208]  |PARTITIONED|
+                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      project ([$$230, $$231, $$201, $$223, $$210, $$218]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- STREAM_PROJECT  |PARTITIONED|
+                                                        assign [$$218] <- [$$c.getField(3)] [cardinality: 838.74, op-cost: 4189.55, total-cost: 1255554.02]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          project ([$$230, $$231, $$223, $$210, $$201, $$c]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- STREAM_PROJECT  |PARTITIONED|
+                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              unnest-map [$$207, $$c] <- index-search("customer", 0, "Default", "tpch", "customer", true, true, 1, $$226, 1, $$226, true, true, true) [cardinality: 15014.11, op-cost: 15000.0, total-cost: 15000.0]
+                                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  order (ASC, $$226) [cardinality: 15014.11, op-cost: 15000.0, total-cost: 15000.0]
+                                                                  -- STABLE_SORT [$$226(ASC)]  |PARTITIONED|
+                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- HASH_PARTITION_EXCHANGE [$$226]  |PARTITIONED|
+                                                                      select (and(ge($$201, "1995-01-01"), le($$201, "1996-12-31"))) [cardinality: 837.9, op-cost: 14137.91, total-cost: 1248012.87]
+                                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                                        project ([$$230, $$231, $$223, $$210, $$226, $$201]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                        -- STREAM_PROJECT  |PARTITIONED|
+                                                                          assign [$$226, $$201] <- [$$o.getField(1), $$o.getField(4)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ASSIGN  |PARTITIONED|
+                                                                            project ([$$230, $$231, $$223, $$210, $$o]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                unnest-map [$$206, $$o] <- index-search("orders", 0, "Default", "tpch", "orders", true, true, 1, $$205, 1, $$205, true, true, true) [cardinality: 44449.67, op-cost: 150000.0, total-cost: 150000.0]
+                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    order (ASC, $$205) [cardinality: 44449.67, op-cost: 150000.0, total-cost: 150000.0]
+                                                                                    -- STABLE_SORT [$$205(ASC)]  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- HASH_PARTITION_EXCHANGE [$$205]  |PARTITIONED|
+                                                                                        project ([$$230, $$231, $$223, $$205, $$210]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                        -- STREAM_PROJECT  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            join (eq($$202, $$221)) [cardinality: 2827.58, op-cost: 601513.27, total-cost: 1222564.64]
+                                                                                            -- HYBRID_HASH_JOIN [$$221][$$202]  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                project ([$$230, $$231, $$223, $$205, $$221]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                  assign [$$231, $$230, $$223, $$221] <- [$$l.getField(6), $$l.getField(5), $$l.getField(2), $$l.getField(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ASSIGN  |PARTITIONED|
+                                                                                                    project ([$$205, $$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                        data-scan []<-[$$204, $$205, $$l] <- tpch.lineitem [cardinality: 600572.0, op-cost: 600572.0, total-cost: 600572.0]
+                                                                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                join (true) [cardinality: 94.07, op-cost: 94.07, total-cost: 20103.07]
+                                                                                                -- NESTED_LOOP  |PARTITIONED|
+                                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                    project ([$$202]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                      select (eq($$p.getField(4), "ECONOMY BURNISHED NICKEL")) [cardinality: 94.07, op-cost: 0.0, total-cost: 20000.0]
+                                                                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                          data-scan []<-[$$202, $$p] <- tpch.part [cardinality: 20000.0, op-cost: 20000.0, total-cost: 20000.0]
+                                                                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                                    project ([$$210]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                                      select (eq($$r.getField(1), "AMERICA")) [cardinality: 1.0, op-cost: 0.0, total-cost: 5.0]
+                                                                                                      -- STREAM_SELECT  |PARTITIONED|
+                                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                          data-scan []<-[$$210, $$r] <- tpch.region [cardinality: 5.0, op-cost: 5.0, total-cost: 5.0]
+                                                                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                      project ([$$212, $$208]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- STREAM_PROJECT  |PARTITIONED|
+                                                        assign [$$212] <- [$$n1.getField(2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ASSIGN  |PARTITIONED|
+                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            replicate [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                                            -- REPLICATE  |PARTITIONED|
+                                                              exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                data-scan []<-[$$208, $$n1] <- tpch.nation [cardinality: 25.0, op-cost: 25.0, total-cost: 25.0]
+                                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
+                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              project ([$$232, $$209]) [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$232] <- [$$n2.getField(1)] [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                -- ASSIGN  |PARTITIONED|
+                                  project ([$$209, $$n2]) [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$209, $$n2] <- [$$208, $$n1] [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                    -- ASSIGN  |PARTITIONED|
+                                      exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                        -- REPLICATE  |PARTITIONED|
+                                          exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            data-scan []<-[$$208, $$n1] <- tpch.nation [cardinality: 25.0, op-cost: 25.0, total-cost: 25.0]
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

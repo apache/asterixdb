@@ -1,0 +1,40 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+USE tpch;
+
+SET `compiler.parallelism` "0";
+SET `compiler.sort.parallel` "false";
+
+EXPLAIN
+SELECT 005,
+       n.n_name, SUM(l.l_extendedprice * (1 - l.l_discount)) AS revenue
+FROM customer c, orders o, lineitem l, supplier s, nation n, region r
+WHERE c.c_custkey = o.o_custkey
+  AND l.l_orderkey = o.o_orderkey
+  AND l.l_suppkey = s.s_suppkey
+  AND c.c_nationkey /*+ productivity s 30000.0 */  = s.s_nationkey
+  AND s.s_nationkey = n.n_nationkey
+  AND c.c_nationkey = n.n_nationkey
+  AND n.n_regionkey = r.r_regionkey
+  AND r.r_name  = 'AFRICA'
+  AND o.o_orderdate  >= '1993-01-01'
+  AND o.o_orderdate < '1994-01-01'
+GROUP BY n.n_name
+ORDER BY revenue DESC;
