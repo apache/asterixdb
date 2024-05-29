@@ -1,16 +1,16 @@
-distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+distribute result [$$d] [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+  exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$d]) [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+    project ([$$d]) [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
     -- STREAM_PROJECT  |PARTITIONED|
-      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+      exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
       -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
-        project ([$$d, $$24]) [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+        project ([$$d, $$24]) [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
         -- STREAM_PROJECT  |PARTITIONED|
           select ($$18) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_SELECT  |PARTITIONED|
-            exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
+            exchange [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               group by ([$$24 := $$20]) decor ([$$d]) {
                         aggregate [$$18] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -19,11 +19,11 @@ distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
                           -- STREAM_SELECT  |LOCAL|
                             nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                     } [cardinality: 6.0, op-cost: 15.51, total-cost: 37.02]
+                     } [cardinality: 3.0, op-cost: 4.75, total-cost: 15.5]
               -- PRE_CLUSTERED_GROUP_BY[$$20]  |PARTITIONED|
-                exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
+                exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 10.75]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  order (ASC, $$20) [cardinality: 6.0, op-cost: 15.51, total-cost: 21.51]
+                  order (ASC, $$20) [cardinality: 6.0, op-cost: 4.75, total-cost: 10.75]
                   -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
                     exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                     -- HASH_PARTITION_EXCHANGE [$$20]  |PARTITIONED|
@@ -31,7 +31,7 @@ distribute result [$$d] [cardinality: 6.0, op-cost: 0.0, total-cost: 37.02]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          left outer join (not(if-missing-or-null(neq($$21, $#1), false))) [cardinality: 6.0, op-cost: 6.0, total-cost: 17.0]
+                          left outer join (not(if-missing-or-null(neq($$21, $#1), false))) [cardinality: 3.0, op-cost: 6.0, total-cost: 17.0]
                           -- NESTED_LOOP  |PARTITIONED|
                             exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
