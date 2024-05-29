@@ -157,7 +157,10 @@ public final class ParallelCacher implements IParallelCacher {
 
     @Override
     public boolean remove(Collection<FileReference> deletedFiles) {
-        LOGGER.info("Deleting {}", deletedFiles);
+        if (!deletedFiles.isEmpty()) {
+            LOGGER.info("Deleting {}", deletedFiles);
+        }
+
         for (FileReference fileReference : deletedFiles) {
             remove(fileReference);
         }
