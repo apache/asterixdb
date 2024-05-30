@@ -226,16 +226,15 @@ public class GlobalTxManager implements IGlobalTxManager {
     @Override
     public void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
             throws HyracksException {
-
-    }
-
-    @Override
-    public void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
         GlobalTxInfo globalTxInfo = (GlobalTxInfo) spec.getProperty(GlOBAL_TX_PROPERTY_NAME);
         if (globalTxInfo != null) {
             beginTransaction(jobId, globalTxInfo.getNumNodes(), globalTxInfo.getNumPartitions(),
                     globalTxInfo.getDatasetIds());
         }
+    }
+
+    @Override
+    public void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
     }
 
     @Override
