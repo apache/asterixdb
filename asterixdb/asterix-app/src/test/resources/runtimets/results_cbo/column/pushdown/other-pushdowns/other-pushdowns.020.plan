@@ -1,0 +1,51 @@
+distribute result [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$68]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+    -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$68] <- [{"count": $$71}] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+      -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$71] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+          -- SORT_MERGE_EXCHANGE [$$66(ASC) ]  |PARTITIONED|
+            distinct ([$$66]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$66) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                -- STABLE_SORT [$$66(ASC)]  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                  -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
+                    project ([$$66]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      select (ge($$70, 3)) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                      -- STREAM_SELECT  |PARTITIONED|
+                        project ([$$66, $$70]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          subplan {
+                                    aggregate [$$70] <- [agg-sql-sum($$52)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- AGGREGATE  |LOCAL|
+                                      assign [$$52] <- [$$i.getField("count")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ASSIGN  |LOCAL|
+                                        unnest $$i <- scan-collection($$72) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- UNNEST  |LOCAL|
+                                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                 } [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                          -- SUBPLAN  |PARTITIONED|
+                            project ([$$66, $$72]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$66, $$72] <- [if-missing-or-null(to-object($$t), cast({  })).getField(0), $$t.getField("a1")] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                              -- ASSIGN  |PARTITIONED|
+                                project ([$$t]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    data-scan []<-[$$69, $$t] <- test.ColumnDataset [cardinality: 2.0, op-cost: 2.0, total-cost: 2.0]
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

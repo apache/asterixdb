@@ -45,6 +45,11 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     }
 
     @Override
+    public boolean allowsReplacing() {
+        return rootType != ALL_FIELDS_ROOT_IRREPLACEABLE;
+    }
+
+    @Override
     public boolean isRoot() {
         return true;
     }
