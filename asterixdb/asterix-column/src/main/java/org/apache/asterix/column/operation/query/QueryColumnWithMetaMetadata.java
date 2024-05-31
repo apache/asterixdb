@@ -35,7 +35,8 @@ import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
+import org.apache.asterix.column.metadata.FieldNamesTrieDictionary;
+import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
@@ -61,7 +62,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
 
     private QueryColumnWithMetaMetadata(ARecordType datasetType, ARecordType metaType,
             PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
-            FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
+            IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
             IColumnValuesReaderFactory readerFactory, IValueGetterFactory valueGetterFactory,
             IColumnFilterEvaluator filterEvaluator, List<IColumnRangeFilterValueAccessor> filterValueAccessors,
             IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders,
@@ -132,7 +133,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         DataInput input = new DataInputStream(new ByteArrayInputStream(bytes, fieldNamesStart, length));
 
         //FieldNames
-        FieldNamesDictionary fieldNamesDictionary = FieldNamesDictionary.deserialize(input);
+        IFieldNamesDictionary fieldNamesDictionary = FieldNamesTrieDictionary.deserialize(input);
 
         //Schema
         ObjectSchemaNode root = (ObjectSchemaNode) AbstractSchemaNode.deserialize(input, null);

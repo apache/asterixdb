@@ -39,7 +39,8 @@ import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorF
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
 import org.apache.asterix.column.metadata.AbstractColumnImmutableReadMetadata;
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
+import org.apache.asterix.column.metadata.FieldNamesTrieDictionary;
+import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
@@ -65,7 +66,7 @@ import org.apache.logging.log4j.Logger;
  */
 public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final FieldNamesDictionary fieldNamesDictionary;
+    private final IFieldNamesDictionary fieldNamesDictionary;
     private final PrimitiveColumnValuesReader[] primaryKeyReaders;
     private final IColumnFilterEvaluator normalizedFilterEvaluator;
     private final List<IColumnRangeFilterValueAccessor> filterValueAccessors;
@@ -76,7 +77,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
 
     protected QueryColumnMetadata(ARecordType datasetType, ARecordType metaType,
             PrimitiveColumnValuesReader[] primaryKeyReaders, IValueReference serializedMetadata,
-            FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
+            IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, IColumnValuesReaderFactory readerFactory,
             IValueGetterFactory valueGetterFactory, IColumnFilterEvaluator normalizedFilterEvaluator,
             List<IColumnRangeFilterValueAccessor> filterValueAccessors,
             IColumnIterableFilterEvaluator columnFilterEvaluator, List<IColumnValuesReader> filterColumnReaders,
@@ -96,7 +97,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         return assembler;
     }
 
-    public final FieldNamesDictionary getFieldNamesDictionary() {
+    public final IFieldNamesDictionary getFieldNamesDictionary() {
         return fieldNamesDictionary;
     }
 
@@ -188,7 +189,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         DataInput input = new DataInputStream(new ByteArrayInputStream(bytes, fieldNamesStart, length));
 
         //FieldNames
-        FieldNamesDictionary fieldNamesDictionary = FieldNamesDictionary.deserialize(input);
+        IFieldNamesDictionary fieldNamesDictionary = FieldNamesTrieDictionary.deserialize(input);
 
         //Schema
         ObjectSchemaNode root = (ObjectSchemaNode) AbstractSchemaNode.deserialize(input, null);
@@ -268,7 +269,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     }
 
     protected static void logSchema(String jobId, ObjectSchemaNode root, String schemaSource,
-            FieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
+            IFieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
         if (jobId != null && LOGGER.isDebugEnabled()) {
             SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
             String schema = LogRedactionUtil.userData(schemaBuilder.build(root));

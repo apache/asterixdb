@@ -31,7 +31,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.metadata.AbstractColumnMetadata;
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
+import org.apache.asterix.column.metadata.FieldNamesTrieDictionary;
+import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNestedNode;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
@@ -71,7 +72,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
     private final Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels;
     private final Mutable<IColumnWriteMultiPageOp> multiPageOpRef;
-    private final FieldNamesDictionary fieldNamesDictionary;
+    private final IFieldNamesDictionary fieldNamesDictionary;
     private final ObjectSchemaNode root;
     private final ObjectSchemaNode metaRoot;
     private final IColumnValuesWriterFactory columnWriterFactory;
@@ -94,7 +95,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         columnWriters = new ArrayList<>();
         level = -1;
         repeated = 0;
-        fieldNamesDictionary = new FieldNamesDictionary();
+        fieldNamesDictionary = new FieldNamesTrieDictionary();
         root = new ObjectSchemaNode();
         metaRoot = metaType != null ? new ObjectSchemaNode() : null;
         pathInfoSerializer = new PathInfoSerializer();
@@ -124,7 +125,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
     private FlushColumnMetadata(ARecordType datasetType, ARecordType metaType, List<List<String>> primaryKeys,
             boolean metaContainsKeys, IColumnValuesWriterFactory columnWriterFactory,
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef, List<IColumnValuesWriter> columnWriters,
-            FieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
+            IFieldNamesDictionary fieldNamesDictionary, ObjectSchemaNode root, ObjectSchemaNode metaRoot,
             Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels,
             ArrayBackedValueStorage serializedMetadata) {
         super(datasetType, metaType, primaryKeys.size());
@@ -146,7 +147,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         changed = false;
     }
 
-    public FieldNamesDictionary getFieldNamesDictionary() {
+    public IFieldNamesDictionary getFieldNamesDictionary() {
         return fieldNamesDictionary;
     }
 
@@ -249,7 +250,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         deserializeWriters(input, writers, columnWriterFactory);
 
         //FieldNames
-        FieldNamesDictionary fieldNamesDictionary = FieldNamesDictionary.deserialize(input);
+        IFieldNamesDictionary fieldNamesDictionary = FieldNamesTrieDictionary.deserialize(input);
 
         //Schema
         Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels = new HashMap<>();
@@ -574,7 +575,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
     }
 
     private static void logSchema(ObjectSchemaNode root, ObjectSchemaNode metaRoot,
-            FieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
+            IFieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
         if (!LOGGER.isDebugEnabled()) {
             return;
         }

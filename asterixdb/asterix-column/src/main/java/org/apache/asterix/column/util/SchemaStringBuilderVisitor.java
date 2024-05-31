@@ -21,7 +21,7 @@ package org.apache.asterix.column.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
+import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -48,7 +48,7 @@ public class SchemaStringBuilderVisitor implements ISchemaNodeVisitor<Void, Void
     private int level;
     private int indent;
 
-    public SchemaStringBuilderVisitor(FieldNamesDictionary dictionary) throws HyracksDataException {
+    public SchemaStringBuilderVisitor(IFieldNamesDictionary dictionary) throws HyracksDataException {
         builder = new StringBuilder();
         this.fieldNames = new ArrayList<>();
         AStringSerializerDeserializer stringSerDer =

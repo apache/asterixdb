@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.metadata.schema;
 
+import static org.apache.asterix.column.metadata.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
+
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -27,7 +29,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
 import org.apache.asterix.column.metadata.schema.primitive.MissingFieldSchemaNode;
 import org.apache.asterix.column.operation.lsm.flush.FlushColumnMetadata;
@@ -64,7 +65,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
         deserializeFieldNameIndexToChildIndex(input, fieldNameIndexToChildIndexMap, numberOfChildren);
-        if (fieldNameIndexToChildIndexMap.containsKey(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX)) {
+        if (fieldNameIndexToChildIndexMap.containsKey(DUMMY_FIELD_NAME_INDEX)) {
             nextIndex = this::emptyColumnIndex;
         } else {
             nextIndex = this::nextIndex;
@@ -102,7 +103,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
             return;
         }
         AbstractSchemaNode emptyChild = columnMetadata.getOrCreateChild(null, ATypeTag.MISSING);
-        addChild(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX, emptyChild);
+        addChild(DUMMY_FIELD_NAME_INDEX, emptyChild);
         nextIndex = this::emptyColumnIndex;
     }
 
@@ -196,7 +197,7 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
     private int emptyColumnIndex(int fieldNameIndex) {
         nextIndex = this::nextIndex;
-        fieldNameIndexToChildIndexMap.remove(FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX);
+        fieldNameIndexToChildIndexMap.remove(DUMMY_FIELD_NAME_INDEX);
         fieldNameIndexToChildIndexMap.put(fieldNameIndex, 0);
         return 0;
     }

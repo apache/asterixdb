@@ -25,70 +25,50 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
-import org.apache.asterix.om.base.AMutableString;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.util.string.UTF8StringReader;
-import org.apache.hyracks.util.string.UTF8StringWriter;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-public class FieldNamesDictionary {
-    /**
-     * Dummy field name used to add a column when encountering empty object
-     */
-    public static final IValueReference DUMMY_FIELD_NAME;
-    public static final int DUMMY_FIELD_NAME_INDEX = -1;
+public class FieldNamesHashDictionary extends AbstractFieldNamesDictionary {
     //For both declared and inferred fields
     private final List<IValueReference> fieldNames;
     private final Object2IntMap<String> declaredFieldNamesToIndexMap;
     private final Int2IntMap hashToFieldNameIndexMap;
     private final IBinaryHashFunction fieldNameHashFunction;
 
-    //For declared fields
-    private final AMutableString mutableString;
-    private final AStringSerializerDeserializer stringSerDer;
-
     //For lookups
     private final ArrayBackedValueStorage lookupStorage;
 
-    static {
-        VoidPointable dummy = new VoidPointable();
-        dummy.set(new byte[0], 0, 0);
-        DUMMY_FIELD_NAME = dummy;
-    }
-
-    public FieldNamesDictionary() {
+    public FieldNamesHashDictionary() {
         this(new ArrayList<>(), new Object2IntOpenHashMap<>(), new Int2IntOpenHashMap());
     }
 
-    private FieldNamesDictionary(List<IValueReference> fieldNames, Object2IntMap<String> declaredFieldNamesToIndexMap,
-            Int2IntMap hashToFieldNameIndexMap) {
+    private FieldNamesHashDictionary(List<IValueReference> fieldNames,
+            Object2IntMap<String> declaredFieldNamesToIndexMap, Int2IntMap hashToFieldNameIndexMap) {
+        super();
         this.fieldNames = fieldNames;
         this.declaredFieldNamesToIndexMap = declaredFieldNamesToIndexMap;
         this.hashToFieldNameIndexMap = hashToFieldNameIndexMap;
-
-        mutableString = new AMutableString("");
-        stringSerDer = new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader());
         fieldNameHashFunction =
                 new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY).createBinaryHashFunction();
         lookupStorage = new ArrayBackedValueStorage();
     }
 
+    @Override
     public List<IValueReference> getFieldNames() {
         return fieldNames;
     }
 
     //TODO solve collision (they're so rare that I haven't seen any)
+    @Override
     public int getOrCreateFieldNameIndex(IValueReference fieldName) throws HyracksDataException {
         if (fieldName == DUMMY_FIELD_NAME) {
             return DUMMY_FIELD_NAME_INDEX;
@@ -103,6 +83,7 @@ public class FieldNamesDictionary {
         return hashToFieldNameIndexMap.get(hash);
     }
 
+    @Override
     public int getOrCreateFieldNameIndex(String fieldName) throws HyracksDataException {
         if (!declaredFieldNamesToIndexMap.containsKey(fieldName)) {
             IValueReference serializedFieldName = creatFieldName(fieldName);
@@ -114,27 +95,11 @@ public class FieldNamesDictionary {
         return declaredFieldNamesToIndexMap.getInt(fieldName);
     }
 
+    @Override
     public int getFieldNameIndex(String fieldName) throws HyracksDataException {
         lookupStorage.reset();
         serializeFieldName(fieldName, lookupStorage);
         return hashToFieldNameIndexMap.getOrDefault(getHash(lookupStorage), -1);
-    }
-
-    private ArrayBackedValueStorage creatFieldName(IValueReference fieldName) throws HyracksDataException {
-        ArrayBackedValueStorage copy = new ArrayBackedValueStorage(fieldName.getLength());
-        copy.append(fieldName);
-        return copy;
-    }
-
-    private ArrayBackedValueStorage creatFieldName(String fieldName) throws HyracksDataException {
-        ArrayBackedValueStorage serializedFieldName = new ArrayBackedValueStorage();
-        serializeFieldName(fieldName, serializedFieldName);
-        return serializedFieldName;
-    }
-
-    private void serializeFieldName(String fieldName, ArrayBackedValueStorage storage) throws HyracksDataException {
-        mutableString.setValue(fieldName);
-        stringSerDer.serialize(mutableString, storage.getDataOutput());
     }
 
     private int getHash(IValueReference fieldName) throws HyracksDataException {
@@ -152,6 +117,7 @@ public class FieldNamesDictionary {
         return index;
     }
 
+    @Override
     public IValueReference getFieldName(int index) {
         if (index == DUMMY_FIELD_NAME_INDEX) {
             return DUMMY_FIELD_NAME;
@@ -159,6 +125,7 @@ public class FieldNamesDictionary {
         return fieldNames.get(index);
     }
 
+    @Override
     public void serialize(DataOutput output) throws IOException {
         output.writeInt(fieldNames.size());
         for (IValueReference fieldName : fieldNames) {
@@ -178,7 +145,7 @@ public class FieldNamesDictionary {
         }
     }
 
-    public static FieldNamesDictionary deserialize(DataInput input) throws IOException {
+    public static FieldNamesHashDictionary deserialize(DataInput input) throws IOException {
         int numberOfFieldNames = input.readInt();
 
         List<IValueReference> fieldNames = new ArrayList<>();
@@ -190,9 +157,10 @@ public class FieldNamesDictionary {
         Int2IntMap hashToFieldNameIndexMap = new Int2IntOpenHashMap();
         deserializeHashToFieldNameIndex(input, hashToFieldNameIndexMap, numberOfFieldNames);
 
-        return new FieldNamesDictionary(fieldNames, declaredFieldNamesToIndexMap, hashToFieldNameIndexMap);
+        return new FieldNamesHashDictionary(fieldNames, declaredFieldNamesToIndexMap, hashToFieldNameIndexMap);
     }
 
+    @Override
     public void abort(DataInputStream input) throws IOException {
         int numberOfFieldNames = input.readInt();
 

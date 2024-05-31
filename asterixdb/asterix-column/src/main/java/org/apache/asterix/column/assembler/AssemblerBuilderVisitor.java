@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.assembler;
 
+import static org.apache.asterix.column.metadata.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collection;
@@ -27,7 +29,6 @@ import java.util.Map;
 
 import org.apache.asterix.column.assembler.value.IValueGetter;
 import org.apache.asterix.column.assembler.value.IValueGetterFactory;
-import org.apache.asterix.column.metadata.FieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -102,7 +103,7 @@ public class AssemblerBuilderVisitor implements ISchemaNodeVisitor<AbstractValue
             for (int i = 0; i < childrenFieldNameIndexes.size(); i++) {
                 int fieldNameIdx = childrenFieldNameIndexes.getInt(i);
                 AbstractSchemaNode childNode = objectNode.getChild(fieldNameIdx);
-                if (fieldNameIdx == FieldNamesDictionary.DUMMY_FIELD_NAME_INDEX || !declaredFields.get(fieldNameIdx)) {
+                if (fieldNameIdx == DUMMY_FIELD_NAME_INDEX || !declaredFields.get(fieldNameIdx)) {
                     numberOfAddedChildren++;
                     IAType childType = getChildType(childNode, BuiltinType.ANY);
                     IValueReference fieldName = columnMetadata.getFieldNamesDictionary().getFieldName(fieldNameIdx);
