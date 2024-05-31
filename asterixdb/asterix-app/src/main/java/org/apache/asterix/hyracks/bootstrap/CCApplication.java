@@ -175,7 +175,7 @@ public class CCApplication extends BaseCCApplication {
                 ccServiceCtx.getAppConfig().getBoolean(CompilerProperties.Option.COMPILER_ENABLE_DB_RESOLUTION);
         boolean cloudDeployment = ccServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
         boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
-        INamespaceResolver namespaceResolver = new NamespaceResolver(useDatabaseResolution);
+        INamespaceResolver namespaceResolver = createNamespaceResolver(useDatabaseResolution);
         INamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
         ccExtensionManager = new CCExtensionManager(new ArrayList<>(getExtensions()), namespaceResolver, ccServiceCtx);
         IGlobalRecoveryManager globalRecoveryManager = createGlobalRecoveryManager();
@@ -216,6 +216,10 @@ public class CCApplication extends BaseCCApplication {
         ccServiceCtx.addJobLifecycleListener(globalTxManager);
 
         jobCapacityController = new JobCapacityController(controllerService.getResourceManager());
+    }
+
+    protected INamespaceResolver createNamespaceResolver(boolean useDatabaseResolution) {
+        return new NamespaceResolver(useDatabaseResolution);
     }
 
     protected ICloudGuardian getCloudGuardian(CloudProperties cloudProperties) {

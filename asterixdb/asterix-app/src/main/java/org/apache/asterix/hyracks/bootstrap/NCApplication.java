@@ -164,7 +164,7 @@ public class NCApplication extends BaseNCApplication {
                 ncServiceCtx.getAppConfig().getBoolean(CompilerProperties.Option.COMPILER_ENABLE_DB_RESOLUTION);
         boolean cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
         boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
-        NamespaceResolver namespaceResolver = new NamespaceResolver(useDatabaseResolution);
+        INamespaceResolver namespaceResolver = createNamespaceResolver(useDatabaseResolution);
         NamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
         ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment,
                 namespaceResolver, ncServiceCtx);
@@ -199,6 +199,10 @@ public class NCApplication extends BaseNCApplication {
         }
         webManager = new WebManager();
         performLocalCleanUp();
+    }
+
+    protected INamespaceResolver createNamespaceResolver(boolean useDatabaseResolution) {
+        return new NamespaceResolver(useDatabaseResolution);
     }
 
     protected INcApplicationContext createNCApplicationContext(INCServiceContext ncServiceCtx,
