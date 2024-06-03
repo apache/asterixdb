@@ -122,7 +122,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             partitionPaths.add(resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir));
         }
 
-        LOGGER.warn("Initializing cloud manager with storage partitions: {}", partitions);
+        LOGGER.warn("Initializing cloud manager with ({}) storage partitions: {}", partitions.size(), partitions);
 
         if (cleanup) {
             deleteUnkeptPartitionDirs(currentOnDiskPartitions);
