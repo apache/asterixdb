@@ -219,7 +219,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                         throw e;
                     } finally {
                         if (!cPage.valid) {
-                            unpin(cPage);
+                            unpin(cPage, context);
                         }
                     }
                 }

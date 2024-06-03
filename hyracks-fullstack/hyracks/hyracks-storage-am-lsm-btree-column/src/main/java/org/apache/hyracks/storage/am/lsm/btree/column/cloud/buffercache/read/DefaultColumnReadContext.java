@@ -67,8 +67,9 @@ public final class DefaultColumnReadContext implements IColumnReadContext {
     @Override
     public ICachedPage pinNext(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
-        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrame.getNextLeaf()));
+        int nextLeaf = leafFrame.getNextLeaf();
         bufferCache.unpin(leafFrame.getPage());
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf));
         leafFrame.setPage(nextPage);
         return nextPage;
     }

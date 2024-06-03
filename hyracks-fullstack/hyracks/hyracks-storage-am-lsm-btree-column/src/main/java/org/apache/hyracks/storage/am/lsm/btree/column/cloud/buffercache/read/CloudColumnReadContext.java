@@ -112,10 +112,13 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     @Override
     public ICachedPage pinNext(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
-        // TODO do we support prefetching?
-        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, leafFrame.getNextLeaf()), this);
+        int nextLeaf = leafFrame.getNextLeaf();
+        // Release the previous pages (including page0)
         release(bufferCache);
         bufferCache.unpin(leafFrame.getPage(), this);
+
+        // pin the next page0
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), this);
         leafFrame.setPage(nextPage);
         return nextPage;
     }
@@ -127,8 +130,8 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             return;
         }
 
-        // TODO handle prefetch if supported
-
+        // TODO What if every other page is requested. That would do N/2 request, where N is the number of pages.
+        // TODO This should be optimized in a way that minimizes the number of requests
         columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns);
         int pageZeroId = leafFrame.getPageId();
         int[] columnsOrders = columnRanges.getColumnsOrder();
