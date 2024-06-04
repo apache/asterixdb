@@ -561,21 +561,27 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     public void cleanup(int partition) throws HyracksDataException {
         beforeReadAccess();
         try {
-            datasetLifecycleManager.waitForIO(AllDatasetsReplicationStrategy.INSTANCE, partition);
-            final Set<FileReference> partitionIndexes = getPartitionIndexes(partition);
-            try {
-                for (FileReference index : partitionIndexes) {
-                    deleteIndexMaskedFiles(index);
-                    if (isValidIndex(index)) {
-                        deleteIndexInvalidComponents(index);
-                    }
-                }
-            } catch (IOException | ParseException e) {
-                throw HyracksDataException.create(e);
-            }
+            CleanupBlockingIOOperation cleanupOp = new CleanupBlockingIOOperation(partition, this, ioManager);
+            datasetLifecycleManager.waitForIOAndPerform(AllDatasetsReplicationStrategy.INSTANCE, partition, cleanupOp);
         } finally {
             clearResourcesCache();
             afterReadAccess();
+        }
+    }
+
+    /**
+     * This will be invoked by {@link CleanupBlockingIOOperation}
+     *
+     * @param index to clean
+     */
+    void cleanupIndex(FileReference index) throws HyracksDataException {
+        try {
+            deleteIndexMaskedFiles(index);
+            if (isValidIndex(index)) {
+                deleteIndexInvalidComponents(index);
+            }
+        } catch (IOException | ParseException e) {
+            throw HyracksDataException.create(e);
         }
     }
 
