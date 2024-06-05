@@ -473,7 +473,7 @@ public class IOManager implements IIOManager {
     public long getTotalDiskUsage() {
         long totalSize = 0;
         for (IODeviceHandle handle : ioDevices) {
-            totalSize += FileUtils.sizeOfDirectory(handle.getMount());
+            totalSize += IoUtil.sizeOfDirectory(handle.getMount().toPath());
         }
         return totalSize;
     }
