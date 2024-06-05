@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.api.IIOBlockingOperation;
 import org.apache.asterix.common.transactions.ILogManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
@@ -260,7 +261,7 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         }
     }
 
-    public void waitForIO(int partition) throws HyracksDataException {
+    public void waitForIOAndPerform(int partition, IIOBlockingOperation operation) throws HyracksDataException {
         logManager.log(waitLog);
         synchronized (this) {
             while (partitionPendingIO.getOrDefault(partition, 0) > 0) {
@@ -271,6 +272,13 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
                     throw HyracksDataException.create(e);
                 }
             }
+
+            Set<IndexInfo> indexes = partitionIndexes.get(partition);
+            if (indexes != null) {
+                // Perform the required operation
+                operation.perform(indexes);
+            }
+
             if (partitionPendingIO.getOrDefault(partition, 0) < 0) {
                 LOGGER.error("number of IO operations cannot be negative for dataset {}, partition {}", this,
                         partition);

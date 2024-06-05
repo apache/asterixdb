@@ -87,10 +87,8 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     DatasetInfo getDatasetInfo(int datasetID);
 
     /**
-     * @param datasetId
-     *            the dataset id to be flushed.
-     * @param asyncFlush
-     *            a flag indicating whether to wait for the flush to complete or not.
+     * @param datasetId  the dataset id to be flushed.
+     * @param asyncFlush a flag indicating whether to wait for the flush to complete or not.
      * @throws HyracksDataException
      */
     void flushDataset(int datasetId, boolean asyncFlush) throws HyracksDataException;
@@ -172,12 +170,25 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
     void waitForIO(IReplicationStrategy replicationStrategy, int partition) throws HyracksDataException;
 
     /**
+     * Waits for all ongoing IO operations on all open datasets and atomically performs the provided {@code operation}
+     * on each opened index before allowing any I/Os to go through.
+     *
+     * @param replicationStrategy replication strategy
+     * @param partition           partition to perform the required operation against
+     * @param operation           operation to perform
+     */
+
+    void waitForIOAndPerform(IReplicationStrategy replicationStrategy, int partition, IIOBlockingOperation operation)
+            throws HyracksDataException;
+
+    /**
      * @return the current datasets io stats
      */
     StorageIOStats getDatasetsIOStats();
 
     /**
      * Closes {@code resourcePath} if open
+     *
      * @param resourcePath
      * @throws HyracksDataException
      */
@@ -185,6 +196,7 @@ public interface IDatasetLifecycleManager extends IResourceLifecycleManager<IInd
 
     /**
      * Removes all memory references of {@code partition}
+     *
      * @param partitionId
      */
     void closePartition(int partitionId);
