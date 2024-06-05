@@ -31,7 +31,6 @@ import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import org.apache.asterix.common.api.IDatasetLifecycleManager;
-import org.apache.asterix.common.api.IIOBlockingOperation;
 import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
@@ -572,37 +571,9 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     public void waitForIO(IReplicationStrategy replicationStrategy, int partition) throws HyracksDataException {
         for (DatasetResource dsr : datasets.values()) {
             if (dsr.isOpen() && replicationStrategy.isMatch(dsr.getDatasetID())) {
-                // Do a simple wait without any operation
-                dsr.getDatasetInfo().waitForIOAndPerform(partition, NoOpBlockingIOOperation.INSTANCE);
+                dsr.getDatasetInfo().waitForIO(partition);
             }
         }
-    }
-
-    /**
-     * Waits for all ongoing IO operations on all open datasets and atomically performs the provided {@code operation}
-     * on each opened index before allowing any I/Os to go through.
-     * <p>
-     * <b>NOTE: this is a synchronized call to prevent activating new indexes (i.e., modifying {@link #datasets})</b>
-     *
-     * @param replicationStrategy replication strategy
-     * @param partition           partition to perform the required operation against
-     * @param operation           operation to perform
-     */
-    @Override
-    public synchronized void waitForIOAndPerform(IReplicationStrategy replicationStrategy, int partition,
-            IIOBlockingOperation operation) throws HyracksDataException {
-        // Signal the operation will be performed
-        operation.beforeOperation();
-
-        for (DatasetResource dsr : datasets.values()) {
-            if (dsr.isOpen() && replicationStrategy.isMatch(dsr.getDatasetID())) {
-                // Wait for all I/Os and then perform the requested operation
-                dsr.getDatasetInfo().waitForIOAndPerform(partition, operation);
-            }
-        }
-
-        // Signal the operation has been performed
-        operation.afterOperation();
     }
 
     @Override
