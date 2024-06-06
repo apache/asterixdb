@@ -22,6 +22,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
+//TODO(CALVIN DANI): Rename function names
 /**
  * A holder for the columnar metadata.
  * Modifications on the columnar metadata are not thread safe.

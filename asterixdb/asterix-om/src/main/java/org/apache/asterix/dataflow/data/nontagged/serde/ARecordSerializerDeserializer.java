@@ -55,10 +55,6 @@ public class ARecordSerializerDeserializer implements ISerializerDeserializer<AR
     public static final ARecordSerializerDeserializer SCHEMALESS_INSTANCE = new ARecordSerializerDeserializer();
     private static final IAObject[] NO_FIELDS = new IAObject[0];
 
-    public ARecordType getRecordType() {
-        return recordType;
-    }
-
     private final ARecordType recordType;
     private final int numberOfSchemaFields;
     @SuppressWarnings("rawtypes")

@@ -73,7 +73,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         ObjectRowSchemaNode objectNode = (ObjectRowSchemaNode) mainRoot;
-//        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
+        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
         //        rowMetadata.printRootSchema(toMergeRoot, rowMetadata.getFieldNamesDictionary(),"MERGER SCHEMA BY SCHEMA BEFORE");
         currentParent = objectNode;
         IntList fieldNameIndexes = toMergeRoot.getChildrenFieldNameIndexes();
@@ -92,7 +92,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 acceptActualNode(new GenericListRowSchemaNode(childTypeTag, child), childNode);
             }
         }
-//        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary()); TODO: CALVIN REMOVE
+        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary()); TODO: CALVIN REMOVE
         rowMetadata.exitNode(mainRoot);
         currentParent = previousParent;
         return null;

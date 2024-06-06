@@ -57,7 +57,7 @@ public class SqlppExecutionSchemaInference {
 
     @Parameters(name = "SqlppExecutionIT {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_schemainferrence_sqlpp.xml");
+        return LangExecutionUtil.tests("only_sqlpp.xml", "testsuite_schemaInferrence_sqlpp.xml");
     }
 
     protected TestCaseContext tcCtx;

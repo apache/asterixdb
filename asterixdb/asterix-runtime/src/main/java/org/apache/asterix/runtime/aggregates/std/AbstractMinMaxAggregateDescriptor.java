@@ -28,7 +28,6 @@ public abstract class AbstractMinMaxAggregateDescriptor extends AbstractAggregat
 
     @Override
     public void setImmutableStates(Object... types) {
-
         aggFieldType = (IAType) types[0];
     }
 }

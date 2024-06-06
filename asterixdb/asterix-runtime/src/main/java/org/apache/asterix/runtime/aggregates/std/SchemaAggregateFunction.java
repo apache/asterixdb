@@ -38,7 +38,7 @@ public class SchemaAggregateFunction extends AbstractSchemaAggregateFunction {
 
     @Override
     public void step(IFrameTupleReference tuple) throws HyracksDataException {
-        processDataValues(tuple); //TODO CALVIN_DANI : time taken
+        processDataValues(tuple);
     }
 
     @Override

@@ -429,6 +429,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier GLOBAL_AVG = FunctionConstants.newAsterix("agg-global-avg", 1);
     public static final FunctionIdentifier INTERMEDIATE_AVG = FunctionConstants.newAsterix("agg-intermediate-avg", 1);
     public static final FunctionIdentifier LOCAL_AVG = FunctionConstants.newAsterix("agg-local-avg", 1);
+    //TODO (CALVIN DANI) : check local global and intermediate role.
     public static final FunctionIdentifier GLOBAL_SCHEMA = FunctionConstants.newAsterix("agg-global-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SCHEMA =
             FunctionConstants.newAsterix("agg-intermediate-schema", 1);
@@ -591,6 +592,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SQL_AVG = FunctionConstants.newAsterix("agg-sql-avg", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
             FunctionConstants.newAsterix("intermediate-agg-sql-avg", 1);
+    //TODO (CALVIN DANI) : check local global and intermediate role.
     public static final FunctionIdentifier SQL_SCHEMA = FunctionConstants.newAsterix("agg-sql-schema", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_SCHEMA =
             FunctionConstants.newAsterix("intermediate-agg-sql-schema", 1);
@@ -2506,7 +2508,7 @@ public class BuiltinFunctions {
         addGlobalAgg(SERIAL_SQL_AVG, SERIAL_GLOBAL_SQL_AVG);
 
         // SQL SCHEMA_INF
-        //TODO CALVIN_DANI: ADD SCHEMA CHECK ALL
+        //TODO CALVIN_DANI: ADD SCHEMA CHECK ALL IF THEY ARE UTLIIZED
         addAgg(SQL_SCHEMA);
         addAgg(LOCAL_SQL_SCHEMA);
         addAgg(GLOBAL_SQL_SCHEMA);
@@ -2887,9 +2889,6 @@ public class BuiltinFunctions {
     }
 
     public static BuiltinFunctionInfo getBuiltinFunctionInfo(FunctionIdentifier fi) {
-        //        for (FunctionIdentifier f : registeredFunctions.keySet()){
-        //            System.out.println(f);
-        //        }
         return registeredFunctions.get(fi);
     }
 
@@ -2988,9 +2987,6 @@ public class BuiltinFunctions {
     }
 
     private static void addFunction(BuiltinFunctionInfo functionInfo) {
-        if (functionInfo.getFunctionIdentifier().getName().contains("array_avg")) {
-            System.out.println("REACHED HERE");
-        }
         registeredFunctions.put(functionInfo.getFunctionIdentifier(), functionInfo);
     }
 

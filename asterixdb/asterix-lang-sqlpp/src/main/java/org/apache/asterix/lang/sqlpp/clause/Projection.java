@@ -148,8 +148,6 @@ public class Projection extends AbstractClause {
                 return expr + ".*";
             case EVERY_VAR_STAR:
                 return "*.*";
-            case UNIFIED_SCHEMA:
-                return "unified_schema";
             default:
                 throw new IllegalStateException();
         }

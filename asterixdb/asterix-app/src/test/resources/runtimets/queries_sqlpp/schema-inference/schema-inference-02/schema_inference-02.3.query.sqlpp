@@ -18,7 +18,7 @@
  */
 
 /*
- * Description    : Tests array_avg() with aggregate combiner
+ * Description    : Tests array_schema() with aggregate combiner
  * Success        : Yes
  */
 

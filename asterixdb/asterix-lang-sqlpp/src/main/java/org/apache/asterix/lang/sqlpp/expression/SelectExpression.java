@@ -38,7 +38,6 @@ public class SelectExpression extends AbstractExpression {
     private OrderbyClause orderbyClause;
     private LimitClause limitClause;
     private boolean subquery;
-    private boolean unified_schema;
 
     public SelectExpression(List<LetClause> letList, SelectSetOperation selectSetOperation, OrderbyClause orderbyClause,
             LimitClause limitClause, boolean subquery) {

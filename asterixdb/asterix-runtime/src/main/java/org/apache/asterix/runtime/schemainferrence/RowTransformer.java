@@ -81,7 +81,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
                 acceptActualNode(pointable.getChildVisitablePointable(), childNode, fieldNameProp);
             }
         }
-//        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
+        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
         rowMetadata.exitNode(arg);
         currentParent = previousParent;
         return null;
@@ -120,25 +120,6 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
     @Override
     public AbstractRowSchemaNode visit(FlatLazyVisitablePointable pointable, AbstractRowSchemaNode arg)
             throws HyracksDataException {
-        //        rowMetadata.enterNode(currentParent, arg);
-        //                ATypeTag valueTypeTag = pointable.getTypeTag();
-        //                PrimitiveRowSchemaNode node = (PrimitiveRowSchemaNode) arg;
-        //                IRowValuesWriter writer = rowMetadata.getWriter(node.getColumnIndex()); //TODO CALVIN_DANI : Writer issue to be debugged
-        //                if (valueTypeTag == ATypeTag.MISSING) {
-        //                    writer.writeLevel(rowMetadata.getLevel());
-        //                } else if (valueTypeTag == ATypeTag.NULL) {
-        //                    writer.writeNull(rowMetadata.getLevel());
-        //                } else if (pointable.isTagged()) {
-        //                    //Remove type tag
-        //                    nonTaggedValue.set(pointable.getByteArray(), pointable.getStartOffset() + 1, pointable.getLength() - 1);
-        //                    writer.writeValue(pointable.getTypeTag(), nonTaggedValue);
-        //                } else {
-        //                    writer.writeValue(pointable.getTypeTag(), pointable);
-        //                }
-        //                if (node.isPrimaryKey()) {
-        //                    primaryKeysLength += writer.getEstimatedSize();
-        //                }
-        //        rowMetadata.exitNode(arg);
         return null;
     }
 

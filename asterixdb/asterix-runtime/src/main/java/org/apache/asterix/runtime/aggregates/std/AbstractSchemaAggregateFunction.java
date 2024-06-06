@@ -38,7 +38,6 @@ import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.UnsafeUtil;
-import org.apache.asterix.runtime.evaluators.common.ClosedRecordConstructorEvalFactory.ClosedRecordConstructorEval;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.ObjectRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.RowMetadata;
@@ -58,22 +57,12 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+
 //import org.apache.logging.log4j.LogManager;
 //import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateFunction {
 
-    public void setFirstHalfTimer(long firstHalfTimer) {
-        this.firstHalfTimer = firstHalfTimer;
-    }
-
-    public void setSecondHalfTimer(long firstHalfTimer) {
-        this.firstHalfTimer = firstHalfTimer;
-    }
-
-    private long firstHalfTimer = 0;
-    private long secondHalfTimer = 0;
-//    private static final Logger logger = LogManager.getLogger(AbstractSchemaAggregateFunction.class);
     private final IEvaluatorContext context;
 
     // Warning flag to warn only once in case of non-numeric data
@@ -82,17 +71,12 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
     private final ARecordType recType;
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private RecordLazyVisitablePointable inputVal = new RecordLazyVisitablePointable(true); //TODO : CALVIN_DANI to be tagged
-
+    private RecordLazyVisitablePointable inputVal;
     private IScalarEvaluator eval;
     protected ATypeTag aggType;
-
-    private ClosedRecordConstructorEval recordEval;
-
     private RowTransformer transformer;
     private RowSchemaTransformer schemaTransformer;
     RowMetadata rowMetaData;
-    //    private int recordFieldId = 0;
 
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AString> stringSerde =
@@ -103,20 +87,14 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         super(sourceLoc);
         this.context = context;
         eval = args[0].createScalarEvaluator(context);
-        //        recType = new ARecordType(null, new String[] { "sum", "count" },//TODO CALVIN_DANI REMOVE
-        //                new IAType[] { BuiltinType.ADOUBLE, BuiltinType.AINT64 }, false);
         recType = (ARecordType) aggFieldState;
         inputVal = new TypedRecordLazyVisitablePointable(recType);
-        //        recordEval = new ClosedRecordConstructorEval(recType, new IScalarEvaluator[] { evalSum, evalCount });
     }
 
     @Override
     public void init() throws HyracksDataException {
         aggType = ATypeTag.SYSTEM_NULL;
         isWarned = false;
-
-        // Schema
-
         Mutable<IRowWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
         rowMetaData = new RowMetadata(multiPageOpRef);
         transformer = new RowTransformer(rowMetaData, rowMetaData.getRoot());
@@ -134,20 +112,17 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
     public abstract void finishPartial(IPointable result) throws HyracksDataException;
 
     protected abstract void processNull();
+
     // TODO : CALVIN DANI
     protected void processDataValues(IFrameTupleReference tuple) throws HyracksDataException {
         long startTime = System.nanoTime();
         if (skipStep()) {
-//            long endTime = System.nanoTime();
-//            logger.warn("processDataValues took " + (endTime - startTime) + " nanoseconds to complete.");
             return;
         }
-        //print thread and thread id
         int recordFieldId = rowMetaData.getRecordFieldIndex();
         inputVal.set(tuple.getFieldData(recordFieldId), tuple.getFieldStart(recordFieldId),
                 tuple.getFieldLength(recordFieldId));
         transformer.transform(inputVal);
-        //        (FrameTupleAccessor)(tuple.getFrameTupleAccessor())
         eval.evaluate(tuple, inputVal); // CONFIRM TODO : CALVIN DANI
         byte[] data = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
@@ -172,21 +147,13 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
             aggTypeTag = typeTag;
         }
         aggType = aggTypeTag;
-        long endTimeSecondHalf = System.nanoTime();
-        setFirstHalfTimer(firstHalfTimer + (endTimeFirstHalf - startTime));
-        setSecondHalfTimer(secondHalfTimer + (endTimeSecondHalf - endTimeFirstHalf));
-//        logger.warn("processDataValues took " + (endTime - startTime) + " milliseconds to complete.");
 
     }
 
     protected void finishPartialResults(IPointable result) throws HyracksDataException {
 
-        System.out.println("TIME TAKEN BY processDataValues FH, SH , TT : " + firstHalfTimer + " " + secondHalfTimer+ " " + (firstHalfTimer + secondHalfTimer));
-//        long startTime = System.nanoTime();
         resultStorage.reset();
-
         try {
-
             if (rowMetaData != null) {
                 IValueReference serSchema = rowMetaData.serializeColumnsMetadata();
                 result.set(serSchema);
@@ -202,26 +169,17 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-//        long endTime = System.nanoTime();
-//        logger.warn("finishPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
-
     }
 
     protected void processPartialResults(IFrameTupleReference tuple) throws HyracksDataException {
-//        long startTime = System.nanoTime();
         if (skipStep()) {
-//            long endTime = System.nanoTime();
-//            logger.warn("processPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
             return;
         }
-        // TODO : Calvin Dani Clean up overhead
         eval.evaluate(tuple, inputVal);
 
         byte[] serBytes = tuple.getFrameTupleAccessor().getBuffer().array();
 
-        int offset = 9; // TO CHANGE
-        //        int length = 732;
-
+        int offset = 9; // TODO (CALVIN DANI) Look at written offset for storing fieldnames  TO CHANGE
         int fieldNamesStart = offset + UnsafeUtil.getInt(serBytes, offset + 4);
         int metaRootStart = UnsafeUtil.getInt(serBytes, offset + 12);
         int length = UnsafeUtil.getInt(serBytes, offset + 20);
@@ -233,46 +191,27 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
             RowFieldNamesDictionary fieldNamesDictionary = RowFieldNamesDictionary.deserialize(input);
             //Schema
             ObjectRowSchemaNode root = (ObjectRowSchemaNode) AbstractRowSchemaNode.deserialize(input, null);
-            //            transformer.transform(root);
-            //            String res = rowMetaData.printRootSchema(root, fieldNamesDictionary);
             schemaTransformer.transform(root);
-
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-//        long endTime = System.nanoTime();
-//        logger.warn("processPartialResults took " + (endTime - startTime) + " milliseconds to complete.");
-
     }
 
     protected void finishFinalResults(IPointable result) throws HyracksDataException {
-//        long startTime = System.nanoTime();
         resultStorage.reset();
-        //        IRecordDataParser<LosslessADMJSONPrinterFactoryProvider> dataParser;
         try {
             ObjectRowSchemaNode root = schemaTransformer.getRoot();
             String res = rowMetaData.printRootSchema(root, rowMetaData.getFieldNamesDictionary());
             if (root == null) {
                 throw new HyracksDataException("Cannot compute Schema on empty root.");
             } else {
-                //                ObjectMapper mapper = new ObjectMapper();
-                //                mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-                //                mapper.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
-                //                mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-
-                //                String jsonString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
-                //                System.out.println(res);
                 stringSerde.serialize(new AString(res), resultStorage.getDataOutput());
-
             }
 
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
         result.set(resultStorage);
-//        long endTime = System.nanoTime();
-//        logger.warn("finishFinalResults took " + (endTime - startTime) + " milliseconds to complete.");
-
     }
 
     protected boolean skipStep() {
@@ -281,6 +220,6 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
 
     // Function identifier
     private FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.AVG;
+        return BuiltinFunctions.SQL_SCHEMA;
     }
 }

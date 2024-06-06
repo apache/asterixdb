@@ -32,6 +32,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
  * Users of an instance of this interface should not expect the temporary buffers will last after the multi-page
  * operation is finished.
  */
+//TODO (CALVIN DANI) : Check if this has any use in any of the files
 public interface IRowWriteMultiPageOp {
     /**
      * @return a buffer that correspond to a page in a file
