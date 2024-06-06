@@ -147,13 +147,22 @@ public class SinkWritePOperator extends AbstractPhysicalOperator {
                 JobGenHelper.variablesToAscBinaryComparatorFactories(partitionVariables, typeEnv, context);
 
         // Key expressions
+        boolean allConstants = true;
         IScalarEvaluatorFactory[] keyEvalFactories = new IScalarEvaluatorFactory[write.getKeyExpressions().size()];
         List<Mutable<ILogicalExpression>> keyExpressions = write.getKeyExpressions();
         if (!keyExpressions.isEmpty()) {
             for (int i = 0; i < keyExpressions.size(); i++) {
                 ILogicalExpression keyExpr = keyExpressions.get(i).getValue();
+                if (keyExpr.getExpressionTag() != LogicalExpressionTag.CONSTANT) {
+                    allConstants = false;
+                }
                 keyEvalFactories[i] = runtimeProvider.createEvaluatorFactory(keyExpr, typeEnv, inputSchemas, context);
             }
+        }
+
+        // key cannot be fully constant
+        if (!keyExpressions.isEmpty() && allConstants) {
+            throw AlgebricksException.create(ErrorCode.EXPRESSION_CANNOT_BE_CONSTANT, op.getSourceLocation(), "KEY");
         }
 
         RecordDescriptor recDesc =

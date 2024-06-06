@@ -408,7 +408,6 @@ public class SetAlgebricksPhysicalOperatorsRule implements IAlgebraicRewriteRule
             }
             ensureAllVariables(op.getPartitionExpressions(), v -> v);
             ensureAllVariables(op.getOrderExpressions(), Pair::getSecond);
-            ensureAllVariables(op.getKeyExpressions(), v -> v);
             return new SinkWritePOperator(op.getSourceVariable(), op.getPartitionVariables(), op.getOrderColumns());
         }
 
