@@ -57,4 +57,10 @@ public interface IJobCapacityController {
      */
     void release(JobSpecification job);
 
+    /**
+     * The cluster current capacity.
+     *
+     * @return the cluster current capacity.
+     */
+    IReadOnlyClusterCapacity getClusterCapacity();
 }

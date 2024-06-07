@@ -41,12 +41,8 @@ import org.apache.hyracks.dataflow.std.structures.IResetableComparable;
 import org.apache.hyracks.dataflow.std.structures.IResetableComparableFactory;
 import org.apache.hyracks.dataflow.std.structures.MaxHeap;
 import org.apache.hyracks.dataflow.std.structures.TuplePointer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class TupleSorterHeapSort implements ITupleSorter {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     class HeapEntryFactory implements IResetableComparableFactory<HeapEntry> {
         @Override
@@ -288,7 +284,6 @@ public class TupleSorterHeapSort implements ITupleSorter {
         int maxFrameSize = outputFrame.getFrameSize();
         int numEntries = heap.getNumEntries();
         IResetableComparable[] entries = heap.getEntries();
-        int io = 0;
         for (int i = 0; i < numEntries; i++) {
             HeapEntry minEntry = (HeapEntry) entries[i];
             bufferAccessor1.reset(minEntry.tuplePointer);
@@ -296,14 +291,10 @@ public class TupleSorterHeapSort implements ITupleSorter {
                     bufferAccessor1.getTupleStartOffset(), bufferAccessor1.getTupleLength());
             if (flushed > 0) {
                 maxFrameSize = Math.max(maxFrameSize, flushed);
-                io++;
             }
         }
         maxFrameSize = Math.max(maxFrameSize, outputFrame.getFrameSize());
         outputAppender.write(writer, true);
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Flushed records:" + numEntries + "; Flushed through " + (io + 1) + " frames");
-        }
         return maxFrameSize;
     }
 

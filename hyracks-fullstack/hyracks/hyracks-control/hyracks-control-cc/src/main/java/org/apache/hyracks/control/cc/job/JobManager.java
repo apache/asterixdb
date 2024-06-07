@@ -41,7 +41,9 @@ import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -391,6 +393,7 @@ public class JobManager implements IJobManager {
         run.setStartTime(System.currentTimeMillis());
         run.setStartTimeZoneId(ZoneId.systemDefault().getId());
         JobId jobId = run.getJobId();
+        logJobCapacity(run, "running");
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
@@ -398,6 +401,7 @@ public class JobManager implements IJobManager {
 
     // Queue a job when the required capacity for the job is not met.
     private void queueJob(JobRun jobRun) throws HyracksException {
+        logJobCapacity(jobRun, "queueing");
         jobRun.setStatus(JobStatus.PENDING, null);
         jobQueue.add(jobRun);
     }
@@ -433,6 +437,24 @@ public class JobManager implements IJobManager {
     private void releaseJobCapacity(JobRun jobRun) {
         final JobSpecification job = jobRun.getJobSpecification();
         jobCapacityController.release(job);
+        logJobCapacity(jobRun, "released");
+    }
+
+    private void logJobCapacity(JobRun jobRun, String jobStateDesc) {
+        IClusterCapacity requiredResources = jobRun.getJobSpecification().getRequiredClusterCapacity();
+        if (requiredResources == null) {
+            return;
+        }
+        long requiredMemory = requiredResources.getAggregatedMemoryByteSize();
+        int requiredCPUs = requiredResources.getAggregatedCores();
+        if (requiredMemory == 0 && requiredCPUs == 0) {
+            return;
+        }
+        IReadOnlyClusterCapacity clusterCapacity = jobCapacityController.getClusterCapacity();
+        LOGGER.info("{} {}, memory={}, cpu={}, (new) cluster memory={}, cpu={}, currently running={}, queued={}",
+                jobStateDesc, jobRun.getJobId(), requiredMemory, requiredCPUs,
+                clusterCapacity.getAggregatedMemoryByteSize(), clusterCapacity.getAggregatedCores(),
+                getRunningJobsCount(), jobQueue.size());
     }
 
     private void handleException(HyracksException ex) {

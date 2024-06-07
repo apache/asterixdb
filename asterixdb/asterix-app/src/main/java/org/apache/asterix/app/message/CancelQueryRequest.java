@@ -82,7 +82,7 @@ public class CancelQueryRequest implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return "CancelQueryRequest{from='" + nodeId + "', reqId=" + reqId + ", uuid='" + uuid + "', contextId='"
-                + contextId + "'}";
+        return String.format("%s(id=%s, uuid=%s, contextId=%s, node=%s)", getClass().getSimpleName(), reqId, uuid,
+                contextId, nodeId);
     }
 }
