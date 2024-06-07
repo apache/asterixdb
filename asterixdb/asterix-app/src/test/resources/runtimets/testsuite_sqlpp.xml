@@ -7296,6 +7296,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-3418">
+        <output-dir compare="Text">query-ASTERIXDB-3418</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-3403">
         <output-dir compare="Text">query-ASTERIXDB-3403</output-dir>
       </compilation-unit>
