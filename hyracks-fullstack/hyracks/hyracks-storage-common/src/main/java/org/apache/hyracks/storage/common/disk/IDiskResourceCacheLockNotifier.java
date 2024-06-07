@@ -24,7 +24,6 @@ import org.apache.hyracks.storage.common.LocalResource;
 /**
  * A proxy to notify a disk-cache (a faster disk that is caching a slower resource) about resource lifecycle events.
  * The notifier could block a resource from being operated on if the disk-cache manager denying access to a resource
- * TODO Do we care about dataset?
  */
 public interface IDiskResourceCacheLockNotifier {
     /**
@@ -33,9 +32,8 @@ public interface IDiskResourceCacheLockNotifier {
      *
      * @param localResource resource to be registered
      * @param index         of the resource
-     * @param partition     partition
      */
-    void onRegister(LocalResource localResource, IIndex index, int partition);
+    void onRegister(LocalResource localResource, IIndex index);
 
     /**
      * Notify unregistering an existing resource

@@ -19,7 +19,6 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MERGE;
-import static org.apache.hyracks.storage.common.buffercache.IBufferCache.RESERVED_HEADER_BYTES;
 import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.DEFAULT;
 
 import java.io.IOException;
@@ -49,9 +48,14 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
     private final ColumnProjectorType operation;
     private final ColumnRanges columnRanges;
     private final IPhysicalDrive drive;
+
     private int numberOfContiguousPages;
     private int pageCounter;
     private InputStream gapStream;
+
+    // For debugging
+    private long streamOffset;
+    private long remainingStreamBytes;
 
     CloudMegaPageReadContext(ColumnProjectorType operation, ColumnRanges columnRanges, IPhysicalDrive drive) {
         this.operation = operation;
@@ -76,7 +80,7 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
              * up writing the bytes of this page in the position of another page. Therefore, we should skip the bytes
              * for this particular page to avoid placing the bytes of this page into another page's position.
              */
-            skipCloudBytes(cachedPage);
+            skipStreamIfOpened(cachedPage);
             pageCounter++;
         }
     }
@@ -102,8 +106,7 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         boolean empty = BufferCacheCloudReadContextUtil.isEmpty(header);
         int pageId = BufferedFileHandle.getPageId(cPage.getDiskPageId());
         boolean cloudOnly = columnRanges.isCloudOnly(pageId);
-        ByteBuffer buffer;
-        if (empty || cloudOnly || gapStream != null) {
+        if (empty || cloudOnly) {
             boolean evictable = columnRanges.isEvictable(pageId);
             /*
              * Persist iff the following conditions are satisfied:
@@ -118,26 +121,30 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
              * 'cloudOnly' is true.
              */
             boolean persist = empty && !cloudOnly && !evictable && operation != MERGE && drive.hasSpace();
-            buffer = readFromStream(ioManager, fileHandle, header, cPage, persist);
-            buffer.position(RESERVED_HEADER_BYTES);
+            readFromStream(ioManager, fileHandle, header, cPage, persist);
         } else {
             /*
-             * Here we can find a page that is planned for eviction, but it has not being evicted yet
-             * (i.e., empty = false). This could happen if the cursor is at a point the sweeper hasn't
-             * reached yet (i.e., cloudOnly = false).
+             *  Here we can find a page that is planned for eviction, but it has not being evicted yet
+             *  (i.e., empty = false). This could happen if the cursor is at a point the sweeper hasn't
+             *  reached yet (i.e., cloudOnly = false). Thus, whatever is read from the disk is valid.
              */
-            buffer = DEFAULT.processHeader(ioManager, fileHandle, header, cPage);
+            skipStreamIfOpened(cPage);
         }
 
         if (++pageCounter == numberOfContiguousPages) {
             close();
         }
 
-        return buffer;
+        // Finally process the header
+        return DEFAULT.processHeader(ioManager, fileHandle, header, cPage);
     }
 
     void close() throws HyracksDataException {
         if (gapStream != null) {
+            if (remainingStreamBytes != 0) {
+                LOGGER.warn("Closed cloud stream with nonzero bytes = {}", remainingStreamBytes);
+            }
+
             try {
                 gapStream.close();
                 gapStream = null;
@@ -147,13 +154,14 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         }
     }
 
-    private ByteBuffer readFromStream(IOManager ioManager, BufferedFileHandle fileHandle,
-            BufferCacheHeaderHelper header, CachedPage cPage, boolean persist) throws HyracksDataException {
+    private void readFromStream(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
+            CachedPage cPage, boolean persist) throws HyracksDataException {
         InputStream stream = getOrCreateStream(ioManager, fileHandle, cPage);
         ByteBuffer buffer = header.getBuffer();
         buffer.position(0);
+
         try {
-            while (buffer.remaining() != 0) {
+            while (buffer.remaining() > 0) {
                 int length = stream.read(buffer.array(), buffer.position(), buffer.remaining());
                 if (length < 0) {
                     throw new IllegalStateException("Stream should not be empty!");
@@ -164,6 +172,7 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             throw HyracksDataException.create(e);
         }
 
+        // Flip the buffer after reading to restore the correct position
         buffer.flip();
 
         if (persist) {
@@ -172,7 +181,8 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             BufferCacheCloudReadContextUtil.persist(cloudIOManager, fileHandle.getFileHandle(), buffer, offset);
         }
 
-        return buffer;
+        streamOffset += cPage.getCompressedPageSize();
+        remainingStreamBytes -= cPage.getCompressedPageSize();
     }
 
     private InputStream getOrCreateStream(IOManager ioManager, BufferedFileHandle fileHandle, CachedPage cPage)
@@ -185,25 +195,31 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         long offset = cPage.getCompressedPageOffset();
         int pageId = BufferedFileHandle.getPageId(cPage.getDiskPageId());
         long length = fileHandle.getPagesTotalSize(pageId, requiredNumOfPages);
+        remainingStreamBytes = length;
+        streamOffset = offset;
+        LOGGER.info(
+                "Cloud stream read for pageId={} starting from pageCounter={} out of "
+                        + "numberOfContiguousPages={} (streamOffset = {}, remainingStreamBytes = {})",
+                pageId, pageCounter, numberOfContiguousPages, streamOffset, remainingStreamBytes);
 
-        LOGGER.info("Cloud stream read for {} pages [{}, {}]", numberOfContiguousPages - pageCounter, pageId,
-                pageId + requiredNumOfPages);
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
         gapStream = cloudIOManager.cloudRead(fileHandle.getFileHandle(), offset, length);
 
         return gapStream;
     }
 
-    private void skipCloudBytes(CloudCachedPage cachedPage) throws HyracksDataException {
+    private void skipStreamIfOpened(CachedPage cPage) throws HyracksDataException {
         if (gapStream == null) {
             return;
         }
 
         try {
-            long remaining = cachedPage.getCompressedPageSize();
+            long remaining = cPage.getCompressedPageSize();
             while (remaining > 0) {
                 remaining -= gapStream.skip(remaining);
             }
+            streamOffset += cPage.getCompressedPageSize();
+            remainingStreamBytes -= cPage.getCompressedPageSize();
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

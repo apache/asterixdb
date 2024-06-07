@@ -19,6 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read;
 
 import static org.apache.hyracks.cloud.buffercache.context.DefaultCloudReadContext.readAndPersistPage;
+import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MERGE;
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MODIFY;
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
 
@@ -45,9 +46,12 @@ import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadCon
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @NotThreadSafe
 public final class CloudColumnReadContext implements IColumnReadContext {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ColumnProjectorType operation;
     private final IPhysicalDrive drive;
     private final BitSet plan;
@@ -130,10 +134,26 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             return;
         }
 
-        // TODO What if every other page is requested. That would do N/2 request, where N is the number of pages.
-        // TODO This should be optimized in a way that minimizes the number of requests
         columnRanges.reset(leafFrame, projectedColumns, plan, cloudOnlyColumns);
         int pageZeroId = leafFrame.getPageId();
+
+        if (operation == MERGE) {
+            pinAll(fileId, pageZeroId, leafFrame.getMegaLeafNodeNumberOfPages() - 1, bufferCache);
+        } else {
+            pinProjected(fileId, pageZeroId, bufferCache);
+        }
+    }
+
+    private void pinAll(int fileId, int pageZeroId, int numberOfPages, IBufferCache bufferCache)
+            throws HyracksDataException {
+        columnCtx.prepare(numberOfPages);
+        pin(bufferCache, fileId, pageZeroId, 1, numberOfPages);
+    }
+
+    private void pinProjected(int fileId, int pageZeroId, IBufferCache bufferCache) throws HyracksDataException {
+        // TODO What if every other page is requested. That would do N/2 request, where N is the number of pages.
+        // TODO This should be optimized in a way that minimizes the number of requests
+
         int[] columnsOrders = columnRanges.getColumnsOrder();
         int i = 0;
         int columnIndex = columnsOrders[i];
@@ -143,38 +163,52 @@ public final class CloudColumnReadContext implements IColumnReadContext {
                 continue;
             }
 
-            int startPageId = columnRanges.getColumnStartPageIndex(columnIndex);
-            // Will increment the number pages if the next column's pages are contiguous to this column's pages
-            int numberOfPages = columnRanges.getColumnNumberOfPages(columnIndex);
+            int firstPageIdx = columnRanges.getColumnStartPageIndex(columnIndex);
+            // last page of the column
+            int lastPageIdx = firstPageIdx + columnRanges.getColumnNumberOfPages(columnIndex) - 1;
 
             // Advance to the next column to check if it has contiguous pages
             columnIndex = columnsOrders[++i];
             while (columnIndex > -1) {
+                int sharedPageCount = 0;
                 // Get the next column's start page ID
-                int nextStartPageId = columnRanges.getColumnStartPageIndex(columnIndex);
-                if (nextStartPageId > startPageId + numberOfPages + 1) {
-                    // The next startPageId is not contiguous, stop.
+                int nextStartPageIdx = columnRanges.getColumnStartPageIndex(columnIndex);
+                if (nextStartPageIdx > lastPageIdx + 1) {
+                    // The nextStartPageIdx is not contiguous, stop.
                     break;
+                } else if (nextStartPageIdx == lastPageIdx) {
+                    // A shared page
+                    sharedPageCount = 1;
                 }
 
-                // Last page of this column
-                int nextLastPage = nextStartPageId + columnRanges.getColumnNumberOfPages(columnIndex);
-                // The next column's pages are contiguous. Combine its ranges with the previous one.
-                numberOfPages = nextLastPage - startPageId;
+                lastPageIdx += columnRanges.getColumnNumberOfPages(columnIndex) - sharedPageCount;
                 // Advance to the next column
                 columnIndex = columnsOrders[++i];
             }
 
+            if (lastPageIdx >= columnRanges.getTotalNumberOfPages()) {
+                throw new IndexOutOfBoundsException("lastPageIdx=" + lastPageIdx + ">=" + "megaLeafNodePages="
+                        + columnRanges.getTotalNumberOfPages());
+            }
+
+            int numberOfPages = lastPageIdx - firstPageIdx + 1;
             columnCtx.prepare(numberOfPages);
-            pin(bufferCache, fileId, pageZeroId, startPageId, numberOfPages);
+            pin(bufferCache, fileId, pageZeroId, firstPageIdx, numberOfPages);
         }
     }
 
-    private void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numOfRequestedPages)
+    private void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
             throws HyracksDataException {
-        for (int i = start; i < start + numOfRequestedPages; i++) {
+        for (int i = start; i < start + numberOfPages; i++) {
             long dpid = BufferedFileHandle.getDiskPageId(fileId, pageZeroId + i);
-            pinnedPages.add(bufferCache.pin(dpid, columnCtx));
+            try {
+                pinnedPages.add(bufferCache.pin(dpid, columnCtx));
+            } catch (Throwable e) {
+                LOGGER.error("Error while pinning page number {} with number of pages {}. {}\n columnRanges:\n {}", i,
+                        numberOfPages, columnCtx, columnRanges);
+                throw e;
+            }
+
         }
     }
 

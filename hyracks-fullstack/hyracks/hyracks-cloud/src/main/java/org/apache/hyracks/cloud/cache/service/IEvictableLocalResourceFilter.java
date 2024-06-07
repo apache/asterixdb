@@ -16,20 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.hyracks.cloud.sweeper;
+package org.apache.hyracks.cloud.cache.service;
 
-import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
-import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
+import org.apache.hyracks.storage.common.LocalResource;
 
-/**
- * Sweeps an index to relieve the pressure on a local {@link IPhysicalDrive}
- */
 @FunctionalInterface
-public interface ISweeper {
+public interface IEvictableLocalResourceFilter {
     /**
-     * Sweep an index
+     * Whether a local resource is evictable
      *
-     * @param indexUnit to sweep
+     * @param resource resource to test
+     * @return true if it is cacheable, false otherwise
      */
-    void sweep(SweepableIndexUnit indexUnit) throws InterruptedException;
+    boolean accept(LocalResource resource);
 }

@@ -114,15 +114,16 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
             } else {
                 uBuffer.position(0);
             }
+            long offset;
             if (compressToWriteBuffer(uBuffer, cBuffer) < bufferCache.getPageSize()) {
                 cBuffer.position(0);
-                final long offset = compressedFileManager.writePageInfo(pageId, cBuffer.remaining());
+                offset = compressedFileManager.writePageInfo(pageId, cBuffer.remaining());
                 expectedBytesWritten = cBuffer.limit();
                 bytesWritten = context.write(ioManager, handle, offset, cBuffer);
             } else {
                 //Compression did not gain any savings
                 final ByteBuffer[] buffers = header.prepareWrite(cPage);
-                final long offset = compressedFileManager.writePageInfo(pageId, bufferCache.getPageSizeWithHeader());
+                offset = compressedFileManager.writePageInfo(pageId, bufferCache.getPageSizeWithHeader());
                 expectedBytesWritten = buffers[0].limit() + (long) buffers[1].limit();
                 bytesWritten = context.write(ioManager, handle, offset, buffers);
             }
@@ -133,6 +134,9 @@ public class CompressedBufferedFileHandle extends BufferedFileHandle {
             if (totalPages > 1) {
                 writeExtraCompressedPages(cPage, cBuffer, totalPages, extraBlockPageId);
             }
+
+            cPage.setCompressedPageOffset(offset);
+            cPage.setCompressedPageSize((int) bytesWritten);
 
         } finally {
             returnHeaderHelper(header);

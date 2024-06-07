@@ -28,7 +28,7 @@ public final class NoOpDiskResourceCacheLockNotifier implements IDiskResourceCac
     }
 
     @Override
-    public void onRegister(LocalResource localResource, IIndex index, int partition) {
+    public void onRegister(LocalResource localResource, IIndex index) {
         // NoOp
     }
 

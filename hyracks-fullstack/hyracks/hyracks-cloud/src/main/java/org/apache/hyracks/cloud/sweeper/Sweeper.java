@@ -35,7 +35,7 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public final class Sweeper implements ISweeper {
+public final class Sweeper {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final SweepRequest POISON = new SweepRequest();
     private final BlockingQueue<SweepRequest> requests;
@@ -55,7 +55,6 @@ public final class Sweeper implements ISweeper {
         }
     }
 
-    @Override
     public void sweep(SweepableIndexUnit indexUnit) throws InterruptedException {
         SweepRequest request = freeRequests.take();
         request.reset(indexUnit);

@@ -114,11 +114,13 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
         final boolean contiguousLargePages = getPageId(cPage.getDiskPageId()) + 1 == extraBlockPageId;
         IFileHandle handle = getFileHandle();
         long bytesWritten;
+        long offset;
         try {
             buf.limit(contiguousLargePages ? bufferCache.getPageSize() * totalPages : bufferCache.getPageSize());
             buf.position(0);
             ByteBuffer[] buffers = header.prepareWrite(cPage);
-            bytesWritten = context.write(ioManager, handle, getFirstPageOffset(cPage), buffers);
+            offset = getFirstPageOffset(cPage);
+            bytesWritten = context.write(ioManager, handle, offset, buffers);
         } finally {
             returnHeaderHelper(header);
         }
@@ -130,6 +132,9 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
 
         final int expectedWritten = bufferCache.getPageSizeWithHeader() + bufferCache.getPageSize() * (totalPages - 1);
         verifyBytesWritten(expectedWritten, bytesWritten);
+
+        cPage.setCompressedPageOffset(offset);
+        cPage.setCompressedPageSize((int) bytesWritten);
     }
 
     @Override

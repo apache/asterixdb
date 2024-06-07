@@ -87,7 +87,7 @@ public class ColumnUtil {
         // Read the length of this column
         int length = firstPage.getInt();
         // Ensure the page limit to at most a full page
-        firstPage.limit(Math.min(length, pageSize));
+        firstPage.limit(Math.min(startOffset + length, pageSize));
         return length;
     }
 
@@ -98,7 +98,7 @@ public class ColumnUtil {
      * @param pageSize        disk buffer cache page size
      * @return number of pages the column occupies
      */
-    public static int getNumberOfPages(int remainingLength, int pageSize) {
+    public static int getNumberOfRemainingPages(int remainingLength, int pageSize) {
         return (int) Math.ceil((double) remainingLength / pageSize);
     }
 

@@ -38,14 +38,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 
 public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCacheLockNotifier {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final int metadataPartition;
+    private final IEvictableLocalResourceFilter filter;
     private final Long2ObjectMap<LocalResource> inactiveResources;
     private final Long2ObjectMap<UnsweepableIndexUnit> unsweepableIndexes;
     private final Long2ObjectMap<SweepableIndexUnit> sweepableIndexes;
     private final ReentrantReadWriteLock evictionLock;
 
-    public CloudDiskResourceCacheLockNotifier(int metadataPartition) {
-        this.metadataPartition = metadataPartition;
+    public CloudDiskResourceCacheLockNotifier(IEvictableLocalResourceFilter filter) {
+        this.filter = filter;
         inactiveResources = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
         unsweepableIndexes = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
         sweepableIndexes = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
@@ -53,19 +53,19 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
     }
 
     @Override
-    public void onRegister(LocalResource localResource, IIndex index, int partition) {
+    public void onRegister(LocalResource localResource, IIndex index) {
         ILSMIndex lsmIndex = (ILSMIndex) index;
         evictionLock.readLock().lock();
         try {
-            if (partition != metadataPartition) {
+            if (filter.accept(localResource)) {
                 long resourceId = localResource.getId();
                 if (lsmIndex.getDiskCacheManager().isSweepable()) {
                     sweepableIndexes.put(resourceId, new SweepableIndexUnit(localResource, lsmIndex));
                 } else {
                     unsweepableIndexes.put(resourceId, new UnsweepableIndexUnit(localResource));
                 }
+                inactiveResources.remove(localResource.getId());
             }
-            inactiveResources.remove(localResource.getId());
         } finally {
             evictionLock.readLock().unlock();
         }
@@ -75,7 +75,7 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
     public void onUnregister(long resourceId) {
         evictionLock.readLock().lock();
         try {
-            AbstractIndexUnit indexUnit = getUnit(resourceId);
+            AbstractIndexUnit indexUnit = removeUnit(resourceId);
             if (indexUnit != null) {
                 indexUnit.drop();
             } else {
@@ -84,14 +84,6 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
         } finally {
             evictionLock.readLock().unlock();
         }
-    }
-
-    private AbstractIndexUnit getUnit(long resourceId) {
-        AbstractIndexUnit indexUnit = sweepableIndexes.get(resourceId);
-        if (indexUnit == null) {
-            indexUnit = unsweepableIndexes.get(resourceId);
-        }
-        return indexUnit;
     }
 
     @Override
@@ -122,7 +114,22 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
         } finally {
             evictionLock.readLock().unlock();
         }
+    }
 
+    private AbstractIndexUnit getUnit(long resourceId) {
+        AbstractIndexUnit indexUnit = sweepableIndexes.get(resourceId);
+        if (indexUnit == null) {
+            indexUnit = unsweepableIndexes.get(resourceId);
+        }
+        return indexUnit;
+    }
+
+    private AbstractIndexUnit removeUnit(long resourceId) {
+        AbstractIndexUnit indexUnit = sweepableIndexes.remove(resourceId);
+        if (indexUnit == null) {
+            indexUnit = unsweepableIndexes.remove(resourceId);
+        }
+        return indexUnit;
     }
 
     ReentrantReadWriteLock getEvictionLock() {
@@ -133,7 +140,8 @@ public final class CloudDiskResourceCacheLockNotifier implements IDiskResourceCa
         inactiveResources.clear();
         // First check whatever we had already
         for (LocalResource lr : localResources.values()) {
-            if (unsweepableIndexes.containsKey(lr.getId()) || sweepableIndexes.containsKey(lr.getId())) {
+            if (!filter.accept(lr) || unsweepableIndexes.containsKey(lr.getId())
+                    || sweepableIndexes.containsKey(lr.getId())) {
                 // We already have this resource
                 continue;
             }

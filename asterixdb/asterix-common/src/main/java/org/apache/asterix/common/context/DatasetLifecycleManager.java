@@ -123,11 +123,11 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         int did = getDIDfromResourcePath(resourcePath);
         LocalResource resource = resourceRepository.get(resourcePath);
         DatasetResource datasetResource = datasets.get(did);
+        lockNotifier.onRegister(resource, index);
         if (datasetResource == null) {
             datasetResource = getDatasetLifecycle(did);
         }
         datasetResource.register(resource, (ILSMIndex) index);
-        lockNotifier.onRegister(resource, index, datasetResource.getIndexInfo(resource.getId()).getPartition());
     }
 
     private int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {

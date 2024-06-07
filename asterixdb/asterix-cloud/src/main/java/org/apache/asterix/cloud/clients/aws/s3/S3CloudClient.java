@@ -120,7 +120,7 @@ public final class S3CloudClient implements ICloudClient {
     public int read(String bucket, String path, long offset, ByteBuffer buffer) throws HyracksDataException {
         guardian.checkReadAccess(bucket, path);
         profiler.objectGet();
-        long readTo = offset + buffer.remaining();
+        long readTo = offset + buffer.remaining() - 1;
         GetObjectRequest rangeGetObjectRequest =
                 GetObjectRequest.builder().range("bytes=" + offset + "-" + readTo).bucket(bucket).key(path).build();
 
@@ -163,7 +163,7 @@ public final class S3CloudClient implements ICloudClient {
     public InputStream getObjectStream(String bucket, String path, long offset, long length) {
         guardian.checkReadAccess(bucket, path);
         profiler.objectGet();
-        long readTo = offset + length;
+        long readTo = offset + length - 1;
         GetObjectRequest getReq =
                 GetObjectRequest.builder().range("bytes=" + offset + "-" + readTo).bucket(bucket).key(path).build();
         try {

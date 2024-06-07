@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+
 /**
  * @author yingyib
  */
@@ -208,5 +210,11 @@ public class CachedPage implements ICachedPageInternal {
     @Override
     public int getCompressedPageSize() {
         return compressedSize;
+    }
+
+    @Override
+    public String toString() {
+        return "CachedPage:[page:" + BufferedFileHandle.getPageId(dpid) + ", compressedPageOffset:" + compressedOffset
+                + ", compressedSize:" + compressedSize + "]";
     }
 }

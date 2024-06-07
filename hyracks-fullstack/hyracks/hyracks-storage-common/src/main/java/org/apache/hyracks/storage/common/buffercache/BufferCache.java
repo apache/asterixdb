@@ -203,12 +203,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 }
             }
 
-            // Notify context page is going to be pinned
-            context.onPin(cPage);
-
             // Resolve race of multiple threads trying to read the page from
             // disk.
             synchronized (cPage) {
+                // Notify context page is going to be pinned
+                context.onPin(cPage);
                 if (!cPage.valid) {
                     try {
                         tryRead(cPage, context);

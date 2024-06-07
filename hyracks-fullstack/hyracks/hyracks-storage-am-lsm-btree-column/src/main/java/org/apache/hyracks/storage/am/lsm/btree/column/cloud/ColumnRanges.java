@@ -20,7 +20,8 @@ package org.apache.hyracks.storage.am.lsm.btree.column.cloud;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweeperUtil.EMPTY;
 import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getColumnPageIndex;
-import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfPages;
+import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getColumnStartOffset;
+import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfRemainingPages;
 
 import java.util.BitSet;
 
@@ -171,15 +172,18 @@ public final class ColumnRanges {
     }
 
     /**
-     * Length of a column in pages
+     * The number of pages the column occupies
      *
      * @param columnIndex column index
      * @return number of pages
      */
     public int getColumnNumberOfPages(int columnIndex) {
         int pageSize = leafFrame.getBuffer().capacity();
-        int numberOfPages = getNumberOfPages(getColumnLength(columnIndex), pageSize);
-        return numberOfPages == 0 ? 1 : numberOfPages;
+        int offset = getColumnStartOffset(leafFrame.getColumnOffset(columnIndex), pageSize);
+        int firstBufferLength = pageSize - offset;
+        int remainingLength = getColumnLength(columnIndex) - firstBufferLength;
+        // 1 for the first page + the number of remaining pages
+        return 1 + getNumberOfRemainingPages(remainingLength, pageSize);
     }
 
     /**
@@ -229,6 +233,10 @@ public final class ColumnRanges {
      */
     public int[] getColumnsOrder() {
         return columnsOrder;
+    }
+
+    public int getTotalNumberOfPages() {
+        return leafFrame.getMegaLeafNodeNumberOfPages();
     }
 
     private void init() {
@@ -312,5 +320,4 @@ public final class ColumnRanges {
         }
         builder.append('\n');
     }
-
 }

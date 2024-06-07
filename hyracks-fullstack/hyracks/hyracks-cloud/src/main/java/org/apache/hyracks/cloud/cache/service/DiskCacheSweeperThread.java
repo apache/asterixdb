@@ -31,7 +31,6 @@ import org.apache.hyracks.api.io.IDiskSpaceMaker;
 import org.apache.hyracks.cloud.cache.unit.SweepableIndexUnit;
 import org.apache.hyracks.cloud.cache.unit.UnsweepableIndexUnit;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
-import org.apache.hyracks.cloud.sweeper.ISweeper;
 import org.apache.hyracks.cloud.sweeper.Sweeper;
 import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.buffercache.BufferCache;
@@ -48,7 +47,7 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
     private final IPhysicalDrive physicalDrive;
     private final List<SweepableIndexUnit> indexes;
     private final ICloudIOManager cloudIOManager;
-    private final ISweeper sweeper;
+    private final Sweeper sweeper;
     private final long inactiveTimeThreshold;
 
     public DiskCacheSweeperThread(ExecutorService executorService, long waitTime,
@@ -161,7 +160,7 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
     }
 
     @CriticalPath
-    private static void sweepIndexes(ISweeper sweeper, List<SweepableIndexUnit> indexes) {
+    private static void sweepIndexes(Sweeper sweeper, List<SweepableIndexUnit> indexes) {
         for (int i = 0; i < indexes.size(); i++) {
             SweepableIndexUnit index = indexes.get(i);
             if (!index.isSweeping()) {

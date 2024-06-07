@@ -19,7 +19,7 @@
 package org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.tuples;
 
 import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getColumnStartOffset;
-import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfPages;
+import static org.apache.hyracks.storage.am.lsm.btree.column.utils.ColumnUtil.getNumberOfRemainingPages;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
@@ -40,7 +40,7 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
     private final IColumnReadMultiPageOp multiPageOp;
     private final Queue<ICachedPage> pages;
     private final LongSet pinnedPages;
-    private int numberOfPages;
+    private int numberOfRemainingPages;
     private int startPage;
     private int startOffset;
     private int length;
@@ -55,7 +55,7 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
     @Override
     public void reset(ColumnBTreeReadLeafFrame frame) throws HyracksDataException {
         if (columnIndex >= frame.getNumberOfColumns()) {
-            numberOfPages = 0;
+            numberOfRemainingPages = 0;
             length = 0;
             return;
         }
@@ -70,8 +70,8 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
         length = ColumnUtil.readColumnLength(firstPage, startOffset, pageSize);
         // Get the remaining length of the column
         int remainingLength = length - firstPage.remaining();
-        // Get the number of pages this column occupies
-        numberOfPages = getNumberOfPages(remainingLength, pageSize);
+        // Get the number of remaining pages this column occupies
+        numberOfRemainingPages = getNumberOfRemainingPages(remainingLength, pageSize);
         //+4-bytes after reading the length
         startOffset += Integer.BYTES;
         //-4-bytes after reading the length
@@ -84,12 +84,12 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
         buffer.clear();
         buffer.position(startOffset);
         buffers.add(buffer);
-        for (int i = 0; i < numberOfPages; i++) {
+        for (int i = 0; i < numberOfRemainingPages; i++) {
             buffer = readNext().duplicate();
             buffer.clear();
             buffers.add(buffer);
         }
-        numberOfPages = 0;
+        numberOfRemainingPages = 0;
     }
 
     @Override

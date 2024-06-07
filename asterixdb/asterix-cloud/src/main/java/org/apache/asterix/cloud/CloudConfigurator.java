@@ -28,6 +28,7 @@ import org.apache.asterix.common.cloud.CloudCachePolicy;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.utils.StorageConstants;
+import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.config.IApplicationConfig;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -37,6 +38,7 @@ import org.apache.hyracks.cloud.buffercache.page.CloudDiskCachedPageAllocator;
 import org.apache.hyracks.cloud.cache.service.CloudDiskCacheMonitoringAndPrefetchingService;
 import org.apache.hyracks.cloud.cache.service.CloudDiskResourceCacheLockNotifier;
 import org.apache.hyracks.cloud.cache.service.DiskCacheSweeperThread;
+import org.apache.hyracks.cloud.cache.service.IEvictableLocalResourceFilter;
 import org.apache.hyracks.cloud.filesystem.PhysicalDrive;
 import org.apache.hyracks.control.common.controllers.NCConfig;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -55,6 +57,8 @@ import org.apache.hyracks.storage.common.disk.NoOpDiskResourceCacheLockNotifier;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public final class CloudConfigurator {
+    private static final IEvictableLocalResourceFilter FILTER =
+            (x -> StoragePathUtil.getPartitionNumFromRelativePath(x.getPath()) != StorageConstants.METADATA_PARTITION);
     private final CloudProperties cloudProperties;
     private final IOManager localIoManager;
     private final AbstractCloudIOManager cloudIOManager;
@@ -157,7 +161,7 @@ public final class CloudConfigurator {
 
     private static IDiskResourceCacheLockNotifier createLockNotifier(boolean diskCacheManagerRequired) {
         if (diskCacheManagerRequired) {
-            return new CloudDiskResourceCacheLockNotifier(StorageConstants.METADATA_PARTITION);
+            return new CloudDiskResourceCacheLockNotifier(FILTER);
         }
 
         return NoOpDiskResourceCacheLockNotifier.INSTANCE;

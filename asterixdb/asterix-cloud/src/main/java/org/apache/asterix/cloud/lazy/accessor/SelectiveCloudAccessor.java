@@ -48,6 +48,10 @@ public class SelectiveCloudAccessor extends ReplaceableCloudAccessor {
 
     @Override
     public void doEvict(FileReference directory) throws HyracksDataException {
+        if (!localIoManager.exists(directory)) {
+            return;
+        }
+
         if (!directory.getFile().isDirectory()) {
             throw new IllegalStateException(directory + " is not a directory");
         }

@@ -321,4 +321,9 @@ public abstract class AbstractBufferedFileIOManager {
         final String path = fileHandle.getFileReference().getAbsolutePath();
         throw new IllegalStateException(String.format(ERROR_MESSAGE, op, expected, actual, path));
     }
+
+    @Override
+    public String toString() {
+        return fileHandle != null ? fileHandle.getFileReference().getAbsolutePath() : "";
+    }
 }
