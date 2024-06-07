@@ -57,7 +57,7 @@
     "metadata\.callback\.port" : 0,
     "metadata\.listen\.port" : 0,
     "metadata\.node" : "asterix_nc1",
-    "metadata\.registration\.timeout\.secs" : 60,
+    "metadata\.registration\.timeout\.secs" : 300,
     "replication\.enabled" : false,
     "replication\.factor" : 2,
     "replication\.log\.batchsize" : 4096,

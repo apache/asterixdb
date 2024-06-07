@@ -37,7 +37,7 @@ public class MetadataProperties extends AbstractProperties {
 
     public enum Option implements IOption {
         METADATA_NODE(STRING, null),
-        METADATA_REGISTRATION_TIMEOUT_SECS(POSITIVE_INTEGER, 60),
+        METADATA_REGISTRATION_TIMEOUT_SECS(POSITIVE_INTEGER, 5 * 60),
         METADATA_LISTEN_PORT(NONNEGATIVE_INTEGER, 0),
         METADATA_CALLBACK_PORT(NONNEGATIVE_INTEGER, 0);
 
