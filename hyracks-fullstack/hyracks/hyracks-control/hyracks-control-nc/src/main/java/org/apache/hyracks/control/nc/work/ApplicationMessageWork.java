@@ -29,6 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ApplicationMessageWork extends AbstractWork {
+
     private static final Logger LOGGER = LogManager.getLogger();
     private final byte[] message;
     private final DeploymentId deploymentId;
@@ -59,12 +60,12 @@ public class ApplicationMessageWork extends AbstractWork {
     }
 
     @Override
-    public String toString() {
-        return getName() + ": nodeId: " + nodeId;
+    public Level logLevel() {
+        return Level.TRACE;
     }
 
     @Override
-    public Level logLevel() {
-        return Level.TRACE;
+    public String toString() {
+        return getName() + ": nodeId: " + nodeId;
     }
 }

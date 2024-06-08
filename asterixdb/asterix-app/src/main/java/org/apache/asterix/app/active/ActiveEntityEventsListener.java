@@ -138,7 +138,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected synchronized void setState(ActivityState newState) {
-        LOGGER.log(level, "State of {} is being set to {} from {}", getEntityId(), newState, state);
+        LOGGER.log(level, "state of {} is being set from {} to {}", getEntityId(), state, newState);
         this.prevState = state;
         this.state = newState;
         if (newState == ActivityState.STARTING || newState == ActivityState.RECOVERING
@@ -471,7 +471,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         // Note: once we start sending stop messages, we can't go back until the entity is stopped
         final String nameBefore = Thread.currentThread().getName();
         try {
-            Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
+            Thread.currentThread().setName(nameBefore + " : wait-for-ingestion-completion: " + jobId);
             sendStopMessages(metadataProvider, timeout, unit);
             LOGGER.debug("waiting for {} to become {}", jobId, waitFor);
             subscriber.sync();
@@ -501,7 +501,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         ICCMessageBroker messageBroker = (ICCMessageBroker) applicationCtx.getServiceContext().getMessageBroker();
         AlgebricksAbsolutePartitionConstraint runtimeLocations = getLocations();
         int partition = 0;
-        LOGGER.log(Level.INFO, "Sending stop messages to {}", runtimeLocations);
+        LOGGER.log(Level.INFO, "sending stop messages to {}", runtimeLocations);
         for (String location : runtimeLocations.getLocations()) {
             ActiveRuntimeId runtimeId = getActiveRuntimeId(partition++);
             messageBroker.sendApplicationMessageToNC(new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY,
@@ -564,10 +564,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         WaitForStateSubscriber subscriber;
         Future<Void> suspendTask;
         synchronized (this) {
-            LOGGER.log(level, "{} Suspending entity {}", jobId, entityId);
-            LOGGER.log(level, "{} Waiting for ongoing activities", jobId);
+            LOGGER.log(level, "{} suspending entity {}", jobId, entityId);
+            LOGGER.log(level, "{} waiting for ongoing activities", jobId);
             waitForNonTransitionState();
-            LOGGER.log(level, "{} Proceeding with suspension. Current state is {}", jobId, state);
+            LOGGER.log(level, "{} proceeding with suspension. current state is {}", jobId, state);
             if (state == ActivityState.STOPPED) {
                 suspended = true;
                 return;
@@ -588,12 +588,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                         doSuspend(metadataProvider);
                         return null;
                     });
-            LOGGER.log(level, "{} Suspension task has been submitted", jobId);
+            LOGGER.log(level, "{} suspension task has been submitted", jobId);
         }
         try {
-            LOGGER.log(level, "{} Waiting for suspension task to complete", jobId);
+            LOGGER.log(level, "{} waiting for suspension task to complete", jobId);
             suspendTask.get();
-            LOGGER.log(level, "{} Waiting for state to become SUSPENDED or TEMPORARILY_FAILED", jobId);
+            LOGGER.log(level, "{} waiting for state to become SUSPENDED or TEMPORARILY_FAILED", jobId);
             subscriber.sync();
             suspended = true;
         } catch (Exception e) {
@@ -715,7 +715,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public String toString() {
-        return "{\"class\":\"" + getClass().getSimpleName() + "\"," + "\"entityId\":\"" + entityId + "\","
-                + "\"state\":\"" + state + "\"" + "}";
+        return "{\"class\":\"" + getClass().getSimpleName() + "\", \"entityId\":\"" + entityId + "\", \"state\":\""
+                + state + "\", \"prev state\":\"" + prevState + "\", \"suspended\":" + suspended + "}";
     }
 }

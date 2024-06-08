@@ -150,7 +150,7 @@ public class PartitionMatchMaker {
     }
 
     public void removeUncommittedPartitions(Set<PartitionId> partitionIds, Set<TaskAttemptId> taIds, JobId jobId) {
-        if (!partitionIds.isEmpty()) {
+        if (partitionIds != null && !partitionIds.isEmpty()) {
             LOGGER.debug("Removing uncommitted partitions {}: {}", jobId, partitionIds);
         }
         IEntryFilter<PartitionDescriptor> filter =
@@ -167,7 +167,7 @@ public class PartitionMatchMaker {
     }
 
     public void removePartitionRequests(Set<PartitionId> partitionIds, Set<TaskAttemptId> taIds, JobId jobId) {
-        if (!partitionIds.isEmpty()) {
+        if (partitionIds != null && !partitionIds.isEmpty()) {
             LOGGER.debug("Removing partition requests {}: {}", jobId, partitionIds);
         }
         IEntryFilter<PartitionRequest> filter = o -> taIds.contains(o.getRequestingTaskAttemptId());

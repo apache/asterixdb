@@ -58,13 +58,13 @@ public class ApplicationMessageWork extends AbstractHeartbeatWork {
     }
 
     @Override
-    public String toString() {
-        return getName() + ": nodeID: " + nodeId;
+    public Level logLevel() {
+        return Level.TRACE;
     }
 
     @Override
-    public Level logLevel() {
-        return Level.TRACE;
+    public String toString() {
+        return getName() + ": nodeID: " + nodeId;
     }
 
     private static void notifyMessageBroker(ICCServiceContext ctx, IMessage msg, String nodeId) {

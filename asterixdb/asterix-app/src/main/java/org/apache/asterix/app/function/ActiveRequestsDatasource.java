@@ -43,4 +43,9 @@ public class ActiveRequestsDatasource extends FunctionDataSource {
                 AlgebricksAbsolutePartitionConstraint.randomLocation(locations.getLocations());
         return new ClientRequestsFunction(randomLocation, ClientRequestsRequest.RequestType.RUNNING);
     }
+
+    @Override
+    public boolean skipJobCapacityAssignment() {
+        return true;
+    }
 }

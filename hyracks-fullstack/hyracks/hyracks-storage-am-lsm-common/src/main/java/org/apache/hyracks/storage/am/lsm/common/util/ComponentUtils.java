@@ -34,7 +34,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMMemoryComponent;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.IPageWriteFailureCallback;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -80,11 +79,7 @@ public class ComponentUtils {
      */
     public static void get(ILSMIndex index, IValueReference key, ArrayBackedValueStorage value)
             throws HyracksDataException {
-        boolean loggable = LOGGER.isDebugEnabled();
         value.reset();
-        if (loggable) {
-            LOGGER.log(Level.DEBUG, "Getting " + key + " from index " + index);
-        }
         // Lock the opTracker to ensure index components don't change
         synchronized (index.getOperationTracker()) {
             ILSMMemoryComponent cmc = index.getCurrentMemoryComponent();
@@ -92,33 +87,17 @@ public class ComponentUtils {
                 index.getCurrentMemoryComponent().getMetadata().get(key, value);
             }
             if (value.getLength() == 0) {
-                if (loggable) {
-                    LOGGER.log(Level.DEBUG, key + " was not found in mutable memory component of " + index);
-                }
-                // was not found in the in current mutable component, search in the other in memory components
+                // was not found in the in current mutable component, search in the other in-memory components
                 fromImmutableMemoryComponents(index, key, value);
                 if (value.getLength() == 0) {
-                    if (loggable) {
-                        LOGGER.log(Level.DEBUG, key + " was not found in all immmutable memory components of " + index);
-                    }
-                    // was not found in the in all in memory components, search in the disk components
+                    // was not found in all in-memory components, search in the disk components
                     fromDiskComponents(index, key, value);
-                    if (loggable) {
-                        if (value.getLength() == 0) {
-                            LOGGER.log(Level.DEBUG, key + " was not found in all disk components of " + index);
-                        } else {
-                            LOGGER.log(Level.DEBUG, key + " was found in disk components of " + index);
-                        }
-                    }
-                } else {
-                    if (loggable) {
-                        LOGGER.log(Level.DEBUG, key + " was found in the immutable memory components of " + index);
+                    if (value.getLength() == 0) {
+                        LOGGER.debug("{} was NOT found", key);
                     }
                 }
             } else {
-                if (loggable) {
-                    LOGGER.log(Level.DEBUG, key + " was found in mutable memory component of " + index);
-                }
+                LOGGER.debug("{} was found in mutable memory component {}", key, cmc);
             }
         }
     }
@@ -143,17 +122,11 @@ public class ComponentUtils {
 
     private static void fromDiskComponents(ILSMIndex index, IValueReference key, ArrayBackedValueStorage value)
             throws HyracksDataException {
-        boolean loggable = LOGGER.isDebugEnabled();
-        if (loggable) {
-            LOGGER.log(Level.DEBUG, "Getting " + key + " from disk components of " + index);
-        }
         for (ILSMDiskComponent c : index.getDiskComponents()) {
-            if (loggable) {
-                LOGGER.log(Level.DEBUG, "Getting " + key + " from disk components " + c);
-            }
             c.getMetadata().get(key, value);
             if (value.getLength() != 0) {
                 // Found
+                LOGGER.debug("{} was found in disk component {}", key, c);
                 return;
             }
         }
@@ -161,21 +134,10 @@ public class ComponentUtils {
 
     private static void fromImmutableMemoryComponents(ILSMIndex index, IValueReference key,
             ArrayBackedValueStorage value) throws HyracksDataException {
-        boolean loggable = LOGGER.isDebugEnabled();
-        if (loggable) {
-            LOGGER.log(Level.DEBUG, "Getting " + key + " from immutable memory components of " + index);
-        }
         List<ILSMMemoryComponent> memComponents = index.getMemoryComponents();
         int numOtherMemComponents = memComponents.size() - 1;
         int next = index.getCurrentMemoryComponentIndex();
-        if (loggable) {
-            LOGGER.log(Level.DEBUG, index + " has " + numOtherMemComponents + " immutable memory components");
-        }
         for (int i = 0; i < numOtherMemComponents; i++) {
-            if (loggable) {
-                LOGGER.log(Level.DEBUG,
-                        "trying to get " + key + " from immutable memory components number: " + (i + 1));
-            }
             next = next - 1;
             if (next < 0) {
                 next = memComponents.size() - 1;
@@ -185,6 +147,7 @@ public class ComponentUtils {
                 c.getMetadata().get(key, value);
                 if (value.getLength() != 0) {
                     // Found
+                    LOGGER.debug("{} was found in immutable memory component {}", key, c);
                     return;
                 }
             }

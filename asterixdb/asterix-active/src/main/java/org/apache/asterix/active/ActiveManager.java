@@ -104,9 +104,9 @@ public class ActiveManager {
     }
 
     public void submit(ActiveManagerMessage message) throws HyracksDataException {
-        LOGGER.debug("Message of type {} received in {}", message.getKind(), nodeId);
         switch (message.getKind()) {
             case STOP_ACTIVITY:
+                LOGGER.debug("Message of type {} received in {}", message.getKind(), nodeId);
                 stopRuntime(message);
                 break;
             case REQUEST_STATS:
@@ -151,7 +151,6 @@ public class ActiveManager {
                 return;
             }
             String stats = runtime.getStats();
-            LOGGER.debug("Sending stats response for {} ", runtimeId);
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
             ((NodeControllerService) serviceCtx.getControllerService()).sendRealTimeApplicationMessageToCC(
                     message.getCcId(), JavaSerializationUtils.serialize(response), null);

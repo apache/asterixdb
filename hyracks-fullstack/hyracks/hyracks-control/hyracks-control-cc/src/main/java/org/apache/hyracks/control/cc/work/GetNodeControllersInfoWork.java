@@ -27,6 +27,7 @@ import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.logging.log4j.Level;
 
 public class GetNodeControllersInfoWork extends AbstractWork {
+
     private final INodeManager nodeManager;
     private final IResultCallback<Map<String, NodeControllerInfo>> callback;
 
