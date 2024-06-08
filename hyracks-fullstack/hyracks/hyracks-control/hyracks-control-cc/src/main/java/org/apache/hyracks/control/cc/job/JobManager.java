@@ -38,7 +38,9 @@ import org.apache.hyracks.api.job.ActivityClusterGraph;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
@@ -129,7 +131,7 @@ public class JobManager implements IJobManager {
         if (activeRunMap.containsKey(jobId)) {
             JobRun jobRun = activeRunMap.get(jobId);
             // The following call will abort all ongoing tasks and then consequently
-            // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecyle of the job.
+            // trigger JobCleanupWork and JobCleanupNotificationWork which will update the lifecycle of the job.
             // Therefore, we do not remove the job out of activeRunMap here.
             jobRun.getExecutor().cancelJob(callback);
             return;
@@ -139,7 +141,7 @@ public class JobManager implements IJobManager {
         if (jobRun != null) {
             List<Exception> exceptions =
                     Collections.singletonList(HyracksException.create(ErrorCode.JOB_CANCELED, jobId));
-            // Since the job has not been executed, we only need to update its status and lifecyle here.
+            // Since the job has not been executed, we only need to update its status and lifecycle here.
             jobRun.setStatus(JobStatus.FAILURE_BEFORE_EXECUTION, exceptions);
             runMapArchive.put(jobId, jobRun);
             runMapHistory.put(jobId, exceptions);
@@ -170,7 +172,6 @@ public class JobManager implements IJobManager {
             return;
         }
         if (run.getPendingStatus() != null) {
-            LOGGER.warn("Ignoring duplicate cleanup for JobRun with id: {}", run::getJobId);
             return;
         }
         Set<String> targetNodes = run.getParticipatingNodeIds();
@@ -313,6 +314,7 @@ public class JobManager implements IJobManager {
         run.setStartTime(System.currentTimeMillis());
         run.setStartTimeZoneId(ZoneId.systemDefault().getId());
         JobId jobId = run.getJobId();
+        logJobCapacity(run, "running", Level.DEBUG);
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
@@ -320,6 +322,7 @@ public class JobManager implements IJobManager {
 
     // Queue a job when the required capacity for the job is not met.
     private void queueJob(JobRun jobRun) throws HyracksException {
+        logJobCapacity(jobRun, "queueing", Level.INFO);
         jobRun.setStatus(JobStatus.PENDING, null);
         jobQueue.add(jobRun);
     }
@@ -355,5 +358,23 @@ public class JobManager implements IJobManager {
     private void releaseJobCapacity(JobRun jobRun) {
         final JobSpecification job = jobRun.getJobSpecification();
         jobCapacityController.release(job);
+        logJobCapacity(jobRun, "released", Level.DEBUG);
+    }
+
+    private void logJobCapacity(JobRun jobRun, String jobStateDesc, Level lvl) {
+        IClusterCapacity requiredResources = jobRun.getJobSpecification().getRequiredClusterCapacity();
+        if (requiredResources == null) {
+            return;
+        }
+        long requiredMemory = requiredResources.getAggregatedMemoryByteSize();
+        int requiredCPUs = requiredResources.getAggregatedCores();
+        if (requiredMemory == 0 && requiredCPUs == 0) {
+            return;
+        }
+        IReadOnlyClusterCapacity clusterCapacity = jobCapacityController.getClusterCapacity();
+        LOGGER.log(lvl, "{} {}, memory={}, cpu={}, (new) cluster memory={}, cpu={}, currently running={}, queued={}",
+                jobStateDesc, jobRun.getJobId(), requiredMemory, requiredCPUs,
+                clusterCapacity.getAggregatedMemoryByteSize(), clusterCapacity.getAggregatedCores(),
+                getRunningJobsCount(), jobQueue.size());
     }
 }

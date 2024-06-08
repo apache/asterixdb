@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.result.IResultPartitionManager;
-import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.api.util.ErrorMessageUtil;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
 import org.apache.hyracks.control.nc.Task;
@@ -50,9 +50,6 @@ public class NotifyTaskFailureWork extends AbstractWork {
 
     @Override
     public void run() {
-        Exception ex = exceptions.get(0);
-        LOGGER.log(ExceptionUtils.causedByInterrupt(ex) ? Level.DEBUG : Level.WARN, "task " + taskId + " has failed",
-                ex);
         try {
             IResultPartitionManager resultPartitionManager = ncs.getResultPartitionManager();
             if (resultPartitionManager != null) {
@@ -69,6 +66,8 @@ public class NotifyTaskFailureWork extends AbstractWork {
 
     @Override
     public String toString() {
-        return getName() + ": [" + ncs.getId() + "[" + jobId + ":" + taskId + "]";
+        return getName() + ": [" + ncs.getId() + "[" + jobId + ":" + taskId + "]"
+                + ((exceptions != null && !exceptions.isEmpty())
+                        ? " " + ErrorMessageUtil.getCauseMessage(exceptions.get(0)) : "");
     }
 }

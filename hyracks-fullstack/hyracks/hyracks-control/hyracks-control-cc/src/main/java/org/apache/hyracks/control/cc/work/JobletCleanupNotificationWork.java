@@ -35,6 +35,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
+
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final JobId jobId;
@@ -46,6 +47,7 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
 
     @Override
     public void runWork() {
+        LOGGER.debug("node {} finished job clean-up {}", nodeId, jobId);
         IJobManager jobManager = ccs.getJobManager();
         final JobRun run = jobManager.get(jobId);
         if (run == null) {
@@ -81,5 +83,10 @@ public class JobletCleanupNotificationWork extends AbstractHeartbeatWork {
     @Override
     public String toString() {
         return getName() + " jobId:" + jobId + ", nodeId:" + nodeId;
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

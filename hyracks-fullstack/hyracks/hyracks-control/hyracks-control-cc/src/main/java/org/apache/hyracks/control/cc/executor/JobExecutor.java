@@ -539,7 +539,7 @@ public class JobExecutor {
 
     private void abortTaskCluster(TaskClusterAttempt tcAttempt,
             TaskClusterAttempt.TaskClusterStatus failedOrAbortedStatus) {
-        LOGGER.trace(() -> "Aborting task cluster: " + tcAttempt.getAttempt());
+        LOGGER.trace("Aborting task cluster: {}", tcAttempt.getAttempt());
         Set<TaskAttemptId> abortTaskIds = new HashSet<>();
         Map<String, List<TaskAttemptId>> abortTaskAttemptMap = new HashMap<>();
         for (TaskAttempt ta : tcAttempt.getTaskAttempts().values()) {
@@ -561,14 +561,12 @@ public class JobExecutor {
             }
         }
         final JobId jobId = jobRun.getJobId();
-        LOGGER.trace(() -> "Abort map for job: " + jobId + ": " + abortTaskAttemptMap);
+        LOGGER.trace("Abort map for job: {}: {}", jobId, abortTaskAttemptMap);
         INodeManager nodeManager = ccs.getNodeManager();
         abortTaskAttemptMap.forEach((key, abortTaskAttempts) -> {
             final NodeControllerState node = nodeManager.getNodeControllerState(key);
             if (node != null) {
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("Aborting: " + abortTaskAttempts + " at " + key);
-                }
+                LOGGER.trace("Aborting: {} at {}", abortTaskAttempts, key);
                 try {
                     node.getNodeController().abortTasks(jobId, abortTaskAttempts);
                 } catch (Exception e) {
@@ -683,7 +681,6 @@ public class JobExecutor {
      */
     public void notifyTaskFailure(TaskAttempt ta, List<Exception> exceptions) {
         try {
-            LOGGER.debug("Received failure notification for TaskAttempt " + ta.getTaskAttemptId());
             TaskAttemptId taId = ta.getTaskAttemptId();
             TaskCluster tc = ta.getTask().getTaskCluster();
             TaskClusterAttempt lastAttempt = findLastTaskClusterAttempt(tc);
@@ -696,7 +693,7 @@ public class JobExecutor {
                 LOGGER.trace(() -> "Marking TaskAttempt " + ta.getTaskAttemptId()
                         + " as failed and the number of max re-attempts = " + maxReattempts);
                 if (lastAttempt.getAttempt() >= maxReattempts || isCancelled()) {
-                    LOGGER.debug(() -> "Aborting the job of " + ta.getTaskAttemptId());
+                    LOGGER.debug("Aborting the job:{} of {}", jobRun.getJobId(), ta.getTaskAttemptId());
                     abortJob(exceptions, NoOpCallback.INSTANCE);
                     return;
                 }

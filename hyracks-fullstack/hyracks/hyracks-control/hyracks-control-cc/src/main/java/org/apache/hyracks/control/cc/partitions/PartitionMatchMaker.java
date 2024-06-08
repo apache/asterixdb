@@ -174,8 +174,8 @@ public class PartitionMatchMaker {
     }
 
     public void removeUncommittedPartitions(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Removing uncommitted partitions: " + partitionIds);
+        if (partitionIds != null && !partitionIds.isEmpty()) {
+            LOGGER.debug("Removing uncommitted partitions {}", partitionIds);
         }
         IEntryFilter<PartitionDescriptor> filter = new IEntryFilter<PartitionDescriptor>() {
             @Override
@@ -195,8 +195,8 @@ public class PartitionMatchMaker {
     }
 
     public void removePartitionRequests(Set<PartitionId> partitionIds, final Set<TaskAttemptId> taIds) {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Removing partition requests: " + partitionIds);
+        if (partitionIds != null && !partitionIds.isEmpty()) {
+            LOGGER.debug("Removing partition requests {}", partitionIds);
         }
         IEntryFilter<PartitionRequest> filter = new IEntryFilter<PartitionRequest>() {
             @Override

@@ -35,6 +35,7 @@ import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
 
 public class JobStartWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
@@ -84,5 +85,10 @@ public class JobStartWork extends SynchronizableWork {
         } catch (Exception e) {
             callback.setException(e);
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }
