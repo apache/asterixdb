@@ -78,7 +78,6 @@ public class ResultDirectoryService extends AbstractResultManager implements IRe
 
     @Override
     public synchronized void notifyJobCreation(JobId jobId, JobSpecification spec) throws HyracksException {
-        LOGGER.debug("{} notified of new job {}", getClass().getSimpleName(), jobId);
         if (jobResultLocations.get(jobId) != null) {
             throw HyracksDataException.create(ErrorCode.MORE_THAN_ONE_RESULT, jobId);
         }

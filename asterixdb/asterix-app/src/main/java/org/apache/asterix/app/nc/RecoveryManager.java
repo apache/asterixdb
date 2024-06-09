@@ -615,9 +615,6 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         boolean infoEnabled = LOGGER.isInfoEnabled();
         // check if the transaction actually wrote some logs.
         if (firstLSN == TransactionManagementConstants.LogManagerConstants.TERMINAL_LSN || firstLSN > lastLSN) {
-            if (infoEnabled) {
-                LOGGER.info("no need to rollback as there were no operations by " + txnContext.getTxnId());
-            }
             return;
         }
         if (infoEnabled) {
