@@ -81,7 +81,6 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
                 acceptActualNode(pointable.getChildVisitablePointable(), childNode, fieldNameProp);
             }
         }
-        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
         rowMetadata.exitNode(arg);
         currentParent = previousParent;
         return null;

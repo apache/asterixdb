@@ -73,8 +73,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         ObjectRowSchemaNode objectNode = (ObjectRowSchemaNode) mainRoot;
-        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
-        //        rowMetadata.printRootSchema(toMergeRoot, rowMetadata.getFieldNamesDictionary(),"MERGER SCHEMA BY SCHEMA BEFORE");
         currentParent = objectNode;
         IntList fieldNameIndexes = toMergeRoot.getChildrenFieldNameIndexes();
         for (int i = 0; i < toMergeRoot.getNumberOfChildren(); i++) {
@@ -92,7 +90,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 acceptActualNode(new GenericListRowSchemaNode(childTypeTag, child), childNode);
             }
         }
-        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary()); TODO: CALVIN REMOVE
         rowMetadata.exitNode(mainRoot);
         currentParent = previousParent;
         return null;
@@ -191,7 +188,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
 
         ObjectRowSchemaNode objectNode = (ObjectRowSchemaNode) mainRoot;
         currentParent = objectNode;
-        //
         ArrayList<AbstractRowSchemaNode> unionChildren = toMergeRoot.getChildrenList();
 
         for (AbstractRowSchemaNode unionChildNode : unionChildren) {
@@ -203,8 +199,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 acceptActualNode(new GenericListRowSchemaNode(unionChildTypeTag, unionChildNode), childNode);
             }
         }
-
-        //        rowMetadata.printRootSchema(objectNode, rowMetadata.getFieldNamesDictionary());
         rowMetadata.exitNode(mainRoot);
         currentParent = previousParent;
         return null;
