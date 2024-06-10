@@ -29,6 +29,7 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
 
 public class WaitForJobCompletionWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
@@ -91,5 +92,10 @@ public class WaitForJobCompletionWork extends SynchronizableWork {
     @Override
     public String toString() {
         return getName() + " jobId:" + jobId;
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

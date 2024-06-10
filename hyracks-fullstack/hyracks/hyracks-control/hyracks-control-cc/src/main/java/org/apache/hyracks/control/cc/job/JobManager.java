@@ -393,7 +393,7 @@ public class JobManager implements IJobManager {
         run.setStartTime(System.currentTimeMillis());
         run.setStartTimeZoneId(ZoneId.systemDefault().getId());
         JobId jobId = run.getJobId();
-        logJobCapacity(run, "running");
+        logJobCapacity(run, "running", Level.DEBUG);
         activeRunMap.put(jobId, run);
         run.setStatus(JobStatus.RUNNING, null);
         executeJobInternal(run);
@@ -401,7 +401,7 @@ public class JobManager implements IJobManager {
 
     // Queue a job when the required capacity for the job is not met.
     private void queueJob(JobRun jobRun) throws HyracksException {
-        logJobCapacity(jobRun, "queueing");
+        logJobCapacity(jobRun, "queueing", Level.INFO);
         jobRun.setStatus(JobStatus.PENDING, null);
         jobQueue.add(jobRun);
     }
@@ -437,10 +437,10 @@ public class JobManager implements IJobManager {
     private void releaseJobCapacity(JobRun jobRun) {
         final JobSpecification job = jobRun.getJobSpecification();
         jobCapacityController.release(job);
-        logJobCapacity(jobRun, "released");
+        logJobCapacity(jobRun, "released", Level.DEBUG);
     }
 
-    private void logJobCapacity(JobRun jobRun, String jobStateDesc) {
+    private void logJobCapacity(JobRun jobRun, String jobStateDesc, Level lvl) {
         IClusterCapacity requiredResources = jobRun.getJobSpecification().getRequiredClusterCapacity();
         if (requiredResources == null) {
             return;
@@ -451,7 +451,7 @@ public class JobManager implements IJobManager {
             return;
         }
         IReadOnlyClusterCapacity clusterCapacity = jobCapacityController.getClusterCapacity();
-        LOGGER.info("{} {}, memory={}, cpu={}, (new) cluster memory={}, cpu={}, currently running={}, queued={}",
+        LOGGER.log(lvl, "{} {}, memory={}, cpu={}, (new) cluster memory={}, cpu={}, currently running={}, queued={}",
                 jobStateDesc, jobRun.getJobId(), requiredMemory, requiredCPUs,
                 clusterCapacity.getAggregatedMemoryByteSize(), clusterCapacity.getAggregatedCores(),
                 getRunningJobsCount(), jobQueue.size());

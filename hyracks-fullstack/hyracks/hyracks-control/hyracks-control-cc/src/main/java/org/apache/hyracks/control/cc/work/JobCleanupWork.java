@@ -28,6 +28,7 @@ import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,6 +53,7 @@ public class JobCleanupWork extends AbstractWork {
 
     @Override
     public void run() {
+        LOGGER.info("cleaning up {} on NCs, status={}", jobId, status);
         final JobRun jobRun = jobManager.get(jobId);
         if (jobRun == null) {
             LOGGER.debug("ignoring cleanup for unknown {}", jobId);
@@ -77,5 +79,10 @@ public class JobCleanupWork extends AbstractWork {
     public String toString() {
         return getName() + ": JobId@" + jobId + " Status@" + status
                 + (exceptions == null ? "" : " Exceptions@" + exceptions);
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

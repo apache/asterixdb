@@ -22,6 +22,7 @@ import java.util.List;
 
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.util.ErrorMessageUtil;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.job.IJobManager;
 import org.apache.hyracks.control.cc.job.JobRun;
@@ -50,6 +51,7 @@ public class TaskFailureWork extends AbstractTaskLifecycleWork {
 
     @Override
     public String toString() {
-        return getName() + ": [" + jobId + ":" + taId + ":" + nodeId + "]";
+        return getName() + ": [" + jobId + ":" + taId + ":" + nodeId + "] "
+                + ErrorMessageUtil.getCauseMessage(exceptions.get(0));
     }
 }
