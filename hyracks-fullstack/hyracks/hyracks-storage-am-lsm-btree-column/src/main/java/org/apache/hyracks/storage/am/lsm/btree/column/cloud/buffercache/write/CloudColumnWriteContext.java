@@ -67,8 +67,8 @@ public final class CloudColumnWriteContext implements IColumnWriteContext {
 
     @Override
     public void startWritingColumn(int columnIndex, boolean overlapping) {
-        if (drive.hasSpace() || indexedColumns.contains(columnIndex)) {
-            // The current column should be persisted locally if free disk space permits
+        if (drive.isUnpressured() || indexedColumns.contains(columnIndex)) {
+            // The current column will be persisted locally if free disk has space (drive.hasSpace() returns true)
             currentContext = DefaultBufferCacheWriteContext.INSTANCE;
         } else if (plan.get(columnIndex)) {
             // This column was planned for eviction, do not persist.

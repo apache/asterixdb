@@ -71,7 +71,7 @@ public final class CloudColumnIndexDiskCacheManager implements IColumnIndexDiskC
     public IColumnReadContext createReadContext(IColumnProjectionInfo projectionInfo) {
         ColumnProjectorType projectorType = projectionInfo.getProjectorType();
         if (projectorType == ColumnProjectorType.QUERY) {
-            planner.access(projectionInfo, drive.hasSpace());
+            planner.access(projectionInfo);
         } else if (projectorType == ColumnProjectorType.MODIFY) {
             planner.setIndexedColumns(projectionInfo);
             // Requested (and indexed) columns will be persisted if space permits

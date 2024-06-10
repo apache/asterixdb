@@ -56,22 +56,20 @@ public final class HolePuncherProvider {
         return new DebugHolePuncher(cloudIOManager, bufferProvider);
     }
 
-    private static int unsupported(IFileHandle fileHandle, long offset, long length) {
+    private static void unsupported(IFileHandle fileHandle, long offset, long length) {
         throw new UnsupportedOperationException("punchHole is not supported");
     }
 
-    private static int linuxPunchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
+    private static void linuxPunchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
         CloudFileHandle cloudFileHandle = (CloudFileHandle) fileHandle;
         int fileDescriptor = cloudFileHandle.getFileDescriptor();
         int blockSize = cloudFileHandle.getBlockSize();
-        int freedSpace = FileSystemOperationDispatcherUtil.punchHole(fileDescriptor, offset, length, blockSize);
+        FileSystemOperationDispatcherUtil.punchHole(fileDescriptor, offset, length, blockSize);
         try {
             cloudFileHandle.getFileChannel().force(false);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
-
-        return freedSpace;
     }
 
     private static final class DebugHolePuncher implements IHolePuncher {
@@ -84,9 +82,8 @@ public final class HolePuncherProvider {
         }
 
         @Override
-        public int punchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
+        public void punchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
             ByteBuffer buffer = acquireAndPrepareBuffer(length);
-            int totalWritten = 0;
             try {
                 long remaining = length;
                 long position = offset;
@@ -94,14 +91,11 @@ public final class HolePuncherProvider {
                     int written = cloudIOManager.localWriter(fileHandle, position, buffer);
                     position += written;
                     remaining -= written;
-                    totalWritten += written;
                     buffer.limit((int) Math.min(remaining, buffer.capacity()));
                 }
             } finally {
                 bufferProvider.recycle(buffer);
             }
-
-            return totalWritten;
         }
 
         private ByteBuffer acquireAndPrepareBuffer(long length) {

@@ -33,7 +33,13 @@ public interface IPhysicalDrive {
     boolean computeAndCheckIsPressured();
 
     /**
-     * @return if drive is still has free space (i.e., not pressured)
+     * @return true if the drive is not pressured, false otherwise
+     */
+    boolean isUnpressured();
+
+    /**
+     * @return true if the disk has free space, false otherwise
+     * Note: disk could be pressured but still has free space for storage
      */
     boolean hasSpace();
 }

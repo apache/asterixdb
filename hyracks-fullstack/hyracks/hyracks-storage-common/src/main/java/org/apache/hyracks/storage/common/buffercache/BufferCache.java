@@ -567,7 +567,13 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
-        fInfo.read(cPage, context);
+        try {
+            fInfo.read(cPage, context);
+        } catch (Throwable e) {
+            LOGGER.error("Error while reading a page {} in file {}", cPage, fInfo);
+            throw e;
+        }
+
         final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
         if (threadStats != null && context.incrementStats()) {
             threadStats.coldRead();

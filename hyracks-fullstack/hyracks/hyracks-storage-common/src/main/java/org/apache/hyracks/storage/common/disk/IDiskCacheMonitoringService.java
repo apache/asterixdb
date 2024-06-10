@@ -37,6 +37,16 @@ public interface IDiskCacheMonitoringService {
     void stop();
 
     /**
+     * Pause all disk caching activities
+     */
+    void pause();
+
+    /**
+     * Resume all disk caching activities
+     */
+    void resume();
+
+    /**
      * @return whether the monitoring service is enabled
      */
     boolean isEnabled();

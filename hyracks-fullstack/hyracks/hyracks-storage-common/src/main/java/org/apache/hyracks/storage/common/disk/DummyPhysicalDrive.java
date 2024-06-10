@@ -30,6 +30,11 @@ public final class DummyPhysicalDrive implements IPhysicalDrive {
     }
 
     @Override
+    public boolean isUnpressured() {
+        return false;
+    }
+
+    @Override
     public boolean hasSpace() {
         return true;
     }

@@ -30,6 +30,7 @@ import org.apache.asterix.cloud.lazy.filesystem.IHolePuncher;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.api.util.InvokeUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 
 public class SelectiveCloudAccessor extends ReplaceableCloudAccessor {
@@ -43,7 +44,14 @@ public class SelectiveCloudAccessor extends ReplaceableCloudAccessor {
 
     @Override
     public int doPunchHole(IFileHandle fileHandle, long offset, long length) throws HyracksDataException {
-        return puncher.punchHole(fileHandle, offset, length);
+        try {
+            // Ensure that punching a hole cannot be interrupted
+            InvokeUtil.doExUninterruptibly(() -> puncher.punchHole(fileHandle, offset, length));
+        } catch (Exception e) {
+            throw HyracksDataException.create(e);
+        }
+
+        return (int) length;
     }
 
     @Override

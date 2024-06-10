@@ -37,18 +37,19 @@ import org.apache.logging.log4j.Logger;
 
 public final class Sweeper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final SweepRequest POISON = new SweepRequest();
+    private final int queueSize;
     private final BlockingQueue<SweepRequest> requests;
     private final BlockingQueue<SweepRequest> freeRequests;
-    private final AtomicBoolean shutdown;
 
-    public Sweeper(ExecutorService executor, ICloudIOManager cloudIOManager, BufferCache bufferCache,
-            Map<Integer, BufferedFileHandle> fileInfoMap, int numOfSweepThreads, int queueSize) {
+    public Sweeper(AtomicBoolean paused, ExecutorService executor, ICloudIOManager cloudIOManager,
+            BufferCache bufferCache, Map<Integer, BufferedFileHandle> fileInfoMap, int numOfSweepThreads,
+            int queueSize) {
+        this.queueSize = queueSize;
         requests = new ArrayBlockingQueue<>(queueSize);
         freeRequests = new ArrayBlockingQueue<>(queueSize);
-        shutdown = new AtomicBoolean(false);
         for (int i = 0; i < queueSize; i++) {
-            freeRequests.add(new SweepRequest(new SweepContext(cloudIOManager, bufferCache, fileInfoMap, shutdown)));
+            SweepContext context = new SweepContext(cloudIOManager, bufferCache, fileInfoMap, paused);
+            freeRequests.add(new SweepRequest(context));
         }
         for (int i = 0; i < numOfSweepThreads; i++) {
             executor.execute(new SweepThread(requests, freeRequests, i));
@@ -61,12 +62,14 @@ public final class Sweeper {
         requests.put(request);
     }
 
-    public void shutdown() {
-        shutdown.set(true);
-        requests.clear();
-        freeRequests.clear();
-        requests.offer(POISON);
-        // TODO wait for threads to terminate
+    public void waitForRunningRequests() {
+        // Wait for all running requests if any
+        while (freeRequests.size() != queueSize) {
+            synchronized (freeRequests) {
+                LOGGER.warn("Waiting for {} running sweep requests", queueSize - freeRequests.size());
+                InvokeUtil.doUninterruptibly(freeRequests::wait);
+            }
+        }
     }
 
     private static class SweepThread implements Runnable {
@@ -88,43 +91,30 @@ public final class Sweeper {
                 SweepRequest request = null;
                 try {
                     request = requests.take();
-                    if (isPoison(request)) {
-                        break;
-                    }
                     request.handle();
                 } catch (InterruptedException e) {
-                    LOGGER.warn("Ignoring interrupt. Sweep threads should never be interrupted.");
+                    LOGGER.warn("Sweep thread interrupted");
+                    break;
                 } catch (Throwable t) {
                     LOGGER.error("Sweep failed", t);
                 } finally {
-                    if (request != null && request != POISON) {
+                    if (request != null) {
                         freeRequests.add(request);
                     }
-                }
 
-            }
-        }
-
-        private boolean isPoison(SweepRequest request) {
-            if (request == POISON) {
-                LOGGER.info("Exiting");
-                InvokeUtil.doUninterruptibly(() -> requests.put(POISON));
-                if (Thread.interrupted()) {
-                    LOGGER.error("Ignoring interrupt. Sweep threads should never be interrupted.");
+                    synchronized (freeRequests) {
+                        // Notify if pause() is waiting for all requests to finish
+                        freeRequests.notify();
+                    }
                 }
-                return true;
             }
 
-            return false;
+            Thread.currentThread().interrupt();
         }
     }
 
     private static class SweepRequest {
         private final SweepContext context;
-
-        SweepRequest() {
-            this(null);
-        }
 
         SweepRequest(SweepContext context) {
             this.context = context;
@@ -150,6 +140,7 @@ public final class Sweeper {
                  */
                 return;
             }
+
             SweepableIndexUnit indexUnit = context.getIndexUnit();
             indexUnit.startSweeping();
             try {

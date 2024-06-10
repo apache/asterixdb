@@ -114,13 +114,13 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
              * - The page is not being evicted (cloudOnly)
              * - The page is not planned for eviction (evictable)
              * - The operation is not a merge operation (the component will be deleted anyway)
-             * - The disk has space
+             * - The disk is not pressured
              *
              * Note: 'empty' can be false while 'cloudOnly is true'. We cannot read from disk as the page can be
              * evicted at any moment. In other words, the sweeper told us that it is going to evict this page; hence
              * 'cloudOnly' is true.
              */
-            boolean persist = empty && !cloudOnly && !evictable && operation != MERGE && drive.hasSpace();
+            boolean persist = empty && !cloudOnly && !evictable && operation != MERGE && drive.isUnpressured();
             readFromStream(ioManager, fileHandle, header, cPage, persist);
         } else {
             /*

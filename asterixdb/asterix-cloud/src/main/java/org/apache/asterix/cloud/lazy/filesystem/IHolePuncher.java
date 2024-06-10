@@ -34,5 +34,5 @@ public interface IHolePuncher {
      * @param offset starting offset
      * @param length length
      */
-    int punchHole(IFileHandle file, long offset, long length) throws HyracksDataException;
+    void punchHole(IFileHandle file, long offset, long length) throws HyracksDataException;
 }

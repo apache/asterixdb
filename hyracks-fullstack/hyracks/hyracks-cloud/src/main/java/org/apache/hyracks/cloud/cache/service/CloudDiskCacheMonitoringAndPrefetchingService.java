@@ -48,7 +48,18 @@ public final class CloudDiskCacheMonitoringAndPrefetchingService
 
     @Override
     public void stop() {
+        monitorThread.pause();
         executor.shutdown();
+    }
+
+    @Override
+    public void pause() {
+        monitorThread.pause();
+    }
+
+    @Override
+    public void resume() {
+        monitorThread.resume();
     }
 
     @Override

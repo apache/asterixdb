@@ -35,16 +35,16 @@ public final class SweepContext implements ISweepContext {
     private final ICloudIOManager cloudIOManager;
     private final BufferCache bufferCache;
     private final Map<Integer, BufferedFileHandle> fileInfoMap;
-    private final AtomicBoolean shutdown;
+    private final AtomicBoolean stop;
     private SweepableIndexUnit indexUnit;
     private BufferedFileHandle handle;
 
     public SweepContext(ICloudIOManager cloudIOManager, BufferCache bufferCache,
-            Map<Integer, BufferedFileHandle> fileInfoMap, AtomicBoolean shutdown) {
+            Map<Integer, BufferedFileHandle> fileInfoMap, AtomicBoolean stop) {
         this.cloudIOManager = cloudIOManager;
         this.bufferCache = bufferCache;
         this.fileInfoMap = fileInfoMap;
-        this.shutdown = shutdown;
+        this.stop = stop;
     }
 
     @Override
@@ -97,6 +97,6 @@ public final class SweepContext implements ISweepContext {
      * @return true if it should stop, false otherwise
      */
     public boolean stopSweeping() {
-        return shutdown.get() || indexUnit.isDropped();
+        return stop.get() || indexUnit.isDropped();
     }
 }

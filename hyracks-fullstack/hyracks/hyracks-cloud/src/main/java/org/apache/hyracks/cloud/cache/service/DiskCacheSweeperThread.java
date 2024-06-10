@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IDiskSpaceMaker;
@@ -49,6 +50,7 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
     private final ICloudIOManager cloudIOManager;
     private final Sweeper sweeper;
     private final long inactiveTimeThreshold;
+    private final AtomicBoolean paused;
 
     public DiskCacheSweeperThread(ExecutorService executorService, long waitTime,
             CloudDiskResourceCacheLockNotifier resourceManager, ICloudIOManager cloudIOManager, int numOfSweepThreads,
@@ -60,12 +62,28 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
         this.inactiveTimeThreshold = inactiveTimeThreshold;
         indexes = new ArrayList<>();
         this.cloudIOManager = cloudIOManager;
-        sweeper = new Sweeper(executorService, cloudIOManager, bufferCache, fileInfoMap, numOfSweepThreads,
+        paused = new AtomicBoolean();
+        sweeper = new Sweeper(paused, executorService, cloudIOManager, bufferCache, fileInfoMap, numOfSweepThreads,
                 sweepQueueSize);
+    }
+
+    public void pause() {
+        LOGGER.info("Pausing Sweeper threads...");
+        // Synchronize to ensure the thread is not sweeping
+        synchronized (this) {
+            // Set paused to ignore all future sweep requests
+            paused.set(true);
+        }
+        sweeper.waitForRunningRequests();
+        LOGGER.info("Sweeper threads have been paused successfully");
     }
 
     public void reportLocalResources(Map<Long, LocalResource> localResources) {
         resourceManager.reportLocalResources(localResources);
+    }
+
+    public void resume() {
+        paused.set(false);
     }
 
     @Override
@@ -95,15 +113,23 @@ public class DiskCacheSweeperThread implements Runnable, IDiskSpaceMaker {
                     makeSpace();
                     wait(waitTime);
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    LOGGER.warn("DiskCacheSweeperThread interrupted", e);
+                    break;
                 } finally {
                     notifyAll();
                 }
             }
         }
+
+        Thread.currentThread().interrupt();
     }
 
     private void makeSpace() {
+        if (paused.get()) {
+            LOGGER.warn("DiskCacheSweeperThread is paused");
+            return;
+        }
+
         if (physicalDrive.computeAndCheckIsPressured()) {
             boolean shouldSweep;
             resourceManager.getEvictionLock().writeLock().lock();

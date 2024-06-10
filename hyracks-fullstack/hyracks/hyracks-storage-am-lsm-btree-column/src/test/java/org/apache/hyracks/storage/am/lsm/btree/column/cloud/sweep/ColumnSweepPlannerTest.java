@@ -56,7 +56,7 @@ public class ColumnSweepPlannerTest {
         // Project 3 columns
         projectedColumns(numberOfPrimaryKeys, numberOfColumns, 3, projectedColumns);
         // access the projected columns (max 10 times)
-        access(planner, info, true, 10);
+        access(planner, info, 10);
 
         // Advance clock
         clock.advance(10);
@@ -69,7 +69,7 @@ public class ColumnSweepPlannerTest {
         // Project another 3 columns
         projectedColumns(numberOfPrimaryKeys, numberOfColumns, 3, projectedColumns);
         // access the projected columns
-        access(planner, info, true, 100);
+        access(planner, info, 100);
 
         // At this point, the plan should change
         BitSet newKeptColumns = new BitSet();
@@ -89,10 +89,10 @@ public class ColumnSweepPlannerTest {
         System.out.println("Kept columns: " + keptColumns);
     }
 
-    private void access(ColumnSweepPlanner planner, DummyColumnProjectionInfo info, boolean hasSpace, int bound) {
+    private void access(ColumnSweepPlanner planner, DummyColumnProjectionInfo info, int bound) {
         int numberOfAccesses = RANDOM.nextInt(1, bound);
         for (int i = 0; i < numberOfAccesses; i++) {
-            planner.access(info, hasSpace);
+            planner.access(info);
             clock.advance(1);
         }
 
