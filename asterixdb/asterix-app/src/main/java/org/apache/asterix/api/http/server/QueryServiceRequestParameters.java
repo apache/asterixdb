@@ -127,6 +127,7 @@ public class QueryServiceRequestParameters {
     private String path;
     private String statement;
     private String clientContextID;
+    private String requestId;
     private String dataverse;
     private String source;
     private ClientType clientType = ClientType.ASTERIX;
@@ -387,6 +388,14 @@ public class QueryServiceRequestParameters {
 
     public long getMaxWarnings() {
         return maxWarnings;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     public ObjectNode asJson() {

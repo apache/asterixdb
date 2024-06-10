@@ -90,4 +90,9 @@ public class RegisterResultPartitionLocationWork extends AbstractWork {
                 + nPartitions + " ResultPartitionLocation@" + networkAddress + " metadata@" + metadata + " EmptyResult@"
                 + emptyResult;
     }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
+    }
 }
