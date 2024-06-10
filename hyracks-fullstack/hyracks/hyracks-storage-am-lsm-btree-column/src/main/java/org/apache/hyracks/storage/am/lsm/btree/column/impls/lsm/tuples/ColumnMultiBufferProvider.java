@@ -68,14 +68,14 @@ public final class ColumnMultiBufferProvider implements IColumnBufferProvider {
         ByteBuffer firstPage = readNext().duplicate();
         // Read the column's length
         length = ColumnUtil.readColumnLength(firstPage, startOffset, pageSize);
+        // +4-bytes after reading the length
+        startOffset += Integer.BYTES;
+        // -4-bytes after reading the length
+        length -= Integer.BYTES;
         // Get the remaining length of the column
         int remainingLength = length - firstPage.remaining();
         // Get the number of remaining pages this column occupies
         numberOfRemainingPages = getNumberOfRemainingPages(remainingLength, pageSize);
-        //+4-bytes after reading the length
-        startOffset += Integer.BYTES;
-        //-4-bytes after reading the length
-        length -= Integer.BYTES;
     }
 
     @Override

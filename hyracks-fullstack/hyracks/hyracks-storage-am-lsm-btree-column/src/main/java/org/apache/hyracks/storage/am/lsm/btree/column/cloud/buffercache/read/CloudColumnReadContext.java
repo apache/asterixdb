@@ -154,12 +154,12 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         // TODO What if every other page is requested. That would do N/2 request, where N is the number of pages.
         // TODO This should be optimized in a way that minimizes the number of requests
 
-        int[] columnsOrders = columnRanges.getColumnsOrder();
+        int[] columnsOrder = columnRanges.getColumnsOrder();
         int i = 0;
-        int columnIndex = columnsOrders[i];
+        int columnIndex = columnsOrder[i];
         while (columnIndex > -1) {
             if (columnIndex < columnRanges.getNumberOfPrimaryKeys()) {
-                columnIndex = columnsOrders[++i];
+                columnIndex = columnsOrder[++i];
                 continue;
             }
 
@@ -168,7 +168,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             int lastPageIdx = firstPageIdx + columnRanges.getColumnNumberOfPages(columnIndex) - 1;
 
             // Advance to the next column to check if it has contiguous pages
-            columnIndex = columnsOrders[++i];
+            columnIndex = columnsOrder[++i];
             while (columnIndex > -1) {
                 int sharedPageCount = 0;
                 // Get the next column's start page ID
@@ -183,7 +183,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
                 lastPageIdx += columnRanges.getColumnNumberOfPages(columnIndex) - sharedPageCount;
                 // Advance to the next column
-                columnIndex = columnsOrders[++i];
+                columnIndex = columnsOrder[++i];
             }
 
             if (lastPageIdx >= columnRanges.getTotalNumberOfPages()) {
