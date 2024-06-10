@@ -79,6 +79,7 @@ public final class S3CloudClient implements ICloudClient {
     private final S3Client s3Client;
     private final ICloudGuardian guardian;
     private final IRequestProfiler profiler;
+    private final int writeBufferSize;
 
     public S3CloudClient(S3ClientConfig config, ICloudGuardian guardian) {
         this(config, buildClient(config), guardian);
@@ -88,6 +89,7 @@ public final class S3CloudClient implements ICloudClient {
         this.config = config;
         this.s3Client = s3Client;
         this.guardian = guardian;
+        this.writeBufferSize = config.getWriteBufferSize();
         long profilerInterval = config.getProfilerLogInterval();
         if (profilerInterval > 0) {
             profiler = new CountRequestProfiler(profilerInterval);
@@ -99,7 +101,7 @@ public final class S3CloudClient implements ICloudClient {
 
     @Override
     public int getWriteBufferSize() {
-        return S3ClientConfig.WRITE_BUFFER_SIZE;
+        return writeBufferSize;
     }
 
     @Override

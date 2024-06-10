@@ -697,7 +697,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         String schedulerName = storageProperties.getIoScheduler();
         int numPartitions = ioManager.getIODevices().size();
 
-        int maxConcurrentFlushes = storageProperties.geMaxConcurrentFlushes(numPartitions);
+        int maxConcurrentFlushes = storageProperties.getMaxConcurrentFlushes(numPartitions);
         int maxScheduledMerges = storageProperties.getMaxScheduledMerges(numPartitions);
         int maxConcurrentMerges = storageProperties.getMaxConcurrentMerges(numPartitions);
 

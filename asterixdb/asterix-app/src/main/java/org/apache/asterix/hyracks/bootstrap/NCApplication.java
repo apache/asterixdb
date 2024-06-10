@@ -338,7 +338,7 @@ public class NCApplication extends BaseNCApplication {
     @Override
     public NodeCapacity getCapacity() {
         StorageProperties storageProperties = runtimeContext.getStorageProperties();
-        final long memorySize = storageProperties.getJobExecutionMemoryBudget();
+        final long memorySize = storageProperties.getJobExecutionMemoryBudget(runtimeContext);
         int allCores = Runtime.getRuntime().availableProcessors();
         return new NodeCapacity(memorySize, allCores);
     }

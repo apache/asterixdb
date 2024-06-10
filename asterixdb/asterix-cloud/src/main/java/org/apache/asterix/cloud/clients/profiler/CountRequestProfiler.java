@@ -20,6 +20,7 @@ package org.apache.asterix.cloud.clients.profiler;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -29,6 +30,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class CountRequestProfiler implements IRequestProfiler {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Level LOG_LEVEL = Level.TRACE;
     private final long logInterval;
     private final AtomicLong listObjectsCounter;
     private final AtomicLong getObjectCounter;
@@ -94,19 +96,21 @@ public class CountRequestProfiler implements IRequestProfiler {
     }
 
     private void log() {
-        long currentTime = System.nanoTime();
-        if (currentTime - lastLogTimestamp >= logInterval) {
-            // Might log multiple times
-            lastLogTimestamp = currentTime;
-            ObjectNode countersNode = OBJECT_MAPPER.createObjectNode();
-            countersNode.put("listObjectsCounter", listObjectsCounter.get());
-            countersNode.put("getObjectCounter", getObjectCounter.get());
-            countersNode.put("writeObjectCounter", writeObjectCounter.get());
-            countersNode.put("deleteObjectCounter", deleteObjectCounter.get());
-            countersNode.put("copyObjectCounter", copyObjectCounter.get());
-            countersNode.put("multipartUploadCounter", multipartUploadCounter.get());
-            countersNode.put("multipartDownloadCounter", multipartDownloadCounter.get());
-            LOGGER.debug("Cloud request counters: {}", countersNode.toString());
+        if (LOGGER.isEnabled(LOG_LEVEL)) {
+            long currentTime = System.nanoTime();
+            if (currentTime - lastLogTimestamp >= logInterval) {
+                // Might log multiple times
+                lastLogTimestamp = currentTime;
+                ObjectNode countersNode = OBJECT_MAPPER.createObjectNode();
+                countersNode.put("listObjectsCounter", listObjectsCounter.get());
+                countersNode.put("getObjectCounter", getObjectCounter.get());
+                countersNode.put("writeObjectCounter", writeObjectCounter.get());
+                countersNode.put("deleteObjectCounter", deleteObjectCounter.get());
+                countersNode.put("copyObjectCounter", copyObjectCounter.get());
+                countersNode.put("multipartUploadCounter", multipartUploadCounter.get());
+                countersNode.put("multipartDownloadCounter", multipartDownloadCounter.get());
+                LOGGER.log(LOG_LEVEL, "Cloud request counters: {}", countersNode.toString());
+            }
         }
     }
 }
