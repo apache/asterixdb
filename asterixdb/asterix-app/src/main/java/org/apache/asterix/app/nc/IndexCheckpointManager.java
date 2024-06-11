@@ -231,18 +231,18 @@ public class IndexCheckpointManager implements IIndexCheckpointManager {
     }
 
     @Override
-    public void deleteLatest(long latestId, int historyToDelete) {
+    public void deleteLatest(long latestId) {
         try {
             final Collection<FileReference> checkpointFiles = ioManager.list(indexPath, CHECKPOINT_FILE_FILTER);
             if (!checkpointFiles.isEmpty()) {
                 for (FileReference checkpointFile : checkpointFiles) {
-                    if (getCheckpointIdFromFileName(checkpointFile) > (latestId - historyToDelete)) {
+                    if (read(checkpointFile).getLastComponentId() == latestId) {
                         ioManager.delete(checkpointFile);
                     }
                 }
             }
         } catch (Exception e) {
-            LOGGER.warn(() -> "Couldn't delete history checkpoints at " + indexPath, e);
+            LOGGER.warn(() -> "Couldn't delete latest checkpoint file at " + indexPath, e);
         }
     }
 

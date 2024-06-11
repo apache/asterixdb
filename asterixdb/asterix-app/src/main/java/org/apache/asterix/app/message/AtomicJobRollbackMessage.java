@@ -71,7 +71,7 @@ public class AtomicJobRollbackMessage implements INcAddressedMessage {
                     if (checkpoint.getLastComponentId() == v.getMaxId()) {
                         LOGGER.info("Removing checkpoint for resource {} for component id {}", k,
                                 checkpoint.getLastComponentId());
-                        checkpointManager.deleteLatest(v.getMaxId(), 1);
+                        checkpointManager.deleteLatest(v.getMaxId());
                     }
                 }
             } catch (Exception e) {
