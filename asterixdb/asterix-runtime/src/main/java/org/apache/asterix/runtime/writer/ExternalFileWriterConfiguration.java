@@ -27,13 +27,15 @@ public final class ExternalFileWriterConfiguration {
     private final SourceLocation pathSourceLocation;
     private final String staticPath;
     private final boolean singleNodeCluster;
+    private final int writeBufferSize;
 
     public ExternalFileWriterConfiguration(Map<String, String> configuration, SourceLocation pathSourceLocation,
-            String staticPath, boolean singleNodeCluster) {
+            String staticPath, boolean singleNodeCluster, int writeBufferSize) {
         this.configuration = configuration;
         this.pathSourceLocation = pathSourceLocation;
         this.staticPath = staticPath;
         this.singleNodeCluster = singleNodeCluster;
+        this.writeBufferSize = writeBufferSize;
     }
 
     public Map<String, String> getConfiguration() {
@@ -50,5 +52,9 @@ public final class ExternalFileWriterConfiguration {
 
     public boolean isSingleNodeCluster() {
         return singleNodeCluster;
+    }
+
+    public int getWriteBufferSize() {
+        return writeBufferSize;
     }
 }

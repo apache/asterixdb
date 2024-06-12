@@ -24,6 +24,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNI
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.GIGABYTE;
 
 import java.util.concurrent.TimeUnit;
@@ -57,7 +58,9 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_DEBUG_MODE_ENABLED(BOOLEAN, false),
         CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, GIGABYTE)),
         CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 5),
-        CLOUD_WRITE_BUFFER_SIZE(POSITIVE_INTEGER, StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE));
+        CLOUD_WRITE_BUFFER_SIZE(
+                getRangedIntegerType(5, Integer.MAX_VALUE),
+                StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE));
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -142,7 +145,7 @@ public class CloudProperties extends AbstractProperties {
                             + " the profiler is disabled by default). The minimum is 1 minute."
                             + " NOTE: Enabling the profiler could perturb the performance of cloud requests";
                 case CLOUD_WRITE_BUFFER_SIZE:
-                    return "The write buffer size in bytes. (default: 8MB)";
+                    return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }

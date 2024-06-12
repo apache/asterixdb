@@ -62,7 +62,7 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
 
     @Override
     ICloudClient createCloudClient() throws CompilationException {
-        S3ClientConfig config = S3ClientConfig.of(configuration);
+        S3ClientConfig config = S3ClientConfig.of(configuration, writeBufferSize);
         return new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }

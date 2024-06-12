@@ -25,6 +25,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.LONG_BYTE_UNI
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.KILOBYTE;
 import static org.apache.hyracks.util.StorageUtil.StorageUnit.MEGABYTE;
 
@@ -124,12 +125,14 @@ public class CompilerProperties extends AbstractProperties {
                 BOOLEAN,
                 AlgebricksConfig.COLUMN_FILTER_DEFAULT,
                 "Enable/disable the use of column min/max filters"),
-        //TODO(DB): remove after
-        COMPILER_ENABLE_DB_RESOLUTION(BOOLEAN, true, "Enable/disable the resolution of namespaces to database"),
         COMPILER_RUNTIME_MEMORY_OVERHEAD(
                 NONNEGATIVE_INTEGER,
                 5,
-                "A percentage of the job's required memory to be added to account for runtime memory overhead");
+                "A percentage of the job's required memory to be added to account for runtime memory overhead"),
+        COMPILER_COPY_TO_WRITE_BUFFER_SIZE(
+                getRangedIntegerType(5, Integer.MAX_VALUE),
+                StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE),
+                "The COPY TO write buffer size in bytes. (default: 8MB, min: 5MB)");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -163,8 +166,7 @@ public class CompilerProperties extends AbstractProperties {
 
         @Override
         public boolean hidden() {
-            return this == COMPILER_EXTERNALSCANMEMORY || this == COMPILER_CBOTEST
-                    || this == COMPILER_ENABLE_DB_RESOLUTION;
+            return this == COMPILER_EXTERNALSCANMEMORY || this == COMPILER_CBOTEST;
         }
     }
 
@@ -322,5 +324,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getRuntimeMemoryOverheadPercentage() {
         return accessor.getInt(Option.COMPILER_RUNTIME_MEMORY_OVERHEAD);
+    }
+
+    public int getCopyToWriteBufferSize() {
+        return accessor.getInt(Option.COMPILER_COPY_TO_WRITE_BUFFER_SIZE);
     }
 }

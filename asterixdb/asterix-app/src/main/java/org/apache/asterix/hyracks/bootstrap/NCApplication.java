@@ -61,7 +61,6 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.api.IPropertiesFactory;
 import org.apache.asterix.common.api.IReceptionistFactory;
 import org.apache.asterix.common.config.AsterixExtension;
-import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.config.ExtensionProperties;
 import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.config.GlobalConfig;
@@ -160,10 +159,8 @@ public class NCApplication extends BaseNCApplication {
         }
         MetadataBuiltinFunctions.init();
 
-        boolean isDbResolutionEnabled =
-                ncServiceCtx.getAppConfig().getBoolean(CompilerProperties.Option.COMPILER_ENABLE_DB_RESOLUTION);
         boolean cloudDeployment = ncServiceCtx.getAppConfig().getBoolean(CLOUD_DEPLOYMENT);
-        boolean useDatabaseResolution = cloudDeployment && isDbResolutionEnabled;
+        boolean useDatabaseResolution = cloudDeployment;
         INamespaceResolver namespaceResolver = createNamespaceResolver(useDatabaseResolution);
         NamespacePathResolver namespacePathResolver = new NamespacePathResolver(useDatabaseResolution);
         ncExtensionManager = new NCExtensionManager(new ArrayList<>(getExtensions()), cloudDeployment,

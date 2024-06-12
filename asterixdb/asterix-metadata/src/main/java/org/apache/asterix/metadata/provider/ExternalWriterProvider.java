@@ -86,8 +86,10 @@ public class ExternalWriterProvider {
             IWriteDataSink sink, String staticPath, SourceLocation pathExpressionLocation) {
         Map<String, String> params = sink.getConfiguration();
         boolean singleNodeCluster = isSingleNodeCluster(appCtx);
+        int copyToWriteBufferSize = appCtx.getCompilerProperties().getCopyToWriteBufferSize();
 
-        return new ExternalFileWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster);
+        return new ExternalFileWriterConfiguration(params, pathExpressionLocation, staticPath, singleNodeCluster,
+                copyToWriteBufferSize);
     }
 
     private static boolean isSingleNodeCluster(ICcApplicationContext appCtx) {

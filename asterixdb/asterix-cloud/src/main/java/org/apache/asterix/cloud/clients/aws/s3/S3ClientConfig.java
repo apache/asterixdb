@@ -22,7 +22,6 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
-import org.apache.hyracks.util.StorageUtil;
 
 import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -55,7 +54,7 @@ public final class S3ClientConfig {
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize());
     }
 
-    public static S3ClientConfig of(Map<String, String> configuration) {
+    public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
         // Used to determine local vs. actual S3
         String endPoint = configuration.getOrDefault(S3Constants.SERVICE_END_POINT_FIELD_NAME, "");
         // Disabled
@@ -65,7 +64,6 @@ public final class S3ClientConfig {
         String region = "";
         String prefix = "";
         boolean anonymousAuth = false;
-        int writeBufferSize = StorageUtil.getIntSizeInBytes(5, StorageUtil.StorageUnit.MEGABYTE);
 
         return new S3ClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize);
     }

@@ -29,6 +29,7 @@
     "compiler.batch.lookup" : true,
     "compiler.cbo" : true,
     "compiler.column.filter" : true,
+    "compiler.copy.to.write.buffer.size" : 8388608,
     "compiler\.external\.field\.pushdown" : true,
     "compiler.forcejoinorder" : false,
     "compiler\.framesize" : 32768,

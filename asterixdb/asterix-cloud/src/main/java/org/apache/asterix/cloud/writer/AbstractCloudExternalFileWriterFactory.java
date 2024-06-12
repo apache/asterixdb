@@ -50,12 +50,14 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
     protected final Map<String, String> configuration;
     protected final SourceLocation pathSourceLocation;
     protected final String staticPath;
+    protected final int writeBufferSize;
     protected transient ICloudClient cloudClient;
 
     AbstractCloudExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
         configuration = externalConfig.getConfiguration();
         pathSourceLocation = externalConfig.getPathSourceLocation();
         staticPath = externalConfig.getStaticPath();
+        writeBufferSize = externalConfig.getWriteBufferSize();
     }
 
     abstract ICloudClient createCloudClient() throws CompilationException;
