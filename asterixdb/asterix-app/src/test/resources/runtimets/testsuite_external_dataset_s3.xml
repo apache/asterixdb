@@ -371,7 +371,7 @@
       <compilation-unit name="common/avro/invalid-avro-files">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">none</output-dir>
-        <expected-error>Malformed input stream</expected-error>
+        <expected-error>External source error. org.apache.avro.InvalidAvroMagicException: Not an Avro data file.</expected-error>
         <source-location>false</source-location>
       </compilation-unit>
     </test-case>

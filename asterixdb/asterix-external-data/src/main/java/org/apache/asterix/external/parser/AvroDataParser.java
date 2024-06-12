@@ -19,6 +19,7 @@
 package org.apache.asterix.external.parser;
 
 import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -40,6 +41,7 @@ import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
@@ -62,8 +64,8 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
             parseObject(record.get(), out);
             valueEmbedder.reset();
             return true;
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
+        } catch (AvroRuntimeException | IOException e) {
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         }
     }
 
@@ -278,12 +280,12 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         doubleSerde.serialize(aDouble, out);
     }
 
-    private void serializeString(Object value, DataOutput out) throws IOException {
+    private void serializeString(Object value, DataOutput out) throws HyracksDataException {
         aString.setValue(value.toString());
         stringSerde.serialize(aString, out);
     }
 
-    private static HyracksDataException createUnsupportedException(Schema schema) throws HyracksDataException {
+    private static HyracksDataException createUnsupportedException(Schema schema) {
         return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Avro Parser", schema);
     }
 }
