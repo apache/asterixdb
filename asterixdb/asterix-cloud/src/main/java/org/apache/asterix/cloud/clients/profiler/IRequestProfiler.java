@@ -32,4 +32,19 @@ public interface IRequestProfiler {
     void objectMultipartUpload();
 
     void objectMultipartDownload();
+
+    long objectsListCount();
+
+    long objectGetCount();
+
+    long objectWriteCount();
+
+    long objectDeleteCount();
+
+    long objectCopyCount();
+
+    long objectMultipartUploadCount();
+
+    long objectMultipartDownloadCount();
+
 }

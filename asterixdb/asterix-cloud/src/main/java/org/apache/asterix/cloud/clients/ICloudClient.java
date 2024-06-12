@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import org.apache.asterix.cloud.IWriteBufferProvider;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -40,6 +41,11 @@ public interface ICloudClient {
      * @return write buffer size
      */
     int getWriteBufferSize();
+
+    /**
+     * @return the requests profiler
+     */
+    IRequestProfiler getProfiler();
 
     /**
      * Creates a cloud buffered writer

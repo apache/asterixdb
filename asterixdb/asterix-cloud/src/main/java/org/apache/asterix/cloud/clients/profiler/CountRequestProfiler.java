@@ -95,6 +95,41 @@ public class CountRequestProfiler implements IRequestProfiler {
         log();
     }
 
+    @Override
+    public long objectsListCount() {
+        return listObjectsCounter.get();
+    }
+
+    @Override
+    public long objectGetCount() {
+        return getObjectCounter.get();
+    }
+
+    @Override
+    public long objectWriteCount() {
+        return writeObjectCounter.get();
+    }
+
+    @Override
+    public long objectDeleteCount() {
+        return deleteObjectCounter.get();
+    }
+
+    @Override
+    public long objectCopyCount() {
+        return copyObjectCounter.get();
+    }
+
+    @Override
+    public long objectMultipartUploadCount() {
+        return multipartUploadCounter.get();
+    }
+
+    @Override
+    public long objectMultipartDownloadCount() {
+        return multipartDownloadCounter.get();
+    }
+
     private void log() {
         if (LOGGER.isEnabled(LOG_LEVEL)) {
             long currentTime = System.nanoTime();

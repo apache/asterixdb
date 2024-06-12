@@ -58,4 +58,39 @@ public class NoOpRequestProfiler implements IRequestProfiler {
     public void objectMultipartDownload() {
         // NoOp
     }
+
+    @Override
+    public long objectsListCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectGetCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectWriteCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectDeleteCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectCopyCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectMultipartUploadCount() {
+        return 0;
+    }
+
+    @Override
+    public long objectMultipartDownloadCount() {
+        return 0;
+    }
 }

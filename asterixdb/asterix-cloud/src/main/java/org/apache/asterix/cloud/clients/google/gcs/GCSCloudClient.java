@@ -91,6 +91,11 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
+    public IRequestProfiler getProfiler() {
+        return profiler;
+    }
+
+    @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         return new GCSWriter(bucket, path, gcsClient, profiler);
     }

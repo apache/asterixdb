@@ -105,6 +105,11 @@ public final class S3CloudClient implements ICloudClient {
     }
 
     @Override
+    public IRequestProfiler getProfiler() {
+        return profiler;
+    }
+
+    @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         ICloudBufferedWriter bufferedWriter = new S3BufferedWriter(s3Client, profiler, guardian, bucket, path);
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
