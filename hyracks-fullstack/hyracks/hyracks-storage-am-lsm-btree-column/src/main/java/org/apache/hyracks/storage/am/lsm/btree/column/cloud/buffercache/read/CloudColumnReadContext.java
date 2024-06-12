@@ -46,6 +46,8 @@ import org.apache.hyracks.util.annotations.NotThreadSafe;
 
 @NotThreadSafe
 public final class CloudColumnReadContext implements IColumnReadContext {
+    public static final Integer MAX_RANGES_COUNT = 3;
+
     private final ColumnProjectorType operation;
     private final IPhysicalDrive drive;
     private final BitSet plan;
@@ -53,6 +55,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     private final ColumnRanges columnRanges;
     private final CloudMegaPageReadContext columnCtx;
     private final BitSet projectedColumns;
+    private final MergedPageRanges mergedPageRanges;
 
     public CloudColumnReadContext(IColumnProjectionInfo projectionInfo, IPhysicalDrive drive, BitSet plan) {
         this.operation = projectionInfo.getProjectorType();
@@ -62,6 +65,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         cloudOnlyColumns = new BitSet();
         columnCtx = new CloudMegaPageReadContext(operation, columnRanges, drive);
         projectedColumns = new BitSet();
+        mergedPageRanges = new MergedPageRanges(columnCtx, MAX_RANGES_COUNT);
         if (operation == QUERY || operation == MODIFY) {
             for (int i = 0; i < projectionInfo.getNumberOfProjectedColumns(); i++) {
                 int columnIndex = projectionInfo.getColumnIndex(i);
@@ -138,13 +142,11 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
     private void pinAll(int fileId, int pageZeroId, int numberOfPages, IBufferCache bufferCache)
             throws HyracksDataException {
-        columnCtx.pin(bufferCache, fileId, pageZeroId, 1, numberOfPages);
+        columnCtx.pin(bufferCache, fileId, pageZeroId, 1, numberOfPages, numberOfPages, MergedPageRanges.EMPTY);
     }
 
     private void pinProjected(int fileId, int pageZeroId, IBufferCache bufferCache) throws HyracksDataException {
-        // TODO What if every other page is requested. That would do N/2 request, where N is the number of pages.
-        // TODO This should be optimized in a way that minimizes the number of requests
-
+        mergedPageRanges.reset();
         int[] columnsOrder = columnRanges.getColumnsOrder();
         int i = 0;
         int columnIndex = columnsOrder[i];
@@ -182,9 +184,10 @@ public final class CloudColumnReadContext implements IColumnReadContext {
                         + columnRanges.getTotalNumberOfPages());
             }
 
-            int numberOfPages = lastPageIdx - firstPageIdx + 1;
-            columnCtx.pin(bufferCache, fileId, pageZeroId, firstPageIdx, numberOfPages);
+            mergedPageRanges.addRange(firstPageIdx, lastPageIdx);
         }
+        // pin the calculated pageRanges
+        mergedPageRanges.pin(fileId, pageZeroId, bufferCache);
     }
 
     @Override

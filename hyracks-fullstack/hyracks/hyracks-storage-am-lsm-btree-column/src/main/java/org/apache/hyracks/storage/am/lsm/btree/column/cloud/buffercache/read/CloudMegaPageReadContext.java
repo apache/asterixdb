@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -54,6 +55,8 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
     private final List<ICachedPage> pinnedPages;
 
     private int numberOfContiguousPages;
+    // For logging, to get actual number of wanted pages
+    private int numberOfWantedPages;
     private int pageCounter;
     private InputStream gapStream;
 
@@ -68,12 +71,13 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         pinnedPages = new ArrayList<>();
     }
 
-    void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
-            throws HyracksDataException {
+    void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages,
+            int numberOfWantedPages, BitSet unwantedPages) throws HyracksDataException {
         closeStream();
         this.numberOfContiguousPages = numberOfPages;
+        this.numberOfWantedPages = numberOfWantedPages;
         pageCounter = 0;
-        doPin(bufferCache, fileId, pageZeroId, start, numberOfPages);
+        doPin(bufferCache, fileId, pageZeroId, start, numberOfPages, numberOfWantedPages, unwantedPages);
     }
 
     @Override
@@ -169,6 +173,17 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         ByteBuffer buffer = header.getBuffer();
         buffer.position(0);
 
+        // If the stream consists of the unwanted pages,
+        // if the currentPage's offset is greater, this means
+        // the streamOffset is pointing to a previous page.
+
+        // hence we should skip those many bytes.
+        // eg: if pageId(cPage) = 7 and streamOffset is pointing at 5
+        // then we need to jump 5,6 page worth of compressed size.
+        if (cPage.getCompressedPageOffset() > streamOffset) {
+            skipBytes(cPage.getCompressedPageOffset() - streamOffset);
+        }
+
         try {
             while (buffer.remaining() > 0) {
                 int length = stream.read(buffer.array(), buffer.position(), buffer.remaining());
@@ -208,13 +223,31 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         streamOffset = offset;
         LOGGER.info(
                 "Cloud stream read for pageId={} starting from pageCounter={} out of "
-                        + "numberOfContiguousPages={} (streamOffset = {}, remainingStreamBytes = {})",
-                pageId, pageCounter, numberOfContiguousPages, streamOffset, remainingStreamBytes);
+                        + "numberOfContiguousPages={} with numberOfWantedPages={}"
+                        + " (streamOffset = {}, remainingStreamBytes = {})",
+                pageId, pageCounter, numberOfContiguousPages, numberOfWantedPages, streamOffset, remainingStreamBytes);
 
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
         gapStream = cloudIOManager.cloudRead(fileHandle.getFileHandle(), offset, length);
 
         return gapStream;
+    }
+
+    private void skipBytes(long length) throws HyracksDataException {
+        if (gapStream == null) {
+            return;
+        }
+
+        try {
+            long lengthToSkip = length;
+            while (length > 0) {
+                length -= gapStream.skip(length);
+            }
+            streamOffset += lengthToSkip;
+            remainingStreamBytes -= lengthToSkip;
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     private void skipStreamIfOpened(CachedPage cPage) throws HyracksDataException {
@@ -234,18 +267,22 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         }
     }
 
-    private void doPin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
-            throws HyracksDataException {
+    private void doPin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages,
+            int numberOfWantedPages, BitSet unwantedPages) throws HyracksDataException {
         for (int i = start; i < start + numberOfPages; i++) {
-            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageZeroId + i);
+            int pageId = pageZeroId + i;
+            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageId);
             try {
-                pinnedPages.add(bufferCache.pin(dpid, this));
+                if (!unwantedPages.get(pageId)) {
+                    pinnedPages.add(bufferCache.pin(dpid, this));
+                }
                 pageCounter++;
             } catch (Throwable e) {
                 LOGGER.error(
-                        "Error while pinning page number {} with number of pages {}. "
+                        "Error while pinning page number {} with number of pages streamed {}, "
+                                + "with actually wanted number of pages {}"
                                 + "(streamOffset:{}, remainingStreamBytes: {}) columnRanges:\n {}",
-                        i, numberOfPages, streamOffset, remainingStreamBytes, columnRanges);
+                        i, numberOfPages, numberOfWantedPages, streamOffset, remainingStreamBytes, columnRanges);
                 throw e;
             }
         }
