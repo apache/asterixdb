@@ -23,7 +23,6 @@ import org.apache.hyracks.algebricks.runtime.operators.base.AbstractPushRuntimeF
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
-import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -31,64 +30,35 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public final class SinkExternalWriterRuntimeFactory extends AbstractPushRuntimeFactory {
     private static final long serialVersionUID = -2215789207336628581L;
     private final int sourceColumn;
-    private final int[] partitionColumns;
-    private final IBinaryComparatorFactory[] partitionComparatorFactories;
-    private final boolean partitionByKey;
     private final RecordDescriptor inputRecordDescriptor;
     private final IExternalWriterFactory writerFactory;
+    private final WriterPartitionerFactory partitionerFactory;
 
     public SinkExternalWriterRuntimeFactory(int sourceColumn, int[] partitionColumns,
             IBinaryComparatorFactory[] partitionComparatorFactories, RecordDescriptor inputRecordDescriptor,
             IExternalWriterFactory writerFactory) {
-        this(sourceColumn, partitionColumns, partitionComparatorFactories, false, inputRecordDescriptor, writerFactory);
+        this(sourceColumn, inputRecordDescriptor, writerFactory,
+                new WriterPartitionerFactory(partitionColumns, partitionComparatorFactories));
     }
 
     public SinkExternalWriterRuntimeFactory(int sourceColumn, RecordDescriptor inputRecordDescriptor,
             IExternalWriterFactory writerFactory) {
-        this(sourceColumn, null, null, true, inputRecordDescriptor, writerFactory);
+        this(sourceColumn, inputRecordDescriptor, writerFactory, new WriterPartitionerFactory());
     }
 
-    private SinkExternalWriterRuntimeFactory(int sourceColumn, int[] partitionColumns,
-            IBinaryComparatorFactory[] partitionComparatorFactories, boolean partitionByKey,
-            RecordDescriptor inputRecordDescriptor, IExternalWriterFactory writerFactory) {
+    private SinkExternalWriterRuntimeFactory(int sourceColumn, RecordDescriptor inputRecordDescriptor,
+            IExternalWriterFactory writerFactory, WriterPartitionerFactory partitionerFactory) {
         this.sourceColumn = sourceColumn;
-        this.partitionColumns = partitionColumns;
-        this.partitionComparatorFactories = partitionComparatorFactories;
-        this.partitionByKey = partitionByKey;
         this.inputRecordDescriptor = inputRecordDescriptor;
         this.writerFactory = writerFactory;
+        this.partitionerFactory = partitionerFactory;
     }
 
     @Override
     public IPushRuntime[] createPushRuntime(IHyracksTaskContext ctx) throws HyracksDataException {
         IExternalWriter writer = writerFactory.createWriter(ctx);
-        SinkExternalWriterRuntime runtime =
-                new SinkExternalWriterRuntime(sourceColumn, createPartitioner(), inputRecordDescriptor, writer);
+        SinkExternalWriterRuntime runtime = new SinkExternalWriterRuntime(sourceColumn,
+                partitionerFactory.createPartitioner(), inputRecordDescriptor, writer);
         return new IPushRuntime[] { runtime };
-    }
-
-    /**
-     * Creates the writer partitioner based on the provided parameters
-     *
-     * @return writer partitioner
-     */
-    private IWriterPartitioner createPartitioner() {
-        // key writer partitioner
-        if (partitionByKey) {
-            return KeyWriterPartitioner.INSTANCE;
-        }
-
-        // writer partitioner
-        if (partitionColumns.length > 0) {
-            IBinaryComparator[] comparators = new IBinaryComparator[partitionComparatorFactories.length];
-            for (int i = 0; i < partitionComparatorFactories.length; i++) {
-                comparators[i] = partitionComparatorFactories[i].createBinaryComparator();
-            }
-
-            return new WriterPartitioner(partitionColumns, comparators);
-        }
-
-        // no-op partitioner
-        return new NoOpWriterPartitioner();
     }
 }

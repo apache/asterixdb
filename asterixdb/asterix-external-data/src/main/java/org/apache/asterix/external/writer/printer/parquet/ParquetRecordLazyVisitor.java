@@ -43,16 +43,14 @@ import org.apache.parquet.schema.Type;
 public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<Void, Type> {
 
     private final MessageType schema;
-    private final IAType typeInfo;
     private final RecordLazyVisitablePointable rec;
     private RecordConsumer recordConsumer;
-    private FieldNamesDictionary fieldNamesDictionary;
+    private final FieldNamesDictionary fieldNamesDictionary;
 
     private final ParquetValueWriter parquetValueWriter;
 
     public ParquetRecordLazyVisitor(MessageType schema, IAType typeInfo) {
         this.schema = schema;
-        this.typeInfo = typeInfo;
         if (typeInfo.getTypeTag() == ATypeTag.OBJECT) {
             this.rec = new TypedRecordLazyVisitablePointable((ARecordType) typeInfo);
         } else if (typeInfo.getTypeTag() == ATypeTag.ANY) {

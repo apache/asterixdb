@@ -20,10 +20,10 @@ package org.apache.asterix.runtime.writer;
 
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-final class StaticPathResolver extends AbstractPathResolver {
+public final class StaticPathResolver extends AbstractPathResolver {
     private final String directoryPath;
 
-    StaticPathResolver(String fileExtension, char fileSeparator, int partition, String directoryPath) {
+    public StaticPathResolver(String fileExtension, char fileSeparator, int partition, String directoryPath) {
         super(fileExtension, fileSeparator, partition);
 
         if (!directoryPath.isEmpty() && directoryPath.charAt(directoryPath.length() - 1) != fileSeparator) {

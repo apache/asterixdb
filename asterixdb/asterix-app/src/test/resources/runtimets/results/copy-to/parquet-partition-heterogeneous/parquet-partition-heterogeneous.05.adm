@@ -1,0 +1,100 @@
+{ "partitioner_key": "A", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 1, "randomField": 5678 }
+{ "partitioner_key": "A", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 2, "randomField": 18 }
+{ "partitioner_key": "C", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 3, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 4, "randomField": 5678 }
+{ "partitioner_key": "A", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 5, "randomField": "1234" }
+{ "partitioner_key": "C", "price": "101.50", "name": 3456, "active": true, "id": 6, "randomField": { "value": 7890 } }
+{ "partitioner_key": "A", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 7, "randomField": 18 }
+{ "partitioner_key": "B", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 8, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "A", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 9, "randomField": 18 }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 10, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 11, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 12, "randomField": "5678" }
+{ "partitioner_key": "A", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 13, "randomField": "None" }
+{ "partitioner_key": "A", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 14, "randomField": 5678 }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 15, "randomField": 18 }
+{ "partitioner_key": "C", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 16, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 17, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "C", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 18, "randomField": 5678 }
+{ "partitioner_key": "C", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 19, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 20, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "B", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 21, "randomField": "1234" }
+{ "partitioner_key": "A", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 22, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 23, "randomField": 18 }
+{ "partitioner_key": "B", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 24, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 25, "randomField": "None" }
+{ "partitioner_key": "A", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 26, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "A", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 27, "randomField": "5678" }
+{ "partitioner_key": "B", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 28, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 29, "randomField": "1234" }
+{ "partitioner_key": "C", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 30, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "C", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 31, "randomField": "5678" }
+{ "partitioner_key": "B", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 32, "randomField": 5678 }
+{ "partitioner_key": "C", "price": "101.50", "name": 3456, "active": true, "id": 33, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 34, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 35, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 36, "randomField": "None" }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 37, "randomField": { "value": 7890 } }
+{ "partitioner_key": "A", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 38, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 39, "randomField": 5678 }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 40, "randomField": "1234" }
+{ "partitioner_key": "A", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 41, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "A", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 42, "randomField": "5678" }
+{ "partitioner_key": "C", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 43, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 44, "randomField": 18 }
+{ "partitioner_key": "A", "price": 99.99, "name": "Virat Kohli", "active": true, "id": 45, "randomField": 1234 }
+{ "partitioner_key": "B", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 46, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 47, "randomField": "None" }
+{ "partitioner_key": "A", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 48, "randomField": "None" }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 49, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "C", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 50, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "B", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 51, "randomField": "None" }
+{ "partitioner_key": "A", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 52, "randomField": "None" }
+{ "partitioner_key": "C", "price": "101.50", "name": 3456, "active": true, "id": 53, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 54, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "A", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 55, "randomField": "5678" }
+{ "partitioner_key": "B", "price": 99.99, "name": "Virat Kohli", "active": true, "id": 56, "randomField": 1234 }
+{ "partitioner_key": "B", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 57, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 58, "randomField": { "value": 7890 } }
+{ "partitioner_key": "A", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 59, "randomField": "None" }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 60, "randomField": 18 }
+{ "partitioner_key": "C", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 61, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 62, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "A", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 63, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 64, "randomField": 18 }
+{ "partitioner_key": "A", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 65, "randomField": 5678 }
+{ "partitioner_key": "B", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 66, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "B", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 67, "randomField": "5678" }
+{ "partitioner_key": "C", "price": "101.50", "name": 3456, "active": true, "id": 68, "randomField": { "value": 7890 } }
+{ "partitioner_key": "C", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 69, "randomField": "None" }
+{ "partitioner_key": "A", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 70, "randomField": 18 }
+{ "partitioner_key": "A", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 71, "randomField": 18 }
+{ "partitioner_key": "B", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 72, "randomField": 18 }
+{ "partitioner_key": "C", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 73, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "C", "price": 99.99, "name": "Virat Kohli", "active": true, "id": 74, "randomField": 1234 }
+{ "partitioner_key": "A", "price": "101.50", "name": 3456, "active": true, "id": 75, "randomField": { "value": 7890 } }
+{ "partitioner_key": "B", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 76, "randomField": "None" }
+{ "partitioner_key": "A", "price": "one hundred", "name": false, "active": { "status": "active" }, "id": 77, "randomField": [ 1, 2, 3 ] }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 78, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 79, "randomField": "1234" }
+{ "partitioner_key": "A", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 80, "randomField": "1234" }
+{ "partitioner_key": "C", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 81, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 82, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "A", "price": { "currency": "INR", "value": 99.99 }, "name": "None", "active": false, "id": 83, "randomField": "5678" }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 84, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "C", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 85, "randomField": "None" }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 86, "randomField": "1234" }
+{ "partitioner_key": "C", "price": { "amount": 99.99, "currency": "USD" }, "name": [ "Kohli", "Dhoni" ], "active": 1, "id": 87, "randomField": 18 }
+{ "partitioner_key": "A", "price": 100, "name": { "nickname": "VK" }, "active": [ true, false ], "id": 88, "randomField": 5678 }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 89, "randomField": "1234" }
+{ "partitioner_key": "C", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 90, "randomField": "None" }
+{ "partitioner_key": "A", "price": 99.99, "name": "Virat Kohli", "active": true, "id": 91, "randomField": 1234 }
+{ "partitioner_key": "A", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 92, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": "101.50", "name": 3456, "active": true, "id": 93, "randomField": { "value": 7890 } }
+{ "partitioner_key": "A", "price": 101.5, "name": { "last": "Dhoni", "first": "MS" }, "active": "no", "id": 94, "randomField": [ 9, 8, 7 ] }
+{ "partitioner_key": "B", "price": 50, "name": [ "Dhoni", "Kohli" ], "active": 0, "id": 95, "randomField": "None" }
+{ "partitioner_key": "B", "price": 99.99, "name": "Virat Kohli", "active": true, "id": 96, "randomField": 1234 }
+{ "partitioner_key": "A", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 97, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "B", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 98, "randomField": "1234" }
+{ "partitioner_key": "A", "price": [ 99, 100, 101 ], "name": 9876, "active": "active", "id": 99, "randomField": { "identifier": "ORD1234", "type": "order" } }
+{ "partitioner_key": "C", "price": "99.99", "name": { "last": "Kohli", "first": "Virat" }, "active": "yes", "id": 100, "randomField": "1234" }

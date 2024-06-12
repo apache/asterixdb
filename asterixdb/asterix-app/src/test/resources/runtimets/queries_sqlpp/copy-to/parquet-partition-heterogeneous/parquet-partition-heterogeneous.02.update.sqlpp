@@ -17,16 +17,10 @@
  * under the License.
  */
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
 USE test;
 
-
-CREATE TYPE ColumnType1 AS {
-  id: int
-};
-
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
-
-
-
+LOAD DATASET ParitionParquetDataset USING localfs
+(
+    ("path" = "asterix_nc1://data/hdfs/parquet/partition_heterogeneous.json"),
+    ("format" = "json")
+);

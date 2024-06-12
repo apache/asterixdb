@@ -21,12 +21,15 @@ DROP DATAVERSE test if exists;
 CREATE DATAVERSE test;
 USE test;
 
-
 CREATE TYPE ColumnType1 AS {
-  id: int
+    id: int
+    };
+
+CREATE DATASET ParitionParquetDataset(ColumnType1)
+PRIMARY KEY id WITH {
+    "storage-format": {"format" : "column"}
 };
 
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
 
-
-
+CREATE TYPE ColumnType2 AS {
+    };

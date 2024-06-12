@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
+import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaBuilderUtils.getGroupChild;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaBuilderUtils.getListChild;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaBuilderUtils.getPrimitiveChild;
+
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.types.ARecordType;
@@ -115,37 +119,6 @@ public class SchemaConverterVisitor implements IATypeVisitor<Void, Pair<Types.Bu
         getPrimitiveChild(builder, primitiveTypeName, logicalTypeAnnotation).named(fieldName);
 
         return null;
-    }
-
-    private static Types.BaseGroupBuilder getGroupChild(Types.Builder parent) {
-        if (parent instanceof Types.BaseGroupBuilder) {
-            return ((Types.BaseGroupBuilder<?, ?>) parent).optionalGroup();
-        } else if (parent instanceof Types.BaseListBuilder) {
-            return ((Types.BaseListBuilder<?, ?>) parent).optionalGroupElement();
-        } else {
-            return null;
-        }
-    }
-
-    private static Types.BaseListBuilder getListChild(Types.Builder parent) {
-        if (parent instanceof Types.BaseGroupBuilder) {
-            return ((Types.BaseGroupBuilder<?, ?>) parent).optionalList();
-        } else if (parent instanceof Types.BaseListBuilder) {
-            return ((Types.BaseListBuilder<?, ?>) parent).optionalListElement();
-        } else {
-            return null;
-        }
-    }
-
-    private static Types.Builder getPrimitiveChild(Types.Builder parent, PrimitiveType.PrimitiveTypeName type,
-            LogicalTypeAnnotation annotation) {
-        if (parent instanceof Types.BaseGroupBuilder) {
-            return ((Types.BaseGroupBuilder<?, ?>) parent).optional(type).as(annotation);
-        } else if (parent instanceof Types.BaseListBuilder) {
-            return ((Types.BaseListBuilder<?, ?>) parent).optionalElement(type).as(annotation);
-        } else {
-            return null;
-        }
     }
 
 }

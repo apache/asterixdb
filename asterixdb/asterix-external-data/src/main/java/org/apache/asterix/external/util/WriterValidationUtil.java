@@ -19,6 +19,7 @@
 package org.apache.asterix.external.util;
 
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
+import static org.apache.asterix.common.exceptions.ErrorCode.MAXIMUM_VALUE_ALLOWED_FOR_PARAM;
 import static org.apache.asterix.common.exceptions.ErrorCode.MINIMUM_VALUE_ALLOWED_FOR_PARAM;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_CSV;
@@ -27,6 +28,8 @@ import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQ
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_PAGE_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_ROW_GROUP_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_RESULT;
+import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_MAX_SCHEMAS_KEY;
+import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_MAX_SCHEMAS_MAX_VALUE;
 import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_WRITER_VERSION_KEY;
 import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_RESULT_MINIMUM;
 
@@ -91,6 +94,7 @@ public class WriterValidationUtil {
         validateParquetRowGroupSize(configuration);
         validateParquetPageSize(configuration);
         validateVersion(configuration, sourceLocation);
+        validateMaxParquetSchemas(configuration, sourceLocation);
     }
 
     private static void validateVersion(Map<String, String> configuration, SourceLocation sourceLocation)
@@ -169,6 +173,24 @@ public class WriterValidationUtil {
             if (value < WRITER_MAX_RESULT_MINIMUM) {
                 throw new CompilationException(MINIMUM_VALUE_ALLOWED_FOR_PARAM, KEY_WRITER_MAX_RESULT,
                         WRITER_MAX_RESULT_MINIMUM, value);
+            }
+        } catch (NumberFormatException e) {
+            throw CompilationException.create(ErrorCode.INTEGER_VALUE_EXPECTED, sourceLocation, maxResult);
+        }
+    }
+
+    private static void validateMaxParquetSchemas(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        String maxResult = configuration.get(PARQUET_MAX_SCHEMAS_KEY);
+        if (maxResult == null) {
+            return;
+        }
+
+        try {
+            int value = Integer.parseInt(maxResult);
+            if (value > PARQUET_MAX_SCHEMAS_MAX_VALUE) {
+                throw new CompilationException(MAXIMUM_VALUE_ALLOWED_FOR_PARAM, PARQUET_MAX_SCHEMAS_KEY,
+                        PARQUET_MAX_SCHEMAS_MAX_VALUE, value);
             }
         } catch (NumberFormatException e) {
             throw CompilationException.create(ErrorCode.INTEGER_VALUE_EXPECTED, sourceLocation, maxResult);

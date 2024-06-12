@@ -74,7 +74,7 @@ public class ParquetValueWriter {
                 recordConsumer.addDouble(value);
                 break;
             default:
-                throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
         }
     }
 
@@ -129,7 +129,7 @@ public class ParquetValueWriter {
                         recordConsumer.addDouble(floatValue);
                         break;
                     default:
-                        throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                        throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
                 }
                 break;
             case DOUBLE:
@@ -148,7 +148,7 @@ public class ParquetValueWriter {
                         recordConsumer.addDouble(doubleValue);
                         break;
                     default:
-                        throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                        throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
                 }
                 break;
             case STRING:
@@ -164,7 +164,7 @@ public class ParquetValueWriter {
                             byteArrayOutputStream.getLength()));
 
                 } else {
-                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
                 }
                 break;
             case BOOLEAN:
@@ -172,7 +172,7 @@ public class ParquetValueWriter {
                 if (primitiveTypeName == PrimitiveType.PrimitiveTypeName.BOOLEAN) {
                     recordConsumer.addBoolean(booleanValue);
                 } else {
-                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                    throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
                 }
                 break;
             case DATE:
@@ -190,7 +190,7 @@ public class ParquetValueWriter {
             case MISSING:
                 break;
             default:
-                throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
+                throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, primitiveTypeName, typeTag);
         }
     }
 }

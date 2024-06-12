@@ -50,8 +50,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-partition-heterogeneous">
+        <output-dir compare="Text">parquet-partition-heterogeneous</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="parquet-utf8">
         <output-dir compare="Text">parquet-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-heterogeneous">
+        <output-dir compare="Text">parquet-heterogeneous</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
@@ -112,8 +122,7 @@
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="parquet-error-checks">
         <output-dir compare="Text">parquet-error-checks</output-dir>
-        <expected-error>ASX1079: Compilation error: TYPE() Expression is required for parquet format</expected-error>
-        <expected-error>ASX0037: Type mismatch: expected value of type integer, but got the value of type BINARY</expected-error>
+        <expected-error>ASX0037: Type mismatch: expected value of type BINARY, but got the value of type bigint</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
         <expected-error>HYR0131: Result does not follow the schema, group type expected but found primitive type at 'nested'</expected-error>
         <expected-error>HYR0131: Result does not follow the schema, primitive type expected but found group type at 'name'</expected-error>
@@ -123,9 +132,10 @@
         <expected-error>ASX1001: Syntax error</expected-error>
         <expected-error>ASX1204: 'binary' type not supported in parquet format</expected-error>
         <expected-error>ASX1205: Invalid Parquet Writer Version provided '3'. Supported values: [1, 2]</expected-error>
-        <expected-error>ASX1001: Syntax error</expected-error>
-        <expected-error>ASX1001: Syntax error</expected-error>
-        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX0039: Expected integer value, got yvghc (in line 22, at column 6)</expected-error>
+        <expected-error>ASX1209: Maximum value allowed for 'max-schemas' is 10. Found 15</expected-error>
+        <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
+        <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
         </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">

@@ -21,7 +21,7 @@ package org.apache.hyracks.algebricks.runtime.operators.writer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 
-interface IWriterPartitioner {
+public interface IWriterPartitioner {
     boolean isNewPartition(FrameTupleAccessor tupleAccessor, int index) throws HyracksDataException;
 
 }

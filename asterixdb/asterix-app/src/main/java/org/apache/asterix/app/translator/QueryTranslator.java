@@ -4118,19 +4118,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx,
                         metadataProvider));
 
-                if (edd.getProperties().get(ExternalDataConstants.KEY_FORMAT)
-                        .equalsIgnoreCase(ExternalDataConstants.FORMAT_PARQUET)) {
-                    if (copyTo.getType() == null) {
-                        throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                "TYPE() Expression is required for parquet format");
+                if (ExternalDataConstants.FORMAT_PARQUET
+                        .equalsIgnoreCase(edd.getProperties().get(ExternalDataConstants.KEY_FORMAT))) {
+                    if (copyTo.getType() != null) {
+                        DataverseName dataverseName =
+                                DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
+                        IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
+                                ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
+                        edd.getProperties().put(ExternalDataConstants.PARQUET_SCHEMA_KEY,
+                                SchemaConverterVisitor.convertToParquetSchemaString((ARecordType) iaType));
                     }
-
-                    DataverseName dataverseName =
-                            DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
-                    IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
-                            ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
-                    edd.getProperties().put(ExternalDataConstants.PARQUET_SCHEMA_KEY,
-                            SchemaConverterVisitor.convertToParquetSchemaString((ARecordType) iaType));
                 }
 
                 if (edd.getProperties().get(ExternalDataConstants.KEY_FORMAT)

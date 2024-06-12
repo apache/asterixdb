@@ -16,17 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.external.writer.printer.parquet;
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
-USE test;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IValueReference;
 
+public interface ISchemaChecker {
+    enum SchemaComparisonType {
+        EQUIVALENT,
+        GROWING,
+        CONFLICTING
+    }
 
-CREATE TYPE ColumnType1 AS {
-  id: int
-};
+    static SchemaComparisonType max(ISchemaChecker.SchemaComparisonType a, ISchemaChecker.SchemaComparisonType b) {
+        return a.compareTo(b) > 0 ? a : b;
+    }
 
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
-
-
-
+    SchemaComparisonType checkSchema(ParquetSchemaTree.SchemaNode schemaNode, IValueReference iValueReference)
+            throws HyracksDataException;
+}

@@ -24,14 +24,15 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks14")
-TYPE ( {id :  int, name : string, list : [int |} )
+TYPE ( {id :  int, name : string, l : int } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"parquet"
+    "format":"parquet",
+    "max-schemas" : "15"
 }
 
 

@@ -24,7 +24,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 /**
  * Path resolver which generates paths for the written files
  */
-interface IPathResolver {
+public interface IPathResolver {
 
     /**
      * Extract the partitioning values from the provided tuple and generates the file path

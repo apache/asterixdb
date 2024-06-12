@@ -18,52 +18,29 @@
  */
 package org.apache.asterix.runtime.writer;
 
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
-import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
-import org.apache.hyracks.algebricks.runtime.evaluators.EvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriter;
 import org.apache.hyracks.algebricks.runtime.writers.IExternalWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.exceptions.IWarningCollector;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
 public class ExternalFileWriterFactory implements IExternalWriterFactory {
     private static final long serialVersionUID = 1412969574113419638L;
     private final IExternalFileWriterFactory writerFactory;
     private final IExternalPrinterFactory printerFactory;
-    private final String fileExtension;
     private final int maxResult;
-    private final IScalarEvaluatorFactory pathEvalFactory;
-    private final String staticPath;
-    private final SourceLocation pathSourceLocation;
+    private final IPathResolverFactory pathResolverFactory;
 
     public ExternalFileWriterFactory(IExternalFileWriterFactory writerFactory, IExternalPrinterFactory printerFactory,
-            String fileExtension, int maxResult, IScalarEvaluatorFactory pathEvalFactory, String staticPath,
-            SourceLocation pathSourceLocation) {
+            IPathResolverFactory pathResolverFactory, int maxResult) {
         this.writerFactory = writerFactory;
         this.printerFactory = printerFactory;
-        this.fileExtension = fileExtension;
+        this.pathResolverFactory = pathResolverFactory;
         this.maxResult = maxResult;
-        this.pathEvalFactory = pathEvalFactory;
-        this.staticPath = staticPath;
-        this.pathSourceLocation = pathSourceLocation;
     }
 
     @Override
     public IExternalWriter createWriter(IHyracksTaskContext context) throws HyracksDataException {
-        int partition = context.getTaskAttemptId().getTaskId().getPartition();
-        char fileSeparator = writerFactory.getSeparator();
-        IPathResolver resolver;
-        if (staticPath == null) {
-            EvaluatorContext evaluatorContext = new EvaluatorContext(context);
-            IScalarEvaluator pathEval = pathEvalFactory.createScalarEvaluator(evaluatorContext);
-            IWarningCollector warningCollector = context.getWarningCollector();
-            resolver = new DynamicPathResolver(fileExtension, fileSeparator, partition, pathEval, warningCollector,
-                    pathSourceLocation);
-        } else {
-            resolver = new StaticPathResolver(fileExtension, fileSeparator, partition, staticPath);
-        }
+        IPathResolver resolver = pathResolverFactory.createResolver(context);
         IExternalFileWriter writer = writerFactory.createWriter(context, printerFactory);
         return new ExternalFileWriter(resolver, writer, maxResult);
     }

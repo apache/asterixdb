@@ -17,16 +17,11 @@
  * under the License.
  */
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
 USE test;
 
 
-CREATE TYPE ColumnType1 AS {
-  id: int
-};
-
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
-
+SELECT c.*
+FROM ParitionParquetDatasetCopy c
+ORDER BY c.id;
 
 

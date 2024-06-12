@@ -17,16 +17,18 @@
  * under the License.
  */
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
 USE test;
 
-
-CREATE TYPE ColumnType1 AS {
-  id: int
+COPY (
+   select c.* from TestCollection c
+) toWriter
+TO S3
+PATH ("copy-to-result", "parquet-heterogeneous")
+WITH {
+    "accessKeyId":"dummyAccessKey",
+    "secretAccessKey":"dummySecretKey",
+    "region":"us-west-2",
+    "serviceEndpoint":"http://127.0.0.1:8001",
+    "container":"playground",
+    "format":"parquet"
 };
-
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
-
-
-

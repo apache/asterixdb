@@ -351,6 +351,9 @@ public class ExternalDataConstants {
             List.of(ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.UINT8,
                     ATypeTag.UINT16, ATypeTag.UINT64, ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING,
                     ATypeTag.BOOLEAN, ATypeTag.DATETIME, ATypeTag.UINT32, ATypeTag.DATE, ATypeTag.TIME);
+    public static final String PARQUET_MAX_SCHEMAS_KEY = "max-schemas";
+    public static final int PARQUET_MAX_SCHEMAS_DEFAULT_VALUE = 5;
+    public static final int PARQUET_MAX_SCHEMAS_MAX_VALUE = 10;
 
     static {
         WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE, FORMAT_PARQUET, FORMAT_CSV_LOWER_CASE);

@@ -19,12 +19,20 @@
 
 USE test;
 
+
+
+
+
+
+insert into TestCollection({"id":1, "name": []});
+
+
+
 COPY (
-   select c.* from TestCollection c
-) toWriter
+select c.* from TestCollection c
+    ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks15")
-TYPE ( {id : int, name : string, list : [int] )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",
@@ -32,7 +40,5 @@ WITH {
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
     "format":"parquet"
-}
-
-
+    }
 

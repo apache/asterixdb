@@ -20,7 +20,7 @@
 USE test;
 
 
-insert into TestCollection({"id":1, "name": "John", "nested" : { "first" : "john" , "second":"JOHN" }  });
+insert into TestCollection({"id":2, "name": "John", "nested" : { "first" : "john" , "second":"JOHN" }  });
 
 COPY (
    select c.* from TestCollection c

@@ -32,7 +32,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.apache.hyracks.util.string.UTF8CharBuffer;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
-final class DynamicPathResolver extends AbstractPathResolver {
+public final class DynamicPathResolver extends AbstractPathResolver {
     private final IScalarEvaluator pathEval;
     private final IWarningCollector warningCollector;
     private final StringBuilder dirStringBuilder;
@@ -40,7 +40,7 @@ final class DynamicPathResolver extends AbstractPathResolver {
     private final UTF8CharBuffer charBuffer;
     private final SourceLocation pathSourceLocation;
 
-    DynamicPathResolver(String fileExtension, char fileSeparator, int partition, IScalarEvaluator pathEval,
+    public DynamicPathResolver(String fileExtension, char fileSeparator, int partition, IScalarEvaluator pathEval,
             IWarningCollector warningCollector, SourceLocation pathSourceLocation) {
         super(fileExtension, fileSeparator, partition);
         this.pathEval = pathEval;

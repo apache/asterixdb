@@ -16,17 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.apache.asterix.runtime.writer;
 
-DROP DATAVERSE test if exists;
-CREATE DATAVERSE test;
-USE test;
+import java.io.Serializable;
 
+import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-CREATE TYPE ColumnType1 AS {
-  id: int
-};
+public interface IPathResolverFactory extends Serializable {
 
-CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;
+    IPathResolver createResolver(IHyracksTaskContext ctx) throws HyracksDataException;
 
-
-
+}

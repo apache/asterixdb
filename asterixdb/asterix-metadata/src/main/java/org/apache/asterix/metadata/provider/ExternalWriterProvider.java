@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.Deflater;
 
+import org.apache.asterix.cloud.parquet.ParquetSinkExternalWriterFactory;
 import org.apache.asterix.cloud.writer.GCSExternalFileWriterFactory;
 import org.apache.asterix.cloud.writer.S3ExternalFileWriterFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -35,18 +36,30 @@ import org.apache.asterix.external.writer.compressor.IExternalFileCompressStream
 import org.apache.asterix.external.writer.compressor.NoOpExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.printer.CsvExternalFilePrinterFactory;
 import org.apache.asterix.external.writer.printer.ParquetExternalFilePrinterFactory;
+import org.apache.asterix.external.writer.printer.ParquetExternalFilePrinterFactoryProvider;
 import org.apache.asterix.external.writer.printer.TextualExternalFilePrinterFactory;
 import org.apache.asterix.formats.nontagged.CSVPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
 import org.apache.asterix.metadata.declared.IExternalWriteDataSink;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.ConstantExpressionUtil;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
+import org.apache.asterix.runtime.writer.ExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactoryProvider;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
+import org.apache.asterix.runtime.writer.PathResolverFactory;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
+import org.apache.hyracks.algebricks.runtime.base.IPushRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
+import org.apache.hyracks.algebricks.runtime.operators.writer.SinkExternalWriterRuntimeFactory;
+import org.apache.hyracks.algebricks.runtime.operators.writer.WriterPartitionerFactory;
+import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
+import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.util.StorageUtil;
@@ -66,7 +79,7 @@ public class ExternalWriterProvider {
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_GCS, GCSExternalFileWriterFactory.PROVIDER);
     }
 
-    public static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,
+    private static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,
             String staticPath, SourceLocation pathExpressionLocation) {
         String adapterName = sink.getAdapterName().toLowerCase();
         IExternalFileWriterFactoryProvider creator = CREATOR_MAP.get(adapterName);
@@ -78,17 +91,25 @@ public class ExternalWriterProvider {
         return creator.create(createConfiguration(appCtx, sink, staticPath, pathExpressionLocation));
     }
 
-    public static String getFileExtension(IWriteDataSink sink) {
+    private static String getFileExtension(IWriteDataSink sink) {
         Map<String, String> configuration = sink.getConfiguration();
         String format = getFormat(configuration);
         String compression = getCompression(configuration);
         return format + (compression.isEmpty() ? "" : "." + compression);
     }
 
-    public static int getMaxResult(IWriteDataSink sink) {
+    private static int getMaxResult(IWriteDataSink sink) {
         String maxResultString = sink.getConfiguration().get(ExternalDataConstants.KEY_WRITER_MAX_RESULT);
         if (maxResultString == null) {
             return ExternalDataConstants.WRITER_MAX_RESULT_DEFAULT;
+        }
+        return Integer.parseInt(maxResultString);
+    }
+
+    private static int getMaxParquetSchema(Map<String, String> conf) {
+        String maxResultString = conf.get(ExternalDataConstants.PARQUET_MAX_SCHEMAS_KEY);
+        if (maxResultString == null) {
+            return ExternalDataConstants.PARQUET_MAX_SCHEMAS_DEFAULT_VALUE;
         }
         return Integer.parseInt(maxResultString);
     }
@@ -117,28 +138,69 @@ public class ExternalWriterProvider {
         CREATOR_MAP.put(adapterName.toLowerCase(), creator);
     }
 
-    public static IExternalPrinterFactory createPrinter(ICcApplicationContext appCtx, IWriteDataSink sink,
-            Object sourceType) throws CompilationException {
+    public static IPushRuntimeFactory getWriteFileRuntime(ICcApplicationContext appCtx, IWriteDataSink sink,
+            Object sourceType, ILogicalExpression staticPathExpr, SourceLocation pathSourceLocation,
+            IScalarEvaluatorFactory dynamicPathEvalFactory, RecordDescriptor inputDesc, int sourceColumn,
+            int[] partitionColumns, IBinaryComparatorFactory[] partitionComparatorFactories)
+            throws AlgebricksException {
+        String staticPath = staticPathExpr != null ? ConstantExpressionUtil.getStringConstant(staticPathExpr) : null;
+        IExternalFileWriterFactory fileWriterFactory =
+                ExternalWriterProvider.createWriterFactory(appCtx, sink, staticPath, pathSourceLocation);
+        fileWriterFactory.validate();
+        String fileExtension = ExternalWriterProvider.getFileExtension(sink);
+        int maxResult = ExternalWriterProvider.getMaxResult(sink);
+
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
 
         // Check for supported formats
-        if (!ExternalDataConstants.FORMAT_JSON_LOWER_CASE.equalsIgnoreCase(format)
-                && !ExternalDataConstants.FORMAT_PARQUET.equalsIgnoreCase(format)
-                && !ExternalDataConstants.FORMAT_CSV_LOWER_CASE.equalsIgnoreCase(format)) {
+        if (!ExternalDataConstants.WRITER_SUPPORTED_FORMATS.contains(format.toLowerCase())) {
             throw new UnsupportedOperationException("Unsupported format " + format);
         }
 
         String compression = getCompression(configuration);
+        WriterPartitionerFactory partitionerFactory =
+                new WriterPartitionerFactory(partitionColumns, partitionComparatorFactories);
+        PathResolverFactory pathResolverFactory = new PathResolverFactory(fileWriterFactory, fileExtension,
+                dynamicPathEvalFactory, staticPath, pathSourceLocation);
         IPrinterFactory printerFactory;
         IExternalFileCompressStreamFactory compressStreamFactory;
+        IExternalPrinterFactory externalPrinterFactory;
+        ExternalFileWriterFactory writerFactory;
         switch (format) {
             case ExternalDataConstants.FORMAT_JSON_LOWER_CASE:
                 compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
                 printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
-                return new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
+                externalPrinterFactory = new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
+                writerFactory = new ExternalFileWriterFactory(fileWriterFactory, externalPrinterFactory,
+                        pathResolverFactory, maxResult);
+
+                return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
+                        partitionComparatorFactories, inputDesc, writerFactory);
+            case ExternalDataConstants.FORMAT_CSV_LOWER_CASE:
+                compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
+                if (sink instanceof IExternalWriteDataSink) {
+                    ARecordType itemType = ((IExternalWriteDataSink) sink).getItemType();
+                    if (itemType != null) {
+                        printerFactory =
+                                CSVPrinterFactoryProvider
+                                        .createInstance(itemType, sink.getConfiguration(),
+                                                ((IExternalWriteDataSink) sink).getSourceLoc())
+                                        .getPrinterFactory(sourceType);
+                        externalPrinterFactory =
+                                new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);
+                        writerFactory = new ExternalFileWriterFactory(fileWriterFactory, externalPrinterFactory,
+                                pathResolverFactory, maxResult);
+                        return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
+                                partitionComparatorFactories, inputDesc, writerFactory);
+                    } else {
+                        throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
+                    }
+                } else {
+                    throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
+                }
+
             case ExternalDataConstants.FORMAT_PARQUET:
-                String parquetSchemaString = configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY);
 
                 CompressionCodecName compressionCodecName;
                 if (compression == null || compression.equals("") || compression.equals("none")) {
@@ -152,31 +214,32 @@ public class ExternalWriterProvider {
 
                 long rowGroupSize = StorageUtil.getByteValue(rowGroupSizeString);
                 int pageSize = (int) StorageUtil.getByteValue(pageSizeString);
-
                 ParquetProperties.WriterVersion writerVersion = getParquetWriterVersion(configuration);
 
-                return new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchemaString,
-                        (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
-            case ExternalDataConstants.FORMAT_CSV_LOWER_CASE:
-                compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
-                if (sink instanceof IExternalWriteDataSink) {
-                    ARecordType itemType = ((IExternalWriteDataSink) sink).getItemType();
-                    if (itemType != null) {
-                        printerFactory =
-                                CSVPrinterFactoryProvider
-                                        .createInstance(itemType, sink.getConfiguration(),
-                                                ((IExternalWriteDataSink) sink).getSourceLoc())
-                                        .getPrinterFactory(sourceType);
-                        return new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);
-                    } else {
-                        throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
-                    }
-                } else {
-                    throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
+                if (configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY) != null) {
+                    String parquetSchemaString = configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY);
+                    ParquetExternalFilePrinterFactory parquetPrinterFactory =
+                            new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchemaString,
+                                    (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
+
+                    ExternalFileWriterFactory parquetWriterFactory = new ExternalFileWriterFactory(fileWriterFactory,
+                            parquetPrinterFactory, pathResolverFactory, maxResult);
+                    return new SinkExternalWriterRuntimeFactory(sourceColumn, partitionColumns,
+                            partitionComparatorFactories, inputDesc, parquetWriterFactory);
                 }
+
+                int maxSchemas = ExternalWriterProvider.getMaxParquetSchema(configuration);
+                ParquetExternalFilePrinterFactoryProvider printerFactoryProvider =
+                        new ParquetExternalFilePrinterFactoryProvider(compressionCodecName, (IAType) sourceType,
+                                rowGroupSize, pageSize, writerVersion);
+                return new ParquetSinkExternalWriterFactory(partitionerFactory, inputDesc, sourceColumn,
+                        (IAType) sourceType, maxSchemas, fileWriterFactory, maxResult, printerFactoryProvider,
+                        pathResolverFactory);
+
             default:
                 throw new UnsupportedOperationException("Unsupported format " + format);
         }
+
     }
 
     private static ParquetProperties.WriterVersion getParquetWriterVersion(Map<String, String> configuration) {
