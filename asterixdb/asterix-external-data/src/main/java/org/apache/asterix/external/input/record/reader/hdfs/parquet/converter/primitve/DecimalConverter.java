@@ -23,8 +23,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
-import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.parquet.io.api.Binary;
 

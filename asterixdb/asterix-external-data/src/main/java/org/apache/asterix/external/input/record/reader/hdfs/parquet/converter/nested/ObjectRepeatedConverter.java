@@ -18,9 +18,11 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested;
 
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.builders.IARecordBuilder;
+import org.apache.asterix.builders.IAsterixListBuilder;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
@@ -29,33 +31,62 @@ import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.pr
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.PrimitiveType;
 
-public class ObjectConverter extends AbstractComplexConverter {
-    private IARecordBuilder builder;
+/**
+ * Handles the following non-standard parquet schema scenario:
+ * a group repeated list that is not contained in a LIST structure, for example
+ *
+ * {
+ *     "my_group_list": [{"date": "123", "author": "abc"}, {"date": "456", "author": "xyz"}]
+ * }
+ *
+ * Represented as:
+ * message Product {
+ *   repeated group name=my_group_list {
+ *     required binary name=date (STRING);
+ *     required binary name=author (STRING);
+ *   }
+ * }
+ *
+ * Instead of:
+ * message arrow_schema {
+ *   required group myGroupArray (LIST) {
+ *     repeated group list {
+ *       optional group  {
+ *         optional binary hello (STRING);
+ *         optional binary foo (STRING);
+ *       }
+ *     }
+ *   }
+ * }
+ *
+ *  In this case, this is a list and the type of the repeated is the type of the elements in the list
+ */
+public class ObjectRepeatedConverter extends AbstractComplexConverter {
+    private IAsterixListBuilder listBuilder;
+    private IMutableValueStorage listStorage;
+
+    private IARecordBuilder recordBuilder;
     /**
      * {@link IExternalFilterValueEmbedder} decides whether the object should be ignored entirely
      */
     private boolean ignore = false;
 
-    public ObjectConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
-            ParquetConverterContext context) throws IOException {
-        super(parent, index, parquetType, context);
-    }
-
-    public ObjectConverter(AbstractComplexConverter parent, String stringFieldName, int index, GroupType parquetType,
-            ParquetConverterContext context) throws IOException {
+    public ObjectRepeatedConverter(AbstractComplexConverter parent, String stringFieldName, int index,
+            GroupType parquetType, ParquetConverterContext context) throws IOException {
         super(parent, stringFieldName, index, parquetType, context);
     }
 
     @Override
     public void start() {
         tempStorage = context.enterObject();
-        builder = context.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        recordBuilder = context.getObjectBuilder(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
         if (isRoot()) {
             valueEmbedder.reset();
@@ -69,19 +100,63 @@ public class ObjectConverter extends AbstractComplexConverter {
     public void end() {
         closeDirectRepeatedChildren();
         if (!ignore) {
-            writeToParent();
+            writeToList();
             context.getValueEmbedder().exitObject();
         }
-
-        context.exitObject(tempStorage, null, builder);
+        context.exitObject(tempStorage, null, recordBuilder);
         tempStorage = null;
-        builder = null;
+        recordBuilder = null;
         ignore = false;
+    }
+
+    private void writeToList() {
+        try {
+            finalizeEmbedding();
+            recordBuilder.write(getListDataOutput(), true);
+            addValueToList();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void addValueToList() {
+        try {
+            listBuilder.addItem(listStorage);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    public DataOutput getListDataOutput() {
+        if (listStorage == null) {
+            internalStart();
+        }
+        listStorage.reset();
+        return listStorage.getDataOutput();
     }
 
     @Override
     public ATypeTag getTypeTag() {
-        return ATypeTag.OBJECT;
+        return ATypeTag.ARRAY;
+    }
+
+    private void internalStart() {
+        listStorage = context.enterCollection();
+        listBuilder = context.getCollectionBuilder(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
+    }
+
+    @Override
+    public void internalEnd() {
+        closeDirectRepeatedChildren();
+        try {
+            listBuilder.write(parent.getDataOutput(), true);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        parent.addValue(this);
+        context.exitCollection(listStorage, listBuilder);
+        listStorage = null;
+        listBuilder = null;
     }
 
     @Override
@@ -94,9 +169,9 @@ public class ObjectConverter extends AbstractComplexConverter {
         IValueReference fieldName = value.getFieldName();
         try {
             if (valueEmbedder.shouldEmbed(value.getStringFieldName(), value.getTypeTag())) {
-                builder.addField(fieldName, valueEmbedder.getEmbeddedValue());
+                recordBuilder.addField(fieldName, valueEmbedder.getEmbeddedValue());
             } else {
-                builder.addField(fieldName, getValue());
+                recordBuilder.addField(fieldName, getValue());
             }
         } catch (HyracksDataException e) {
             throw new IllegalStateException(e);
@@ -145,21 +220,11 @@ public class ObjectConverter extends AbstractComplexConverter {
         boolean embed = valueEmbedder.shouldEmbed(getStringFieldName(), ATypeTag.OBJECT);
         if (embed) {
             ((ArrayBackedValueStorage) parent.getValue()).set(valueEmbedder.getEmbeddedValue());
-            addThisValueToParent();
+            addValueToList();
         } else {
             valueEmbedder.enterObject();
         }
         return embed;
-    }
-
-    private void writeToParent() {
-        try {
-            finalizeEmbedding();
-            builder.write(getParentDataOutput(), true);
-            addThisValueToParent();
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     private void finalizeEmbedding() throws IOException {
@@ -170,7 +235,7 @@ public class ObjectConverter extends AbstractComplexConverter {
                 String embeddedFieldName = embeddedFieldNames[i];
                 if (valueEmbedder.isMissing(embeddedFieldName)) {
                     IValueReference embeddedValue = valueEmbedder.getEmbeddedValue();
-                    builder.addField(context.getSerializedFieldName(embeddedFieldName), embeddedValue);
+                    recordBuilder.addField(context.getSerializedFieldName(embeddedFieldName), embeddedValue);
                 }
             }
         }

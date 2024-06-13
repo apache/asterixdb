@@ -21,6 +21,7 @@ package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.n
 import java.io.IOException;
 
 import org.apache.asterix.builders.IAsterixListBuilder;
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.IFieldValue;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve.PrimitiveConverterProvider;
@@ -31,7 +32,7 @@ import org.apache.parquet.io.api.PrimitiveConverter;
 import org.apache.parquet.schema.GroupType;
 import org.apache.parquet.schema.PrimitiveType;
 
-class ArrayConverter extends AbstractComplexConverter {
+public class ArrayConverter extends AbstractComplexConverter {
     private IAsterixListBuilder builder;
 
     public ArrayConverter(AbstractComplexConverter parent, int index, GroupType parquetType,
@@ -52,6 +53,7 @@ class ArrayConverter extends AbstractComplexConverter {
 
     @Override
     public void end() {
+        closeDirectRepeatedChildren();
         try {
             builder.write(getParentDataOutput(), true);
         } catch (IOException e) {

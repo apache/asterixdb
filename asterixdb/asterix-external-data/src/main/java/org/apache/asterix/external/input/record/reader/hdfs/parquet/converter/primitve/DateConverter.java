@@ -20,8 +20,8 @@ package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.p
 
 import java.io.IOException;
 
+import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
-import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.AbstractComplexConverter;
 import org.apache.asterix.om.types.ATypeTag;
 
 class DateConverter extends GenericPrimitiveConverter {

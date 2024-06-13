@@ -18,22 +18,15 @@
  */
 package org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.primitve;
 
-import java.io.IOException;
+/**
+ * Special case interface to handle scenarios that are not following the latest parquet standards. See implementors
+ * of this interface methods for more details.
+ */
+public interface IClosableRepeatedConverter {
 
-import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.AbstractComplexConverter;
-import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.ParquetConverterContext;
-import org.apache.asterix.om.types.ATypeTag;
-import org.apache.parquet.io.api.Binary;
-
-public class UUIDConverter extends GenericPrimitiveConverter {
-    UUIDConverter(AbstractComplexConverter parent, String stringFieldName, int index, ParquetConverterContext context)
-            throws IOException {
-        super(ATypeTag.UUID, parent, stringFieldName, index, context);
-    }
-
-    @Override
-    public void addBinary(Binary value) {
-        context.serializeUUID(value, parent.getDataOutput());
-        parent.addValue(this);
+    /**
+     * Calls any necessary end operations for repeated types
+     */
+    default void internalEnd() {
     }
 }
