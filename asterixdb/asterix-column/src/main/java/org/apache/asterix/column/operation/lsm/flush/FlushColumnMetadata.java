@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.column.metadata.AbstractColumnMetadata;
-import org.apache.asterix.column.metadata.FieldNamesTrieDictionary;
 import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.PathInfoSerializer;
+import org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNestedNode;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -95,7 +95,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         columnWriters = new ArrayList<>();
         level = -1;
         repeated = 0;
-        fieldNamesDictionary = new FieldNamesTrieDictionary();
+        fieldNamesDictionary = AbstractFieldNamesDictionary.create();
         root = new ObjectSchemaNode();
         metaRoot = metaType != null ? new ObjectSchemaNode() : null;
         pathInfoSerializer = new PathInfoSerializer();
@@ -250,7 +250,7 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         deserializeWriters(input, writers, columnWriterFactory);
 
         //FieldNames
-        IFieldNamesDictionary fieldNamesDictionary = FieldNamesTrieDictionary.deserialize(input);
+        IFieldNamesDictionary fieldNamesDictionary = AbstractFieldNamesDictionary.deserialize(input);
 
         //Schema
         Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels = new HashMap<>();

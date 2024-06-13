@@ -17,22 +17,18 @@
  * under the License.
  */
 
-package org.apache.asterix.column.metadata;
+package org.apache.asterix.column.metadata.dictionary;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.hyracks.data.std.api.IValueReference;
-
-import it.unimi.dsi.fastutil.bytes.Byte2ObjectArrayMap;
-import it.unimi.dsi.fastutil.bytes.Byte2ObjectMap;
 
 class TrieNode {
     public static final int NOT_FOUND_INDEX = -1;
 
-    private Byte2ObjectMap<TrieNode> children;
+    private ByteToNodeMap children;
     private boolean isEndOfField;
     private int index;
     private int start; // includes the edges' byte
@@ -40,11 +36,11 @@ class TrieNode {
     private int bytesToStoreLength;
 
     TrieNode() {
-        children = new Byte2ObjectArrayMap<>();
+        this.children = new ByteToNodeMap();
         index = NOT_FOUND_INDEX;
     }
 
-    TrieNode(Byte2ObjectMap<TrieNode> children) {
+    TrieNode(ByteToNodeMap children) {
         this.children = children;
         index = NOT_FOUND_INDEX;
     }
@@ -60,10 +56,6 @@ class TrieNode {
         this.isEndOfField = isEndOfField;
     }
 
-    public boolean containsKey(byte key) {
-        return children.containsKey(key);
-    }
-
     public TrieNode getChild(byte key) {
         return children.get(key);
     }
@@ -72,7 +64,7 @@ class TrieNode {
         children.put(key, child);
     }
 
-    public Byte2ObjectMap<TrieNode> getChildren() {
+    public ByteToNodeMap getChildren() {
         return children;
     }
 
@@ -98,7 +90,7 @@ class TrieNode {
 
     public void reset() {
         // since this object went to the new node.
-        children = new Byte2ObjectArrayMap<>();
+        children = new ByteToNodeMap();
     }
 
     public void split(IValueReference fieldName, int splitIndex) {
@@ -107,6 +99,7 @@ class TrieNode {
         // something to be split, have to create a new node
         // and do the linking.
         TrieNode childNode = new TrieNode(children);
+
         int leftToSplit = length - splitIndex;
         childNode.setIndex(index, start + splitIndex, leftToSplit, bytesToStoreLength);
         childNode.setIsEndOfField(isEndOfField);
@@ -120,33 +113,25 @@ class TrieNode {
     }
 
     public void serialize(DataOutput out) throws IOException {
+        // Serialize child first
+        children.serialize(out);
         // serialize fields
         out.writeBoolean(isEndOfField);
         out.writeInt(index);
         out.writeInt(start);
         out.writeInt(length);
         out.writeInt(bytesToStoreLength);
-
-        out.writeInt(children.size());
-        for (Map.Entry<Byte, TrieNode> entry : children.byte2ObjectEntrySet()) {
-            out.writeByte(entry.getKey());
-            entry.getValue().serialize(out);
-        }
     }
 
     public static TrieNode deserialize(DataInput in) throws IOException {
-        TrieNode node = new TrieNode();
+        ByteToNodeMap children = ByteToNodeMap.deserialize(in);
+        TrieNode node = new TrieNode(children);
         node.isEndOfField = in.readBoolean();
         node.index = in.readInt();
         node.start = in.readInt();
         node.length = in.readInt();
         node.bytesToStoreLength = in.readInt();
 
-        int childrenSize = in.readInt();
-        for (int i = 0; i < childrenSize; i++) {
-            byte b = in.readByte();
-            node.children.put(b, TrieNode.deserialize(in));
-        }
         return node;
     }
 }

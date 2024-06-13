@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.metadata;
+package org.apache.asterix.column.metadata.dictionary;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -37,6 +37,10 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
+/**
+ * @deprecated Use {@link FieldNamesTrieDictionary}
+ */
+@Deprecated
 public class FieldNamesHashDictionary extends AbstractFieldNamesDictionary {
     //For both declared and inferred fields
     private final List<IValueReference> fieldNames;
@@ -172,18 +176,6 @@ public class FieldNamesHashDictionary extends AbstractFieldNamesDictionary {
 
         hashToFieldNameIndexMap.clear();
         deserializeHashToFieldNameIndex(input, hashToFieldNameIndexMap, numberOfFieldNames);
-    }
-
-    private static void deserializeFieldNames(DataInput input, List<IValueReference> fieldNames, int numberOfFieldNames)
-            throws IOException {
-
-        for (int i = 0; i < numberOfFieldNames; i++) {
-            int length = input.readInt();
-            ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(length);
-            fieldName.setSize(length);
-            input.readFully(fieldName.getByteArray(), 0, length);
-            fieldNames.add(fieldName);
-        }
     }
 
     private static void deserializeDeclaredFieldNames(DataInput input,

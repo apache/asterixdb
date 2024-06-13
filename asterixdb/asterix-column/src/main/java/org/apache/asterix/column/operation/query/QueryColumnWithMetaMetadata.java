@@ -35,8 +35,8 @@ import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluator;
 import org.apache.asterix.column.filter.iterable.IColumnIterableFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterEvaluatorFactory;
 import org.apache.asterix.column.filter.range.IColumnRangeFilterValueAccessor;
-import org.apache.asterix.column.metadata.FieldNamesTrieDictionary;
 import org.apache.asterix.column.metadata.IFieldNamesDictionary;
+import org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
@@ -133,7 +133,7 @@ public final class QueryColumnWithMetaMetadata extends QueryColumnMetadata {
         DataInput input = new DataInputStream(new ByteArrayInputStream(bytes, fieldNamesStart, length));
 
         //FieldNames
-        IFieldNamesDictionary fieldNamesDictionary = FieldNamesTrieDictionary.deserialize(input);
+        IFieldNamesDictionary fieldNamesDictionary = AbstractFieldNamesDictionary.deserialize(input);
 
         //Schema
         ObjectSchemaNode root = (ObjectSchemaNode) AbstractSchemaNode.deserialize(input, null);

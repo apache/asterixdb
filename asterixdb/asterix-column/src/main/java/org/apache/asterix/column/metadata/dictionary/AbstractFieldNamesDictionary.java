@@ -17,8 +17,13 @@
  * under the License.
  */
 
-package org.apache.asterix.column.metadata;
+package org.apache.asterix.column.metadata.dictionary;
 
+import java.io.DataInput;
+import java.io.IOException;
+import java.util.List;
+
+import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -50,6 +55,14 @@ public abstract class AbstractFieldNamesDictionary implements IFieldNamesDiction
         stringSerDer = new AStringSerializerDeserializer(new UTF8StringWriter(), new UTF8StringReader());
     }
 
+    public static IFieldNamesDictionary create() {
+        return new FieldNamesTrieDictionary();
+    }
+
+    public static IFieldNamesDictionary deserialize(DataInput input) throws IOException {
+        return FieldNamesTrieDictionary.deserialize(input);
+    }
+
     static ArrayBackedValueStorage creatFieldName(IValueReference fieldName) throws HyracksDataException {
         ArrayBackedValueStorage copy = new ArrayBackedValueStorage(fieldName.getLength());
         copy.append(fieldName);
@@ -65,5 +78,16 @@ public abstract class AbstractFieldNamesDictionary implements IFieldNamesDiction
     protected void serializeFieldName(String fieldName, ArrayBackedValueStorage storage) throws HyracksDataException {
         mutableString.setValue(fieldName);
         stringSerDer.serialize(mutableString, storage.getDataOutput());
+    }
+
+    static void deserializeFieldNames(DataInput input, List<IValueReference> fieldNames, int numberOfFieldNames)
+            throws IOException {
+        for (int i = 0; i < numberOfFieldNames; i++) {
+            int length = input.readInt();
+            ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(length);
+            fieldName.setSize(length);
+            input.readFully(fieldName.getByteArray(), 0, length);
+            fieldNames.add(fieldName);
+        }
     }
 }

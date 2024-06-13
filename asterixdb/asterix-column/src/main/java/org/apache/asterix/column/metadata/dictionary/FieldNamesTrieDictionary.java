@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.metadata;
+package org.apache.asterix.column.metadata.dictionary;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -37,7 +37,7 @@ public class FieldNamesTrieDictionary extends AbstractFieldNamesDictionary {
         this(new FieldNameTrie());
     }
 
-    public FieldNamesTrieDictionary(FieldNameTrie dictionary) {
+    private FieldNamesTrieDictionary(FieldNameTrie dictionary) {
         super();
         this.dictionary = dictionary;
         lookupStorage = new ArrayBackedValueStorage();

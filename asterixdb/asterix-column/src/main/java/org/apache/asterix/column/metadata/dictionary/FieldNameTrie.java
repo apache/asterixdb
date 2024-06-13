@@ -16,19 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.metadata;
+package org.apache.asterix.column.metadata.dictionary;
+
+import static org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionary.deserializeFieldNames;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
 public class FieldNameTrie {
@@ -129,11 +130,10 @@ public class FieldNameTrie {
 
         // resume from the stored node.
         int bytesToStoreLength = UTF8StringUtil.getNumBytesToStoreLength(len);
-        int start = bytesToStoreLength;
 
         int byteIndex = lookupState.getRelativeOffsetFromStart() + bytesToStoreLength;
         byte[] bytes = fieldName.getByteArray();
-        int lastIndex = (start + len - 1);
+        int lastIndex = (bytesToStoreLength + len - 1);
         while (byteIndex <= lastIndex) {
             byte b = bytes[byteIndex];
             TrieNode nextNode = searchNode.getChild(b);
@@ -191,7 +191,7 @@ public class FieldNameTrie {
         // find absolute starting point in the current fieldName
         int diff = searchNode.getStart() - searchNode.getBytesToStoreLength();
         // since hookup happens on a new fieldName, hence start will be bytesToStoreLength
-        searchNode.setIndex(fieldNames.size(), start + diff, searchNode.getLength(), bytesToStoreLength);
+        searchNode.setIndex(fieldNames.size(), bytesToStoreLength + diff, searchNode.getLength(), bytesToStoreLength);
         searchNode.setIsEndOfField(true);
         fieldNames.add(fieldName);
         return searchNode.getIndex();
@@ -210,14 +210,25 @@ public class FieldNameTrie {
         rootNode.serialize(out);
     }
 
+    public List<IValueReference> getFieldNames() {
+        return fieldNames;
+    }
+
+    public IValueReference getFieldName(int fieldIndex) {
+        return fieldNames.get(fieldIndex);
+    }
+
+    public void clear() {
+        rootNode = null;
+        fieldNames.clear();
+    }
+
     public static FieldNameTrie deserialize(DataInput in) throws IOException {
         int version = in.readInt();
-        switch (version) {
-            case VERSION:
-                return deserializeV1(in);
-            default:
-                throw new IllegalStateException("Unsupported version: " + version);
+        if (version == VERSION) {
+            return deserializeV1(in);
         }
+        throw new IllegalStateException("Unsupported version: " + version);
     }
 
     private static FieldNameTrie deserializeV1(DataInput in) throws IOException {
@@ -232,37 +243,11 @@ public class FieldNameTrie {
         return newTrie;
     }
 
-    private static void deserializeFieldNames(DataInput input, List<IValueReference> fieldNames, int numberOfFieldNames)
-            throws IOException {
-        for (int i = 0; i < numberOfFieldNames; i++) {
-            int length = input.readInt();
-            ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(length);
-            fieldName.setSize(length);
-            input.readFully(fieldName.getByteArray(), 0, length);
-            fieldNames.add(fieldName);
-        }
-    }
-
-    public List<IValueReference> getFieldNames() {
-        return fieldNames;
-    }
-
-    public IValueReference getFieldName(int fieldIndex) {
-        return fieldNames.get(fieldIndex);
-    }
-
-    public void clear() {
-        rootNode = null;
-        fieldNames.clear();
-    }
-
     @Override
     public String toString() {
         TrieNode currentNode = rootNode;
-        Queue<TrieNode> queue = new LinkedList<>();
-        for (TrieNode node : currentNode.getChildren().values()) {
-            queue.offer(node);
-        }
+        Queue<TrieNode> queue = new ArrayDeque<>();
+        currentNode.getChildren().addAllChildren(queue);
         StringBuilder treeBuilder = new StringBuilder();
         while (!queue.isEmpty()) {
             int len = queue.size();
@@ -278,16 +263,14 @@ public class FieldNameTrie {
                     treeBuilder.append(" | ");
                 }
 
-                for (TrieNode child : node.getChildren().values()) {
-                    queue.offer(child);
-                }
+                node.getChildren().addAllChildren(queue);
             }
             treeBuilder.append("\n");
         }
         return treeBuilder.toString();
     }
 
-    class LookupState {
+    private static class LookupState {
         private TrieNode lastNode;
         private int relativeOffsetFromStart;
         private int fieldLength;
