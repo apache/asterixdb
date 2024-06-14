@@ -19,6 +19,8 @@
 
 package org.apache.hyracks.storage.am.lsm.common.impls;
 
+import static org.apache.hyracks.util.ExitUtil.EC_INCONSISTENT_STORAGE_REFERENCES;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +57,7 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
 import org.apache.hyracks.storage.am.lsm.common.api.LSMOperationType;
 import org.apache.hyracks.storage.common.IIndexCursor;
 import org.apache.hyracks.storage.common.ISearchPredicate;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.annotations.CriticalPath;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
@@ -244,56 +247,35 @@ public class LSMHarness implements ILSMHarness {
                             }
                         }
                         if (inactiveDiskComponentsToBeDeleted != null) {
+                            // note: the disk components have been removed before they were destroyed
                             inactiveDiskComponents.removeAll(inactiveDiskComponentsToBeDeleted);
                         }
                     }
                     List<ILSMMemoryComponent> inactiveMemoryComponents = lsmIndex.getInactiveMemoryComponents();
                     if (!inactiveMemoryComponents.isEmpty()) {
                         inactiveMemoryComponentsToBeCleanedUp = new ArrayList<>(inactiveMemoryComponents);
+                        // note: the inactive memory components have been cleared before they were cleaned up
                         inactiveMemoryComponents.clear();
                     }
                 }
             }
         } finally {
-            /*
-             * cleanup inactive disk components if any
-             */
-            if (inactiveDiskComponentsToBeDeleted != null) {
-                try {
-                    //schedule a replication job to delete these inactive disk components from replicas
-                    if (replicationEnabled) {
-                        lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted,
-                                ReplicationOperation.DELETE, opType);
-                    }
-                    for (ILSMDiskComponent c : inactiveDiskComponentsToBeDeleted) {
-                        c.deactivateAndDestroy();
-                    }
-                } catch (Throwable e) { // NOSONAR Log and re-throw
-                    if (LOGGER.isWarnEnabled()) {
-                        LOGGER.log(Level.WARN, "Failure scheduling replication or destroying merged component", e);
-                    }
-                    throw e; // NOSONAR: The last call in the finally clause
-                }
-            }
+            // the memory components clean up must be done first to avoid any unexpected exceptions during the rest
+            // of the finally block
             if (inactiveMemoryComponentsToBeCleanedUp != null) {
-                for (ILSMMemoryComponent c : inactiveMemoryComponentsToBeCleanedUp) {
-                    tracer.instant(c.toString(), traceCategory, Scope.p, lsmIndex::toString);
-                    c.cleanup();
-                    synchronized (opTracker) {
-                        c.reset();
-                        // Notify all waiting threads whenever the mutable component's state
-                        // has changed to inactive. This is important because even though we switched
-                        // the mutable components, it is possible that the component that we just
-                        // switched to is still busy flushing its data to disk. Thus, the notification
-                        // that was issued upon scheduling the flush is not enough.
-                        opTracker.notifyAll(); // NOSONAR: Always called inside synchronized block
-                    }
-                }
+                cleanupInactiveMemoryComponents(inactiveMemoryComponentsToBeCleanedUp);
             }
             if (opType == LSMOperationType.FLUSH) {
                 ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
                 // We must call flushed without synchronizing on opTracker to avoid deadlocks
                 flushingComponent.flushed();
+            }
+            if (inactiveDiskComponentsToBeDeleted != null) {
+                if (replicationEnabled) {
+                    lsmIndex.scheduleReplication(null, inactiveDiskComponentsToBeDeleted, ReplicationOperation.DELETE,
+                            opType);
+                }
+                lsmIndex.scheduleCleanup(inactiveDiskComponentsToBeDeleted);
             }
         }
     }
@@ -929,6 +911,34 @@ public class LSMHarness implements ILSMHarness {
                 enterComponents(componentReplacementCtx, LSMOperationType.SEARCH, false);
                 componentReplacementCtx.replace(ctx);
             }
+        }
+    }
+
+    /**
+     * Resets the memory state of {@code inactiveMemoryComponents}. This method should not throw any exceptions.
+     * To account for cases where unexpected exceptions are thrown, we halt to avoid getting stuck with a bad in-memory
+     * state.
+     *
+     * @param inactiveMemoryComponents
+     */
+    private void cleanupInactiveMemoryComponents(List<ILSMMemoryComponent> inactiveMemoryComponents) {
+        try {
+            for (ILSMMemoryComponent c : inactiveMemoryComponents) {
+                tracer.instant(c.toString(), traceCategory, Scope.p, lsmIndex::toString);
+                c.cleanup();
+                synchronized (opTracker) {
+                    c.reset();
+                    // Notify all waiting threads whenever the mutable component's state
+                    // has changed to inactive. This is important because even though we switched
+                    // the mutable components, it is possible that the component that we just
+                    // switched to is still busy flushing its data to disk. Thus, the notification
+                    // that was issued upon scheduling the flush is not enough.
+                    opTracker.notifyAll(); // NOSONAR: Always called inside synchronized block
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.fatal("unexpected error while cleaning up inactive memory components", e);
+            ExitUtil.halt(EC_INCONSISTENT_STORAGE_REFERENCES);
         }
     }
 }

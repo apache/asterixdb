@@ -38,7 +38,8 @@ public interface ILSMIOOperation extends Callable<LSMIOOperationStatus>, IPageWr
         MERGE,
         LOAD,
         NOOP,
-        REPLICATE
+        REPLICATE,
+        CLEANUP
     }
 
     /**

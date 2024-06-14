@@ -229,4 +229,11 @@ public interface ILSMIndex extends IIndex {
      */
     IIndexDiskCacheManager getDiskCacheManager();
 
+    /**
+     * Schedules a cleanup opeartion on the components {@code inactiveDiskComponents}
+     *
+     * @param inactiveDiskComponents
+     * @throws HyracksDataException
+     */
+    void scheduleCleanup(List<ILSMDiskComponent> inactiveDiskComponents) throws HyracksDataException;
 }

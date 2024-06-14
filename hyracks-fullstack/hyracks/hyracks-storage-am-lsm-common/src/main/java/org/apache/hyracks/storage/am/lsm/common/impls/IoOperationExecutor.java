@@ -74,12 +74,12 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
             fail(executedOp, t != null ? t : executedOp.getFailure());
         }
         if (!failed || executedOp.getIOOpertionType() != LSMIOOperationType.FLUSH) {
-            executedOp.complete(); // destroy if merge or successful flush
+            executedOp.complete(); // destroy if merge, cleanup, or successful flush
         }
         scheduler.completeOperation(executedOp);
     }
 
-    private void fail(ILSMIOOperation executedOp, Throwable t) throws HyracksDataException {
+    private void fail(ILSMIOOperation executedOp, Throwable t) {
         callback.operationFailed(executedOp, t);
         if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
             executedOp.complete();

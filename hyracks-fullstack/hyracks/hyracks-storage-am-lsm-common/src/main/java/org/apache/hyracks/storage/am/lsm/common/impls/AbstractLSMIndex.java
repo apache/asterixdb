@@ -118,6 +118,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
     private final boolean atomic;
     private final List<ILSMDiskComponent> temporaryDiskComponents;
     private final ILSMMergePolicy mergePolicy;
+    private final ILSMIOOperationScheduler ioScheduler;
 
     public AbstractLSMIndex(IIOManager ioManager, List<IVirtualBufferCache> virtualBufferCaches,
             IBufferCache diskBufferCache, ILSMIndexFileManager fileManager, double bloomFilterFalsePositiveRate,
@@ -148,6 +149,7 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         this.atomic = atomic;
         this.temporaryDiskComponents = new ArrayList<>();
         this.mergePolicy = mergePolicy;
+        this.ioScheduler = ioScheduler;
 
         fileManager.initLastUsedSeq(ioOpCallback.getLastValidSequence());
         lsmHarness = new LSMHarness(this, ioScheduler, mergePolicy, opTracker, diskBufferCache.isReplicationEnabled(),
@@ -448,6 +450,13 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         }
         ioOpCallback.scheduled(mergeOp);
         return mergeOp;
+    }
+
+    @Override
+    public void scheduleCleanup(List<ILSMDiskComponent> inactiveDiskComponents) throws HyracksDataException {
+        LSMCleanupOperation cleanupOperation = new LSMCleanupOperation(this, ioOpCallback, inactiveDiskComponents);
+        ioOpCallback.scheduled(cleanupOperation);
+        ioScheduler.scheduleOperation(cleanupOperation);
     }
 
     private static void propagateMap(ILSMIndexOperationContext src, ILSMIndexOperationContext destination) {

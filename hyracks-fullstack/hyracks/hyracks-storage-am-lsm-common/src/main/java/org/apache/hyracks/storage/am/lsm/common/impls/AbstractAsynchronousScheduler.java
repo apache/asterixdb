@@ -62,6 +62,9 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
             case REPLICATE:
                 scheduleReplicate(operation);
                 break;
+            case CLEANUP:
+                scheduleCleanup(operation);
+                break;
             case NOOP:
                 break;
             default:
@@ -83,7 +86,7 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
             case REPLICATE:
                 completeReplicate(operation);
                 break;
-            case NOOP:
+            case CLEANUP, NOOP:
                 return;
             default:
                 // this should never happen
@@ -167,6 +170,10 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
                 executor.submit(operation);
             }
         }
+    }
+
+    private void scheduleCleanup(ILSMIOOperation operation) {
+        executor.submit(operation);
     }
 
     private void completeReplicate(ILSMIOOperation operation) {
