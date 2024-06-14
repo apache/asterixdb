@@ -52,7 +52,7 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
 
     @Override
     public void scheduleOperation(ILSMIOOperation operation) {
-        switch (operation.getIOOpertionType()) {
+        switch (operation.getIOOperationType()) {
             case FLUSH:
                 scheduleFlush(operation);
                 break;
@@ -70,13 +70,13 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
             default:
                 // this should never happen
                 // just guard here to avoid silent failures in case of future extensions
-                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOpertionType());
+                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOperationType());
         }
     }
 
     @Override
     public void completeOperation(ILSMIOOperation operation) throws HyracksDataException {
-        switch (operation.getIOOpertionType()) {
+        switch (operation.getIOOperationType()) {
             case FLUSH:
                 completeFlush(operation);
                 break;
@@ -91,7 +91,7 @@ public abstract class AbstractAsynchronousScheduler implements ILSMIOOperationSc
             default:
                 // this should never happen
                 // just guard here to avoid silent failures in case of future extensions
-                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOpertionType());
+                throw new IllegalArgumentException("Unknown operation type " + operation.getIOOperationType());
         }
     }
 

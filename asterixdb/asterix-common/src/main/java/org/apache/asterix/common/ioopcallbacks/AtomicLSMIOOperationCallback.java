@@ -42,10 +42,10 @@ public class AtomicLSMIOOperationCallback extends LSMIOOperationCallback {
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             return;
         }
-        if (operation.getIOOpertionType() != LSMIOOperationType.LOAD
+        if (operation.getIOOperationType() != LSMIOOperationType.LOAD
                 && operation.getAccessor().getOpContext().getOperation() == IndexOperation.DELETE_COMPONENTS) {
             deleteComponentsFromCheckpoint(operation);
-        } else if (operation.getIOOpertionType() == LSMIOOperationType.LOAD) {
+        } else if (operation.getIOOperationType() == LSMIOOperationType.LOAD) {
             addComponentToCheckpoint(operation);
         } else if (isMerge(operation)) {
             IoUtil.delete(getOperationMaskFilePath(operation));

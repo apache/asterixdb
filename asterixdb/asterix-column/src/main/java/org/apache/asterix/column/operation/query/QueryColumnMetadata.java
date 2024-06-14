@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.query;
 
+import static org.apache.asterix.column.util.SchemaConstants.LOG_PROBABILITY;
+import static org.apache.asterix.column.util.SchemaConstants.RECORD_SCHEMA;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 
 import java.io.ByteArrayInputStream;
@@ -224,7 +226,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
         // log normalized filter
         logFilter(jobId, normalizedFilterEvaluator, normalizedEvaluatorFactory.toString());
         // log requested schema
-        logSchema(jobId, clippedRoot, SchemaStringBuilderVisitor.RECORD_SCHEMA, fieldNamesDictionary);
+        logSchema(jobId, clippedRoot, RECORD_SCHEMA, fieldNamesDictionary);
 
         // Primary key readers
         PrimitiveColumnValuesReader[] primaryKeyReaders =
@@ -270,7 +272,7 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
 
     protected static void logSchema(String jobId, ObjectSchemaNode root, String schemaSource,
             IFieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
-        if (jobId != null && LOGGER.isDebugEnabled()) {
+        if (jobId != null && LOGGER.isDebugEnabled() && System.nanoTime() % LOG_PROBABILITY == 0) {
             SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
             String schema = LogRedactionUtil.userData(schemaBuilder.build(root));
             LOGGER.debug("Queried {} schema [{}]: \n {}", schemaSource, jobId, schema);

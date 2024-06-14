@@ -351,9 +351,9 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
 
     @Override
     public String toString() {
-        return "{\"class\":\"" + getClass().getSimpleName() + "\", \"state\":\"" + state + "\", \"writers\":"
-                + writerCount + ", \"readers\":" + readerCount + ", \"pendingFlushes\":" + pendingFlushes
-                + ", \"id\":\"" + componentId + "\", \"index\":" + getIndex() + "}";
+        return "{\"state\":\"" + state + "\", \"writers\":" + writerCount + ", \"readers\":" + readerCount
+                + ", \"pendingFlushes\":" + pendingFlushes + ", \"id\":\"" + componentId + "\", \"index\":" + getIndex()
+                + "}";
     }
 
     @Override

@@ -120,7 +120,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             // Everything is cached, no need to invoke cloud-based accessor for read operations
             accessor = new LocalAccessor(cloudClient, bucket, localIoManager);
         } else {
-            LOGGER.debug("The number of uncached files: {}. Uncached files: {}", remainingUncachedFiles, cloudFiles);
+            LOGGER.info("The number of uncached files: {}. Uncached files: {}", remainingUncachedFiles, cloudFiles);
             // Get list of FileReferences from the list of cloud (i.e., resolve each path's string to FileReference)
             List<FileReference> uncachedFiles = resolve(cloudFiles);
             // Create a parallel downloader using the given cloudClient

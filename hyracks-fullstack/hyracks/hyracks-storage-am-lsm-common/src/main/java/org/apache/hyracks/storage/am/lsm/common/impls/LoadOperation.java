@@ -36,7 +36,7 @@ public class LoadOperation extends AbstractIoOperation {
     }
 
     @Override
-    public final LSMIOOperationType getIOOpertionType() {
+    public final LSMIOOperationType getIOOperationType() {
         return LSMIOOperationType.LOAD;
     }
 

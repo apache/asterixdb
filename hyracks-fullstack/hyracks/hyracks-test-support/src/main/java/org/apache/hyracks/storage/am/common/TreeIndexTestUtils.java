@@ -394,7 +394,7 @@ public abstract class TreeIndexTestUtils {
     }
 
     public static void checkCursorStats(ILSMIOOperation op) {
-        if (op.getIOOpertionType() == LSMIOOperationType.MERGE) {
+        if (op.getIOOperationType() == LSMIOOperationType.MERGE) {
             MergeOperation mergeOp = (MergeOperation) op;
             IIndexCursorStats stats = mergeOp.getCursorStats();
             Assert.assertTrue(stats.getPageCounter().get() > 0);

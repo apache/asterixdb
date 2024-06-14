@@ -159,20 +159,20 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
             synchronized (TestLsmIoOpCallbackFactory.this) {
                 if (op.getNewComponent() != null) {
                     if (op.getNewComponent() == EmptyComponent.INSTANCE) {
-                        if (op.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+                        if (op.getIOOperationType() == LSMIOOperationType.FLUSH) {
                             rollbackFlushes++;
                         } else {
                             rollbackMerges++;
                         }
                     } else {
-                        if (op.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+                        if (op.getIOOperationType() == LSMIOOperationType.FLUSH) {
                             completedFlushes++;
                         } else {
                             completedMerges++;
                         }
                     }
                 } else {
-                    recordFailure(op.getIOOpertionType());
+                    recordFailure(op.getIOOperationType());
                 }
                 TestLsmIoOpCallbackFactory.this.notifyAll();
             }

@@ -40,8 +40,6 @@ import org.apache.hyracks.util.string.UTF8StringWriter;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 public class SchemaStringBuilderVisitor implements ISchemaNodeVisitor<Void, Void> {
-    public static String RECORD_SCHEMA = "record";
-    public static String META_RECORD_SCHEMA = "meta-record";
     private final StringBuilder builder;
     private final List<String> fieldNames;
 

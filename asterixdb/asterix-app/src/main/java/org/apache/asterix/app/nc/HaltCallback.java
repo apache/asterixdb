@@ -47,7 +47,7 @@ public class HaltCallback implements IIoOperationFailedCallback {
     }
 
     private boolean haltOnFailure(ILSMIOOperation operation) {
-        switch (operation.getIOOpertionType()) {
+        switch (operation.getIOOperationType()) {
             case CLEANUP:
             case REPLICATE:
                 return false;

@@ -41,7 +41,7 @@ public class LSMCleanupOperation extends AbstractIoOperation {
     }
 
     @Override
-    public ILSMIOOperation.LSMIOOperationType getIOOpertionType() {
+    public ILSMIOOperation.LSMIOOperationType getIOOperationType() {
         return LSMIOOperationType.CLEANUP;
     }
 

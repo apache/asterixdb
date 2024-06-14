@@ -59,7 +59,7 @@ public abstract class FlushOperation extends AbstractIoOperation {
     }
 
     @Override
-    public LSMIOOperationType getIOOpertionType() {
+    public LSMIOOperationType getIOOperationType() {
         return LSMIOOperationType.FLUSH;
     }
 

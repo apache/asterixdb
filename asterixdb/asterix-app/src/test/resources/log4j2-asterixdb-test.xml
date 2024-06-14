@@ -27,6 +27,9 @@
     <File name="DebugLog" fileName="target/debug.log">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </File>
+    <File name="StorageDebug" fileName="target/storage_debug.log">
+      <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    </File>
     <Console name="ConsoleTest" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
     </Console>
@@ -44,6 +47,25 @@
     </Logger>
     <Logger name="org.apache.asterix.test" level="INFO">
       <AppenderRef ref="ConsoleTest"/>
+    </Logger>
+    <!--  Storage debug  -->
+    <Logger name="org.apache.hyracks.storage" level="debug" additivity="false">
+      <AppenderRef ref="InfoLog" level="warn"/>
+      <AppenderRef ref="StorageDebug"/>
+    </Logger>
+    <Logger name="org.apache.hyracks.cloud" level="debug" additivity="false">
+      <AppenderRef ref="StorageDebug"/>
+    </Logger>
+    <Logger name="org.apache.asterix.column" level="debug" additivity="false">
+      <AppenderRef ref="StorageDebug"/>
+    </Logger>
+    <Logger name="org.apache.asterix.cloud" additivity="false">
+      <AppenderRef ref="InfoLog" level="warn"/>
+      <AppenderRef ref="StorageDebug" level="debug"/>
+    </Logger>
+    <Logger name="org.apache.asterix.common.context.GlobalVirtualBufferCache" additivity="false">
+      <AppenderRef ref="InfoLog" level="warn"/>
+      <AppenderRef ref="StorageDebug" level="debug"/>
     </Logger>
   </Loggers>
 </Configuration>

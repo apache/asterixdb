@@ -237,6 +237,6 @@ public abstract class AbstractTreeIndex implements ITreeIndex {
 
     @Override
     public String toString() {
-        return "{\"class\":\"" + getClass().getSimpleName() + "\",\"file\":\"" + file.getRelativePath() + "\"}";
+        return "{\"class\": \"" + getClass().getSimpleName() + "\", \"file\": \"" + file.getRelativePath() + "\"}";
     }
 }

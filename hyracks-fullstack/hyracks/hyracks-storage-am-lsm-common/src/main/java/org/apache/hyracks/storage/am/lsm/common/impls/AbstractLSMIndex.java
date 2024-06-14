@@ -728,10 +728,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
 
     @Override
     public final String toString() {
-        return "{\"class\" : \"" + getClass().getSimpleName() + "\", \"dir\" : \"" + fileManager.getBaseDir()
-                + "\", \"memory\" : " + (memoryComponents == null ? 0 : memoryComponents) + ", \"disk\" : "
-                + diskComponents.size() + ", \"num-scheduled-flushes\":" + numScheduledFlushes
-                + ", \"current-memory-component\":"
+        return "{\"dir\" : \"" + fileManager.getBaseDir() + "\", \"memory\" : "
+                + (memoryComponents == null ? 0 : memoryComponents) + ", \"disk\" : " + diskComponents.size()
+                + ", \"num-scheduled-flushes\":" + numScheduledFlushes + ", \"current-memory-component\":"
                 + (currentMutableComponentId == null ? "" : currentMutableComponentId.get()) + "}";
     }
 
@@ -914,8 +913,9 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
         if (!memoryComponent.isModified() || opCtx.getOperation() == IndexOperation.DELETE_COMPONENTS) {
             return EmptyComponent.INSTANCE;
         }
-        LOGGER.debug("flushing component with id {} in the index {}",
-                ((FlushOperation) operation).getFlushingComponent().getId(), this);
+        FlushOperation flushOperation = (FlushOperation) operation;
+        ILSMComponent component = flushOperation.getFlushingComponent();
+        LOGGER.debug("Flushing {} memory component {}", operation, component);
         return doFlush(operation);
     }
 

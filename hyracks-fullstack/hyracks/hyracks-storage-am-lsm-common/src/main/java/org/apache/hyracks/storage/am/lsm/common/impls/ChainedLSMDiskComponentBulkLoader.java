@@ -173,7 +173,7 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     }
 
     private void checkOperation() throws HyracksDataException {
-        if (operation.getIOOpertionType() == LSMIOOperationType.MERGE && ++tupleCounter % CHECK_CYCLE == 0) {
+        if (operation.getIOOperationType() == LSMIOOperationType.MERGE && ++tupleCounter % CHECK_CYCLE == 0) {
             tupleCounter = 0;
             ((MergeOperation) operation).waitIfPaused();
         }

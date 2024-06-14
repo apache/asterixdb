@@ -19,6 +19,8 @@
 package org.apache.asterix.column.operation.lsm.flush;
 
 import static org.apache.asterix.column.util.ColumnValuesUtil.getNormalizedTypeTag;
+import static org.apache.asterix.column.util.SchemaConstants.META_RECORD_SCHEMA;
+import static org.apache.asterix.column.util.SchemaConstants.RECORD_SCHEMA;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
@@ -582,11 +584,10 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
         // This should be a low frequency object creation
         SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
         String recordSchema = LogRedactionUtil.userData(schemaBuilder.build(root));
-        LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.RECORD_SCHEMA, recordSchema);
+        LOGGER.debug("Schema for {} has changed: \n {}", RECORD_SCHEMA, recordSchema);
         if (metaRoot != null) {
             String metaRecordSchema = LogRedactionUtil.userData(schemaBuilder.build(metaRoot));
-            LOGGER.debug("Schema for {} has changed: \n {}", SchemaStringBuilderVisitor.META_RECORD_SCHEMA,
-                    metaRecordSchema);
+            LOGGER.debug("Schema for {} has changed: \n {}", META_RECORD_SCHEMA, metaRecordSchema);
         }
     }
 }

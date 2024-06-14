@@ -72,7 +72,7 @@ public class LSMColumnBTreeWithBloomFilterDiskComponent extends LSMBTreeWithBloo
 
     private IChainedComponentBulkLoader createColumnIndexBulkLoader(ILSMIOOperation operation, float fillFactor,
             boolean verifyInput, IPageWriteCallback callback) throws HyracksDataException {
-        LSMIOOperationType operationType = operation.getIOOpertionType();
+        LSMIOOperationType operationType = operation.getIOOperationType();
         LSMColumnBTree lsmColumnBTree = (LSMColumnBTree) getLsmIndex();
         ColumnBTree columnBTree = (ColumnBTree) getIndex();
         IColumnMetadata columnMetadata;

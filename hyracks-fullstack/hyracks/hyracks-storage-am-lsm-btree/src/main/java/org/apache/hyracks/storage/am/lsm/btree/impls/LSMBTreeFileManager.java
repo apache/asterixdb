@@ -38,9 +38,11 @@ import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReferenc
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.common.impls.TreeIndexFactory;
 import org.apache.hyracks.storage.common.compression.NoOpCompressorDecompressorFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final FilenameFilter BTREE_FILTER =
             (dir, name) -> !name.startsWith(".") && name.endsWith(BTREE_SUFFIX);
     private final TreeIndexFactory<? extends ITreeIndex> btreeFactory;
@@ -97,6 +99,8 @@ public class LSMBTreeFileManager extends AbstractLSMIndexFileManager {
             validateFiles(btreeFilesSet, allBloomFilterFiles, BLOOM_FILTER_FILTER, null, btreeFactory.getBufferCache());
             // Sanity check.
             if (allBTreeFiles.size() != allBloomFilterFiles.size()) {
+                LOGGER.error("Unequal number of trees and filters. Trees: {}, Filters: {}", allBTreeFiles,
+                        allBloomFilterFiles);
                 throw HyracksDataException.create(ErrorCode.UNEQUAL_NUM_FILTERS_TREES, baseDir);
             }
         }

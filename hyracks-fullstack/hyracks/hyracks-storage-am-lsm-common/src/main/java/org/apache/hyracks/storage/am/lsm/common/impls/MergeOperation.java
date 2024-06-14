@@ -54,7 +54,7 @@ public abstract class MergeOperation extends AbstractIoOperation {
     }
 
     @Override
-    public LSMIOOperationType getIOOpertionType() {
+    public LSMIOOperationType getIOOperationType() {
         return LSMIOOperationType.MERGE;
     }
 

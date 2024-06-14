@@ -75,7 +75,7 @@ public class SynchronousScheduler implements ILSMIOOperationScheduler {
     }
 
     private void after(ILSMIOOperation operation) {
-        if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+        if (operation.getIOOperationType() == LSMIOOperationType.FLUSH) {
             synchronized (runningFlushOperations) {
                 runningFlushOperations.remove(operation.getIndexIdentifier());
                 if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
@@ -91,7 +91,7 @@ public class SynchronousScheduler implements ILSMIOOperationScheduler {
 
     private void before(ILSMIOOperation operation) throws InterruptedException {
         String id = operation.getIndexIdentifier();
-        if (operation.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+        if (operation.getIOOperationType() == LSMIOOperationType.FLUSH) {
             synchronized (runningFlushOperations) {
                 while (true) {
                     if (failedGroups.containsKey(id)) {

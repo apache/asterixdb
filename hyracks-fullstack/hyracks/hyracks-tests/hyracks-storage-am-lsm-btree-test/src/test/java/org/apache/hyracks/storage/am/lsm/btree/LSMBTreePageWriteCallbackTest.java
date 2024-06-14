@@ -158,7 +158,7 @@ public class LSMBTreePageWriteCallbackTest extends OrderedIndexTestDriver {
             ILSMIndexAccessor accessor = (ILSMIndexAccessor) ctx.getIndexAccessor();
             ILSMIOOperation mergeOp = accessor.scheduleMerge(((LSMBTree) ctx.getIndex()).getDiskComponents());
             mergeOp.addCompleteListener(op -> {
-                if (op.getIOOpertionType() == LSMIOOperationType.MERGE) {
+                if (op.getIOOperationType() == LSMIOOperationType.MERGE) {
                     long numPages = op.getNewComponent().getComponentSize()
                             / harness.getDiskBufferCache().getPageSizeWithHeader() - 1;
                     // we skipped the metadata page for simplicity

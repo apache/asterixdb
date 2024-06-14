@@ -62,6 +62,10 @@ public final class PhysicalDrive implements IPhysicalDrive {
             LOGGER.info("Used space: {}, pressureCapacity: {} (isPressured: {})",
                     StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureCapacity),
                     true);
+        } else if (usedSpace >= diskSpace.getAllocatedCapacity()) {
+            LOGGER.warn("Allocated disk space has been exceeded. Used space: {}, pressureCapacity: {}",
+                    StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureCapacity),
+                    true);
         } else {
             LOGGER.debug("Used space: {}, pressureCapacity: {} (isPressured: {})",
                     StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureCapacity),

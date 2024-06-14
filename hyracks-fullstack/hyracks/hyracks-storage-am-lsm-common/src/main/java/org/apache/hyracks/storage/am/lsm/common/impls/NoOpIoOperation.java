@@ -54,7 +54,7 @@ public class NoOpIoOperation implements ILSMIOOperation {
     }
 
     @Override
-    public LSMIOOperationType getIOOpertionType() {
+    public LSMIOOperationType getIOOperationType() {
         return LSMIOOperationType.NOOP;
     }
 

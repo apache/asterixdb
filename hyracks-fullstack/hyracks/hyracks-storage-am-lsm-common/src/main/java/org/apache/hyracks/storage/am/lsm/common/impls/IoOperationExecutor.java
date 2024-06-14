@@ -73,7 +73,7 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
         if (failed) {
             fail(executedOp, t != null ? t : executedOp.getFailure());
         }
-        if (!failed || executedOp.getIOOpertionType() != LSMIOOperationType.FLUSH) {
+        if (!failed || executedOp.getIOOperationType() != LSMIOOperationType.FLUSH) {
             executedOp.complete(); // destroy if merge, cleanup, or successful flush
         }
         scheduler.completeOperation(executedOp);
@@ -81,7 +81,7 @@ public class IoOperationExecutor extends ThreadPoolExecutor {
 
     private void fail(ILSMIOOperation executedOp, Throwable t) {
         callback.operationFailed(executedOp, t);
-        if (executedOp.getIOOpertionType() == LSMIOOperationType.FLUSH) {
+        if (executedOp.getIOOperationType() == LSMIOOperationType.FLUSH) {
             executedOp.complete();
             // Doesn't make sense to process further flush requests... Mark the operation group permanently failed
             // Fail other scheduled operations

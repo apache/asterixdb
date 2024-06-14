@@ -158,11 +158,11 @@ public final class ParallelCacher implements IParallelCacher {
     @Override
     public boolean remove(Collection<FileReference> deletedFiles) {
         if (!deletedFiles.isEmpty()) {
-            LOGGER.info("Deleting {}", deletedFiles);
+            LOGGER.debug("Deleting {}", deletedFiles);
         }
 
         for (FileReference fileReference : deletedFiles) {
-            remove(fileReference);
+            doRemove(fileReference);
         }
 
         return isEmpty();
@@ -170,13 +170,8 @@ public final class ParallelCacher implements IParallelCacher {
 
     @Override
     public boolean remove(FileReference fileReference) {
-        LOGGER.info("Deleting {}", fileReference);
-        if (isDataFile(fileReference)) {
-            uncachedDataFiles.remove(fileReference);
-        } else {
-            uncachedMetadataFiles.remove(fileReference);
-        }
-
+        LOGGER.debug("Deleting {}", fileReference);
+        doRemove(fileReference);
         return isEmpty();
     }
 
@@ -216,12 +211,20 @@ public final class ParallelCacher implements IParallelCacher {
         return DATA_FILTER.accept(null, fileReference.getName());
     }
 
+    private void doRemove(FileReference fileReference) {
+        if (isDataFile(fileReference)) {
+            uncachedDataFiles.remove(fileReference);
+        } else {
+            uncachedMetadataFiles.remove(fileReference);
+        }
+    }
+
     private synchronized boolean isEmpty() {
         if (!checkEmpty) {
             return false;
         }
         int totalSize = uncachedDataFiles.size() + uncachedMetadataFiles.size();
-        LOGGER.info("Current number of uncached files {}", totalSize);
+        LOGGER.debug("Current number of uncached files {}", totalSize);
         return totalSize == 0;
     }
 

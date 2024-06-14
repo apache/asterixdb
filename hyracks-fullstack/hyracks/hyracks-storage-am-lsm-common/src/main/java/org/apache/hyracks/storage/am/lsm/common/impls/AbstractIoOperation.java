@@ -219,4 +219,10 @@ public abstract class AbstractIoOperation implements ILSMIOOperation {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        String fileName = target != null ? "\"fileName\": \"" + target.getFile().getName() + "\", " : "";
+        return "{" + fileName + "\"ioOpID\": " + System.identityHashCode(this) + "}";
+    }
 }

@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation.LSMIOOperati
 import org.apache.hyracks.storage.am.lsm.common.impls.AsynchronousScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.GreedyScheduler;
 import org.apache.hyracks.storage.am.lsm.common.impls.NoOpIoOperationFailedCallback;
-import org.apache.hyracks.storage.am.lsm.common.test.IoSchedulerTest.MockedOperation;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -221,7 +220,7 @@ public class IoSchedulerTest {
         ILSMIOOperation op = Mockito.mock(ILSMIOOperation.class);
         MockedOperation mockedOp = new MockedOperation(op);
         Mockito.when(op.getIndexIdentifier()).thenReturn(index);
-        Mockito.when(op.getIOOpertionType()).thenReturn(type);
+        Mockito.when(op.getIOOperationType()).thenReturn(type);
         Mockito.when(op.getRemainingPages()).thenReturn(remainingPages);
 
         Mockito.doAnswer(new Answer<Boolean>() {

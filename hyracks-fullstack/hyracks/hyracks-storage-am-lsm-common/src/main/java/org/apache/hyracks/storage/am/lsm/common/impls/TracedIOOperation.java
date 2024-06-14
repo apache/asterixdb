@@ -34,13 +34,8 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.util.trace.ITracer;
 import org.apache.hyracks.util.trace.ITracer.Scope;
 import org.apache.hyracks.util.trace.TraceUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 class TracedIOOperation implements ILSMIOOperation {
-
-    static final Logger LOGGER = LogManager.getLogger();
-
     protected final ILSMIOOperation ioOp;
     private final LSMIOOperationType ioOpType;
     private final ITracer tracer;
@@ -49,12 +44,12 @@ class TracedIOOperation implements ILSMIOOperation {
     protected TracedIOOperation(ILSMIOOperation ioOp, ITracer tracer, long traceCategory) {
         this.ioOp = ioOp;
         this.tracer = tracer;
-        this.ioOpType = ioOp.getIOOpertionType();
+        this.ioOpType = ioOp.getIOOperationType();
         this.traceCategory = traceCategory;
     }
 
     public static ILSMIOOperation wrap(final ILSMIOOperation ioOp, final ITracer tracer) {
-        final String ioOpName = ioOp.getIOOpertionType().name().toLowerCase();
+        final String ioOpName = ioOp.getIOOperationType().name().toLowerCase();
         final long traceCategory = tracer.getRegistry().get(TraceUtils.INDEX_IO_OPERATIONS);
         if (tracer.isEnabled(traceCategory)) {
             tracer.instant("schedule-" + ioOpName, traceCategory, Scope.p,
@@ -84,7 +79,7 @@ class TracedIOOperation implements ILSMIOOperation {
     }
 
     @Override
-    public LSMIOOperationType getIOOpertionType() {
+    public LSMIOOperationType getIOOperationType() {
         return ioOpType;
     }
 
@@ -95,7 +90,7 @@ class TracedIOOperation implements ILSMIOOperation {
         try {
             return ioOp.call();
         } finally {
-            tracer.durationE(ioOp.getIOOpertionType().name().toLowerCase(), traceCategory, tid, () -> "{\"size\":"
+            tracer.durationE(ioOp.getIOOperationType().name().toLowerCase(), traceCategory, tid, () -> "{\"size\":"
                     + getTarget().getFile().length() + ", \"path\": \"" + ioOp.getTarget().getRelativePath() + "\"}");
         }
     }
@@ -198,5 +193,10 @@ class TracedIOOperation implements ILSMIOOperation {
     @Override
     public boolean isCompleted() {
         return ioOp.isCompleted();
+    }
+
+    @Override
+    public String toString() {
+        return ioOp.toString();
     }
 }
