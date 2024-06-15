@@ -64,16 +64,16 @@ public class SleepDescriptor extends AbstractScalarFunctionDynamicDescriptor {
                         final long time = ATypeHierarchy.getLongValue(getIdentifier().getName(), 1, bytes, offset);
 
                         try {
-                            if (LOGGER.isInfoEnabled()) {
-                                LOGGER.log(Level.INFO,
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.log(Level.TRACE,
                                         ctx.getTaskContext().getTaskAttemptId() + " sleeping for " + time + " ms");
                             }
                             Thread.sleep(time);
                         } catch (InterruptedException e) {
                             Thread.currentThread().interrupt();
                         } finally {
-                            if (LOGGER.isInfoEnabled()) {
-                                LOGGER.log(Level.INFO,
+                            if (LOGGER.isTraceEnabled()) {
+                                LOGGER.log(Level.TRACE,
                                         ctx.getTaskContext().getTaskAttemptId() + " done sleeping for " + time + " ms");
                             }
                         }

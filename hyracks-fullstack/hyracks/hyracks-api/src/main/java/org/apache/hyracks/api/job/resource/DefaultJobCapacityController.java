@@ -24,6 +24,11 @@ import org.apache.hyracks.api.job.JobSpecification;
 public class DefaultJobCapacityController implements IJobCapacityController {
 
     public static final DefaultJobCapacityController INSTANCE = new DefaultJobCapacityController();
+    private static final IClusterCapacity CAPACITY = new ClusterCapacity();
+    static {
+        CAPACITY.setAggregatedCores(Integer.MAX_VALUE);
+        CAPACITY.setAggregatedMemoryByteSize(Long.MAX_VALUE);
+    }
 
     private DefaultJobCapacityController() {
     }
@@ -36,5 +41,10 @@ public class DefaultJobCapacityController implements IJobCapacityController {
     @Override
     public void release(JobSpecification job) {
         // No operation here.
+    }
+
+    @Override
+    public IReadOnlyClusterCapacity getClusterCapacity() {
+        return CAPACITY;
     }
 }

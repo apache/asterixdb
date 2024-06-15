@@ -121,4 +121,9 @@ public class FIFOJobQueue implements IJobQueue {
     public void clear() {
         jobListMap.clear();
     }
+
+    @Override
+    public int size() {
+        return jobListMap.size();
+    }
 }

@@ -73,4 +73,11 @@ public interface IJobQueue {
      * Clears the job queue
      */
     void clear();
+
+    /**
+     * Returns the number of queued jobs.
+     *
+     * @return the number of queued jobs.
+     */
+    int size();
 }

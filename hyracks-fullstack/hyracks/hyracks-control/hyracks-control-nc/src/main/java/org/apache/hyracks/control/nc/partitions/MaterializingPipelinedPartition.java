@@ -52,7 +52,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
     private boolean failed;
     protected boolean flushRequest;
     private boolean deallocated;
-    private Level openCloseLevel = Level.DEBUG;
     private Thread dataConsumerThread;
 
     public MaterializingPipelinedPartition(IHyracksTaskContext ctx, PartitionManager manager, PartitionId pid,
@@ -181,9 +180,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void open() throws HyracksDataException {
-        if (LOGGER.isEnabled(openCloseLevel)) {
-            LOGGER.log(openCloseLevel, "open(" + pid + " by " + taId);
-        }
         size = 0;
         eos = false;
         failed = false;
@@ -215,9 +211,6 @@ public class MaterializingPipelinedPartition implements IFrameWriter, IPartition
 
     @Override
     public void close() throws HyracksDataException {
-        if (LOGGER.isEnabled(openCloseLevel)) {
-            LOGGER.log(openCloseLevel, "close(" + pid + " by " + taId);
-        }
         if (writeHandle != null) {
             ctx.getIoManager().close(writeHandle);
         }

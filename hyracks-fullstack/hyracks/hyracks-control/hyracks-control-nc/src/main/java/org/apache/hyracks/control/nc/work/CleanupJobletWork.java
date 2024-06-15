@@ -47,7 +47,7 @@ public class CleanupJobletWork extends AbstractWork {
 
     @Override
     public void run() {
-        LOGGER.debug("cleaning up {}", jobId);
+        LOGGER.debug("cleaning up {}, status:{}", jobId, status);
         ncs.removeJobParameterByteStore(jobId);
         ncs.getPartitionManager().jobCompleted(jobId, status);
         Map<JobId, Joblet> jobletMap = ncs.getJobletMap();
