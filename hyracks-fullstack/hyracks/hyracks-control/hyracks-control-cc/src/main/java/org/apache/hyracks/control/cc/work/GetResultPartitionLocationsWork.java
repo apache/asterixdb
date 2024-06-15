@@ -28,6 +28,7 @@ import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.result.IResultDirectoryService;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
 
 public class GetResultPartitionLocationsWork extends SynchronizableWork {
     private final ClusterControllerService ccs;
@@ -67,5 +68,10 @@ public class GetResultPartitionLocationsWork extends SynchronizableWork {
     @Override
     public String toString() {
         return getName() + ": JobId@" + jobId + " ResultSetId@" + rsId + " Known@" + Arrays.toString(knownRecords);
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

@@ -501,9 +501,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         ICCMessageBroker messageBroker = (ICCMessageBroker) applicationCtx.getServiceContext().getMessageBroker();
         AlgebricksAbsolutePartitionConstraint runtimeLocations = getLocations();
         int partition = 0;
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.log(Level.INFO, "Sending stop messages to " + runtimeLocations);
-        }
+        LOGGER.log(Level.INFO, "sending stop messages to {}", runtimeLocations);
         for (String location : runtimeLocations.getLocations()) {
             ActiveRuntimeId runtimeId = getActiveRuntimeId(partition++);
             messageBroker.sendApplicationMessageToNC(new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY,
@@ -566,14 +564,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         WaitForStateSubscriber subscriber;
         Future<Void> suspendTask;
         synchronized (this) {
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, "suspending entity " + entityId);
-                LOGGER.log(level, "Waiting for ongoing activities");
-            }
+            LOGGER.log(level, "{} suspending entity {}", jobId, entityId);
+            LOGGER.log(level, "{} waiting for ongoing activities", jobId);
             waitForNonTransitionState();
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, "Proceeding with suspension. Current state is " + state);
-            }
+            LOGGER.log(level, "{} proceeding with suspension. current state is {}", jobId, state);
             if (state == ActivityState.STOPPED) {
                 suspended = true;
                 return;
@@ -594,12 +588,12 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
                         doSuspend(metadataProvider);
                         return null;
                     });
-            LOGGER.log(level, "Suspension task has been submitted");
+            LOGGER.log(level, "{} suspension task has been submitted", jobId);
         }
         try {
-            LOGGER.log(level, "Waiting for suspension task to complete");
+            LOGGER.log(level, "{} waiting for suspension task to complete", jobId);
             suspendTask.get();
-            LOGGER.log(level, "waiting for state to become SUSPENDED or TEMPORARILY_FAILED");
+            LOGGER.log(level, "{} waiting for state to become SUSPENDED or TEMPORARILY_FAILED", jobId);
             subscriber.sync();
             suspended = true;
         } catch (Exception e) {

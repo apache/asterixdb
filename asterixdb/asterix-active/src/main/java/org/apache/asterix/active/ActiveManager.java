@@ -104,20 +104,26 @@ public class ActiveManager {
     }
 
     public void handle(ActiveManagerMessage message) throws HyracksDataException {
-        LOGGER.debug("NC handling {}({})({})", message.getKind(), message.getRuntimeId(), message.getDesc());
         switch (message.getKind()) {
             case STOP_ACTIVITY:
+                logHandle(Level.DEBUG, message);
                 stopRuntime(message);
                 break;
             case REQUEST_STATS:
+                logHandle(Level.TRACE, message);
                 requestStats((ActiveStatsRequestMessage) message);
                 break;
             case GENERIC_EVENT:
+                logHandle(Level.DEBUG, message);
                 deliverGenericEvent(message);
                 break;
             default:
                 LOGGER.warn("Unknown message type received: " + message.getKind());
         }
+    }
+
+    private void logHandle(Level level, ActiveManagerMessage message) {
+        LOGGER.log(level, "NC handling {}({})({})", message.getKind(), message.getRuntimeId(), message.getDesc());
     }
 
     private void deliverGenericEvent(ActiveManagerMessage message) throws HyracksDataException {
@@ -140,8 +146,6 @@ public class ActiveManager {
             IActiveRuntime runtime = runtimes.get(runtimeId);
             long reqId = message.getReqId();
             if (runtime == null) {
-                LOGGER.warn("Request stats of a runtime that is not registered {}; sending failure response",
-                        runtimeId);
                 // Send a failure message
                 ((NodeControllerService) serviceCtx.getControllerService()).sendApplicationMessageToCC(
                         message.getCcId(),
@@ -151,7 +155,6 @@ public class ActiveManager {
                 return;
             }
             String stats = runtime.getStats();
-            LOGGER.debug("Sending stats response for {} ", runtimeId);
             ActiveStatsResponse response = new ActiveStatsResponse(reqId, stats, null);
             ((NodeControllerService) serviceCtx.getControllerService()).sendRealTimeApplicationMessageToCC(
                     message.getCcId(), JavaSerializationUtils.serialize(response), null);

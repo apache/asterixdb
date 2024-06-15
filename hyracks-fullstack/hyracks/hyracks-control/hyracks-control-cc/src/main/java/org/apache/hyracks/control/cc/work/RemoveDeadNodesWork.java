@@ -69,6 +69,6 @@ public class RemoveDeadNodesWork extends AbstractWork {
 
     @Override
     public Level logLevel() {
-        return Level.DEBUG;
+        return Level.TRACE;
     }
 }

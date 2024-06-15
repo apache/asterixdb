@@ -654,7 +654,11 @@ public class JobExecutor {
             }
             TaskAttempt.TaskStatus taStatus = ta.getStatus();
             if (taStatus != TaskAttempt.TaskStatus.RUNNING) {
-                LOGGER.warn(() -> "Spurious task complete notification: " + taId + " Current state = " + taStatus);
+                // don't log if aborted/failed because a task could complete just before the job was aborted/failed
+                if (taStatus != TaskAttempt.TaskStatus.ABORTED && taStatus != TaskAttempt.TaskStatus.FAILED) {
+                    LOGGER.warn("spurious task complete notification {}:{}. current state {}", jobRun.getJobId(), taId,
+                            taStatus);
+                }
                 return;
             }
             ta.setStatus(TaskAttempt.TaskStatus.COMPLETED, null);

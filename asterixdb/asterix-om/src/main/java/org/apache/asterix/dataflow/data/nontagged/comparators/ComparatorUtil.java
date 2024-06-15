@@ -84,9 +84,9 @@ public class ComparatorUtil {
     // start points to the value; checking left and right are compatible and numbers has to be done before calling this
     static int compareNumbers(ATypeTag lTag, byte[] l, int lStart, ATypeTag rTag, byte[] r, int rStart) {
         if (lTag == DOUBLE || rTag == DOUBLE) {
-            return Double.compare(getDoubleValue(lTag, l, lStart), getDoubleValue(rTag, r, rStart));
+            return compareDoubles(getDoubleValue(lTag, l, lStart), getDoubleValue(rTag, r, rStart));
         } else if (lTag == FLOAT || rTag == FLOAT) {
-            return Float.compare((float) getDoubleValue(lTag, l, lStart), (float) getDoubleValue(rTag, r, rStart));
+            return compareFloats((float) getDoubleValue(lTag, l, lStart), (float) getDoubleValue(rTag, r, rStart));
         } else if (lTag == BIGINT || rTag == BIGINT) {
             return Long.compare(getLongValue(lTag, l, lStart), getLongValue(rTag, r, rStart));
         } else if (lTag == INTEGER || lTag == SMALLINT || lTag == TINYINT) {
@@ -103,10 +103,10 @@ public class ComparatorUtil {
         byte[] leftBytes = left.getByteArray();
         int start = left.getStartOffset();
         if (leftTag == DOUBLE || rightTag == DOUBLE) {
-            return asResult(Double.compare(getDoubleValue(leftTag, leftBytes, start), getConstantDouble(right)));
+            return asResult(compareDoubles(getDoubleValue(leftTag, leftBytes, start), getConstantDouble(right)));
         } else if (leftTag == FLOAT || rightTag == FLOAT) {
             return asResult(
-                    Float.compare((float) getDoubleValue(leftTag, leftBytes, start), (float) getConstantDouble(right)));
+                    compareFloats((float) getDoubleValue(leftTag, leftBytes, start), (float) getConstantDouble(right)));
         } else if (leftTag == BIGINT || rightTag == BIGINT) {
             return asResult(Long.compare(getLongValue(leftTag, leftBytes, start), getConstantLong(right)));
         } else if (leftTag == INTEGER || leftTag == SMALLINT || leftTag == TINYINT) {
@@ -122,10 +122,10 @@ public class ComparatorUtil {
         ATypeTag leftTag = leftConstant.getType().getTypeTag();
         ATypeTag rightTag = rightConstant.getType().getTypeTag();
         if (leftTag == DOUBLE || rightTag == DOUBLE) {
-            return asResult(Double.compare(getConstantDouble(leftConstant), getConstantDouble(rightConstant)));
+            return asResult(compareDoubles(getConstantDouble(leftConstant), getConstantDouble(rightConstant)));
         } else if (leftTag == FLOAT || rightTag == FLOAT) {
             return asResult(
-                    Float.compare((float) getConstantDouble(leftConstant), (float) getConstantDouble(rightConstant)));
+                    compareFloats((float) getConstantDouble(leftConstant), (float) getConstantDouble(rightConstant)));
         } else if (leftTag == BIGINT || rightTag == BIGINT) {
             return asResult(Long.compare(getConstantLong(leftConstant), getConstantLong(rightConstant)));
         } else if (leftTag == INTEGER || leftTag == SMALLINT || leftTag == TINYINT) {
@@ -207,5 +207,13 @@ public class ComparatorUtil {
                 // TODO(ali): use unsupported type
                 throw new UnsupportedOperationException();
         }
+    }
+
+    public static int compareDoubles(double d1, double d2) {
+        return d1 == d2 ? 0 : Double.compare(d1, d2);
+    }
+
+    public static int compareFloats(float f1, float f2) {
+        return f1 == f2 ? 0 : Float.compare(f1, f2);
     }
 }
