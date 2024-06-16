@@ -182,7 +182,8 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public final int localWriter(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
-        return localIoManager.doSyncWrite(fHandle, offset, data);
+        // Using syncWrite here to avoid closing the file channel when the thread is interrupted
+        return localIoManager.syncWrite(fHandle, offset, data);
     }
 
     @Override

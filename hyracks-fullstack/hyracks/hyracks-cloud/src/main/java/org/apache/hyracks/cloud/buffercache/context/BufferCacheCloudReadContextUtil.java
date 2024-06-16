@@ -51,7 +51,6 @@ public class BufferCacheCloudReadContextUtil {
         // Next, write the header. This is like a "commit" for the page
         buffer.position(0);
         buffer.limit(RESERVED_HEADER_BYTES);
-        // TODO what if this failed to write fully? (e.g., it wrote the first 3 bytes of the multiplier)
         cloudIOManager.localWriter(fileHandle, offset, buffer);
 
         // After this point the header is written. We are sure the page is valid and has the correct multiplier
