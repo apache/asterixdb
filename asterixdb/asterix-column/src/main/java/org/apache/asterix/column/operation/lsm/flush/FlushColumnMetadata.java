@@ -47,7 +47,7 @@ import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaBuilderFromIATypeVisitor;
 import org.apache.asterix.column.util.ColumnValuesUtil;
 import org.apache.asterix.column.util.RunLengthIntArray;
-import org.apache.asterix.column.util.SchemaStringBuilderVisitor;
+import org.apache.asterix.column.util.SchemaJSONBuilderVisitor;
 import org.apache.asterix.column.values.IColumnValuesWriter;
 import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.AbstractColumnValuesWriter;
@@ -582,12 +582,12 @@ public final class FlushColumnMetadata extends AbstractColumnMetadata {
             return;
         }
         // This should be a low frequency object creation
-        SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
+        SchemaJSONBuilderVisitor schemaBuilder = new SchemaJSONBuilderVisitor(fieldNamesDictionary);
         String recordSchema = LogRedactionUtil.userData(schemaBuilder.build(root));
-        LOGGER.debug("Schema for {} has changed: \n {}", RECORD_SCHEMA, recordSchema);
+        LOGGER.debug("Schema for {} has changed: {}", RECORD_SCHEMA, recordSchema);
         if (metaRoot != null) {
             String metaRecordSchema = LogRedactionUtil.userData(schemaBuilder.build(metaRoot));
-            LOGGER.debug("Schema for {} has changed: \n {}", META_RECORD_SCHEMA, metaRecordSchema);
+            LOGGER.debug("Schema for {} has changed: {}", META_RECORD_SCHEMA, metaRecordSchema);
         }
     }
 }

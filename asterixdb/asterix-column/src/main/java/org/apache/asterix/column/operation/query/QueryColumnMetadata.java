@@ -46,7 +46,7 @@ import org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionar
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
 import org.apache.asterix.column.metadata.schema.visitor.SchemaClipperVisitor;
-import org.apache.asterix.column.util.SchemaStringBuilderVisitor;
+import org.apache.asterix.column.util.SchemaJSONBuilderVisitor;
 import org.apache.asterix.column.values.IColumnValuesReader;
 import org.apache.asterix.column.values.IColumnValuesReaderFactory;
 import org.apache.asterix.column.values.reader.PrimitiveColumnValuesReader;
@@ -273,9 +273,9 @@ public class QueryColumnMetadata extends AbstractColumnImmutableReadMetadata {
     protected static void logSchema(String jobId, ObjectSchemaNode root, String schemaSource,
             IFieldNamesDictionary fieldNamesDictionary) throws HyracksDataException {
         if (jobId != null && LOGGER.isDebugEnabled() && System.nanoTime() % LOG_PROBABILITY == 0) {
-            SchemaStringBuilderVisitor schemaBuilder = new SchemaStringBuilderVisitor(fieldNamesDictionary);
+            SchemaJSONBuilderVisitor schemaBuilder = new SchemaJSONBuilderVisitor(fieldNamesDictionary);
             String schema = LogRedactionUtil.userData(schemaBuilder.build(root));
-            LOGGER.debug("Queried {} schema [{}]: \n {}", schemaSource, jobId, schema);
+            LOGGER.debug("Queried {} schema [{}]: {}", schemaSource, jobId, schema);
         }
     }
 }
