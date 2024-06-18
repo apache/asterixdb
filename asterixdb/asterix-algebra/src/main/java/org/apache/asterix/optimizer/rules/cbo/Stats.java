@@ -512,13 +512,7 @@ public class Stats {
             // SELECT count(*) as revenue
             // FROM   orders o, o.o_orderline ol
             // WHERE  TRUE;
-
-            // Replace ALL SELECTS with TRUE
-            List<ILogicalExpression> selExprs;
-            selExprs = storeSelectConditionsAndMakeThemTrue(selOp, null); // all these will be marked true and will be resorted later.
-            result = runSamplingQuery(optCtx, selOp);
-            restoreAllSelectConditions(selOp, selExprs, null);
-            sampleCard = findPredicateCardinality(result, false);
+            sampleCard = computeUnnestedOriginalCardinality(selOp);
         }
         // switch  the scanOp back
         parent.getInputs().get(0).setValue(scanOp);
@@ -541,6 +535,14 @@ public class Stats {
     public int numberOfFields(List<List<IAObject>> result) {
         ARecord record = (ARecord) (((IAObject) ((List<IAObject>) (result.get(0))).get(0)));
         return record.numberOfFields();
+    }
+
+    public double computeUnnestedOriginalCardinality(SelectOperator selOp) throws AlgebricksException {
+        // Replace ALL SELECTS with TRUE, restore them after running the sampling query.
+        List<ILogicalExpression> selExprs = storeSelectConditionsAndMakeThemTrue(selOp, null);
+        List<List<IAObject>> result = runSamplingQuery(optCtx, selOp);
+        restoreAllSelectConditions(selOp, selExprs, null);
+        return findPredicateCardinality(result, false);
     }
 
     public double findSizeVarsFromDisk(List<List<IAObject>> result, int numDiskVars) {

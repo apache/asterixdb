@@ -1,34 +1,34 @@
-distribute result [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+distribute result [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+  exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    project ([$$31]) [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+    project ([$$31]) [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$31] <- [{"a": $$34, "item": $$item}] [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+      assign [$$31] <- [{"a": $$34, "item": $$item}] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$34, $$item]) [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+        project ([$$34, $$item]) [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 8.0]
+          exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
           -- SORT_MERGE_EXCHANGE [$$35(ASC), $$34(ASC), $$item(ASC) ]  |PARTITIONED|
-            order (ASC, $$35) (ASC, $$34) (ASC, $$item) [cardinality: 2.0, op-cost: 2.0, total-cost: 8.0]
+            order (ASC, $$35) (ASC, $$34) (ASC, $$item) [cardinality: 2.0, op-cost: 2.0, total-cost: 20.0]
             -- STABLE_SORT [$$35(ASC), $$34(ASC), $$item(ASC)]  |PARTITIONED|
-              exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 6.0]
+              exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 18.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                select (gt($$item, 10)) [cardinality: 2.0, op-cost: 0.0, total-cost: 6.0]
+                select (gt($$item, 10)) [cardinality: 2.0, op-cost: 0.0, total-cost: 18.0]
                 -- STREAM_SELECT  |PARTITIONED|
-                  project ([$$35, $$34, $$item]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                  project ([$$35, $$34, $$item]) [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                   -- STREAM_PROJECT  |PARTITIONED|
-                    unnest $$item <- scan-collection($$36) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                    unnest $$item <- scan-collection($$36) [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                     -- UNNEST  |PARTITIONED|
                       select (eq($$34, "1")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_SELECT  |PARTITIONED|
-                        project ([$$35, $$34, $$36]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                        project ([$$35, $$34, $$36]) [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          assign [$$34, $$36] <- [$$d.getField("a"), $$d.getField("array")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                          assign [$$34, $$36] <- [$$d.getField("a"), $$d.getField("array")] [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                           -- ASSIGN  |PARTITIONED|
-                            exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                            exchange [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$35, $$d] <- test.ColumnDataset project ({a:any,array:[any]}) filter on: and(eq($$d.getField("a"), "1"), gt(scan-collection($$d.getField("array")), 10)) range-filter on: and(eq($$d.getField("a"), "1"), gt(scan-collection($$d.getField("array")), 10)) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
+                              data-scan []<-[$$35, $$d] <- test.ColumnDataset project ({a:any,array:[any]}) filter on: and(eq($$d.getField("a"), "1"), gt(scan-collection($$d.getField("array")), 10)) range-filter on: and(eq($$d.getField("a"), "1"), gt(scan-collection($$d.getField("array")), 10)) [cardinality: 18.0, op-cost: 18.0, total-cost: 18.0]
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

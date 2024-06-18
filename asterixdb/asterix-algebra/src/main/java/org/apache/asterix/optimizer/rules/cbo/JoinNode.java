@@ -92,6 +92,7 @@ public class JoinNode {
     protected double origCardinality; // without any selections
     protected double cardinality;
     protected double size; // avg size of whole document; available from the sample
+    protected double unnestFactor;
     protected double diskProjectionSize; // what is coming out of the disk; in case of row format, it is the entire document
                                          // in case of columnar we need to add sizes of individual fields.
     protected double projectionSizeAfterScan; // excludes fields only used for selections
@@ -166,6 +167,10 @@ public class JoinNode {
 
     public double getAvgDocSize() {
         return size;
+    }
+
+    public double getUnnestFactor() {
+        return unnestFactor;
     }
 
     public void setLimitVal(int val) {
@@ -247,30 +252,19 @@ public class JoinNode {
     public void setCardsAndSizes(Index.SampleIndexDetails idxDetails, ILogicalOperator leafInput)
             throws AlgebricksException {
 
-        double origDatasetCard, finalDatasetCard;
-        finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
+        double origDatasetCard, finalDatasetCard, sampleCard;
+        unnestFactor = 1.0;
 
         DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(leafInput);
         if (scanOp == null) {
             return; // what happens to the cards and sizes then? this may happen in case of in lists
         }
 
-        double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        if (sampleCard == 0) { // should not happen unless the original dataset is empty
-            sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
-
-            IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
-            if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
-                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-            }
-        }
-
         List<List<IAObject>> result;
-        SelectOperator selop = (SelectOperator) joinEnum.findASelectOp(leafInput);
-        if (selop == null) { // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
-            selop = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
-            ILogicalOperator op = selop;
+        SelectOperator selOp = (SelectOperator) joinEnum.findASelectOp(leafInput);
+        if (selOp == null) { // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
+            selOp = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
+            ILogicalOperator op = selOp;
             op.getInputs().add(new MutableObject<>(leafInput));
             leafInput = op;
         }
@@ -300,9 +294,31 @@ public class JoinNode {
         } else {
             primaryKey = deepCopyofScan.getVariables().get(0);
         }
+
         // if there is only one conjunct, I do not have to call the sampling query during index selection!
         // insert this in place of the scandatasourceOp.
         parent.getInputs().get(0).setValue(deepCopyofScan);
+        finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
+        sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
+        boolean unnest = joinEnum.findUnnestOp(selOp);
+        if (unnest) {
+            ILogicalExpression saveExpr = selOp.getCondition().getValue();
+            double unnestSampleCard = joinEnum.stats.computeUnnestedOriginalCardinality(selOp);
+            selOp.getCondition().setValue(saveExpr); // restore the expression
+            unnestFactor = unnestSampleCard / sampleCard;
+            sampleCard = unnestSampleCard;
+            finalDatasetCard = origDatasetCard = origDatasetCard * unnestFactor;
+        }
+        if (sampleCard == 0) { // should not happen unless the original dataset is empty
+            sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
+
+            IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
+                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+            }
+        }
+
         // There are predicates here. So skip the predicates and get the original dataset card.
         // Now apply all the predicates and get the card after all predicates are applied.
         result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
@@ -316,8 +332,8 @@ public class JoinNode {
             sizeVarsFromDisk = joinEnum.getStatsHandle().findSizeVarsFromDisk(result, getNumVarsFromDisk());
             sizeVarsAfterScan = joinEnum.getStatsHandle().findSizeVarsAfterScan(result, getNumVarsFromDisk());
         } else { // in case we did not get any tuples from the sample, get the size by setting the predicate to true.
-            ILogicalExpression saveExpr = selop.getCondition().getValue();
-            selop.getCondition().setValue(ConstantExpression.TRUE);
+            ILogicalExpression saveExpr = selOp.getCondition().getValue();
+            selOp.getCondition().setValue(ConstantExpression.TRUE);
             result = joinEnum.getStatsHandle().runSamplingQueryProjection(joinEnum.optCtx, leafInput, jnArrayIndex,
                     primaryKey);
             double x = joinEnum.getStatsHandle().findPredicateCardinality(result, true);
@@ -329,7 +345,7 @@ public class JoinNode {
                 sizeVarsFromDisk = joinEnum.getStatsHandle().findSizeVarsFromDisk(result, getNumVarsFromDisk());
                 sizeVarsAfterScan = joinEnum.getStatsHandle().findSizeVarsAfterScan(result, getNumVarsFromDisk());
             }
-            selop.getCondition().setValue(saveExpr); // restore the expression
+            selOp.getCondition().setValue(saveExpr); // restore the expression
         }
 
         // Adjust for zero predicate cardinality from the sample.
@@ -350,6 +366,7 @@ public class JoinNode {
             // is small), no need to assign any artificial min. cardinality as the sample is accurate.
             setCardinality(finalDatasetCard, scaleUp);
         }
+        setOrigCardinality(origDatasetCard, false);
 
         setSizeVarsFromDisk(sizeVarsFromDisk);
         setSizeVarsAfterScan(sizeVarsAfterScan);
