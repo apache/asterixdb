@@ -60,7 +60,8 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 5),
         CLOUD_WRITE_BUFFER_SIZE(
                 getRangedIntegerType(5, Integer.MAX_VALUE),
-                StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE));
+                StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
+        CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD(POSITIVE_INTEGER, 50);
 
         private final IOptionType interpreter;
         private final Object defaultValue;
@@ -88,6 +89,7 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
                 case CLOUD_PROFILER_LOG_INTERVAL:
                 case CLOUD_WRITE_BUFFER_SIZE:
+                case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                     return Section.COMMON;
                 default:
                     return Section.NC;
@@ -146,6 +148,8 @@ public class CloudProperties extends AbstractProperties {
                             + " NOTE: Enabling the profiler could perturb the performance of cloud requests";
                 case CLOUD_WRITE_BUFFER_SIZE:
                     return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
+                case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
+                    return "The number of cloud reads for re-evaluating an eviction plan. (default: 50)";
                 default:
                     throw new IllegalStateException("NYI: " + this);
             }
@@ -223,5 +227,9 @@ public class CloudProperties extends AbstractProperties {
 
     public int getWriteBufferSize() {
         return accessor.getInt(Option.CLOUD_WRITE_BUFFER_SIZE);
+    }
+
+    public int getEvictionPlanReevaluationThreshold() {
+        return accessor.getInt(Option.CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD);
     }
 }

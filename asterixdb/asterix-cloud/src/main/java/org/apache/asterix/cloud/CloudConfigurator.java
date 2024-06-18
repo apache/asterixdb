@@ -124,8 +124,8 @@ public final class CloudConfigurator {
                 resourceCacheManager, cloudIOManager, numOfSweepThreads, maxSweepQueueSize, physicalDrive,
                 diskBufferCache, fileInfoMap, inactiveThreshold);
 
-        IDiskCacheMonitoringService diskCacheService =
-                new CloudDiskCacheMonitoringAndPrefetchingService(executor, physicalDrive, monitorThread);
+        IDiskCacheMonitoringService diskCacheService = new CloudDiskCacheMonitoringAndPrefetchingService(executor,
+                physicalDrive, monitorThread, cloudProperties.getEvictionPlanReevaluationThreshold());
         localIoManager.setSpaceMaker(monitorThread);
         return diskCacheService;
     }

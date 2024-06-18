@@ -48,11 +48,11 @@ public final class CloudColumnIndexDiskCacheManager implements IColumnIndexDiskC
     private final ColumnSweepPlanner planner;
     private final ColumnSweeper sweeper;
 
-    public CloudColumnIndexDiskCacheManager(int numberOfPrimaryKeys, IColumnTupleProjector sweepProjector,
-            IPhysicalDrive drive) {
+    public CloudColumnIndexDiskCacheManager(int numberOfPrimaryKeys, int evictionPlanReevaluationThreshold,
+            IColumnTupleProjector sweepProjector, IPhysicalDrive drive) {
         this.sweepProjector = sweepProjector;
         this.drive = drive;
-        planner = new ColumnSweepPlanner(numberOfPrimaryKeys, System::nanoTime);
+        planner = new ColumnSweepPlanner(numberOfPrimaryKeys, evictionPlanReevaluationThreshold, System::nanoTime);
         sweeper = new ColumnSweeper(numberOfPrimaryKeys);
     }
 

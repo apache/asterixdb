@@ -76,6 +76,7 @@ public class LSMColumnBTreeUtil {
         IColumnManager columnManager = columnManagerFactory.createColumnManager();
         IColumnIndexDiskCacheManager diskCacheManager = diskCacheEnabled
                 ? new CloudColumnIndexDiskCacheManager(columnManager.getNumberOfPrimaryKeys(),
+                        diskCacheService.getEvictionPlanReevaluationThreshold(),
                         columnManager.getMergeColumnProjector(), diskCacheService.getPhysicalDrive())
                 : NoOpColumnIndexDiskCacheManager.INSTANCE;
 

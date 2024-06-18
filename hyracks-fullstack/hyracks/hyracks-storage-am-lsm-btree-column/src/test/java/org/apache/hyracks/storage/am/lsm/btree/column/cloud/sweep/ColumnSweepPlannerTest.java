@@ -38,6 +38,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 
 public class ColumnSweepPlannerTest {
     private static final int MAX_MEGA_LEAF_NODE_SIZE = getIntSizeInBytes(10, StorageUtil.StorageUnit.MEGABYTE);
+    private static final int REEVALUATE_PLAN_THRESHOLD = 50;
     private static final Random RANDOM = new Random(0);
     private final DummySweepClock clock = new DummySweepClock();
 
@@ -46,7 +47,7 @@ public class ColumnSweepPlannerTest {
         int numberOfPrimaryKeys = 1;
         int numberOfColumns = numberOfPrimaryKeys + 10;
         int[] columnSizes = createNormalColumnSizes(numberOfPrimaryKeys, numberOfColumns);
-        ColumnSweepPlanner planner = new ColumnSweepPlanner(numberOfPrimaryKeys, clock);
+        ColumnSweepPlanner planner = new ColumnSweepPlanner(numberOfPrimaryKeys, REEVALUATE_PLAN_THRESHOLD, clock);
         IntList projectedColumns = new IntArrayList();
         DummyColumnProjectionInfo info = new DummyColumnProjectionInfo(numberOfPrimaryKeys, QUERY, projectedColumns);
 

@@ -57,6 +57,7 @@ public final class ColumnSweepPlanner {
     private final BitSet reevaluatedPlan;
     private final IntSet indexedColumns;
     private final ISweepClock clock;
+    private final int evictionPlanReevaluationThreshold;
     private int numberOfColumns;
     private long lastAccess;
     private int maxSize;
@@ -67,7 +68,7 @@ public final class ColumnSweepPlanner {
     private int numberOfSweptColumns;
     private int numberOfCloudRequests;
 
-    public ColumnSweepPlanner(int numberOfPrimaryKeys, ISweepClock clock) {
+    public ColumnSweepPlanner(int numberOfPrimaryKeys, int evictionPlanReevaluationThreshold, ISweepClock clock) {
         this.clock = clock;
         active = new AtomicBoolean(false);
         this.numberOfPrimaryKeys = numberOfPrimaryKeys;
@@ -77,6 +78,7 @@ public final class ColumnSweepPlanner {
         plan = new BitSet();
         reevaluatedPlan = new BitSet();
         punchableThreshold = INITIAL_PUNCHABLE_THRESHOLD;
+        this.evictionPlanReevaluationThreshold = evictionPlanReevaluationThreshold;
     }
 
     public boolean isActive() {
@@ -235,7 +237,7 @@ public final class ColumnSweepPlanner {
     }
 
     private void resetPlanIfNeeded() {
-        if (numberOfCloudRequests < REEVALUATE_PLAN_THRESHOLD) {
+        if (numberOfCloudRequests < evictionPlanReevaluationThreshold) {
             return;
         }
 

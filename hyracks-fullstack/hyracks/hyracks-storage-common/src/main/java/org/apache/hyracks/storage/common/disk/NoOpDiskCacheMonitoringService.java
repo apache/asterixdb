@@ -62,4 +62,9 @@ public final class NoOpDiskCacheMonitoringService implements IDiskCacheMonitorin
     public IPhysicalDrive getPhysicalDrive() {
         return DummyPhysicalDrive.INSTANCE;
     }
+
+    @Override
+    public int getEvictionPlanReevaluationThreshold() {
+        return 0;
+    }
 }

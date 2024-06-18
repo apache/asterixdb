@@ -10,6 +10,7 @@
     "active\.suspend\.timeout" : 3600,
     "azure.request.timeout" : 120,
     "cloud.deployment" : false,
+    "cloud.eviction.plan.reevaluate.threshold" : 50,
     "cloud.profiler.log.interval" : 5,
     "cloud.storage.allocation.percentage" : 0.8,
     "cloud.storage.anonymous.auth" : false,

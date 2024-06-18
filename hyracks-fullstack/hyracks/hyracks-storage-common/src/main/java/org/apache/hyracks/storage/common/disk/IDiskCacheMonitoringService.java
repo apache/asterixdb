@@ -62,4 +62,9 @@ public interface IDiskCacheMonitoringService {
      * @return physical drive
      */
     IPhysicalDrive getPhysicalDrive();
+
+    /**
+     * @return threshold for re-evaluation of eviction plan
+     */
+    int getEvictionPlanReevaluationThreshold();
 }
