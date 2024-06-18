@@ -24,9 +24,7 @@ import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.Colu
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
@@ -42,23 +40,18 @@ import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
-import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 @NotThreadSafe
 public final class CloudColumnReadContext implements IColumnReadContext {
-    private static final Logger LOGGER = LogManager.getLogger();
     private final ColumnProjectorType operation;
     private final IPhysicalDrive drive;
     private final BitSet plan;
     private final BitSet cloudOnlyColumns;
     private final ColumnRanges columnRanges;
     private final CloudMegaPageReadContext columnCtx;
-    private final List<ICachedPage> pinnedPages;
     private final BitSet projectedColumns;
 
     public CloudColumnReadContext(IColumnProjectionInfo projectionInfo, IPhysicalDrive drive, BitSet plan) {
@@ -68,7 +61,6 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         columnRanges = new ColumnRanges(projectionInfo.getNumberOfPrimaryKeys());
         cloudOnlyColumns = new BitSet();
         columnCtx = new CloudMegaPageReadContext(operation, columnRanges, drive);
-        pinnedPages = new ArrayList<>();
         projectedColumns = new BitSet();
         if (operation == QUERY || operation == MODIFY) {
             for (int i = 0; i < projectionInfo.getNumberOfProjectedColumns(); i++) {
@@ -146,8 +138,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
     private void pinAll(int fileId, int pageZeroId, int numberOfPages, IBufferCache bufferCache)
             throws HyracksDataException {
-        columnCtx.prepare(numberOfPages);
-        pin(bufferCache, fileId, pageZeroId, 1, numberOfPages);
+        columnCtx.pin(bufferCache, fileId, pageZeroId, 1, numberOfPages);
     }
 
     private void pinProjected(int fileId, int pageZeroId, IBufferCache bufferCache) throws HyracksDataException {
@@ -192,23 +183,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
             }
 
             int numberOfPages = lastPageIdx - firstPageIdx + 1;
-            columnCtx.prepare(numberOfPages);
-            pin(bufferCache, fileId, pageZeroId, firstPageIdx, numberOfPages);
-        }
-    }
-
-    private void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
-            throws HyracksDataException {
-        for (int i = start; i < start + numberOfPages; i++) {
-            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageZeroId + i);
-            try {
-                pinnedPages.add(bufferCache.pin(dpid, columnCtx));
-            } catch (Throwable e) {
-                LOGGER.error("Error while pinning page number {} with number of pages {}. {}\n columnRanges:\n {}", i,
-                        numberOfPages, columnCtx, columnRanges);
-                throw e;
-            }
-
+            columnCtx.pin(bufferCache, fileId, pageZeroId, firstPageIdx, numberOfPages);
         }
     }
 
@@ -220,15 +195,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
     @Override
     public void close(IBufferCache bufferCache) throws HyracksDataException {
-        release(pinnedPages, bufferCache, columnCtx);
-        columnCtx.close();
-    }
-
-    private static void release(List<ICachedPage> pinnedPages, IBufferCache bufferCache, IBufferCacheReadContext ctx)
-            throws HyracksDataException {
-        for (int i = 0; i < pinnedPages.size(); i++) {
-            bufferCache.unpin(pinnedPages.get(i), ctx);
-        }
-        pinnedPages.clear();
+        columnCtx.unpinAll(bufferCache);
+        columnCtx.closeStream();
     }
 }

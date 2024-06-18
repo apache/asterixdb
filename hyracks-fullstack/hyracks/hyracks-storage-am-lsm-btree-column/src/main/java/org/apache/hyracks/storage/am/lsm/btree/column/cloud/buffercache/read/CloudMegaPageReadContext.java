@@ -24,6 +24,8 @@ import static org.apache.hyracks.storage.common.buffercache.context.read.Default
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.buffercache.context.BufferCacheCloudReadContextUtil;
@@ -34,6 +36,7 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProje
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.ColumnRanges;
 import org.apache.hyracks.storage.common.buffercache.BufferCacheHeaderHelper;
 import org.apache.hyracks.storage.common.buffercache.CachedPage;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
@@ -48,6 +51,7 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
     private final ColumnProjectorType operation;
     private final ColumnRanges columnRanges;
     private final IPhysicalDrive drive;
+    private final List<ICachedPage> pinnedPages;
 
     private int numberOfContiguousPages;
     private int pageCounter;
@@ -61,12 +65,15 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         this.operation = operation;
         this.columnRanges = columnRanges;
         this.drive = drive;
+        pinnedPages = new ArrayList<>();
     }
 
-    public void prepare(int numberOfContiguousPages) throws HyracksDataException {
-        close();
-        this.numberOfContiguousPages = numberOfContiguousPages;
+    void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
+            throws HyracksDataException {
+        closeStream();
+        this.numberOfContiguousPages = numberOfPages;
         pageCounter = 0;
+        doPin(bufferCache, fileId, pageZeroId, start, numberOfPages);
     }
 
     @Override
@@ -81,7 +88,6 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
              * for this particular page to avoid placing the bytes of this page into another page's position.
              */
             skipStreamIfOpened(cachedPage);
-            pageCounter++;
         }
     }
 
@@ -131,15 +137,18 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             skipStreamIfOpened(cPage);
         }
 
-        if (++pageCounter == numberOfContiguousPages) {
-            close();
-        }
-
         // Finally process the header
         return DEFAULT.processHeader(ioManager, fileHandle, header, cPage);
     }
 
-    void close() throws HyracksDataException {
+    void unpinAll(IBufferCache bufferCache) throws HyracksDataException {
+        for (int i = 0; i < pinnedPages.size(); i++) {
+            bufferCache.unpin(pinnedPages.get(i), this);
+        }
+        pinnedPages.clear();
+    }
+
+    void closeStream() throws HyracksDataException {
         if (gapStream != null) {
             if (remainingStreamBytes != 0) {
                 LOGGER.warn("Closed cloud stream with nonzero bytes = {}", remainingStreamBytes);
@@ -225,4 +234,20 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         }
     }
 
+    private void doPin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages)
+            throws HyracksDataException {
+        for (int i = start; i < start + numberOfPages; i++) {
+            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageZeroId + i);
+            try {
+                pinnedPages.add(bufferCache.pin(dpid, this));
+                pageCounter++;
+            } catch (Throwable e) {
+                LOGGER.error(
+                        "Error while pinning page number {} with number of pages {}. "
+                                + "(streamOffset:{}, remainingStreamBytes: {}) columnRanges:\n {}",
+                        i, numberOfPages, streamOffset, remainingStreamBytes, columnRanges);
+                throw e;
+            }
+        }
+    }
 }

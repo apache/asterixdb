@@ -90,7 +90,7 @@ public final class ColumnBTreeReadLeafFrame extends AbstractColumnBTreeLeafFrame
         return buf.getInt(NEXT_LEAF_OFFSET);
     }
 
-    public long getMegaLeafNodeLengthInBytes() {
+    public int getMegaLeafNodeLengthInBytes() {
         return buf.getInt(MEGA_LEAF_NODE_LENGTH);
     }
 

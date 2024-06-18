@@ -38,8 +38,7 @@ import it.unimi.dsi.fastutil.longs.LongComparator;
  * Computes columns offsets, lengths, and pages
  */
 public final class ColumnRanges {
-    private static final LongComparator OFFSET_COMPARATOR =
-            (x, y) -> Integer.compare(getOffsetFromPair(x), getOffsetFromPair(y));
+    private static final LongComparator OFFSET_COMPARATOR = IntPairUtil.FIRST_COMPARATOR;
     private final int numberOfPrimaryKeys;
 
     // For eviction
@@ -112,13 +111,14 @@ public final class ColumnRanges {
         // Get the number of columns in a page
         int numberOfColumns = leafFrame.getNumberOfColumns();
         for (int i = 0; i < numberOfColumns; i++) {
-            long offset = leafFrame.getColumnOffset(i);
+            int offset = leafFrame.getColumnOffset(i);
             // Set the first 32-bits to the offset and the second 32-bits to columnIndex
-            offsetColumnIndexPairs[i] = (offset << 32) + i;
+            offsetColumnIndexPairs[i] = IntPairUtil.of(offset, i);
         }
 
         // Set artificial offset to determine the last column's length
-        offsetColumnIndexPairs[numberOfColumns] = (leafFrame.getMegaLeafNodeLengthInBytes() << 32) + numberOfColumns;
+        int megaLeafLength = leafFrame.getMegaLeafNodeLengthInBytes();
+        offsetColumnIndexPairs[numberOfColumns] = IntPairUtil.of(megaLeafLength, numberOfColumns);
 
         // Sort the pairs by offset (i.e., lowest offset first)
         LongArrays.stableSort(offsetColumnIndexPairs, 0, numberOfColumns, OFFSET_COMPARATOR);
@@ -251,11 +251,11 @@ public final class ColumnRanges {
     }
 
     private static int getOffsetFromPair(long pair) {
-        return (int) (pair >> 32);
+        return IntPairUtil.getFirst(pair);
     }
 
     private static int getColumnIndexFromPair(long pair) {
-        return (int) pair;
+        return IntPairUtil.getSecond(pair);
     }
 
     private void setCloudOnlyAndEvictablePages(int columnIndex, BitSet cloudOnlyColumns, BitSet evictableColumns,
