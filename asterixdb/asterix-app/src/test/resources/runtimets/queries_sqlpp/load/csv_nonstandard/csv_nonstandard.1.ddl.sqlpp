@@ -23,8 +23,12 @@
  *
  */
 
+drop  dataverse temp if exists;
+create  dataverse temp;
+
 use temp;
 
+CREATE TYPE temp.test AS {f1: int, f2: string};
 
-load  dataset testds using localfs (("path"="asterix_nc1://data/csv/sample_06_space_error_2.csv"),("format"="csv"),("header"="false"));
+create  dataset testds(test) primary key id;
 

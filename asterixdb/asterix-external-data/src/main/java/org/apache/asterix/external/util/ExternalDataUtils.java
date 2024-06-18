@@ -143,7 +143,10 @@ public class ExternalDataUtils {
         return quote;
     }
 
-    public static char validateGetEscape(Map<String, String> configuration) throws HyracksDataException {
+    public static char validateGetEscape(Map<String, String> configuration, String format) throws HyracksDataException {
+        if (ExternalDataConstants.FORMAT_CSV.equals(format)) {
+            return validateCharOrDefault(configuration, KEY_ESCAPE, ExternalDataConstants.CSV_ESCAPE);
+        }
         return validateCharOrDefault(configuration, KEY_ESCAPE, ExternalDataConstants.ESCAPE);
     }
 
@@ -578,7 +581,7 @@ public class ExternalDataUtils {
         }
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
-        validateGetEscape(configuration);
+        validateGetEscape(configuration, format);
         String value = configuration.get(ExternalDataConstants.KEY_REDACT_WARNINGS);
         if (value != null && !isBoolean(value)) {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_REDACT_WARNINGS,

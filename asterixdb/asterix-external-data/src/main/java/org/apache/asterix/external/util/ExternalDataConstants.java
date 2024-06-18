@@ -246,6 +246,8 @@ public class ExternalDataConstants {
      * Constant characters
      */
     public static final char ESCAPE = '\\';
+
+    public static final char CSV_ESCAPE = '\"';
     public static final char QUOTE = '"';
     public static final char SPACE = ' ';
     public static final char TAB = '\t';

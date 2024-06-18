@@ -47,7 +47,7 @@ public class CSVToRecordWithMetadataAndPKConverter
             IExternalDataRuntimeContext context) {
         IWarningCollector warningCollector = context.getTaskContext().getWarningCollector();
         this.cursor = new FieldCursorForDelimitedDataParser(null, delimiter, ExternalDataConstants.QUOTE,
-                warningCollector, ExternalDataConstants.EMPTY_STRING);
+                ExternalDataConstants.QUOTE, warningCollector, ExternalDataConstants.EMPTY_STRING);
         this.record = new CharArrayRecord();
         this.valueIndex = valueIndex;
         this.recordWithMetadata = new RecordWithMetadataAndPK<>(record, metaType.getFieldTypes(), recordType,
@@ -64,8 +64,8 @@ public class CSVToRecordWithMetadataAndPKConverter
         int j = 0;
         FieldCursorForDelimitedDataParser.Result lastResult;
         while ((lastResult = cursor.nextField()) == FieldCursorForDelimitedDataParser.Result.OK) {
-            if (cursor.fieldHasDoubleQuote()) {
-                cursor.eliminateDoubleQuote();
+            if (cursor.fieldHasEscapedQuote()) {
+                cursor.eliminateEscapeChar();
             }
             if (i == valueIndex) {
                 record.setValue(cursor.getBuffer(), cursor.getFieldStart(), cursor.getFieldLength());

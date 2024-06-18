@@ -50,9 +50,11 @@ public class DelimitedDataParserFactory extends AbstractRecordStreamParserFactor
         IValueParserFactory[] valueParserFactories = ExternalDataUtils.getValueParserFactories(recordType);
         char delimiter = ExternalDataUtils.validateGetDelimiter(configuration);
         char quote = ExternalDataUtils.validateGetQuote(configuration, delimiter);
+        char escape =
+                ExternalDataUtils.validateGetEscape(configuration, configuration.get(ExternalDataConstants.KEY_FORMAT));
         boolean hasHeader = ExternalDataUtils.hasHeader(configuration);
         String nullString = configuration.get(ExternalDataConstants.KEY_NULL_STR);
-        return new DelimitedDataParser(context, valueParserFactories, delimiter, quote, hasHeader, recordType,
+        return new DelimitedDataParser(context, valueParserFactories, delimiter, quote, escape, hasHeader, recordType,
                 ExternalDataUtils.getDataSourceType(configuration).equals(DataSourceType.STREAM), nullString);
     }
 

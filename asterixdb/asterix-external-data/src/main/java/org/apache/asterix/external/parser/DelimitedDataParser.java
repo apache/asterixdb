@@ -61,6 +61,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private final IWarningCollector warnings;
     private final char fieldDelimiter;
     private final char quote;
+    private final char escape;
     private final boolean hasHeader;
     private final ARecordType recordType;
     private final IARecordBuilder recBuilder;
@@ -79,14 +80,15 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     private FieldCursorForDelimitedDataParser cursor;
 
     public DelimitedDataParser(IExternalDataRuntimeContext context, IValueParserFactory[] valueParserFactories,
-            char fieldDelimiter, char quote, boolean hasHeader, ARecordType recordType, boolean isStreamParser,
-            String nullString) throws HyracksDataException {
+            char fieldDelimiter, char quote, char escape, boolean hasHeader, ARecordType recordType,
+            boolean isStreamParser, String nullString) throws HyracksDataException {
         this.dataSourceName = context.getDatasourceNameSupplier();
         this.lineNumber = context.getLineNumberSupplier();
         this.warnings = context.getTaskContext().getWarningCollector();
         this.valueEmbedder = context.getValueEmbedder();
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
+        this.escape = escape;
         this.hasHeader = hasHeader;
         this.recordType = recordType;
         valueParsers = new IValueParser[valueParserFactories.length];
@@ -127,7 +129,7 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
             fieldNames[i] = name;
         }
         if (!isStreamParser) {
-            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, warnings,
+            cursor = new FieldCursorForDelimitedDataParser(null, this.fieldDelimiter, quote, escape, warnings,
                     this::getDataSourceName);
         }
         this.nullChars = nullString != null ? nullString.toCharArray() : null;
@@ -186,8 +188,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
                     }
                     fieldValueBufferOutput.writeByte(fieldTypeTags[i]);
                     // Eliminate double quotes in the field that we are going to parse
-                    if (cursor.fieldHasDoubleQuote()) {
-                        cursor.eliminateDoubleQuote();
+                    if (cursor.fieldHasEscapedQuote()) {
+                        cursor.eliminateEscapeChar();
                     }
                     boolean success = valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
                             cursor.getFieldLength(), fieldValueBufferOutput);
@@ -232,8 +234,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     @Override
     public void setInputStream(InputStream in) throws IOException {
         // TODO(ali): revisit this in regards to stream
-        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
-                this::getDataSourceName);
+        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, escape,
+                warnings, this::getDataSourceName);
         if (hasHeader) {
             cursor.nextRecord();
             FieldCursorForDelimitedDataParser.Result result;
@@ -249,8 +251,8 @@ public class DelimitedDataParser extends AbstractDataParser implements IStreamDa
     @Override
     public boolean reset(InputStream in) throws IOException {
         // TODO(ali): revisit this in regards to stream
-        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, warnings,
-                this::getDataSourceName);
+        cursor = new FieldCursorForDelimitedDataParser(new InputStreamReader(in), fieldDelimiter, quote, escape,
+                warnings, this::getDataSourceName);
         return true;
     }
 

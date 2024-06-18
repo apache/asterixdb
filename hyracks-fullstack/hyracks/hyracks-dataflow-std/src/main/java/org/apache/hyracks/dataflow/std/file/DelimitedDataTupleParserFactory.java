@@ -43,16 +43,18 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
     private IValueParserFactory[] valueParserFactories;
     private char fieldDelimiter;
     private char quote;
+    private char escape;
 
     public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter) {
-        this(fieldParserFactories, fieldDelimiter, '\"');
+        this(fieldParserFactories, fieldDelimiter, '\"', '\"');
     }
 
-    public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter,
-            char quote) {
+    public DelimitedDataTupleParserFactory(IValueParserFactory[] fieldParserFactories, char fieldDelimiter, char quote,
+            char escape) {
         this.valueParserFactories = fieldParserFactories;
         this.fieldDelimiter = fieldDelimiter;
         this.quote = quote;
+        this.escape = escape;
     }
 
     @Override
@@ -74,7 +76,7 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                     DataOutput dos = tb.getDataOutput();
 
                     FieldCursorForDelimitedDataParser cursor = new FieldCursorForDelimitedDataParser(
-                            new InputStreamReader(in), fieldDelimiter, quote, warningCollector, () -> "");
+                            new InputStreamReader(in), fieldDelimiter, quote, escape, warningCollector, () -> "");
                     while (cursor.nextRecord()) {
                         tb.reset();
                         for (int i = 0; i < valueParsers.length; ++i) {
@@ -88,9 +90,9 @@ public class DelimitedDataTupleParserFactory implements ITupleParserFactory {
                                 default:
                                     throw new IllegalStateException();
                             }
-                            // Eliminate double quotes in the field that we are going to parse
-                            if (cursor.fieldHasDoubleQuote()) {
-                                cursor.eliminateDoubleQuote();
+                            // Eliminate escaped quotes in the field that we are going to parse
+                            if (cursor.fieldHasEscapedQuote()) {
+                                cursor.eliminateEscapeChar();
                             }
                             if (!valueParsers[i].parse(cursor.getBuffer(), cursor.getFieldStart(),
                                     cursor.getFieldLength(), dos)) {

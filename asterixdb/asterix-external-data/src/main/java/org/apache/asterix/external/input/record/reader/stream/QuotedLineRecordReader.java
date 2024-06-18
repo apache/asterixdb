@@ -55,7 +55,7 @@ public class QuotedLineRecordReader extends LineRecordReader {
         String quoteString = config.get(ExternalDataConstants.KEY_QUOTE);
         ExternalDataUtils.validateChar(quoteString, ExternalDataConstants.KEY_QUOTE);
         this.quote = quoteString.charAt(0);
-        this.escape = ExternalDataUtils.validateGetEscape(config);
+        this.escape = ExternalDataUtils.validateGetEscape(config, config.get(ExternalDataConstants.KEY_FORMAT));
     }
 
     @Override

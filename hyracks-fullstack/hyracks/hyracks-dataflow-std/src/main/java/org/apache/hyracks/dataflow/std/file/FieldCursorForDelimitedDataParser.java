@@ -53,8 +53,8 @@ public class FieldCursorForDelimitedDataParser {
     private int fEnd; //end position for field
     private long lineCount; //count of lines
     private int fieldCount; //count of fields in current record
-    private int doubleQuoteCount; //count of double quotes
-    private boolean isDoubleQuoteIncludedInThisField; //does current field include double quotes
+    private int escapedQuoteCount; //count of escaped quotes
+    private boolean containsEscapedQuotes; //does current field contain escaped quotes
 
     private static final int INITIAL_BUFFER_SIZE = 4096;//initial buffer size
     private static final int INCREMENT = 4096; //increment size
@@ -66,15 +66,18 @@ public class FieldCursorForDelimitedDataParser {
     private State state; //state (see states above)
 
     private int lastQuotePosition; //position of last quote
-    private int lastDoubleQuotePosition; //position of last double quote
+    private int lastEscapedQuotePosition; //position of last escaped quote
     private int lastDelimiterPosition; //position of last delimiter
+    private int lastEscapePosition; //position of last escape
     private int quoteCount; //count of single quotes
     private boolean startedQuote; //whether a quote has been started
 
     private final char quote; //the quote character
     private final char fieldDelimiter; //the delimiter
 
-    public FieldCursorForDelimitedDataParser(Reader in, char fieldDelimiter, char quote,
+    private final char escape;
+
+    public FieldCursorForDelimitedDataParser(Reader in, char fieldDelimiter, char quote, char escape,
             IWarningCollector warningCollector, Supplier<String> dataSourceName) {
         this.warnings = warningCollector;
         this.dataSourceName = dataSourceName;
@@ -89,13 +92,15 @@ public class FieldCursorForDelimitedDataParser {
         state = State.INIT;
         this.quote = quote;
         this.fieldDelimiter = fieldDelimiter;
+        this.escape = escape;
         lastDelimiterPosition = -1;
         lastQuotePosition = -1;
-        lastDoubleQuotePosition = -1;
+        lastEscapedQuotePosition = -1;
+        lastEscapePosition = -1;
         quoteCount = 0;
-        doubleQuoteCount = 0;
+        escapedQuoteCount = 0;
         startedQuote = false;
-        isDoubleQuoteIncludedInThisField = false;
+        containsEscapedQuotes = false;
         lineCount = 1;
         fieldCount = 0;
     }
@@ -116,8 +121,8 @@ public class FieldCursorForDelimitedDataParser {
         return fStart == fEnd;
     }
 
-    public boolean fieldHasDoubleQuote() {
-        return isDoubleQuoteIncludedInThisField;
+    public boolean fieldHasEscapedQuote() {
+        return containsEscapedQuotes;
     }
 
     public int getFieldCount() {
@@ -133,11 +138,12 @@ public class FieldCursorForDelimitedDataParser {
         fieldCount = 0;
         lastDelimiterPosition = -1;
         lastQuotePosition = -1;
-        lastDoubleQuotePosition = -1;
+        lastEscapedQuotePosition = -1;
+        lastEscapePosition = -1;
         quoteCount = 0;
-        doubleQuoteCount = 0;
+        escapedQuoteCount = 0;
         startedQuote = false;
-        isDoubleQuoteIncludedInThisField = false;
+        containsEscapedQuotes = false;
         start = 0;
         end = recordLength;
         state = State.IN_RECORD;
@@ -171,22 +177,34 @@ public class FieldCursorForDelimitedDataParser {
                             }
                             p -= (s - start);
                             lastQuotePosition -= (s - start);
-                            lastDoubleQuotePosition -= (s - start);
+                            lastEscapedQuotePosition -= (s - start);
                             lastDelimiterPosition -= (s - start);
                         }
                         char ch = buffer[p];
                         // We perform rough format correctness (delimiter, quote) check here
                         // to set the starting position of a record.
                         // In the field level, more checking will be conducted.
+                        if (ch == escape) {
+                            // this may or may not be an escape. the next character must be a quote for it to be.
+                            lastEscapePosition = p;
+                        }
                         if (ch == quote) {
-                            startedQuote = true;
-                            // check two quotes in a row - "". This is an escaped quote
-                            if (lastQuotePosition == p - 1 && start != p - 1 && lastDoubleQuotePosition != p - 1) {
-                                lastDoubleQuotePosition = p;
+                            boolean couldBeEscapedQuote =
+                                    lastEscapePosition == p - 1 && lastEscapedQuotePosition != p - 1;
+                            if (quote == escape) {
+                                startedQuote = true;
+                                // check two quotes in a row that aren't at the start of a field if quote is escape, e.g. ""
+                                if (couldBeEscapedQuote && start != p - 1) {
+                                    lastEscapedQuotePosition = p;
+                                }
+                            } else {
+                                if (couldBeEscapedQuote) {
+                                    lastEscapedQuotePosition = p;
+                                }
                             }
                             lastQuotePosition = p;
                         } else if (ch == fieldDelimiter) {
-                            if (startedQuote && lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1) {
+                            if (startedQuote && lastQuotePosition == p - 1 && lastEscapedQuotePosition != p - 1) {
                                 startedQuote = false;
                                 lastDelimiterPosition = p;
                             }
@@ -266,11 +284,12 @@ public class FieldCursorForDelimitedDataParser {
                 fieldCount++;
                 // reset quote related values
                 startedQuote = false;
-                isDoubleQuoteIncludedInThisField = false;
+                containsEscapedQuotes = false;
                 lastQuotePosition = -1;
-                lastDoubleQuotePosition = -1;
+                lastEscapedQuotePosition = -1;
+                lastEscapePosition = -1;
                 quoteCount = 0;
-                doubleQuoteCount = 0;
+                escapedQuoteCount = 0;
 
                 char lastChar = '\0';
                 int p = start;
@@ -280,7 +299,7 @@ public class FieldCursorForDelimitedDataParser {
                         boolean eof = !readMore();
                         p -= (s - start);
                         lastQuotePosition -= (lastQuotePosition > -1) ? (s - start) : 0;
-                        lastDoubleQuotePosition -= (lastDoubleQuotePosition > -1) ? (s - start) : 0;
+                        lastEscapedQuotePosition -= (lastEscapedQuotePosition > -1) ? (s - start) : 0;
                         lastDelimiterPosition -= (lastDelimiterPosition > -1) ? (s - start) : 0;
                         if (eof) {
                             state = State.EOF;
@@ -288,8 +307,8 @@ public class FieldCursorForDelimitedDataParser {
                                 fStart = start;
                                 fEnd = p;
                             } else {
-                                if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
-                                        && quoteCount == doubleQuoteCount * 2 + 2) {
+                                if (lastQuotePosition == p - 1 && lastEscapedQuotePosition != p - 1
+                                        && quoteCount == escapedQuoteCount * (escape == quote ? 2 : 1) + 2) {
                                     // set the position of fStart to +1, fEnd to -1 to remove quote character
                                     fStart = start + 1;
                                     fEnd = p - 1;
@@ -319,16 +338,18 @@ public class FieldCursorForDelimitedDataParser {
                                 return Result.ERROR;
                             }
                         }
-                        // Check double quotes - "". We check [start != p-2]
+                        // Check escaped quotes - \ESC". We check [start != p-2] if escape is quote
                         // to avoid false positive where there is no value in a field,
-                        // since it looks like a double quote. However, it's not a double quote.
+                        // since it looks like an escaped quote. However, it's not an escaped quote.
                         // (e.g. if field2 has no value:
                         //       field1,"",field3 ... )
-                        if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
-                                && lastQuotePosition != start) {
-                            isDoubleQuoteIncludedInThisField = true;
-                            doubleQuoteCount++;
-                            lastDoubleQuotePosition = p;
+                        boolean couldBeEscaped = lastEscapePosition == p - 1 && lastEscapedQuotePosition != p - 1;
+                        boolean isEscapedQuote =
+                                quote == escape ? couldBeEscaped && lastQuotePosition != start : couldBeEscaped;
+                        if (isEscapedQuote) {
+                            containsEscapedQuotes = true;
+                            escapedQuoteCount++;
+                            lastEscapedQuotePosition = p;
                         }
                         lastQuotePosition = p;
                         quoteCount++;
@@ -343,9 +364,9 @@ public class FieldCursorForDelimitedDataParser {
                             return Result.OK;
                         }
 
-                        if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
+                        if (lastQuotePosition == p - 1 && lastEscapedQuotePosition != p - 1
                                 && lastQuotePosition != start) {
-                            // There is a quote right before the delimiter (e.g. ",)  and it is not two quote,
+                            // There is a quote right before the delimiter (e.g. ",)  and it is not an escaped quote,
                             // then the field contains a valid string.
                             // We set the position of fStart to +1, fEnd to -1 to remove quote character
                             fStart = start + 1;
@@ -354,8 +375,8 @@ public class FieldCursorForDelimitedDataParser {
                             lastDelimiterPosition = p;
                             startedQuote = false;
                             return Result.OK;
-                        } else if (lastQuotePosition < p - 1 && lastQuotePosition != lastDoubleQuotePosition
-                                && quoteCount == doubleQuoteCount * 2 + 2) {
+                        } else if (lastQuotePosition < p - 1 && lastQuotePosition != lastEscapedQuotePosition
+                                && quoteCount == escapedQuoteCount * (escape == quote ? 2 : 1) + 2) {
                             // There is a quote before the delimiter, however it is not directly placed before the delimiter.
                             // In this case, we throw an exception.
                             // quoteCount == doubleQuoteCount * 2 + 2 : only true when we have two quotes except double-quotes.
@@ -376,8 +397,8 @@ public class FieldCursorForDelimitedDataParser {
                             state = ch == '\n' ? State.EOR : State.CR;
                             lastDelimiterPosition = p;
                             return Result.OK;
-                        } else if (lastQuotePosition == p - 1 && lastDoubleQuotePosition != p - 1
-                                && quoteCount == doubleQuoteCount * 2 + 2) {
+                        } else if (lastQuotePosition == p - 1 && lastEscapedQuotePosition != p - 1
+                                && quoteCount == escapedQuoteCount * (escape == quote ? 2 : 1) + 2) {
                             // set the position of fStart to +1, fEnd to -1 to remove quote character
                             fStart = start + 1;
                             fEnd = p - 1;
@@ -387,6 +408,12 @@ public class FieldCursorForDelimitedDataParser {
                             startedQuote = false;
                             return Result.OK;
                         }
+                    }
+                    if (ch == escape) {
+                        //RFC4180 defines the escape character for quotes as quotes. however CSV is not a well-defined
+                        //format, and so frequently nonstandard escaping such as C-style \ escaping is used.
+                        //Therefore, we need to track potential escapes separately to support these cases.
+                        lastEscapePosition = p;
                     }
                     // count lines inside quotes
                     if (ch == '\r' || (ch == '\n' && lastChar != '\r')) {
@@ -421,17 +448,17 @@ public class FieldCursorForDelimitedDataParser {
         return true;
     }
 
-    // Eliminate escaped double quotes("") in a field
-    public void eliminateDoubleQuote() {
-        int lastDoubleQuotePosition = -1;
+    // Eliminate escaped quotes("" by default) in a field
+    public void eliminateEscapeChar() {
+        int lastEsc = -1;
         int writepos = fStart;
         int readpos = fStart;
         int length = fEnd - fStart;
         // Find positions where double quotes appear
         for (int i = 0; i < length; i++) {
             // Skip double quotes
-            if (buffer[readpos] == quote && lastDoubleQuotePosition != readpos - 1) {
-                lastDoubleQuotePosition = readpos;
+            if (buffer[readpos] == escape && lastEsc != readpos - 1) {
+                lastEsc = readpos;
                 readpos++;
             } else {
                 // Moving characters except double quote to the front
@@ -442,8 +469,8 @@ public class FieldCursorForDelimitedDataParser {
                 readpos++;
             }
         }
-        fEnd -= doubleQuoteCount;
-        isDoubleQuoteIncludedInThisField = false;
+        fEnd -= escapedQuoteCount;
+        containsEscapedQuotes = false;
     }
 
     private void warn(String message) {

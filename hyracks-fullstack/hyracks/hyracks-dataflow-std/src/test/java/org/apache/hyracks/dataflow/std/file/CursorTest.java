@@ -40,7 +40,7 @@ public class CursorTest {
             reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
             // skip header
             final FieldCursorForDelimitedDataParser cursor =
-                    new FieldCursorForDelimitedDataParser(reader, ',', '"', null, () -> "");
+                    new FieldCursorForDelimitedDataParser(reader, ',', '"', '"', null, () -> "");
             // get number of fields from header (first record is header)
             cursor.nextRecord();
             int numOfFields = 0;
@@ -55,8 +55,8 @@ public class CursorTest {
             while (cursor.nextRecord()) {
                 int fieldNumber = 0;
                 while ((lastResult = cursor.nextField()) == FieldCursorForDelimitedDataParser.Result.OK) {
-                    if (cursor.fieldHasDoubleQuote()) {
-                        cursor.eliminateDoubleQuote();
+                    if (cursor.fieldHasEscapedQuote()) {
+                        cursor.eliminateEscapeChar();
                     }
                     fieldNumber++;
                 }
