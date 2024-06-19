@@ -43,4 +43,37 @@ public interface IThreadStats {
      * @return the cold read count
      */
     long getColdReadCount();
+
+    /**
+     * Indicates that this thread made a cloud request to object storage
+     */
+    void cloudReadRequest();
+
+    /**
+     * Gets the count of cloud request to object storage
+     *
+     * @return the cloud request count
+     */
+    long getCloudReadRequestCount();
+
+    /**
+     * Indicates a page is read from the cloud
+     */
+    void cloudPageRead();
+
+    /**
+     * @return the count of pages read from the cloud
+     */
+    long getCloudPageReadCount();
+
+    /**
+     * Indicates the page is persistent in the disk,
+     * after fetching from cloud.
+     */
+    void cloudPagePersist();
+
+    /**
+     * @return the count of fetched page is persisted in the disk.
+     */
+    long getCloudPagePersistCount();
 }

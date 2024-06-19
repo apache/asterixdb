@@ -18,66 +18,60 @@
  */
 package org.apache.hyracks.util;
 
-import java.util.concurrent.atomic.AtomicLong;
+public class NoOpThreadStats implements IThreadStats {
+    public static final IThreadStats INSTANCE = new NoOpThreadStats();
 
-import org.apache.hyracks.util.annotations.ThreadSafe;
+    private NoOpThreadStats() {
 
-@ThreadSafe
-public class ThreadStats implements IThreadStats {
-
-    private final AtomicLong pinnedPagesCount = new AtomicLong();
-    private final AtomicLong coldReadCount = new AtomicLong();
-    private final AtomicLong cloudReadRequestCount = new AtomicLong();
-    private final AtomicLong cloudReadPageCount = new AtomicLong();
-    private final AtomicLong cloudPersistPageCount = new AtomicLong();
+    }
 
     @Override
     public void pagePinned() {
-        pinnedPagesCount.incrementAndGet();
+        // do nothing
     }
 
     @Override
     public long getPinnedPagesCount() {
-        return pinnedPagesCount.get();
-    }
-
-    @Override
-    public long getColdReadCount() {
-        return coldReadCount.get();
+        return 0;
     }
 
     @Override
     public void coldRead() {
-        coldReadCount.incrementAndGet();
+
+    }
+
+    @Override
+    public long getColdReadCount() {
+        return 0;
     }
 
     @Override
     public void cloudReadRequest() {
-        cloudReadRequestCount.incrementAndGet();
+        // do nothing
     }
 
     @Override
     public long getCloudReadRequestCount() {
-        return cloudReadRequestCount.get();
+        return 0;
     }
 
     @Override
     public void cloudPageRead() {
-        cloudReadPageCount.incrementAndGet();
+        // do nothing
     }
 
     @Override
     public long getCloudPageReadCount() {
-        return cloudReadPageCount.get();
+        return 0;
     }
 
     @Override
     public void cloudPagePersist() {
-        cloudPersistPageCount.incrementAndGet();
+        // do nothing
     }
 
     @Override
     public long getCloudPagePersistCount() {
-        return cloudPersistPageCount.get();
+        return 0;
     }
 }

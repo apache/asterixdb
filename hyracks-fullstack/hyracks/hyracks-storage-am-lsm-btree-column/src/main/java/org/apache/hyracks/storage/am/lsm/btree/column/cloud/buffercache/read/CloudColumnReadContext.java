@@ -43,6 +43,7 @@ import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
 @NotThreadSafe
@@ -105,9 +106,9 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
     @Override
     public ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
-            CachedPage cPage) throws HyracksDataException {
+            CachedPage cPage, IThreadStats threadStats) throws HyracksDataException {
         // Page zero will be persisted (always) if free space permits
-        return readAndPersistPage(ioManager, fileHandle, header, cPage, drive.hasSpace());
+        return readAndPersistPage(ioManager, fileHandle, header, cPage, threadStats, drive.hasSpace());
     }
 
     @Override

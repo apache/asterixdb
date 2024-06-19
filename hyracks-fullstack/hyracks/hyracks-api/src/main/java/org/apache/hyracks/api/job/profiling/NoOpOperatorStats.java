@@ -95,6 +95,21 @@ public class NoOpOperatorStats implements IOperatorStats {
     }
 
     @Override
+    public ICounter cloudReadRequestCounter() {
+        return NOOP_COUNTER;
+    }
+
+    @Override
+    public ICounter cloudReadPageCounter() {
+        return NOOP_COUNTER;
+    }
+
+    @Override
+    public ICounter cloudPersistPageCounter() {
+        return NOOP_COUNTER;
+    }
+
+    @Override
     public ICounter getAverageTupleSz() {
         return NOOP_COUNTER;
     }

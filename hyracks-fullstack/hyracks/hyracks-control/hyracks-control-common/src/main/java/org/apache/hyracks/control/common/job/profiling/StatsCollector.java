@@ -69,6 +69,9 @@ public class StatsCollector implements IStatsCollector {
             aggregatedStats.getTimeCounter().update(stats.getTimeCounter().get());
             aggregatedStats.getPageReads().update(stats.getPageReads().get());
             aggregatedStats.coldReadCounter().update(stats.coldReadCounter().get());
+            aggregatedStats.cloudReadRequestCounter().update(stats.cloudReadRequestCounter().get());
+            aggregatedStats.cloudReadPageCounter().update(stats.cloudReadPageCounter().get());
+            aggregatedStats.cloudPersistPageCounter().update(stats.cloudPersistPageCounter().get());
         }
         return aggregatedStats;
     }

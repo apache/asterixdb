@@ -27,6 +27,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 
 /**
  * Provide a context to {@link IBufferCache} pin/unpin operations as well as processing the header of the first
@@ -68,5 +69,5 @@ public interface IBufferCacheReadContext {
      * @return the byte buffer of the header after processing it
      */
     ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
-            CachedPage cPage) throws HyracksDataException;
+            CachedPage cPage, IThreadStats threadStats) throws HyracksDataException;
 }

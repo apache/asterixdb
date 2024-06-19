@@ -32,13 +32,17 @@ public class ResponseMetrics {
     private long queueWaitTime;
     private double bufferCacheHitRatio;
     private long bufferCachePageReadCount;
+    private long cloudReadRequestsCount;
+    private long cloudPagesReadCount;
+    private long cloudPagesPersistedCount;
 
     private ResponseMetrics() {
     }
 
     public static ResponseMetrics of(long elapsedTime, long executionTime, long resultCount, long resultSize,
             long processedObjects, long errorCount, long warnCount, long compileTime, long queueWaitTime,
-            double bufferCacheHitRatio, long bufferCachePageReadCount) {
+            double bufferCacheHitRatio, long bufferCachePageReadCount, long cloudRequestsCount,
+            long cloudPagesReadCount, long cloudPagesPersistedCount) {
         ResponseMetrics metrics = new ResponseMetrics();
         metrics.elapsedTime = elapsedTime;
         metrics.executionTime = executionTime;
@@ -51,6 +55,9 @@ public class ResponseMetrics {
         metrics.queueWaitTime = queueWaitTime;
         metrics.bufferCacheHitRatio = bufferCacheHitRatio;
         metrics.bufferCachePageReadCount = bufferCachePageReadCount;
+        metrics.cloudReadRequestsCount = cloudRequestsCount;
+        metrics.cloudPagesReadCount = cloudPagesReadCount;
+        metrics.cloudPagesPersistedCount = cloudPagesPersistedCount;
         return metrics;
     }
 
@@ -96,5 +103,17 @@ public class ResponseMetrics {
 
     public long getBufferCachePageReadCount() {
         return bufferCachePageReadCount;
+    }
+
+    public long getCloudReadRequestsCount() {
+        return cloudReadRequestsCount;
+    }
+
+    public long getCloudPagesReadCount() {
+        return cloudPagesReadCount;
+    }
+
+    public long getCloudPagesPersistedCount() {
+        return cloudPagesPersistedCount;
     }
 }

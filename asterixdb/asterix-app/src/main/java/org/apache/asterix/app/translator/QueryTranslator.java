@@ -5334,6 +5334,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         stats.setQueueWaitTime(resultMetadata.getQueueWaitTimeInNanos());
         stats.setBufferCacheHitRatio(resultMetadata.getBufferCacheHitRatio());
         stats.setBufferCachePageReadCount(resultMetadata.getBufferCachePageReadCount());
+        stats.setCloudReadRequestsCount(resultMetadata.getCloudReadRequestsCount());
+        stats.setCloudPagesReadCount(resultMetadata.getCloudPagesReadCount());
+        stats.setCloudPagesPersistedCount(resultMetadata.getCloudPagesPersistedCount());
         if (jobFlags.contains(JobFlag.PROFILE_RUNTIME)) {
             stats.setJobProfile(resultMetadata.getJobProfile());
             apiFramework.generateOptimizedLogicalPlanWithProfile(resultMetadata.getJobProfile());

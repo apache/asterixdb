@@ -38,6 +38,7 @@ import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteCo
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
 import org.apache.hyracks.storage.common.compression.file.NoOpLAFWriter;
+import org.apache.hyracks.util.IThreadStats;
 
 public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     private final int fileId;
@@ -71,7 +72,8 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
     }
 
     @Override
-    public void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
+    public void read(CachedPage cPage, IBufferCacheReadContext context, IThreadStats threadStats)
+            throws HyracksDataException {
         final BufferCacheHeaderHelper header = checkoutHeaderHelper();
         try {
             setPageInfo(cPage);
@@ -83,7 +85,7 @@ public class BufferedFileHandle extends AbstractBufferedFileIOManager {
                 return;
             }
 
-            final ByteBuffer buf = context.processHeader(ioManager, this, header, cPage);
+            final ByteBuffer buf = context.processHeader(ioManager, this, header, cPage, threadStats);
             cPage.getBuffer().put(buf);
         } finally {
             returnHeaderHelper(header);

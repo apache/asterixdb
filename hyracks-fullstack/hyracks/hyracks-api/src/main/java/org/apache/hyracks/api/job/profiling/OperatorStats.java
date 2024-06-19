@@ -36,6 +36,9 @@ public class OperatorStats implements IOperatorStats {
     public final ICounter timeCounter;
     public final ICounter pageReads;
     public final ICounter coldReadCounter;
+    public final ICounter cloudReadRequestCounter;
+    public final ICounter cloudReadPageCounter;
+    public final ICounter cloudPersistPageCounter;
     public final ICounter avgTupleSz;
     public final ICounter minTupleSz;
     public final ICounter maxTupleSz;
@@ -57,6 +60,9 @@ public class OperatorStats implements IOperatorStats {
         timeCounter = new Counter("timeCounter");
         pageReads = new Counter("diskIoCounter");
         coldReadCounter = new Counter("coldReadCounter");
+        cloudReadRequestCounter = new Counter("cloudReadRequestCounter");
+        cloudReadPageCounter = new Counter("cloudReadPageCounter");
+        cloudPersistPageCounter = new Counter("cloudPersistPageCounter");
         avgTupleSz = new Counter("avgTupleSz");
         minTupleSz = new Counter("minTupleSz");
         maxTupleSz = new Counter("maxTupleSz");
@@ -91,6 +97,21 @@ public class OperatorStats implements IOperatorStats {
     @Override
     public ICounter coldReadCounter() {
         return coldReadCounter;
+    }
+
+    @Override
+    public ICounter cloudReadRequestCounter() {
+        return cloudReadRequestCounter;
+    }
+
+    @Override
+    public ICounter cloudReadPageCounter() {
+        return cloudReadPageCounter;
+    }
+
+    @Override
+    public ICounter cloudPersistPageCounter() {
+        return cloudPersistPageCounter;
     }
 
     @Override
@@ -171,6 +192,9 @@ public class OperatorStats implements IOperatorStats {
         output.writeLong(timeCounter.get());
         output.writeLong(pageReads.get());
         output.writeLong(coldReadCounter.get());
+        output.writeLong(cloudReadRequestCounter.get());
+        output.writeLong(cloudReadPageCounter.get());
+        output.writeLong(cloudPersistPageCounter.get());
         output.writeLong(avgTupleSz.get());
         output.writeLong(minTupleSz.get());
         output.writeLong(maxTupleSz.get());
@@ -187,6 +211,9 @@ public class OperatorStats implements IOperatorStats {
         timeCounter.set(input.readLong());
         pageReads.set(input.readLong());
         coldReadCounter.set(input.readLong());
+        cloudReadRequestCounter.set(input.readLong());
+        cloudReadPageCounter.set(input.readLong());
+        cloudPersistPageCounter.set(input.readLong());
         avgTupleSz.set(input.readLong());
         minTupleSz.set(input.readLong());
         maxTupleSz.set(input.readLong());
@@ -218,7 +245,10 @@ public class OperatorStats implements IOperatorStats {
     public String toString() {
         return "{ " + "\"operatorName\": \"" + operatorName + "\", " + "\"id\": \"" + operatorId + "\", " + "\""
                 + tupleCounter.getName() + "\": " + tupleCounter.get() + ", \"" + timeCounter.getName() + "\": "
-                + timeCounter.get() + ", \"" + coldReadCounter.getName() + "\": " + coldReadCounter.get()
+                + timeCounter.get() + ", \"" + coldReadCounter.getName() + "\": " + coldReadCounter.get() + ", \""
+                + cloudReadRequestCounter.getName() + "\": " + cloudReadRequestCounter.get() + ", \""
+                + cloudReadPageCounter.getName() + "\": " + cloudReadPageCounter.get() + ", \""
+                + cloudPersistPageCounter.getName() + "\": " + cloudPersistPageCounter.get() + ", \""
                 + avgTupleSz.getName() + "\": " + avgTupleSz.get() + ", \"" + minTupleSz.getName() + "\": "
                 + minTupleSz.get() + ", \"" + minTupleSz.getName() + "\": " + timeCounter.get() + ", \""
                 + inputTupleCounter.getName() + "\": " + bytesRead.get() + ", \"" + bytesRead.getName() + "\": "

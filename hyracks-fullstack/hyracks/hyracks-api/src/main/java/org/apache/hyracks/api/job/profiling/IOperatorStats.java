@@ -57,6 +57,21 @@ public interface IOperatorStats extends IWritable, Serializable {
     ICounter coldReadCounter();
 
     /**
+     * @return A counter used to track the number of request to fetch pages from object store
+     */
+    ICounter cloudReadRequestCounter();
+
+    /**
+     * @return A counter used to track the number of pages read from the cloud.
+     */
+    ICounter cloudReadPageCounter();
+
+    /**
+     * @return A counter used to track the number of pages, fetched form cloud gets persisted to disk
+     */
+    ICounter cloudPersistPageCounter();
+
+    /**
      * @return A counter used to set the average tuple size outputted by an operator
      */
 

@@ -30,6 +30,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 
 abstract class AbstractBufferCacheReadContext implements IBufferCacheReadContext {
     @Override
@@ -44,7 +45,7 @@ abstract class AbstractBufferCacheReadContext implements IBufferCacheReadContext
 
     @Override
     public final ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle,
-            BufferCacheHeaderHelper header, CachedPage cPage) {
+            BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats) {
         ByteBuffer buf = header.getBuffer();
         cPage.setFrameSizeMultiplier(buf.getInt(FRAME_MULTIPLIER_OFF));
         cPage.setExtraBlockPageId(buf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));

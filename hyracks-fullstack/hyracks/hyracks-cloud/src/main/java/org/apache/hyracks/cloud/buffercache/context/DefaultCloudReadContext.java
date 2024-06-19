@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
 /**
@@ -73,13 +74,15 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
 
     @Override
     public ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
-            CachedPage cPage) throws HyracksDataException {
-        return readAndPersistPage(ioManager, fileHandle, header, cPage, drive.hasSpace());
+            CachedPage cPage, IThreadStats threadStats) throws HyracksDataException {
+        return readAndPersistPage(ioManager, fileHandle, header, cPage, threadStats, drive.hasSpace());
     }
 
     public static ByteBuffer readAndPersistPage(IOManager ioManager, BufferedFileHandle fileHandle,
-            BufferCacheHeaderHelper header, CachedPage cPage, boolean persist) throws HyracksDataException {
-        ByteBuffer headerBuf = readAndPersistIfEmpty(ioManager, fileHandle.getFileHandle(), header, cPage, persist);
+            BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats, boolean persist)
+            throws HyracksDataException {
+        ByteBuffer headerBuf =
+                readAndPersistIfEmpty(ioManager, fileHandle.getFileHandle(), header, cPage, threadStats, persist);
 
         cPage.setFrameSizeMultiplier(headerBuf.getInt(FRAME_MULTIPLIER_OFF));
         cPage.setExtraBlockPageId(headerBuf.getInt(EXTRA_BLOCK_PAGE_ID_OFF));
@@ -98,7 +101,8 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
      * @return header buffer
      */
     private static ByteBuffer readAndPersistIfEmpty(IOManager ioManager, IFileHandle fileHandle,
-            BufferCacheHeaderHelper header, CachedPage cPage, boolean persist) throws HyracksDataException {
+            BufferCacheHeaderHelper header, CachedPage cPage, IThreadStats threadStats, boolean persist)
+            throws HyracksDataException {
         ByteBuffer headerBuf = header.getBuffer();
         if (BufferCacheCloudReadContextUtil.isEmpty(header)) {
             // header indicates the page is empty
@@ -108,10 +112,13 @@ public class DefaultCloudReadContext implements IBufferCacheReadContext {
             ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
             // Read pageZero from the cloud
             cloudIOManager.cloudRead(fileHandle, offset, headerBuf);
+            // accounting pageZero for cloud read
+            threadStats.cloudPageRead();
             headerBuf.flip();
 
             if (persist) {
                 BufferCacheCloudReadContextUtil.persist(cloudIOManager, fileHandle, headerBuf, offset);
+                threadStats.cloudPagePersist();
             }
         }
 

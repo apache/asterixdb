@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadCon
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.storage.common.compression.file.CompressedFileReference;
 import org.apache.hyracks.storage.common.compression.file.ICompressedPageWriter;
+import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
 
 /**
@@ -70,7 +71,8 @@ public abstract class AbstractBufferedFileIOManager {
      * @param cPage   CachedPage in {@link BufferCache}
      * @param context read context
      */
-    public abstract void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException;
+    public abstract void read(CachedPage cPage, IBufferCacheReadContext context, IThreadStats threadStats)
+            throws HyracksDataException;
 
     /**
      * Write the CachedPage into disk

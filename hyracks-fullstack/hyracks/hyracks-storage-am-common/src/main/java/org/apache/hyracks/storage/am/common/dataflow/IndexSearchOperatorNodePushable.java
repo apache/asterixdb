@@ -344,6 +344,9 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
                 }
                 stats.getPageReads().update(ctx.getThreadStats().getPinnedPagesCount());
                 stats.coldReadCounter().update(ctx.getThreadStats().getColdReadCount());
+                stats.cloudReadRequestCounter().update(ctx.getThreadStats().getCloudReadRequestCount());
+                stats.cloudReadPageCounter().update(ctx.getThreadStats().getCloudPageReadCount());
+                stats.cloudPersistPageCounter().update(ctx.getThreadStats().getCloudPagePersistCount());
             } catch (Throwable th) { // NOSONAR Must ensure writer.fail is called.
                 // subsequently, the failure will be thrown
                 failure = th;

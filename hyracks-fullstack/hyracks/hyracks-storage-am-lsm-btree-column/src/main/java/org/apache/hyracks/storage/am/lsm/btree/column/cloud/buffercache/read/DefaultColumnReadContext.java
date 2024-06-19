@@ -31,6 +31,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 
 public final class DefaultColumnReadContext implements IColumnReadContext {
     public static final IColumnReadContext INSTANCE = new DefaultColumnReadContext();
@@ -60,8 +61,8 @@ public final class DefaultColumnReadContext implements IColumnReadContext {
 
     @Override
     public ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
-            CachedPage cPage) throws HyracksDataException {
-        return DEFAULT.processHeader(ioManager, fileHandle, header, cPage);
+            CachedPage cPage, IThreadStats threadStats) throws HyracksDataException {
+        return DEFAULT.processHeader(ioManager, fileHandle, header, cPage, threadStats);
     }
 
     @Override

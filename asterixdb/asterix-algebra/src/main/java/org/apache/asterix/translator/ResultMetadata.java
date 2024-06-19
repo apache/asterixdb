@@ -40,6 +40,9 @@ public class ResultMetadata implements IResultMetadata {
     private transient List<Object> outputTypes;
     private long queueWaitTimeInNanos;
     private long bufferCachePageReadCount;
+    private long cloudReadRequestsCount;
+    private long cloudPagesReadCount;
+    private long cloudPagesPersistedCount;
 
     public ResultMetadata(SessionConfig.OutputFormat format) {
         this.format = format;
@@ -75,6 +78,30 @@ public class ResultMetadata implements IResultMetadata {
 
     public long getBufferCachePageReadCount() {
         return bufferCachePageReadCount;
+    }
+
+    public void setCloudReadRequestsCount(long cloudReadRequestsCount) {
+        this.cloudReadRequestsCount = cloudReadRequestsCount;
+    }
+
+    public long getCloudReadRequestsCount() {
+        return cloudReadRequestsCount;
+    }
+
+    public void setCloudPagesReadCount(long cloudPagesReadCount) {
+        this.cloudPagesReadCount = cloudPagesReadCount;
+    }
+
+    public long getCloudPagesReadCount() {
+        return cloudPagesReadCount;
+    }
+
+    public void setCloudPagesPersistedCount(long cloudPagesPersistedCount) {
+        this.cloudPagesPersistedCount = cloudPagesPersistedCount;
+    }
+
+    public long getCloudPagesPersistedCount() {
+        return cloudPagesPersistedCount;
     }
 
     public void setWarnings(Set<Warning> warnings) {

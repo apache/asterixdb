@@ -103,7 +103,9 @@ public class QueryResultApiServlet extends AbstractQueryApiServlet {
                 ResponseMetrics metrics = ResponseMetrics.of(System.nanoTime() - elapsedStart,
                         metadata.getJobDuration(), stats.getCount(), stats.getSize(), metadata.getProcessedObjects(), 0,
                         metadata.getTotalWarningsCount(), stats.getCompileTime(), stats.getQueueWaitTime(),
-                        stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount());
+                        stats.getBufferCacheHitRatio(), stats.getBufferCachePageReadCount(),
+                        stats.getCloudReadRequestsCount(), stats.getCloudPagesReadCount(),
+                        stats.getCloudPagesPersistedCount());
                 printer.addFooterPrinter(new MetricsPrinter(metrics, HttpUtil.getPreferredCharset(request)));
                 if (metadata.getJobProfile() != null) {
                     printer.addFooterPrinter(new ProfilePrinter(metadata.getJobProfile()));

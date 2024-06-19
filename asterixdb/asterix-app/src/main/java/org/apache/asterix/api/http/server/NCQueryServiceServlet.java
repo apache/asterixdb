@@ -209,6 +209,9 @@ public class NCQueryServiceServlet extends QueryServiceServlet {
         stats.setQueueWaitTime(responseStats.getQueueWaitTime());
         stats.setBufferCacheHitRatio(responseStats.getBufferCacheHitRatio());
         stats.setBufferCachePageReadCount(responseStats.getBufferCachePageReadCount());
+        stats.setCloudReadRequestsCount(responseStats.getCloudReadRequestsCount());
+        stats.setCloudPagesReadCount(responseStats.getCloudPagesReadCount());
+        stats.setCloudPagesPersistedCount(responseStats.getCloudPagesPersistedCount());
     }
 
     private static void updatePropertiesFromCC(IStatementExecutor.StatementProperties statementProperties,

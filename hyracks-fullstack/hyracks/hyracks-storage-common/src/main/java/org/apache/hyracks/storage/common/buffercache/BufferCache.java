@@ -52,6 +52,7 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.storage.common.file.IFileMapManager;
 import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.IThreadStatsCollector;
+import org.apache.hyracks.util.NoOpThreadStats;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -184,8 +185,9 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         if (DEBUG) {
             pinSanityCheck(dpid);
         }
-        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
-        if (threadStats != null && context.incrementStats()) {
+        final IThreadStats threadStats =
+                statsSubscribers.getOrDefault(Thread.currentThread(), NoOpThreadStats.INSTANCE);
+        if (context.incrementStats()) {
             threadStats.pagePinned();
         }
         CachedPage cPage = findPage(dpid);
@@ -567,15 +569,16 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private void read(CachedPage cPage, IBufferCacheReadContext context) throws HyracksDataException {
         BufferedFileHandle fInfo = getFileHandle(cPage);
         cPage.buffer.clear();
+        final IThreadStats threadStats =
+                statsSubscribers.getOrDefault(Thread.currentThread(), NoOpThreadStats.INSTANCE);
         try {
-            fInfo.read(cPage, context);
+            fInfo.read(cPage, context, threadStats);
         } catch (Throwable e) {
             LOGGER.error("Error while reading a page {} in file {}", cPage, fInfo);
             throw e;
         }
 
-        final IThreadStats threadStats = statsSubscribers.get(Thread.currentThread());
-        if (threadStats != null && context.incrementStats()) {
+        if (context.incrementStats()) {
             threadStats.coldRead();
         }
     }

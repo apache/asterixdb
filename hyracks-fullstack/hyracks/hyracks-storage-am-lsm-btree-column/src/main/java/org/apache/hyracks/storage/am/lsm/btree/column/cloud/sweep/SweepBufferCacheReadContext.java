@@ -29,6 +29,7 @@ import org.apache.hyracks.storage.common.buffercache.CachedPage;
 import org.apache.hyracks.storage.common.buffercache.ICachedPage;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheReadContext;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
+import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 
 @ThreadSafe
@@ -61,8 +62,8 @@ final class SweepBufferCacheReadContext implements IBufferCacheReadContext {
 
     @Override
     public ByteBuffer processHeader(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
-            CachedPage cPage) throws HyracksDataException {
+            CachedPage cPage, IThreadStats threadStats) throws HyracksDataException {
         // Will not persist as the disk is pressured
-        return readAndPersistPage(ioManager, fileHandle, header, cPage, false);
+        return readAndPersistPage(ioManager, fileHandle, header, cPage, threadStats, false);
     }
 }
