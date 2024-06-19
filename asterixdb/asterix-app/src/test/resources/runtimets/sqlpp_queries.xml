@@ -13821,6 +13821,61 @@
         <output-dir compare="Text">csv_08</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="comma_in_quotes">
+        <output-dir compare="Text">comma_in_quotes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="empty">
+        <output-dir compare="Text">empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="empty_crlf">
+        <output-dir compare="Text">empty_crlf</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="escaped_quotes">
+        <output-dir compare="Text">escaped_quotes</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="json">
+        <output-dir compare="Text">json</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="newlines">
+        <output-dir compare="Text">newlines</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="newlines_crlf">
+        <output-dir compare="Text">newlines_crlf</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="quotes_and_newlines">
+        <output-dir compare="Text">quotes_and_newlines</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="simple">
+        <output-dir compare="Text">simple</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="simple_crlf">
+        <output-dir compare="Text">simple_crlf</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="csv-spectrum">
+      <compilation-unit name="utf8">
+        <output-dir compare="Text">utf8</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="load">
       <compilation-unit name="csv_08_header_crlf">
         <output-dir compare="Text">csv_08</output-dir>
