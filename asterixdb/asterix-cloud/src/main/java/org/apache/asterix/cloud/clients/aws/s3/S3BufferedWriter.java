@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.clients.aws.s3;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -38,9 +39,11 @@ import software.amazon.awssdk.services.s3.model.CompletedMultipartUpload;
 import software.amazon.awssdk.services.s3.model.CompletedPart;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadRequest;
 import software.amazon.awssdk.services.s3.model.CreateMultipartUploadResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 
 public class S3BufferedWriter implements ICloudBufferedWriter {
+    private static final String PUT_UPLOAD_ID = "putUploadId";
     private static final int MAX_RETRIES = 3;
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -65,7 +68,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     }
 
     @Override
-    public int upload(InputStream stream, int length) {
+    public void upload(InputStream stream, int length) {
         guardian.checkIsolatedWriteAccess(bucket, path);
         profiler.objectMultipartUpload();
         setUploadId();
@@ -73,8 +76,21 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
                 UploadPartRequest.builder().uploadId(uploadId).partNumber(partNumber).bucket(bucket).key(path).build();
         String etag = s3Client.uploadPart(upReq, RequestBody.fromInputStream(stream, length)).eTag();
         partQueue.add(CompletedPart.builder().partNumber(partNumber).eTag(etag).build());
+        partNumber++;
+    }
 
-        return partNumber++;
+    @Override
+    public void uploadLast(InputStream stream, ByteBuffer buffer) {
+        if (uploadId == null) {
+            profiler.objectWrite();
+            PutObjectRequest request = PutObjectRequest.builder().bucket(bucket).key(path).build();
+            // TODO make retryable
+            s3Client.putObject(request, RequestBody.fromByteBuffer(buffer));
+            // Only set the uploadId if the putObject succeeds
+            uploadId = PUT_UPLOAD_ID;
+        } else {
+            upload(stream, buffer.limit());
+        }
     }
 
     @Override
@@ -86,9 +102,12 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     public void finish() throws HyracksDataException {
         if (uploadId == null) {
             throw new IllegalStateException("Cannot finish without writing any bytes");
+        } else if (PUT_UPLOAD_ID.equals(uploadId)) {
+            LOGGER.debug("FINISHED multipart upload as PUT for {}", path);
+            return;
         }
 
-        // A non-empty files, proceed with completing the multipart upload
+        // Finishing a multipart file. Proceed with completing the multipart upload
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder().parts(partQueue).build();
         CompleteMultipartUploadRequest completeMultipartUploadRequest = CompleteMultipartUploadRequest.builder()
                 .bucket(bucket).key(path).uploadId(uploadId).multipartUpload(completedMultipartUpload).build();
@@ -119,7 +138,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     @Override
     public void abort() throws HyracksDataException {
-        if (uploadId == null) {
+        if (uploadId == null || PUT_UPLOAD_ID.equals(uploadId)) {
             return;
         }
         s3Client.abortMultipartUpload(

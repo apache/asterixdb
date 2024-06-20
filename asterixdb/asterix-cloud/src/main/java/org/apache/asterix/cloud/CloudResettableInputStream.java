@@ -31,9 +31,8 @@ import org.apache.logging.log4j.Logger;
 public class CloudResettableInputStream extends InputStream implements ICloudWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IWriteBufferProvider bufferProvider;
-    private ByteBuffer writeBuffer;
-
     private final ICloudBufferedWriter bufferedWriter;
+    private ByteBuffer writeBuffer;
 
     public CloudResettableInputStream(ICloudBufferedWriter bufferedWriter, IWriteBufferProvider bufferProvider) {
         this.bufferedWriter = bufferedWriter;
@@ -140,7 +139,13 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
                  * OR
                  * (2) nothing was written to the file at all to ensure writing empty file
                  */
-                uploadAndWait();
+                writeBuffer.flip();
+                try {
+                    bufferedWriter.uploadLast(this, writeBuffer);
+                } catch (Exception e) {
+                    LOGGER.error(e);
+                    throw HyracksDataException.create(e);
+                }
             }
             bufferedWriter.finish();
         } finally {

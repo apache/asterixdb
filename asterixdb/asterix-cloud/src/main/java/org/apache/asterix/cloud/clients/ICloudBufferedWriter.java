@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.clients;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -29,9 +30,16 @@ public interface ICloudBufferedWriter {
      *
      * @param stream stream
      * @param length length
-     * @return amount uploaded
      */
-    int upload(InputStream stream, int length) throws HyracksDataException;
+    void upload(InputStream stream, int length) throws HyracksDataException;
+
+    /**
+     * Upload the last content of the stream or buffer depending on whether a previous part was uploaded
+     *
+     * @param stream stream
+     * @param buffer buffer (should be used instead of stream if no previous bytes were written)
+     */
+    void uploadLast(InputStream stream, ByteBuffer buffer) throws HyracksDataException;
 
     /**
      * Checks whether the writer has not written anything
