@@ -147,12 +147,12 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             boolean metadataNode, int metadataPartition) throws HyracksDataException {
         String partitionDir = PARTITION_DIR_PREFIX + metadataPartition;
         if (metadataNode && uncachedFiles.stream().anyMatch(f -> f.getRelativePath().contains(partitionDir))) {
-            LOGGER.debug("Downloading metadata partition {}, Current uncached files: {}", metadataPartition,
+            LOGGER.info("Downloading metadata partition {}, Current uncached files: {}", metadataPartition,
                     uncachedFiles);
             FileReference metadataDir = resolve(STORAGE_ROOT_DIR_NAME + File.separator + partitionDir);
             downloader.downloadDirectories(Collections.singleton(metadataDir));
             uncachedFiles.removeIf(f -> f.getRelativePath().contains(partitionDir));
-            LOGGER.debug("Finished downloading metadata partition. Current uncached files: {}", uncachedFiles);
+            LOGGER.info("Finished downloading metadata partition. Current uncached files: {}", uncachedFiles);
         }
     }
 

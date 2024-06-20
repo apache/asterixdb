@@ -158,7 +158,7 @@ public final class ParallelCacher implements IParallelCacher {
     @Override
     public boolean remove(Collection<FileReference> deletedFiles) {
         if (!deletedFiles.isEmpty()) {
-            LOGGER.debug("Deleting {}", deletedFiles);
+            LOGGER.debug("Delete {}", deletedFiles);
         }
 
         for (FileReference fileReference : deletedFiles) {
@@ -170,7 +170,7 @@ public final class ParallelCacher implements IParallelCacher {
 
     @Override
     public boolean remove(FileReference fileReference) {
-        LOGGER.debug("Deleting {}", fileReference);
+        LOGGER.debug("Delete {}", fileReference);
         doRemove(fileReference);
         return isEmpty();
     }
