@@ -94,9 +94,11 @@ public final class ColumnSweepPlanner {
         resizeStatsArrays(numberOfColumns);
         setInitialSizes(diskComponents, sweepProjector, bufferCache);
         active.set(true);
+        // Initialize access time to the time of activating the index
+        lastAccess = clock.getCurrentTime();
     }
 
-    public void setIndexedColumns(IColumnProjectionInfo projectionInfo) {
+    public synchronized void setIndexedColumns(IColumnProjectionInfo projectionInfo) {
         indexedColumns.clear();
         for (int i = 0; i < projectionInfo.getNumberOfProjectedColumns(); i++) {
             int columnIndex = projectionInfo.getColumnIndex(i);
@@ -104,7 +106,7 @@ public final class ColumnSweepPlanner {
         }
     }
 
-    public IntSet getIndexedColumnsCopy() {
+    public synchronized IntSet getIndexedColumnsCopy() {
         return new IntOpenHashSet(indexedColumns);
     }
 
