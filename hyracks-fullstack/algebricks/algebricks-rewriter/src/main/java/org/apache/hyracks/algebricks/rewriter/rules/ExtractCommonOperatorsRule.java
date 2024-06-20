@@ -36,12 +36,14 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.base.PhysicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractReplicateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ExchangeOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ReplicateOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.IsomorphismUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.AssignPOperator;
@@ -147,6 +149,63 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
         return changed;
     }
 
+    // Check for a special case (ASTERIXDB-3415) to avoid adding Replicate Operator
+    // that causes hang during execution of the plan.
+    private boolean isUnionAllSink(List<Mutable<ILogicalOperator>> group) {
+        if (group.size() != 2) {
+            return false;
+        }
+        List<Pair<Mutable<ILogicalOperator>, Integer>> operators = new ArrayList<>();
+        if (childrenToParents.containsKey(group.get(0))) {
+            for (Mutable<ILogicalOperator> op : childrenToParents.get(group.get(0))) {
+                operators.add(new Pair<>(op, 0));
+            }
+        } else {
+            return false;
+        }
+        List<Pair<Mutable<ILogicalOperator>, Integer>> unionAllOps = new ArrayList<>();
+        while (operators.size() > 0) {
+            Pair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
+            if (entry.first.getValue() instanceof UnionAllOperator) {
+                unionAllOps.add(entry);
+            } else if (entry.first.getValue() instanceof ExchangeOperator && ((ExchangeOperator) entry.first.getValue())
+                    .getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+                entry.second += 1;
+            }
+            if (childrenToParents.containsKey(entry.first)) {
+                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.first)) {
+                    operators.add(new Pair<>(op, entry.second));
+                }
+            }
+        }
+        if (childrenToParents.containsKey(group.get(1))) {
+            for (Mutable<ILogicalOperator> op : childrenToParents.get(group.get(1))) {
+                operators.add(new Pair<>(op, 0));
+            }
+        } else {
+            return false;
+        }
+        while (operators.size() > 0) {
+            Pair<Mutable<ILogicalOperator>, Integer> entry = operators.remove(0);
+            if (entry.first.getValue() instanceof UnionAllOperator) {
+                for (Pair<Mutable<ILogicalOperator>, Integer> unionAllOp : unionAllOps) {
+                    if (unionAllOp.first.equals(entry.first) && unionAllOp.second + entry.second == 1) {
+                        return true;
+                    }
+                }
+            } else if (entry.first.getValue() instanceof ExchangeOperator && ((ExchangeOperator) entry.first.getValue())
+                    .getPhysicalOperator().getOperatorTag() == PhysicalOperatorTag.HASH_PARTITION_EXCHANGE) {
+                entry.second += 1;
+            }
+            if (childrenToParents.containsKey(entry.first)) {
+                for (Mutable<ILogicalOperator> op : childrenToParents.get(entry.first)) {
+                    operators.add(new Pair<>(op, entry.second));
+                }
+            }
+        }
+        return false;
+    }
+
     private boolean rewriteForOneEquivalentClass(List<Mutable<ILogicalOperator>> members, IOptimizationContext context)
             throws AlgebricksException {
         List<Mutable<ILogicalOperator>> group = new ArrayList<>();
@@ -163,7 +222,7 @@ public class ExtractCommonOperatorsRule implements IAlgebraicRewriteRule {
                 }
             }
             boolean[] materializationFlags = computeMaterilizationFlags(group);
-            if (group.isEmpty()) {
+            if (group.isEmpty() || isUnionAllSink(group)) {
                 continue;
             }
             candidate = group.get(0);

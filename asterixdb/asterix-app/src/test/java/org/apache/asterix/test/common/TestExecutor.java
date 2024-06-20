@@ -359,6 +359,9 @@ public class TestExecutor {
             } else if (actualFile.toString().endsWith(".plan")) {
                 runScriptAndCompareWithResultPlan(scriptFile, readerExpected, readerActual);
                 return;
+            } else if (actualFile.toString().endsWith(".jsonl")) {
+                runScriptAndCompareWithResultJsonl(scriptFile, readerExpected, readerActual, statement);
+                return;
             }
 
             String lineExpected, lineActual;
@@ -633,6 +636,49 @@ public class TestExecutor {
         if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray, ignoreExtraFields, false, null)) {
             throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON"
                     + "\nexpected result:\n" + expectedJson + "\nactual result:\n" + actualJson);
+        }
+    }
+
+    private static void runScriptAndCompareWithResultJsonl(File scriptFile, BufferedReader readerExpected,
+            BufferedReader readerActual, String statement) throws ComparisonException, IOException {
+        List<String> expectedLines = readerExpected.lines().collect(Collectors.toList());
+        List<String> actualLines = readerActual.lines().collect(Collectors.toList());
+        boolean compareUnorderedArray = statement != null && getCompareUnorderedArray(statement);
+        boolean ignoreExtraFields = statement != null && getIgnoreExtraFields(statement);
+
+        JsonNode expectedJson, actualJson;
+        int i = 0;
+        for (String expectedLine : expectedLines) {
+            if (actualLines.size() <= i) {
+                throw new ComparisonException("Result for " + canonicalize(scriptFile) + " expected json line at " + i
+                        + " not found: " + truncateIfLong(expectedLine));
+            }
+            String actualLine = actualLines.get(i);
+            i += 1;
+            try {
+                expectedJson = SINGLE_JSON_NODE_READER.readTree(expectedLine);
+            } catch (JsonProcessingException e) {
+                throw new ComparisonException("Invalid expected JSON for: " + scriptFile, e);
+            }
+            try {
+                actualJson = SINGLE_JSON_NODE_READER.readTree(actualLine);
+            } catch (JsonProcessingException e) {
+                throw new ComparisonException("Invalid actual JSON for: " + scriptFile, e);
+            }
+            if (expectedJson == null) {
+                throw new ComparisonException("No expected result for: " + scriptFile);
+            } else if (actualJson == null) {
+                throw new ComparisonException("No actual result for: " + scriptFile);
+            }
+            if (!TestHelper.equalJson(expectedJson, actualJson, compareUnorderedArray, ignoreExtraFields, false,
+                    null)) {
+                throw new ComparisonException("Result for " + scriptFile + " didn't match the expected JSON"
+                        + "\nexpected result:\n" + expectedJson + "\nactual result:\n" + actualJson);
+            }
+        }
+        if (actualLines.size() > i) {
+            throw new ComparisonException("Result for " + canonicalize(scriptFile) + " extra json line at " + i
+                    + " found: " + truncateIfLong(actualLines.get(i)));
         }
     }
 

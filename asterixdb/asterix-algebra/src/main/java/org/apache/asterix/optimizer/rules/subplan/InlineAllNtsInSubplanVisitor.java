@@ -592,7 +592,27 @@ class InlineAllNtsInSubplanVisitor implements IQueryOperatorVisitor<ILogicalOper
 
     @Override
     public ILogicalOperator visitUnionOperator(UnionAllOperator op, Void arg) throws AlgebricksException {
-        visitMultiInputOperator(op);
+        orderingExprs.clear();
+        correlatedKeyVars.clear();
+        ILogicalOperator newChild = op.getInputs().get(0).getValue().accept(this, null);
+        op.getInputs().get(0).setValue(newChild);
+        List<LogicalVariable> leftKeyVars = new ArrayList<>(correlatedKeyVars);
+        correlatedKeyVars.clear();
+
+        newChild = op.getInputs().get(1).getValue().accept(this, null);
+        op.getInputs().get(1).setValue(newChild);
+        int i = 0;
+        for (LogicalVariable leftVar : leftKeyVars) {
+            op.addTriple(new Triple<>(leftKeyVars.get(i),
+                    subplanInputVarToCurrentVarMap.get(currentVarToSubplanInputVarMap.get(leftVar)), context.newVar()));
+            context.computeAndSetTypeEnvironmentForOperator(op);
+            i += 1;
+        }
+        if (correlatedKeyVars.isEmpty()) {
+            correlatedKeyVars.addAll(leftKeyVars);
+        }
+        subtituteVariables(op);
+
         // Update the variable mappings
         List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> varTriples = op.getVariableMappings();
         for (Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple : varTriples) {

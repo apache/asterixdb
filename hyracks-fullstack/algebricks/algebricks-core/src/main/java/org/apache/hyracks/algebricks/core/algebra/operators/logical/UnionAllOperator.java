@@ -41,6 +41,10 @@ public class UnionAllOperator extends AbstractLogicalOperator {
         this.varMap = varMap;
     }
 
+    public void addTriple(Triple<LogicalVariable, LogicalVariable, LogicalVariable> triple) {
+        varMap.add(triple);
+    }
+
     public List<Triple<LogicalVariable, LogicalVariable, LogicalVariable>> getVariableMappings() {
         return varMap;
     }
