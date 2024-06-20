@@ -60,6 +60,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper, ICloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final byte[] EMPTY_FILE_BYTES = "empty".getBytes();
     protected final ICloudClient cloudClient;
     protected final ICloudGuardian guardian;
     protected final IWriteBufferProvider writeBufferProvider;
@@ -302,6 +303,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     public final void create(FileReference fileRef) throws HyracksDataException {
         // We need to delete the local file on create as the cloud storage didn't complete the upload
         // In other words, both cloud files and the local files are not in sync
+        overwrite(fileRef, EMPTY_FILE_BYTES);
         localIoManager.delete(fileRef);
         localIoManager.create(fileRef);
     }

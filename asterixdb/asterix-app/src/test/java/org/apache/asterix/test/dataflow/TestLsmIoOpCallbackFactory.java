@@ -25,6 +25,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
 import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactory;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.btree.impl.TestLsmBtree;
@@ -65,7 +66,7 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
         // However, the counters for the failed operations are never reset since we expect them
         // To be always 0
         return new TestLsmIoOpCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index, getComponentIdGenerator(),
-                getIndexCheckpointManagerProvider());
+                getIndexCheckpointManagerProvider(), getIOManager());
     }
 
     public int getTotalFlushes() {
@@ -126,8 +127,8 @@ public class TestLsmIoOpCallbackFactory extends LSMIndexIOOperationCallbackFacto
         private final TestLsmBtree lsmBtree;
 
         public TestLsmIoOpCallback(DatasetInfo dsInfo, ILSMIndex index, ILSMComponentIdGenerator idGenerator,
-                IIndexCheckpointManagerProvider checkpointManagerProvider) {
-            super(dsInfo, index, idGenerator.getId(), checkpointManagerProvider);
+                IIndexCheckpointManagerProvider checkpointManagerProvider, IIOManager ioManager) {
+            super(dsInfo, index, idGenerator.getId(), checkpointManagerProvider, ioManager);
             lsmBtree = (TestLsmBtree) index;
         }
 

@@ -25,6 +25,7 @@ import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IJsonSerializable;
 import org.apache.hyracks.api.io.IPersistedResourceRegistry;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -68,10 +69,14 @@ public class LSMIndexIOOperationCallbackFactory implements ILSMIOOperationCallba
         return ((INcApplicationContext) ncCtx.getApplicationContext()).getIndexCheckpointManagerProvider();
     }
 
+    protected IIOManager getIOManager() {
+        return ((INcApplicationContext) ncCtx.getApplicationContext()).getPersistenceIoManager();
+    }
+
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
         return new LSMIOOperationCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
-                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
+                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider(), getIOManager());
     }
 
     @Override

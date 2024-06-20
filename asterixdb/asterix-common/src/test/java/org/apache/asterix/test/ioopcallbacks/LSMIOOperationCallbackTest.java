@@ -31,6 +31,7 @@ import org.apache.asterix.common.storage.IIndexCheckpointManager;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
@@ -82,7 +83,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         DatasetInfo dsInfo = new DatasetInfo(101, null);
         LSMComponentIdGenerator idGenerator = new LSMComponentIdGenerator(numMemoryComponents, MIN_VALID_COMPONENT_ID);
         LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
-                mockIndexCheckpointManagerProvider());
+                mockIndexCheckpointManagerProvider(), mockIOManager());
         //Flush first
         idGenerator.refresh();
         long flushLsn = 1L;
@@ -148,7 +149,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
         LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
-                mockIndexCheckpointManagerProvider());
+                mockIndexCheckpointManagerProvider(), mockIOManager());
         ILSMComponentId initialId = idGenerator.getId();
         // simulate a partition is flushed before allocated
         idGenerator.refresh();
@@ -170,7 +171,7 @@ public class LSMIOOperationCallbackTest extends TestCase {
         ILSMMemoryComponent mockComponent = Mockito.mock(AbstractLSMMemoryComponent.class);
         Mockito.when(mockIndex.getCurrentMemoryComponent()).thenReturn(mockComponent);
         LSMIOOperationCallback callback = new LSMIOOperationCallback(dsInfo, mockIndex, idGenerator.getId(),
-                mockIndexCheckpointManagerProvider());
+                mockIndexCheckpointManagerProvider(), mockIOManager());
         String indexId = "mockIndexId";
         ILSMComponentId id = idGenerator.getId();
         callback.recycled(mockComponent);
@@ -228,6 +229,10 @@ public class LSMIOOperationCallbackTest extends TestCase {
                 Mockito.anyLong());
         Mockito.doReturn(indexCheckpointManager).when(indexCheckpointManagerProvider).get(Mockito.any());
         return indexCheckpointManagerProvider;
+    }
+
+    private IIOManager mockIOManager() {
+        return Mockito.mock(IIOManager.class);
     }
 
     private static String getIndexPath() {

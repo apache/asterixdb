@@ -40,6 +40,7 @@ public class AtomicLSMIndexIOOperationCallbackFactory extends LSMIndexIOOperatio
         super(idGeneratorFactory, datasetInfoProvider);
     }
 
+    @Override
     protected IIndexCheckpointManagerProvider getIndexCheckpointManagerProvider() {
         return ((INcApplicationContext) ncCtx.getApplicationContext()).getIndexCheckpointManagerProvider();
     }
@@ -47,7 +48,7 @@ public class AtomicLSMIndexIOOperationCallbackFactory extends LSMIndexIOOperatio
     @Override
     public ILSMIOOperationCallback createIoOpCallback(ILSMIndex index) throws HyracksDataException {
         return new AtomicLSMIOOperationCallback(datasetInfoProvider.getDatasetInfo(ncCtx), index,
-                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider());
+                getComponentIdGenerator().getId(), getIndexCheckpointManagerProvider(), getIOManager());
     }
 
     @SuppressWarnings("squid:S1172") // unused parameter

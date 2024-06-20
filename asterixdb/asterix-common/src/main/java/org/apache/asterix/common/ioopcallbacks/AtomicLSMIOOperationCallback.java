@@ -22,7 +22,7 @@ package org.apache.asterix.common.ioopcallbacks;
 import org.apache.asterix.common.context.DatasetInfo;
 import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperation;
@@ -33,8 +33,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 public class AtomicLSMIOOperationCallback extends LSMIOOperationCallback {
 
     public AtomicLSMIOOperationCallback(DatasetInfo dsInfo, ILSMIndex lsmIndex, ILSMComponentId componentId,
-            IIndexCheckpointManagerProvider indexCheckpointManagerProvider) {
-        super(dsInfo, lsmIndex, componentId, indexCheckpointManagerProvider);
+            IIndexCheckpointManagerProvider indexCheckpointManagerProvider, IIOManager ioManager) {
+        super(dsInfo, lsmIndex, componentId, indexCheckpointManagerProvider, ioManager);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class AtomicLSMIOOperationCallback extends LSMIOOperationCallback {
         } else if (operation.getIOOperationType() == LSMIOOperationType.LOAD) {
             addComponentToCheckpoint(operation);
         } else if (isMerge(operation)) {
-            IoUtil.delete(getOperationMaskFilePath(operation));
+            ioManager.delete(getOperationMaskFilePath(operation));
         }
     }
 }

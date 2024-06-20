@@ -60,7 +60,7 @@ public class MetadataBootstrapTask implements INCLifecycleTask {
         IIOManager persistenceIoManager = appContext.getPersistenceIoManager();
         FileReference bootstrapMarker = persistenceIoManager
                 .resolve(StoragePathUtil.getBootstrapMarkerRelativePath(appContext.getNamespacePathResolver()));
-        persistenceIoManager.overwrite(bootstrapMarker, new byte[0]);
+        persistenceIoManager.create(bootstrapMarker);
     }
 
     private void deleteBootstrapMarker(INcApplicationContext appContext) throws HyracksDataException {
