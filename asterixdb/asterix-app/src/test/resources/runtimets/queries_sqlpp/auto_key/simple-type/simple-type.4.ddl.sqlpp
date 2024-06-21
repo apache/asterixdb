@@ -1,0 +1,124 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+USE test;
+
+UPSERT INTO pk_auto2 (
+[
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b6355d",
+    "callsign": "AIRLINAIR",
+    "country": "France",
+    "iata": "A5",
+    "icao": "RLA",
+    "id": 1203,
+    "name": "Airlinair",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63555",
+    "callsign": "TXW",
+    "country": "United States",
+    "iata": "TQ",
+    "icao": "TXW",
+    "id": 10123,
+    "name": "Texas Wings",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63556",
+    "callsign": "atifly",
+    "country": "United States",
+    "iata": "A1",
+    "icao": "A1F",
+    "id": 10226,
+    "name": "Atifly",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b6355a",
+    "callsign": "ACE AIR",
+    "country": "United States",
+    "iata": "KO",
+    "icao": "AER",
+    "id": 109,
+    "name": "Alaska Central Express",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63559",
+    "callsign": "SASQUATCH",
+    "country": "United States",
+    "iata": "K5",
+    "icao": "SQH",
+    "id": 10765,
+    "name": "SeaPort Airlines",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b6355b",
+    "callsign": "FLYSTAR",
+    "country": "United Kingdom",
+    "iata": "5W",
+    "icao": "AEU",
+    "id": 112,
+    "name": "Astraeus",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63558",
+    "callsign": "LOCAIR",
+    "country": "United States",
+    "iata": "ZQ",
+    "icao": "LOC",
+    "id": 10748,
+    "name": "Locair",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63554",
+    "callsign": "MILE-AIR",
+    "country": "United States",
+    "iata": "Q5",
+    "icao": "MLA",
+    "id": 10,
+    "name": "40-Mile Air",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b63557",
+    "callsign": null,
+    "country": "United Kingdom",
+    "iata": null,
+    "icao": "JRB",
+    "id": 10642,
+    "name": "Jc royal.britannica",
+    "type": "airline"
+  },
+  {
+    "myKey": "2be3fcf4-f86b-09d0-4bf2-eac9d1b6355c",
+    "callsign": "REUNION",
+    "country": "France",
+    "iata": "UU",
+    "icao": "REU",
+    "id": 1191,
+    "name": "Air Austral",
+    "type": "airline"
+  }
+]
+);

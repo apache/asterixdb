@@ -465,6 +465,7 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new FixReplicateOperatorOutputsRule());
         prepareForJobGenRewrites.add(new PopulateResultMetadataRule());
         prepareForJobGenRewrites.add(new AnnotateOperatorCostCardinalityRule());
+        prepareForJobGenRewrites.add(new EnsureColumnarSupportedTypesRule());
         return prepareForJobGenRewrites;
     }
 }

@@ -16622,4 +16622,22 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="auto_key">
+    <test-case FilePath="auto_key">
+      <compilation-unit name="simple-type">
+        <output-dir compare="Clean-JSON">simple-type</output-dir>
+        <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+        <expected-error>ASX0001: Field type bigint cannot be promoted to type uuid</expected-error>
+        <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+        <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="auto_key">
+      <compilation-unit name="nested-type">
+        <output-dir compare="Clean-JSON">nested-type</output-dir>
+        <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+        <expected-error>ASX0001: Field type string cannot be promoted to type uuid</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-group>
