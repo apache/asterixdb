@@ -24,8 +24,10 @@ import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 
 public class CloudClientProvider {
+    private static final boolean UNSTABLE = isUnstable();
     public static final String S3 = "s3";
     public static final String GCS = "gs";
 
@@ -36,13 +38,21 @@ public class CloudClientProvider {
     public static ICloudClient getClient(CloudProperties cloudProperties, ICloudGuardian guardian)
             throws HyracksDataException {
         String storageScheme = cloudProperties.getStorageScheme();
+        ICloudClient cloudClient;
         if (S3.equalsIgnoreCase(storageScheme)) {
             S3ClientConfig config = S3ClientConfig.of(cloudProperties);
-            return new S3CloudClient(config, guardian);
+            cloudClient = new S3CloudClient(config, guardian);
         } else if (GCS.equalsIgnoreCase(storageScheme)) {
             GCSClientConfig config = GCSClientConfig.of(cloudProperties);
-            return new GCSCloudClient(config, guardian);
+            cloudClient = new GCSCloudClient(config, guardian);
+        } else {
+            throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
         }
-        throw new IllegalStateException("unsupported cloud storage scheme: " + storageScheme);
+
+        return UNSTABLE ? new UnstableCloudClient(cloudClient) : cloudClient;
+    }
+
+    private static boolean isUnstable() {
+        return Boolean.getBoolean(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
     }
 }

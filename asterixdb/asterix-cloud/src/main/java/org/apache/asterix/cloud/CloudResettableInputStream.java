@@ -25,6 +25,9 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
+import org.apache.hyracks.cloud.io.request.ICloudRequest;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -141,7 +144,9 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
                  */
                 writeBuffer.flip();
                 try {
-                    bufferedWriter.uploadLast(this, writeBuffer);
+                    ICloudRequest request = () -> bufferedWriter.uploadLast(this, writeBuffer);
+                    ICloudBeforeRetryRequest retry = () -> writeBuffer.position(0);
+                    CloudRetryableRequestUtil.runWithNoRetryOnInterruption(request, retry);
                 } catch (Exception e) {
                     LOGGER.error(e);
                     throw HyracksDataException.create(e);
@@ -182,7 +187,10 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
     private void uploadAndWait() throws HyracksDataException {
         writeBuffer.flip();
         try {
-            bufferedWriter.upload(this, writeBuffer.limit());
+            ICloudRequest request = () -> bufferedWriter.upload(this, writeBuffer.limit());
+            ICloudBeforeRetryRequest retry = () -> writeBuffer.position(0);
+            // This will be interrupted and the interruption will be followed by a halt
+            CloudRetryableRequestUtil.runWithNoRetryOnInterruption(request, retry);
         } catch (Exception e) {
             LOGGER.error(e);
             throw HyracksDataException.create(e);

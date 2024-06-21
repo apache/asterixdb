@@ -22,7 +22,6 @@ import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.Colu
 import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.DEFAULT;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -32,6 +31,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.buffercache.context.BufferCacheCloudReadContextUtil;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
+import org.apache.hyracks.cloud.io.stream.CloudInputStream;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.ColumnRanges;
@@ -47,22 +47,20 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @NotThreadSafe
-final class CloudMegaPageReadContext implements IBufferCacheReadContext {
+public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
     private static final Logger LOGGER = LogManager.getLogger();
+    static final BitSet ALL_PAGES = new BitSet();
     private final ColumnProjectorType operation;
     private final ColumnRanges columnRanges;
     private final IPhysicalDrive drive;
     private final List<ICachedPage> pinnedPages;
 
     private int numberOfContiguousPages;
-    // For logging, to get actual number of wanted pages
-    private int numberOfWantedPages;
     private int pageCounter;
-    private InputStream gapStream;
+    private CloudInputStream gapStream;
 
-    // For debugging
-    private long streamOffset;
-    private long remainingStreamBytes;
+    // for debugging
+    int pageZeroId;
 
     CloudMegaPageReadContext(ColumnProjectorType operation, ColumnRanges columnRanges, IPhysicalDrive drive) {
         this.operation = operation;
@@ -71,13 +69,13 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         pinnedPages = new ArrayList<>();
     }
 
-    void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages,
-            int numberOfWantedPages, BitSet unwantedPages) throws HyracksDataException {
+    void pin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages, BitSet requestedPages)
+            throws HyracksDataException {
         closeStream();
         this.numberOfContiguousPages = numberOfPages;
-        this.numberOfWantedPages = numberOfWantedPages;
         pageCounter = 0;
-        doPin(bufferCache, fileId, pageZeroId, start, numberOfPages, numberOfWantedPages, unwantedPages);
+        this.pageZeroId = pageZeroId;
+        doPin(bufferCache, fileId, pageZeroId, start, numberOfPages, requestedPages);
     }
 
     @Override
@@ -86,10 +84,10 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         if (cachedPage.skipCloudStream()) {
             /*
              * This page is requested but the buffer cache has a valid copy in memory. Also, the page itself was
-             * requested to be read from the cloud. Since this page is valid, no buffer cache read() will be performed.
-             * As the buffer cache read() is also responsible for persisting the bytes read from the cloud, we can end
-             * up writing the bytes of this page in the position of another page. Therefore, we should skip the bytes
-             * for this particular page to avoid placing the bytes of this page into another page's position.
+             * gapStream requested to be read from the cloud. Since this page is valid, no buffer cache read() will be
+             * performed. As the buffer cache read() is also responsible for persisting the bytes read from the cloud,
+             * we can end up writing the bytes of this page in the position of another page. Therefore, we should skip
+             * the bytes for this particular page to avoid placing the bytes of this page into another page's position.
              */
             skipStreamIfOpened(cachedPage);
         }
@@ -152,49 +150,28 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         pinnedPages.clear();
     }
 
-    void closeStream() throws HyracksDataException {
+    void closeStream() {
         if (gapStream != null) {
-            if (remainingStreamBytes != 0) {
-                LOGGER.warn("Closed cloud stream with nonzero bytes = {}", remainingStreamBytes);
-            }
-
-            try {
-                gapStream.close();
-                gapStream = null;
-            } catch (IOException e) {
-                throw HyracksDataException.create(e);
-            }
+            gapStream.close();
+            gapStream = null;
         }
     }
 
     private void readFromStream(IOManager ioManager, BufferedFileHandle fileHandle, BufferCacheHeaderHelper header,
             CachedPage cPage, boolean persist) throws HyracksDataException {
-        InputStream stream = getOrCreateStream(ioManager, fileHandle, cPage);
+        CloudInputStream stream = getOrCreateStream(ioManager, fileHandle, cPage);
         ByteBuffer buffer = header.getBuffer();
         buffer.position(0);
 
-        // If the stream consists of the unwanted pages,
-        // if the currentPage's offset is greater, this means
-        // the streamOffset is pointing to a previous page.
+        /*
+         * The 'gapStream' could point to an offset of an unwanted page due to range merging. For example, if
+         * 'gapStream' is currently at the offset of pageId = 5 and the cPage is for pageId = 7, then, the stream
+         * must be advanced to the cPage's offset (i.e., offset of pageId = 7) -- skipping pages 5 and 6.
+         */
+        gapStream.skipTo(cPage.getCompressedPageOffset());
 
-        // hence we should skip those many bytes.
-        // eg: if pageId(cPage) = 7 and streamOffset is pointing at 5
-        // then we need to jump 5,6 page worth of compressed size.
-        if (cPage.getCompressedPageOffset() > streamOffset) {
-            skipBytes(cPage.getCompressedPageOffset() - streamOffset);
-        }
-
-        try {
-            while (buffer.remaining() > 0) {
-                int length = stream.read(buffer.array(), buffer.position(), buffer.remaining());
-                if (length < 0) {
-                    throw new IllegalStateException("Stream should not be empty!");
-                }
-                buffer.position(buffer.position() + length);
-            }
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
-        }
+        // Get the page's data from the cloud
+        doStreamRead(stream, buffer);
 
         // Flip the buffer after reading to restore the correct position
         buffer.flip();
@@ -204,12 +181,9 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
             BufferCacheCloudReadContextUtil.persist(cloudIOManager, fileHandle.getFileHandle(), buffer, offset);
         }
-
-        streamOffset += cPage.getCompressedPageSize();
-        remainingStreamBytes -= cPage.getCompressedPageSize();
     }
 
-    private InputStream getOrCreateStream(IOManager ioManager, BufferedFileHandle fileHandle, CachedPage cPage)
+    private CloudInputStream getOrCreateStream(IOManager ioManager, BufferedFileHandle fileHandle, CachedPage cPage)
             throws HyracksDataException {
         if (gapStream != null) {
             return gapStream;
@@ -219,34 +193,24 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         long offset = cPage.getCompressedPageOffset();
         int pageId = BufferedFileHandle.getPageId(cPage.getDiskPageId());
         long length = fileHandle.getPagesTotalSize(pageId, requiredNumOfPages);
-        remainingStreamBytes = length;
-        streamOffset = offset;
-        LOGGER.info(
-                "Cloud stream read for pageId={} starting from pageCounter={} out of "
-                        + "numberOfContiguousPages={} with numberOfWantedPages={}"
-                        + " (streamOffset = {}, remainingStreamBytes = {})",
-                pageId, pageCounter, numberOfContiguousPages, numberOfWantedPages, streamOffset, remainingStreamBytes);
-
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
         gapStream = cloudIOManager.cloudRead(fileHandle.getFileHandle(), offset, length);
+
+        LOGGER.info(
+                "Cloud stream read for pageId={} starting from pageCounter={} out of "
+                        + "numberOfContiguousPages={}. pageZeroId={} stream: {}",
+                pageId, pageCounter, numberOfContiguousPages, pageZeroId, gapStream);
 
         return gapStream;
     }
 
-    private void skipBytes(long length) throws HyracksDataException {
-        if (gapStream == null) {
-            return;
-        }
-
+    private void doStreamRead(CloudInputStream stream, ByteBuffer buffer) throws HyracksDataException {
+        int length = buffer.remaining();
         try {
-            long lengthToSkip = length;
-            while (length > 0) {
-                length -= gapStream.skip(length);
-            }
-            streamOffset += lengthToSkip;
-            remainingStreamBytes -= lengthToSkip;
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
+            stream.read(buffer);
+        } catch (Throwable th) {
+            LOGGER.warn("Failed to READ {} bytes from stream {}", length, gapStream);
+            throw HyracksDataException.create(th);
         }
     }
 
@@ -255,34 +219,29 @@ final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             return;
         }
 
+        // Ensure the stream starts from the page's offset and also skip the page's content
+        long newOffset = cPage.getCompressedPageOffset() + cPage.getCompressedPageSize();
         try {
-            long remaining = cPage.getCompressedPageSize();
-            while (remaining > 0) {
-                remaining -= gapStream.skip(remaining);
-            }
-            streamOffset += cPage.getCompressedPageSize();
-            remainingStreamBytes -= cPage.getCompressedPageSize();
+            gapStream.skipTo(newOffset);
         } catch (IOException e) {
+            LOGGER.warn("Failed to SKIP to new offset {} from stream {}", newOffset, gapStream);
             throw HyracksDataException.create(e);
         }
     }
 
     private void doPin(IBufferCache bufferCache, int fileId, int pageZeroId, int start, int numberOfPages,
-            int numberOfWantedPages, BitSet unwantedPages) throws HyracksDataException {
+            BitSet requestedPages) throws HyracksDataException {
         for (int i = start; i < start + numberOfPages; i++) {
-            int pageId = pageZeroId + i;
-            long dpid = BufferedFileHandle.getDiskPageId(fileId, pageId);
             try {
-                if (!unwantedPages.get(pageId)) {
+                if (requestedPages == ALL_PAGES || requestedPages.get(i)) {
+                    int pageId = pageZeroId + i;
+                    long dpid = BufferedFileHandle.getDiskPageId(fileId, pageId);
                     pinnedPages.add(bufferCache.pin(dpid, this));
                 }
                 pageCounter++;
             } catch (Throwable e) {
-                LOGGER.error(
-                        "Error while pinning page number {} with number of pages streamed {}, "
-                                + "with actually wanted number of pages {}"
-                                + "(streamOffset:{}, remainingStreamBytes: {}) columnRanges:\n {}",
-                        i, numberOfPages, numberOfWantedPages, streamOffset, remainingStreamBytes, columnRanges);
+                LOGGER.error("Error while pinning page number {} with number of pages {}. "
+                        + "stream: {}, columnRanges:\n {}", i, numberOfPages, gapStream, columnRanges);
                 throw e;
             }
         }

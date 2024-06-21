@@ -288,6 +288,13 @@ public final class S3CloudClient implements ICloudClient {
         s3Client.close();
     }
 
+    /**
+     * FOR TESTING ONLY
+     */
+    public ICloudBufferedWriter createBufferedWriter(String bucket, String path) {
+        return new S3BufferedWriter(s3Client, profiler, guardian, bucket, path);
+    }
+
     private static S3Client buildClient(S3ClientConfig config) {
         S3ClientBuilder builder = S3Client.builder();
         builder.credentialsProvider(config.createCredentialsProvider());

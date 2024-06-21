@@ -51,6 +51,10 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
+import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
+import org.apache.hyracks.cloud.io.request.ICloudRequest;
+import org.apache.hyracks.cloud.io.stream.CloudInputStream;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -173,12 +177,30 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
     @Override
     public final void cloudRead(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
-        cloudClient.read(bucket, fHandle.getFileReference().getRelativePath(), offset, data);
+        int position = data.position();
+        ICloudRequest request =
+                () -> cloudClient.read(bucket, fHandle.getFileReference().getRelativePath(), offset, data);
+        ICloudBeforeRetryRequest retry = () -> data.position(position);
+        CloudRetryableRequestUtil.run(request, retry);
     }
 
     @Override
-    public final InputStream cloudRead(IFileHandle fHandle, long offset, long length) {
-        return cloudClient.getObjectStream(bucket, fHandle.getFileReference().getRelativePath(), offset, length);
+    public final CloudInputStream cloudRead(IFileHandle fHandle, long offset, long length) throws HyracksDataException {
+        return CloudRetryableRequestUtil.run(() -> new CloudInputStream(this, fHandle,
+                cloudClient.getObjectStream(bucket, fHandle.getFileReference().getRelativePath(), offset, length),
+                offset, length));
+    }
+
+    @Override
+    public void restoreStream(CloudInputStream cloudStream) {
+        LOGGER.warn("Restoring stream from cloud, {}", cloudStream);
+        /*
+         * This cloud request should not be called using CloudRetryableRequestUtil as it is the responsibility of the
+         * caller to warp this request as ICloudRequest or ICloudRetry.
+         */
+        InputStream stream = cloudClient.getObjectStream(bucket, cloudStream.getPath(), cloudStream.getOffset(),
+                cloudStream.getRemaining());
+        cloudStream.setInputStream(stream);
     }
 
     @Override

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.control.nc.io.bulk.DeleteBulkOperation;
 import org.apache.logging.log4j.LogManager;
@@ -57,7 +58,7 @@ public class DeleteBulkCloudOperation extends DeleteBulkOperation {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Bulk deleting: local: {}, cloud: {}", fileReferences, paths);
         }
-        cloudClient.deleteObjects(bucket, paths);
+        CloudRetryableRequestUtil.run(() -> cloudClient.deleteObjects(bucket, paths));
         // Bulk delete locally as well
         super.performOperation();
         callBack.call(fileReferences);

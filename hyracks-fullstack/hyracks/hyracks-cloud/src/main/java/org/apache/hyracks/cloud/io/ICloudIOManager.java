@@ -18,11 +18,14 @@
  */
 package org.apache.hyracks.cloud.io;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
+import org.apache.hyracks.cloud.io.request.ICloudRequest;
+import org.apache.hyracks.cloud.io.stream.CloudInputStream;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 
 /**
  * Certain operations needed to be provided by {@link org.apache.hyracks.api.io.IIOManager} to support cloud
@@ -45,7 +48,17 @@ public interface ICloudIOManager {
      * @param offset  starting offset
      * @return input stream of the required data
      */
-    InputStream cloudRead(IFileHandle fHandle, long offset, long length);
+    CloudInputStream cloudRead(IFileHandle fHandle, long offset, long length) throws HyracksDataException;
+
+    /**
+     * Tries to restore the stream created by {@link #cloudRead(IFileHandle, long, long)}
+     * NOTE: The implementer of this method should not use {@link CloudRetryableRequestUtil} when calling this method.
+     * It is the responsibility of the caller to either call this method as a
+     * {@link ICloudRequest} or as a {@link ICloudBeforeRetryRequest}.
+     *
+     * @param stream to restore
+     */
+    void restoreStream(CloudInputStream stream);
 
     /**
      * Write to local drive only

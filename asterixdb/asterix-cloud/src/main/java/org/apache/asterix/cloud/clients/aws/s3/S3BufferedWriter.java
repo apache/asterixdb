@@ -22,12 +22,12 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -84,7 +84,6 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         if (uploadId == null) {
             profiler.objectWrite();
             PutObjectRequest request = PutObjectRequest.builder().bucket(bucket).key(path).build();
-            // TODO make retryable
             s3Client.putObject(request, RequestBody.fromByteBuffer(buffer));
             // Only set the uploadId if the putObject succeeds
             uploadId = PUT_UPLOAD_ID;
@@ -111,28 +110,9 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         CompletedMultipartUpload completedMultipartUpload = CompletedMultipartUpload.builder().parts(partQueue).build();
         CompleteMultipartUploadRequest completeMultipartUploadRequest = CompleteMultipartUploadRequest.builder()
                 .bucket(bucket).key(path).uploadId(uploadId).multipartUpload(completedMultipartUpload).build();
-        int retries = 0;
-        while (true) {
-            try {
-                completeMultipartUpload(completeMultipartUploadRequest);
-                break;
-            } catch (Exception e) {
-                retries++;
-                if (retries == MAX_RETRIES) {
-                    throw HyracksDataException.create(e);
-                }
-                LOGGER.info(() -> "S3 storage write retry, encountered: " + e.getMessage());
-
-                // Backoff for 1 sec for the first 2 retries, and 2 seconds from there onward
-                try {
-                    Thread.sleep(TimeUnit.SECONDS.toMillis(retries < 2 ? 1 : 2));
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    throw HyracksDataException.create(ex);
-                }
-            }
-        }
-
+        // This will be interrupted and the interruption will be followed by a halt
+        CloudRetryableRequestUtil
+                .runWithNoRetryOnInterruption(() -> completeMultipartUpload(completeMultipartUploadRequest));
         log("FINISHED");
     }
 

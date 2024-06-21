@@ -53,6 +53,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -174,7 +175,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
 
     @Override
     public Set<FileReference> list(FileReference dir, FilenameFilter filter) throws HyracksDataException {
-        return accessor.doList(dir, filter);
+        return CloudRetryableRequestUtil.run(() -> accessor.doList(dir, filter));
     }
 
     @Override
@@ -189,18 +190,18 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
 
     @Override
     public byte[] readAllBytes(FileReference fileRef) throws HyracksDataException {
-        return accessor.doReadAllBytes(fileRef);
+        return CloudRetryableRequestUtil.run(() -> accessor.doReadAllBytes(fileRef));
     }
 
     @Override
     public void delete(FileReference fileRef) throws HyracksDataException {
-        accessor.doDelete(fileRef);
+        CloudRetryableRequestUtil.run(() -> CloudRetryableRequestUtil.run(() -> accessor.doDelete(fileRef)));
         log("DELETE", fileRef);
     }
 
     @Override
     public void overwrite(FileReference fileRef, byte[] bytes) throws HyracksDataException {
-        accessor.doOverwrite(fileRef, bytes);
+        CloudRetryableRequestUtil.run(() -> accessor.doOverwrite(fileRef, bytes));
         log("WRITE", fileRef);
     }
 

@@ -22,6 +22,7 @@ import static org.apache.hyracks.cloud.buffercache.context.DefaultCloudReadConte
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MERGE;
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MODIFY;
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
+import static org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read.CloudMegaPageReadContext.ALL_PAGES;
 
 import java.nio.ByteBuffer;
 import java.util.BitSet;
@@ -55,7 +56,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     private final ColumnRanges columnRanges;
     private final CloudMegaPageReadContext columnCtx;
     private final BitSet projectedColumns;
-    private final MergedPageRanges mergedPageRanges;
+    private final AbstractPageRangesComputer mergedPageRanges;
 
     public CloudColumnReadContext(IColumnProjectionInfo projectionInfo, IPhysicalDrive drive, BitSet plan) {
         this.operation = projectionInfo.getProjectorType();
@@ -65,7 +66,7 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         cloudOnlyColumns = new BitSet();
         columnCtx = new CloudMegaPageReadContext(operation, columnRanges, drive);
         projectedColumns = new BitSet();
-        mergedPageRanges = new MergedPageRanges(columnCtx, MAX_RANGES_COUNT);
+        mergedPageRanges = AbstractPageRangesComputer.create(MAX_RANGES_COUNT);
         if (operation == QUERY || operation == MODIFY) {
             for (int i = 0; i < projectionInfo.getNumberOfProjectedColumns(); i++) {
                 int columnIndex = projectionInfo.getColumnIndex(i);
@@ -113,10 +114,10 @@ public final class CloudColumnReadContext implements IColumnReadContext {
     public ICachedPage pinNext(ColumnBTreeReadLeafFrame leafFrame, IBufferCache bufferCache, int fileId)
             throws HyracksDataException {
         int nextLeaf = leafFrame.getNextLeaf();
-        // Release the previous pages (including page0)
+        // Release the previous pages
         release(bufferCache);
+        // Release page0
         bufferCache.unpin(leafFrame.getPage(), this);
-
         // pin the next page0
         ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), this);
         leafFrame.setPage(nextPage);
@@ -142,11 +143,11 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
     private void pinAll(int fileId, int pageZeroId, int numberOfPages, IBufferCache bufferCache)
             throws HyracksDataException {
-        columnCtx.pin(bufferCache, fileId, pageZeroId, 1, numberOfPages, numberOfPages, MergedPageRanges.EMPTY);
+        columnCtx.pin(bufferCache, fileId, pageZeroId, 1, numberOfPages, ALL_PAGES);
     }
 
     private void pinProjected(int fileId, int pageZeroId, IBufferCache bufferCache) throws HyracksDataException {
-        mergedPageRanges.reset();
+        mergedPageRanges.clear();
         int[] columnsOrder = columnRanges.getColumnsOrder();
         int i = 0;
         int columnIndex = columnsOrder[i];
@@ -186,8 +187,9 @@ public final class CloudColumnReadContext implements IColumnReadContext {
 
             mergedPageRanges.addRange(firstPageIdx, lastPageIdx);
         }
+
         // pin the calculated pageRanges
-        mergedPageRanges.pin(fileId, pageZeroId, bufferCache);
+        mergedPageRanges.pin(columnCtx, bufferCache, fileId, pageZeroId);
     }
 
     @Override
