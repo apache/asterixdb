@@ -21,6 +21,7 @@ package org.apache.asterix.messaging;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -40,6 +41,7 @@ import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.cc.NodeControllerState;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
+import org.apache.hyracks.util.Span;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -131,16 +133,15 @@ public class CCMessageBroker implements ICCMessageBroker {
                         throw new RuntimeDataException(ErrorCode.ILLEGAL_STATE, "unable to send sync message to " + nc);
                     }
                 }
-                long time = System.currentTimeMillis();
+                Span span = Span.start(timeout, TimeUnit.MILLISECONDS);
                 while (pair.getLeft().getValue() > 0) {
-                    try {
-                        pair.wait(timeout);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        throw HyracksDataException.create(e);
-                    }
-                    if (System.currentTimeMillis() - time > timeout && pair.getLeft().getValue() > 0) {
+                    if (span.elapsed()) {
                         throw new RuntimeDataException(ErrorCode.NC_REQUEST_TIMEOUT, timeout / 1000);
+                    }
+                    try {
+                        span.wait(pair);
+                    } catch (InterruptedException e) {
+                        throw HyracksDataException.create(e);
                     }
                 }
             }
