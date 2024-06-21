@@ -539,7 +539,7 @@ public class LSMHarness implements ILSMHarness {
         }
         String flushedComponent =
                 operation.getStatus() == LSMIOOperationStatus.SUCCESS ? newComponent.toString() : "FAILED";
-        LOGGER.debug("Finished FLUSH operation {} to new disk component {}.", operation, flushedComponent,
+        LOGGER.debug("Finished FLUSH operation {} to new disk component {}. Status: {}", operation, flushedComponent,
                 operation.getStatus());
     }
 
