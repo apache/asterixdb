@@ -138,6 +138,7 @@ import org.apache.asterix.om.typecomputer.impl.ToBigIntTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToDoubleTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToNumberTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ToObjectTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.ToObjectVarStrTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.TreatAsTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UnaryBinaryInt64TypeComputer;
 import org.apache.asterix.om.typecomputer.impl.UniformInputTypeComputer;
@@ -1263,6 +1264,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier TO_DOUBLE = FunctionConstants.newAsterix("to-double", 1);
     public static final FunctionIdentifier TO_NUMBER = FunctionConstants.newAsterix("to-number", 1);
     public static final FunctionIdentifier TO_OBJECT = FunctionConstants.newAsterix("to-object", 1);
+    public static final FunctionIdentifier TO_OBJECT_VAR_STR = FunctionConstants.newAsterix("to-object-var-str", 1);
     public static final FunctionIdentifier TO_STRING = FunctionConstants.newAsterix("to-string", 1);
 
     public static final FunctionIdentifier TREAT_AS_INTEGER = FunctionConstants.newAsterix("treat-as-integer", 1);
@@ -1529,6 +1531,7 @@ public class BuiltinFunctions {
         addFunction(TO_DOUBLE, ToDoubleTypeComputer.INSTANCE, true);
         addFunction(TO_NUMBER, ToNumberTypeComputer.INSTANCE, true);
         addFunction(TO_OBJECT, ToObjectTypeComputer.INSTANCE, true);
+        addPrivateFunction(TO_OBJECT_VAR_STR, ToObjectVarStrTypeComputer.INSTANCE, true);
         addFunction(TO_STRING, AStringTypeComputer.INSTANCE_NULLABLE, true);
 
         addPrivateFunction(TREAT_AS_INTEGER, TreatAsTypeComputer.INSTANCE_INTEGER, true);

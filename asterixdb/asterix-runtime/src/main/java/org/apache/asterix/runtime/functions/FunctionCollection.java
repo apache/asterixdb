@@ -511,6 +511,7 @@ import org.apache.asterix.runtime.evaluators.functions.ToBooleanDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToDoubleDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToNumberDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToObjectDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.ToObjectVarStrDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.ToStringDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.TreatAsIntegerDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.UUIDDescriptor;
@@ -1323,6 +1324,7 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ToDoubleDescriptor.FACTORY);
         fc.add(ToNumberDescriptor.FACTORY);
         fc.add(ToObjectDescriptor.FACTORY);
+        fc.add(ToObjectVarStrDescriptor.FACTORY);
         fc.add(ToStringDescriptor.FACTORY);
 
         fc.add(TreatAsIntegerDescriptor.FACTORY);

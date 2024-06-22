@@ -129,8 +129,23 @@ public class SelectOperator extends AbstractLogicalOperator {
             return env;
         }
         AbstractFunctionCallExpression f1 = (AbstractFunctionCallExpression) condition.getValue();
-        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
+        if (f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.AND)) {
+            for (Mutable<ILogicalExpression> a1 : f1.getArguments()) {
+                if (a1.getValue().getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                    computeMissableNullAble(env, (AbstractFunctionCallExpression) a1.getValue());
+                }
+            }
             return env;
+        }
+        if (f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
+            computeMissableNullAble(env, f1);
+        }
+        return env;
+    }
+
+    private void computeMissableNullAble(PropagatingTypeEnvironment env, AbstractFunctionCallExpression f1) {
+        if (!f1.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.NOT)) {
+            return;
         }
         ILogicalExpression a1 = f1.getArguments().get(0).getValue();
         if (a1.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
@@ -142,7 +157,6 @@ public class SelectOperator extends AbstractLogicalOperator {
                 extractFunctionArgVarInto(f2, env.getNonNullableVariables());
             }
         }
-        return env;
     }
 
     @Override

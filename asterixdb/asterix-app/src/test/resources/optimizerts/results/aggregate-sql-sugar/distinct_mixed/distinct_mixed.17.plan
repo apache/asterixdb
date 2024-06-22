@@ -6,22 +6,22 @@
           -- ASSIGN  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- PRE_CLUSTERED_GROUP_BY[$$149]  |PARTITIONED|
+                -- PRE_CLUSTERED_GROUP_BY[$$156]  |PARTITIONED|
                         {
                           -- AGGREGATE  |LOCAL|
                             -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$115(ASC)]  |LOCAL|
+                              -- MICRO_STABLE_SORT [$$124(ASC)]  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                         {
                           -- AGGREGATE  |LOCAL|
                             -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$120(ASC)]  |LOCAL|
+                              -- MICRO_STABLE_SORT [$$129(ASC)]  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$149(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$149]  |PARTITIONED|
+                    -- STABLE_SORT [$$156(ASC)]  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
                         -- NESTED_LOOP  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|
@@ -54,22 +54,22 @@
           -- ASSIGN  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- PRE_CLUSTERED_GROUP_BY[$$150]  |PARTITIONED|
+                -- PRE_CLUSTERED_GROUP_BY[$$157]  |PARTITIONED|
                         {
                           -- AGGREGATE  |LOCAL|
                             -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$133(ASC)]  |LOCAL|
+                              -- MICRO_STABLE_SORT [$$142(ASC)]  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                         {
                           -- AGGREGATE  |LOCAL|
                             -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$138(ASC)]  |LOCAL|
+                              -- MICRO_STABLE_SORT [$$147(ASC)]  |LOCAL|
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                         }
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$150(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$150]  |PARTITIONED|
+                    -- STABLE_SORT [$$157(ASC)]  |PARTITIONED|
+                      -- HASH_PARTITION_EXCHANGE [$$157]  |PARTITIONED|
                         -- NESTED_LOOP  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                             -- STREAM_PROJECT  |PARTITIONED|

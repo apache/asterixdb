@@ -187,7 +187,7 @@ public class TypeComputeUtils {
         return actualTypes;
     }
 
-    private static boolean[] isUnknownableType(IAType... inputTypes) {
+    public static boolean[] isUnknownableType(IAType... inputTypes) {
         boolean[] unknownable = new boolean[inputTypes.length];
         for (int index = 0; index < unknownable.length; ++index) {
             IAType type = inputTypes[index];

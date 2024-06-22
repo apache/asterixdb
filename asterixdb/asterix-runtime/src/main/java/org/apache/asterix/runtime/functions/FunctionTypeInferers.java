@@ -393,4 +393,16 @@ public final class FunctionTypeInferers {
         }
         return argsTypes;
     }
+
+    public static final class ToObjectVarStrTypeInferer implements IFunctionTypeInferer {
+        @Override
+        public void infer(ILogicalExpression expr, IFunctionDescriptor fd, IVariableTypeEnvironment context,
+                CompilerProperties compilerProps) throws AlgebricksException {
+            AbstractFunctionCallExpression f = (AbstractFunctionCallExpression) expr;
+            List<Mutable<ILogicalExpression>> args = f.getArguments();
+            fd.setImmutableStates(context.getType(expr),
+                    TypeComputeUtils.getActualType((IAType) context.getType(args.get(0).getValue())));
+        }
+
+    }
 }

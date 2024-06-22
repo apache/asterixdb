@@ -21,7 +21,6 @@ package org.apache.asterix.translator;
 import static org.apache.asterix.external.util.ExternalDataConstants.SUBPATH;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -912,14 +911,10 @@ public class SqlppExpressionToPlanTranslator extends LangExpressionToPlanTransla
     }
 
     private Expression translateProjectVarStar(Expression projectionExpr, SourceLocation sourceLoc) {
-        // var.* -> if_missing_or_null(to_object(var), {})
-        CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT),
+        CallExpr toObjectExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.TO_OBJECT_VAR_STR),
                 Collections.singletonList(projectionExpr));
         toObjectExpr.setSourceLocation(sourceLoc);
-        CallExpr ifMissingOrNullExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.IF_MISSING_OR_NULL),
-                Arrays.asList(toObjectExpr, new RecordConstructor(Collections.emptyList())));
-        ifMissingOrNullExpr.setSourceLocation(sourceLoc);
-        return ifMissingOrNullExpr;
+        return toObjectExpr;
     }
 
     private static boolean includeInSelectStar(VariableExpr varExpr) {
