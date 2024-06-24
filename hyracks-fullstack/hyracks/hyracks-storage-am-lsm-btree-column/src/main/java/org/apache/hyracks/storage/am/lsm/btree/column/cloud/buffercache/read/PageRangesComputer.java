@@ -147,8 +147,7 @@ final class PageRangesComputer extends AbstractPageRangesComputer {
 
     private void pinEachRange(CloudMegaPageReadContext ctx, IBufferCache bufferCache, int fileId, int pageZeroId)
             throws HyracksDataException {
-        int numberOfRanges = getNumberOfRanges();
-        for (int i = 0; i < numberOfRanges; i += 2) {
+        for (int i = 0; i < pageRanges.size(); i += 2) {
             int start = pageRanges.getInt(i);
             int end = pageRanges.getInt(i + 1);
             int numberOfPages = end - start + 1;

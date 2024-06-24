@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.AsterixTypeToParquetTypeVisitor;
-import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.ArrayConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.ObjectConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.ObjectRepeatedConverter;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.converter.nested.RepeatedConverter;
