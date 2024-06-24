@@ -18,7 +18,26 @@
  */
 package org.apache.hyracks.util;
 
+import java.util.function.Supplier;
+
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
 @FunctionalInterface
 public interface ThrowingSupplier<T> {
     T get() throws Exception;
+
+    @SuppressWarnings("Duplicates")
+    static <T> Supplier<T> asUnchecked(ThrowingSupplier<T> supplier) {
+        return () -> {
+            try {
+                return supplier.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new UncheckedExecutionException(e);
+            } catch (Exception e) {
+                throw new UncheckedExecutionException(e);
+            }
+        };
+    }
+
 }
