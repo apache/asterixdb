@@ -266,12 +266,16 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         synchronized (this) {
             while (partitionPendingIO.getOrDefault(partition, 0) > 0) {
                 try {
+                    int numPendingIOOps = partitionPendingIO.getOrDefault(partition, 0);
+                    LOGGER.debug("Waiting for {} IO operations in {} partition {}", numPendingIOOps, this, partition);
                     wait();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     throw HyracksDataException.create(e);
                 }
             }
+
+            LOGGER.debug("All IO operations for {} partition {} are finished", this, partition);
 
             Set<IndexInfo> indexes = partitionIndexes.get(partition);
             if (indexes != null) {

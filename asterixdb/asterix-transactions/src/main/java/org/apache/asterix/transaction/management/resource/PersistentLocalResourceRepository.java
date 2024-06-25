@@ -559,14 +559,10 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
     }
 
     public void cleanup(int partition) throws HyracksDataException {
-        beforeReadAccess();
-        try {
-            CleanupBlockingIOOperation cleanupOp = new CleanupBlockingIOOperation(partition, this, ioManager);
-            datasetLifecycleManager.waitForIOAndPerform(AllDatasetsReplicationStrategy.INSTANCE, partition, cleanupOp);
-        } finally {
-            clearResourcesCache();
-            afterReadAccess();
-        }
+        LOGGER.info("Cleaning up indexes in partition {}", partition);
+        CleanupBlockingIOOperation cleanupOp = new CleanupBlockingIOOperation(partition, this, ioManager);
+        datasetLifecycleManager.waitForIOAndPerform(AllDatasetsReplicationStrategy.INSTANCE, partition, cleanupOp);
+        LOGGER.info("Finished cleaning up indexes in partition {} successfully", partition);
     }
 
     /**
@@ -575,6 +571,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
      * @param index to clean
      */
     void cleanupIndex(FileReference index) throws HyracksDataException {
+        beforeReadAccess();
         try {
             deleteIndexMaskedFiles(index);
             if (isValidIndex(index)) {
@@ -582,6 +579,9 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
             }
         } catch (IOException | ParseException e) {
             throw HyracksDataException.create(e);
+        } finally {
+            clearResourcesCache();
+            afterReadAccess();
         }
     }
 

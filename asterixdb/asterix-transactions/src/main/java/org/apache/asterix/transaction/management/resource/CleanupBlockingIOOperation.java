@@ -62,7 +62,7 @@ class CleanupBlockingIOOperation implements IIOBlockingOperation {
     }
 
     /**
-     * Clean all inactive indexes while the DatasetLifeCycleManager is synchronized
+     * Clean all inactive indexes
      */
     @Override
     public void afterOperation() throws HyracksDataException {
