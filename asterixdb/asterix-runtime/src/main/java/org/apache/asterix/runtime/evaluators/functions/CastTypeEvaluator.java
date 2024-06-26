@@ -23,10 +23,10 @@ import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -41,22 +41,12 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     private final IPointable argPointable = new VoidPointable();
     private final PointableAllocator allocator = new PointableAllocator();
     private IVisitablePointable inputPointable;
-    private IVisitablePointable resultPointable;
     private final ACastVisitor castVisitor = createCastVisitor();
-    private final Triple<IVisitablePointable, IAType, Boolean> arg = new Triple<>(null, null, null);
-
-    public CastTypeEvaluator() {
-        this(null);
-        // reset() should be called after using this constructor before calling any method
-    }
+    private final CastResult castResult = new CastResult(new VoidPointable(), null);
 
     public CastTypeEvaluator(SourceLocation sourceLoc) {
         this.sourceLoc = sourceLoc;
         // reset() should be called after using this constructor before calling any method
-    }
-
-    public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
-        this(reqType, inputType, argEvaluator, null);
     }
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator,
@@ -68,10 +58,7 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     public void resetAndAllocate(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
         this.argEvaluator = argEvaluator;
         this.inputPointable = allocatePointable(inputType, reqType);
-        this.resultPointable = allocatePointable(reqType, inputType);
-        this.arg.first = resultPointable;
-        this.arg.second = reqType;
-        this.arg.third = Boolean.FALSE;
+        this.castResult.setOutType(reqType);
     }
 
     protected ACastVisitor createCastVisitor() {
@@ -86,19 +73,18 @@ public class CastTypeEvaluator implements IScalarEvaluator {
             return;
         }
 
-        inputPointable.set(argPointable);
-        cast(result);
+        cast(argPointable, result);
     }
 
-    protected void cast(IPointable result) throws HyracksDataException {
-        inputPointable.accept(castVisitor, arg);
-        result.set(resultPointable);
-    }
-
-    // TODO: refactor in a better way
+    // TODO(ali): refactor in a better way
     protected void cast(IPointable argPointable, IPointable result) throws HyracksDataException {
         inputPointable.set(argPointable);
-        cast(result);
+        castInto(result);
+    }
+
+    protected void castInto(IPointable result) throws HyracksDataException {
+        inputPointable.accept(castVisitor, castResult);
+        result.set(castResult.getOutPointable());
     }
 
     // Allocates the result pointable.

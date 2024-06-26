@@ -29,15 +29,14 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeHelper;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -95,7 +94,7 @@ public class ToObjectVarStrDescriptor extends AbstractScalarFunctionDynamicDescr
                 private final ARecordVisitablePointable argRec;
                 private final boolean castRequired;
                 private ACastVisitor castVisitor;
-                private Triple<IVisitablePointable, IAType, Boolean> castVisitorArg;
+                private CastResult castResult;
                 private boolean wroteEmpty;
 
                 private ToObjectVarStrEvaluator(final IEvaluatorContext ctx) throws HyracksDataException {
@@ -103,9 +102,8 @@ public class ToObjectVarStrDescriptor extends AbstractScalarFunctionDynamicDescr
                     if (!TypeHelper.isFullyOpen(argType) && TypeHelper.isFullyOpen(outType)) {
                         castRequired = true;
                         argRec = new ARecordVisitablePointable(argType);
-                        ARecordVisitablePointable openRec = new ARecordVisitablePointable(NESTED_OPEN_RECORD_TYPE);
                         castVisitor = new ACastVisitor();
-                        castVisitorArg = new Triple<>(openRec, openRec.getInputRecordType(), Boolean.FALSE);
+                        castResult = new CastResult(new VoidPointable(), NESTED_OPEN_RECORD_TYPE);
                     } else {
                         castRequired = false;
                         argRec = null;
@@ -119,8 +117,8 @@ public class ToObjectVarStrDescriptor extends AbstractScalarFunctionDynamicDescr
                     if (arg0.getByteArray()[arg0.getStartOffset()] == ATypeTag.SERIALIZED_RECORD_TYPE_TAG) {
                         if (castRequired) {
                             argRec.set(arg0);
-                            argRec.accept(castVisitor, castVisitorArg);
-                            resultPointable.set(castVisitorArg.first);
+                            argRec.accept(castVisitor, castResult);
+                            resultPointable.set(castResult.getOutPointable());
                         } else {
                             resultPointable.set(arg0);
                         }

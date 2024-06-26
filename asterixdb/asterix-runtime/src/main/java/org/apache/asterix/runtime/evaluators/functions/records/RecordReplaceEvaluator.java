@@ -62,8 +62,8 @@ class RecordReplaceEvaluator implements IScalarEvaluator {
         this.eval1 = eval1;
         this.eval2 = eval2;
         openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-        inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[0], eval0);
-        newValueRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[2], eval2);
+        inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[0], eval0, null);
+        newValueRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, argTypes[2], eval2, null);
         // comp compares a value existing in the input record with the provided value. the input record is casted open
         comp = BinaryComparatorFactoryProvider.INSTANCE.getBinaryComparatorFactory(BuiltinType.ANY, argTypes[1], true)
                 .createBinaryComparator();

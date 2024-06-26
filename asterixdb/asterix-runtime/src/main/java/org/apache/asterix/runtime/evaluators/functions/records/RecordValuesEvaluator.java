@@ -60,7 +60,7 @@ class RecordValuesEvaluator implements IScalarEvaluator {
         if (recordType != null) {
             inputRecordOpen = recordType.isOpen() && recordType.getFieldTypes().length == 0;
             openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
-            inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, recordType, eval0);
+            inputRecordCaster = new CastTypeEvaluator(BuiltinType.ANY, recordType, eval0, null);
             listBuilder = new OrderedListBuilder();
         } else {
             inputRecordOpen = true;

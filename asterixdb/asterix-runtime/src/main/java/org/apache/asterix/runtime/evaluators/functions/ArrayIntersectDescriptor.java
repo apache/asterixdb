@@ -194,7 +194,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             hashes = new Int2ObjectOpenHashMap<>();
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
-            caster = new CastTypeEvaluator();
+            caster = new CastTypeEvaluator(null);
             // for functions that accept multiple lists arguments, they will be casted to open, hence item is ANY
             comp = BinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();

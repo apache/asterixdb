@@ -108,7 +108,7 @@ public class ArrayReplaceEvaluator extends AbstractScalarEval {
         tempVal = new VoidPointable();
         item = new VoidPointable();
         listAccessor = new ListAccessor();
-        caster = new CastTypeEvaluator();
+        caster = new CastTypeEvaluator(null);
         orderedListBuilder = null;
         unorderedListBuilder = null;
 

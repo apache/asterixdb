@@ -27,11 +27,11 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -44,23 +44,22 @@ class RecordUnwrapEvaluator implements IScalarEvaluator {
     private final IPointable inputRecordPointable = new VoidPointable();
     private final IScalarEvaluator eval0;
     private ARecordVisitablePointable inputRecordVisitable;
-    private ARecordVisitablePointable openRecordVisitablePointable;
+    private final ARecordVisitablePointable openRecord;
     private boolean requiresCast = false;
     private ACastVisitor castVisitor;
-    private Triple<IVisitablePointable, IAType, Boolean> castVisitorArg;
+    private CastResult castResult;
     private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
     private final DataOutput resultOutput = resultStorage.getDataOutput();
 
     RecordUnwrapEvaluator(IScalarEvaluator eval0, ARecordType recordType) {
         this.eval0 = eval0;
-        openRecordVisitablePointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+        openRecord = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         if (recordType != null) {
             inputRecordVisitable = new ARecordVisitablePointable(recordType);
             if (hasDerivedType(recordType.getFieldTypes())) {
                 requiresCast = true;
                 castVisitor = new ACastVisitor();
-                castVisitorArg = new Triple<>(openRecordVisitablePointable,
-                        openRecordVisitablePointable.getInputRecordType(), Boolean.FALSE);
+                castResult = new CastResult(openRecord, openRecord.getInputRecordType());
             }
         }
     }
@@ -109,8 +108,8 @@ class RecordUnwrapEvaluator implements IScalarEvaluator {
     }
 
     private ARecordVisitablePointable castToOpenRecord() throws HyracksDataException {
-        inputRecordVisitable.accept(castVisitor, castVisitorArg);
-        return openRecordVisitablePointable;
+        inputRecordVisitable.accept(castVisitor, castResult);
+        return openRecord;
     }
 
     private void writeValue(IVisitablePointable value) throws HyracksDataException {

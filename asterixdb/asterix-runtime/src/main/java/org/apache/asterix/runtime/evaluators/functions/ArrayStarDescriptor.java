@@ -198,7 +198,7 @@ public class ArrayStarDescriptor extends AbstractScalarFunctionDynamicDescriptor
             list = new VoidPointable();
             tempList = new VoidPointable();
             listEval = args[0].createScalarEvaluator(ctx);
-            caster = new CastTypeEvaluator();
+            caster = new CastTypeEvaluator(null);
             listAccessor = new ListAccessor();
             recordBuilder = new RecordBuilder();
             listBuilder = new OrderedListBuilder();

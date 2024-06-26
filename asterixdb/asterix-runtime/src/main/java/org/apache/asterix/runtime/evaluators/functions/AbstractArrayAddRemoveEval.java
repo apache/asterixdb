@@ -71,7 +71,7 @@ public abstract class AbstractArrayAddRemoveEval implements IScalarEvaluator {
         orderedListBuilder = null;
         unorderedListBuilder = null;
         listAccessor = new ListAccessor();
-        caster = new CastTypeEvaluator();
+        caster = new CastTypeEvaluator(null);
         storage = new ArrayBackedValueStorage();
         listArg = new VoidPointable();
         tempList = new VoidPointable();

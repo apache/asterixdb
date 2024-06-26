@@ -46,9 +46,9 @@ class CastTypeLaxEvaluator extends CastTypeEvaluator {
     }
 
     @Override
-    protected void cast(IPointable result) {
+    protected void castInto(IPointable result) {
         try {
-            super.cast(result);
+            super.castInto(result);
         } catch (HyracksDataException e) {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.log(Level.TRACE, e.toString(), e);

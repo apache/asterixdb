@@ -31,13 +31,13 @@ import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.common.ListAccessor;
 import org.apache.asterix.runtime.evaluators.functions.BinaryHashMap;
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.algebricks.runtime.base.IEvaluatorContext;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
@@ -100,11 +100,11 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private final IScalarEvaluator[] argEvals;
         private IPointable[] argPointables;
         private ARecordVisitablePointable[] argRecordPointables;
-        private final ARecordVisitablePointable openRecordPointable;
+        private final ARecordVisitablePointable openRecord;
 
         private final BitSet castRequired;
         private ACastVisitor castVisitor;
-        private Triple<IVisitablePointable, IAType, Boolean> castVisitorArg;
+        private CastResult castResult;
 
         private final RecordBuilder outRecordBuilder;
         private final ArrayBackedValueStorage resultStorage;
@@ -123,12 +123,12 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
             this.warningCollector = warningCollector;
 
             firstArg = new VoidPointable();
-            openRecordPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+            openRecord = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
 
             resultStorage = new ArrayBackedValueStorage();
             resultOutput = resultStorage.getDataOutput();
             outRecordBuilder = new RecordBuilder();
-            outRecordBuilder.reset(openRecordPointable.getInputRecordType());
+            outRecordBuilder.reset(openRecord.getInputRecordType());
 
             fieldMap = new BinaryHashMap(TABLE_SIZE, TABLE_FRAME_SIZE, outRecordBuilder.getFieldNameHashFunction(),
                     outRecordBuilder.getFieldNameHashFunction(), outRecordBuilder.getFieldNameComparator());
@@ -166,8 +166,7 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
         private void initCastVisitor() {
             if (castVisitor == null) {
                 castVisitor = new ACastVisitor();
-                castVisitorArg =
-                        new Triple<>(openRecordPointable, openRecordPointable.getInputRecordType(), Boolean.FALSE);
+                castResult = new CastResult(openRecord, openRecord.getInputRecordType());
             }
         }
 
@@ -300,14 +299,14 @@ class RecordConcatEvalFactory implements IScalarEvaluatorFactory {
             if (argVisitablePointable != null) {
                 argVisitablePointable.set(recordPtr);
                 if (argCastRequired) {
-                    argVisitablePointable.accept(castVisitor, castVisitorArg);
-                    recordPointable = openRecordPointable;
+                    argVisitablePointable.accept(castVisitor, castResult);
+                    recordPointable = openRecord;
                 } else {
                     recordPointable = argVisitablePointable;
                 }
             } else {
-                openRecordPointable.set(recordPtr);
-                recordPointable = openRecordPointable;
+                openRecord.set(recordPtr);
+                recordPointable = openRecord;
             }
 
             List<IVisitablePointable> fieldNames = recordPointable.getFieldNames();

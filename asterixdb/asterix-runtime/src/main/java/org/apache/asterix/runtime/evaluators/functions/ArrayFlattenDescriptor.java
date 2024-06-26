@@ -141,7 +141,7 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
             depthEval = args[1].createScalarEvaluator(ctx);
             list = new VoidPointable();
             pointable = new VoidPointable();
-            caster = new CastTypeEvaluator();
+            caster = new CastTypeEvaluator(null);
             depthArg = new TaggedValuePointable();
             orderedListBuilder = null;
             unorderedListBuilder = null;

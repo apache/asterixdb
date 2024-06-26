@@ -45,11 +45,12 @@ import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.accessors.UTF8StringBinaryComparatorFactory;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleOutputStream;
 import org.apache.hyracks.util.string.UTF8StringWriter;
 
@@ -73,9 +74,7 @@ class ARecordCaster {
             UTF8StringBinaryComparatorFactory.INSTANCE.createBinaryComparator();
     private final ByteArrayAccessibleOutputStream outputBos = new ByteArrayAccessibleOutputStream();
     private final DataOutputStream outputDos = new DataOutputStream(outputBos);
-    private final IVisitablePointable fieldTempReference = PointableAllocator.allocateUnrestableEmpty();
-    private final Triple<IVisitablePointable, IAType, Boolean> nestedVisitorArg =
-            new Triple<>(fieldTempReference, null, null);
+    private final CastResult fieldCastResult = new CastResult(new VoidPointable(), null);
     private int numInputFields = 0;
     // describe closed fields in the required type
     private int[] fieldPermutation;
@@ -102,8 +101,8 @@ class ARecordCaster {
         }
     }
 
-    public void castRecord(ARecordVisitablePointable recordAccessor, IVisitablePointable resultAccessor,
-            ARecordType reqType, ACastVisitor visitor) throws HyracksDataException {
+    public void castRecord(ARecordVisitablePointable recordAccessor, IPointable castOutResult, ARecordType reqType,
+            ACastVisitor visitor) throws HyracksDataException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
         List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
@@ -125,7 +124,7 @@ class ARecordCaster {
         reset();
         matchClosedPart(fieldNames, fieldTypeTags);
         writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
-        resultAccessor.set(outputBos.getByteArray(), 0, outputBos.size());
+        castOutResult.set(outputBos.getByteArray(), 0, outputBos.size());
     }
 
     private void reset() {
@@ -289,7 +288,7 @@ class ARecordCaster {
             final int pos = fieldPermutation[i];
             final IVisitablePointable field = pos >= 0 ? fieldValues.get(pos) : missingTypeTag;
             final IAType fType = cachedReqType.getFieldTypes()[i];
-            nestedVisitorArg.second = fType;
+            fieldCastResult.setOutType(fType);
 
             // recursively casting, the result of casting can always be thought
             // as flat
@@ -297,15 +296,15 @@ class ARecordCaster {
                 //the field is optional in the input record
                 IVisitablePointable fieldTypeTag = pos >= 0 ? fieldTypeTags.get(pos) : null;
                 if (fieldTypeTag == null || fieldTypeTag.equals(missingTypeTag)) {
-                    nestedVisitorArg.second = BuiltinType.AMISSING;
+                    fieldCastResult.setOutType(BuiltinType.AMISSING);
                 } else if (fieldTypeTag.equals(nullTypeTag)) {
-                    nestedVisitorArg.second = BuiltinType.ANULL;
+                    fieldCastResult.setOutType(BuiltinType.ANULL);
                 } else {
-                    nestedVisitorArg.second = ((AUnionType) fType).getActualType();
+                    fieldCastResult.setOutType(((AUnionType) fType).getActualType());
                 }
             }
-            field.accept(visitor, nestedVisitorArg);
-            recBuilder.addField(i, nestedVisitorArg.first);
+            field.accept(visitor, fieldCastResult);
+            recBuilder.addField(i, fieldCastResult.getOutPointable());
         }
 
         // write the open part
@@ -317,9 +316,9 @@ class ARecordCaster {
 
                 ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
                         .deserialize(fieldTypeTag.getByteArray()[fieldTypeTag.getStartOffset()]);
-                nestedVisitorArg.second = DefaultOpenFieldType.getDefaultOpenFieldType(typeTag);
-                field.accept(visitor, nestedVisitorArg);
-                recBuilder.addField(name, nestedVisitorArg.first);
+                fieldCastResult.setOutType(DefaultOpenFieldType.getDefaultOpenFieldType(typeTag));
+                field.accept(visitor, fieldCastResult);
+                recBuilder.addField(name, fieldCastResult.getOutPointable());
             }
         }
         recBuilder.write(output, true);

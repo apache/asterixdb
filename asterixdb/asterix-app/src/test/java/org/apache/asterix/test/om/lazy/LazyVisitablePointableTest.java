@@ -29,12 +29,10 @@ import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ARecordType;
-import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.comparisons.DeepEqualAssessor;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.junit.Assert;
@@ -55,7 +53,7 @@ public class LazyVisitablePointableTest {
     private final RecordLazyVisitablePointable openLazyPointable;
     private final ARecordVisitablePointable openPointable;
     private final ArrayBackedValueStorage recordStorage;
-    private final Triple<IVisitablePointable, IAType, Boolean> arg;
+    private final CastResult castResult;
 
     static {
         BASE_DIR = "data";
@@ -74,8 +72,7 @@ public class LazyVisitablePointableTest {
         openLazyPointable = new RecordLazyVisitablePointable(true);
         openPointable = new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         recordStorage = new ArrayBackedValueStorage();
-        arg = new Triple<>(null, null, null);
-        arg.third = Boolean.FALSE;
+        castResult = new CastResult(null, null);
     }
 
     private void prepareParser(String path) throws IOException {
@@ -91,12 +88,12 @@ public class LazyVisitablePointableTest {
             //Infer the schema
             ARecordType inferredFromOpen = (ARecordType) openLazyPointable.accept(schemaInference, "fromOpen");
             ARecordVisitablePointable closedPointable = new ARecordVisitablePointable(inferredFromOpen);
-            arg.first = closedPointable;
-            arg.second = inferredFromOpen;
+            castResult.setOutPointable(closedPointable);
+            castResult.setOutType(inferredFromOpen);
 
             //Cast to closed using the inferred type
             openPointable.set(recordStorage);
-            openPointable.accept(castVisitor, arg);
+            openPointable.accept(castVisitor, castResult);
             //Ensure both closed and open records are the same
             Assert.assertTrue(deepEqualAssessor.isEqual(openPointable, closedPointable));
 

@@ -67,7 +67,7 @@ public class ListifyAggregateFunctionEvalFactory implements IAggregateEvaluatorF
             // create caster to open up input item if the list item type is ANY but the received item is not fully open
             private final CastTypeEvaluator caster =
                     orderedListType.getItemType().getTypeTag() == ATypeTag.ANY && !TypeHelper.isFullyOpen(itemType)
-                            ? new CastTypeEvaluator(BuiltinType.ANY, itemType, eval) : null;
+                            ? new CastTypeEvaluator(BuiltinType.ANY, itemType, eval, sourceLoc) : null;
 
             @Override
             public void init() throws HyracksDataException {

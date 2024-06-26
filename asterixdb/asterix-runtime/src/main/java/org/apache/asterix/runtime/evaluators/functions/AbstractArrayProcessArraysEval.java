@@ -68,7 +68,7 @@ public abstract class AbstractArrayProcessArraysEval implements IScalarEvaluator
         storageAllocator = new ListObjectPool<>(ObjectFactories.STORAGE_FACTORY);
         finalResult = new ArrayBackedValueStorage();
         listAccessor = new ListAccessor();
-        caster = new CastTypeEvaluator();
+        caster = new CastTypeEvaluator(null);
         tempList = new VoidPointable();
         listsArgs = new IPointable[args.length];
         listsEval = new IScalarEvaluator[args.length];

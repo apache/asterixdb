@@ -43,7 +43,7 @@ abstract class AbstractRecordPairsEvaluator implements IScalarEvaluator {
     AbstractRecordPairsEvaluator(IScalarEvaluator eval0, IAType inputType) {
         this.eval0 = eval0;
         if (inputType != null) {
-            inputCaster = new CastTypeEvaluator(BuiltinType.ANY, inputType, eval0);
+            inputCaster = new CastTypeEvaluator(BuiltinType.ANY, inputType, eval0, null);
         }
     }
 

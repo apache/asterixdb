@@ -37,9 +37,9 @@ import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.hyracks.algebricks.common.utils.Triple;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 /**
@@ -53,7 +53,7 @@ import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
  * memory/storage layout, the visitor will change the layout as specified at
  * runtime.
  */
-public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVisitablePointable, IAType, Boolean>> {
+public class ACastVisitor implements IVisitablePointableVisitor<Void, CastResult> {
 
     private final Map<IVisitablePointable, ARecordCaster> raccessorToCaster = new HashMap<>();
     private final Map<IVisitablePointable, AListCaster> laccessorToCaster = new HashMap<>();
@@ -76,8 +76,7 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
     }
 
     @Override
-    public Void visit(AListVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws HyracksDataException {
+    public Void visit(AListVisitablePointable accessor, CastResult castResult) throws HyracksDataException {
         AListCaster caster = laccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new AListCaster();
@@ -85,27 +84,26 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
         }
 
         AbstractCollectionType resultType;
-        switch (arg.second.getTypeTag()) {
+        switch (castResult.getOutType().getTypeTag()) {
             case ANY:
                 resultType = accessor.ordered() ? DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE
                         : DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE;
                 break;
             case ARRAY:
             case MULTISET:
-                resultType = (AbstractCollectionType) arg.second;
+                resultType = (AbstractCollectionType) castResult.getOutType();
                 break;
             default:
                 throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc,
-                        accessor.ordered() ? ATypeTag.ARRAY : ATypeTag.MULTISET, arg.second.getTypeTag());
+                        accessor.ordered() ? ATypeTag.ARRAY : ATypeTag.MULTISET, castResult.getOutType().getTypeTag());
         }
 
-        caster.castList(accessor, arg.first, resultType, this);
+        caster.castList(accessor, castResult.getOutPointable(), resultType, this);
         return null;
     }
 
     @Override
-    public Void visit(ARecordVisitablePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws HyracksDataException {
+    public Void visit(ARecordVisitablePointable accessor, CastResult castResult) throws HyracksDataException {
         ARecordCaster caster = raccessorToCaster.get(accessor);
         if (caster == null) {
             caster = new ARecordCaster();
@@ -113,47 +111,48 @@ public class ACastVisitor implements IVisitablePointableVisitor<Void, Triple<IVi
         }
 
         ARecordType resultType;
-        switch (arg.second.getTypeTag()) {
+        IAType oType = castResult.getOutType();
+        switch (oType.getTypeTag()) {
             case ANY:
                 resultType = DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE;
                 break;
             case OBJECT:
-                resultType = (ARecordType) arg.second;
+                resultType = (ARecordType) oType;
                 break;
             default:
-                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc, ATypeTag.OBJECT,
-                        arg.second.getTypeTag());
+                throw new RuntimeDataException(ErrorCode.TYPE_CONVERT, sourceLoc, ATypeTag.OBJECT, oType.getTypeTag());
         }
 
-        caster.castRecord(accessor, arg.first, resultType, this);
+        caster.castRecord(accessor, castResult.getOutPointable(), resultType, this);
         return null;
     }
 
     @Override
-    public Void visit(AFlatValuePointable accessor, Triple<IVisitablePointable, IAType, Boolean> arg)
-            throws HyracksDataException {
-        if (arg.second == null) {
+    public Void visit(AFlatValuePointable accessor, CastResult castResult) throws HyracksDataException {
+        IAType oType = castResult.getOutType();
+        IPointable outPointable = castResult.getOutPointable();
+        if (oType == null) {
             // for open type case
-            arg.first.set(accessor);
+            outPointable.set(accessor);
             return null;
         }
         // set the pointer for result
-        ATypeTag reqTypeTag = (arg.second).getTypeTag();
+        ATypeTag reqTypeTag = oType.getTypeTag();
         if (reqTypeTag == ATypeTag.ANY) {
             // for open type case
-            arg.first.set(accessor);
+            outPointable.set(accessor);
             return null;
         }
         ATypeTag inputTypeTag =
                 EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(accessor.getByteArray()[accessor.getStartOffset()]);
         if (!needPromote(inputTypeTag, reqTypeTag)) {
-            arg.first.set(accessor);
+            outPointable.set(accessor);
         } else {
             try {
                 castBuffer.reset();
                 ATypeHierarchy.convertNumericTypeByteArray(accessor.getByteArray(), accessor.getStartOffset(),
                         accessor.getLength(), reqTypeTag, castBuffer.getDataOutput(), strictDemote);
-                arg.first.set(castBuffer);
+                outPointable.set(castBuffer);
             } catch (HyracksDataException e) {
                 throw e;
             } catch (IOException e) {
