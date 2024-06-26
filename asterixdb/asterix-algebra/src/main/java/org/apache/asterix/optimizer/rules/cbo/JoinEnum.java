@@ -300,14 +300,15 @@ public class JoinEnum {
         ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
 
-        // at least one equality predicate needs to be present for a hash join to be possible.
+        // All the join predicates need to be equality predicates for a hash join to be possible.
         boolean eqPredFound = false;
         for (int joinNum : newJoinConditions) {
             // need to AND all the expressions.
             JoinCondition jc = joinConditions.get(joinNum);
-            if (jc.comparisonType == JoinCondition.comparisonOp.OP_EQ) {
-                eqPredFound = true;
+            if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
+                return null;
             }
+            eqPredFound = true;
             andExpr.getArguments().add(new MutableObject<>(jc.joinCondition));
         }
         // return null if no equality predicates were found
