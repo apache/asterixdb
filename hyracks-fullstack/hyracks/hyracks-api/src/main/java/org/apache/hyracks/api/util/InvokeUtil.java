@@ -39,6 +39,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.common.util.concurrent.UncheckedExecutionException;
+
 public class InvokeUtil {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -355,6 +357,26 @@ public class InvokeUtil {
             }
         }
         throw HyracksDataException.create(new InterruptedException());
+    }
+
+    public static Exception unwrapUnchecked(UncheckedExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof Error err) {
+            throw err;
+        } else if (cause instanceof Exception ex) {
+            return ex;
+        } else {
+            return HyracksDataException.create(cause);
+        }
+    }
+
+    public static HyracksDataException unwrapUncheckedHyracks(UncheckedExecutionException e) {
+        Throwable cause = e.getCause();
+        if (cause instanceof Error err) {
+            throw err;
+        } else {
+            return HyracksDataException.create(cause);
+        }
     }
 
     @FunctionalInterface
