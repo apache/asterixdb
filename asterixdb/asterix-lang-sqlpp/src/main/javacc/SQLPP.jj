@@ -4391,9 +4391,11 @@ Expression ValueExpr() throws ParseException:
 {
   expr = PrimaryExpr()
   (
-    accessor = FieldAccessor(accessor != null ? accessor : expr)
-    |
-    accessor = IndexAccessor(accessor != null ? accessor : expr)
+    LOOKAHEAD(2)(
+      accessor = FieldAccessor(accessor != null ? accessor : expr)
+      |
+      accessor = IndexAccessor(accessor != null ? accessor : expr)
+    )
   )*
   {
     return accessor == null ? expr : accessor;
@@ -5335,8 +5337,8 @@ Projection Projection() throws ParseException :
 {
   (
     <MUL> { kind = Projection.Kind.STAR; startSrcLoc = getSourceLocation(token); }
-    | LOOKAHEAD(3) expr = VariableRef() <DOT> <MUL> { kind = Projection.Kind.VAR_STAR; }
-    | expr = Expression()
+        | LOOKAHEAD(ValueExpr() <DOT> <MUL>) expr = ValueExpr() <DOT> <MUL> { kind = Projection.Kind.VAR_STAR; }
+        | expr = Expression()
       ( // EXCLUDE is a soft-keyword-- we want to avoid mistaking EXCLUDE as an identifier here.
         LOOKAHEAD({ getToken(1).kind == AS || getToken(1).kind == QUOTED_STRING
                     || (getToken(1).kind == IDENTIFIER && !laIdentifier(1, EXCLUDE)) })
