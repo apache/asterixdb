@@ -21,13 +21,13 @@ package org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read;
 import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MERGE;
 import static org.apache.hyracks.storage.common.buffercache.context.read.DefaultBufferCacheReadContextProvider.DEFAULT;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.cloud.buffercache.context.BufferCacheCloudReadContextUtil;
 import org.apache.hyracks.cloud.buffercache.page.CloudCachedPage;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
@@ -44,6 +44,7 @@ import org.apache.hyracks.storage.common.disk.IPhysicalDrive;
 import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 import org.apache.hyracks.util.IThreadStats;
 import org.apache.hyracks.util.annotations.NotThreadSafe;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -215,7 +216,7 @@ public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
             stream.read(buffer);
             threadStats.cloudPageRead();
         } catch (Throwable th) {
-            LOGGER.warn("Failed to READ {} bytes from stream {}", length, gapStream);
+            LOGGER.log(getLevel(th), "Failed to READ {} bytes from stream {}", length, gapStream, th);
             throw HyracksDataException.create(th);
         }
     }
@@ -229,9 +230,9 @@ public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
         long newOffset = cPage.getCompressedPageOffset() + cPage.getCompressedPageSize();
         try {
             gapStream.skipTo(newOffset);
-        } catch (IOException e) {
-            LOGGER.warn("Failed to SKIP to new offset {} from stream {}", newOffset, gapStream);
-            throw HyracksDataException.create(e);
+        } catch (Throwable th) {
+            LOGGER.log(getLevel(th), "Failed to SKIP to new offset {} from stream {}", newOffset, gapStream, th);
+            throw HyracksDataException.create(th);
         }
     }
 
@@ -245,11 +246,16 @@ public final class CloudMegaPageReadContext implements IBufferCacheReadContext {
                     pinnedPages.add(bufferCache.pin(dpid, this));
                 }
                 pageCounter++;
-            } catch (Throwable e) {
-                LOGGER.error("Error while pinning page number {} with number of pages {}. "
-                        + "stream: {}, columnRanges:\n {}", i, numberOfPages, gapStream, columnRanges);
-                throw e;
+            } catch (Throwable th) {
+                LOGGER.log(getLevel(th),
+                        "Error while pinning page number {} with number of pages {}. stream: {}, columnRanges:\n {}", i,
+                        numberOfPages, gapStream, columnRanges, th);
+                throw th;
             }
         }
+    }
+
+    private static Level getLevel(Throwable th) {
+        return ExceptionUtils.causedByInterrupt(th) ? Level.DEBUG : Level.WARN;
     }
 }

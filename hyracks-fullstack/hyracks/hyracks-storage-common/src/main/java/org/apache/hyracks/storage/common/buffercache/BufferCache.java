@@ -214,10 +214,6 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                     try {
                         tryRead(cPage, context);
                         cPage.valid = true;
-                    } catch (Exception e) {
-                        LOGGER.log(ExceptionUtils.causedByInterrupt(e) ? Level.DEBUG : Level.WARN,
-                                "Failure while trying to read a page from disk", e);
-                        throw e;
                     } finally {
                         if (!cPage.valid) {
                             unpin(cPage, context);
@@ -573,9 +569,10 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 statsSubscribers.getOrDefault(Thread.currentThread(), NoOpThreadStats.INSTANCE);
         try {
             fInfo.read(cPage, context, threadStats);
-        } catch (Throwable e) {
-            LOGGER.error("Error while reading a page {} in file {}", cPage, fInfo);
-            throw e;
+        } catch (Throwable th) {
+            LOGGER.log(ExceptionUtils.causedByInterrupt(th) ? Level.DEBUG : Level.WARN,
+                    "Error while reading a page {} in file {}", cPage, fInfo, th);
+            throw th;
         }
 
         if (context.incrementStats()) {

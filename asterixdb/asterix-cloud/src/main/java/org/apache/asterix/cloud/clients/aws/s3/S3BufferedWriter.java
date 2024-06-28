@@ -44,7 +44,6 @@ import software.amazon.awssdk.services.s3.model.UploadPartRequest;
 
 public class S3BufferedWriter implements ICloudBufferedWriter {
     private static final String PUT_UPLOAD_ID = "putUploadId";
-    private static final int MAX_RETRIES = 3;
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final S3Client s3Client;
