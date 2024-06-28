@@ -50,8 +50,7 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
     static IObjectFactory<AListVisitablePointable, IAType> FACTORY =
             type -> new AListVisitablePointable((AbstractCollectionType) type);
 
-    private final List<IVisitablePointable> items = new ArrayList<IVisitablePointable>();
-    private final List<IVisitablePointable> itemTags = new ArrayList<IVisitablePointable>();
+    private final List<IVisitablePointable> items = new ArrayList<>();
     private final PointableAllocator allocator = new PointableAllocator();
 
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
@@ -87,7 +86,6 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
     private void reset() {
         allocator.reset();
         items.clear();
-        itemTags.clear();
         dataBos.reset();
     }
 
@@ -109,21 +107,13 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
             if (typedItemList) {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, false);
-                    IVisitablePointable tag = allocator.allocateEmpty();
                     IVisitablePointable item = allocator.allocateFieldValue(itemType);
 
-                    // set item type tag
+                    // set item value including the tag
                     int start = dataBos.size();
                     dataDos.writeByte(itemTag.serialize());
-                    int end = dataBos.size();
-                    tag.set(dataBos.getByteArray(), start, end - start);
-                    itemTags.add(tag);
-
-                    // set item value
-                    start = dataBos.size();
-                    dataDos.writeByte(itemTag.serialize());
                     dataDos.write(b, itemOffset, itemLength);
-                    end = dataBos.size();
+                    int end = dataBos.size();
                     item.set(dataBos.getByteArray(), start, end - start);
                     itemOffset += itemLength;
                     items.add(item);
@@ -132,15 +122,7 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
                 for (int i = 0; i < numberOfitems; i++) {
                     itemTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[itemOffset]);
                     itemLength = NonTaggedFormatUtil.getFieldValueLength(b, itemOffset, itemTag, true) + 1;
-                    IVisitablePointable tag = allocator.allocateEmpty();
                     IVisitablePointable item = allocator.allocateFieldValue(itemTag, b, itemOffset + 1);
-
-                    // set item type tag
-                    int start = dataBos.size();
-                    dataDos.writeByte(itemTag.serialize());
-                    int end = dataBos.size();
-                    tag.set(dataBos.getByteArray(), start, end - start);
-                    itemTags.add(tag);
 
                     // open part field already include the type tag
                     item.set(b, itemOffset, itemLength);
@@ -154,16 +136,12 @@ public class AListVisitablePointable extends AbstractVisitablePointable {
     }
 
     @Override
-    public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws HyracksDataException {
-        return vistor.visit(this, tag);
+    public <R, T> R accept(IVisitablePointableVisitor<R, T> visitor, T tag) throws HyracksDataException {
+        return visitor.visit(this, tag);
     }
 
     public List<IVisitablePointable> getItems() {
         return items;
-    }
-
-    public List<IVisitablePointable> getItemTags() {
-        return itemTags;
     }
 
     public boolean ordered() {

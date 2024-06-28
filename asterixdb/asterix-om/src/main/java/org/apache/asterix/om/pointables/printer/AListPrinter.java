@@ -25,7 +25,7 @@ import java.util.List;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.types.EnumDeserializer;
+import org.apache.asterix.om.utils.PointableHelper;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -47,33 +47,28 @@ public class AListPrinter {
 
     public void printList(AListVisitablePointable listAccessor, PrintStream ps, IPrintVisitor visitor)
             throws HyracksDataException {
-        List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
         itemVisitorArg.first = ps;
-
         ps.print(startList);
 
         // print item 0 to n-2
         final int size = items.size();
         for (int i = 0; i < size - 1; i++) {
-            printItem(visitor, itemTags, items, i);
+            printItem(visitor, items, i);
             ps.print(separator);
         }
 
         // print item n-1
         if (size > 0) {
-            printItem(visitor, itemTags, items, size - 1);
+            printItem(visitor, items, size - 1);
         }
 
         ps.print(endList);
     }
 
-    private void printItem(IPrintVisitor visitor, List<IVisitablePointable> itemTags, List<IVisitablePointable> items,
-            int i) throws HyracksDataException {
-        IVisitablePointable itemTypeTag = itemTags.get(i);
+    private void printItem(IPrintVisitor visitor, List<IVisitablePointable> items, int i) throws HyracksDataException {
         IVisitablePointable item = items.get(i);
-        ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
+        ATypeTag typeTag = PointableHelper.getTypeTag(item);
         itemVisitorArg.second = getItemTypeTag(item, typeTag);
         item.accept(visitor, itemVisitorArg);
     }

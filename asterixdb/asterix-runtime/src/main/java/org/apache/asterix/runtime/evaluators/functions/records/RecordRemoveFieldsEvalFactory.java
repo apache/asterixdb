@@ -145,7 +145,6 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
                 List<IVisitablePointable> fieldNames = srp.getFieldNames();
                 List<IVisitablePointable> fieldValues = srp.getFieldValues();
-                List<IVisitablePointable> fieldTypes = srp.getFieldTypeTags();
 
                 for (int i = 0; i < fieldNames.size(); i++) {
                     IVisitablePointable subRecFieldName = fieldNames.get(i);
@@ -153,10 +152,11 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                     if (isValidPath(inputList)) {
                         if (requiredType != null && requiredType.getTypeTag() != ATypeTag.ANY) {
                             addKeptFieldToSubRecord(requiredType, subRecFieldName, fieldValues.get(i),
-                                    fieldTypes.get(i), inputList, nestedLevel);
+                                    PointableHelper.getTypeTag(fieldValues.get(i)), inputList, nestedLevel);
                         } else {
                             addKeptFieldToSubRecord(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE, subRecFieldName,
-                                    fieldValues.get(i), fieldTypes.get(i), inputList, nestedLevel);
+                                    fieldValues.get(i), PointableHelper.getTypeTag(fieldValues.get(i)), inputList,
+                                    nestedLevel);
                         }
                     }
                     recordPath.pop();
@@ -164,14 +164,14 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
             }
 
             private void addKeptFieldToSubRecord(ARecordType requiredType, IVisitablePointable fieldNamePointable,
-                    IVisitablePointable fieldValuePointable, IVisitablePointable fieldTypePointable,
+                    IVisitablePointable fieldValuePointable, ATypeTag fieldTypePointable,
                     AListVisitablePointable inputList, int nestedLevel) throws IOException {
 
                 runtimeRecordTypeInfo.reset(requiredType);
                 int pos = runtimeRecordTypeInfo.getFieldIndex(fieldNamePointable.getByteArray(),
                         fieldNamePointable.getStartOffset() + 1, fieldNamePointable.getLength() - 1);
                 if (pos >= 0) { // Closed field
-                    if (PointableHelper.sameType(ATypeTag.OBJECT, fieldTypePointable)
+                    if (ATypeTag.OBJECT == fieldTypePointable
                             && PointableHelper.sameType(ATypeTag.OBJECT, fieldValuePointable)) {
                         processRecord((ARecordType) TypeComputeUtils.getActualType(requiredType.getFieldTypes()[pos]),
                                 (ARecordVisitablePointable) fieldValuePointable, inputList, nestedLevel + 1);
@@ -182,7 +182,7 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
                         rbStack.get(nestedLevel).addField(pos, fieldValuePointable);
                     }
                 } else { // Open field
-                    if (PointableHelper.sameType(ATypeTag.OBJECT, fieldTypePointable)) {
+                    if (ATypeTag.OBJECT == fieldTypePointable) {
                         processRecord(null, (ARecordVisitablePointable) fieldValuePointable, inputList,
                                 nestedLevel + 1);
                         tabvs.reset();
@@ -196,12 +196,10 @@ class RecordRemoveFieldsEvalFactory implements IScalarEvaluatorFactory {
 
             private boolean isValidPath(AListVisitablePointable inputList) throws HyracksDataException {
                 List<IVisitablePointable> items = inputList.getItems();
-                List<IVisitablePointable> typeTags = inputList.getItemTags();
-
                 int pathLen = recordPath.size();
                 for (int i = 0; i < items.size(); i++) {
                     IVisitablePointable item = items.get(i);
-                    if (PointableHelper.sameType(ATypeTag.ARRAY, typeTags.get(i))) {
+                    if (PointableHelper.sameType(ATypeTag.ARRAY, item)) {
                         List<IVisitablePointable> inputPathItems = ((AListVisitablePointable) item).getItems();
 
                         if (pathLen == inputPathItems.size()) {

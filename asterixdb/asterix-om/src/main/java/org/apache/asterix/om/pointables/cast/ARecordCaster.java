@@ -39,10 +39,10 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AUnionType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
 import org.apache.asterix.om.utils.NonTaggedFormatUtil;
+import org.apache.asterix.om.utils.PointableHelper;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparator;
@@ -63,7 +63,7 @@ class ARecordCaster {
     // pointable allocator
     private final PointableAllocator allocator = new PointableAllocator();
     private final List<IVisitablePointable> reqFieldNames = new ArrayList<>();
-    private final List<IVisitablePointable> reqFieldTypeTags = new ArrayList<>();
+    private final List<ATypeTag> reqFieldTypeTags = new ArrayList<>();
     private ARecordType cachedReqType = null;
     private final ResettableByteArrayOutputStream bos = new ResettableByteArrayOutputStream();
     private final DataOutputStream dos = new DataOutputStream(bos);
@@ -104,7 +104,6 @@ class ARecordCaster {
     public void castRecord(ARecordVisitablePointable recordAccessor, IPointable castOutResult, ARecordType reqType,
             ACastVisitor visitor) throws HyracksDataException {
         List<IVisitablePointable> fieldNames = recordAccessor.getFieldNames();
-        List<IVisitablePointable> fieldTypeTags = recordAccessor.getFieldTypeTags();
         List<IVisitablePointable> fieldValues = recordAccessor.getFieldValues();
         numInputFields = fieldNames.size();
 
@@ -122,8 +121,8 @@ class ARecordCaster {
 
         // clear the previous states
         reset();
-        matchClosedPart(fieldNames, fieldTypeTags);
-        writeOutput(fieldNames, fieldTypeTags, fieldValues, outputDos, visitor);
+        matchClosedPart(fieldNames, fieldValues);
+        writeOutput(fieldNames, fieldValues, outputDos, visitor);
         castOutResult.set(outputBos.getByteArray(), 0, outputBos.size());
     }
 
@@ -166,12 +165,7 @@ class ARecordCaster {
                 ftypeTag = ((AUnionType) fieldTypes[i]).getActualType().getTypeTag();
                 optionalFields[i] = true;
             }
-            int tagStart = bos.size();
-            dos.writeByte(ftypeTag.serialize());
-            int tagEnd = bos.size();
-            IVisitablePointable typeTagPointable = allocator.allocateEmpty();
-            typeTagPointable.set(bos.getByteArray(), tagStart, tagEnd - tagStart);
-            reqFieldTypeTags.add(typeTagPointable);
+            reqFieldTypeTags.add(ftypeTag);
 
             // add type name pointable (including a string type tag)
             int nameStart = bos.size();
@@ -191,7 +185,7 @@ class ARecordCaster {
         quickSort(reqFieldNamesSortedIndex, reqFieldNames, 0, reqFieldNamesSortedIndex.length - 1);
     }
 
-    private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags)
+    private void matchClosedPart(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldValues)
             throws HyracksDataException {
         int fnStart = 0;
         int reqFnStart = 0;
@@ -204,20 +198,18 @@ class ARecordCaster {
             int reqFnPos = reqFieldNamesSortedIndex[reqFnStart];
             int c = compare(fieldNames.get(fnPos), reqFieldNames.get(reqFnPos));
             if (c == 0) {
-                IVisitablePointable fieldTypeTag = fieldTypeTags.get(fnPos);
-                IVisitablePointable reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                ATypeTag fieldTypeTag = PointableHelper.getTypeTag(fieldValues.get(fnPos));
+                ATypeTag reqFieldTypeTag = reqFieldTypeTags.get(reqFnPos);
+                //TODO(ali): check the last || condition
                 if (fieldTypeTag.equals(reqFieldTypeTag) || (
                 // match the null type of optional field
-                optionalFields[reqFnPos] && (fieldTypeTag.equals(nullTypeTag))
-                        || fieldTypeTag.equals(missingTypeTag))) {
+                optionalFields[reqFnPos] && ((fieldTypeTag == ATypeTag.NULL) || fieldTypeTag == ATypeTag.MISSING))) {
                     fieldPermutation[reqFnPos] = fnPos;
                     openFields[fnPos] = false;
                 } else {
                     // if mismatch, check whether input type can be promoted to the required type
-                    ATypeTag inputTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(fieldTypeTag.getByteArray()[fieldTypeTag.getStartOffset()]);
-                    ATypeTag requiredTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(reqFieldTypeTag.getByteArray()[reqFieldTypeTag.getStartOffset()]);
+                    ATypeTag inputTypeTag = fieldTypeTag;
+                    ATypeTag requiredTypeTag = reqFieldTypeTag;
 
                     if (ATypeHierarchy.canPromote(inputTypeTag, requiredTypeTag)
                             || ATypeHierarchy.canDemote(inputTypeTag, requiredTypeTag)) {
@@ -253,9 +245,7 @@ class ARecordCaster {
                 ps.print(":");
 
                 //print the field type
-                IVisitablePointable fieldType = fieldTypeTags.get(i);
-                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(fieldType.getByteArray()[fieldType.getStartOffset()]);
+                ATypeTag typeTag = PointableHelper.getTypeTag(fieldValues.get(i));
                 ps.print(typeTag);
 
                 //collect the output message and throw the exception
@@ -276,9 +266,8 @@ class ARecordCaster {
         }
     }
 
-    private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldTypeTags,
-            List<IVisitablePointable> fieldValues, DataOutput output, ACastVisitor visitor)
-            throws HyracksDataException {
+    private void writeOutput(List<IVisitablePointable> fieldNames, List<IVisitablePointable> fieldValues,
+            DataOutput output, ACastVisitor visitor) throws HyracksDataException {
         // reset the states of the record builder
         recBuilder.reset(cachedReqType);
         recBuilder.init();
@@ -294,10 +283,10 @@ class ARecordCaster {
             // as flat
             if (optionalFields[i]) {
                 //the field is optional in the input record
-                IVisitablePointable fieldTypeTag = pos >= 0 ? fieldTypeTags.get(pos) : null;
-                if (fieldTypeTag == null || fieldTypeTag.equals(missingTypeTag)) {
+                ATypeTag fieldTypeTag = pos >= 0 ? PointableHelper.getTypeTag(fieldValues.get(pos)) : null;
+                if (fieldTypeTag == null || fieldTypeTag == ATypeTag.MISSING) {
                     fieldCastResult.setOutType(BuiltinType.AMISSING);
-                } else if (fieldTypeTag.equals(nullTypeTag)) {
+                } else if (fieldTypeTag == ATypeTag.NULL) {
                     fieldCastResult.setOutType(BuiltinType.ANULL);
                 } else {
                     fieldCastResult.setOutType(((AUnionType) fType).getActualType());
@@ -312,10 +301,7 @@ class ARecordCaster {
             if (openFields[i]) {
                 IVisitablePointable name = fieldNames.get(i);
                 IVisitablePointable field = fieldValues.get(i);
-                IVisitablePointable fieldTypeTag = fieldTypeTags.get(i);
-
-                ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                        .deserialize(fieldTypeTag.getByteArray()[fieldTypeTag.getStartOffset()]);
+                ATypeTag typeTag = PointableHelper.getTypeTag(field);
                 fieldCastResult.setOutType(DefaultOpenFieldType.getDefaultOpenFieldType(typeTag));
                 field.accept(visitor, fieldCastResult);
                 recBuilder.addField(name, fieldCastResult.getOutPointable());

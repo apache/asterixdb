@@ -79,12 +79,10 @@ class RecordDeepEqualityChecker {
             hashMap.put(keyEntry, valEntry);
         }
 
-        return compareValues(recLeft.getFieldTypeTags(), recLeft.getFieldValues(), fieldNamesRight,
-                recRight.getFieldTypeTags(), recRight.getFieldValues());
+        return compareValues(recLeft.getFieldValues(), fieldNamesRight, recRight.getFieldValues());
     }
 
-    private boolean compareValues(List<IVisitablePointable> fieldTypesLeft, List<IVisitablePointable> fieldValuesLeft,
-            List<IVisitablePointable> fieldNamesRight, List<IVisitablePointable> fieldTypesRight,
+    private boolean compareValues(List<IVisitablePointable> fieldValuesLeft, List<IVisitablePointable> fieldNamesRight,
             List<IVisitablePointable> fieldValuesRight) throws HyracksDataException {
 
         // Probe phase: Probe items from second record
@@ -97,12 +95,14 @@ class RecordDeepEqualityChecker {
             }
 
             int fieldIdLeft = AInt32SerializerDeserializer.getInt(entry.getBuf(), entry.getOffset());
-            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(fieldTypesLeft.get(fieldIdLeft));
-            if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(fieldTypesRight.get(i))) {
+            IVisitablePointable fieldValLeft = fieldValuesLeft.get(fieldIdLeft);
+            IVisitablePointable fieldValRight = fieldValuesRight.get(i);
+            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(fieldValLeft);
+            if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(fieldValRight)) {
                 return false;
             }
-            nestedVisitorArg.first = fieldValuesRight.get(i);
-            fieldValuesLeft.get(fieldIdLeft).accept(visitor, nestedVisitorArg);
+            nestedVisitorArg.first = fieldValRight;
+            fieldValLeft.accept(visitor, nestedVisitorArg);
             if (nestedVisitorArg.second == false) {
                 return false;
             }

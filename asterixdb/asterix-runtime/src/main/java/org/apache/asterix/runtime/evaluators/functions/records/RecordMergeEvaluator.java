@@ -83,8 +83,8 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
 
     private final RuntimeRecordTypeInfo runtimeRecordTypeInfo = new RuntimeRecordTypeInfo();
     private final DeepEqualAssessor deepEqualAssessor = new DeepEqualAssessor();
-    private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
-    private DataOutput out = resultStorage.getDataOutput();
+    private final ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
+    private final DataOutput out = resultStorage.getDataOutput();
 
     RecordMergeEvaluator(IEvaluatorContext ctx, IScalarEvaluatorFactory[] args, IAType[] argTypes,
             SourceLocation sourceLocation, FunctionIdentifier identifier, boolean isIgnoreDuplicates)
@@ -143,22 +143,21 @@ public class RecordMergeEvaluator extends AbstractScalarEval {
         for (int i = 0; i < leftRecord.getFieldNames().size(); i++) {
             IVisitablePointable leftName = leftRecord.getFieldNames().get(i);
             IVisitablePointable leftValue = leftRecord.getFieldValues().get(i);
-            IVisitablePointable leftType = leftRecord.getFieldTypeTags().get(i);
+            ATypeTag leftType = PointableHelper.getTypeTag(leftValue);
 
             // Check if a match for the left record exists on the right record
             boolean foundMatch = false;
             for (int j = 0; j < rightRecord.getFieldNames().size(); j++) {
                 IVisitablePointable rightName = rightRecord.getFieldNames().get(j);
                 IVisitablePointable rightValue = rightRecord.getFieldValues().get(j);
-                IVisitablePointable rightType = rightRecord.getFieldTypeTags().get(j);
+                ATypeTag rightType = PointableHelper.getTypeTag(rightValue);
 
                 // Check if same field name and not same value exists (same name and value, just take the left one)
                 if (PointableHelper.isEqual(leftName, rightName, stringBinaryComparator)
                         && !deepEqualAssessor.isEqual(leftValue, rightValue)) {
 
                     // Same name, different value, both of type Record, do nested join
-                    if (PointableHelper.sameType(ATypeTag.OBJECT, rightType)
-                            && PointableHelper.sameType(ATypeTag.OBJECT, leftType)) {
+                    if (ATypeTag.OBJECT == rightType && ATypeTag.OBJECT == leftType) {
                         // We are merging two sub records
                         addFieldToSubRecord(combinedType, leftName, leftValue, rightValue, nestedLevel);
                         foundMatch = true;

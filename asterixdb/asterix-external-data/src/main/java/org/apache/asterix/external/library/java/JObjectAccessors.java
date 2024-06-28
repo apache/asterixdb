@@ -69,10 +69,10 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
 import org.apache.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.util.string.UTF8StringReader;
@@ -375,7 +375,6 @@ public class JObjectAccessors {
             jRecord.reset();
             ARecordVisitablePointable recordPointable = pointable;
             List<IVisitablePointable> fieldPointables = recordPointable.getFieldValues();
-            List<IVisitablePointable> fieldTypeTags = recordPointable.getFieldTypeTags();
             List<IVisitablePointable> fieldNames = recordPointable.getFieldNames();
             int index = 0;
             boolean closedPart;
@@ -383,9 +382,7 @@ public class JObjectAccessors {
                 IJObject fieldObject = null;
                 for (IPointable fieldPointable : fieldPointables) {
                     closedPart = index < recordType.getFieldTypes().length;
-                    IPointable tt = fieldTypeTags.get(index);
-                    ATypeTag typeTag =
-                            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tt.getByteArray()[tt.getStartOffset()]);
+                    ATypeTag typeTag = PointableHelper.getTypeTag(fieldPointables.get(index));
                     IAType fieldType;
                     fieldType =
                             closedPart ? recordType.getFieldTypes()[index] : TypeTagUtil.getBuiltinTypeByTag(typeTag);
@@ -449,7 +446,6 @@ public class JObjectAccessors {
         public IJObject access(AListVisitablePointable pointable, IObjectPool<IJObject, IAType> objectPool,
                 IAType listType, JObjectPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
-            List<IVisitablePointable> itemTags = pointable.getItemTags();
             JList list = pointable.ordered() ? new JOrderedList(listType) : new JUnorderedList(listType);
             IJObject listItem;
             for (int iter1 = 0; iter1 < items.size(); iter1++) {
@@ -458,10 +454,7 @@ public class JObjectAccessors {
                 IAType fieldType = ((AbstractCollectionType) listType).getItemType();
                 if (fieldType.getTypeTag() == ATypeTag.ANY) {
                     // Second, if defined type is not available, try to infer it from data
-                    IVisitablePointable itemTagPointable = itemTags.get(iter1);
-                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
-                    fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
+                    fieldType = TypeTagUtil.getBuiltinTypeByTag(PointableHelper.getTypeTag(itemPointable));
                 }
                 typeInfo.reset(fieldType, fieldType.getTypeTag());
                 switch (typeInfo.getTypeTag()) {

@@ -55,7 +55,6 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
     // access results: field names, field types, and field values
     private final List<IVisitablePointable> fieldNames = new ArrayList<>();
-    private final List<IVisitablePointable> fieldTypeTags = new ArrayList<>();
     private final List<IVisitablePointable> fieldValues = new ArrayList<>();
 
     // pointable allocator
@@ -88,28 +87,12 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
         String[] fieldNameStrs = inputType.getFieldNames();
         numberOfSchemaFields = fieldTypes.length;
 
-        // initialize the buffer for closed parts(fieldName bytes+ type bytes) +
-        // constant(null bytes)
+        // initialize the buffer for closed parts(fieldName bytes+ type bytes) + constant(null bytes)
         try {
             final DataOutputStream typeDos = new DataOutputStream(typeBos);
             final UTF8StringWriter utf8Writer = new UTF8StringWriter();
             for (int i = 0; i < numberOfSchemaFields; i++) {
-                ATypeTag ftypeTag = fieldTypes[i].getTypeTag();
-
-                if (NonTaggedFormatUtil.isOptional(fieldTypes[i])) {
-                    // optional field: add the embedded non-null type tag
-                    ftypeTag = ((AUnionType) fieldTypes[i]).getActualType().getTypeTag();
-                }
-
-                // add type tag Reference
-                int tagStart = typeBos.size();
-                typeDos.writeByte(ftypeTag.serialize());
-                int tagEnd = typeBos.size();
-                IVisitablePointable typeTagReference = AFlatValuePointable.FACTORY.create(null);
-                typeTagReference.set(typeBos.getByteArray(), tagStart, tagEnd - tagStart);
-                fieldTypeTags.add(typeTagReference);
-
-                // add type name Reference (including a astring type tag)
+                // add type name Reference (including a string type tag)
                 int nameStart = typeBos.size();
                 typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
                 utf8Writer.writeUTF8(fieldNameStrs[i], typeDos);
@@ -146,9 +129,6 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
         // clean up the returned containers
         for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--) {
             fieldNames.remove(i);
-        }
-        for (int i = fieldTypeTags.size() - 1; i >= numberOfSchemaFields; i--) {
-            fieldTypeTags.remove(i);
         }
         fieldValues.clear();
     }
@@ -239,8 +219,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 int numberOfOpenFields = AInt32SerializerDeserializer.getInt(b, openPartOffset);
                 int fieldOffset = openPartOffset + 4 + (8 * numberOfOpenFields);
                 for (int i = 0; i < numberOfOpenFields; i++) {
-                    // set the field name (including a type tag, which is
-                    // astring)
+                    // set the field name (including a type tag, which is a string)
                     int fieldValueLength =
                             NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, ATypeTag.STRING, false);
                     int fnstart = dataBos.size();
@@ -252,12 +231,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     fieldNames.add(fieldName);
                     fieldOffset += fieldValueLength;
 
-                    // set the field type tag
-                    IVisitablePointable fieldTypeTag = allocator.allocateEmpty();
-                    fieldTypeTag.set(b, fieldOffset, 1);
-                    fieldTypeTags.add(fieldTypeTag);
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
-
                     // set the field value (already including type tag)
                     fieldValueLength = NonTaggedFormatUtil.getFieldValueLength(b, fieldOffset, typeTag, true) + 1;
 
@@ -275,10 +249,6 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
 
     public List<IVisitablePointable> getFieldNames() {
         return fieldNames;
-    }
-
-    public List<IVisitablePointable> getFieldTypeTags() {
-        return fieldTypeTags;
     }
 
     public List<IVisitablePointable> getFieldValues() {

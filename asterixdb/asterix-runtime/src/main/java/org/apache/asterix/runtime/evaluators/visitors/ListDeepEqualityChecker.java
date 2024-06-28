@@ -51,11 +51,9 @@ class ListDeepEqualityChecker {
 
         AListVisitablePointable listLeft = (AListVisitablePointable) listPointableLeft;
         List<IVisitablePointable> itemsLeft = listLeft.getItems();
-        List<IVisitablePointable> itemTagTypesLeft = listLeft.getItemTags();
 
         AListVisitablePointable listRight = (AListVisitablePointable) listPointableRight;
         List<IVisitablePointable> itemsRight = listRight.getItems();
-        List<IVisitablePointable> itemTagTypesRight = listRight.getItemTags();
 
         if (itemsLeft.size() != itemsRight.size())
             return false;
@@ -65,23 +63,23 @@ class ListDeepEqualityChecker {
             return false;
 
         if (isOrderedRight) {
-            return processOrderedList(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
+            return processOrderedList(itemsLeft, itemsRight);
         } else {
-            return processUnorderedList(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
+            return processUnorderedList(itemsLeft, itemsRight);
         }
     }
 
-    private boolean processOrderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
-            List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
+    private boolean processOrderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemsRight)
             throws HyracksDataException {
         for (int i = 0; i < itemsLeft.size(); i++) {
-            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(i));
-            if (fieldTypeLeft.isDerivedType()
-                    && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(i))) {
+            IVisitablePointable itemLeft = itemsLeft.get(i);
+            IVisitablePointable itemRight = itemsRight.get(i);
+            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemLeft);
+            if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemRight)) {
                 return false;
             }
-            itemVisitorArg.first = itemsRight.get(i);
-            itemsLeft.get(i).accept(visitor, itemVisitorArg);
+            itemVisitorArg.first = itemRight;
+            itemLeft.accept(visitor, itemVisitorArg);
             if (itemVisitorArg.second == false)
                 return false;
         }
@@ -89,9 +87,8 @@ class ListDeepEqualityChecker {
         return true;
     }
 
-    private boolean processUnorderedList(List<IVisitablePointable> itemsLeft,
-            List<IVisitablePointable> itemTagTypesLeft, List<IVisitablePointable> itemsRight,
-            List<IVisitablePointable> itemTagTypesRight) throws HyracksDataException {
+    private boolean processUnorderedList(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemsRight)
+            throws HyracksDataException {
 
         hashMap.clear();
         // Build phase: Add items into hash map, starting with first list.
@@ -105,11 +102,10 @@ class ListDeepEqualityChecker {
             hashMap.put(keyEntry, valEntry);
         }
 
-        return probeHashMap(itemsLeft, itemTagTypesLeft, itemsRight, itemTagTypesRight);
+        return probeHashMap(itemsLeft, itemsRight);
     }
 
-    private boolean probeHashMap(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemTagTypesLeft,
-            List<IVisitablePointable> itemsRight, List<IVisitablePointable> itemTagTypesRight)
+    private boolean probeHashMap(List<IVisitablePointable> itemsLeft, List<IVisitablePointable> itemsRight)
             throws HyracksDataException {
         // Probe phase: Probe items from second list
         for (int indexRight = 0; indexRight < itemsRight.size(); indexRight++) {
@@ -126,14 +122,14 @@ class ListDeepEqualityChecker {
             }
 
             int indexLeft = IntegerPointable.getInteger(entry.getBuf(), entry.getOffset());
-            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemTagTypesLeft.get(indexLeft));
-            if (fieldTypeLeft.isDerivedType()
-                    && fieldTypeLeft != PointableHelper.getTypeTag(itemTagTypesRight.get(indexRight))) {
+            IVisitablePointable itemLeft = itemsLeft.get(indexLeft);
+            ATypeTag fieldTypeLeft = PointableHelper.getTypeTag(itemLeft);
+            if (fieldTypeLeft.isDerivedType() && fieldTypeLeft != PointableHelper.getTypeTag(itemRight)) {
                 return false;
             }
 
             itemVisitorArg.first = itemRight;
-            itemsLeft.get(indexLeft).accept(visitor, itemVisitorArg);
+            itemLeft.accept(visitor, itemVisitorArg);
             if (itemVisitorArg.second == false)
                 return false;
         }

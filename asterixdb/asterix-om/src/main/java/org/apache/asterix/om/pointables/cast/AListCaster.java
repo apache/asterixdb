@@ -30,8 +30,8 @@ import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.base.IVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.utils.PointableHelper;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -61,16 +61,11 @@ class AListCaster {
             reqItemType = reqType.getItemType();
         }
         dataBos.reset();
-
-        List<IVisitablePointable> itemTags = listAccessor.getItemTags();
         List<IVisitablePointable> items = listAccessor.getItems();
-
         int start = dataBos.size();
         for (int i = 0; i < items.size(); i++) {
-            IVisitablePointable itemTypeTag = itemTags.get(i);
             IVisitablePointable item = items.get(i);
-            ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                    .deserialize(itemTypeTag.getByteArray()[itemTypeTag.getStartOffset()]);
+            ATypeTag typeTag = PointableHelper.getTypeTag(item);
             if (reqItemType == null || reqItemType.getTypeTag().equals(ATypeTag.ANY)) {
                 itemCastResult.setOutType(DefaultOpenFieldType.getDefaultOpenFieldType(typeTag));
             } else {

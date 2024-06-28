@@ -54,9 +54,9 @@ import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.AbstractCollectionType;
 import org.apache.asterix.om.types.BuiltinType;
-import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
+import org.apache.asterix.runtime.evaluators.functions.PointableHelper;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.util.encoding.VarLenIntEncoderDecoder;
@@ -207,7 +207,6 @@ public class MsgPackAccessors {
         public static Void access(ARecordVisitablePointable pointable, PyTypeInfo arg,
                 MsgPackPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> fieldPointables = pointable.getFieldValues();
-            List<IVisitablePointable> fieldTypeTags = pointable.getFieldTypeTags();
             List<IVisitablePointable> fieldNames = pointable.getFieldNames();
             boolean closedPart;
             int index = 0;
@@ -222,9 +221,7 @@ public class MsgPackAccessors {
             try {
                 for (IVisitablePointable fieldPointable : fieldPointables) {
                     closedPart = index < recordType.getFieldTypes().length;
-                    IVisitablePointable tt = fieldTypeTags.get(index);
-                    ATypeTag typeTag =
-                            EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(tt.getByteArray()[tt.getStartOffset()]);
+                    ATypeTag typeTag = PointableHelper.getTypeTag(fieldPointables.get(index));
                     IAType fieldType;
                     fieldType =
                             closedPart ? recordType.getFieldTypes()[index] : TypeTagUtil.getBuiltinTypeByTag(typeTag);
@@ -247,7 +244,6 @@ public class MsgPackAccessors {
         public static Void access(AListVisitablePointable pointable, PyTypeInfo arg,
                 MsgPackPointableVisitor pointableVisitor) throws HyracksDataException {
             List<IVisitablePointable> items = pointable.getItems();
-            List<IVisitablePointable> itemTags = pointable.getItemTags();
             DataOutput out = arg.getDataOutput();
             try {
                 out.writeByte(ARRAY32);
@@ -261,10 +257,7 @@ public class MsgPackAccessors {
                 IAType fieldType = ((AbstractCollectionType) arg.getType()).getItemType();
                 if (fieldType.getTypeTag() == ATypeTag.ANY) {
                     // Second, if defined type is not available, try to infer it from data
-                    IVisitablePointable itemTagPointable = itemTags.get(iter1);
-                    ATypeTag itemTypeTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                            .deserialize(itemTagPointable.getByteArray()[itemTagPointable.getStartOffset()]);
-                    fieldType = TypeTagUtil.getBuiltinTypeByTag(itemTypeTag);
+                    fieldType = TypeTagUtil.getBuiltinTypeByTag(PointableHelper.getTypeTag(itemPointable));
                 }
                 PyTypeInfo fieldTypeInfo = pointableVisitor.getTypeInfo(fieldType, out);
                 itemPointable.accept(pointableVisitor, fieldTypeInfo);
