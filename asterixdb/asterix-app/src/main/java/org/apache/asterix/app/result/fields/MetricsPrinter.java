@@ -101,7 +101,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
             pw.print("\n");
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.BUFFERCACHE_PAGEREAD_COUNT.str(), metrics.getBufferCachePageReadCount(),
-                    hasWarnings || hasErrors);
+                    hasWarnings || hasErrors || madeCloudReadRequests);
             pw.print("\n");
         }
         if (madeCloudReadRequests) {
@@ -115,7 +115,7 @@ public class MetricsPrinter implements IResponseFieldPrinter {
             pw.print("\n");
             pw.print("\t");
             ResultUtil.printField(pw, Metrics.REMOTE_PAGES_PERSISTED_COUNT.str(), metrics.getCloudPagesPersistedCount(),
-                    true);
+                    hasWarnings || hasErrors);
             pw.print("\n");
         }
         if (hasWarnings) {

@@ -58,9 +58,12 @@ public class CloudFileUtil {
                 continue;
             }
 
-            CloudFile path = CloudFile.of(file.getRelativePath());
+            CloudFile path = CloudFile.of(file.getRelativePath(), ioManager.getSize(file));
             if (!cloudFiles.contains(path)) {
-                // Delete local files that do not exist in cloud storage (the ground truth for valid files)
+                /*
+                 * Delete local files that do not exist in cloud storage (the ground truth for valid files), or files
+                 * that has not been downloaded completely.
+                 */
                 logDeleteFile(file);
                 localFilesIter.remove();
                 ioManager.delete(file);
@@ -82,7 +85,8 @@ public class CloudFileUtil {
     }
 
     private static void logDeleteFile(FileReference fileReference) {
-        LOGGER.info("Deleting {} from the local cache as {} doesn't exist in the cloud", fileReference,
-                fileReference.getRelativePath());
+        LOGGER.info(
+                "Deleting {} from the local cache as {} either doesn't exist in the cloud or it wasn't downloaded completely",
+                fileReference, fileReference.getRelativePath());
     }
 }

@@ -113,7 +113,7 @@ final class LazyCloudIOManager extends AbstractCloudIOManager {
             }
         }
 
-        // Keep uncached files list (i.e., files exists in cloud only)
+        // Keep uncached files list (i.e., files exist in cloud only)
         cloudFiles.removeAll(localFiles);
         int remainingUncachedFiles = cloudFiles.size();
         boolean canReplaceAccessor = replacer != InitialCloudAccessor.NO_OP_REPLACER;

@@ -18,7 +18,12 @@
  */
 package org.apache.asterix.cloud.clients;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 public final class CloudFile {
+    private static final long IGNORED_SIZE = -1;
     private final String path;
     private final long size;
 
@@ -47,7 +52,7 @@ public final class CloudFile {
         }
 
         CloudFile other = (CloudFile) obj;
-        return path.equals(other.path);
+        return path.equals(other.path) && compareSize(other.size);
     }
 
     @Override
@@ -55,11 +60,25 @@ public final class CloudFile {
         return path;
     }
 
+    private boolean compareSize(long otherSize) {
+        // Compare sizes iff both sizes are not ignored
+        return size == otherSize || size == IGNORED_SIZE || otherSize == IGNORED_SIZE;
+    }
+
     public static CloudFile of(String path, long size) {
         return new CloudFile(path, size);
     }
 
     public static CloudFile of(String path) {
-        return new CloudFile(path, 0);
+        return new CloudFile(path, IGNORED_SIZE);
+    }
+
+    public static Map<String, CloudFile> toMap(Set<CloudFile> cloudFiles) {
+        Map<String, CloudFile> map = new HashMap<>();
+        for (CloudFile cloudFile : cloudFiles) {
+            map.put(cloudFile.getPath(), cloudFile);
+        }
+
+        return map;
     }
 }
