@@ -19,14 +19,20 @@
 
 package org.apache.asterix.om.pointables.printer.csv;
 
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_HEADER;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_RECORD_DELIMITER;
+
 import java.io.PrintStream;
+import java.util.Map;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.csv.AObjectPrinterFactory;
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils;
 import org.apache.asterix.om.pointables.AListVisitablePointable;
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.printer.AListPrinter;
 import org.apache.asterix.om.pointables.printer.ARecordPrinter;
 import org.apache.asterix.om.pointables.printer.AbstractPrintVisitor;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -36,6 +42,15 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * PrintStream in CSV format.
  */
 public class APrintVisitor extends AbstractPrintVisitor {
+    private final ARecordType itemType;
+    private final Map<String, String> configuration;
+
+    public APrintVisitor(ARecordType itemType, Map<String, String> configuration) {
+        super();
+        this.itemType = itemType;
+        this.configuration = configuration;
+    }
+
     @Override
     protected AListPrinter createListPrinter(AListVisitablePointable accessor) throws HyracksDataException {
         throw new HyracksDataException("'List' type unsupported for CSV output");
@@ -43,12 +58,15 @@ public class APrintVisitor extends AbstractPrintVisitor {
 
     @Override
     protected ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor) {
-        return new ARecordPrinter("", "", ",", null);
+        String delimiter = CSVUtils.getDelimiter(configuration);
+        String recordDelimiter = configuration.get(KEY_RECORD_DELIMITER) == null ? (itemType == null ? "" : "\n")
+                : configuration.get(KEY_RECORD_DELIMITER);
+        return new ACSVRecordPrinter("", "", delimiter, null, recordDelimiter, itemType, configuration.get(KEY_HEADER));
     }
 
     @Override
     protected boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
             throws HyracksDataException {
-        return AObjectPrinterFactory.printFlatValue(typeTag, b, s, l, ps);
+        return AObjectPrinterFactory.createInstance(itemType, configuration).printFlatValue(typeTag, b, s, l, ps);
     }
 }

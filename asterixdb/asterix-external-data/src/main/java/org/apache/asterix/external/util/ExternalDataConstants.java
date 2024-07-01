@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.external.util;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.function.LongSupplier;
@@ -90,6 +91,9 @@ public class ExternalDataConstants {
     public static final String KEY_INCLUDE = "include";
     public static final String KEY_EXCLUDE = "exclude";
     public static final String KEY_QUOTE = "quote";
+    public static final String KEY_FORCE_QUOTE = "force-quote";
+    public static final String KEY_EMPTY_FIELD_AS_NULL = "empty_field_as_null";
+    public static final String KEY_RECORD_DELIMITER = "record-delimiter";
     public static final String KEY_ESCAPE = "escape";
     public static final String KEY_PARSER = "parser";
     public static final String KEY_DATASET_RECORD = "dataset-record";
@@ -188,6 +192,8 @@ public class ExternalDataConstants {
     public static final String HAS_HEADER = "has.header";
     public static final String TIME_TRACKING = "time.tracking";
     public static final String DEFAULT_QUOTE = "\"";
+    public static final String DEFAULT_SINGLE_QUOTE = "'";
+    public static final String NONE = "none";
     public static final String NODE_RESOLVER_FACTORY_PROPERTY = "node.Resolver";
     public static final String DEFAULT_DELIMITER = ",";
     public static final String EXTERNAL_LIBRARY_SEPARATOR = "#";
@@ -199,6 +205,7 @@ public class ExternalDataConstants {
     public static final String FORMAT_ADM = "adm";
     public static final String FORMAT_AVRO = "avro";
     public static final String FORMAT_JSON_LOWER_CASE = "json";
+    public static final String FORMAT_CSV_LOWER_CASE = "csv";
     public static final String FORMAT_JSON_UPPER_CASE = "JSON";
     public static final String FORMAT_DELIMITED_TEXT = "delimited-text";
     public static final String FORMAT_TWEET = "twitter-status";
@@ -339,15 +346,21 @@ public class ExternalDataConstants {
     public static final Set<String> PARQUET_WRITER_SUPPORTED_COMPRESSION;
     public static final Set<String> PARQUET_WRITER_SUPPORTED_VERSION;
     public static final int PARQUET_DICTIONARY_PAGE_SIZE = 1048576;
+    public static final List<String> WRITER_SUPPORTED_QUOTES;
+    public static final List<ATypeTag> CSV_WRITER_SUPPORTED_DATA_TYPES =
+            List.of(ATypeTag.TINYINT, ATypeTag.SMALLINT, ATypeTag.INTEGER, ATypeTag.BIGINT, ATypeTag.UINT8,
+                    ATypeTag.UINT16, ATypeTag.UINT64, ATypeTag.FLOAT, ATypeTag.DOUBLE, ATypeTag.STRING,
+                    ATypeTag.BOOLEAN, ATypeTag.DATETIME, ATypeTag.UINT32, ATypeTag.DATE, ATypeTag.TIME);
 
     static {
-        WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE, FORMAT_PARQUET);
+        WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE, FORMAT_PARQUET, FORMAT_CSV_LOWER_CASE);
         WRITER_SUPPORTED_ADAPTERS = Set.of(ALIAS_LOCALFS_ADAPTER.toLowerCase(), KEY_ADAPTER_NAME_AWS_S3.toLowerCase(),
                 KEY_ADAPTER_NAME_GCS.toLowerCase());
         TEXTUAL_WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
         PARQUET_WRITER_SUPPORTED_COMPRESSION =
                 Set.of(KEY_COMPRESSION_GZIP, KEY_COMPRESSION_SNAPPY, KEY_COMPRESSION_ZSTD);
         PARQUET_WRITER_SUPPORTED_VERSION = Set.of(PARQUET_WRITER_VERSION_VALUE_1, PARQUET_WRITER_VERSION_VALUE_2);
+        WRITER_SUPPORTED_QUOTES = List.of(DEFAULT_QUOTE, DEFAULT_SINGLE_QUOTE, NONE);
     }
 
     public static class ParquetOptions {

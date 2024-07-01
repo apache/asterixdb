@@ -19,16 +19,34 @@
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
 
 public class ANullPrinterFactory implements IPrinterFactory {
-
     private static final long serialVersionUID = 1L;
-    public static final ANullPrinterFactory INSTANCE = new ANullPrinterFactory();
+    private static final String DEFAULT_NULL_STRING = "";
+    // Store the information about the instance based on the parameters
+    private static final ConcurrentHashMap<String, ANullPrinterFactory> instanceCache = new ConcurrentHashMap<>();
+    private String nullString;
 
-    public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> ps.print("null");
+    private ANullPrinterFactory(String nullString) {
+        this.nullString = nullString;
+    }
+
+    public static ANullPrinterFactory createInstance(String nullString) {
+        String key = CSVUtils.generateKey(nullString);
+        return instanceCache.computeIfAbsent(key, k -> new ANullPrinterFactory(nullString));
+    }
+
+    private final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
+        if (nullString != null) {
+            ps.print(nullString);
+        } else {
+            ps.print(DEFAULT_NULL_STRING);
+        }
+    };
 
     @Override
     public IPrinter createPrinter() {

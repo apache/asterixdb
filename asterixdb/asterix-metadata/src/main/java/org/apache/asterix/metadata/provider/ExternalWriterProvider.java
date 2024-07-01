@@ -26,15 +26,20 @@ import org.apache.asterix.cloud.writer.GCSExternalFileWriterFactory;
 import org.apache.asterix.cloud.writer.S3ExternalFileWriterFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.writer.LocalFSExternalFileWriterFactory;
 import org.apache.asterix.external.writer.compressor.GzipExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.compressor.NoOpExternalFileCompressStreamFactory;
+import org.apache.asterix.external.writer.printer.CsvExternalFilePrinterFactory;
 import org.apache.asterix.external.writer.printer.ParquetExternalFilePrinterFactory;
 import org.apache.asterix.external.writer.printer.TextualExternalFilePrinterFactory;
+import org.apache.asterix.formats.nontagged.CSVPrinterFactoryProvider;
 import org.apache.asterix.formats.nontagged.CleanJSONPrinterFactoryProvider;
+import org.apache.asterix.metadata.declared.IExternalWriteDataSink;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -117,19 +122,20 @@ public class ExternalWriterProvider {
         Map<String, String> configuration = sink.getConfiguration();
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
 
-        // Only JSON and parquet is supported for now
+        // Check for supported formats
         if (!ExternalDataConstants.FORMAT_JSON_LOWER_CASE.equalsIgnoreCase(format)
-                && !ExternalDataConstants.FORMAT_PARQUET.equalsIgnoreCase(format)) {
+                && !ExternalDataConstants.FORMAT_PARQUET.equalsIgnoreCase(format)
+                && !ExternalDataConstants.FORMAT_CSV_LOWER_CASE.equalsIgnoreCase(format)) {
             throw new UnsupportedOperationException("Unsupported format " + format);
         }
 
         String compression = getCompression(configuration);
-
+        IPrinterFactory printerFactory;
+        IExternalFileCompressStreamFactory compressStreamFactory;
         switch (format) {
             case ExternalDataConstants.FORMAT_JSON_LOWER_CASE:
-                IExternalFileCompressStreamFactory compressStreamFactory =
-                        createCompressionStreamFactory(appCtx, compression, configuration);
-                IPrinterFactory printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
+                compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
+                printerFactory = CleanJSONPrinterFactoryProvider.INSTANCE.getPrinterFactory(sourceType);
                 return new TextualExternalFilePrinterFactory(printerFactory, compressStreamFactory);
             case ExternalDataConstants.FORMAT_PARQUET:
                 String parquetSchemaString = configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY);
@@ -151,6 +157,23 @@ public class ExternalWriterProvider {
 
                 return new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchemaString,
                         (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
+            case ExternalDataConstants.FORMAT_CSV_LOWER_CASE:
+                compressStreamFactory = createCompressionStreamFactory(appCtx, compression, configuration);
+                if (sink instanceof IExternalWriteDataSink) {
+                    ARecordType itemType = ((IExternalWriteDataSink) sink).getItemType();
+                    if (itemType != null) {
+                        printerFactory =
+                                CSVPrinterFactoryProvider
+                                        .createInstance(itemType, sink.getConfiguration(),
+                                                ((IExternalWriteDataSink) sink).getSourceLoc())
+                                        .getPrinterFactory(sourceType);
+                        return new CsvExternalFilePrinterFactory(printerFactory, compressStreamFactory);
+                    } else {
+                        throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
+                    }
+                } else {
+                    throw new CompilationException(ErrorCode.INVALID_CSV_SCHEMA);
+                }
             default:
                 throw new UnsupportedOperationException("Unsupported format " + format);
         }

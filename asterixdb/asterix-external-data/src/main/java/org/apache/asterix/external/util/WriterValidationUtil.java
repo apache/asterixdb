@@ -21,6 +21,7 @@ package org.apache.asterix.external.util;
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_REQ_PARAM_VAL;
 import static org.apache.asterix.common.exceptions.ErrorCode.MINIMUM_VALUE_ALLOWED_FOR_PARAM;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAMETERS_REQUIRED;
+import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_CSV;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_JSON_LOWER_CASE;
 import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQUET;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_PAGE_SIZE;
@@ -51,6 +52,15 @@ public class WriterValidationUtil {
         validateMaxResult(configuration, sourceLocation);
     }
 
+    private static void validateQuote(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        String quote = configuration.get(ExternalDataConstants.KEY_QUOTE);
+        if (quote != null && !ExternalDataConstants.WRITER_SUPPORTED_QUOTES.contains(quote.toLowerCase())) {
+            throw CompilationException.create(ErrorCode.INVALID_QUOTE, sourceLocation, quote,
+                    ExternalDataConstants.WRITER_SUPPORTED_QUOTES.toString());
+        }
+    }
+
     private static void validateAdapter(String adapter, Set<String> supportedAdapters, SourceLocation sourceLocation)
             throws CompilationException {
         checkSupported(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter, supportedAdapters,
@@ -68,6 +78,9 @@ public class WriterValidationUtil {
                 break;
             case FORMAT_PARQUET:
                 validateParquet(configuration, sourceLocation);
+                break;
+            case FORMAT_CSV:
+                validateCSV(configuration, sourceLocation);
                 break;
         }
     }
@@ -113,6 +126,15 @@ public class WriterValidationUtil {
     private static void validateJSON(Map<String, String> configuration, SourceLocation sourceLocation)
             throws CompilationException {
         validateTextualCompression(configuration, sourceLocation);
+    }
+
+    private static void validateCSV(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        validateTextualCompression(configuration, sourceLocation);
+        validateDelimiter(configuration, sourceLocation);
+        validateRecordDelimiter(configuration, sourceLocation);
+        validateQuote(configuration, sourceLocation);
+        validateEscape(configuration, sourceLocation);
     }
 
     private static void validateParquetCompression(Map<String, String> configuration, SourceLocation sourceLocation)
@@ -202,6 +224,33 @@ public class WriterValidationUtil {
         if (!supportedSet.contains(normalizedValue)) {
             List<String> sorted = supportedSet.stream().sorted().collect(Collectors.toList());
             throw CompilationException.create(errorCode, sourceLocation, value, format, sorted.toString());
+        }
+    }
+
+    private static void validateDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        // Will this affect backward compatibility
+        String delimiter = configuration.get(ExternalDataConstants.KEY_DELIMITER);
+        unitByteCondition(delimiter, sourceLocation, ErrorCode.INVALID_DELIMITER);
+    }
+
+    private static void validateEscape(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        // Will this affect backward compatibility?
+        String escape = configuration.get(ExternalDataConstants.KEY_ESCAPE);
+        unitByteCondition(escape, sourceLocation, ErrorCode.INVALID_ESCAPE);
+    }
+
+    private static void validateRecordDelimiter(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
+        String recordDel = configuration.get(ExternalDataConstants.KEY_RECORD_DELIMITER);
+        unitByteCondition(recordDel, sourceLocation, ErrorCode.INVALID_FORCE_QUOTE);
+    }
+
+    private static void unitByteCondition(String param, SourceLocation sourceLocation, ErrorCode errorCode)
+            throws CompilationException {
+        if (param != null && param.length() > 1 && param.getBytes().length != 1) {
+            throw CompilationException.create(errorCode, sourceLocation, param);
         }
     }
 

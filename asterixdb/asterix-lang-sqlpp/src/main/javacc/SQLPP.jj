@@ -2936,7 +2936,9 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   Namespace namespace = nameComponents == null ? null : nameComponents.first;
   String datasetName = nameComponents == null ? null : nameComponents.second.getValue();
   List<Expression> pathExprs;
-  RecordTypeDefinition typeExpr = null;
+  RecordTypeDefinition recordTypeDefinition = null;
+  TypeExpression typeExpr = null;
+  Boolean isRecordTypeDefinition = false;
 
   List<Expression> partitionExprs = new ArrayList<Expression>();
   Map<Integer, VariableExpr> partitionVarExprs = new HashMap<Integer, VariableExpr>();
@@ -2948,7 +2950,21 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
   <TO> adapterName = AdapterName()
   <PATH> <LEFTPAREN> pathExprs = ExpressionList() <RIGHTPAREN>
   (CopyToOverClause(partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList))?
-  (<TYPE>  <LEFTPAREN> typeExpr = RecordTypeDef() <RIGHTPAREN>)?
+  (<TYPE> <LEFTPAREN>
+    {
+      recordTypeDefinition = RecordTypeDef();
+      isRecordTypeDefinition = true;
+    }
+    <RIGHTPAREN>) ?
+  (<AS>
+    {
+      if (isRecordTypeDefinition == false) {
+        typeExpr = DatasetRecordTypeSpecification(false, null);
+      } else {
+        throw new SqlppParseException(getSourceLocation(token), "Syntax error: Both 'TYPE()' and 'AS()' are provided. Please use either 'TYPE()' or 'AS()'.");
+      }
+    }
+  )?
   <WITH> withRecord = RecordConstructor()
     {
        ExternalDetailsDecl edd = new ExternalDetailsDecl();
@@ -2963,7 +2979,7 @@ CopyToStatement CopyToStatement(Token startToken, Pair<Namespace, Identifier> na
           usedAlias = new VariableExpr(SqlppVariableUtil.toInternalVariableIdentifier(datasetName));
        }
 
-       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs, partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter(), typeExpr);
+       CopyToStatement stmt = new CopyToStatement(namespace, datasetName, query, usedAlias, edd, pathExprs, partitionExprs, partitionVarExprs, orderbyList, orderbyModifierList, orderbyNullModifierList, getVarCounter(), typeExpr, recordTypeDefinition);
        return addSourceLocation(stmt, startToken);
     }
 }

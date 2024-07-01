@@ -105,7 +105,7 @@
       <compilation-unit name="supported-adapter-format-compression">
         <output-dir compare="Text">supported-adapter-format-compression</output-dir>
         <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [gcs, localfs, s3]</expected-error>
-        <expected-error>ASX1189: Unsupported writing format 'csv'. Supported formats: [json, parquet]</expected-error>
+        <expected-error>ASX1189: Unsupported writing format 'avro'. Supported formats: [csv, json, parquet]</expected-error>
         <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for json are [gzip]</expected-error>
       </compilation-unit>
     </test-case>
@@ -139,6 +139,47 @@
         <output-dir compare="Text">bad-max-objects-per-file</output-dir>
         <expected-error>Minimum value allowed for 'max-objects-per-file' is 1000. Found 2</expected-error>
         <expected-error>Expected integer value, got hello</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="csv-error-checks">
+        <output-dir compare="Text">csv-error-checks</output-dir>
+        <expected-error>ASX1079: Compilation error: TYPE/AS Expression is required for csv format</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name wrongDataType (in line 27, at column 4)</expected-error>
+        <expected-error>ASX3124: 'ABCD' is not a valid quote. The length of a quote should be 1</expected-error>
+        <expected-error>ASX3049: 'wrongDelimiter' is not a valid delimiter. The length of a delimiter should be 1</expected-error>
+        <expected-error>ASX3126: 'wrongEscape' is not a valid escape. The length of a escape should be 1</expected-error>
+        <expected-error>ASX3125: 'ABCD' is not a valid force-quote input. The length of a force-quote input should be 1 character</expected-error>
+        <expected-error>ASX1207: 'object' type not supported in csv format</expected-error>
+        <expected-error>ASX1207: 'array' type not supported in csv format</expected-error>
+        <expected-error>Syntax error: Both 'TYPE()' and 'AS()' are provided. Please use either 'TYPE()' or 'AS()'.</expected-error>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="copy-to/csv">
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="simple-csv">
+        <output-dir compare="Text">simple-csv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="type-mismatch">
+        <output-dir compare="Text">type-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="delimiter">
+        <output-dir compare="Text">delimiter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="header">
+        <output-dir compare="Text">header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="quote-escape">
+        <output-dir compare="Text">quote-escape</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

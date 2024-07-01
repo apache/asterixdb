@@ -18,12 +18,22 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_DELIMITER;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_EMPTY_FIELD_AS_NULL;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_ESCAPE;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_FORCE_QUOTE;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_NULL;
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.KEY_QUOTE;
+
 import java.io.PrintStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.pointables.printer.IPrintVisitor;
 import org.apache.asterix.om.pointables.printer.csv.APrintVisitor;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.hyracks.algebricks.common.utils.Pair;
@@ -32,11 +42,26 @@ import org.apache.hyracks.algebricks.data.IPrinterFactory;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
-
     private static final long serialVersionUID = 1L;
-    public static final AObjectPrinterFactory INSTANCE = new AObjectPrinterFactory();
+    private static final ConcurrentHashMap<String, AObjectPrinterFactory> instanceCache = new ConcurrentHashMap<>();
+    private ARecordType itemType;
+    private Map<String, String> configuration;
+    private boolean emptyFieldAsNull;
 
-    public static boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
+    private AObjectPrinterFactory(ARecordType itemType, Map<String, String> configuration) {
+        this.itemType = itemType;
+        this.configuration = configuration;
+        String emptyFieldAsNullStr = configuration.get(KEY_EMPTY_FIELD_AS_NULL);
+        this.emptyFieldAsNull = emptyFieldAsNullStr != null && Boolean.parseBoolean(emptyFieldAsNullStr);
+    }
+
+    public static AObjectPrinterFactory createInstance(ARecordType itemType, Map<String, String> configuration) {
+        // generate a unique identifier based on the parameters and hash the instance corresponding to it.
+        String key = CSVUtils.generateKey(itemType, configuration);
+        return instanceCache.computeIfAbsent(key, k -> new AObjectPrinterFactory(itemType, configuration));
+    }
+
+    public boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
             throws HyracksDataException {
         switch (typeTag) {
             case TINYINT:
@@ -53,7 +78,7 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 return true;
             case MISSING:
             case NULL:
-                ANullPrinterFactory.PRINTER.print(b, s, l, ps);
+                ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter().print(b, s, l, ps);
                 return true;
             case BOOLEAN:
                 ABooleanPrinterFactory.PRINTER.print(b, s, l, ps);
@@ -104,7 +129,14 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 ARectanglePrinterFactory.PRINTER.print(b, s, l, ps);
                 return true;
             case STRING:
-                AStringPrinterFactory.PRINTER.print(b, s, l, ps);
+                if (emptyFieldAsNull && CSVUtils.isEmptyString(b, s, l)) {
+                    ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter().print(b, s, l, ps);
+                } else {
+                    AStringPrinterFactory
+                            .createInstance(configuration.get(KEY_QUOTE), configuration.get(KEY_FORCE_QUOTE),
+                                    configuration.get(KEY_ESCAPE), configuration.get(KEY_DELIMITER))
+                            .createPrinter().print(b, s, l, ps);
+                }
                 return true;
             case BINARY:
                 ABinaryHexPrinterFactory.PRINTER.print(b, s, l, ps);
@@ -119,11 +151,10 @@ public class AObjectPrinterFactory implements IPrinterFactory {
 
     @Override
     public IPrinter createPrinter() {
-        final ARecordVisitablePointable rPointable =
+        final ARecordVisitablePointable recordVisitablePointable =
                 new ARecordVisitablePointable(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
         final Pair<PrintStream, ATypeTag> streamTag = new Pair<>(null, null);
-
-        final IPrintVisitor visitor = new APrintVisitor();
+        final IPrintVisitor visitor = new APrintVisitor(itemType, configuration);
 
         return (byte[] b, int s, int l, PrintStream ps) -> {
             ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[s]);
@@ -132,8 +163,8 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 streamTag.second = typeTag;
                 switch (typeTag) {
                     case OBJECT:
-                        rPointable.set(b, s, l);
-                        visitor.visit(rPointable, streamTag);
+                        recordVisitablePointable.set(b, s, l);
+                        visitor.visit(recordVisitablePointable, streamTag);
                         break;
                     default:
                         throw new HyracksDataException("No printer for type " + typeTag);

@@ -33,13 +33,13 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * This class is to print the content of a record.
  */
 public class ARecordPrinter {
-    private final String startRecord;
-    private final String endRecord;
-    private final String fieldSeparator;
-    private final String fieldNameSeparator;
+    protected final String startRecord;
+    protected final String endRecord;
+    protected final String fieldSeparator;
+    protected final String fieldNameSeparator;
 
-    private final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<>(null, ATypeTag.STRING);
-    private final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<>(null, null);
+    protected final Pair<PrintStream, ATypeTag> nameVisitorArg = new Pair<>(null, ATypeTag.STRING);
+    protected final Pair<PrintStream, ATypeTag> itemVisitorArg = new Pair<>(null, null);
 
     public ARecordPrinter(final String startRecord, final String endRecord, final String fieldSeparator,
             final String fieldNameSeparator) {
@@ -82,7 +82,7 @@ public class ARecordPrinter {
         ps.print(endRecord);
     }
 
-    private void printField(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName,
+    protected void printField(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName,
             IVisitablePointable fieldValue, ATypeTag fieldTypeTag) throws HyracksDataException {
         itemVisitorArg.second = fieldTypeTag;
         if (fieldNameSeparator != null) {

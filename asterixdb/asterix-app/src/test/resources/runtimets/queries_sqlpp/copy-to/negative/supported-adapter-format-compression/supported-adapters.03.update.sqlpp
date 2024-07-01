@@ -28,7 +28,7 @@ WITH {
     "region":"us-west-2",
     "serviceEndpoint":"http://127.0.0.1:8001",
     "container":"playground",
-    "format":"csv"
+    "format":"avro"
 }
 
 

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.dataflow.data.nontagged.printers;
 
+import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.DEFAULT_QUOTE;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -25,6 +27,7 @@ import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils;
 import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
@@ -280,29 +283,55 @@ public class PrintTools {
         UPPER_CASE,
     }
 
-    public static void writeUTF8StringAsCSV(byte[] b, int s, int l, OutputStream os) throws IOException {
+    public static void writeUTF8StringAsCSV(byte[] b, int s, int l, PrintStream ps, char quote, boolean forceQuote,
+            char escape, char delimiter) throws IOException {
         int stringLength = UTF8StringUtil.getUTFLength(b, s);
         int position = s + UTF8StringUtil.getNumBytesToStoreLength(stringLength);
         int maxPosition = position + stringLength;
-        os.write('"');
+        char quoteChar = quote == CSVUtils.NULL_CHAR ? DEFAULT_QUOTE : quote;
+
+        boolean shouldQuote = forceQuote;
+        if (!shouldQuote) {
+            // Check if the string contains any special characters that require quoting
+            for (int i = position; i < maxPosition; i++) {
+                char c = UTF8StringUtil.charAt(b, i);
+                if (c == quote || c == '\r' || c == '\n' || c == escape || c == delimiter) {
+                    shouldQuote = true;
+                    break;
+                }
+            }
+        }
+
+        if (shouldQuote) {
+            ps.print(quoteChar);
+        }
+
         while (position < maxPosition) {
             char c = UTF8StringUtil.charAt(b, position);
             int sz = UTF8StringUtil.charSize(b, position);
-            if (c == '"') {
-                os.write('"');
+
+            // todo: Escape character handling -- as the data is strictly quoted in case of carriage return, should "\r" needs to get handled?
+            if (c == quote || c == '\r') {
+                ps.print(escape);
             }
+
+            // Handling surrogate pairs
             if (Character.isHighSurrogate(c)) {
-                position += writeSupplementaryChar(os, b, maxPosition, position, c, sz);
+                position += writeSupplementaryChar(ps, b, maxPosition, position, c, sz);
                 continue;
             }
+
+            // Write the character bytes
             while (sz > 0) {
-                os.write(b[position]);
+                ps.print(c);
                 ++position;
                 --sz;
             }
-            break;
         }
-        os.write('"');
+
+        if (shouldQuote) {
+            ps.print(quoteChar);
+        }
     }
 
     public static void writeUTF8StringRaw(byte[] b, int s, int l, DataOutput os) throws IOException {

@@ -21,20 +21,39 @@ package org.apache.asterix.metadata.declared;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public class WriteDataSink implements IWriteDataSink {
+public class WriteDataSink implements IExternalWriteDataSink {
     private final String adapterName;
     private final Map<String, String> configuration;
+    private ARecordType itemType;
+    private SourceLocation sourceLoc;
 
-    public WriteDataSink(String adapterName, Map<String, String> configuration) {
+    public WriteDataSink(String adapterName, Map<String, String> configuration, ARecordType itemType,
+            SourceLocation sourceLoc) {
         this.adapterName = adapterName;
         this.configuration = configuration;
+        this.itemType = itemType;
+        this.sourceLoc = sourceLoc;
     }
 
     private WriteDataSink(WriteDataSink writeDataSink) {
         this.adapterName = writeDataSink.getAdapterName();
         this.configuration = new HashMap<>(writeDataSink.configuration);
+        this.itemType = writeDataSink.itemType;
+        this.sourceLoc = writeDataSink.sourceLoc;
+    }
+
+    @Override
+    public ARecordType getItemType() {
+        return itemType;
+    }
+
+    @Override
+    public SourceLocation getSourceLoc() {
+        return sourceLoc;
     }
 
     @Override

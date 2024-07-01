@@ -19,6 +19,7 @@
 package org.apache.asterix.dataflow.data.nontagged.printers.csv;
 
 import java.io.PrintStream;
+import java.util.Map;
 
 import org.apache.asterix.om.pointables.PointableAllocator;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -36,9 +37,13 @@ public class ARecordPrinterFactory implements IPrinterFactory {
 
     private static final long serialVersionUID = 1L;
     private final ARecordType recType;
+    private final ARecordType itemType;
+    private final Map<String, String> configuration;
 
-    public ARecordPrinterFactory(ARecordType recType) {
+    public ARecordPrinterFactory(ARecordType recType, ARecordType itemType, Map<String, String> configuration) {
         this.recType = recType;
+        this.itemType = itemType;
+        this.configuration = configuration;
     }
 
     @Override
@@ -47,7 +52,7 @@ public class ARecordPrinterFactory implements IPrinterFactory {
         final IAType inputType =
                 recType == null ? DefaultOpenFieldType.getDefaultOpenFieldType(ATypeTag.OBJECT) : recType;
         final IVisitablePointable recAccessor = allocator.allocateRecordValue(inputType);
-        final APrintVisitor printVisitor = new APrintVisitor();
+        final APrintVisitor printVisitor = new APrintVisitor(itemType, configuration);
         final Pair<PrintStream, ATypeTag> arg = new Pair<>(null, null);
 
         return new IPrinter() {

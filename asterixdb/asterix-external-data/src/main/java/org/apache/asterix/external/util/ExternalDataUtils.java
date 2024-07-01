@@ -27,6 +27,7 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNA
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
+import static org.apache.asterix.external.util.ExternalDataConstants.KEY_READER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureBlobProperties;
@@ -437,6 +438,7 @@ public class ExternalDataUtils {
     public static void defaultConfiguration(Map<String, String> configuration) {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         if (format != null) {
+            //todo:utsav
             // default quote, escape character for quote and fields delimiter for csv and tsv format
             if (format.equals(ExternalDataConstants.FORMAT_CSV)) {
                 configuration.putIfAbsent(KEY_DELIMITER, ExternalDataConstants.DEFAULT_DELIMITER);
@@ -610,11 +612,21 @@ public class ExternalDataUtils {
     public static void validate(Map<String, String> configuration) throws HyracksDataException {
         String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
         String header = configuration.get(ExternalDataConstants.KEY_HEADER);
+        String forceQuote = configuration.get(ExternalDataConstants.KEY_FORCE_QUOTE);
+        String emptyFieldAsNull = configuration.get(ExternalDataConstants.KEY_EMPTY_FIELD_AS_NULL);
         if (format != null && isHeaderRequiredFor(format) && header == null) {
             throw new RuntimeDataException(ErrorCode.PARAMETERS_REQUIRED, ExternalDataConstants.KEY_HEADER);
         }
         if (header != null && !isBoolean(header)) {
             throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_HEADER, header);
+        }
+        if (forceQuote != null && !isBoolean(forceQuote)) {
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL, ExternalDataConstants.KEY_FORCE_QUOTE,
+                    forceQuote);
+        }
+        if (emptyFieldAsNull != null && !isBoolean(emptyFieldAsNull)) {
+            throw new RuntimeDataException(ErrorCode.INVALID_REQ_PARAM_VAL,
+                    ExternalDataConstants.KEY_EMPTY_FIELD_AS_NULL, emptyFieldAsNull);
         }
         char delimiter = validateGetDelimiter(configuration);
         validateGetQuote(configuration, delimiter);
