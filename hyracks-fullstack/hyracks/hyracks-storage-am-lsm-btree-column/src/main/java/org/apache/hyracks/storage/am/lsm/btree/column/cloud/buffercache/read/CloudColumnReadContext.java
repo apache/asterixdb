@@ -117,10 +117,15 @@ public final class CloudColumnReadContext implements IColumnReadContext {
         int nextLeaf = leafFrame.getNextLeaf();
         // Release the previous pages
         release(bufferCache);
+        /*
+         * First pin the next page0. This has to be called before the unpin below to avoid doing
+         * readLock().unlock() twice. If unpin called first and pin fails, then the method onUnpin will be
+         * called twice on the same pageZero, once when unpin called within this method and another one when the
+         * cursor is closed due to the pin failure.
+         */
+        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), this);
         // Release page0
         bufferCache.unpin(leafFrame.getPage(), this);
-        // pin the next page0
-        ICachedPage nextPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextLeaf), this);
         leafFrame.setPage(nextPage);
         return nextPage;
     }
