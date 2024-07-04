@@ -35,7 +35,6 @@ import org.apache.asterix.runtime.schemainferrence.primitive.PrimitiveRowSchemaN
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public abstract class AbstractRowSchemaNode {
     private int counter;
@@ -60,7 +59,6 @@ public abstract class AbstractRowSchemaNode {
         this.counter = counter;
     }
 
-    @JsonIgnore
     public final int getCounter() {
         return counter;
     }

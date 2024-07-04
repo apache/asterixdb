@@ -38,9 +38,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.annotations.CriticalPath;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
@@ -48,7 +45,6 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntImmutableList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
-@JsonPropertyOrder({ "fieldName", "typeTag", "numberOfChildren", "children" })
 public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
 
     private IValueReference fieldName;
@@ -62,11 +58,9 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         return children.size();
     }
 
-    @JsonIgnore
     private final Int2IntMap fieldNameIndexToChildIndexMap;
     private final List<AbstractRowSchemaNode> children;
 
-    @JsonSerialize(using = fieldNameSerialization.class)
     public IValueReference getFieldName() {
         return fieldName;
     }
@@ -79,7 +73,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     public ObjectRowSchemaNode(IValueReference fieldName) {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
         children = new ArrayList<>();
-        this.fieldName = fieldName;
+//        this.fieldName = fieldName;
     }
 
     public ObjectRowSchemaNode() {
@@ -92,21 +86,6 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         if (definitionLevels != null) {
             definitionLevels.put(this, new RunRowLengthIntArray());
         }
-        ArrayBackedValueStorage fieldNameSize = new ArrayBackedValueStorage(1);
-        input.readFully(fieldNameSize.getByteArray(), 0, 1);
-
-        ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0]);
-        ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0] + 1);
-
-        input.readFully(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        fieldName.append(fieldNameSize.getByteArray(), 0, 1);
-        fieldName.append(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        if (fieldName.getByteArray()[0] == 0) {
-            this.fieldName = null;
-        } else {
-            this.fieldName = fieldName;
-        }
-        //        this.fieldName = fieldName;
 
         int numberOfChildren = input.readInt();
 
@@ -160,7 +139,6 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     /**
      * Should not be used in a {@link CriticalPath}
      */
-    @JsonIgnore
     public IntList getChildrenFieldNameIndexes() {
         return IntImmutableList.toList(fieldNameIndexToChildIndexMap.int2IntEntrySet().stream()
                 .sorted(Comparator.comparingInt(Entry::getIntValue)).mapToInt(Entry::getIntKey));
@@ -171,13 +149,11 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         return fieldNameIndexToChildIndexMap.containsKey(fieldNameIndex);
     }
 
-    @JsonIgnore
     @Override
     public boolean isObjectOrCollection() {
         return true;
     }
 
-    @JsonIgnore
     @Override
     public boolean isCollection() {
         return false;
@@ -191,11 +167,6 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     @Override
     public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
         output.write(ATypeTag.OBJECT.serialize());
-        if (fieldName == null) {
-            output.writeByte(0);
-        } else {
-            output.write(fieldName.getByteArray());
-        }
         output.writeInt(children.size());
         for (Entry fieldNameIndexChildIndex : fieldNameIndexToChildIndexMap.int2IntEntrySet()) {
             output.writeInt(fieldNameIndexChildIndex.getIntKey());

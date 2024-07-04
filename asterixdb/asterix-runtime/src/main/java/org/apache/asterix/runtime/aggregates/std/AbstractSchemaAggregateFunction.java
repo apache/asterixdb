@@ -58,8 +58,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
 
 public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateFunction {
 
@@ -115,7 +113,6 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
 
     // TODO : CALVIN DANI
     protected void processDataValues(IFrameTupleReference tuple) throws HyracksDataException {
-        long startTime = System.nanoTime();
         if (skipStep()) {
             return;
         }
@@ -123,10 +120,8 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         inputVal.set(tuple.getFieldData(recordFieldId), tuple.getFieldStart(recordFieldId),
                 tuple.getFieldLength(recordFieldId));
         transformer.transform(inputVal);
-        eval.evaluate(tuple, inputVal); // CONFIRM TODO : CALVIN DANI
         byte[] data = inputVal.getByteArray();
         int offset = inputVal.getStartOffset();
-        long endTimeFirstHalf = System.nanoTime();
 
         ATypeTag typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(data[offset]);
         ATypeTag aggTypeTag = aggType;
@@ -175,11 +170,10 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
         if (skipStep()) {
             return;
         }
-        eval.evaluate(tuple, inputVal);
 
         byte[] serBytes = tuple.getFrameTupleAccessor().getBuffer().array();
 
-        int offset = 9; // TODO (CALVIN DANI) Look at written offset for storing fieldnames  TO CHANGE
+        int offset = 9; // TODO (CALVIN DANI) Look at written offset for storing fieldnames TO CHANGE
         int fieldNamesStart = offset + UnsafeUtil.getInt(serBytes, offset + 4);
         int metaRootStart = UnsafeUtil.getInt(serBytes, offset + 12);
         int length = UnsafeUtil.getInt(serBytes, offset + 20);

@@ -18,10 +18,8 @@
  */
 package org.apache.asterix.runtime.schemainferrence;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public abstract class AbstractRowSchemaNestedNode extends AbstractRowSchemaNode {
-    @JsonIgnore
     @Override
     public final boolean isNested() {
         return true;

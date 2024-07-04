@@ -26,18 +26,12 @@ import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNestedNode;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNode;
-import org.apache.asterix.runtime.schemainferrence.Serialization.fieldNameSerialization;
 import org.apache.hyracks.data.std.api.IValueReference;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /*
 Schema node for Array types.
 */
 
-@JsonPropertyOrder({ "fieldName", "typeTag", "children" })
 public final class ArrayRowSchemaNode extends AbstractRowCollectionSchemaNode {
     private IValueReference fieldName;
 
@@ -57,7 +51,6 @@ public final class ArrayRowSchemaNode extends AbstractRowCollectionSchemaNode {
         return ATypeTag.ARRAY;
     }
 
-    @JsonSerialize(using = fieldNameSerialization.class)
     @Override
     public IValueReference getFieldName() {
         return fieldName;
@@ -73,13 +66,11 @@ public final class ArrayRowSchemaNode extends AbstractRowCollectionSchemaNode {
         return getItemNode().getChild(i);
     }
 
-    @JsonIgnore
     @Override
     public int getNumberOfChildren() {
         return getItemNode().getNumberOfChildren();
     }
 
-    @JsonIgnore
     public ATypeTag getItemTypeTag() {
         return getItemNode().getTypeTag();
     }

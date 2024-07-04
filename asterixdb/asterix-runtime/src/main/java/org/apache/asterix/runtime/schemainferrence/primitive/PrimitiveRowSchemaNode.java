@@ -32,27 +32,21 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /*
 A schema node for representing Asterix data types such as : String, Integer
  */
-@JsonPropertyOrder({ "fieldName", "typeTag" })
 public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
-    @JsonIgnore
     private final int columnIndex;
     private final ATypeTag typeTag;
     private final boolean primaryKey;
-    //    private ArrayBackedValueStorage fieldName;
     private IValueReference fieldName;
 
     public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey, IValueReference fieldName) {
         this.columnIndex = columnIndex;
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;
-        this.fieldName = fieldName;
+//        this.fieldName = fieldName;
     }
 
     public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey) {
@@ -67,22 +61,6 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
         columnIndex = input.readInt();
         primaryKey = input.readBoolean();
 
-        ArrayBackedValueStorage fieldNameSize = new ArrayBackedValueStorage(1);
-        input.readFully(fieldNameSize.getByteArray(), 0, 1);
-
-        ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0]);
-        ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0] + 1);
-
-        input.readFully(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        fieldName.append(fieldNameSize.getByteArray(), 0, 1);
-        fieldName.append(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        if (fieldName.getByteArray()[0] == 0) {
-            this.fieldName = null;
-        } else {
-            this.fieldName = fieldName;
-        }
-        //        this.fieldName = fieldName;
-
     }
 
     public final int getColumnIndex() {
@@ -94,30 +72,25 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
         return typeTag;
     }
 
-    @JsonIgnore
     @Override
     public final boolean isNested() {
         return false;
     }
 
-    @JsonIgnore
     @Override
     public final boolean isObjectOrCollection() {
         return false;
     }
 
-    @JsonIgnore
     @Override
     public final boolean isCollection() {
         return false;
     }
 
-    @JsonIgnore
     public final boolean isPrimaryKey() {
         return primaryKey;
     }
 
-    @JsonSerialize(using = fieldNameSerialization.class)
     public IValueReference getFieldName() {
         return fieldName;
     }
@@ -137,11 +110,6 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
         output.write(typeTag.serialize());
         output.writeInt(columnIndex);
         output.writeBoolean(primaryKey);
-        if (fieldName == null) {
-            output.writeByte(0);
-        } else {
-            output.write(fieldName.getByteArray());
-        }
         pathInfoSerializer.writePathInfo(typeTag, columnIndex, primaryKey);
     }
 
@@ -150,7 +118,6 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
         return null;
     }
 
-    @JsonIgnore
     @Override
     public int getNumberOfChildren() {
         return 0;

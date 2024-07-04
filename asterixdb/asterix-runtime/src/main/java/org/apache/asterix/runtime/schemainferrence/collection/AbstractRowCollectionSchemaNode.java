@@ -36,10 +36,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 /*
 Node that defines collection nodes methods. Collection schema nodes include Array and Multiset.
 */
@@ -66,21 +62,6 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
 
     AbstractRowCollectionSchemaNode(DataInput input,
             Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels) throws IOException {
-        ArrayBackedValueStorage fieldNameSize = new ArrayBackedValueStorage(1);
-        input.readFully(fieldNameSize.getByteArray(), 0, 1);
-
-        ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0]);
-        ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0] + 1);
-
-        input.readFully(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        fieldName.append(fieldNameSize.getByteArray(), 0, 1);
-        fieldName.append(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        if (fieldName.getByteArray()[0] == 0) {
-            this.fieldName = null;
-        } else {
-            this.fieldName = fieldName;
-        }
-        //        this.fieldName = fieldName;
         if (definitionLevels != null) {
             definitionLevels.put(this, new RunRowLengthIntArray());
         }
@@ -105,8 +86,6 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
         return item;
     }
 
-    @JsonSerialize(using = itemNodeSerialization.class)
-    @JsonProperty("children")
     public final AbstractRowSchemaNode getItemNode() {
         return item;
     }
@@ -116,13 +95,11 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
         return visitor.visit(this, arg);
     }
 
-    @JsonIgnore
     @Override
     public final boolean isObjectOrCollection() {
         return true;
     }
 
-    @JsonIgnore
     @Override
     public final boolean isCollection() {
         return true;
@@ -132,11 +109,6 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
     public final void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
 
         output.write(getTypeTag().serialize());
-        if (fieldName == null) {
-            output.writeByte(0);
-        } else {
-            output.write(fieldName.getByteArray());
-        }
         pathInfoSerializer.enter(this);
         item.serialize(output, pathInfoSerializer);
         pathInfoSerializer.exit(this);

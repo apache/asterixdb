@@ -29,8 +29,6 @@ import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.Serialization.fieldNameSerialization;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /*
 Schema node for Multiset types.
@@ -55,7 +53,6 @@ public final class MultisetRowSchemaNode extends AbstractRowCollectionSchemaNode
         return ATypeTag.MULTISET;
     }
 
-    @JsonSerialize(using = fieldNameSerialization.class)
     @Override
     public IValueReference getFieldName() {
         return fieldName;
@@ -71,13 +68,11 @@ public final class MultisetRowSchemaNode extends AbstractRowCollectionSchemaNode
         return getItemNode().getChild(i);
     }
 
-    @JsonIgnore
     @Override
     public int getNumberOfChildren() {
         return getItemNode().getNumberOfChildren();
     }
 
-    @JsonIgnore
     public ATypeTag getItemTypeTag() {
         return getItemNode().getTypeTag();
     }

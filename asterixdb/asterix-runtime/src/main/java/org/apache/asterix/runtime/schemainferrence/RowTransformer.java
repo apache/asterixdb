@@ -102,8 +102,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
         for (int i = 0; i < numberOfChildren; i++) {
             pointable.nextChild();
             ATypeTag childTypeTag = pointable.getChildTypeTag();
-            IValueReference fieldName = new ArrayBackedValueStorage(1); //TODO CALVIN_DANI add correct fieldName
-            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata, null);
+            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata);
             acceptActualNode(pointable.getChildVisitablePointable(), childNode, null);
             /*
              * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing

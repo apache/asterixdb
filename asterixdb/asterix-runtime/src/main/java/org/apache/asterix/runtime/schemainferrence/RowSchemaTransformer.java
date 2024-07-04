@@ -116,8 +116,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
             for (AbstractRowSchemaNode unionChildNode : unionChildren) {
                 AbstractRowSchemaNode child = unionChildNode;
                 ATypeTag childTypeTag = child.getTypeTag();
-                IValueReference fieldName = child.getFieldName(); //TODO CALVIN_DANI add correct fieldName
-                AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata, fieldName);
+                AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata);
                 acceptActualNode(new GenericListRowSchemaNode(childTypeTag, child), childNode);
                 /*
                  * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
@@ -128,8 +127,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
             numberOfChildren = 1;
             AbstractRowSchemaNode primItem = toMergeRoot.getItemNode();
             ATypeTag childTypeTag = primItem.getTypeTag();
-            IValueReference fieldName = primItem.getFieldName(); //TODO CALVIN_DANI add correct fieldName
-            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata, fieldName);
+            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata);
             acceptActualNode(new GenericListRowSchemaNode(childTypeTag, primItem), childNode);
         }
 
@@ -158,8 +156,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
             for (AbstractRowSchemaNode unionChildNode : unionChildren) {
                 AbstractRowSchemaNode child = unionChildNode;
                 ATypeTag childTypeTag = child.getTypeTag();
-                IValueReference fieldName = child.getFieldName(); //TODO CALVIN_DANI add correct fieldName
-                AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata, fieldName);
+                AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata);
                 acceptActualNode(new GenericListRowSchemaNode(childTypeTag, child), childNode);
                 /*
                  * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
@@ -170,8 +167,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
             numberOfChildren = 1;
             AbstractRowSchemaNode primItem = toMergeRoot.getItemNode();
             ATypeTag childTypeTag = primItem.getTypeTag();
-            IValueReference fieldName = primItem.getFieldName(); //TODO CALVIN_DANI add now correct fieldName
-            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata, fieldName);
+            AbstractRowSchemaNode childNode = collectionNode.getOrCreateItem(childTypeTag, rowMetadata);
             acceptActualNode(new GenericListRowSchemaNode(childTypeTag, primItem), childNode);
         }
 
@@ -234,10 +230,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
             } else {
                 actualNode = unionNode.getOrCreateChild(childTypeTag, rowMetadata, fieldName);
             }
-            //            if (actualNode.getTypeTag() == ATypeTag.MULTISET) {
-            //                GenericListRowSchemaNode genericNode = new GenericListRowSchemaNode(nodeToAdd.getTypeTag(),nodeToAdd);
             nodeToAdd.accept(this, actualNode);
-            //            }
 
             currentParent = previousParent;
             rowMetadata.exitNode(node);

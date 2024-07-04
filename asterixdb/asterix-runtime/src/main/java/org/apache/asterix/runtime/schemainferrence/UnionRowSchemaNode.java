@@ -37,11 +37,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-@JsonPropertyOrder({ "fieldName", "typeTag", "numberOfChildren", "children" })
 public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
     private final AbstractRowSchemaNode originalType;
     private IValueReference fieldName;
@@ -76,20 +72,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         }
         ATypeTag originalTypeTag = ATypeTag.VALUE_TYPE_MAPPING[input.readByte()];
 
-        ArrayBackedValueStorage fieldNameSize = new ArrayBackedValueStorage(1);
-        input.readFully(fieldNameSize.getByteArray(), 0, 1);
-
-        ArrayBackedValueStorage fieldNameBuffer = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0]);
-        ArrayBackedValueStorage fieldName = new ArrayBackedValueStorage(fieldNameSize.getByteArray()[0] + 1);
-
-        input.readFully(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        fieldName.append(fieldNameSize.getByteArray(), 0, 1);
-        fieldName.append(fieldNameBuffer.getByteArray(), 0, fieldNameSize.getByteArray()[0]);
-        if (fieldName.getByteArray()[0] == 0) {
-            this.fieldName = null;
-        } else {
-            this.fieldName = fieldName;
-        }
         int numberOfChildren = input.readInt();
         children = new EnumMap<>(ATypeTag.class);
         for (int i = 0; i < numberOfChildren; i++) {
@@ -103,7 +85,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         children.put(child.getTypeTag(), child);
     }
 
-    @JsonIgnore
     public AbstractRowSchemaNode getOriginalType() {
         return originalType;
     }
@@ -124,24 +105,20 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         return children.getOrDefault(typeTag, MissingRowFieldSchemaNode.INSTANCE);
     }
 
-    @JsonSerialize(using = mapSerialization.class)
     public Map<ATypeTag, AbstractRowSchemaNode> getChildren() {
         return children;
     }
 
-    @JsonIgnore
     @Override
     public boolean isObjectOrCollection() {
         return false;
     }
 
-    @JsonIgnore
     @Override
     public boolean isCollection() {
         return false;
     }
 
-    @JsonSerialize(using = fieldNameSerialization.class)
     @Override
     public IValueReference getFieldName() {
         if (originalType != null) {
@@ -164,11 +141,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
     public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
         output.write(ATypeTag.UNION.serialize());
         output.writeByte(originalType.getTypeTag().serialize());
-        if (fieldName == null) {
-            output.writeByte(0);
-        } else {
-            output.write(fieldName.getByteArray());
-        }
         output.writeInt(children.size());
         pathInfoSerializer.enter(this);
         for (AbstractRowSchemaNode child : children.values()) {
@@ -182,7 +154,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         return null;
     }
 
-    @JsonIgnore
     public ArrayList<AbstractRowSchemaNode> getChildrenList() {
         return new ArrayList<AbstractRowSchemaNode>(children.values());
     }
@@ -192,7 +163,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
      *
      * @return first numeric node or missing node\
      */
-    @JsonIgnore
     public AbstractRowSchemaNode getNumericChildOrMissing() {
         for (AbstractRowSchemaNode node : children.values()) {
             if (ATypeHierarchy.getTypeDomain(node.getTypeTag()) == ATypeHierarchy.Domain.NUMERIC) {
@@ -202,7 +172,6 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         return MissingRowFieldSchemaNode.INSTANCE;
     }
 
-    @JsonIgnore
     public int getNumberOfNumericChildren() {
         int counter = 0;
         for (AbstractRowSchemaNode node : children.values()) {

@@ -107,7 +107,6 @@ public final class RowMetadata extends AbstractRowMetadata {
         if (changed) {
             try {
                 serializeChanges();
-                //                logSchema(root, metaRoot, fieldNamesDictionary);
                 changed = false;
             } catch (IOException e) {
                 throw HyracksDataException.create(e);
