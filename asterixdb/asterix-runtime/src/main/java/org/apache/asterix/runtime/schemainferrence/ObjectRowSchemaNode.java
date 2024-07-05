@@ -78,7 +78,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         children = new ArrayList<>();
     }
 
-    ObjectRowSchemaNode(DataInput input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
+    ObjectRowSchemaNode(DataInput input)
             throws IOException {
 
 
@@ -88,7 +88,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         deserializeFieldNameIndexToChildIndex(input, fieldNameIndexToChildIndexMap, numberOfChildren);
 
         children = new ArrayList<>();
-        deserializeChildren(input, children, numberOfChildren, definitionLevels);
+        deserializeChildren(input, children, numberOfChildren);
     }
 
     public AbstractRowSchemaNode getOrCreateChild(IValueReference fieldName, ATypeTag childTypeTag,
@@ -172,9 +172,9 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         }
     }
 
-    public void abort(DataInputStream input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
+    public void abort(DataInputStream input)
             throws IOException {
-        definitionLevels.put(this, new RunRowLengthIntArray());
+//        definitionLevels.put(this, new RunRowLengthIntArray());
 
         int numberOfChildren = input.readInt();
 
@@ -182,7 +182,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         deserializeFieldNameIndexToChildIndex(input, fieldNameIndexToChildIndexMap, numberOfChildren);
 
         children.clear();
-        deserializeChildren(input, children, numberOfChildren, definitionLevels);
+        deserializeChildren(input, children, numberOfChildren);
     }
 
     private static void deserializeFieldNameIndexToChildIndex(DataInput input, Int2IntMap fieldNameIndexToChildIndexMap,
@@ -194,10 +194,9 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         }
     }
 
-    private static void deserializeChildren(DataInput input, List<AbstractRowSchemaNode> children, int numberOfChildren,
-            Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels) throws IOException {
+    private static void deserializeChildren(DataInput input, List<AbstractRowSchemaNode> children, int numberOfChildren) throws IOException {
         for (int i = 0; i < numberOfChildren; i++) {
-            children.add(AbstractRowSchemaNode.deserialize(input, definitionLevels));
+            children.add(AbstractRowSchemaNode.deserialize(input));
         }
     }
 

@@ -34,19 +34,12 @@ import org.apache.hyracks.data.std.api.IValueReference;
 A schema node for representing Asterix data types such as : String, Integer
  */
 public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
-    private final int columnIndex;
     private final ATypeTag typeTag;
     private final boolean primaryKey;
     private IValueReference fieldName;
 
-    public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey, IValueReference fieldName) {
 
-        this.typeTag = typeTag;
-        this.primaryKey = primaryKey;
-
-    }
-
-    public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey) {
+    public PrimitiveRowSchemaNode(ATypeTag typeTag, boolean primaryKey) {
 
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;

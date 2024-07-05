@@ -59,7 +59,6 @@ public final class RowMetadata extends AbstractRowMetadata {
     private final ObjectRowSchemaNode root;
     private final ObjectRowSchemaNode metaRoot;
 
-    private int sizeOfWriters = 0;
     private final ArrayBackedValueStorage serializedMetadata;
     private final IntArrayList nullWriterIndexes;
     private boolean changed;
@@ -76,7 +75,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         metaRoot = null;
         nullWriterIndexes = new IntArrayList();
         //Add definition levels for the root
-        addDefinitionLevelsAndGet(root);
+//        addDefinitionLevelsAndGet(root);
         serializedMetadata = new ArrayBackedValueStorage();
         changed = true;
         serializeColumnsMetadata();
@@ -186,10 +185,6 @@ public final class RowMetadata extends AbstractRowMetadata {
         return level;
     }
 
-    @Override
-    public int getNumberOfColumns() {
-        return this.sizeOfWriters;
-    }
 
     // Create schema node
     public AbstractRowSchemaNode getOrCreateChild(AbstractRowSchemaNode child, ATypeTag childTypeTag)
@@ -247,21 +242,11 @@ public final class RowMetadata extends AbstractRowMetadata {
 
     // Collection node level updated and set
     public void exitCollectionNode(AbstractRowCollectionSchemaNode collectionNode, int numberOfItems) {
-        RunRowLengthIntArray collectionDefLevels = definitionLevels.get(collectionNode);
-        //Add delimiter
-        collectionDefLevels.add(level - 1);
         level--;
         collectionNode.incrementCounter();
     }
 
     //TODO : CALVIN_DANI remove overhead
-    /**
-     * Needed by {@link AbstractRowCollectionSchemaNode} to add the definition level for each item
-     *
-     * @param collectionSchemaNode collection node
-     * @return collection node's definition level
-     */
-
 
 
     // Create union and primitive node with fieldName
@@ -274,8 +259,8 @@ public final class RowMetadata extends AbstractRowMetadata {
                 System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
             } else {
                 //Different type. Make union
-                createdChild = addDefinitionLevelsAndGet(
-                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, fieldName)));
+                createdChild =
+                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, fieldName));
             }
         } else {
             createdChild = createChild(normalizedTypeTag, fieldName);
@@ -294,8 +279,8 @@ public final class RowMetadata extends AbstractRowMetadata {
                 System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
             } else {
                 //Different type. Make union
-                createdChild = addDefinitionLevelsAndGet(
-                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, initFieldName)));
+                createdChild =
+                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, initFieldName));
             }
         } else {
             createdChild = createChild(normalizedTypeTag, initFieldName);
@@ -308,11 +293,11 @@ public final class RowMetadata extends AbstractRowMetadata {
             throws HyracksDataException {
         switch (normalizedTypeTag) {
             case OBJECT:
-                return addDefinitionLevelsAndGet(new ObjectRowSchemaNode(fieldName));
+                return new ObjectRowSchemaNode(fieldName);
             case ARRAY:
-                return addDefinitionLevelsAndGet(new ArrayRowSchemaNode(fieldName));
+                return new ArrayRowSchemaNode(fieldName);
             case MULTISET:
-                return addDefinitionLevelsAndGet(new MultisetRowSchemaNode(fieldName));
+                return new MultisetRowSchemaNode(fieldName);
             case NULL:
             case MISSING:
             case BOOLEAN:
@@ -320,21 +305,13 @@ public final class RowMetadata extends AbstractRowMetadata {
             case BIGINT:
             case STRING:
             case UUID:
-                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
-                if (columnIndex == this.sizeOfWriters) {
-                    this.sizeOfWriters += 1;
-                }
-                return new PrimitiveRowSchemaNode(columnIndex, normalizedTypeTag, false, fieldName);
+//                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
+
+                return new PrimitiveRowSchemaNode( normalizedTypeTag, false);
             default:
                 throw new IllegalStateException("Unsupported type " + normalizedTypeTag);
 
         }
-    }
-
-    // definition level set for schema level
-    private AbstractRowSchemaNode addDefinitionLevelsAndGet(AbstractRowSchemaNestedNode nestedNode) {
-
-        return nestedNode;
     }
 
     // Schema structure logger
@@ -374,10 +351,9 @@ public final class RowMetadata extends AbstractRowMetadata {
 
 
 
-    public void addNestedNull(AbstractRowSchemaNestedNode parent, AbstractRowSchemaNestedNode node)
+    public void addNestedNull(AbstractRowSchemaNestedNode node)
             throws HyracksDataException {
         //Add null value (+2) to say that both the parent and the child are present
-
         node.incrementCounter();
     }
 }

@@ -34,5 +34,4 @@ public abstract class AbstractRowMetadata implements IRowMetadata {
         return recordFieldIndex;
     }
 
-    public abstract int getNumberOfColumns();
 }

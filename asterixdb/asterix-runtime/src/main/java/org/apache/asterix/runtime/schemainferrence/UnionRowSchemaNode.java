@@ -61,7 +61,7 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         putChild(child2);
     }
 
-    UnionRowSchemaNode(DataInput input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
+    UnionRowSchemaNode(DataInput input)
             throws IOException {
 
 
@@ -70,7 +70,7 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         int numberOfChildren = input.readInt();
         children = new EnumMap<>(ATypeTag.class);
         for (int i = 0; i < numberOfChildren; i++) {
-            AbstractRowSchemaNode child = AbstractRowSchemaNode.deserialize(input, definitionLevels);
+            AbstractRowSchemaNode child = AbstractRowSchemaNode.deserialize(input);
             children.put(child.getTypeTag(), child);
         }
         originalType = children.get(originalTypeTag);

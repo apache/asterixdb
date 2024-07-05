@@ -28,6 +28,6 @@ public final class MissingRowFieldSchemaNode extends PrimitiveRowSchemaNode {
     public static final AbstractRowSchemaNode INSTANCE = new MissingRowFieldSchemaNode();
 
     private MissingRowFieldSchemaNode() {
-        super(-1, ATypeTag.MISSING, false);
+        super(ATypeTag.MISSING, false);
     }
 }
