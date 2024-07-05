@@ -19,9 +19,11 @@
 package org.apache.asterix.cloud.lazy.accessor;
 
 import java.io.FilenameFilter;
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.asterix.cloud.CloudFileHandle;
+import org.apache.asterix.cloud.UncachedFileReference;
 import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
 import org.apache.asterix.cloud.clients.ICloudClient;
@@ -83,5 +85,10 @@ public class LocalAccessor extends AbstractLazyAccessor {
     public void doOverwrite(FileReference fileReference, byte[] bytes) throws HyracksDataException {
         cloudClient.write(bucket, fileReference.getRelativePath(), bytes);
         localIoManager.overwrite(fileReference, bytes);
+    }
+
+    @Override
+    public Set<UncachedFileReference> getUncachedFiles() {
+        return Collections.emptySet();
     }
 }

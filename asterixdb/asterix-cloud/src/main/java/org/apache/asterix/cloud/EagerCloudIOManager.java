@@ -67,6 +67,11 @@ final class EagerCloudIOManager extends AbstractCloudIOManager {
     }
 
     @Override
+    protected Set<UncachedFileReference> getUncachedFiles() {
+        return Collections.emptySet();
+    }
+
+    @Override
     protected void onOpen(CloudFileHandle fileHandle) {
         // NoOp
     }

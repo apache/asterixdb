@@ -23,6 +23,7 @@ import java.io.FilenameFilter;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.asterix.cloud.UncachedFileReference;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
@@ -37,6 +38,13 @@ public interface IParallelCacher {
 
     /**
      * Returns a list of all uncached files
+     *
+     * @return all uncached files
+     */
+    Set<UncachedFileReference> getUncachedFiles();
+
+    /**
+     * Returns a list of all uncached files of specified directory
      *
      * @param dir    directory to list
      * @param filter file name filter

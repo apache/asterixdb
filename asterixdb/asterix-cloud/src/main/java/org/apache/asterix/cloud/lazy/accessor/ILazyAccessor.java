@@ -22,6 +22,7 @@ import java.io.FilenameFilter;
 import java.util.Set;
 
 import org.apache.asterix.cloud.CloudFileHandle;
+import org.apache.asterix.cloud.UncachedFileReference;
 import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -111,4 +112,11 @@ public interface ILazyAccessor {
      * @param directory to evict
      */
     void doEvict(FileReference directory) throws HyracksDataException;
+
+    /**
+     * Returns all uncached files
+     *
+     * @return all uncached files
+     */
+    Set<UncachedFileReference> getUncachedFiles();
 }

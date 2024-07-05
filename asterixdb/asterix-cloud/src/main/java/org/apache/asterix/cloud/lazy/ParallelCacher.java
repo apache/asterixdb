@@ -88,6 +88,14 @@ public final class ParallelCacher implements IParallelCacher {
     }
 
     @Override
+    public synchronized Set<UncachedFileReference> getUncachedFiles() {
+        Set<UncachedFileReference> uncached = new HashSet<>();
+        uncached.addAll(uncachedDataFiles.values());
+        uncached.addAll(uncachedMetadataFiles.values());
+        return uncached;
+    }
+
+    @Override
     public Set<FileReference> getUncachedFiles(FileReference dir, FilenameFilter filter) {
         if (dir.getRelativePath().endsWith(StorageConstants.STORAGE_ROOT_DIR_NAME)) {
             return uncachedDataFiles.keySet().stream()

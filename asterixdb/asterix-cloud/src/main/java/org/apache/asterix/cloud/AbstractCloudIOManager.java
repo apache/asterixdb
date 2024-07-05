@@ -49,6 +49,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
+import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
@@ -61,6 +62,8 @@ import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper, ICloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -168,6 +171,8 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     protected abstract void downloadPartitions(boolean metadataNode, int metadataPartition) throws HyracksDataException;
+
+    protected abstract Set<UncachedFileReference> getUncachedFiles();
 
     /*
      * ******************************************************************
@@ -362,13 +367,59 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     /**
-     * Returns a list of all stored objects (sorted ASC by path) in the cloud and their sizes
+     * Returns a list of all stored objects (sorted ASC by path) in the cloud and their sizes. The already cached files
+     * are retrieved by listing the local disk, while the uncached files are retrieved from uncached files trackers.
      *
      * @param objectMapper to create the result {@link JsonNode}
      * @return {@link JsonNode} with stored objects' information
      */
     public final JsonNode listAsJson(ObjectMapper objectMapper) {
-        return cloudClient.listAsJson(objectMapper, bucket);
+        ArrayNode objectsInfo = objectMapper.createArrayNode();
+        List<CloudFile> allFiles = new ArrayList<>();
+        try {
+            // get cached files (read from disk)
+            for (IODeviceHandle deviceHandle : getIODevices()) {
+                FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
+
+                Set<FileReference> deviceFiles;
+                try {
+                    deviceFiles = localIoManager.list(storageRoot, IoUtil.NO_OP_FILTER);
+                } catch (Throwable th) {
+                    LOGGER.warn("Failed to get local storage files for root {}", storageRoot.getRelativePath(), th);
+                    continue;
+                }
+
+                for (FileReference fileReference : deviceFiles) {
+                    try {
+                        allFiles.add(CloudFile.of(fileReference.getRelativePath(), fileReference.getFile().length()));
+                    } catch (Throwable th) {
+                        LOGGER.warn("Encountered issue for local storage file {}", fileReference.getRelativePath(), th);
+                    }
+                }
+            }
+
+            // get uncached files from uncached files tracker
+            for (UncachedFileReference uncachedFile : getUncachedFiles()) {
+                allFiles.add(CloudFile.of(uncachedFile.getRelativePath(), uncachedFile.getSize()));
+            }
+
+            // combine all and sort
+            allFiles.sort((x, y) -> String.CASE_INSENSITIVE_ORDER.compare(x.getPath(), y.getPath()));
+
+            for (CloudFile file : allFiles) {
+                ObjectNode objectInfo = objectsInfo.addObject();
+                objectInfo.put("path", file.getPath());
+                objectInfo.put("size", file.getSize());
+            }
+
+            return objectsInfo;
+        } catch (Throwable th) {
+            LOGGER.warn("Failed to retrieve list of all cloud files", th);
+            objectsInfo.removeAll();
+            ObjectNode objectInfo = objectsInfo.addObject();
+            objectInfo.put("error", "Failed to retrieve list of all cloud files. " + th.getMessage());
+            return objectsInfo;
+        }
     }
 
     /**

@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.asterix.cloud.CloudFileHandle;
+import org.apache.asterix.cloud.UncachedFileReference;
 import org.apache.asterix.cloud.bulk.IBulkOperationCallBack;
 import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.ICloudClient;
@@ -184,5 +185,10 @@ public class ReplaceableCloudAccessor extends AbstractLazyAccessor {
     private static boolean isTxnDir(FileReference dir) {
         return dir.getRelativePath().startsWith(StorageConstants.METADATA_TXN_NOWAL_DIR_NAME)
                 || dir.getName().equals(StorageConstants.GLOBAL_TXN_DIR_NAME);
+    }
+
+    @Override
+    public Set<UncachedFileReference> getUncachedFiles() {
+        return cacher.getUncachedFiles();
     }
 }

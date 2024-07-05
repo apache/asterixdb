@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.asterix.cloud.UncachedFileReference;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 
@@ -32,6 +33,11 @@ public class NoOpParallelCacher implements IParallelCacher {
     @Override
     public boolean isCacheable(FileReference fileReference) {
         return false;
+    }
+
+    @Override
+    public Set<UncachedFileReference> getUncachedFiles() {
+        return Collections.emptySet();
     }
 
     @Override
