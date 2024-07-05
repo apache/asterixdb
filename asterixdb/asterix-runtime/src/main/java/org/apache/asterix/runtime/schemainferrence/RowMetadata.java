@@ -404,32 +404,10 @@ public final class RowMetadata extends AbstractRowMetadata {
         multiPageOpRef.setValue(null);
     }
 
-    public void flushDefinitionLevels(int level, AbstractRowSchemaNestedNode parent, AbstractRowSchemaNode node)
-            throws HyracksDataException {
-        if (parent != null) {
-            RunRowLengthIntArray parentDefLevels = definitionLevels.get(parent);
-            if (node.getCounter() < parentDefLevels.getSize()) {
-                int parentMask = RowValuesUtil.getNullMask(level);
-                int childMask = RowValuesUtil.getNullMask(level + 1);
-                flushDefinitionLevels(parentMask, childMask, parentDefLevels, node);
-            }
-        }
-    }
 
-    private void flushDefinitionLevels(int parentMask, int childMask, RunRowLengthIntArray parentDefLevels,
-            AbstractRowSchemaNode node) throws HyracksDataException {
-        int startIndex = node.getCounter();
-        if (node.isNested()) {
-            RunRowLengthIntArray childDefLevels = definitionLevels.get((AbstractRowSchemaNestedNode) node);
-            flushNestedDefinitionLevel(parentMask, childMask, startIndex, parentDefLevels, childDefLevels);
-        }
-        node.setCounter(parentDefLevels.getSize());
-    }
 
     public void addNestedNull(AbstractRowSchemaNestedNode parent, AbstractRowSchemaNestedNode node)
             throws HyracksDataException {
-        //Flush all definition levels from parent to the current node
-        flushDefinitionLevels(level, parent, node);
         //Add null value (+2) to say that both the parent and the child are present
         definitionLevels.get(node).add(RowValuesUtil.getNullMask(level + 2) | level);
         node.incrementCounter();

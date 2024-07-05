@@ -38,7 +38,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<AbstractRowSchemaNode, AbstractRowSchemaNode> {
 
     private final RowMetadata rowMetadata;
-    private final VoidPointable nonTaggedValue;
+//    private final VoidPointable nonTaggedValue;
     private final ObjectRowSchemaNode root;
     private AbstractRowSchemaNestedNode currentParent;
     private int primaryKeysLength;
@@ -50,7 +50,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
     public RowSchemaTransformer(RowMetadata rowMetadata, ObjectRowSchemaNode root) {
         this.rowMetadata = rowMetadata;
         this.root = root;
-        nonTaggedValue = new VoidPointable();
+//        nonTaggedValue = new VoidPointable();
     }
 
     /**
@@ -102,9 +102,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         AbstractRowCollectionSchemaNode collectionNode = (AbstractRowCollectionSchemaNode) mainRoot;
-        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
         //the level at which an item is missing
-        int missingLevel = rowMetadata.getLevel();
         currentParent = collectionNode;
         int numberOfChildren = 0;
 
@@ -121,7 +119,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 /*
                  * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
                  */
-                defLevels.add(missingLevel);
             }
         } else {
             numberOfChildren = 1;
@@ -143,9 +140,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         AbstractRowCollectionSchemaNode collectionNode = (AbstractRowCollectionSchemaNode) mainRoot;
-        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
         //the level at which an item is missing
-        int missingLevel = rowMetadata.getLevel();
         currentParent = collectionNode;
         int numberOfChildren = 0;
         if (toMergeRoot.getItemTypeTag() == ATypeTag.UNION) {
@@ -161,7 +156,6 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
                 /*
                  * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
                  */
-                defLevels.add(missingLevel);
             }
         } else {
             numberOfChildren = 1;

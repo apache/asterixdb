@@ -93,7 +93,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         AbstractRowCollectionSchemaNode collectionNode = (AbstractRowCollectionSchemaNode) arg;
-        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
+//        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
         //the level at which an item is missing
         int missingLevel = rowMetadata.getLevel();
         currentParent = collectionNode;
@@ -107,7 +107,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
             /*
              * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
              */
-            defLevels.add(missingLevel);
+//            defLevels.add(missingLevel);
         }
 
         rowMetadata.exitCollectionNode(collectionNode, numberOfChildren);
