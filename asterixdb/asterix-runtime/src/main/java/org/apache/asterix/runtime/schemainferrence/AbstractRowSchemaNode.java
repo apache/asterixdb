@@ -29,7 +29,6 @@ import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.collection.ArrayRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.MultisetRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisitor;
-import org.apache.asterix.runtime.schemainferrence.lazy.metadata.PathRowInfoSerializer;
 import org.apache.asterix.runtime.schemainferrence.primitive.MissingRowFieldSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.primitive.PrimitiveRowSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

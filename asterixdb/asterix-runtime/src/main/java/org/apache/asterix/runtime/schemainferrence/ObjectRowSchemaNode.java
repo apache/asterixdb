@@ -29,13 +29,10 @@ import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.utils.RunRowLengthIntArray;
-import org.apache.asterix.runtime.schemainferrence.Serialization.fieldNameSerialization;
 import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisitor;
-import org.apache.asterix.runtime.schemainferrence.lazy.metadata.PathRowInfoSerializer;
 import org.apache.asterix.runtime.schemainferrence.primitive.MissingRowFieldSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.util.annotations.CriticalPath;
 
 

@@ -33,7 +33,6 @@ import org.apache.asterix.runtime.schemainferrence.collection.AbstractRowCollect
 import org.apache.asterix.runtime.schemainferrence.collection.ArrayRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.MultisetRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.lazy.metadata.AbstractRowMetadata;
-import org.apache.asterix.runtime.schemainferrence.lazy.metadata.PathRowInfoSerializer;
 import org.apache.asterix.runtime.schemainferrence.lazy.metadata.RowFieldNamesDictionary;
 import org.apache.asterix.runtime.schemainferrence.primitive.PrimitiveRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.utils.JSONRowSchemaStringBuilderVisitor;
