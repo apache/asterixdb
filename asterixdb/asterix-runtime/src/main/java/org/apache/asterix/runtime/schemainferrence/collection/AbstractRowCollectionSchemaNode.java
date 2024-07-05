@@ -58,12 +58,8 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
         item = null;
     }
 
-    AbstractRowCollectionSchemaNode(DataInput input,
-            Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels) throws IOException {
-        if (definitionLevels != null) {
-            definitionLevels.put(this, new RunRowLengthIntArray());
-        }
-        item = AbstractRowSchemaNestedNode.deserialize(input, definitionLevels);
+    AbstractRowCollectionSchemaNode(DataInput input) throws IOException {
+        item = AbstractRowSchemaNestedNode.deserialize(input);
     }
 
     public final AbstractRowSchemaNode getOrCreateItem(ATypeTag childTypeTag, RowMetadata columnMetadata)

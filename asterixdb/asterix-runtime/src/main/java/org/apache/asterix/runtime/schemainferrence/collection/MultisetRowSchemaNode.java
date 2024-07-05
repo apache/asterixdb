@@ -42,9 +42,8 @@ public final class MultisetRowSchemaNode extends AbstractRowCollectionSchemaNode
         this.fieldName = fieldName;
     }
 
-    public MultisetRowSchemaNode(DataInput input,
-            Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels) throws IOException {
-        super(input, definitionLevels);
+    public MultisetRowSchemaNode(DataInput input) throws IOException {
+        super(input);
         this.fieldName = super.getFieldName();
     }
 

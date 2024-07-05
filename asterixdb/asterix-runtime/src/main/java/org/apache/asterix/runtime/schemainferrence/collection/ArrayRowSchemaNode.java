@@ -40,9 +40,9 @@ public final class ArrayRowSchemaNode extends AbstractRowCollectionSchemaNode {
         this.fieldName = fieldName;
     }
 
-    public ArrayRowSchemaNode(DataInput input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
+    public ArrayRowSchemaNode(DataInput input)
             throws IOException {
-        super(input, definitionLevels);
+        super(input);
         this.fieldName = super.getFieldName();
     }
 

@@ -184,7 +184,7 @@ public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateF
             //FieldNames //TODO CALVIN DANI check fieldNamesDictionary if it is required
             RowFieldNamesDictionary fieldNamesDictionary = RowFieldNamesDictionary.deserialize(input);
             //Schema
-            ObjectRowSchemaNode root = (ObjectRowSchemaNode) AbstractRowSchemaNode.deserialize(input, null);
+            ObjectRowSchemaNode root = (ObjectRowSchemaNode) AbstractRowSchemaNode.deserialize(input);
             schemaTransformer.transform(root);
         } catch (Exception e) {
             System.out.println(e.getMessage());

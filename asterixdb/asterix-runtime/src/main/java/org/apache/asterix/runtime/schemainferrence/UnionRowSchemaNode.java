@@ -64,9 +64,7 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
     UnionRowSchemaNode(DataInput input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
             throws IOException {
 
-        if (definitionLevels != null) {
-            definitionLevels.put(this, new RunRowLengthIntArray());
-        }
+
         ATypeTag originalTypeTag = ATypeTag.VALUE_TYPE_MAPPING[input.readByte()];
 
         int numberOfChildren = input.readInt();

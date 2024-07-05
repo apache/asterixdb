@@ -40,29 +40,27 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     private IValueReference fieldName;
 
     public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey, IValueReference fieldName) {
-        this.columnIndex = columnIndex;
+
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;
-//        this.fieldName = fieldName;
+
     }
 
     public PrimitiveRowSchemaNode(int columnIndex, ATypeTag typeTag, boolean primaryKey) {
-        this.columnIndex = columnIndex;
+
         this.typeTag = typeTag;
         this.primaryKey = primaryKey;
-        //        this.fieldName = fieldName;
+
     }
 
     public PrimitiveRowSchemaNode(ATypeTag typeTag, DataInput input) throws IOException {
         this.typeTag = typeTag;
-        columnIndex = input.readInt();
+
         primaryKey = input.readBoolean();
 
     }
 
-    public final int getColumnIndex() {
-        return columnIndex;
-    }
+
 
     @Override
     public final ATypeTag getTypeTag() {
@@ -105,7 +103,7 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     @Override
     public void serialize(DataOutput output) throws IOException {
         output.write(typeTag.serialize());
-        output.writeInt(columnIndex);
+
         output.writeBoolean(primaryKey);
     }
 

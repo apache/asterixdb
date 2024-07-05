@@ -68,20 +68,19 @@ public abstract class AbstractRowSchemaNode {
 
     public abstract void serialize(DataOutput output) throws IOException;
 
-    public static AbstractRowSchemaNode deserialize(DataInput input,
-            Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels) throws IOException {
+    public static AbstractRowSchemaNode deserialize(DataInput input) throws IOException {
         ATypeTag typeTag = ATypeTag.VALUE_TYPE_MAPPING[input.readByte()];
         switch (typeTag) {
             case SYSTEM_NULL:
                 return MissingRowFieldSchemaNode.INSTANCE;
             case OBJECT:
-                return new ObjectRowSchemaNode(input, definitionLevels);
+                return new ObjectRowSchemaNode(input);
             case ARRAY:
-                return new ArrayRowSchemaNode(input, definitionLevels);
+                return new ArrayRowSchemaNode(input);
             case MULTISET:
-                return new MultisetRowSchemaNode(input, definitionLevels);
+                return new MultisetRowSchemaNode(input);
             case UNION:
-                return new UnionRowSchemaNode(input, definitionLevels);
+                return new UnionRowSchemaNode(input);
             case NULL:
             case MISSING:
             case BOOLEAN:

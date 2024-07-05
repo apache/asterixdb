@@ -149,7 +149,7 @@ public class RowSchemaStringBuilderVisitor implements IRowSchemaNodeVisitor<Void
         if (!node.isNested()) {
             final PrimitiveRowSchemaNode primitiveNode = (PrimitiveRowSchemaNode) node;
             builder.append(", index: ");
-            builder.append(primitiveNode.getColumnIndex());
+
         }
         builder.append(">\n");
     }

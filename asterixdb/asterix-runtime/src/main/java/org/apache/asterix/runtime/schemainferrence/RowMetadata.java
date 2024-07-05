@@ -53,7 +53,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
  */
 public final class RowMetadata extends AbstractRowMetadata {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels;
+
     private final Mutable<IRowWriteMultiPageOp> multiPageOpRef;
     private final RowFieldNamesDictionary fieldNamesDictionary;
     private final ObjectRowSchemaNode root;
@@ -68,7 +68,7 @@ public final class RowMetadata extends AbstractRowMetadata {
     public RowMetadata(Mutable<IRowWriteMultiPageOp> multiPageOpRef) throws HyracksDataException {
         super();
         this.multiPageOpRef = multiPageOpRef;
-        definitionLevels = new HashMap<>();
+
         level = -1;
         fieldNamesDictionary = new RowFieldNamesDictionary();
         ArrayBackedValueStorage initFieldName = new ArrayBackedValueStorage(1);
@@ -90,9 +90,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         return root;
     }
 
-    public ObjectRowSchemaNode getMetaRoot() {
-        return metaRoot;
-    }
+
 
     public Mutable<IRowWriteMultiPageOp> getMultiPageOpRef() {
         return multiPageOpRef;
@@ -175,8 +173,8 @@ public final class RowMetadata extends AbstractRowMetadata {
         changed = false;
 
         fieldNamesDictionary.abort(input);
-        definitionLevels.clear();
-        root.abort(input, definitionLevels);
+
+        root.abort(input);
     }
 
     /* ********************************************************
@@ -224,13 +222,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         return currentChild;
     }
 
-    public void enterLevel(AbstractRowSchemaNestedNode node) {
-        level++;
-    }
 
-    public void exitLevel(AbstractRowSchemaNestedNode node) {
-        level--;
-    }
 
     // Update schema level by incrementing
     public void enterNode(AbstractRowSchemaNode parent, AbstractRowSchemaNode node) throws HyracksDataException {
@@ -269,32 +261,8 @@ public final class RowMetadata extends AbstractRowMetadata {
      * @param collectionSchemaNode collection node
      * @return collection node's definition level
      */
-    public RunRowLengthIntArray getDefinitionLevels(AbstractRowCollectionSchemaNode collectionSchemaNode) {
-        return definitionLevels.get(collectionSchemaNode);
-    }
 
-    private void flushNestedDefinitionLevel(int parentMask, int childMask, int startIndex,
-            RunRowLengthIntArray parentDefLevels, RunRowLengthIntArray childDefLevels) {
-        if (parentDefLevels.getSize() == 0) {
-            return;
-        }
-        //First, handle the first block as startIndex might be at the middle of a block
-        //Get which block that startIndex resides
-        int blockIndex = parentDefLevels.getBlockIndex(startIndex);
-        //Get the remaining of the first block starting from startIndex
-        int remainingValues = parentDefLevels.getBlockSize(blockIndex, startIndex);
 
-        int firstBlockValue =
-                RowValuesUtil.getChildValue(parentMask, childMask, parentDefLevels.getBlockValue(blockIndex));
-        //Batch add all the remaining values
-        childDefLevels.add(firstBlockValue, remainingValues);
-
-        //Add other blocks as batches
-        for (int i = blockIndex + 1; i < parentDefLevels.getNumberOfBlocks(); i++) {
-            int blockValue = RowValuesUtil.getChildValue(parentMask, childMask, parentDefLevels.getBlockValue(i));
-            childDefLevels.add(blockValue, parentDefLevels.getBlockSize(i));
-        }
-    }
 
     // Create union and primitive node with fieldName
     private AbstractRowSchemaNode createChild(AbstractRowSchemaNode child, ATypeTag normalizedTypeTag,
@@ -365,7 +333,7 @@ public final class RowMetadata extends AbstractRowMetadata {
 
     // definition level set for schema level
     private AbstractRowSchemaNode addDefinitionLevelsAndGet(AbstractRowSchemaNestedNode nestedNode) {
-        definitionLevels.put(nestedNode, new RunRowLengthIntArray());
+
         return nestedNode;
     }
 
@@ -409,7 +377,7 @@ public final class RowMetadata extends AbstractRowMetadata {
     public void addNestedNull(AbstractRowSchemaNestedNode parent, AbstractRowSchemaNestedNode node)
             throws HyracksDataException {
         //Add null value (+2) to say that both the parent and the child are present
-        definitionLevels.get(node).add(RowValuesUtil.getNullMask(level + 2) | level);
+
         node.incrementCounter();
     }
 }

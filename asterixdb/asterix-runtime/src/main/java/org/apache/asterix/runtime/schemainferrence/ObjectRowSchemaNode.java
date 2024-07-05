@@ -80,9 +80,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
 
     ObjectRowSchemaNode(DataInput input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)
             throws IOException {
-        if (definitionLevels != null) {
-            definitionLevels.put(this, new RunRowLengthIntArray());
-        }
+
 
         int numberOfChildren = input.readInt();
 
