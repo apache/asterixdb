@@ -62,7 +62,6 @@ public final class RowMetadata extends AbstractRowMetadata {
 
     private int sizeOfWriters = 0;
     private final ArrayBackedValueStorage serializedMetadata;
-    private final PathRowInfoSerializer pathInfoSerializer;
     private final IntArrayList nullWriterIndexes;
     private boolean changed;
     private int level;
@@ -76,7 +75,6 @@ public final class RowMetadata extends AbstractRowMetadata {
         ArrayBackedValueStorage initFieldName = new ArrayBackedValueStorage(1);
         root = new ObjectRowSchemaNode(initFieldName);
         metaRoot = null;
-        pathInfoSerializer = new PathRowInfoSerializer();
         nullWriterIndexes = new IntArrayList();
         //Add definition levels for the root
         addDefinitionLevelsAndGet(root);
@@ -138,18 +136,16 @@ public final class RowMetadata extends AbstractRowMetadata {
         fieldNamesDictionary.serialize(output);
 
         //Schema
-        pathInfoSerializer.reset();
         setOffset(schemaOffsetPointer);
-        root.serialize(output, pathInfoSerializer);
+        root.serialize(output);
         if (metaRoot != null) {
             //Meta schema
             setOffset(metaSchemaOffsetPointer);
-            metaRoot.serialize(output, pathInfoSerializer);
+            metaRoot.serialize(output);
         }
 
         //Path info
         setOffset(pathInfoOffsetPointer);
-        pathInfoSerializer.serialize(output, getNumberOfColumns());
         // Length info
         setOffset(lengthDataOffsetPointer);
     }

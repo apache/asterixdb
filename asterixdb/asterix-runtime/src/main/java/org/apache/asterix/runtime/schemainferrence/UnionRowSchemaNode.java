@@ -138,15 +138,13 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
     }
 
     @Override
-    public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
+    public void serialize(DataOutput output) throws IOException {
         output.write(ATypeTag.UNION.serialize());
         output.writeByte(originalType.getTypeTag().serialize());
         output.writeInt(children.size());
-        pathInfoSerializer.enter(this);
         for (AbstractRowSchemaNode child : children.values()) {
-            child.serialize(output, pathInfoSerializer);
+            child.serialize(output);
         }
-        pathInfoSerializer.exit(this);
     }
 
     @Override

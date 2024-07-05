@@ -165,18 +165,16 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     }
 
     @Override
-    public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
+    public void serialize(DataOutput output) throws IOException {
         output.write(ATypeTag.OBJECT.serialize());
         output.writeInt(children.size());
         for (Entry fieldNameIndexChildIndex : fieldNameIndexToChildIndexMap.int2IntEntrySet()) {
             output.writeInt(fieldNameIndexChildIndex.getIntKey());
             output.writeInt(fieldNameIndexChildIndex.getIntValue());
         }
-        pathInfoSerializer.enter(this);
         for (AbstractRowSchemaNode child : children) {
-            child.serialize(output, pathInfoSerializer);
+            child.serialize(output);
         }
-        pathInfoSerializer.exit(this);
     }
 
     public void abort(DataInputStream input, Map<AbstractRowSchemaNestedNode, RunRowLengthIntArray> definitionLevels)

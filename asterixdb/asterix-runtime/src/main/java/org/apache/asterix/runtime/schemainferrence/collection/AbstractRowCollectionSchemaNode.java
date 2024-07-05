@@ -106,12 +106,10 @@ public abstract class AbstractRowCollectionSchemaNode extends AbstractRowSchemaN
     }
 
     @Override
-    public final void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
+    public final void serialize(DataOutput output) throws IOException {
 
         output.write(getTypeTag().serialize());
-        pathInfoSerializer.enter(this);
-        item.serialize(output, pathInfoSerializer);
-        pathInfoSerializer.exit(this);
+        item.serialize(output);
     }
 
     public static AbstractRowCollectionSchemaNode create(ATypeTag typeTag) {

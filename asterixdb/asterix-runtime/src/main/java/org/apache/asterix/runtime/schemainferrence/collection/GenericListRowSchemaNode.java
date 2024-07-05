@@ -104,7 +104,7 @@ public class GenericListRowSchemaNode extends AbstractRowSchemaNestedNode {
     }
 
     @Override
-    public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
+    public void serialize(DataOutput output) throws IOException {
 
     }
 

@@ -106,11 +106,10 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     }
 
     @Override
-    public void serialize(DataOutput output, PathRowInfoSerializer pathInfoSerializer) throws IOException {
+    public void serialize(DataOutput output) throws IOException {
         output.write(typeTag.serialize());
         output.writeInt(columnIndex);
         output.writeBoolean(primaryKey);
-        pathInfoSerializer.writePathInfo(typeTag, columnIndex, primaryKey);
     }
 
     @Override
