@@ -59,6 +59,16 @@ public interface IARecordBuilder {
     public void addField(IValueReference name, IValueReference value) throws HyracksDataException;
 
     /**
+     * @param name
+     *            The field name without the tag.
+     * @param value
+     *            The field value.
+     * @throws HyracksDataException
+     *             if the field name conflicts with a closed field name
+     */
+    public void addNonTaggedFieldName(IValueReference name, IValueReference value) throws HyracksDataException;
+
+    /**
      * @param out
      *            Stream to write data to.
      * @param writeTypeTag

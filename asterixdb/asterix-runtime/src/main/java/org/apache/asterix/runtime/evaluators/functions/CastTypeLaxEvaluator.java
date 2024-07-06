@@ -19,7 +19,7 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.cast.ACastingPointableVisitor;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
@@ -41,8 +41,8 @@ class CastTypeLaxEvaluator extends CastTypeEvaluator {
     }
 
     @Override
-    protected ACastVisitor createCastVisitor() {
-        return new ACastVisitor(false, sourceLoc);
+    protected ACastingPointableVisitor createCastVisitor() {
+        return ACastingPointableVisitor.laxCasting(sourceLoc);
     }
 
     @Override

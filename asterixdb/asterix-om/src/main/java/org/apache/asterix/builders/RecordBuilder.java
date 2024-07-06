@@ -178,7 +178,21 @@ public class RecordBuilder implements IARecordBuilder {
     }
 
     @Override
+    public void addNonTaggedFieldName(IValueReference name, IValueReference value) throws HyracksDataException {
+        addField(ATypeTag.SERIALIZED_STRING_TYPE_TAG, name.getStartOffset(), name.getLength(), name.getByteArray(),
+                value);
+    }
+
+    @Override
     public void addField(IValueReference name, IValueReference value) throws HyracksDataException {
+        // +1 to move from the tag to the start of the field name value
+        byte[] nameBytes = name.getByteArray();
+        int start = name.getStartOffset();
+        addField(nameBytes[start], start + 1, name.getLength() - 1, nameBytes, value);
+    }
+
+    private void addField(byte nameTag, int nameStart, int nameLength, byte[] nameBytes, IValueReference value)
+            throws HyracksDataException {
         byte[] data = value.getByteArray();
         int offset = value.getStartOffset();
 
@@ -186,17 +200,12 @@ public class RecordBuilder implements IARecordBuilder {
         if (data[offset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG) {
             return;
         }
-        byte[] nameBytes = name.getByteArray();
-        int nameOffset = name.getStartOffset();
         // ignore adding fields with NULL/MISSING names
-        if (nameBytes[nameOffset] == ATypeTag.SERIALIZED_MISSING_TYPE_TAG
-                || nameBytes[nameOffset] == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
+        if (nameTag == ATypeTag.SERIALIZED_MISSING_TYPE_TAG || nameTag == ATypeTag.SERIALIZED_NULL_TYPE_TAG) {
             // TODO(ali): issue a warning
             return;
         }
         // ignore adding duplicate fields
-        int nameStart = nameOffset + 1;
-        int nameLength = name.getLength() - 1;
         if (recType != null && recTypeInfo.getFieldIndex(nameBytes, nameStart, nameLength) >= 0) {
             // TODO(ali): issue a warning
             return;

@@ -19,14 +19,19 @@
 
 package org.apache.asterix.runtime.evaluators.functions;
 
-import org.apache.asterix.om.pointables.PointableAllocator;
-import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
-import org.apache.asterix.om.pointables.base.IVisitablePointable;
-import org.apache.asterix.om.pointables.cast.ACastVisitor;
+import org.apache.asterix.om.pointables.AFlatValueCastingPointable;
+import org.apache.asterix.om.pointables.AListCastingPointable;
+import org.apache.asterix.om.pointables.ARecordCastingPointable;
+import org.apache.asterix.om.pointables.base.ICastingPointable;
+import org.apache.asterix.om.pointables.cast.ACastingPointableVisitor;
 import org.apache.asterix.om.pointables.cast.CastResult;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
+import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.TypeTagUtil;
+import org.apache.asterix.om.util.container.IObjectPool;
+import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -36,13 +41,19 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
 public class CastTypeEvaluator implements IScalarEvaluator {
 
+    private final IPointable argPointable = new VoidPointable();
+    private final IObjectPool<AFlatValueCastingPointable, IAType> flatValuePool =
+            new ListObjectPool<>(AFlatValueCastingPointable.FACTORY);
+    private final IObjectPool<ARecordCastingPointable, IAType> recordValuePool =
+            new ListObjectPool<>(ARecordCastingPointable.FACTORY);
+    private final IObjectPool<AListCastingPointable, IAType> listValuePool =
+            new ListObjectPool<>(AListCastingPointable.FACTORY);
     private IScalarEvaluator argEvaluator;
     protected final SourceLocation sourceLoc;
-    private final IPointable argPointable = new VoidPointable();
-    private final PointableAllocator allocator = new PointableAllocator();
-    private IVisitablePointable inputPointable;
-    private final ACastVisitor castVisitor = createCastVisitor();
+    private ICastingPointable inputPointable;
+    private final ACastingPointableVisitor castVisitor = createCastVisitor();
     private final CastResult castResult = new CastResult(new VoidPointable(), null);
+    private boolean inputTypeIsAny;
 
     public CastTypeEvaluator(SourceLocation sourceLoc) {
         this.sourceLoc = sourceLoc;
@@ -57,12 +68,12 @@ public class CastTypeEvaluator implements IScalarEvaluator {
 
     public void resetAndAllocate(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
         this.argEvaluator = argEvaluator;
-        this.inputPointable = allocatePointable(inputType, reqType);
+        this.inputPointable = allocatePointable(inputType);
         this.castResult.setOutType(reqType);
     }
 
-    protected ACastVisitor createCastVisitor() {
-        return new ACastVisitor(sourceLoc);
+    protected ACastingPointableVisitor createCastVisitor() {
+        return ACastingPointableVisitor.strictCasting(sourceLoc);
     }
 
     @Override
@@ -78,6 +89,11 @@ public class CastTypeEvaluator implements IScalarEvaluator {
 
     // TODO(ali): refactor in a better way
     protected void cast(IPointable argPointable, IPointable result) throws HyracksDataException {
+        if (inputTypeIsAny) {
+            ATypeTag inTag = EnumDeserializer.ATYPETAGDESERIALIZER
+                    .deserialize(argPointable.getByteArray()[argPointable.getStartOffset()]);
+            inputPointable = allocateForInput(TypeTagUtil.getBuiltinTypeByTag(inTag));
+        }
         inputPointable.set(argPointable);
         castInto(result);
     }
@@ -87,30 +103,35 @@ public class CastTypeEvaluator implements IScalarEvaluator {
         result.set(castResult.getOutPointable());
     }
 
-    // Allocates the result pointable.
-    private IVisitablePointable allocatePointable(IAType typeForPointable, IAType typeForOtherSide) {
-        if (!typeForPointable.equals(BuiltinType.ANY)) {
-            return allocator.allocateFieldValue(typeForPointable);
+    private ICastingPointable allocatePointable(IAType inputType) {
+        if (!inputType.equals(BuiltinType.ANY)) {
+            inputTypeIsAny = false;
+            return allocateForInput(inputType);
+        } else {
+            inputTypeIsAny = true;
+            return null;
         }
-        return allocatePointableForAny(typeForOtherSide);
     }
 
-    // Allocates an input or result pointable if the input or required type is ANY.
-    private IVisitablePointable allocatePointableForAny(IAType type) {
-        ATypeTag tag = type.getTypeTag();
-        switch (tag) {
+    private ICastingPointable allocateForInput(IAType inputType) {
+        ICastingPointable pointable;
+        switch (inputType.getTypeTag()) {
             case OBJECT:
-                return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+                pointable = recordValuePool.allocate(inputType);
+                break;
             case ARRAY:
-                return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_AORDERED_LIST_TYPE);
             case MULTISET:
-                return allocator.allocateFieldValue(DefaultOpenFieldType.NESTED_OPEN_AUNORDERED_LIST_TYPE);
+                pointable = listValuePool.allocate(inputType);
+                break;
             default:
-                return allocator.allocateFieldValue(null);
+                pointable = flatValuePool.allocate(null);
         }
+        return pointable;
     }
 
     public void deallocatePointables() {
-        allocator.reset();
+        flatValuePool.reset();
+        listValuePool.reset();
+        recordValuePool.reset();
     }
 }
