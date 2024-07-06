@@ -57,11 +57,13 @@ class S3ParallelDownloader implements IParallelDownloader {
     private final IOManager ioManager;
     private final S3AsyncClient s3AsyncClient;
     private final S3TransferManager transferManager;
+    private final S3ClientConfig config;
     private final IRequestProfiler profiler;
 
     S3ParallelDownloader(String bucket, IOManager ioManager, S3ClientConfig config, IRequestProfiler profiler) {
         this.bucket = bucket;
         this.ioManager = ioManager;
+        this.config = config;
         this.profiler = profiler;
         s3AsyncClient = createAsyncClient(config);
         transferManager = createS3TransferManager(s3AsyncClient);
@@ -110,7 +112,7 @@ class S3ParallelDownloader implements IParallelDownloader {
             // GetObjectRequest
             GetObjectRequest.Builder requestBuilder = GetObjectRequest.builder();
             requestBuilder.bucket(bucket);
-            requestBuilder.key(fileReference.getRelativePath());
+            requestBuilder.key(config.getPrefix() + fileReference.getRelativePath());
 
             // Download object
             DownloadFileRequest.Builder builder = DownloadFileRequest.builder();
@@ -138,7 +140,8 @@ class S3ParallelDownloader implements IParallelDownloader {
             DownloadDirectoryRequest.Builder builder = DownloadDirectoryRequest.builder();
             builder.bucket(bucket);
             builder.destination(fileReference.getFile().toPath());
-            builder.listObjectsV2RequestTransformer(l -> l.prefix(fileReference.getRelativePath()));
+            builder.listObjectsV2RequestTransformer(
+                    l -> l.prefix(config.getPrefix() + fileReference.getRelativePath()));
             DirectoryDownload directoryDownload = transferManager.downloadDirectory(builder.build());
             downloads.add(directoryDownload.completionFuture());
         }

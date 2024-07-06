@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.clients.aws.s3;
 
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
@@ -40,9 +41,9 @@ public final class S3ClientConfig {
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize) {
-        this.region = region;
-        this.endpoint = endpoint;
-        this.prefix = prefix;
+        this.region = Objects.requireNonNull(region, "region");
+        this.endpoint = Objects.requireNonNull(endpoint, "endpoint");
+        this.prefix = Objects.requireNonNull(prefix, "prefix");
         this.anonymousAuth = anonymousAuth;
         this.profilerLogInterval = profilerLogInterval;
         this.writeBufferSize = writeBufferSize;
