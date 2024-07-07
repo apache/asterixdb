@@ -41,12 +41,14 @@ public class GCSWriter implements ICloudWriter {
     private final IRequestProfiler profiler;
     private final Storage gcsClient;
     private WriteChannel writer = null;
+    private long writtenBytes;
 
     public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfiler profiler) {
         this.bucket = bucket;
         this.path = path;
         this.profiler = profiler;
         this.gcsClient = gcsClient;
+        writtenBytes = 0;
     }
 
     @Override
@@ -67,17 +69,26 @@ public class GCSWriter implements ICloudWriter {
             throw HyracksDataException.create(e);
         }
 
+        writtenBytes += written;
         return written;
     }
 
     @Override
     public int write(byte[] b, int off, int len) throws HyracksDataException {
-        return write(ByteBuffer.wrap(b, off, len));
+        int written = write(ByteBuffer.wrap(b, off, len));
+        writtenBytes += written;
+        return written;
+    }
+
+    @Override
+    public long position() {
+        return writtenBytes;
     }
 
     @Override
     public void write(int b) throws HyracksDataException {
         write(ByteBuffer.wrap(new byte[] { (byte) b }));
+        writtenBytes += 1;
     }
 
     @Override
@@ -105,6 +116,7 @@ public class GCSWriter implements ICloudWriter {
         if (writer == null) {
             writer = gcsClient.writer(BlobInfo.newBuilder(BlobId.of(bucket, path)).build());
             writer.setChunkSize(WRITE_BUFFER_SIZE);
+            writtenBytes = 0;
             log("STARTED");
         }
     }

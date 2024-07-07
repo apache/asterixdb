@@ -36,13 +36,13 @@ public final class DefaultCloudOnlyWriteContext implements IBufferCacheWriteCont
     public int write(IOManager ioManager, IFileHandle handle, long offset, ByteBuffer data)
             throws HyracksDataException {
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
-        return cloudIOManager.cloudWrite(handle, data);
+        return cloudIOManager.cloudWrite(handle, offset, data);
     }
 
     @Override
     public long write(IOManager ioManager, IFileHandle handle, long offset, ByteBuffer[] data)
             throws HyracksDataException {
         ICloudIOManager cloudIOManager = (ICloudIOManager) ioManager;
-        return cloudIOManager.cloudWrite(handle, data);
+        return cloudIOManager.cloudWrite(handle, offset, data);
     }
 }

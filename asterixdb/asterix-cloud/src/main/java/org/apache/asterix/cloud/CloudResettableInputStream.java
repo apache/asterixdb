@@ -36,10 +36,12 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
     private final IWriteBufferProvider bufferProvider;
     private final ICloudBufferedWriter bufferedWriter;
     private ByteBuffer writeBuffer;
+    private long writtenBytes;
 
     public CloudResettableInputStream(ICloudBufferedWriter bufferedWriter, IWriteBufferProvider bufferProvider) {
         this.bufferedWriter = bufferedWriter;
         this.bufferProvider = bufferProvider;
+        writtenBytes = 0;
     }
 
     /* ************************************************************
@@ -75,7 +77,7 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
     @Override
     public int write(ByteBuffer page) throws HyracksDataException {
         open();
-        return write(page.array(), 0, page.limit());
+        return write(page.array(), page.position(), page.remaining());
     }
 
     @Override
@@ -84,6 +86,7 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
             uploadAndWait();
         }
         writeBuffer.put((byte) b);
+        writtenBytes += 1;
     }
 
     @Override
@@ -102,7 +105,7 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
             // enough to write all
             if (writeBuffer.remaining() > pageRemaining) {
                 writeBuffer.put(b, offset, pageRemaining);
-                return len;
+                break;
             }
 
             int remaining = writeBuffer.remaining();
@@ -112,7 +115,13 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
             uploadAndWait();
         }
 
+        writtenBytes += len;
         return len;
+    }
+
+    @Override
+    public long position() {
+        return writtenBytes;
     }
 
     @Override
@@ -173,6 +182,7 @@ public class CloudResettableInputStream extends InputStream implements ICloudWri
         if (writeBuffer == null) {
             writeBuffer = bufferProvider.getBuffer();
             writeBuffer.clear();
+            writtenBytes = 0;
         }
     }
 

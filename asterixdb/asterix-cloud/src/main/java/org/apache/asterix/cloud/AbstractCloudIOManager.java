@@ -210,10 +210,11 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     @Override
-    public final int cloudWrite(IFileHandle fHandle, ByteBuffer data) throws HyracksDataException {
+    public final int cloudWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
         ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
         int writtenBytes;
         try {
+            ensurePosition(fHandle, cloudWriter.position(), offset);
             writtenBytes = cloudWriter.write(data);
         } catch (HyracksDataException e) {
             cloudWriter.abort();
@@ -223,10 +224,11 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     @Override
-    public final long cloudWrite(IFileHandle fHandle, ByteBuffer[] data) throws HyracksDataException {
+    public final long cloudWrite(IFileHandle fHandle, long offset, ByteBuffer[] data) throws HyracksDataException {
         ICloudWriter cloudWriter = ((CloudFileHandle) fHandle).getCloudWriter();
         int writtenBytes;
         try {
+            ensurePosition(fHandle, cloudWriter.position(), offset);
             writtenBytes = cloudWriter.write(data[0], data[1]);
         } catch (HyracksDataException e) {
             cloudWriter.abort();
@@ -265,18 +267,33 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public final long doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer[] dataArray)
             throws HyracksDataException {
+        // Save original position and limit
+        ByteBuffer buffer1 = dataArray[0];
+        int position1 = buffer1.position();
+
+        ByteBuffer buffer2 = dataArray[1];
+        int position2 = buffer2.position();
+
         long writtenBytes = localIoManager.doSyncWrite(fHandle, offset, dataArray);
-        dataArray[0].flip();
-        dataArray[1].flip();
-        cloudWrite(fHandle, dataArray);
+
+        // Restore original position
+        buffer1.position(position1);
+        buffer2.position(position2);
+
+        cloudWrite(fHandle, offset, dataArray);
         return writtenBytes;
     }
 
     @Override
     public final int doSyncWrite(IFileHandle fHandle, long offset, ByteBuffer data) throws HyracksDataException {
+        // Save original position and limit
+        int position = data.position();
+
         int writtenBytes = localIoManager.doSyncWrite(fHandle, offset, data);
-        data.flip();
-        cloudWrite(fHandle, data);
+
+        // Restore original position
+        data.position(position);
+        cloudWrite(fHandle, offset, data);
         return writtenBytes;
     }
 
@@ -388,6 +405,13 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
                 deleteBulkOperation.add(resolve(file.getPath()));
             }
             performBulkOperation(deleteBulkOperation);
+        }
+    }
+
+    private void ensurePosition(IFileHandle fileHandle, long cloudOffset, long requestedWriteOffset) {
+        if (cloudOffset != requestedWriteOffset) {
+            throw new IllegalStateException("Misaligned positions in " + fileHandle.getFileReference()
+                    + ", cloudOffset: " + cloudOffset + " != requestedWriteOffset: " + requestedWriteOffset);
         }
     }
 }

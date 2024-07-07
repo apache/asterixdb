@@ -61,6 +61,11 @@ public interface ICloudWriter {
     int write(byte[] b, int off, int len) throws HyracksDataException;
 
     /**
+     * @return the current position of the writer
+     */
+    long position();
+
+    /**
      * Finish the write operation
      * Note: this should be called upon successful write
      */
