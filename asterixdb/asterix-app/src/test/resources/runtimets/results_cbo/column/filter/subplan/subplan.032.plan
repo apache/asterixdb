@@ -1,16 +1,16 @@
-distribute result [$$70] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+distribute result [$$70] [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$70] <- [agg-sql-sum($$76)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+    aggregate [$$70] <- [agg-sql-sum($$76)] [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
     -- AGGREGATE  |UNPARTITIONED|
-      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+      exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$76] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+        aggregate [$$76] <- [agg-sql-count(1)] [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
         -- AGGREGATE  |PARTITIONED|
-          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 12.0]
+          exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            join (true) [cardinality: 2.1, op-cost: 1.0, total-cost: 12.0]
+            join (true) [cardinality: 2.1, op-cost: 4.41, total-cost: 15.41]
             -- NESTED_LOOP  |PARTITIONED|
               exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

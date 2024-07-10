@@ -148,7 +148,8 @@ public class CostMethods implements ICostMethods {
     public Cost costCartesianProductJoin(JoinNode jn) {
         JoinNode leftJn = jn.getLeftJn();
         JoinNode rightJn = jn.getRightJn();
-        return new Cost(leftJn.getCardinality() * rightJn.getCardinality());
+        return new Cost(
+                Math.max(leftJn.getCardinality(), Cost.MIN_CARD) * Math.max(rightJn.getCardinality(), Cost.MIN_CARD));
     }
 
     public Cost computeCPRightExchangeCost(JoinNode jn) {

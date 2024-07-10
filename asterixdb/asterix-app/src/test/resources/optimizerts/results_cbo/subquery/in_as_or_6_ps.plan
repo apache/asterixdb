@@ -21,14 +21,14 @@
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- HYBRID_HASH_JOIN [$$23][$#1]  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ASSIGN  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                    -- HASH_PARTITION_EXCHANGE [$#1]  |PARTITIONED|
+                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
                                       -- ASSIGN  |UNPARTITIONED|
                                         -- UNNEST  |UNPARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
@@ -54,14 +54,14 @@
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- HYBRID_HASH_JOIN [$$23][$#1]  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$$23]  |PARTITIONED|
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 -- ASSIGN  |PARTITIONED|
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                     -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                            -- HASH_PARTITION_EXCHANGE [$#1]  |PARTITIONED|
+                                            -- BROADCAST_EXCHANGE  |PARTITIONED|
                                               -- ASSIGN  |UNPARTITIONED|
                                                 -- UNNEST  |UNPARTITIONED|
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,8 +1,8 @@
-distribute result [$$63] [cardinality: 2.1, op-cost: 0.0, total-cost: 17.0]
+distribute result [$$63] [cardinality: 2.1, op-cost: 0.0, total-cost: 20.41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 17.0]
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 20.41]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    join (true) [cardinality: 2.1, op-cost: 1.0, total-cost: 17.0]
+    join (true) [cardinality: 2.1, op-cost: 4.41, total-cost: 20.41]
     -- NESTED_LOOP  |PARTITIONED|
       exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

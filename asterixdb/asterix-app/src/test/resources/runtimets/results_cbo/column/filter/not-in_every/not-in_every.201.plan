@@ -31,7 +31,7 @@ distribute result [$$d] [cardinality: 3.0, op-cost: 0.0, total-cost: 15.5]
                       -- STREAM_PROJECT  |PARTITIONED|
                         exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          left outer join (not(if-missing-or-null(neq($$21, $#1), false))) [cardinality: 3.0, op-cost: 6.0, total-cost: 17.0]
+                          left outer join (not(if-missing-or-null(neq($$21, $#1), false))) [cardinality: 3.0, op-cost: 12.6, total-cost: 23.6]
                           -- NESTED_LOOP  |PARTITIONED|
                             exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,16 +1,16 @@
-distribute result [$$70] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+distribute result [$$70] [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    aggregate [$$70] <- [agg-sql-sum($$76)] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+    aggregate [$$70] <- [agg-sql-sum($$76)] [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
     -- AGGREGATE  |UNPARTITIONED|
-      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        aggregate [$$76] <- [agg-sql-count(1)] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+        aggregate [$$76] <- [agg-sql-count(1)] [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
         -- AGGREGATE  |PARTITIONED|
-          exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+          exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 28.6]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            join (or(eq($$71, "7"), neq($$69, 0))) [cardinality: 6.0, op-cost: 6.0, total-cost: 22.0]
+            join (or(eq($$71, "7"), neq($$69, 0))) [cardinality: 6.0, op-cost: 12.6, total-cost: 28.6]
             -- NESTED_LOOP  |PARTITIONED|
               exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
