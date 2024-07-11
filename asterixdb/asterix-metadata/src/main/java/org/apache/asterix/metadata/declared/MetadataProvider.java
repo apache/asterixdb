@@ -157,7 +157,6 @@ import org.apache.hyracks.api.dataflow.value.RecordDescriptor;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.io.FileSplit;
-import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.result.IResultMetadata;
 import org.apache.hyracks.api.result.ResultSetId;
@@ -1138,28 +1137,28 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                     BulkLoadUsage.LOAD, dataset.getDatasetId(), null, partitionerFactory,
                     partitioningProperties.getComputeStorageMap());
         } else {
-            if (indexOp == IndexOperation.INSERT) {
-                ISearchOperationCallbackFactory searchCallbackFactory = dataset
-                        .getSearchCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
+            ISearchOperationCallbackFactory searchCallbackFactory =
+                    dataset.getSearchCallbackFactory(storageComponentProvider, primaryIndex, indexOp, primaryKeyFields);
 
-                Optional<Index> primaryKeyIndex = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
-                        dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName()).stream()
-                        .filter(Index::isPrimaryKeyIndex).findFirst();
-                IIndexDataflowHelperFactory pkidfh = null;
-                if (primaryKeyIndex.isPresent()) {
-                    PartitioningProperties idxPartitioningProperties =
-                            getPartitioningProperties(dataset, primaryKeyIndex.get().getIndexName());
-                    pkidfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
-                            idxPartitioningProperties.getSplitsProvider());
-                }
+            Optional<Index> primaryKeyIndex = MetadataManager.INSTANCE.getDatasetIndexes(mdTxnCtx,
+                    dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName()).stream()
+                    .filter(Index::isPrimaryKeyIndex).findFirst();
+            IIndexDataflowHelperFactory pkidfh = null;
+            if (primaryKeyIndex.isPresent()) {
+                PartitioningProperties idxPartitioningProperties =
+                        getPartitioningProperties(dataset, primaryKeyIndex.get().getIndexName());
+                pkidfh = new IndexDataflowHelperFactory(storageComponentProvider.getStorageManager(),
+                        idxPartitioningProperties.getSplitsProvider());
+            }
+            if (indexOp == IndexOperation.INSERT) {
                 op = createLSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
                         modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields, partitionerFactory,
-                        partitioningProperties.getComputeStorageMap());
+                        partitioningProperties.getComputeStorageMap(), IndexOperation.UPSERT);
 
             } else {
-                op = createLSMTreeInsertDeleteOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, indexOp, idfh,
-                        null, true, modificationCallbackFactory, partitionerFactory,
-                        partitioningProperties.getComputeStorageMap());
+                op = createLSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
+                        modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields, partitionerFactory,
+                        partitioningProperties.getComputeStorageMap(), IndexOperation.DELETE);
             }
         }
         return new Pair<>(op, partitioningProperties.getConstraints());
@@ -1169,20 +1168,11 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             RecordDescriptor inputRecordDesc, int[] fieldPermutation, IIndexDataflowHelperFactory idfh,
             IIndexDataflowHelperFactory pkidfh, IModificationOperationCallbackFactory modificationCallbackFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int numKeys, int[] filterFields,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap, IndexOperation op) {
         // this can be used by extensions to pick up their own operators
         return new LSMPrimaryInsertOperatorDescriptor(spec, inputRecordDesc, fieldPermutation, idfh, pkidfh,
                 modificationCallbackFactory, searchCallbackFactory, numKeys, filterFields, tuplePartitionerFactory,
-                partitionsMap);
-    }
-
-    protected LSMTreeInsertDeleteOperatorDescriptor createLSMTreeInsertDeleteOperatorDescriptor(
-            IOperatorDescriptorRegistry spec, RecordDescriptor outRecDesc, int[] fieldPermutation, IndexOperation op,
-            IIndexDataflowHelperFactory indexHelperFactory, ITupleFilterFactory tupleFilterFactory, boolean isPrimary,
-            IModificationOperationCallbackFactory modCallbackFactory, ITuplePartitionerFactory tuplePartitionerFactory,
-            int[][] partitionsMap) {
-        return new LSMTreeInsertDeleteOperatorDescriptor(spec, outRecDesc, fieldPermutation, op, indexHelperFactory,
-                tupleFilterFactory, isPrimary, modCallbackFactory, tuplePartitionerFactory, partitionsMap);
+                partitionsMap, op);
     }
 
     private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getIndexModificationRuntime(IndexOperation indexOp,

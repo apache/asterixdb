@@ -107,10 +107,10 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             int[] fieldPermutation, RecordDescriptor inputRecDesc,
             IModificationOperationCallbackFactory modCallbackFactory,
             ISearchOperationCallbackFactory searchCallbackFactory, int numOfPrimaryKeys, int[] filterFields,
-            SourceLocation sourceLoc, ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap)
-            throws HyracksDataException {
-        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, IndexOperation.UPSERT,
-                modCallbackFactory, null, tuplePartitionerFactory, partitionsMap);
+            SourceLocation sourceLoc, ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap,
+            IndexOperation op) throws HyracksDataException {
+        super(ctx, partition, indexHelperFactory, fieldPermutation, inputRecDesc, op, modCallbackFactory, null,
+                tuplePartitionerFactory, partitionsMap);
         this.sourceLoc = sourceLoc;
         this.frameOpCallbacks = new IFrameOperationCallback[partitions.length];
         this.searchCallbacks = new ISearchOperationCallback[partitions.length];
@@ -160,47 +160,59 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                         // already processed; skip
                         return;
                     }
-                    keyTuple.reset(accessor, index);
-                    searchPred.reset(keyTuple, keyTuple, true, true, keySearchCmp, keySearchCmp);
-                    boolean duplicate = false;
+                    switch (op) {
+                        case INSERT:
+                        case UPSERT:
+                            keyTuple.reset(accessor, index);
+                            searchPred.reset(keyTuple, keyTuple, true, true, keySearchCmp, keySearchCmp);
+                            boolean duplicate = false;
 
-                    lsmAccessorForUniqunessCheck.search(cursor, searchPred);
-                    try {
-                        if (cursor.hasNext()) {
-                            // duplicate, skip
-                            if (searchCallback instanceof LockThenSearchOperationCallback) {
-                                ((LockThenSearchOperationCallback) searchCallback).release();
+                            lsmAccessorForUniqunessCheck.search(cursor, searchPred);
+                            try {
+                                if (cursor.hasNext()) {
+                                    // duplicate, skip
+                                    if (searchCallback instanceof LockThenSearchOperationCallback) {
+                                        ((LockThenSearchOperationCallback) searchCallback).release();
+                                    }
+                                    duplicate = true;
+                                }
+                            } finally {
+                                cursor.close();
                             }
-                            duplicate = true;
-                        }
-                    } finally {
-                        cursor.close();
-                    }
-                    if (!duplicate) {
-                        beforeModification(tuple);
-                        ((ILSMIndexAccessor) indexAccessor).forceUpsert(tuple);
-                        if (lsmAccessorForKeyIndex != null) {
-                            lsmAccessorForKeyIndex.forceUpsert(keyTuple);
-                        }
-                    } else {
-                        // we should flush previous inserted records so that these transactions can commit
-                        flushPartialFrame();
-                        // feed requires this nested exception to remove duplicated tuples
-                        // TODO: a better way to treat duplicates?
-                        throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE,
-                                HyracksDataException.create(ErrorCode.DUPLICATE_KEY), sourceLoc, index);
+                            if (!duplicate) {
+                                beforeModification(tuple);
+                                ((ILSMIndexAccessor) indexAccessor).forceUpsert(tuple);
+                                if (lsmAccessorForKeyIndex != null) {
+                                    lsmAccessorForKeyIndex.forceUpsert(keyTuple);
+                                }
+                            } else {
+                                // we should flush previous inserted records so that these transactions can commit
+                                flushPartialFrame();
+                                // feed requires this nested exception to remove duplicated tuples
+                                // TODO: a better way to treat duplicates?
+                                throw HyracksDataException.create(ErrorCode.ERROR_PROCESSING_TUPLE,
+                                        HyracksDataException.create(ErrorCode.DUPLICATE_KEY), sourceLoc, index);
+                            }
+                            break;
+                        case DELETE:
+                            ((ILSMIndexAccessor) indexAccessor).forceDelete(tuple);
+                            break;
+                        default:
+                            throw HyracksDataException.create(ErrorCode.INVALID_OPERATOR_OPERATION, sourceLoc,
+                                    op.toString(), LSMPrimaryInsertOperatorNodePushable.class.getSimpleName());
+
                     }
                     processedTuples.add(index);
                 }
 
                 @Override
                 public void start() throws HyracksDataException {
-                    ((LSMTreeIndexAccessor) indexAccessor).getCtx().setOperation(IndexOperation.UPSERT);
+                    ((LSMTreeIndexAccessor) indexAccessor).getCtx().setOperation(op);
                 }
 
                 @Override
                 public void finish() throws HyracksDataException {
-                    ((LSMTreeIndexAccessor) indexAccessor).getCtx().setOperation(IndexOperation.UPSERT);
+                    ((LSMTreeIndexAccessor) indexAccessor).getCtx().setOperation(op);
                 }
 
                 @Override

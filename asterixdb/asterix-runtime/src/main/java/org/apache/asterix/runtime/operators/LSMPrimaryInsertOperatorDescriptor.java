@@ -45,9 +45,9 @@ public class LSMPrimaryInsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
             IIndexDataflowHelperFactory keyIndexHelperFactory,
             IModificationOperationCallbackFactory modificationOpCallbackFactory,
             ISearchOperationCallbackFactory searchOpCallbackFactory, int numOfPrimaryKeys, int[] filterFields,
-            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap) {
-        super(spec, outRecDesc, fieldPermutation, IndexOperation.UPSERT, indexHelperFactory, null, true,
-                modificationOpCallbackFactory, tuplePartitionerFactory, partitionsMap);
+            ITuplePartitionerFactory tuplePartitionerFactory, int[][] partitionsMap, IndexOperation op) {
+        super(spec, outRecDesc, fieldPermutation, op, indexHelperFactory, null, true, modificationOpCallbackFactory,
+                tuplePartitionerFactory, partitionsMap);
         this.keyIndexHelperFactory = keyIndexHelperFactory;
         this.searchOpCallbackFactory = searchOpCallbackFactory;
         this.numOfPrimaryKeys = numOfPrimaryKeys;
@@ -60,6 +60,6 @@ public class LSMPrimaryInsertOperatorDescriptor extends LSMTreeInsertDeleteOpera
         RecordDescriptor intputRecDesc = recordDescProvider.getInputRecordDescriptor(getActivityId(), 0);
         return new LSMPrimaryInsertOperatorNodePushable(ctx, partition, indexHelperFactory, keyIndexHelperFactory,
                 fieldPermutation, intputRecDesc, modCallbackFactory, searchOpCallbackFactory, numOfPrimaryKeys,
-                filterFields, sourceLoc, tuplePartitionerFactory, partitionsMap);
+                filterFields, sourceLoc, tuplePartitionerFactory, partitionsMap, op);
     }
 }
