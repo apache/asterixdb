@@ -25,3 +25,8 @@ insert into d1([
 {"id":1, "compType":{"sth":33}},
 {"id":2, "compType":{"sth":44}, "followers":["John Green", "Emily Jones"]}
 ]);
+
+insert into d3([
+{"id":1, "list_f": [99],           "compType":{"sth":33}, "s": 1},
+{"id":2, "list_f": [88, {"a": 8}], "compType":[{"sth":44}, {"sth2": [1,2]}], "s": 2}
+]);

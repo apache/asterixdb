@@ -86,7 +86,7 @@ public class ArrayReplaceEvaluator extends AbstractScalarEval {
     private final ListAccessor listAccessor;
     private final IBinaryComparator comp;
     private final ArrayBackedValueStorage storage;
-    private final CastTypeEvaluator caster;
+    private final TypeCaster caster;
     private IAsterixListBuilder orderedListBuilder;
     private IAsterixListBuilder unorderedListBuilder;
 
@@ -108,7 +108,7 @@ public class ArrayReplaceEvaluator extends AbstractScalarEval {
         tempVal = new VoidPointable();
         item = new VoidPointable();
         listAccessor = new ListAccessor();
-        caster = new CastTypeEvaluator(null);
+        caster = new TypeCaster(sourceLocation);
         orderedListBuilder = null;
         unorderedListBuilder = null;
 
@@ -157,12 +157,10 @@ public class ArrayReplaceEvaluator extends AbstractScalarEval {
         }
         try {
             IAType defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(listType);
-            caster.resetAndAllocate(defaultOpenType, inputListType, listEval);
-            caster.cast(tempList, list);
+            caster.allocateAndCast(tempList, inputListType, list, defaultOpenType);
             defaultOpenType = DefaultOpenFieldType.getDefaultOpenFieldType(newValTag);
             if (defaultOpenType != null) {
-                caster.resetAndAllocate(defaultOpenType, newValueType, newValEval);
-                caster.cast(tempVal, newVal);
+                caster.allocateAndCast(tempVal, newValueType, newVal, defaultOpenType);
             } else {
                 newVal.set(tempVal);
             }

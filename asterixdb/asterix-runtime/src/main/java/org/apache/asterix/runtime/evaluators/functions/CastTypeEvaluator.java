@@ -30,8 +30,6 @@ import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.om.types.TypeTagUtil;
-import org.apache.asterix.om.util.container.IObjectPool;
-import org.apache.asterix.om.util.container.ListObjectPool;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluator;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
@@ -42,34 +40,27 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 public class CastTypeEvaluator implements IScalarEvaluator {
 
     private final IPointable argPointable = new VoidPointable();
-    private final IObjectPool<AFlatValueCastingPointable, IAType> flatValuePool =
-            new ListObjectPool<>(AFlatValueCastingPointable.FACTORY);
-    private final IObjectPool<ARecordCastingPointable, IAType> recordValuePool =
-            new ListObjectPool<>(ARecordCastingPointable.FACTORY);
-    private final IObjectPool<AListCastingPointable, IAType> listValuePool =
-            new ListObjectPool<>(AListCastingPointable.FACTORY);
-    private IScalarEvaluator argEvaluator;
+    private final IScalarEvaluator argEvaluator;
     protected final SourceLocation sourceLoc;
     private ICastingPointable inputPointable;
+    private ICastingPointable record;
+    private ICastingPointable list;
+    private ICastingPointable flat;
     private final ACastingPointableVisitor castVisitor = createCastVisitor();
     private final CastResult castResult = new CastResult(new VoidPointable(), null);
-    private boolean inputTypeIsAny;
-
-    public CastTypeEvaluator(SourceLocation sourceLoc) {
-        this.sourceLoc = sourceLoc;
-        // reset() should be called after using this constructor before calling any method
-    }
+    private final boolean inputTypeIsAny;
 
     public CastTypeEvaluator(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator,
             SourceLocation sourceLoc) {
         this.sourceLoc = sourceLoc;
-        resetAndAllocate(reqType, inputType, argEvaluator);
-    }
-
-    public void resetAndAllocate(IAType reqType, IAType inputType, IScalarEvaluator argEvaluator) {
         this.argEvaluator = argEvaluator;
-        this.inputPointable = allocatePointable(inputType);
         this.castResult.setOutType(reqType);
+        if (!inputType.equals(BuiltinType.ANY)) {
+            this.inputPointable = createPointable(inputType);
+            this.inputTypeIsAny = false;
+        } else {
+            this.inputTypeIsAny = true;
+        }
     }
 
     protected ACastingPointableVisitor createCastVisitor() {
@@ -79,20 +70,11 @@ public class CastTypeEvaluator implements IScalarEvaluator {
     @Override
     public void evaluate(IFrameTupleReference tuple, IPointable result) throws HyracksDataException {
         argEvaluator.evaluate(tuple, argPointable);
-
         if (PointableHelper.checkAndSetMissingOrNull(result, argPointable)) {
             return;
         }
-
-        cast(argPointable, result);
-    }
-
-    // TODO(ali): refactor in a better way
-    protected void cast(IPointable argPointable, IPointable result) throws HyracksDataException {
         if (inputTypeIsAny) {
-            ATypeTag inTag = EnumDeserializer.ATYPETAGDESERIALIZER
-                    .deserialize(argPointable.getByteArray()[argPointable.getStartOffset()]);
-            inputPointable = allocateForInput(TypeTagUtil.getBuiltinTypeByTag(inTag));
+            inputPointable = getPointable(argPointable);
         }
         inputPointable.set(argPointable);
         castInto(result);
@@ -103,35 +85,37 @@ public class CastTypeEvaluator implements IScalarEvaluator {
         result.set(castResult.getOutPointable());
     }
 
-    private ICastingPointable allocatePointable(IAType inputType) {
-        if (!inputType.equals(BuiltinType.ANY)) {
-            inputTypeIsAny = false;
-            return allocateForInput(inputType);
-        } else {
-            inputTypeIsAny = true;
-            return null;
-        }
-    }
-
-    private ICastingPointable allocateForInput(IAType inputType) {
-        ICastingPointable pointable;
-        switch (inputType.getTypeTag()) {
+    private static ICastingPointable createPointable(IAType type) {
+        switch (type.getTypeTag()) {
             case OBJECT:
-                pointable = recordValuePool.allocate(inputType);
-                break;
+                return ARecordCastingPointable.FACTORY.create(type);
             case ARRAY:
             case MULTISET:
-                pointable = listValuePool.allocate(inputType);
-                break;
+                return AListCastingPointable.FACTORY.create(type);
             default:
-                pointable = flatValuePool.allocate(null);
+                return AFlatValueCastingPointable.FACTORY.create(type);
         }
-        return pointable;
     }
 
-    public void deallocatePointables() {
-        flatValuePool.reset();
-        listValuePool.reset();
-        recordValuePool.reset();
+    private ICastingPointable getPointable(IPointable arg) throws HyracksDataException {
+        ATypeTag tag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(arg.getByteArray()[arg.getStartOffset()]);
+        switch (tag) {
+            case OBJECT:
+                if (record == null) {
+                    record = ARecordCastingPointable.FACTORY.create(TypeTagUtil.getBuiltinTypeByTag(tag));
+                }
+                return record;
+            case ARRAY:
+            case MULTISET:
+                if (list == null) {
+                    list = AListCastingPointable.FACTORY.create(TypeTagUtil.getBuiltinTypeByTag(tag));
+                }
+                return list;
+            default:
+                if (flat == null) {
+                    flat = AFlatValueCastingPointable.FACTORY.create(null);
+                }
+                return flat;
+        }
     }
 }

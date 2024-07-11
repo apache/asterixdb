@@ -1,0 +1,2 @@
+{ "append_result": [ 99, { "sth": 33 }, 1 ] }
+{ "append_result": [ 88, { "a": 8 }, [ { "sth": 44 }, { "sth2": [ 1, 2 ] } ], 2 ] }

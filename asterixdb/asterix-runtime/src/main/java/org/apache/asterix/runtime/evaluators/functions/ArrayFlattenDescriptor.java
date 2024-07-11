@@ -127,7 +127,7 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
         private final TaggedValuePointable depthArg;
         private final IObjectPool<IMutableValueStorage, ATypeTag> storageAllocator;
         private final IObjectPool<ListAccessor, ATypeTag> listAccessorAllocator;
-        private final CastTypeEvaluator caster;
+        private final TypeCaster caster;
         private final ArrayBackedValueStorage finalStorage;
         private ArrayBackedValueStorage storage;
         private IAsterixListBuilder orderedListBuilder;
@@ -141,7 +141,7 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
             depthEval = args[1].createScalarEvaluator(ctx);
             list = new VoidPointable();
             pointable = new VoidPointable();
-            caster = new CastTypeEvaluator(null);
+            caster = new TypeCaster(sourceLoc);
             depthArg = new TaggedValuePointable();
             orderedListBuilder = null;
             unorderedListBuilder = null;
@@ -172,9 +172,8 @@ public class ArrayFlattenDescriptor extends AbstractScalarFunctionDynamicDescrip
             }
 
             try {
-                caster.resetAndAllocate(DefaultOpenFieldType.getDefaultOpenFieldType(listType), inputListType,
-                        listEval);
-                caster.cast(pointable, list);
+                caster.allocateAndCast(pointable, inputListType, list,
+                        DefaultOpenFieldType.getDefaultOpenFieldType(listType));
 
                 int depthInt = (int) depth;
                 // create list

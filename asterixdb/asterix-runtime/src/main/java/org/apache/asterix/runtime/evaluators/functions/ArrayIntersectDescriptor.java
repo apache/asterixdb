@@ -179,7 +179,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
         private final IObjectPool<List<ValueListIndex>, ATypeTag> arrayListAllocator;
         private final IObjectPool<ValueListIndex, ATypeTag> valueListIndexAllocator;
         private final ArrayBackedValueStorage finalResult;
-        private final CastTypeEvaluator caster;
+        private final TypeCaster caster;
         private final IBinaryComparator comp;
         private IAsterixListBuilder orderedListBuilder;
         private IAsterixListBuilder unorderedListBuilder;
@@ -194,7 +194,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
             hashes = new Int2ObjectOpenHashMap<>();
             finalResult = new ArrayBackedValueStorage();
             listAccessor = new ListAccessor();
-            caster = new CastTypeEvaluator(null);
+            caster = new TypeCaster(sourceLoc);
             // for functions that accept multiple lists arguments, they will be casted to open, hence item is ANY
             comp = BinaryComparatorFactoryProvider.INSTANCE
                     .getBinaryComparatorFactory(BuiltinType.ANY, BuiltinType.ANY, true).createBinaryComparator();
@@ -247,8 +247,7 @@ public class ArrayIntersectDescriptor extends AbstractScalarFunctionDynamicDescr
                                         (AbstractCollectionType) DefaultOpenFieldType.getDefaultOpenFieldType(listTag);
                             }
 
-                            caster.resetAndAllocate(outList, argTypes[i], listsEval[i]);
-                            caster.cast(pointable, listsArgs[i]);
+                            caster.allocateAndCast(pointable, argTypes[i], listsArgs[i], outList);
                             nextSize = getNumItems(outList, listsArgs[i].getByteArray(), listsArgs[i].getStartOffset());
                             if (nextSize < minSize || minSize == -1) {
                                 minSize = nextSize;
