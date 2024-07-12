@@ -42,7 +42,7 @@ public final class S3ClientConfig {
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize) {
         this.region = Objects.requireNonNull(region, "region");
-        this.endpoint = Objects.requireNonNull(endpoint, "endpoint");
+        this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
         this.anonymousAuth = anonymousAuth;
         this.profilerLogInterval = profilerLogInterval;
