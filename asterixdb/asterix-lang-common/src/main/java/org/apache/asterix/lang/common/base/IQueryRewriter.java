@@ -23,9 +23,11 @@ import java.util.Set;
 
 import org.apache.asterix.common.api.INamespaceResolver;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.expression.AbstractCallExpression;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.ViewDecl;
@@ -66,4 +68,8 @@ public interface IQueryRewriter {
     Query createFunctionAccessorQuery(FunctionDecl functionDecl);
 
     Query createViewAccessorQuery(ViewDecl viewDecl, INamespaceResolver namespaceResolver);
+
+    Query createDatasetAccessorQuery(DatasetDecl datasetDecl, INamespaceResolver namespaceResolver,
+            Namespace namespace);
+
 }

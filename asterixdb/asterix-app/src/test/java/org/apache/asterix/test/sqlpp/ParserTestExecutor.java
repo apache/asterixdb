@@ -213,7 +213,7 @@ public class ParserTestExecutor extends TestExecutor {
                     Query query = (Query) st;
                     IQueryRewriter rewriter = sqlppRewriterFactory.createQueryRewriter();
                     LangRewritingContext rwContext = new LangRewritingContext(metadataProvider, functions, null,
-                            TestUtils.NOOP_WARNING_COLLECTOR, query.getVarCounter());
+                            TestUtils.NOOP_WARNING_COLLECTOR, null, query.getVarCounter());
                     rewrite(rewriter, query, rwContext);
 
                     // Tests deep copy and deep equality.

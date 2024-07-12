@@ -172,6 +172,7 @@ import org.apache.asterix.lang.common.statement.ViewDropStatement;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
 import org.apache.asterix.lang.common.util.FunctionUtil;
+import org.apache.asterix.lang.common.util.LangDatasetUtil;
 import org.apache.asterix.lang.common.util.ViewUtil;
 import org.apache.asterix.lang.sqlpp.rewrites.SqlppQueryRewriter;
 import org.apache.asterix.metadata.IDatasetDetails;
@@ -601,10 +602,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected LangRewritingContext createLangRewritingContext(MetadataProvider metadataProvider,
-            List<FunctionDecl> declaredFunctions, List<ViewDecl> declaredViews, IWarningCollector warningCollector,
-            int varCounter) {
+            List<FunctionDecl> declaredFunctions, List<ViewDecl> declaredViews, List<DatasetDecl> declaredDatasets,
+            IWarningCollector warningCollector, int varCounter) {
         return new LangRewritingContext(metadataProvider, declaredFunctions, declaredViews, warningCollector,
-                varCounter);
+                declaredDatasets, varCounter);
     }
 
     protected Namespace handleUseDataverseStatement(MetadataProvider metadataProvider, Statement stmt)
@@ -921,6 +922,20 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     throw new CompilationException(ErrorCode.DATASET_EXISTS, sourceLoc, datasetName, dataverseName);
                 }
             }
+            if (dd.getQuery() != null) {
+                IQueryRewriter queryRewriter = rewriterFactory.createQueryRewriter();
+                Query wrappedQuery = queryRewriter.createDatasetAccessorQuery(dd, namespaceResolver, namespace);
+                dd.setNamespace(namespace);
+                LangRewritingContext langRewritingContext =
+                        createLangRewritingContext(metadataProvider, declaredFunctions, null,
+                                Collections.singletonList(dd), warningCollector, wrappedQuery.getVarCounter());
+                apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
+                        Collections.emptyList());
+
+                LangDatasetUtil.getDatasetDependencies(metadataProvider, dd, queryRewriter);
+                appCtx.getReceptionist().ensureAuthorized(requestParameters, metadataProvider);
+            }
+
             List<TypeExpression> partitioningExprTypes = null;
             if (dsType == DatasetType.INTERNAL) {
                 partitioningExprTypes = ((InternalDetailsDecl) dd.getDatasetDetailsDecl()).getPartitioningExprTypes();
@@ -1033,7 +1048,6 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
             if (dsType == DatasetType.INTERNAL) {
                 JobSpecification jobSpec = DatasetUtil.createDatasetJobSpec(dataset, metadataProvider);
-
                 // #. make metadataTxn commit before calling runJob.
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
@@ -2932,8 +2946,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             Query wrappedQuery =
                     queryRewriter.createViewAccessorQuery(viewDecl, metadataProvider.getNamespaceResolver());
             metadataProvider.setDefaultNamespace(ns);
+
             LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
-                    Collections.singletonList(viewDecl), warningCollector, wrappedQuery.getVarCounter());
+                    Collections.singletonList(viewDecl), null, warningCollector, wrappedQuery.getVarCounter());
             apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
                     Collections.emptyList());
 
@@ -3237,7 +3252,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 fdList.add(fd);
                 metadataProvider.setDefaultNamespace(ns);
                 LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, fdList, null,
-                        warningCollector, wrappedQuery.getVarCounter());
+                        null, warningCollector, wrappedQuery.getVarCounter());
                 apiFramework.reWriteQuery(langRewritingContext, wrappedQuery, sessionOutput, false, false,
                         Collections.emptyList());
 
@@ -4077,7 +4092,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 Map<VarIdentifier, IAObject> externalVars = createExternalVariables(copyTo, stmtParams);
                 // Query Rewriting (happens under the same ongoing metadata transaction)
                 LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider,
-                        declaredFunctions, null, warningCollector, copyTo.getVarCounter());
+                        declaredFunctions, null, null, warningCollector, copyTo.getVarCounter());
                 Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext,
                         copyTo, sessionOutput, true, true, externalVars.keySet());
 
@@ -4141,6 +4156,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 metadataProvider.setWriteTransaction(true);
                 final JobSpecification jobSpec =
                         rewriteCompileInsertUpsert(hcc, metadataProvider, stmtInsertUpsert, stmtParams);
+                appCtx.getReceptionist().ensureAuthorized(reqParams, metadataProvider);
                 MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
                 bActiveTxn = false;
                 return isCompileOnly() ? null : jobSpec;
@@ -4298,7 +4314,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Query Rewriting (happens under the same ongoing metadata transaction)
         LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
-                null, warningCollector, query.getVarCounter());
+                null, null, warningCollector, query.getVarCounter());
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext, query,
                 sessionOutput, true, true, externalVars.keySet());
 
@@ -4317,7 +4333,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
         // Insert/upsert statement rewriting (happens under the same ongoing metadata transaction)
         LangRewritingContext langRewritingContext = createLangRewritingContext(metadataProvider, declaredFunctions,
-                null, warningCollector, insertUpsert.getVarCounter());
+                null, null, warningCollector, insertUpsert.getVarCounter());
         Pair<IReturningStatement, Integer> rewrittenResult = apiFramework.reWriteQuery(langRewritingContext,
                 insertUpsert, sessionOutput, true, true, externalVars.keySet());
 
@@ -5226,7 +5242,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private interface IStatementCompiler {
-        JobSpecification compile() throws AlgebricksException, RemoteException, ACIDException;
+        JobSpecification compile() throws AlgebricksException, RemoteException, ACIDException, HyracksDataException;
     }
 
     protected void handleQuery(MetadataProvider metadataProvider, Query query, IHyracksClientConnection hcc,

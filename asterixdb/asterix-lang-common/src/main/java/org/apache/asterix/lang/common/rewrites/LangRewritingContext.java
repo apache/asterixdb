@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.functions.FunctionSignature;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -37,16 +38,19 @@ public class LangRewritingContext {
     private final IWarningCollector warningCollector;
     private final Map<FunctionSignature, FunctionDecl> declaredFunctions;
     private final Map<DatasetFullyQualifiedName, ViewDecl> declaredViews;
+    private final Map<DatasetFullyQualifiedName, DatasetDecl> declaredDatasets;
     private final Counter varCounter;
     private int systemVarCounter = 1;
     private final Map<Integer, VarIdentifier> oldVarIdToNewVarId = new HashMap<>();
 
     public LangRewritingContext(MetadataProvider metadataProvider, List<FunctionDecl> declaredFunctions,
-            List<ViewDecl> declaredViews, IWarningCollector warningCollector, int varCounter) {
+            List<ViewDecl> declaredViews, IWarningCollector warningCollector, List<DatasetDecl> declaredDatasets,
+            int varCounter) {
         this.metadataProvider = metadataProvider;
         this.warningCollector = warningCollector;
         this.declaredFunctions = createMap(declaredFunctions, FunctionDecl::getSignature);
         this.declaredViews = createMap(declaredViews, ViewDecl::getViewName);
+        this.declaredDatasets = createMap(declaredDatasets, DatasetDecl::getDatasetName);
         this.varCounter = new Counter(varCounter);
     }
 
@@ -100,6 +104,10 @@ public class LangRewritingContext {
 
     public Map<DatasetFullyQualifiedName, ViewDecl> getDeclaredViews() {
         return declaredViews;
+    }
+
+    public Map<DatasetFullyQualifiedName, DatasetDecl> getDeclaredDatasets() {
+        return declaredDatasets;
     }
 
     private static <K, V> Map<K, V> createMap(List<V> values, java.util.function.Function<V, K> keyMapper) {

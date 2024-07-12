@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.lang.common.base.AbstractStatement;
@@ -42,7 +43,7 @@ import org.apache.hyracks.util.StorageUtil;
 public class DatasetDecl extends AbstractStatement {
 
     protected final Identifier name;
-    protected final Namespace namespace;
+    protected Namespace namespace;
     protected final TypeExpression itemType;
     protected final TypeExpression metaItemType;
     protected final DatasetType datasetType;
@@ -71,6 +72,11 @@ public class DatasetDecl extends AbstractStatement {
         this.datasetType = datasetType;
         this.datasetDetailsDecl = idd;
         this.query = query;
+    }
+
+    public DatasetFullyQualifiedName getDatasetName() {
+        return new DatasetFullyQualifiedName(namespace.getDatabaseName(), namespace.getDataverseName(),
+                name.getValue());
     }
 
     public boolean getIfNotExists() {
@@ -103,6 +109,10 @@ public class DatasetDecl extends AbstractStatement {
 
     public Query getQuery() {
         return query;
+    }
+
+    public void setNamespace(Namespace namespace) {
+        this.namespace = namespace;
     }
 
     public String getNodegroupName() {

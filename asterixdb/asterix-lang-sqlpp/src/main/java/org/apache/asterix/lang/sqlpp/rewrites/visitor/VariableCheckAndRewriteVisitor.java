@@ -42,6 +42,7 @@ import org.apache.asterix.lang.common.expression.CallExpr;
 import org.apache.asterix.lang.common.expression.FieldAccessor;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.ViewDecl;
 import org.apache.asterix.lang.common.struct.Identifier;
 import org.apache.asterix.lang.common.struct.VarIdentifier;
@@ -187,12 +188,19 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         String resolvedDatasetName;
         boolean viaSynonym, isView;
         ViewDecl viewDecl = findDeclaredView(databaseName, dataverseName, datasetName);
+        DatasetDecl datasetDecl = findDeclaredDataset(databaseName, dataverseName, datasetName);
         if (viewDecl != null) {
             resolvedDatabaseName = viewDecl.getViewName().getDatabaseName();
             resolvedDataverseName = viewDecl.getViewName().getDataverseName();
             resolvedDatasetName = viewDecl.getViewName().getDatasetName();
             viaSynonym = false;
             isView = true;
+        } else if (datasetDecl != null) {
+            resolvedDatabaseName = databaseName;
+            resolvedDataverseName = dataverseName;
+            resolvedDatasetName = datasetName;
+            viaSynonym = false;
+            isView = false;
         } else {
             Pair<Dataset, Boolean> p = findDataset(databaseName, dataverseName, datasetName, true, sourceLoc);
             if (p == null) {
@@ -303,6 +311,12 @@ public class VariableCheckAndRewriteVisitor extends AbstractSqlppExpressionScopi
         Map<DatasetFullyQualifiedName, ViewDecl> declaredViews = context.getDeclaredViews();
         return declaredViews.isEmpty() ? null
                 : declaredViews.get(new DatasetFullyQualifiedName(databaseName, dataverseName, viewName));
+    }
+
+    private DatasetDecl findDeclaredDataset(String databaseName, DataverseName dataverseName, String datasetName) {
+        Map<DatasetFullyQualifiedName, DatasetDecl> declaredDatasets = context.getDeclaredDatasets();
+        return declaredDatasets.isEmpty() ? null
+                : declaredDatasets.get(new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName));
     }
 
     @Override

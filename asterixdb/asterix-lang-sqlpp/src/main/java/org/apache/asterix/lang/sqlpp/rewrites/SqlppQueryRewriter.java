@@ -48,6 +48,7 @@ import org.apache.asterix.lang.common.expression.LiteralExpr;
 import org.apache.asterix.lang.common.expression.VariableExpr;
 import org.apache.asterix.lang.common.literal.MissingLiteral;
 import org.apache.asterix.lang.common.rewrites.LangRewritingContext;
+import org.apache.asterix.lang.common.statement.DatasetDecl;
 import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.Query;
 import org.apache.asterix.lang.common.statement.ViewDecl;
@@ -204,6 +205,8 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         // Load all the accessed datasets
         loadAccessedDatasets();
 
+        rewriteDatasetQueryExpression();
+
         // Inlines functions and views
         loadAndInlineUdfsAndViews();
 
@@ -345,6 +348,17 @@ public class SqlppQueryRewriter implements IQueryRewriter {
         rewriteTopExpr(visitor, null);
     }
 
+    protected void rewriteDatasetQueryExpression() throws CompilationException {
+        Map<DatasetFullyQualifiedName, DatasetDecl> ds = context.getDeclaredDatasets();
+        if (ds != null && ds.size() > 0) {
+            DatasetFullyQualifiedName datasetName = ds.keySet().iterator().next();
+            if (ds.get(datasetName) != null) {
+                Expression normBody = fetchDatasetDecl(ds.get(datasetName));
+                ds.get(datasetName).getQuery().setBody(normBody);
+            }
+        }
+    }
+
     protected void loadAndInlineUdfsAndViews() throws CompilationException {
         Pair<Map<FunctionSignature, FunctionDecl>, Map<DatasetFullyQualifiedName, ViewDecl>> udfAndViewDecls =
                 loadUdfsAndViews(topStatement);
@@ -453,6 +467,7 @@ public class SqlppQueryRewriter implements IQueryRewriter {
                                 fd.getNormalizedFuncBody().accept(callVisitor, null);
                             }
                         }
+
                     }
                     break;
                 case WINDOW_EXPRESSION:
@@ -489,6 +504,16 @@ public class SqlppQueryRewriter implements IQueryRewriter {
             fd.setNormalizedFuncBody(normBody);
         }
         return fd;
+    }
+
+    private Expression fetchDatasetDecl(DatasetDecl ds) throws CompilationException {
+        String databaseName = ds.getNamespace().getDatabaseName();
+        DataverseName dataverseName = ds.getNamespace().getDataverseName();
+        String datasetName = ds.getName().toString();
+        Expression expression = rewriteFunctionOrViewBody(databaseName, dataverseName,
+                new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName), ds.getQuery().getBody(),
+                Collections.emptyList(), false, ds.getSourceLocation());
+        return expression;
     }
 
     private ViewDecl fetchViewDecl(DatasetFullyQualifiedName viewName, SourceLocation sourceLoc)
@@ -617,13 +642,24 @@ public class SqlppQueryRewriter implements IQueryRewriter {
     @Override
     public Query createViewAccessorQuery(ViewDecl viewDecl, INamespaceResolver namespaceResolver) {
         boolean usingDatabase = namespaceResolver.isUsingDatabase();
-        // dataverse_name.view_name
         String databaseName = viewDecl.getViewName().getDatabaseName();
         DataverseName dataverseName = viewDecl.getViewName().getDataverseName();
         String viewName = viewDecl.getViewName().getDatasetName();
         Expression vAccessExpr = createDatasetAccessExpression(databaseName, dataverseName, viewName,
                 viewDecl.getSourceLocation(), usingDatabase);
         return ExpressionUtils.createWrappedQuery(vAccessExpr, viewDecl.getSourceLocation());
+    }
+
+    @Override
+    public Query createDatasetAccessorQuery(DatasetDecl datasetDecl, INamespaceResolver namespaceResolver,
+            Namespace namespace) {
+        boolean usingDatabase = namespaceResolver.isUsingDatabase();
+        String databaseName = namespace.getDatabaseName();
+        DataverseName dataverseName = namespace.getDataverseName();
+        String datasetName = datasetDecl.getName().toString();
+        Expression datasetAccessExpression = createDatasetAccessExpression(databaseName, dataverseName, datasetName,
+                datasetDecl.getSourceLocation(), usingDatabase);
+        return ExpressionUtils.createWrappedQuery(datasetAccessExpression, datasetDecl.getSourceLocation());
     }
 
     private static Expression createDatasetAccessExpression(String databaseName, DataverseName dataverseName,

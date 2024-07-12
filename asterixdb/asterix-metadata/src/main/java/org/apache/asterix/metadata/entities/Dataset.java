@@ -19,6 +19,8 @@
 
 package org.apache.asterix.metadata.entities;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +44,7 @@ import org.apache.asterix.common.ioopcallbacks.LSMIndexIOOperationCallbackFactor
 import org.apache.asterix.common.ioopcallbacks.LSMIndexPageWriteCallbackFactory;
 import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.DependencyFullyQualifiedName;
 import org.apache.asterix.common.metadata.IDataset;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
@@ -882,4 +885,23 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
     public ILSMTupleFilterCallbackFactory getTupleFilterCallbackFactory() {
         return NoOpLSMTupleFilterCallbackFactory.INSTANCE;
     }
+
+    public static List<DependencyKind> DEPENDENCIES_SCHEMA =
+            Arrays.asList(DependencyKind.DATASET, DependencyKind.FUNCTION, DependencyKind.TYPE, DependencyKind.SYNONYM);
+
+    public static List<List<DependencyFullyQualifiedName>> createDependencies(
+            List<DependencyFullyQualifiedName> datasetDependencies,
+            List<DependencyFullyQualifiedName> functionDependencies,
+            List<DependencyFullyQualifiedName> typeDependencies,
+            List<DependencyFullyQualifiedName> synonymDependencies) {
+        List<List<DependencyFullyQualifiedName>> depList = new ArrayList<>(DEPENDENCIES_SCHEMA.size());
+        depList.add(datasetDependencies);
+        depList.add(functionDependencies);
+        depList.add(typeDependencies);
+        if (!synonymDependencies.isEmpty()) {
+            depList.add(synonymDependencies);
+        }
+        return depList;
+    }
+
 }
