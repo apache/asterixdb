@@ -920,6 +920,13 @@
         <output-dir compare="Text">common/include-exclude/include-12</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/start-with-slash">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/start-with-slash</output-dir>
+        <expected-error>Prefix should not start with "/". Prefix: '/json-data/reviews/single-line/json'</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="bom">
     <test-case FilePath="external-dataset">

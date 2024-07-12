@@ -607,5 +607,12 @@
         <output-dir compare="Text">common/byte_order_mark/tsv</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/start-with-slash">
+        <placeholder name="adapter" value="AZUREBLOB" />
+        <output-dir compare="Text">common/start-with-slash</output-dir>
+        <expected-error>Prefix should not start with "/". Prefix: '/json-data/reviews/single-line/json'</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
 </test-suite>

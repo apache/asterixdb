@@ -764,11 +764,12 @@ public class ExternalDataUtils {
      *
      * @param configuration configuration
      */
-    public static String getPrefix(Map<String, String> configuration) {
-        return getPrefix(configuration, true);
+    public static String getPrefix(Map<String, String> configuration) throws CompilationException {
+        return getPrefix(configuration, true, true);
     }
 
-    public static String getPrefix(Map<String, String> configuration, boolean appendSlash) {
+    public static String getPrefix(Map<String, String> configuration, boolean appendSlash, boolean failSlashAtStart)
+            throws CompilationException {
         String root = configuration.get(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME);
         String definition = configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
         String subPath = configuration.get(ExternalDataConstants.SUBPATH);
@@ -776,6 +777,11 @@ public class ExternalDataUtils {
         boolean hasRoot = root != null;
         boolean hasDefinition = definition != null && !definition.isEmpty();
         boolean hasSubPath = subPath != null && !subPath.isEmpty();
+
+        // prefix cannot start with a "/"
+        if (failSlashAtStart && hasDefinition && definition.startsWith("/")) {
+            throw new CompilationException(ErrorCode.PREFIX_SHOULD_NOT_START_WITH_SLASH, definition);
+        }
 
         // if computed fields are used, subpath will not take effect. we can tell if we're using a computed field or
         // not by checking if the root matches the definition or not, they never match if computed fields are used

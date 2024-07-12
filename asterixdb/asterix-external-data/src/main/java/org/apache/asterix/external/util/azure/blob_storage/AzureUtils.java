@@ -476,7 +476,7 @@ public class AzureUtils {
             ListPathsOptions listOptions = new ListPathsOptions();
             boolean recursive = Boolean.parseBoolean(configuration.get(RECURSIVE_FIELD_NAME));
             listOptions.setRecursive(recursive);
-            listOptions.setPath(getPrefix(configuration, false));
+            listOptions.setPath(getPrefix(configuration, false, false));
             PagedIterable<PathItem> pathItems = fileSystemClient.listPaths(listOptions, null);
 
             // Collect the paths to files only
