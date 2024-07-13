@@ -164,12 +164,14 @@ import org.apache.hyracks.data.std.primitive.ShortPointable;
 import org.apache.hyracks.dataflow.common.data.marshalling.ShortSerializerDeserializer;
 import org.apache.hyracks.dataflow.common.data.partition.FieldHashPartitionerFactory;
 import org.apache.hyracks.dataflow.std.result.ResultWriterOperatorDescriptor;
+import org.apache.hyracks.storage.am.btree.dataflow.BTreePartitionSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.btree.dataflow.BTreeSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.api.IModificationOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.api.ITupleFilterFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
+import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeBatchPointSearchOperatorDescriptor;
 import org.apache.hyracks.storage.am.lsm.invertedindex.dataflow.BinaryTokenizerOperatorDescriptor;
@@ -596,6 +598,15 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         return new Triple<>(feedIngestor, partitionConstraint, adapterFactory);
     }
 
+    public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBtreePartitionSearchRuntime(
+            JobSpecification jobSpec, IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context,
+            Dataset dataset, ITupleFilterFactory tupleFilterFactory, long outputLimit, int partitionNum)
+            throws AlgebricksException {
+        return getBtreeSearchRuntime(jobSpec, opSchema, typeEnv, context, true, false, null, dataset,
+                dataset.getDatasetName(), null, null, true, true, false, null, null, null, tupleFilterFactory,
+                outputLimit, false, false, DefaultTupleProjectorFactory.INSTANCE, false, partitionNum);
+    }
+
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBtreeSearchRuntime(JobSpecification jobSpec,
             IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, boolean retainInput,
             boolean retainMissing, IMissingWriterFactory nonMatchWriterFactory, Dataset dataset, String indexName,
@@ -604,6 +615,21 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory, long outputLimit,
             boolean isIndexOnlyPlan, boolean isPrimaryIndexPointSearch, ITupleProjectorFactory tupleProjectorFactory,
             boolean partitionInputTuples) throws AlgebricksException {
+        return getBtreeSearchRuntime(jobSpec, opSchema, typeEnv, context, retainInput, retainMissing,
+                nonMatchWriterFactory, dataset, indexName, lowKeyFields, highKeyFields, lowKeyInclusive,
+                highKeyInclusive, propagateFilter, nonFilterWriterFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
+                tupleFilterFactory, outputLimit, isIndexOnlyPlan, isPrimaryIndexPointSearch, tupleProjectorFactory,
+                partitionInputTuples, -1);
+    }
+
+    private Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> getBtreeSearchRuntime(JobSpecification jobSpec,
+            IOperatorSchema opSchema, IVariableTypeEnvironment typeEnv, JobGenContext context, boolean retainInput,
+            boolean retainMissing, IMissingWriterFactory nonMatchWriterFactory, Dataset dataset, String indexName,
+            int[] lowKeyFields, int[] highKeyFields, boolean lowKeyInclusive, boolean highKeyInclusive,
+            boolean propagateFilter, IMissingWriterFactory nonFilterWriterFactory, int[] minFilterFieldIndexes,
+            int[] maxFilterFieldIndexes, ITupleFilterFactory tupleFilterFactory, long outputLimit,
+            boolean isIndexOnlyPlan, boolean isPrimaryIndexPointSearch, ITupleProjectorFactory tupleProjectorFactory,
+            boolean partitionInputTuples, int targetPartition) throws AlgebricksException {
         boolean isSecondary = true;
         Index primaryIndex = MetadataManager.INSTANCE.getIndex(mdTxnCtx, dataset.getDatabaseName(),
                 dataset.getDataverseName(), dataset.getDatasetName(), dataset.getDatasetName());
@@ -678,12 +704,19 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                             retainMissing, nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
                             maxFilterFieldIndexes, tupleFilterFactory, outputLimit, tupleProjectorFactory,
                             tuplePartitionerFactory, partitionsMap)
-                    : new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields, highKeyFields,
-                            lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput, retainMissing,
-                            nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes, maxFilterFieldIndexes,
-                            propagateFilter, nonFilterWriterFactory, tupleFilterFactory, outputLimit,
-                            proceedIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan,
-                            tupleProjectorFactory, tuplePartitionerFactory, partitionsMap);
+                    : targetPartition < 0 ? new BTreeSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
+                            highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
+                            retainMissing, nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
+                            maxFilterFieldIndexes, propagateFilter, nonFilterWriterFactory, tupleFilterFactory,
+                            outputLimit, proceedIndexOnlyPlan, failValueForIndexOnlyPlan, successValueForIndexOnlyPlan,
+                            tupleProjectorFactory, tuplePartitionerFactory, partitionsMap)
+                            : new BTreePartitionSearchOperatorDescriptor(jobSpec, outputRecDesc, lowKeyFields,
+                                    highKeyFields, lowKeyInclusive, highKeyInclusive, indexHelperFactory, retainInput,
+                                    retainMissing, nonMatchWriterFactory, searchCallbackFactory, minFilterFieldIndexes,
+                                    maxFilterFieldIndexes, propagateFilter, nonFilterWriterFactory, tupleFilterFactory,
+                                    outputLimit, proceedIndexOnlyPlan, failValueForIndexOnlyPlan,
+                                    successValueForIndexOnlyPlan, tupleProjectorFactory, tuplePartitionerFactory,
+                                    partitionsMap, targetPartition);
         } else {
             btreeSearchOp = null;
         }

@@ -27,6 +27,7 @@ import org.apache.asterix.app.function.FeedRewriter;
 import org.apache.asterix.app.function.JobSummariesRewriter;
 import org.apache.asterix.app.function.PingRewriter;
 import org.apache.asterix.app.function.QueryIndexRewriter;
+import org.apache.asterix.app.function.QueryPartitionRewriter;
 import org.apache.asterix.app.function.StorageComponentsRewriter;
 import org.apache.asterix.app.function.TPCDSAllTablesDataGeneratorRewriter;
 import org.apache.asterix.app.function.TPCDSSingleTableDataGeneratorRewriter;
@@ -100,6 +101,11 @@ public class MetadataBuiltinFunctions {
         BuiltinFunctions.addFunction(QueryIndexRewriter.QUERY_INDEX, QueryIndexRewriter.INSTANCE, true);
         BuiltinFunctions.addUnnestFun(QueryIndexRewriter.QUERY_INDEX, false);
         BuiltinFunctions.addDatasourceFunction(QueryIndexRewriter.QUERY_INDEX, QueryIndexRewriter.INSTANCE);
+        // Query index partition function
+        BuiltinFunctions.addPrivateFunction(QueryPartitionRewriter.QUERY_PARTITION, QueryPartitionRewriter.INSTANCE,
+                true);
+        BuiltinFunctions.addUnnestFun(QueryPartitionRewriter.QUERY_PARTITION, false);
+        BuiltinFunctions.addDatasourceFunction(QueryPartitionRewriter.QUERY_PARTITION, QueryPartitionRewriter.INSTANCE);
     }
 
     private MetadataBuiltinFunctions() {

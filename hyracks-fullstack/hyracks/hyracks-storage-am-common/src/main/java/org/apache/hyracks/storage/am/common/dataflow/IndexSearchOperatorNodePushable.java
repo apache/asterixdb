@@ -120,7 +120,7 @@ public abstract class IndexSearchOperatorNodePushable extends AbstractUnaryInput
     protected final ITupleProjector tupleProjector;
     protected final ITuplePartitioner tuplePartitioner;
     protected final int[] partitions;
-    private final Int2IntMap storagePartitionId2Index = new Int2IntOpenHashMap();
+    protected final Int2IntMap storagePartitionId2Index = new Int2IntOpenHashMap();
 
     public IndexSearchOperatorNodePushable(IHyracksTaskContext ctx, RecordDescriptor inputRecDesc, int partition,
             int[] minFilterFieldIndexes, int[] maxFilterFieldIndexes, IIndexDataflowHelperFactory indexHelperFactory,
