@@ -53,10 +53,7 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
 
     @Override
     public ITuplePartitionComputer createPartitioner(IHyracksTaskContext ctx) {
-        final IBinaryHashFunction[] hashFunctions = new IBinaryHashFunction[hashFunctionFactories.length];
-        for (int i = 0; i < hashFunctionFactories.length; ++i) {
-            hashFunctions[i] = hashFunctionFactories[i].createBinaryHashFunction();
-        }
+        final IBinaryHashFunction[] hashFunctions = getBinaryHashFunctions();
         if (partitionsMap == null) {
             return new FieldHashPartitionComputer(hashFields, hashFunctions, null);
         } else {
@@ -68,5 +65,18 @@ public class FieldHashPartitionComputerFactory implements ITuplePartitionCompute
             }
             return new FieldHashPartitionComputer(hashFields, hashFunctions, storagePartition2Compute);
         }
+    }
+
+    @Override
+    public IBinaryHashFunction[] getBinaryHashFunctions() {
+        final IBinaryHashFunction[] hashFunctions = new IBinaryHashFunction[hashFunctionFactories.length];
+        for (int i = 0; i < hashFunctionFactories.length; ++i) {
+            hashFunctions[i] = hashFunctionFactories[i].createBinaryHashFunction();
+        }
+        return hashFunctions;
+    }
+
+    public int[][] getPartitionsMap() {
+        return partitionsMap;
     }
 }

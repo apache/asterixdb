@@ -21,7 +21,13 @@ package org.apache.hyracks.api.dataflow.value;
 import java.io.Serializable;
 
 import org.apache.hyracks.api.context.IHyracksTaskContext;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public interface ITuplePartitionComputerFactory extends Serializable {
-    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext);
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext)
+            throws HyracksDataException;
+
+    default IBinaryHashFunction[] getBinaryHashFunctions() {
+        throw new UnsupportedOperationException();
+    }
 }

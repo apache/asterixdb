@@ -36,7 +36,8 @@ public class RepartitionComputerFactory implements ITuplePartitionComputerFactor
     }
 
     @Override
-    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext) {
+    public ITuplePartitionComputer createPartitioner(IHyracksTaskContext hyracksTaskContext)
+            throws HyracksDataException {
         return new ITuplePartitionComputer() {
             private ITuplePartitionComputer delegate = delegateFactory.createPartitioner(hyracksTaskContext);
 

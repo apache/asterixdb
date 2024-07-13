@@ -41,4 +41,9 @@ public interface ITuplePartitionComputer {
      */
     public default void initialize() throws HyracksDataException {
     }
+
+    default int partition(IFrameTupleAccessor accessor, int tIndex, int evaluatorIndex, int nParts)
+            throws HyracksDataException {
+        throw new UnsupportedOperationException();
+    }
 }

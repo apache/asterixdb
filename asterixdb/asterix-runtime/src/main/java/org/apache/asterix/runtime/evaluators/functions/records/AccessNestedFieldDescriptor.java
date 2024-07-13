@@ -16,60 +16,53 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.evaluators.functions;
+package org.apache.asterix.runtime.evaluators.functions.records;
+
+import java.util.List;
 
 import org.apache.asterix.common.annotations.MissingNullInOutFunction;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.functions.IFunctionTypeInferer;
-import org.apache.asterix.om.types.IAType;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.functions.FunctionTypeInferers;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.runtime.base.IScalarEvaluatorFactory;
 
-/**
- * This runtime function casts an input ADM instance of a certain type into the form
- * that confirms a required type.
- */
-
 @MissingNullInOutFunction
-public class CastTypeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+public class AccessNestedFieldDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = new IFunctionDescriptorFactory() {
         @Override
         public IFunctionDescriptor createFunctionDescriptor() {
-            return new CastTypeDescriptor();
+            return new AccessNestedFieldDescriptor();
         }
 
         @Override
         public IFunctionTypeInferer createFunctionTypeInferer() {
-            return new FunctionTypeInferers.CastTypeInferer();
+            return new FunctionTypeInferers.FieldAccessNestedTypeInferer();
         }
     };
 
     private static final long serialVersionUID = 1L;
-    private IAType reqType;
-    private IAType inputType;
-
-    private CastTypeDescriptor() {
-    }
+    private ARecordType recType;
+    private List<String> fldName;
 
     @Override
     public void setImmutableStates(Object... states) {
-        reqType = (IAType) states[0];
-        inputType = (IAType) states[1];
+        this.recType = (ARecordType) states[0];
+        this.fldName = (List<String>) states[1];
     }
 
     @Override
     public FunctionIdentifier getIdentifier() {
-        return BuiltinFunctions.CAST_TYPE;
+        return BuiltinFunctions.ACCESS_NESTED_FIELD;
     }
 
     @Override
-    public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
-        final IScalarEvaluatorFactory recordEvalFactory = args[0];
-        return new CastTypeEvaluatorFactory(recordEvalFactory, reqType, inputType, sourceLoc);
+    public IScalarEvaluatorFactory createEvaluatorFactory(IScalarEvaluatorFactory[] args) {
+        return new FieldAccessNestedEvalFactory(args[0], recType, fldName, sourceLoc, getIdentifier());
     }
 }

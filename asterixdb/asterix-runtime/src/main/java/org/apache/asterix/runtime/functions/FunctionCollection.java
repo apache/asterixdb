@@ -536,6 +536,8 @@ import org.apache.asterix.runtime.evaluators.functions.bitwise.BitTestWithoutAll
 import org.apache.asterix.runtime.evaluators.functions.bitwise.BitXorDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.bitwise.IsBitSetWithAllFlagDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.bitwise.IsBitSetWithoutAllFlagDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.AccessFieldDescriptor;
+import org.apache.asterix.runtime.evaluators.functions.records.AccessNestedFieldDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByIndexDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessByNameDescriptor;
 import org.apache.asterix.runtime.evaluators.functions.records.FieldAccessNestedDescriptor;
@@ -990,7 +992,9 @@ public final class FunctionCollection implements IFunctionCollection {
         // Element accessors.
         fc.add(FieldAccessByIndexDescriptor.FACTORY);
         fc.add(FieldAccessByNameDescriptor.FACTORY);
+        fc.add(AccessFieldDescriptor.FACTORY);
         fc.add(FieldAccessNestedDescriptor.FACTORY);
+        fc.add(AccessNestedFieldDescriptor.FACTORY);
 
         fc.add(AnyCollectionMemberDescriptor.FACTORY);
         fc.add(GetItemDescriptor.FACTORY);
