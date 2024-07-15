@@ -46,26 +46,15 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
             callback.beforeWrite(cPage);
             bufferCache.write(cPage, context);
             callback.afterWrite(cPage);
-        } catch (Exception e) {
-            handleWriteFailure(page, e);
-            LOGGER.warn("Failed to write page {}", cPage, e);
         } catch (Throwable th) {
             // Halt
-            LOGGER.error("FIFOLocalWriter has encountered a fatal error", th);
-            ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
+            LOGGER.error("Failed to write page {}", cPage, th);
+            ExitUtil.halt(ExitUtil.EC_IO_OPERATION_FAILED);
         } finally {
             bufferCache.returnPage(cPage);
             if (DEBUG) {
                 LOGGER.error("[FIFO] Return page: {}, {}", cPage.cpid, cPage.dpid);
             }
-        }
-    }
-
-    private void handleWriteFailure(ICachedPage page, Exception e) {
-        if (failureCallback != null) {
-            failureCallback.writeFailed(page, e);
-        } else {
-            LOGGER.error("an IO failure took place but the failure callback is not set", e);
         }
     }
 
