@@ -254,7 +254,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                     if (DEBUG) {
                         assert !cPage.confiscated.get();
                     }
-                    cPage.pinCount.incrementAndGet();
+                    cPage.incrementAndGetPinCount();
                     return cPage;
                 }
                 cPage = cPage.next;
@@ -311,7 +311,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
                 // pin count and try again
                 if (victim.dpid >= 0) {
-                    victim.pinCount.decrementAndGet();
+                    victim.decrementAndGetPinCount();
                     return null;
                 }
                 if (DEBUG) {
@@ -353,7 +353,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
                 // pin count and try again
                 if (victimHash != hash(victim.dpid)) {
-                    victim.pinCount.decrementAndGet();
+                    victim.decrementAndGetPinCount();
                     return null;
                 }
                 if (DEBUG) {
@@ -397,7 +397,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
                 // pin count and try again
                 if (victimHash != hash(victim.dpid)) {
-                    victim.pinCount.decrementAndGet();
+                    victim.decrementAndGetPinCount();
                     return null;
                 }
                 if (DEBUG && confiscatedPages.contains(victim)) {
@@ -436,8 +436,8 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
     private CachedPage findTargetInBucket(long dpid, CachedPage cPage, CachedPage victim) {
         while (cPage != null) {
             if (cPage.dpid == dpid) {
-                cPage.pinCount.incrementAndGet();
-                victim.pinCount.decrementAndGet();
+                cPage.incrementAndGetPinCount();
+                victim.decrementAndGetPinCount();
                 if (DEBUG) {
                     assert !cPage.confiscated.get();
                 }
@@ -610,7 +610,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         }
 
         context.onUnpin(page);
-        int pinCount = ((CachedPage) page).pinCount.decrementAndGet();
+        int pinCount = ((CachedPage) page).decrementAndGetPinCount();
         if (DEBUG && pinCount == 0) {
             pinnedPageOwner.remove(page);
         }
@@ -700,7 +700,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             }
             if (cleaned) {
                 cPage.dirty.set(false);
-                cPage.pinCount.decrementAndGet();
+                cPage.decrementAndGetPinCount();
                 // this increment of a volatile is OK as there is only one writer
                 cleanedCount++;
                 synchronized (cleanNotification) {
@@ -925,11 +925,11 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                     write(cPage, DefaultBufferCacheWriteContext.INSTANCE);
                 }
                 cPage.dirty.set(false);
-                pinCount = cPage.pinCount.decrementAndGet();
+                pinCount = cPage.decrementAndGetPinCount();
             } else {
                 pinCount = cPage.pinCount.get();
             }
-            if (pinCount > 0) {
+            if (pinCount != 0) {
                 throw new IllegalStateException("Page " + BufferedFileHandle.getFileId(cPage.dpid) + ":"
                         + BufferedFileHandle.getPageId(cPage.dpid)
                         + " is pinned and file is being closed. Pincount is: " + pinCount + " Page is confiscated: "
@@ -1081,7 +1081,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
             // pin count and try again
             if (victim.dpid >= 0) {
-                victim.pinCount.decrementAndGet();
+                victim.decrementAndGetPinCount();
                 return false;
             }
         } else {
@@ -1096,7 +1096,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 // now that we have the pin, ensure the victim's bucket hasn't changed, if it has, decrement
                 // pin count and try again
                 if (pageHash != hash(victim.dpid)) {
-                    victim.pinCount.decrementAndGet();
+                    victim.decrementAndGetPinCount();
                     return false;
                 }
                 // readjust the next pointers to remove this page from
@@ -1198,7 +1198,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             // now that we have the pin, ensure the victim's dpid still is < 0, if it's not, decrement
             // pin count and try again
             if (victim.dpid >= 0) {
-                victim.pinCount.decrementAndGet();
+                victim.decrementAndGetPinCount();
                 return null;
             }
             returnPage = victim;
@@ -1383,7 +1383,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
                 cPage.valid = true;
                 cPage.next = bucket.cachedPage;
                 bucket.cachedPage = cPage;
-                cPage.pinCount.decrementAndGet();
+                cPage.decrementAndGetPinCount();
                 if (DEBUG) {
                     assert cPage.pinCount.get() == 0;
                     assert cPage.latch.getReadLockCount() == 0;
@@ -1399,7 +1399,7 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
             }
         } else {
             cPage.invalidate();
-            cPage.pinCount.decrementAndGet();
+            cPage.decrementAndGetPinCount();
             if (DEBUG) {
                 assert cPage.pinCount.get() == 0;
                 assert cPage.latch.getReadLockCount() == 0;

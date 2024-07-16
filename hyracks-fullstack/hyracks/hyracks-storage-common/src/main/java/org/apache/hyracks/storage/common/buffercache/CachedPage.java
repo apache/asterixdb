@@ -62,7 +62,19 @@ public class CachedPage implements ICachedPageInternal {
     }
 
     public int incrementAndGetPinCount() {
-        return pinCount.incrementAndGet();
+        int count = pinCount.incrementAndGet();
+        if (count <= 0) {
+            throw new IllegalStateException("incrementAndGet: Invalid pinCount: " + count + " in page: " + this);
+        }
+        return count;
+    }
+
+    public int decrementAndGetPinCount() {
+        int count = pinCount.decrementAndGet();
+        if (count < 0) {
+            throw new IllegalStateException("decrementAndGet: Invalid pinCount: " + count + " in page: " + this);
+        }
+        return count;
     }
 
     public CachedPage(int cpid, ByteBuffer buffer, IPageReplacementStrategy pageReplacementStrategy) {
