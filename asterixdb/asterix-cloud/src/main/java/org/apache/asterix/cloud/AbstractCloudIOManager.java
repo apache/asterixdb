@@ -375,43 +375,14 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      */
     public final JsonNode listAsJson(ObjectMapper objectMapper) {
         ArrayNode objectsInfo = objectMapper.createArrayNode();
-        List<CloudFile> allFiles = new ArrayList<>();
         try {
-            // get cached files (read from disk)
-            for (IODeviceHandle deviceHandle : getIODevices()) {
-                FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
-
-                Set<FileReference> deviceFiles;
-                try {
-                    deviceFiles = localIoManager.list(storageRoot, IoUtil.NO_OP_FILTER);
-                } catch (Throwable th) {
-                    LOGGER.warn("Failed to get local storage files for root {}", storageRoot.getRelativePath(), th);
-                    continue;
-                }
-
-                for (FileReference fileReference : deviceFiles) {
-                    try {
-                        allFiles.add(CloudFile.of(fileReference.getRelativePath(), fileReference.getFile().length()));
-                    } catch (Throwable th) {
-                        LOGGER.warn("Encountered issue for local storage file {}", fileReference.getRelativePath(), th);
-                    }
-                }
-            }
-
-            // get uncached files from uncached files tracker
-            for (UncachedFileReference uncachedFile : getUncachedFiles()) {
-                allFiles.add(CloudFile.of(uncachedFile.getRelativePath(), uncachedFile.getSize()));
-            }
-
-            // combine all and sort
+            List<CloudFile> allFiles = list();
             allFiles.sort((x, y) -> String.CASE_INSENSITIVE_ORDER.compare(x.getPath(), y.getPath()));
-
             for (CloudFile file : allFiles) {
                 ObjectNode objectInfo = objectsInfo.addObject();
                 objectInfo.put("path", file.getPath());
                 objectInfo.put("size", file.getSize());
             }
-
             return objectsInfo;
         } catch (Throwable th) {
             LOGGER.warn("Failed to retrieve list of all cloud files", th);
@@ -420,6 +391,36 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             objectInfo.put("error", "Failed to retrieve list of all cloud files. " + th.getMessage());
             return objectsInfo;
         }
+    }
+
+    private List<CloudFile> list() {
+        List<CloudFile> allFiles = new ArrayList<>();
+        // get cached files (read from disk)
+        for (IODeviceHandle deviceHandle : getIODevices()) {
+            FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
+
+            Set<FileReference> deviceFiles;
+            try {
+                deviceFiles = localIoManager.list(storageRoot, IoUtil.NO_OP_FILTER);
+            } catch (Throwable th) {
+                LOGGER.warn("Failed to get local storage files for root {}", storageRoot.getRelativePath(), th);
+                continue;
+            }
+
+            for (FileReference fileReference : deviceFiles) {
+                try {
+                    allFiles.add(CloudFile.of(fileReference.getRelativePath(), fileReference.getFile().length()));
+                } catch (Throwable th) {
+                    LOGGER.warn("Encountered issue for local storage file {}", fileReference.getRelativePath(), th);
+                }
+            }
+        }
+
+        // get uncached files from uncached files tracker
+        for (UncachedFileReference uncachedFile : getUncachedFiles()) {
+            allFiles.add(CloudFile.of(uncachedFile.getRelativePath(), uncachedFile.getSize()));
+        }
+        return allFiles;
     }
 
     /**
@@ -464,5 +465,13 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             throw new IllegalStateException("Misaligned positions in " + fileHandle.getFileReference()
                     + ", cloudOffset: " + cloudOffset + " != requestedWriteOffset: " + requestedWriteOffset);
         }
+    }
+
+    public long getTotalRemoteStorageSizeForNodeBytes() {
+        long size = 0;
+        for (CloudFile file : list()) {
+            size += file.getSize();
+        }
+        return size;
     }
 }
