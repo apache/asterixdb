@@ -90,7 +90,8 @@ public class FIFOJobQueue implements IJobQueue {
             // Cluster maximum capacity can change over time, thus we have to re-check if the job should be rejected
             // or not.
             try {
-                IJobCapacityController.JobSubmissionStatus status = jobCapacityController.allocate(job);
+                IJobCapacityController.JobSubmissionStatus status =
+                        jobCapacityController.allocate(job, run.getJobId(), run.getFlags());
                 // Checks if the job can be executed immediately.
                 if (status == IJobCapacityController.JobSubmissionStatus.EXECUTE) {
                     jobRuns.add(run);

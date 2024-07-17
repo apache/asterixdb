@@ -22,8 +22,13 @@ package org.apache.asterix.runtime.job.resource;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.EnumSet;
+
+import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.ClusterCapacity;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
@@ -36,31 +41,34 @@ import org.junit.Test;
 
 public class JobCapacityControllerTest {
 
+    private static final EnumSet<JobFlag> none = EnumSet.noneOf(JobFlag.class);
+
     @Test
     public void test() throws HyracksException {
+        JobId jobId = new JobId(0);
         IResourceManager resourceManager = makeResourceManagerWithCapacity(4294967296L, 33);
-        JobCapacityController capacityController = new JobCapacityController(resourceManager);
+        JobCapacityController capacityController = new JobCapacityController(resourceManager, makeCCApp());
 
         // Verifies the correctness of the allocate method.
-        Assert.assertTrue(capacityController.allocate(
-                makeJobWithRequiredCapacity(4294967296L, 16)) == IJobCapacityController.JobSubmissionStatus.EXECUTE);
-        Assert.assertTrue(capacityController.allocate(
-                makeJobWithRequiredCapacity(2147483648L, 16)) == IJobCapacityController.JobSubmissionStatus.QUEUE);
-        Assert.assertTrue(capacityController.allocate(
-                makeJobWithRequiredCapacity(2147483648L, 32)) == IJobCapacityController.JobSubmissionStatus.QUEUE);
+        Assert.assertTrue(capacityController.allocate(makeJobWithRequiredCapacity(4294967296L, 16), jobId,
+                none) == IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        Assert.assertTrue(capacityController.allocate(makeJobWithRequiredCapacity(2147483648L, 16), jobId,
+                none) == IJobCapacityController.JobSubmissionStatus.QUEUE);
+        Assert.assertTrue(capacityController.allocate(makeJobWithRequiredCapacity(2147483648L, 32), jobId,
+                none) == IJobCapacityController.JobSubmissionStatus.QUEUE);
 
         boolean exceedCapacity = false;
         try {
-            capacityController.allocate(makeJobWithRequiredCapacity(2147483648L, 64));
+            capacityController.allocate(makeJobWithRequiredCapacity(2147483648L, 64), jobId, none);
         } catch (HyracksException e) {
             exceedCapacity = e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY);
         }
         Assert.assertTrue(exceedCapacity);
-        Assert.assertTrue(capacityController.allocate(
-                makeJobWithRequiredCapacity(4294967296L, 32)) == IJobCapacityController.JobSubmissionStatus.QUEUE);
+        Assert.assertTrue(capacityController.allocate(makeJobWithRequiredCapacity(4294967296L, 32), jobId,
+                none) == IJobCapacityController.JobSubmissionStatus.QUEUE);
         exceedCapacity = false;
         try {
-            capacityController.allocate(makeJobWithRequiredCapacity(4294967297L, 33));
+            capacityController.allocate(makeJobWithRequiredCapacity(4294967297L, 33), jobId, none);
         } catch (HyracksException e) {
             exceedCapacity = e.matches(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY);
         }
@@ -95,4 +103,9 @@ public class JobCapacityControllerTest {
         return clusterCapacity;
     }
 
+    private ICCApplication makeCCApp() {
+        ICCApplication ccApp = mock(ICCApplication.class);
+        when(ccApp.acceptingJobs(none)).thenReturn(true);
+        return ccApp;
+    }
 }

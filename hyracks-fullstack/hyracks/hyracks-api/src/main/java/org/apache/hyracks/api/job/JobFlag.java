@@ -20,5 +20,6 @@ package org.apache.hyracks.api.job;
 
 public enum JobFlag {
     PROFILE_RUNTIME,
-    ENFORCE_CONTRACT
+    ENFORCE_CONTRACT,
+    ENSURE_RUNNABLE
 }

@@ -305,7 +305,7 @@ public class RebalanceUtil {
     private static void createRebalanceTarget(Dataset target, MetadataProvider metadataProvider,
             IHyracksClientConnection hcc) throws Exception {
         JobSpecification spec = DatasetUtil.createDatasetJobSpec(target, metadataProvider);
-        JobUtils.runJob(hcc, spec, true);
+        JobUtils.forceRunJob(hcc, spec, true);
     }
 
     // Populates the data from the source dataset to the rebalance target dataset.
@@ -348,7 +348,7 @@ public class RebalanceUtil {
         spec.connect(new OneToOneConnectorDescriptor(spec), upsertOp, 0, commitOp, 0);
 
         // Executes the job.
-        JobUtils.runJob(hcc, spec, true);
+        JobUtils.forceRunJob(hcc, spec, true);
     }
 
     private static ITupleProjectorFactory createTupleProjectorFactory(Dataset source, MetadataProvider metadataProvider)
@@ -403,7 +403,7 @@ public class RebalanceUtil {
                     EnumSet.of(DropOption.IF_EXISTS, DropOption.WAIT_ON_IN_USE), null));
         }
         for (JobSpecification jobSpec : jobs) {
-            JobUtils.runJob(hcc, jobSpec, true);
+            JobUtils.forceRunJob(hcc, jobSpec, true);
         }
     }
 
@@ -427,12 +427,12 @@ public class RebalanceUtil {
             // Creates the secondary index.
             JobSpecification indexCreationJobSpec =
                     IndexUtil.buildSecondaryIndexCreationJobSpec(target, index, metadataProvider, null);
-            JobUtils.runJob(hcc, indexCreationJobSpec, true);
+            JobUtils.forceRunJob(hcc, indexCreationJobSpec, true);
 
             // Loads the secondary index.
             JobSpecification indexLoadingJobSpec =
                     IndexUtil.buildSecondaryIndexLoadingJobSpec(target, index, metadataProvider, null);
-            JobUtils.runJob(hcc, indexLoadingJobSpec, true);
+            JobUtils.forceRunJob(hcc, indexLoadingJobSpec, true);
         }
     }
 

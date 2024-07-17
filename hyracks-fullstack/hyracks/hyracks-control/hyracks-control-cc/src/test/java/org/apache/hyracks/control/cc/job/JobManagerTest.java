@@ -30,12 +30,14 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.JobStatus;
@@ -57,6 +59,8 @@ import org.mockito.Mockito;
 
 public class JobManagerTest {
 
+    private static final EnumSet<JobFlag> none = EnumSet.noneOf(JobFlag.class);
+
     private CCConfig ccConfig;
 
     @Before
@@ -77,7 +81,8 @@ public class JobManagerTest {
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
             // Submits the job.
             acceptedRuns.add(run);
@@ -93,7 +98,8 @@ public class JobManagerTest {
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                     .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
             // Submits the job.
@@ -109,7 +115,8 @@ public class JobManagerTest {
             JobRun run = mockJobRun(8193);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                     .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
             jobManager.add(run);
         } catch (HyracksException e) {
@@ -149,7 +156,7 @@ public class JobManagerTest {
             JobRun run = mockJobRun(1);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job))
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
                     .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
             jobManager.add(run);
         } catch (HyracksException e) {
@@ -172,14 +179,16 @@ public class JobManagerTest {
         JobRun run1 = mockJobRun(1);
         JobSpecification job1 = mock(JobSpecification.class);
         when(run1.getJobSpecification()).thenReturn(job1);
-        when(jobCapacityController.allocate(job1)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
+        when(jobCapacityController.allocate(job1, run1.getJobId(), none))
+                .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
         jobManager.add(run1);
 
         // A failure run.
         JobRun run2 = mockJobRun(2);
         JobSpecification job2 = mock(JobSpecification.class);
         when(run2.getJobSpecification()).thenReturn(job2);
-        when(jobCapacityController.allocate(job2)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+        when(jobCapacityController.allocate(job2, run2.getJobId(), none))
+                .thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                 .thenThrow(HyracksException.create(ErrorCode.JOB_REQUIREMENTS_EXCEED_CAPACITY, "1", "0"));
         jobManager.add(run2);
 
@@ -220,7 +229,8 @@ public class JobManagerTest {
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
             // Submits the job.
             acceptedRuns.add(run);
@@ -236,7 +246,8 @@ public class JobManagerTest {
             JobRun run = mockJobRun(id);
             JobSpecification job = mock(JobSpecification.class);
             when(run.getJobSpecification()).thenReturn(job);
-            when(jobCapacityController.allocate(job)).thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
+            when(jobCapacityController.allocate(job, run.getJobId(), none))
+                    .thenReturn(IJobCapacityController.JobSubmissionStatus.QUEUE)
                     .thenReturn(IJobCapacityController.JobSubmissionStatus.EXECUTE);
 
             // Submits the job.

@@ -123,7 +123,7 @@ public class JobManager implements IJobManager {
         JobSpecification job = jobRun.getJobSpecification();
         IJobCapacityController.JobSubmissionStatus status;
         try {
-            status = jobCapacityController.allocate(job);
+            status = jobCapacityController.allocate(job, jobRun.getJobId(), jobRun.getFlags());
             CCServiceContext serviceCtx = ccs.getContext();
             serviceCtx.notifyJobCreation(jobRun.getJobId(), job, status);
             switch (status) {

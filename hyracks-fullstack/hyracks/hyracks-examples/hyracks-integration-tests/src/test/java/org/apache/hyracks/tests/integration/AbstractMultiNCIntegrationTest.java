@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -247,7 +248,8 @@ public abstract class AbstractMultiNCIntegrationTest {
                 private long maxRAM = Runtime.getRuntime().maxMemory();
 
                 @Override
-                public JobSubmissionStatus allocate(JobSpecification job) throws HyracksException {
+                public JobSubmissionStatus allocate(JobSpecification job, JobId jobId, Set<JobFlag> jobFlags)
+                        throws HyracksException {
                     return maxRAM > job.getRequiredClusterCapacity().getAggregatedMemoryByteSize()
                             ? JobSubmissionStatus.EXECUTE : JobSubmissionStatus.QUEUE;
                 }

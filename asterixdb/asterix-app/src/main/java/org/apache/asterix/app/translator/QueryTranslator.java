@@ -302,7 +302,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected final APIFramework apiFramework;
     protected final IRewriterFactory rewriterFactory;
     protected final ExecutorService executorService;
-    protected final EnumSet<JobFlag> jobFlags = EnumSet.noneOf(JobFlag.class);
+    protected final EnumSet<JobFlag> jobFlags = EnumSet.of(JobFlag.ENSURE_RUNNABLE);
     protected final IMetadataLockManager lockManager;
     protected final IMetadataLockUtil lockUtil;
     protected final IResponsePrinter responsePrinter;
@@ -2435,7 +2435,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 requestParameters.isForceDropDataset());
                     }
                     for (JobSpecification jobSpec : jobsToExecute) {
-                        JobUtils.runJob(hcc, jobSpec, true);
+                        JobUtils.runJobIfActive(hcc, jobSpec, true);
                     }
                 } catch (Exception e2) {
                     // do no throw exception since still the metadata needs to be compensated.
@@ -4298,7 +4298,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     private static JobId runTrackJob(IHyracksClientConnection hcc, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags,
             String reqId, String clientCtxId, ClientRequest clientRequest) throws Exception {
         jobSpec.setRequestId(reqId);
-        JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
+        JobId jobId = JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, false);
         LOGGER.info("Created job {} for uuid:{}, clientContextID:{}", jobId, reqId, clientCtxId);
         clientRequest.setJobId(jobId);
         return jobId;
@@ -5407,12 +5407,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     private static void runJob(IHyracksClientConnection hcc, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags)
             throws Exception {
-        JobUtils.runJob(hcc, jobSpec, jobFlags, true);
+        JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, true);
     }
 
     private static List<IOperatorStats> runJob(IHyracksClientConnection hcc, JobSpecification jobSpec,
             EnumSet<JobFlag> jobFlags, List<String> statOperatorNames) throws Exception {
-        Pair<JobId, List<IOperatorStats>> p = JobUtils.runJob(hcc, jobSpec, jobFlags, true, statOperatorNames);
+        Pair<JobId, List<IOperatorStats>> p = JobUtils.runJobIfActive(hcc, jobSpec, jobFlags, true, statOperatorNames);
         return p.second;
     }
 

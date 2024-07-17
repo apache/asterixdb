@@ -107,7 +107,7 @@ public class FeedEventsListener extends ActiveEntityEventsListener {
             // TODO(Yingyi): currently we do not check IFrameWriter protocol violations for Feed jobs.
             // We will need to design general exception handling mechanism for feeds.
             setLocations(jobInfo.getRight());
-            return JobUtils.runJob(hcc, feedJob, false);
+            return JobUtils.runJobIfActive(hcc, feedJob, false);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }

@@ -156,6 +156,7 @@ public enum ErrorCode implements IError {
     ILLEGAL_STATE(126),
     INVALID_STRING_UNICODE(127),
     UNSUPPORTED_WRITE_SPEC(128),
+    JOB_REJECTED(129),
 
     // Compilation error codes.
     RULECOLLECTION_NOT_INSTANCE_OF_LIST(10000),

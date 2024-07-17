@@ -89,6 +89,66 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
     JobId startJob(JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
 
     /**
+     * Used to run a deployed Job Spec by id
+     *
+     * @param deployedJobSpecId
+     *            The id of the deployed job spec
+     * @param jobParameters
+     *            The serialized job parameters
+     * @throws Exception
+     */
+    JobId startJob(DeployedJobSpecId deployedJobSpecId, Map<byte[], byte[]> jobParameters) throws Exception;
+
+    /**
+     * Start the specified Job.
+     *
+     * @param acggf
+     *            Activity Cluster Graph Generator Factory
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception;
+
+    /**
+     * Start the specified Job.
+     *
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param jobSpec
+     *            Job Specification
+     * @throws Exception
+     */
+    JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec) throws Exception;
+
+    /**
+     * Start the specified Job.
+     *
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param jobSpec
+     *            Job Specification
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
+
+    /**
+     * Start the specified Job.
+     *
+     * @param deploymentId
+     *            the id of the specific deployment
+     * @param acggf
+     *            Activity Cluster Graph Generator Factory
+     * @param jobFlags
+     *            Flags
+     * @throws Exception
+     */
+    JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
+            throws Exception;
+
+    /**
      * Distribute the specified Job.
      *
      * @param jobSpec
@@ -116,28 +176,6 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      * @throws Exception
      */
     void undeployJobSpec(DeployedJobSpecId deployedJobSpecId) throws Exception;
-
-    /**
-     * Used to run a deployed Job Spec by id
-     *
-     * @param deployedJobSpecId
-     *            The id of the deployed job spec
-     * @param jobParameters
-     *            The serialized job parameters
-     * @throws Exception
-     */
-    JobId startJob(DeployedJobSpecId deployedJobSpecId, Map<byte[], byte[]> jobParameters) throws Exception;
-
-    /**
-     * Start the specified Job.
-     *
-     * @param acggf
-     *            Activity Cluster Graph Generator Factory
-     * @param jobFlags
-     *            Flags
-     * @throws Exception
-     */
-    JobId startJob(IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags) throws Exception;
 
     /**
      * Gets the IP Address and port for the ResultDirectoryService wrapped in NetworkAddress
@@ -194,44 +232,6 @@ public interface IHyracksClientConnection extends IClusterInfoCollector {
      *            the id for the deployment to be undeployed
      */
     void unDeployBinary(DeploymentId deploymentId) throws Exception;
-
-    /**
-     * Start the specified Job.
-     *
-     * @param deploymentId
-     *            the id of the specific deployment
-     * @param jobSpec
-     *            Job Specification
-     * @throws Exception
-     */
-    JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec) throws Exception;
-
-    /**
-     * Start the specified Job.
-     *
-     * @param deploymentId
-     *            the id of the specific deployment
-     * @param jobSpec
-     *            Job Specification
-     * @param jobFlags
-     *            Flags
-     * @throws Exception
-     */
-    JobId startJob(DeploymentId deploymentId, JobSpecification jobSpec, EnumSet<JobFlag> jobFlags) throws Exception;
-
-    /**
-     * Start the specified Job.
-     *
-     * @param deploymentId
-     *            the id of the specific deployment
-     * @param acggf
-     *            Activity Cluster Graph Generator Factory
-     * @param jobFlags
-     *            Flags
-     * @throws Exception
-     */
-    JobId startJob(DeploymentId deploymentId, IActivityClusterGraphGeneratorFactory acggf, EnumSet<JobFlag> jobFlags)
-            throws Exception;
 
     /**
      * Shuts down all NCs and then the CC.

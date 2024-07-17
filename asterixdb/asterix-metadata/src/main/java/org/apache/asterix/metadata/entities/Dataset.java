@@ -403,7 +403,7 @@ public class Dataset implements IMetadataEntity<Dataset>, IDataset {
 
             // #. run the jobs
             for (JobSpecification jobSpec : jobsToExecute) {
-                JobUtils.runJob(hcc, jobSpec, true);
+                JobUtils.runJobIfActive(hcc, jobSpec, true);
             }
 
             mdTxnCtx.setValue(MetadataManager.INSTANCE.beginTransaction());

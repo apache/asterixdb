@@ -19,7 +19,11 @@
 
 package org.apache.hyracks.api.job.resource;
 
+import java.util.Set;
+
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 /**
@@ -41,13 +45,14 @@ public interface IJobCapacityController {
      * Allocates required cluster capacity for a job.
      *
      * @param job,
-     *            the job specification.
-     * @return EXECUTE, if the job can be executed immediately;
-     *         QUEUE, if the job cannot be executed
+     *         the job specification.
+     * @param jobId
+     *         the job id.
+     * @return EXECUTE, if the job can be executed immediately; QUEUE, if the job cannot be executed
      * @throws HyracksException
-     *             if the job's capacity requirement exceeds the maximum capacity of the cluster.
+     *         if the job's capacity requirement exceeds the maximum capacity of the cluster.
      */
-    JobSubmissionStatus allocate(JobSpecification job) throws HyracksException;
+    JobSubmissionStatus allocate(JobSpecification job, JobId jobId, Set<JobFlag> jobFlags) throws HyracksException;
 
     /**
      * Releases cluster capacity for a job when it completes.

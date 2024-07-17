@@ -19,6 +19,10 @@
 
 package org.apache.hyracks.api.job.resource;
 
+import java.util.Set;
+
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 
 public class DefaultJobCapacityController implements IJobCapacityController {
@@ -34,7 +38,7 @@ public class DefaultJobCapacityController implements IJobCapacityController {
     }
 
     @Override
-    public JobSubmissionStatus allocate(JobSpecification job) {
+    public JobSubmissionStatus allocate(JobSpecification job, JobId jobId, Set<JobFlag> jobFlags) {
         return JobSubmissionStatus.EXECUTE;
     }
 

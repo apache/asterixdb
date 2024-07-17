@@ -75,7 +75,7 @@ public class FlushDatasetUtil {
 
         JobEventListenerFactory jobEventListenerFactory = new JobEventListenerFactory(txnId, true);
         spec.setJobletEventListenerFactory(jobEventListenerFactory);
-        JobUtils.runJob(hcc, spec, true);
+        JobUtils.runJobIfActive(hcc, spec, true);
     }
 
 }

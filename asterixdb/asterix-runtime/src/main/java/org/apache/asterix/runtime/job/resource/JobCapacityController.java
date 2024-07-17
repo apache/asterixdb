@@ -19,8 +19,14 @@
 
 package org.apache.asterix.runtime.job.resource;
 
+import java.util.Set;
+
+import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobFlag;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
@@ -36,13 +42,19 @@ public class JobCapacityController implements IJobCapacityController {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final IResourceManager resourceManager;
+    private final ICCApplication ccApp;
 
-    public JobCapacityController(IResourceManager resourceManager) {
+    public JobCapacityController(IResourceManager resourceManager, ICCApplication ccApp) {
         this.resourceManager = resourceManager;
+        this.ccApp = ccApp;
     }
 
     @Override
-    public JobSubmissionStatus allocate(JobSpecification job) throws HyracksException {
+    public JobSubmissionStatus allocate(JobSpecification job, JobId jobId, Set<JobFlag> jobFlags)
+            throws HyracksException {
+        if (!ccApp.acceptingJobs(jobFlags)) {
+            throw HyracksDataException.create(ErrorCode.JOB_REJECTED, job);
+        }
         IClusterCapacity requiredCapacity = job.getRequiredClusterCapacity();
         long reqAggregatedMemoryByteSize = requiredCapacity.getAggregatedMemoryByteSize();
         int reqAggregatedNumCores = requiredCapacity.getAggregatedCores();

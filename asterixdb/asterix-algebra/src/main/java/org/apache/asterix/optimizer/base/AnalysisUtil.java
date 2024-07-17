@@ -282,7 +282,7 @@ public class AnalysisUtil {
 
             JobSpecification jobSpec = compiler.createJob(appCtx, new JobEventListenerFactory(newTxnId, false));
 
-            JobId jobId = JobUtils.runJob(appCtx.getHcc(), jobSpec, true);
+            JobId jobId = JobUtils.runJobIfActive(appCtx.getHcc(), jobSpec, true);
 
             IResultSetReader resultSetReader = appCtx.getResultSet().createReader(jobId, resultSetId);
             FrameManager frameManager = new FrameManager(queryOptCtx.getPhysicalOptimizationConfig().getFrameSize());

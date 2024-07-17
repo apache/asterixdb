@@ -18,8 +18,11 @@
  */
 package org.apache.hyracks.api.application;
 
+import java.util.Set;
+
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.control.IGatekeeper;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.result.IJobResultCallback;
 
@@ -37,4 +40,9 @@ public interface ICCApplication extends IApplication {
      * @return the job result callback
      */
     IJobResultCallback getJobResultCallback();
+
+    /**
+     * @return true if the application is accepting jobs. False, otherwise.
+     */
+    boolean acceptingJobs(Set<JobFlag> jobFlags);
 }

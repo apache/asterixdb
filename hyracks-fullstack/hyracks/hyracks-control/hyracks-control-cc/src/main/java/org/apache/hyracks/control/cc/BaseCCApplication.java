@@ -19,6 +19,7 @@
 package org.apache.hyracks.control.cc;
 
 import java.util.Arrays;
+import java.util.Set;
 
 import org.apache.hyracks.api.application.ICCApplication;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -26,6 +27,7 @@ import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.config.IConfigManager;
 import org.apache.hyracks.api.config.Section;
 import org.apache.hyracks.api.control.IGatekeeper;
+import org.apache.hyracks.api.job.JobFlag;
 import org.apache.hyracks.api.job.resource.DefaultJobCapacityController;
 import org.apache.hyracks.api.job.resource.IJobCapacityController;
 import org.apache.hyracks.api.result.IJobResultCallback;
@@ -124,5 +126,10 @@ public class BaseCCApplication implements ICCApplication {
         return (jobId, resultJobRecord) -> {
             // no op
         };
+    }
+
+    @Override
+    public boolean acceptingJobs(Set<JobFlag> flags) {
+        return true;
     }
 }

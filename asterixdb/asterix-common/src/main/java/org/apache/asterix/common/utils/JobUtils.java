@@ -36,12 +36,28 @@ public class JobUtils {
         ADDED_PENDINGOP_RECORD_TO_METADATA
     }
 
-    public static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
+    public static JobId forceRunJob(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
             throws Exception {
         return runJob(hcc, spec, EnumSet.noneOf(JobFlag.class), waitForCompletion);
     }
 
-    public static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, EnumSet<JobFlag> jobFlags,
+    public static JobId runJobIfActive(IHyracksClientConnection hcc, JobSpecification spec, boolean waitForCompletion)
+            throws Exception {
+        return runJob(hcc, spec, EnumSet.of(JobFlag.ENSURE_RUNNABLE), waitForCompletion);
+    }
+
+    public static JobId runJobIfActive(IHyracksClientConnection hcc, JobSpecification spec, EnumSet<JobFlag> jobFlags,
+            boolean waitForCompletion) throws Exception {
+        if (jobFlags.contains(JobFlag.ENSURE_RUNNABLE)) {
+            return runJob(hcc, spec, jobFlags, waitForCompletion);
+        } else {
+            EnumSet<JobFlag> flags = EnumSet.copyOf(jobFlags);
+            flags.add(JobFlag.ENSURE_RUNNABLE);
+            return runJob(hcc, spec, flags, waitForCompletion);
+        }
+    }
+
+    private static JobId runJob(IHyracksClientConnection hcc, JobSpecification spec, EnumSet<JobFlag> jobFlags,
             boolean waitForCompletion) throws Exception {
         spec.setMaxReattempts(0);
         final JobId jobId = hcc.startJob(spec, jobFlags);
@@ -57,8 +73,12 @@ public class JobUtils {
         return jobId;
     }
 
-    public static Pair<JobId, List<IOperatorStats>> runJob(IHyracksClientConnection hcc, JobSpecification spec,
+    public static Pair<JobId, List<IOperatorStats>> runJobIfActive(IHyracksClientConnection hcc, JobSpecification spec,
             EnumSet<JobFlag> jobFlags, boolean waitForCompletion, List<String> statOperatorNames) throws Exception {
+        if (!jobFlags.contains(JobFlag.ENSURE_RUNNABLE)) {
+            jobFlags = EnumSet.copyOf(jobFlags);
+            jobFlags.add(JobFlag.ENSURE_RUNNABLE);
+        }
         spec.setMaxReattempts(0);
         final JobId jobId = hcc.startJob(spec, jobFlags);
         List<IOperatorStats> opStats = null;
