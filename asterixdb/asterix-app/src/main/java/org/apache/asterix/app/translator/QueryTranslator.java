@@ -3664,8 +3664,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     public JobSpecification handleInsertUpsertStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IResultSet resultSet, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters,
-            Map<String, IAObject> stmtParams, IStatementRewriter stmtRewriter) throws Exception {
+            ResultMetadata outMetadata, Stats stats, IRequestParameters reqParams, Map<String, IAObject> stmtParams,
+            IStatementRewriter stmtRewriter) throws Exception {
         InsertStatement stmtInsertUpsert = (InsertStatement) stmt;
         String datasetName = stmtInsertUpsert.getDatasetName();
         metadataProvider.validateDatabaseObjectName(stmtInsertUpsert.getDataverseName(), datasetName,
@@ -3702,10 +3702,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw e;
             }
         };
-
+        IRequestTracker requestTracker = appCtx.getRequestTracker();
+        ClientRequest clientRequest = (ClientRequest) requestTracker.get(reqParams.getRequestReference().getUuid());
         if (stmtInsertUpsert.getReturnExpression() != null) {
             deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
-                    requestParameters, false);
+                    reqParams, false, clientRequest);
         } else {
             locker.lock();
             try {
@@ -4702,13 +4703,13 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
         };
         deliverResult(hcc, resultSet, compiler, metadataProvider, locker, resultDelivery, outMetadata, stats,
-                requestParameters, true);
+                requestParameters, true, clientRequest);
     }
 
     private void deliverResult(IHyracksClientConnection hcc, IResultSet resultSet, IStatementCompiler compiler,
             MetadataProvider metadataProvider, IMetadataLocker locker, ResultDelivery resultDelivery,
-            ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters, boolean cancellable)
-            throws Exception {
+            ResultMetadata outMetadata, Stats stats, IRequestParameters requestParameters, boolean cancellable,
+            ClientRequest clientRequest) throws Exception {
         final ResultSetId resultSetId = metadataProvider.getResultSetId();
         switch (resultDelivery) {
             case ASYNC:
@@ -4724,7 +4725,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             case IMMEDIATE:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
                     final ResultReader resultReader = new ResultReader(resultSet, id, resultSetId);
-                    updateJobStats(id, stats, metadataProvider.getResultSetId());
+                    updateJobStats(id, stats, metadataProvider.getResultSetId(), clientRequest);
                     responsePrinter.addResultPrinter(new ResultsPrinter(appCtx, resultReader,
                             metadataProvider.findOutputRecordType(), stats, sessionOutput));
                     responsePrinter.printResults();
@@ -4732,7 +4733,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 break;
             case DEFERRED:
                 createAndRunJob(hcc, jobFlags, null, compiler, locker, resultDelivery, id -> {
-                    updateJobStats(id, stats, metadataProvider.getResultSetId());
+                    updateJobStats(id, stats, metadataProvider.getResultSetId(), clientRequest);
                     responsePrinter.addResultPrinter(
                             new ResultHandlePrinter(sessionOutput, new ResultHandle(id, resultSetId)));
                     responsePrinter.printResults();
@@ -4747,7 +4748,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    private void updateJobStats(JobId jobId, Stats stats, ResultSetId rsId) throws HyracksDataException {
+    private void updateJobStats(JobId jobId, Stats stats, ResultSetId rsId, ClientRequest clientRequest)
+            throws HyracksDataException {
         final ClusterControllerService controllerService =
                 (ClusterControllerService) appCtx.getServiceContext().getControllerService();
         org.apache.asterix.translator.ResultMetadata resultMetadata =
@@ -4757,6 +4759,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         if (jobFlags.contains(JobFlag.PROFILE_RUNTIME)) {
             stats.setJobProfile(resultMetadata.getJobProfile());
         }
+        clientRequest.setPlan(apiFramework.getExecutionPlans().getOptimizedLogicalPlan());
         stats.updateTotalWarningsCount(resultMetadata.getTotalWarningsCount());
         WarningUtil.mergeWarnings(resultMetadata.getWarnings(), warningCollector);
     }
@@ -4836,6 +4839,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             appCtx.getReceptionist().ensureSchedulable(schedulableRequest);
             // ensure request not cancelled before running job
             ensureNotCancelled(clientRequest);
+            jobSpec.setRequestId(clientRequest.getId());
             final JobId jobId = JobUtils.runJob(hcc, jobSpec, jobFlags, false);
             if (LOGGER.isInfoEnabled()) {
                 LOGGER.info("Created job {} for query uuid:{}, clientContextID:{}", jobId,
@@ -5208,7 +5212,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void trackRequest(IRequestParameters requestParameters) throws HyracksDataException {
         final IClientRequest clientRequest = appCtx.getReceptionist().requestReceived(requestParameters);
-        appCtx.getRequestTracker().track(clientRequest);
+        this.appCtx.getRequestTracker().track(clientRequest);
     }
 
     protected void validateStatements(IRequestParameters requestParameters)

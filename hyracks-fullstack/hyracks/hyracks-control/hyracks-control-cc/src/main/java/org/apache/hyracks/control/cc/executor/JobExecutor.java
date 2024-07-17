@@ -115,7 +115,7 @@ public class JobExecutor {
 
     public void startJob() throws HyracksException {
         startRunnableActivityClusters();
-        ccs.getContext().notifyJobStart(jobRun.getJobId());
+        ccs.getContext().notifyJobStart(jobRun.getJobId(), jobRun.getJobSpecification());
     }
 
     public void cancelJob(IResultCallback<Void> callback) throws HyracksException {

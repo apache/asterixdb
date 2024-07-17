@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -16,7 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
- -- param client_context_id=ensure_running_query
- -- polltimeoutsecs=15
-SELECT rqst.cancellable, rqst.jobId, rqst.state, rqst.uuid, rqst.jobStatus FROM active_requests() rqst
-WHERE rqst.clientContextID = 'sleep_async_query';
+package org.apache.asterix.api.http.server;
+
+import java.util.Collection;
+import java.util.concurrent.ConcurrentMap;
+
+import org.apache.asterix.common.api.IClientRequest;
+import org.apache.asterix.common.dataflow.ICcApplicationContext;
+
+public class CompletedRequestsServlet extends AbstractRequestsServlet {
+
+    public CompletedRequestsServlet(ConcurrentMap<String, Object> ctx, ICcApplicationContext appCtx, String... paths) {
+        super(ctx, appCtx, paths);
+    }
+
+    @Override
+    public Collection<IClientRequest> getRequests() {
+        return appCtx.getRequestTracker().getCompletedRequests();
+    }
+
+}

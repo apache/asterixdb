@@ -34,9 +34,9 @@ public interface IReceptionist {
     /**
      * Generates a {@link IClientRequest} based on the requests parameters
      *
-     * @param requestParameters
+     * @param requestParameters the request parameters
      * @return the client request
-     * @throws HyracksDataException
+     * @throws HyracksDataException HyracksDataException
      */
     IClientRequest requestReceived(ICommonRequestParameters requestParameters) throws HyracksDataException;
 

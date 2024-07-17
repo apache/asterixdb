@@ -21,6 +21,8 @@ package org.apache.asterix.runtime.utils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,20 +31,32 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IRequestTracker;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
-import org.apache.commons.collections4.queue.CircularFifoQueue;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.HyracksException;
+import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobSpecification;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
 
 public class RequestTracker implements IRequestTracker {
 
     private final Map<String, IClientRequest> runningRequests = new ConcurrentHashMap<>();
     private final Map<String, IClientRequest> clientIdRequests = new ConcurrentHashMap<>();
-    private final CircularFifoQueue<IClientRequest> completedRequests;
+    private final Map<String, IClientRequest> completedRequests;
     private final ICcApplicationContext ccAppCtx;
     private final AtomicLong numRequests;
 
     public RequestTracker(ICcApplicationContext ccAppCtx) {
         this.ccAppCtx = ccAppCtx;
-        completedRequests = new CircularFifoQueue<>(ccAppCtx.getExternalProperties().getRequestsArchiveSize());
+        int archiveSize = ccAppCtx.getExternalProperties().getRequestsArchiveSize();
+        completedRequests = new LinkedHashMap<>(archiveSize) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, IClientRequest> eldest) {
+                return size() > archiveSize;
+            }
+        };
         numRequests = new AtomicLong(0);
     }
 
@@ -94,7 +108,7 @@ public class RequestTracker implements IRequestTracker {
 
     @Override
     public synchronized Collection<IClientRequest> getCompletedRequests() {
-        return Collections.unmodifiableCollection(new ArrayList<>(completedRequests));
+        return Collections.unmodifiableCollection(new ArrayList<>(completedRequests.values()));
     }
 
     private void cancel(IClientRequest request) throws HyracksDataException {
@@ -114,10 +128,55 @@ public class RequestTracker implements IRequestTracker {
     }
 
     private synchronized void archive(IClientRequest request) {
-        completedRequests.add(request);
+        completedRequests.put(request.getId(), request);
     }
 
     public long getTotalNumberOfRequests() {
         return numRequests.get();
+    }
+
+    @Override
+    public void notifyJobCreation(JobId jobId, JobSpecification spec, IJobCapacityController.JobSubmissionStatus status)
+            throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest request = getRequest(requestId);
+            if (request != null) {
+                request.jobCreated(jobId, spec.getRequiredClusterCapacity(), status);
+            }
+        }
+    }
+
+    @Override
+    public void notifyJobStart(JobId jobId, JobSpecification spec) throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest request = getRequest(requestId);
+            if (request != null) {
+                request.jobStarted(jobId);
+            }
+        }
+    }
+
+    @Override
+    public void notifyJobFinish(JobId jobId, JobSpecification spec, JobStatus jobStatus, List<Exception> exceptions)
+            throws HyracksException {
+        String requestId = spec.getRequestId();
+        if (requestId != null) {
+            IClientRequest request = getRequest(requestId);
+            if (request != null) {
+                request.jobFinished(jobId, jobStatus, exceptions);
+            }
+        }
+    }
+
+    private IClientRequest getRequest(String requestId) {
+        IClientRequest clientRequest = runningRequests.get(requestId);
+        if (clientRequest != null) {
+            return clientRequest;
+        }
+        synchronized (this) {
+            return completedRequests.get(requestId);
+        }
     }
 }

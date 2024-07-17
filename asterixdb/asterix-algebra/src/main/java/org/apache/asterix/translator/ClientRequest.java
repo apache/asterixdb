@@ -18,11 +18,22 @@
  */
 package org.apache.asterix.translator;
 
+import static org.apache.hyracks.api.job.resource.IJobCapacityController.JobSubmissionStatus.QUEUE;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.asterix.common.api.ICommonRequestParameters;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.api.job.JobStatus;
+import org.apache.hyracks.api.job.resource.IJobCapacityController;
+import org.apache.hyracks.api.job.resource.IReadOnlyClusterCapacity;
+import org.apache.hyracks.api.util.ExceptionUtils;
+import org.apache.hyracks.util.LogRedactionUtil;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -32,18 +43,25 @@ public class ClientRequest extends BaseClientRequest {
     protected final Thread executor;
     protected final String statement;
     protected final String clientContextId;
+    protected final JobState jobState;
     protected volatile JobId jobId;
+    private volatile String plan; // can be null
 
     public ClientRequest(ICommonRequestParameters requestParameters) {
         super(requestParameters.getRequestReference());
         this.clientContextId = requestParameters.getClientContextId();
         this.statement = requestParameters.getStatement();
         this.executor = Thread.currentThread();
+        this.jobState = new JobState();
     }
 
     @Override
     public String getClientContextId() {
         return clientContextId;
+    }
+
+    public void setPlan(String plan) {
+        this.plan = plan;
     }
 
     public synchronized void setJobId(JobId jobId) {
@@ -76,11 +94,93 @@ public class ClientRequest extends BaseClientRequest {
     }
 
     @Override
-    protected ObjectNode asJson() {
+    public ObjectNode asJson() {
         ObjectNode json = super.asJson();
-        json.put("jobId", jobId != null ? jobId.toString() : null);
-        json.put("statement", statement);
+        return asJson(json, false);
+    }
+
+    @Override
+    public ObjectNode asRedactedJson() {
+        ObjectNode json = super.asRedactedJson();
+        return asJson(json, true);
+    }
+
+    private ObjectNode asJson(ObjectNode json, boolean redact) {
+        putJobDetails(json, redact);
+        json.put("statement", redact ? LogRedactionUtil.statement(statement) : statement);
         json.put("clientContextID", clientContextId);
+        if (plan != null) {
+            json.put("plan", redact ? LogRedactionUtil.userData(plan) : plan);
+        }
         return json;
+    }
+
+    @Override
+    public void jobCreated(JobId jobId, IReadOnlyClusterCapacity requiredClusterCapacity,
+            IJobCapacityController.JobSubmissionStatus status) {
+        jobState.createTime = System.currentTimeMillis();
+        jobState.status = status == QUEUE ? JobStatus.PENDING : JobStatus.RUNNING;
+        jobState.requiredCPUs = requiredClusterCapacity.getAggregatedCores();
+        jobState.requiredMemoryInBytes = requiredClusterCapacity.getAggregatedMemoryByteSize();
+    }
+
+    @Override
+    public void jobStarted(JobId jobId) {
+        jobState.startTime = System.currentTimeMillis();
+        jobState.status = JobStatus.RUNNING;
+    }
+
+    @Override
+    public void jobFinished(JobId jobId, JobStatus jobStatus, List<Exception> exceptions) {
+        jobState.endTime = System.currentTimeMillis();
+        jobState.status = jobStatus;
+        if (exceptions != null && !exceptions.isEmpty()) {
+            jobState.errorMsg = processException(exceptions.get(0));
+        }
+    }
+
+    protected String processException(Exception e) {
+        return ExceptionUtils.unwrap(e).getMessage();
+    }
+
+    private void putJobDetails(ObjectNode json, boolean redact) {
+        try {
+            json.put("jobId", jobId != null ? jobId.toString() : null);
+            putJobState(json, jobState, redact);
+        } catch (Throwable th) {
+            // ignore
+        }
+    }
+
+    private static void putJobState(ObjectNode json, JobState state, boolean redact) {
+        AMutableDateTime dateTime = new AMutableDateTime(0);
+        putTime(json, state.createTime, "jobCreateTime", dateTime);
+        putTime(json, state.startTime, "jobStartTime", dateTime);
+        putTime(json, state.endTime, "jobEndTime", dateTime);
+        long queueTime = (state.startTime > 0 ? state.startTime : System.currentTimeMillis()) - state.createTime;
+        json.put("jobQueueTime", TimeUnit.MILLISECONDS.toSeconds(queueTime));
+        json.put("jobStatus", String.valueOf(state.status));
+        json.put("jobRequiredCPUs", state.requiredCPUs);
+        json.put("jobRequiredMemory", state.requiredMemoryInBytes);
+        if (state.errorMsg != null) {
+            json.put("error", redact ? LogRedactionUtil.userData(state.errorMsg) : state.errorMsg);
+        }
+    }
+
+    private static void putTime(ObjectNode json, long time, String label, AMutableDateTime dateTime) {
+        if (time > 0) {
+            dateTime.setValue(time);
+            json.put(label, dateTime.toSimpleString());
+        }
+    }
+
+    static class JobState {
+        volatile long createTime;
+        volatile long startTime;
+        volatile long endTime;
+        volatile long requiredMemoryInBytes;
+        volatile int requiredCPUs;
+        volatile JobStatus status;
+        volatile String errorMsg;
     }
 }

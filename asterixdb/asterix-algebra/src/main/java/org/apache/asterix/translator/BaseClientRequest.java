@@ -20,7 +20,6 @@ package org.apache.asterix.translator;
 
 import org.apache.asterix.common.api.IClientRequest;
 import org.apache.asterix.common.api.IRequestReference;
-import org.apache.asterix.common.api.RequestReference;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.om.base.ADateTime;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -93,15 +92,25 @@ public abstract class BaseClientRequest implements IClientRequest {
         return JSONUtil.convertNodeUnchecked(asJson());
     }
 
-    protected ObjectNode asJson() {
+    @Override
+    public ObjectNode asJson() {
+        return putJson();
+    }
+
+    @Override
+    public ObjectNode asRedactedJson() {
+        return putJson();
+    }
+
+    private ObjectNode putJson() {
         ObjectNode json = JSONUtil.createObject();
         json.put("uuid", requestReference.getUuid());
         json.put("requestTime", new ADateTime(requestReference.getTime()).toSimpleString());
         json.put("elapsedTime", getElapsedTimeInSecs());
         json.put("node", requestReference.getNode());
         json.put("state", state.getLabel());
-        json.put("userAgent", ((RequestReference) requestReference).getUserAgent());
-        json.put("remoteAddr", ((RequestReference) requestReference).getRemoteAddr());
+        json.put("userAgent", requestReference.getUserAgent());
+        json.put("remoteAddr", requestReference.getRemoteAddr());
         json.put("cancellable", cancellable);
         return json;
     }

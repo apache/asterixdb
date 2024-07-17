@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.asterix.api.http.server.CcQueryCancellationServlet;
+import org.apache.asterix.api.http.server.ActiveRequestsServlet;
 import org.apache.asterix.api.http.server.ServletConstants;
 import org.apache.asterix.app.translator.RequestParameters;
 import org.apache.asterix.common.api.RequestReference;
@@ -35,8 +35,10 @@ import org.apache.asterix.common.config.ExternalProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.runtime.utils.RequestTracker;
 import org.apache.asterix.translator.ClientRequest;
+import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.job.JobId;
+import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.junit.Test;
@@ -57,8 +59,8 @@ public class QueryCancellationServletTest {
         RequestTracker tracker = new RequestTracker(appCtx);
         Mockito.when(appCtx.getRequestTracker()).thenReturn(tracker);
         // Creates a query cancellation servlet.
-        CcQueryCancellationServlet cancellationServlet =
-                new CcQueryCancellationServlet(new ConcurrentHashMap<>(), appCtx, new String[] { "/" });
+        ActiveRequestsServlet cancellationServlet =
+                new ActiveRequestsServlet(new ConcurrentHashMap<>(), appCtx, new String[] { "/" });
         // Adds mocked Hyracks client connection into the servlet context.
         IHyracksClientConnection mockHcc = mock(IHyracksClientConnection.class);
         cancellationServlet.ctx().put(ServletConstants.HYRACKS_CONNECTION_ATTR, mockHcc);
@@ -66,6 +68,11 @@ public class QueryCancellationServletTest {
         // Tests the case that query is not in the map.
         IServletRequest mockRequest = mockRequest("1");
         IServletResponse mockResponse = mock(IServletResponse.class);
+        ICCServiceContext mockCCServiceCtx = mock(ICCServiceContext.class);
+        ClusterControllerService mockCCService = mock(ClusterControllerService.class);
+        Mockito.when(appCtx.getServiceContext()).thenReturn(mockCCServiceCtx);
+        Mockito.when(appCtx.getServiceContext().getControllerService()).thenReturn(mockCCService);
+        Mockito.when(mockCCServiceCtx.getControllerService()).thenReturn(mockCCService);
         cancellationServlet.handle(mockRequest, mockResponse);
         verify(mockResponse, times(1)).setStatus(HttpResponseStatus.NOT_FOUND);
 
