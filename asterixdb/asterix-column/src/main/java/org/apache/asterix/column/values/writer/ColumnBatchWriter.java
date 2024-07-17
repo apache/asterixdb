@@ -94,10 +94,7 @@ public final class ColumnBatchWriter implements IColumnBatchWriter {
         }
 
         // compute the final length
-        int totalLength = nonKeyColumnStartOffset + columns.size();
-        // reset to ensure the last buffer's position and limit are set appropriately
-        columns.reset();
-        return totalLength;
+        return nonKeyColumnStartOffset + columns.size();
     }
 
     @Override

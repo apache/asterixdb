@@ -38,12 +38,6 @@ public final class MultiPersistentBufferBytesOutputStream extends AbstractMultiB
     @Override
     protected void preReset() throws HyracksDataException {
         if (allocatedBytes > 0) {
-            /*
-             * Ensure limit is set to current position and position is set to 0. This to ensure no unrelated bytes are
-             * persisted to disk. Unrelated bytes are bytes that were in the ByteBuffer (when the column writer
-             * confiscated it from the buffer cache) but those byte do not belong to the column that to be written.
-             */
-            currentBuf.flip();
             //Persist all buffers before resetting the stream
             multiPageOpRef.getValue().persist();
             allocatedBytes = 0;
