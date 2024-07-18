@@ -159,6 +159,7 @@ import org.apache.asterix.runtime.aggregates.std.GlobalSqlAvgAggregateDescriptor
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.GlobalSqlSchemaAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalSqlStddevPopAggregateDescriptor;
@@ -207,6 +208,7 @@ import org.apache.asterix.runtime.aggregates.std.LocalSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlMinAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.LocalSqlSchemaAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.LocalSqlStddevPopAggregateDescriptor;
@@ -815,7 +817,9 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(SqlAvgAggregateDescriptor.FACTORY);
         fc.add(LocalSqlAvgAggregateDescriptor.FACTORY);
         fc.add(IntermediateSqlAvgAggregateDescriptor.FACTORY);
+        fc.add(GlobalSqlSchemaAggregateDescriptor.FACTORY);
         fc.add(SqlSchemaAggregateDescriptor.FACTORY);
+        fc.add(LocalSqlSchemaAggregateDescriptor.FACTORY);
         fc.add(SchemaAggregateDescriptor.FACTORY);
         fc.add(LocalSchemaAggregateDescriptor.FACTORY);
         fc.add(GlobalSchemaAggregateDescriptor.FACTORY);
