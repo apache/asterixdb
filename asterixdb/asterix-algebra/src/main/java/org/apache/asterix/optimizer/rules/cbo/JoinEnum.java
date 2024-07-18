@@ -526,12 +526,16 @@ public class JoinEnum {
     private void markCompositeJoinPredicates() {
         // can use dataSetBits??? This will be simpler.
         for (int i = 0; i < joinConditions.size() - 1; i++) {
-            for (int j = i + 1; j < joinConditions.size(); j++) {
-                if (joinConditions.get(i).datasetBits == joinConditions.get(j).datasetBits) {
-                    joinConditions.get(i).selectivity = 1.0 / smallerDatasetSize(joinConditions.get(i).datasetBits);
-                    // 1/P will be the selectivity of the composite clause
-                    joinConditions.get(j).partOfComposite = true;
-                    joinConditions.get(j).selectivity = 1.0;
+            JoinCondition jcI = joinConditions.get(i);
+            if (jcI.comparisonType == JoinCondition.comparisonOp.OP_EQ && !jcI.partOfComposite) {
+                for (int j = i + 1; j < joinConditions.size(); j++) {
+                    JoinCondition jcJ = joinConditions.get(j);
+                    if (jcJ.comparisonType == JoinCondition.comparisonOp.OP_EQ && jcI.datasetBits == jcJ.datasetBits) {
+                        jcI.selectivity = 1.0 / smallerDatasetSize(jcI.datasetBits);
+                        // 1/P will be the selectivity of the composite clause
+                        jcJ.partOfComposite = true;
+                        jcJ.selectivity = 1.0;
+                    }
                 }
             }
         }
