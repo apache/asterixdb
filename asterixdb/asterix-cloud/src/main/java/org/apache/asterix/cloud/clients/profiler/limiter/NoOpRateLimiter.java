@@ -16,35 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.cloud.clients.profiler;
+package org.apache.asterix.cloud.clients.profiler.limiter;
 
-public interface IRequestProfiler {
-    void objectsList();
+public class NoOpRateLimiter implements IRateLimiter {
+    public static final NoOpRateLimiter INSTANCE = new NoOpRateLimiter();
 
-    void objectGet();
+    private NoOpRateLimiter() {
+    }
 
-    void objectWrite();
-
-    void objectDelete();
-
-    void objectCopy();
-
-    void objectMultipartUpload();
-
-    void objectMultipartDownload();
-
-    long objectsListCount();
-
-    long objectGetCount();
-
-    long objectWriteCount();
-
-    long objectDeleteCount();
-
-    long objectCopyCount();
-
-    long objectMultipartUploadCount();
-
-    long objectMultipartDownloadCount();
-
+    @Override
+    public void acquire() {
+        // NoOp
+    }
 }

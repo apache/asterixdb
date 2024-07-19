@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.cloud.clients.ICloudWriter;
-import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,12 +38,12 @@ public class GCSWriter implements ICloudWriter {
     private static final Logger LOGGER = LogManager.getLogger();
     private final String bucket;
     private final String path;
-    private final IRequestProfiler profiler;
+    private final IRequestProfilerLimiter profiler;
     private final Storage gcsClient;
     private WriteChannel writer = null;
     private long writtenBytes;
 
-    public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfiler profiler) {
+    public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfilerLimiter profiler) {
         this.bucket = bucket;
         this.path = path;
         this.profiler = profiler;

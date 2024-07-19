@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.cloud.clients.profiler;
 
-public class NoOpRequestProfiler implements IRequestProfiler {
-    public static final IRequestProfiler INSTANCE = new NoOpRequestProfiler();
+public class NoOpRequestProfilerLimiter implements IRequestProfilerLimiter {
+    public static final IRequestProfilerLimiter INSTANCE = new NoOpRequestProfilerLimiter();
 
-    private NoOpRequestProfiler() {
+    private NoOpRequestProfilerLimiter() {
     }
 
     @Override

@@ -20,6 +20,7 @@ package org.apache.asterix.cloud.clients.profiler;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.asterix.cloud.clients.profiler.limiter.IRequestRateLimiter;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,11 +28,12 @@ import org.apache.logging.log4j.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class CountRequestProfiler implements IRequestProfiler {
+public class CountRequestProfilerLimiter implements IRequestProfilerLimiter {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Level LOG_LEVEL = Level.TRACE;
     private final long logInterval;
+    private final IRequestRateLimiter limiter;
     private final AtomicLong listObjectsCounter;
     private final AtomicLong getObjectCounter;
     private final AtomicLong writeObjectCounter;
@@ -41,8 +43,9 @@ public class CountRequestProfiler implements IRequestProfiler {
     private final AtomicLong multipartDownloadCounter;
     private long lastLogTimestamp;
 
-    public CountRequestProfiler(long logIntervalNanoSec) {
+    public CountRequestProfilerLimiter(long logIntervalNanoSec, IRequestRateLimiter limiter) {
         this.logInterval = logIntervalNanoSec;
+        this.limiter = limiter;
         listObjectsCounter = new AtomicLong();
         getObjectCounter = new AtomicLong();
         writeObjectCounter = new AtomicLong();
@@ -55,42 +58,49 @@ public class CountRequestProfiler implements IRequestProfiler {
 
     @Override
     public void objectsList() {
+        limiter.listRequest();
         listObjectsCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectGet() {
+        limiter.readRequest();
         getObjectCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectWrite() {
+        limiter.writeRequest();
         writeObjectCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectDelete() {
+        limiter.writeRequest();
         deleteObjectCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectCopy() {
+        limiter.writeRequest();
         copyObjectCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectMultipartUpload() {
+        limiter.writeRequest();
         multipartUploadCounter.incrementAndGet();
         log();
     }
 
     @Override
     public void objectMultipartDownload() {
+        limiter.readRequest();
         multipartDownloadCounter.incrementAndGet();
         log();
     }
