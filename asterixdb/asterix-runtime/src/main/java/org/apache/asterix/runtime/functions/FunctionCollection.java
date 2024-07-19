@@ -37,6 +37,8 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgAggregateDescriptor
 import org.apache.asterix.runtime.aggregates.scalar.ScalarAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarCountDistinctAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarCountNAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarCountNDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarFirstElementAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarKurtosisDistinctAggregateDescriptor;
@@ -50,6 +52,8 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgAggregateDescrip
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlAvgDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountDistinctAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountNAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlCountNDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlKurtosisDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.scalar.ScalarSqlMaxAggregateDescriptor;
@@ -83,6 +87,7 @@ import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopAggregateDescrip
 import org.apache.asterix.runtime.aggregates.scalar.ScalarVarPopDistinctAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableCountNAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableGlobalSkewnessAggregateDescriptor;
@@ -135,6 +140,7 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableLocalV
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlCountNAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlSkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableSqlStddevAggregateDescriptor;
@@ -149,6 +155,7 @@ import org.apache.asterix.runtime.aggregates.serializable.std.SerializableVarAgg
 import org.apache.asterix.runtime.aggregates.serializable.std.SerializableVarPopAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.AvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.CountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.CountNAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.GlobalMaxAggregateDescriptor;
@@ -226,6 +233,7 @@ import org.apache.asterix.runtime.aggregates.std.RangeMapAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SkewnessAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlAvgAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlCountAggregateDescriptor;
+import org.apache.asterix.runtime.aggregates.std.SqlCountNAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlKurtosisAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlMaxAggregateDescriptor;
 import org.apache.asterix.runtime.aggregates.std.SqlMedianAggregateDescriptor;
@@ -698,6 +706,7 @@ public final class FunctionCollection implements IFunctionCollection {
         // aggregate functions
         fc.add(ListifyAggregateDescriptor.FACTORY);
         fc.add(CountAggregateDescriptor.FACTORY);
+        fc.add(CountNAggregateDescriptor.FACTORY);
         fc.add(AvgAggregateDescriptor.FACTORY);
         fc.add(LocalAvgAggregateDescriptor.FACTORY);
         fc.add(IntermediateAvgAggregateDescriptor.FACTORY);
@@ -753,6 +762,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // serializable aggregates
         fc.add(SerializableCountAggregateDescriptor.FACTORY);
+        fc.add(SerializableCountNAggregateDescriptor.FACTORY);
         fc.add(SerializableAvgAggregateDescriptor.FACTORY);
         fc.add(SerializableLocalAvgAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateAvgAggregateDescriptor.FACTORY);
@@ -790,7 +800,9 @@ public final class FunctionCollection implements IFunctionCollection {
         fc.add(ScalarArrayAggAggregateDescriptor.FACTORY);
         fc.add(ScalarArrayAggDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarCountAggregateDescriptor.FACTORY);
+        fc.add(ScalarCountNAggregateDescriptor.FACTORY);
         fc.add(ScalarCountDistinctAggregateDescriptor.FACTORY);
+        fc.add(ScalarCountNDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarAvgAggregateDescriptor.FACTORY);
         fc.add(ScalarAvgDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSumAggregateDescriptor.FACTORY);
@@ -816,6 +828,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // SQL aggregates
         fc.add(SqlCountAggregateDescriptor.FACTORY);
+        fc.add(SqlCountNAggregateDescriptor.FACTORY);
         fc.add(SqlAvgAggregateDescriptor.FACTORY);
         fc.add(LocalSqlAvgAggregateDescriptor.FACTORY);
         fc.add(IntermediateSqlAvgAggregateDescriptor.FACTORY);
@@ -867,6 +880,7 @@ public final class FunctionCollection implements IFunctionCollection {
 
         // SQL serializable aggregates
         fc.add(SerializableSqlCountAggregateDescriptor.FACTORY);
+        fc.add(SerializableSqlCountNAggregateDescriptor.FACTORY);
         fc.add(SerializableSqlAvgAggregateDescriptor.FACTORY);
         fc.add(SerializableLocalSqlAvgAggregateDescriptor.FACTORY);
         fc.add(SerializableIntermediateSqlAvgAggregateDescriptor.FACTORY);
@@ -903,6 +917,8 @@ public final class FunctionCollection implements IFunctionCollection {
         // SQL scalar aggregates
         fc.add(ScalarSqlCountAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlCountDistinctAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlCountNDistinctAggregateDescriptor.FACTORY);
+        fc.add(ScalarSqlCountNAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlAvgAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlAvgDistinctAggregateDescriptor.FACTORY);
         fc.add(ScalarSqlSumAggregateDescriptor.FACTORY);

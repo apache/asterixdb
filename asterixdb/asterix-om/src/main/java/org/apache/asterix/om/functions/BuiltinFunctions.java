@@ -82,6 +82,7 @@ import org.apache.asterix.om.typecomputer.impl.CollectionMemberResultType;
 import org.apache.asterix.om.typecomputer.impl.CollectionToSequenceTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ConcatNonNullTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.ConcatTypeComputer;
+import org.apache.asterix.om.typecomputer.impl.CountNTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.DoubleIfTypeComputer;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByIndexResultType;
 import org.apache.asterix.om.typecomputer.impl.FieldAccessByNameResultType;
@@ -417,6 +418,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier LISTIFY = FunctionConstants.newAsterix("listify", 1);
     public static final FunctionIdentifier AVG = FunctionConstants.newAsterix("agg-avg", 1);
     public static final FunctionIdentifier COUNT = FunctionConstants.newAsterix("agg-count", 1);
+    public static final FunctionIdentifier COUNTN = FunctionConstants.newAsterix("agg-countn", 1);
     public static final FunctionIdentifier SUM = FunctionConstants.newAsterix("agg-sum", 1);
     public static final FunctionIdentifier LOCAL_SUM = FunctionConstants.newAsterix("agg-local-sum", 1);
     public static final FunctionIdentifier INTERMEDIATE_SUM = FunctionConstants.newAsterix("agg-intermediate-sum", 1);
@@ -482,6 +484,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier SCALAR_ARRAYAGG = FunctionConstants.newAsterix("arrayagg", 1);
     public static final FunctionIdentifier SCALAR_AVG = FunctionConstants.newAsterix("avg", 1);
     public static final FunctionIdentifier SCALAR_COUNT = FunctionConstants.newAsterix("count", 1);
+    public static final FunctionIdentifier SCALAR_COUNTN = FunctionConstants.newAsterix("countn", 1);
     public static final FunctionIdentifier SCALAR_SUM = FunctionConstants.newAsterix("sum", 1);
     public static final FunctionIdentifier SCALAR_MAX = FunctionConstants.newAsterix("max", 1);
     public static final FunctionIdentifier SCALAR_MIN = FunctionConstants.newAsterix("min", 1);
@@ -501,6 +504,7 @@ public class BuiltinFunctions {
     // serializable aggregate functions
     public static final FunctionIdentifier SERIAL_AVG = FunctionConstants.newAsterix("avg-serial", 1);
     public static final FunctionIdentifier SERIAL_COUNT = FunctionConstants.newAsterix("count-serial", 1);
+    public static final FunctionIdentifier SERIAL_COUNTN = FunctionConstants.newAsterix("countn-serial", 1);
     public static final FunctionIdentifier SERIAL_SUM = FunctionConstants.newAsterix("sum-serial", 1);
     public static final FunctionIdentifier SERIAL_LOCAL_SUM = FunctionConstants.newAsterix("local-sum-serial", 1);
     public static final FunctionIdentifier SERIAL_INTERMEDIATE_SUM =
@@ -559,6 +563,8 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("arrayagg-distinct", 1);
     public static final FunctionIdentifier COUNT_DISTINCT = FunctionConstants.newAsterix("agg-count-distinct", 1);
     public static final FunctionIdentifier SCALAR_COUNT_DISTINCT = FunctionConstants.newAsterix("count-distinct", 1);
+    public static final FunctionIdentifier COUNTN_DISTINCT = FunctionConstants.newAsterix("agg-countn-distinct", 1);
+    public static final FunctionIdentifier SCALAR_COUNTN_DISTINCT = FunctionConstants.newAsterix("countn-distinct", 1);
     public static final FunctionIdentifier SUM_DISTINCT = FunctionConstants.newAsterix("agg-sum-distinct", 1);
     public static final FunctionIdentifier SCALAR_SUM_DISTINCT = FunctionConstants.newAsterix("sum-distinct", 1);
     public static final FunctionIdentifier AVG_DISTINCT = FunctionConstants.newAsterix("agg-avg-distinct", 1);
@@ -593,6 +599,7 @@ public class BuiltinFunctions {
     public static final FunctionIdentifier INTERMEDIATE_SQL_AVG =
             FunctionConstants.newAsterix("intermediate-agg-sql-avg", 1);
     public static final FunctionIdentifier SQL_COUNT = FunctionConstants.newAsterix("agg-sql-count", 1);
+    public static final FunctionIdentifier SQL_COUNTN = FunctionConstants.newAsterix("agg-sql-countn", 1);
     public static final FunctionIdentifier SQL_SUM = FunctionConstants.newAsterix("agg-sql-sum", 1);
     public static final FunctionIdentifier LOCAL_SQL_SUM = FunctionConstants.newAsterix("agg-local-sql-sum", 1);
     public static final FunctionIdentifier INTERMEDIATE_SQL_SUM =
@@ -666,6 +673,7 @@ public class BuiltinFunctions {
 
     public static final FunctionIdentifier SCALAR_SQL_AVG = FunctionConstants.newAsterix("sql-avg", 1);
     public static final FunctionIdentifier SCALAR_SQL_COUNT = FunctionConstants.newAsterix("sql-count", 1);
+    public static final FunctionIdentifier SCALAR_SQL_COUNTN = FunctionConstants.newAsterix("sql-countn", 1);
     public static final FunctionIdentifier SCALAR_SQL_SUM = FunctionConstants.newAsterix("sql-sum", 1);
     public static final FunctionIdentifier SCALAR_SQL_MAX = FunctionConstants.newAsterix("sql-max", 1);
     public static final FunctionIdentifier SCALAR_SQL_MIN = FunctionConstants.newAsterix("sql-min", 1);
@@ -681,6 +689,7 @@ public class BuiltinFunctions {
     // serializable sql aggregate functions
     public static final FunctionIdentifier SERIAL_SQL_AVG = FunctionConstants.newAsterix("sql-avg-serial", 1);
     public static final FunctionIdentifier SERIAL_SQL_COUNT = FunctionConstants.newAsterix("sql-count-serial", 1);
+    public static final FunctionIdentifier SERIAL_SQL_COUNTN = FunctionConstants.newAsterix("sql-countn-serial", 1);
     public static final FunctionIdentifier SERIAL_SQL_SUM = FunctionConstants.newAsterix("sql-sum-serial", 1);
     public static final FunctionIdentifier SERIAL_LOCAL_SQL_SUM =
             FunctionConstants.newAsterix("local-sql-sum-serial", 1);
@@ -744,6 +753,10 @@ public class BuiltinFunctions {
             FunctionConstants.newAsterix("agg-sql-count-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_COUNT_DISTINCT =
             FunctionConstants.newAsterix("sql-count-distinct", 1);
+    public static final FunctionIdentifier SQL_COUNTN_DISTINCT =
+            FunctionConstants.newAsterix("agg-sql-countn-distinct", 1);
+    public static final FunctionIdentifier SCALAR_SQL_COUNTN_DISTINCT =
+            FunctionConstants.newAsterix("sql-countn-distinct", 1);
     public static final FunctionIdentifier SQL_SUM_DISTINCT = FunctionConstants.newAsterix("agg-sql-sum-distinct", 1);
     public static final FunctionIdentifier SCALAR_SQL_SUM_DISTINCT =
             FunctionConstants.newAsterix("sql-sum-distinct", 1);
@@ -1575,6 +1588,7 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(NON_EMPTY_STREAM, ABooleanTypeComputer.INSTANCE, true);
         addFunction(COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(COUNTN, CountNTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
@@ -1623,11 +1637,13 @@ public class BuiltinFunctions {
 
         addPrivateFunction(SERIAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_SQL_COUNTN, CountNTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SCALAR_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SCALAR_COUNTN, CountNTypeComputer.INSTANCE, true);
         addFunction(SCALAR_MAX, scalarMinMaxTypeComputer, true);
         addFunction(SCALAR_MIN, scalarMinMaxTypeComputer, true);
         addPrivateFunction(INTERMEDIATE_AVG, LocalAvgTypeComputer.INSTANCE, true);
@@ -1685,6 +1701,7 @@ public class BuiltinFunctions {
         addPrivateFunction(LOCAL_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addFunction(SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SQL_COUNTN, CountNTypeComputer.INSTANCE, true);
         addFunction(SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(LOCAL_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
         addPrivateFunction(INTERMEDIATE_SQL_MAX, MinMaxAggTypeComputer.INSTANCE, true);
@@ -1695,6 +1712,7 @@ public class BuiltinFunctions {
         addPrivateFunction(GLOBAL_SQL_MIN, MinMaxAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_COUNTN, CountNTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_MAX, scalarMinMaxTypeComputer, true);
         addFunction(SCALAR_SQL_MIN, scalarMinMaxTypeComputer, true);
         addPrivateFunction(INTERMEDIATE_SQL_AVG, LocalAvgTypeComputer.INSTANCE, true);
@@ -1743,6 +1761,7 @@ public class BuiltinFunctions {
 
         addPrivateFunction(SERIAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_COUNT, AInt64TypeComputer.INSTANCE, true);
+        addPrivateFunction(SERIAL_COUNTN, CountNTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_GLOBAL_AVG, NullableDoubleTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_LOCAL_AVG, LocalAvgTypeComputer.INSTANCE, true);
         addPrivateFunction(SERIAL_INTERMEDIATE_AVG, LocalAvgTypeComputer.INSTANCE, true);
@@ -1781,6 +1800,11 @@ public class BuiltinFunctions {
         addFunction(SCALAR_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SQL_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
         addFunction(SCALAR_SQL_COUNT_DISTINCT, AInt64TypeComputer.INSTANCE, true);
+
+        addFunction(COUNTN_DISTINCT, CountNTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_COUNTN_DISTINCT, CountNTypeComputer.INSTANCE, true);
+        addFunction(SQL_COUNTN_DISTINCT, CountNTypeComputer.INSTANCE, true);
+        addFunction(SCALAR_SQL_COUNTN_DISTINCT, CountNTypeComputer.INSTANCE, true);
 
         addFunction(SUM_DISTINCT, NumericSumAggTypeComputer.INSTANCE, true);
         addFunction(SCALAR_SUM_DISTINCT, scalarNumericSumTypeComputer, true);
@@ -2207,6 +2231,26 @@ public class BuiltinFunctions {
 
         addDistinctAgg(COUNT_DISTINCT, COUNT);
         addScalarAgg(COUNT_DISTINCT, SCALAR_COUNT_DISTINCT);
+
+        // COUNTN
+
+        addAgg(COUNTN);
+        addLocalAgg(COUNTN, COUNTN);
+        addIntermediateAgg(COUNTN, SUM);
+        addGlobalAgg(COUNTN, SUM);
+
+        addScalarAgg(COUNTN, SCALAR_COUNTN);
+
+        addSerialAgg(COUNTN, SERIAL_COUNTN);
+        addAgg(SERIAL_COUNTN);
+        addLocalAgg(SERIAL_COUNTN, SERIAL_COUNTN);
+        addIntermediateAgg(SERIAL_COUNTN, SERIAL_SUM);
+        addGlobalAgg(SERIAL_COUNTN, SERIAL_SUM);
+
+        // COUNTN DISTINCT
+
+        addDistinctAgg(COUNTN_DISTINCT, COUNTN);
+        addScalarAgg(COUNTN_DISTINCT, SCALAR_COUNTN_DISTINCT);
 
         // MAX
         addAgg(MAX);
@@ -2718,6 +2762,26 @@ public class BuiltinFunctions {
 
         addDistinctAgg(SQL_COUNT_DISTINCT, SQL_COUNT);
         addScalarAgg(SQL_COUNT_DISTINCT, SCALAR_SQL_COUNT_DISTINCT);
+
+        // SQL COUNTN
+
+        addAgg(SQL_COUNTN);
+        addLocalAgg(SQL_COUNTN, SQL_COUNTN);
+        addIntermediateAgg(SQL_COUNTN, SQL_SUM);
+        addGlobalAgg(SQL_COUNTN, SQL_SUM);
+
+        addScalarAgg(SQL_COUNTN, SCALAR_SQL_COUNTN);
+
+        addSerialAgg(SQL_COUNTN, SERIAL_SQL_COUNTN);
+        addAgg(SERIAL_SQL_COUNTN);
+        addLocalAgg(SERIAL_SQL_COUNTN, SERIAL_SQL_COUNTN);
+        addIntermediateAgg(SERIAL_SQL_COUNTN, SERIAL_SQL_SUM);
+        addGlobalAgg(SERIAL_SQL_COUNTN, SERIAL_SQL_SUM);
+
+        // SQL COUNTN DISTINCT
+
+        addDistinctAgg(SQL_COUNTN_DISTINCT, SQL_COUNTN);
+        addScalarAgg(SQL_COUNTN_DISTINCT, SCALAR_SQL_COUNTN_DISTINCT);
 
         // SQL MAX
         addAgg(SQL_MAX);

@@ -621,6 +621,36 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
+      <compilation-unit name="countn_01">
+        <output-dir compare="Text">countn_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="countn_02">
+        <output-dir compare="Text">countn_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="countn_empty_01">
+        <output-dir compare="Text">countn_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="countn_empty_02">
+        <output-dir compare="Text">countn_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="countn_null">
+        <output-dir compare="Text">countn_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="countn_distinct">
+        <output-dir compare="Text">countn_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
       <compilation-unit name="kurtosis_double">
         <output-dir compare="Text">kurtosis_double</output-dir>
       </compilation-unit>
@@ -753,6 +783,21 @@
     <test-case FilePath="aggregate">
       <compilation-unit name="scalar_count_null">
         <output-dir compare="Text">scalar_count_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_countn">
+        <output-dir compare="Text">scalar_countn</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_countn_empty">
+        <output-dir compare="Text">scalar_countn_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate">
+      <compilation-unit name="scalar_countn_null">
+        <output-dir compare="Text">scalar_countn_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate">
@@ -1894,6 +1939,36 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_01">
+        <output-dir compare="Text">countn_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_02">
+        <output-dir compare="Text">countn_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_empty_01">
+        <output-dir compare="Text">countn_empty_01</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_empty_02">
+        <output-dir compare="Text">countn_empty_02</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_null">
+        <output-dir compare="Text">countn_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="countn_distinct">
+        <output-dir compare="Text">countn_distinct</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
       <compilation-unit name="kurtosis_double">
         <output-dir compare="Text">kurtosis_double</output-dir>
       </compilation-unit>
@@ -2026,6 +2101,21 @@
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="scalar_count_null">
         <output-dir compare="Text">scalar_count_null</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_countn">
+        <output-dir compare="Text">scalar_countn</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_countn_empty">
+        <output-dir compare="Text">scalar_countn_empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="scalar_countn_null">
+        <output-dir compare="Text">scalar_countn_null</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="aggregate-sql">

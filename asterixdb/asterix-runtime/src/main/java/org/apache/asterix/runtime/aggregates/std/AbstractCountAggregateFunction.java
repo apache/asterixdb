@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.om.base.AInt64;
 import org.apache.asterix.om.base.AMutableInt64;
+import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.EnumDeserializer;
@@ -45,9 +46,13 @@ public abstract class AbstractCountAggregateFunction extends AbstractAggregateFu
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AInt64> int64Serde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AINT64);
+    @SuppressWarnings("unchecked")
+    private ISerializerDeserializer<ANull> nullSerde =
+            SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.ANULL);
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
     protected long cnt;
+    protected boolean nullRes;
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
@@ -60,6 +65,7 @@ public abstract class AbstractCountAggregateFunction extends AbstractAggregateFu
     @Override
     public void init() throws HyracksDataException {
         cnt = 0;
+        nullRes = false;
     }
 
     @Override
@@ -71,7 +77,7 @@ public abstract class AbstractCountAggregateFunction extends AbstractAggregateFu
         if (typeTag == ATypeTag.NULL || typeTag == ATypeTag.MISSING) {
             processNull();
         } else if (typeTag != ATypeTag.SYSTEM_NULL) {
-            cnt++;
+            processValue(typeTag);
         }
     }
 
@@ -79,8 +85,12 @@ public abstract class AbstractCountAggregateFunction extends AbstractAggregateFu
     public void finish(IPointable resultPointable) throws HyracksDataException {
         resultStorage.reset();
         try {
-            result.setValue(cnt);
-            int64Serde.serialize(result, resultStorage.getDataOutput());
+            if (nullRes) {
+                nullSerde.serialize(ANull.NULL, resultStorage.getDataOutput());
+            } else {
+                result.setValue(cnt);
+                int64Serde.serialize(result, resultStorage.getDataOutput());
+            }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -93,4 +103,8 @@ public abstract class AbstractCountAggregateFunction extends AbstractAggregateFu
     }
 
     protected abstract void processNull();
+
+    protected void processValue(ATypeTag tag) {
+        cnt++;
+    }
 }

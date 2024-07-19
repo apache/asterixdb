@@ -81,7 +81,7 @@ public abstract class AbstractSerializableCountAggregateFunction extends Abstrac
         if (typeTag == ATypeTag.MISSING || typeTag == ATypeTag.NULL) {
             processNull(state, start);
         } else {
-            cnt++;
+            cnt = processValue(typeTag, cnt);
         }
         BufferSerDeUtil.writeBoolean(metNull, state, start + MET_NULL_OFFSET);
         BufferSerDeUtil.writeLong(cnt, state, start + COUNT_OFFSET);
@@ -110,5 +110,9 @@ public abstract class AbstractSerializableCountAggregateFunction extends Abstrac
 
     protected void processNull(byte[] state, int start) {
         BufferSerDeUtil.writeBoolean(true, state, start + MET_NULL_OFFSET);
+    }
+
+    protected long processValue(ATypeTag tag, long cnt) {
+        return cnt + 1;
     }
 }
