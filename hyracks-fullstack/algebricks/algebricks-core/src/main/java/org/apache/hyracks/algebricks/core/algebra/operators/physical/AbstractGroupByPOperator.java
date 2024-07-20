@@ -32,6 +32,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceE
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.IOperatorSchema;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 
 public abstract class AbstractGroupByPOperator extends AbstractPhysicalOperator {
@@ -83,6 +84,11 @@ public abstract class AbstractGroupByPOperator extends AbstractPhysicalOperator 
     @Override
     public void createLocalMemoryRequirements(ILogicalOperator op) {
         localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_GROUP_BY);
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op, PhysicalOptimizationConfig physicalOpConfig) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(physicalOpConfig.getMinGroupFrames());
     }
 
     @Override

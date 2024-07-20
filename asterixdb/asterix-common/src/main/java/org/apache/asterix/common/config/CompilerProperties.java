@@ -18,6 +18,10 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_GROUP_BY;
+import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_JOIN;
+import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_SORT;
+import static org.apache.asterix.common.config.OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_WINDOW;
 import static org.apache.hyracks.control.common.config.OptionTypes.BOOLEAN;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.INTEGER_BYTE_UNIT;
@@ -66,6 +70,22 @@ public class CompilerProperties extends AbstractProperties {
                 INTEGER_BYTE_UNIT,
                 StorageUtil.getIntSizeInBytes(32, KILOBYTE),
                 "The page size (in bytes) for computation"),
+        COMPILER_MIN_SORTMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(512, KILOBYTE),
+                "The min memory budget (in bytes) for a sort operator instance in a partition"),
+        COMPILER_MIN_JOINMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(512, KILOBYTE),
+                "The min memory budget (in bytes) for a join operator instance in a partition"),
+        COMPILER_MIN_GROUPMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(512, KILOBYTE),
+                "The min memory budget (in bytes) for a group by operator instance in a partition"),
+        COMPILER_MIN_WINDOWMEMORY(
+                LONG_BYTE_UNIT,
+                StorageUtil.getLongSizeInBytes(512, KILOBYTE),
+                "The min memory budget (in bytes) for a window operator instance in a partition"),
         COMPILER_PARALLELISM(
                 INTEGER,
                 COMPILER_PARALLELISM_AS_STORAGE,
@@ -240,6 +260,26 @@ public class CompilerProperties extends AbstractProperties {
         return accessor.getLong(Option.COMPILER_TEXTSEARCHMEMORY);
     }
 
+    public int getMinSortMemoryFrames() {
+        int numFrames = (int) accessor.getLong(Option.COMPILER_MIN_SORTMEMORY) / getFrameSize();
+        return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_SORT);
+    }
+
+    public int getMinJoinMemoryFrames() {
+        int numFrames = (int) accessor.getLong(Option.COMPILER_MIN_JOINMEMORY) / getFrameSize();
+        return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_JOIN);
+    }
+
+    public int getMinGroupMemoryFrames() {
+        int numFrames = (int) accessor.getLong(Option.COMPILER_MIN_GROUPMEMORY) / getFrameSize();
+        return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_GROUP_BY);
+    }
+
+    public int getMinWindowMemoryFrames() {
+        int numFrames = (int) accessor.getLong(Option.COMPILER_MIN_WINDOWMEMORY) / getFrameSize();
+        return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_WINDOW);
+    }
+
     public int getFrameSize() {
         return accessor.getInt(Option.COMPILER_FRAMESIZE);
     }
@@ -315,7 +355,7 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getSortMemoryFrames() {
         int numFrames = (int) getSortMemorySize() / getFrameSize();
-        return Math.max(numFrames, OptimizationConfUtil.MIN_FRAME_LIMIT_FOR_SORT);
+        return Math.max(numFrames, MIN_FRAME_LIMIT_FOR_SORT);
     }
 
     public boolean isColumnFilter() {

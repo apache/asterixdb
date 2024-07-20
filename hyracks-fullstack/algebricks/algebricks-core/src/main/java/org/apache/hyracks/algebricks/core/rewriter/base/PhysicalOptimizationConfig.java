@@ -18,6 +18,11 @@
  */
 package org.apache.hyracks.algebricks.core.rewriter.base;
 
+import static org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractGroupByPOperator.MIN_FRAME_LIMIT_FOR_GROUP_BY;
+import static org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN;
+import static org.apache.hyracks.algebricks.core.algebra.operators.physical.AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT;
+import static org.apache.hyracks.algebricks.core.algebra.operators.physical.WindowPOperator.MIN_FRAME_LIMIT_FOR_WINDOW;
+
 import java.util.Properties;
 
 import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
@@ -53,6 +58,10 @@ public class PhysicalOptimizationConfig {
     private static final String FORCE_JOIN_ORDER = "FORCE_JOIN_ORDER";
     private static final String QUERY_PLAN_SHAPE = "QUERY_PLAN_SHAPE";
     private static final String COLUMN_FILTER = "COLUMN_FILTER";
+    private static final String MIN_SORT_FRAMES = "MIN_SORT_FRAMES";
+    private static final String MIN_JOIN_FRAMES = "MIN_JOIN_FRAMES";
+    private static final String MIN_GROUP_FRAMES = "MIN_GROUP_FRAMES";
+    private static final String MIN_WINDOW_FRAMES = "MIN_WINDOW_FRAMES";
 
     private final Properties properties = new Properties();
 
@@ -66,6 +75,11 @@ public class PhysicalOptimizationConfig {
         setInt(DEFAULT_HASH_GROUP_TABLE_SIZE, 10485767);
         setInt(DEFAULT_EXTERNAL_GROUP_TABLE_SIZE, 10485767);
         setInt(DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE, 10485767);
+
+        setInt(MIN_SORT_FRAMES, MIN_FRAME_LIMIT_FOR_SORT);
+        setInt(MIN_JOIN_FRAMES, MIN_FRAME_LIMIT_FOR_JOIN);
+        setInt(MIN_GROUP_FRAMES, MIN_FRAME_LIMIT_FOR_GROUP_BY);
+        setInt(MIN_WINDOW_FRAMES, MIN_FRAME_LIMIT_FOR_WINDOW);
     }
 
     public int getFrameSize() {
@@ -167,6 +181,54 @@ public class PhysicalOptimizationConfig {
 
     public void setInMemHashJoinTableSize(int tableSize) {
         setInt(DEFAULT_IN_MEM_HASH_JOIN_TABLE_SIZE, tableSize);
+    }
+
+    public int getMinSortFrames() {
+        return getInt(MIN_SORT_FRAMES, MIN_FRAME_LIMIT_FOR_SORT);
+    }
+
+    public void setMinSortFrames(int minSortFrames) {
+        if (minSortFrames < MIN_FRAME_LIMIT_FOR_SORT) {
+            throw new IllegalArgumentException(
+                    "Minimum sort frames is " + MIN_FRAME_LIMIT_FOR_SORT + ", got " + minSortFrames);
+        }
+        setInt(MIN_SORT_FRAMES, minSortFrames);
+    }
+
+    public int getMinJoinFrames() {
+        return getInt(MIN_JOIN_FRAMES, MIN_FRAME_LIMIT_FOR_JOIN);
+    }
+
+    public void setMinJoinFrames(int minJoinFrames) {
+        if (minJoinFrames < MIN_FRAME_LIMIT_FOR_JOIN) {
+            throw new IllegalArgumentException(
+                    "Minimum join frames is " + MIN_FRAME_LIMIT_FOR_JOIN + ", got " + minJoinFrames);
+        }
+        setInt(MIN_JOIN_FRAMES, minJoinFrames);
+    }
+
+    public int getMinGroupFrames() {
+        return getInt(MIN_GROUP_FRAMES, MIN_FRAME_LIMIT_FOR_GROUP_BY);
+    }
+
+    public void setMinGroupFrames(int minGroupFrames) {
+        if (minGroupFrames < MIN_FRAME_LIMIT_FOR_GROUP_BY) {
+            throw new IllegalArgumentException(
+                    "Minimum group frames is " + MIN_FRAME_LIMIT_FOR_GROUP_BY + ", got " + minGroupFrames);
+        }
+        setInt(MIN_GROUP_FRAMES, minGroupFrames);
+    }
+
+    public int getMinWindowFrames() {
+        return getInt(MIN_WINDOW_FRAMES, MIN_FRAME_LIMIT_FOR_WINDOW);
+    }
+
+    public void setMinWindowFrames(int minWindowFrames) {
+        if (minWindowFrames < MIN_FRAME_LIMIT_FOR_WINDOW) {
+            throw new IllegalArgumentException(
+                    "Minimum window frames is " + MIN_FRAME_LIMIT_FOR_WINDOW + ", got " + minWindowFrames);
+        }
+        setInt(MIN_WINDOW_FRAMES, minWindowFrames);
     }
 
     public boolean getSortParallel() {

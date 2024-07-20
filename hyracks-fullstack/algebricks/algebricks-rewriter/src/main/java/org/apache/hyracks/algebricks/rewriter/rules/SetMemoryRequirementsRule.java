@@ -75,7 +75,7 @@ import org.apache.hyracks.api.exceptions.ErrorCode;
 /**
  * Set memory requirements for all operators as follows:
  * <ol>
- * <li>First call {@link IPhysicalOperator#createLocalMemoryRequirements(ILogicalOperator)}
+ * <li>First call {@link IPhysicalOperator#createLocalMemoryRequirements(ILogicalOperator, PhysicalOptimizationConfig)}
  *     to initialize each operator's {@link LocalMemoryRequirements} with minimal memory budget required by
  *     that operator</li>
  * <li>Then increase memory requirements for certain operators as specified by {@link PhysicalOptimizationConfig}</li>
@@ -97,19 +97,23 @@ public class SetMemoryRequirementsRule implements IAlgebraicRewriteRule {
         if (physOp.getLocalMemoryRequirements() != null) {
             return false;
         }
-        computeLocalMemoryRequirements(op, createMemoryRequirementsConfigurator(context));
+        computeLocalMemoryRequirements(op, createMemoryRequirementsConfigurator(context), context);
         return true;
     }
 
     private void computeLocalMemoryRequirements(AbstractLogicalOperator op,
-            ILogicalOperatorVisitor<Void, Void> memoryRequirementsVisitor) throws AlgebricksException {
+            ILogicalOperatorVisitor<Void, Void> memoryRequirementsVisitor, IOptimizationContext context)
+            throws AlgebricksException {
         IPhysicalOperator physOp = op.getPhysicalOperator();
         if (physOp.getLocalMemoryRequirements() == null) {
-            physOp.createLocalMemoryRequirements(op);
-            if (physOp.getLocalMemoryRequirements() == null) {
-                throw new IllegalStateException(physOp.getOperatorTag().toString());
-            }
-            if (memoryRequirementsVisitor != null) {
+            if (memoryRequirementsVisitor == null) {
+                // null means forcing the min memory budget from the physical optimization config
+                physOp.createLocalMemoryRequirements(op, context.getPhysicalOptimizationConfig());
+            } else {
+                physOp.createLocalMemoryRequirements(op);
+                if (physOp.getLocalMemoryRequirements() == null) {
+                    throw new IllegalStateException(physOp.getOperatorTag().toString());
+                }
                 op.accept(memoryRequirementsVisitor, null);
             }
         }
@@ -117,13 +121,14 @@ public class SetMemoryRequirementsRule implements IAlgebraicRewriteRule {
             AbstractOperatorWithNestedPlans nested = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : nested.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> root : p.getRoots()) {
-                    computeLocalMemoryRequirements((AbstractLogicalOperator) root.getValue(),
-                            memoryRequirementsVisitor);
+                    computeLocalMemoryRequirements((AbstractLogicalOperator) root.getValue(), memoryRequirementsVisitor,
+                            context);
                 }
             }
         }
         for (Mutable<ILogicalOperator> opRef : op.getInputs()) {
-            computeLocalMemoryRequirements((AbstractLogicalOperator) opRef.getValue(), memoryRequirementsVisitor);
+            computeLocalMemoryRequirements((AbstractLogicalOperator) opRef.getValue(), memoryRequirementsVisitor,
+                    context);
         }
     }
 
