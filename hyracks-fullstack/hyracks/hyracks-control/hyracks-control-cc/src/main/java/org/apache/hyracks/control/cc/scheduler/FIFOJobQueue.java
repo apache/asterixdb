@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
@@ -81,9 +82,10 @@ public class FIFOJobQueue implements IJobQueue {
     }
 
     @Override
-    public List<JobRun> pull() {
+    public synchronized List<JobRun> pull() {
         List<JobRun> jobRuns = new ArrayList<>();
         Iterator<JobRun> runIterator = jobListMap.values().iterator();
+        List<Pair<JobRun, List<Exception>>> failingJobs = null;
         while (runIterator.hasNext()) {
             JobRun run = runIterator.next();
             JobSpecification job = run.getJobSpecification();
@@ -98,13 +100,21 @@ public class FIFOJobQueue implements IJobQueue {
                     runIterator.remove(); // Removes the selected job.
                 }
             } catch (HyracksException exception) {
-                // The required capacity exceeds maximum capacity.
-                List<Exception> exceptions = new ArrayList<>();
+                if (failingJobs == null) {
+                    failingJobs = new ArrayList<>();
+                }
+                // The required capacity exceeds maximum capacity or the job cannot be run at this time.
+                List<Exception> exceptions = new ArrayList<>(1);
                 exceptions.add(exception);
+                failingJobs.add(Pair.of(run, exceptions));
                 runIterator.remove(); // Removes the job from the queue.
+            }
+        }
+        if (failingJobs != null) {
+            for (int i = 0; i < failingJobs.size(); i++) {
                 try {
-                    // Fails the job.
-                    jobManager.prepareComplete(run, JobStatus.FAILURE_BEFORE_EXECUTION, exceptions);
+                    Pair<JobRun, List<Exception>> job = failingJobs.get(i);
+                    jobManager.prepareComplete(job.getLeft(), JobStatus.FAILURE_BEFORE_EXECUTION, job.getRight());
                 } catch (HyracksException e) {
                     LOGGER.log(Level.ERROR, e.getMessage(), e);
                 }

@@ -53,7 +53,7 @@ public class JobCapacityController implements IJobCapacityController {
     public JobSubmissionStatus allocate(JobSpecification job, JobId jobId, Set<JobFlag> jobFlags)
             throws HyracksException {
         if (!ccApp.acceptingJobs(jobFlags)) {
-            throw HyracksDataException.create(ErrorCode.JOB_REJECTED, job);
+            throw HyracksDataException.create(ErrorCode.JOB_REJECTED, jobId);
         }
         IClusterCapacity requiredCapacity = job.getRequiredClusterCapacity();
         long reqAggregatedMemoryByteSize = requiredCapacity.getAggregatedMemoryByteSize();
