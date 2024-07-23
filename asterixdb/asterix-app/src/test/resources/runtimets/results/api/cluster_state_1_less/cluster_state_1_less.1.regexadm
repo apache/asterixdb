@@ -13,7 +13,7 @@
     "cloud.deployment" : false,
     "cloud.eviction.plan.reevaluate.threshold" : 50,
     "cloud.max.read.requests.per.second" : 4000,
-    "cloud.max.write.requests.per.second" : 2500,
+    "cloud.max.write.requests.per.second" : 2000,
     "cloud.profiler.log.interval" : 5,
     "cloud.storage.allocation.percentage" : 0.8,
     "cloud.storage.anonymous.auth" : false,
