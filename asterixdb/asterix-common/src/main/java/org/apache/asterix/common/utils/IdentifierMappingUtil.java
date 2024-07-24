@@ -21,42 +21,59 @@ package org.apache.asterix.common.utils;
 
 import static org.apache.asterix.common.utils.IdentifierUtil.DATASET;
 import static org.apache.asterix.common.utils.IdentifierUtil.DATAVERSE;
+import static org.apache.asterix.common.utils.IdentifierUtil.PRODUCT_ABBREVIATION;
+import static org.apache.asterix.common.utils.IdentifierUtil.PRODUCT_NAME;
 
 import org.apache.asterix.common.api.IIdentifierMapper;
 import org.apache.asterix.common.api.IIdentifierMapper.Modifier;
 
 public class IdentifierMappingUtil {
 
+    private static final String PLAIN_DATASET = "dataset";
     private static final String SINGULAR_DATASET = "a dataset";
     private static final String PLURAL_DATASET = "datasets";
 
+    private static final String PLAIN_DATAVERSE = "dataverse";
     private static final String SINGULAR_DATAVERSE = "a dataverse";
     private static final String PLURAL_DATAVERSE = "dataverses";
+
+    private static final String DEFAULT_PRODUCT_NAME = "Apache AsterixDB";
+    private static final String DEFAULT_PRODUCT_ABBREVIATION = "AsterixDB";
 
     private static final IIdentifierMapper DEFAULT_MAPPER = (identifier, modifier) -> {
         switch (identifier) {
             case DATASET:
                 switch (modifier) {
                     case NONE:
-                        return DATASET;
+                    case NONE_CAPITALIZED:
+                        return modifier.fixup(PLAIN_DATASET);
                     case SINGULAR:
-                        return SINGULAR_DATASET;
+                    case SINGULAR_CAPITALIZED:
+                        return modifier.fixup(SINGULAR_DATASET);
                     case PLURAL:
-                        return PLURAL_DATASET;
+                    case PLURAL_CAPITALIZED:
+                        return modifier.fixup(PLURAL_DATASET);
                     default:
                         throw new IllegalArgumentException("unknown modifier " + modifier);
                 }
             case DATAVERSE:
                 switch (modifier) {
                     case NONE:
-                        return DATAVERSE;
+                    case NONE_CAPITALIZED:
+                        return modifier.fixup(PLAIN_DATAVERSE);
                     case SINGULAR:
-                        return SINGULAR_DATAVERSE;
+                    case SINGULAR_CAPITALIZED:
+                        return modifier.fixup(SINGULAR_DATAVERSE);
                     case PLURAL:
-                        return PLURAL_DATAVERSE;
+                    case PLURAL_CAPITALIZED:
+                        return modifier.fixup(PLURAL_DATAVERSE);
                     default:
                         throw new IllegalArgumentException("unknown modifier " + modifier);
                 }
+            case PRODUCT_NAME:
+                return modifier.fixup(DEFAULT_PRODUCT_NAME);
+            case PRODUCT_ABBREVIATION:
+                return modifier.fixup(DEFAULT_PRODUCT_ABBREVIATION);
             default:
                 throw new IllegalArgumentException("unmapped identifier: " + identifier);
         }

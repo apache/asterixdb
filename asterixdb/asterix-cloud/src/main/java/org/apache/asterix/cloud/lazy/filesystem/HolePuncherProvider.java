@@ -52,7 +52,7 @@ public final class HolePuncherProvider {
 
         // Running a debug hole puncher on a non-Linux box
         String osName = FileSystemOperationDispatcherUtil.getOSName();
-        LOGGER.warn("Using 'DebugHolePuncher' as the OS '{}' does not support punishing holes", osName);
+        LOGGER.warn("Using 'DebugHolePuncher' as the OS '{}' does not support punching holes", osName);
         return new DebugHolePuncher(cloudIOManager, bufferProvider);
     }
 

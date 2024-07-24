@@ -79,6 +79,7 @@ import org.apache.asterix.common.transactions.Checkpoint;
 import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.transactions.IRecoveryManagerFactory;
+import org.apache.asterix.common.utils.IdentifierUtil;
 import org.apache.asterix.common.utils.PrintUtil;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.common.utils.StorageConstants;
@@ -148,9 +149,7 @@ public class NCApplication extends BaseNCApplication {
             throw new IllegalArgumentException("Unrecognized argument(s): " + Arrays.toString(args));
         }
         nodeId = this.ncServiceCtx.getNodeId();
-        if (LOGGER.isInfoEnabled()) {
-            LOGGER.info("Starting Asterix node controller: " + nodeId);
-        }
+        LOGGER.info("Starting {} node controller: {}", IdentifierUtil.productName(), nodeId);
         final NodeControllerService controllerService = (NodeControllerService) ncServiceCtx.getControllerService();
 
         if (System.getProperty("java.rmi.server.hostname") == null) {
@@ -280,9 +279,7 @@ public class NCApplication extends BaseNCApplication {
         if (!stopInitiated) {
             runtimeContext.setShuttingdown(true);
             stopInitiated = true;
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.info("Stopping Asterix node controller: " + nodeId);
-            }
+            LOGGER.info("Stopping {} node controller: {}", IdentifierUtil.productName(), nodeId);
 
             webManager.stop();
 

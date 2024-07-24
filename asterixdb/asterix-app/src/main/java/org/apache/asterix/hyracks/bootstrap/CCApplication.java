@@ -91,6 +91,7 @@ import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.metadata.NamespacePathResolver;
 import org.apache.asterix.common.metadata.NamespaceResolver;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
+import org.apache.asterix.common.utils.IdentifierUtil;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.external.adapter.factory.AdapterFactoryService;
 import org.apache.asterix.file.StorageComponentProvider;
@@ -165,7 +166,7 @@ public class CCApplication extends BaseCCApplication {
         ccServiceCtx.setMessageBroker(new CCMessageBroker(controllerService));
         ccServiceCtx.setPersistedResourceRegistry(new PersistedResourceRegistry());
         configureLoggingLevel(ccServiceCtx.getAppConfig().getLoggingLevel(ExternalProperties.Option.LOG_LEVEL));
-        LOGGER.info("Starting Asterix cluster controller");
+        LOGGER.info("Starting {} cluster controller", IdentifierUtil.productName());
         String strIP = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetAddress();
         int port = ccServiceCtx.getCCContext().getClusterControllerInfo().getClientNetPort();
         hcc = new HyracksConnection(strIP, port,

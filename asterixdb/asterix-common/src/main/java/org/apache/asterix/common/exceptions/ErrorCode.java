@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.exceptions;
 
+import org.apache.asterix.common.utils.IdentifierUtil;
 import org.apache.hyracks.api.exceptions.IError;
 import org.apache.hyracks.api.util.ErrorMessageUtil;
 
@@ -460,8 +461,8 @@ public enum ErrorCode implements IError {
     }
 
     private static class ErrorMessageMapHolder {
-        private static final String[] enumMessages =
-                ErrorMessageUtil.defineMessageEnumOrdinalMap(values(), RESOURCE_PATH);
+        private static final String[] enumMessages = IdentifierUtil
+                .replaceIdentifiers(ErrorMessageUtil.defineMessageEnumOrdinalMap(values(), RESOURCE_PATH));
 
         private static String get(ErrorCode errorCode) {
             return enumMessages[errorCode.ordinal()];

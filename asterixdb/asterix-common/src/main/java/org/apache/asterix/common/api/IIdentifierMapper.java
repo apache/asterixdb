@@ -19,13 +19,29 @@
 
 package org.apache.asterix.common.api;
 
+import org.apache.commons.lang3.StringUtils;
+
 @FunctionalInterface
 public interface IIdentifierMapper {
 
     enum Modifier {
         SINGULAR,
+        SINGULAR_CAPITALIZED,
         PLURAL,
-        NONE
+        PLURAL_CAPITALIZED,
+        NONE,
+        NONE_CAPITALIZED;
+
+        public String fixup(String input) {
+            switch (this) {
+                case SINGULAR_CAPITALIZED:
+                case PLURAL_CAPITALIZED:
+                case NONE_CAPITALIZED:
+                    return StringUtils.capitalize(input);
+                default:
+                    return input;
+            }
+        }
     }
 
     String map(String identifier, Modifier modifier);
