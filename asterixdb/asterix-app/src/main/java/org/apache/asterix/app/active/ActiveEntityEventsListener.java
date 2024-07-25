@@ -138,7 +138,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     }
 
     protected synchronized void setState(ActivityState newState) {
-        LOGGER.log(level, "State of {} is being set to {} from {}", getEntityId(), newState, state);
+        LOGGER.log(level, "state of {} is being set from {} to {}", getEntityId(), state, newState);
         this.prevState = state;
         this.state = newState;
         if (newState == ActivityState.STARTING || newState == ActivityState.RECOVERING
@@ -153,9 +153,8 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     @Override
     public synchronized void notify(ActiveEvent event) {
         try {
-            if (LOGGER.isEnabled(level)) {
-                LOGGER.log(level, "EventListener is notified.");
-            }
+            LOGGER.debug("CC handling event {}; state={}, prev state={}, suspended={}", event, state, prevState,
+                    suspended);
             ActiveEvent.Kind eventKind = event.getEventKind();
             switch (eventKind) {
                 case JOB_CREATED:
@@ -194,26 +193,21 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @SuppressWarnings("unchecked")
     protected void finish(ActiveEvent event) throws HyracksDataException {
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "Active job {} finished", jobId);
-        }
         JobId lastJobId = jobId;
+        Pair<JobStatus, List<Exception>> status = (Pair<JobStatus, List<Exception>>) event.getEventObject();
         if (numRegistered != numDeRegistered) {
             LOGGER.log(Level.WARN,
-                    "Active job {} finished with reported runtime registrations = {} and deregistrations = {}", jobId,
-                    numRegistered, numDeRegistered);
+                    "ingestion job {} finished with status={}, reported runtime registrations={}, deregistrations={}",
+                    jobId, status, numRegistered, numDeRegistered);
         }
         jobId = null;
-        Pair<JobStatus, List<Exception>> status = (Pair<JobStatus, List<Exception>>) event.getEventObject();
         JobStatus jobStatus = status.getLeft();
         List<Exception> exceptions = status.getRight();
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "Active job {} finished with status {}", lastJobId, jobStatus);
-        }
+        LOGGER.debug("ingestion job {} finished with status {}", lastJobId, jobStatus);
         if (!jobSuccessfullyTerminated(jobStatus)) {
             jobFailure = exceptions.isEmpty() ? new RuntimeDataException(ErrorCode.UNREPORTED_TASK_FAILURE_EXCEPTION)
                     : exceptions.get(0);
-            LOGGER.error("Active Job {} failed", lastJobId, jobFailure);
+            LOGGER.error("ingestion job {} failed", lastJobId, jobFailure);
             setState((state == ActivityState.STOPPING || state == ActivityState.CANCELLING) ? ActivityState.STOPPED
                     : ActivityState.TEMPORARILY_FAILED);
             if (prevState == ActivityState.RUNNING) {
@@ -371,16 +365,14 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public synchronized void recover() {
-        if (LOGGER.isEnabled(level)) {
-            LOGGER.log(level, "Recover is called on {}", entityId);
-        }
         if (retryPolicyFactory == NoRetryPolicyFactory.INSTANCE) {
-            LOGGER.log(level, "But it has no recovery policy, so it is set to permanent failure");
+            LOGGER.debug("recover is called on {} w/o recovery policy; setting to permanent failure", entityId);
             setState(ActivityState.STOPPED);
         } else {
+            LOGGER.debug("recover is called on {}", entityId);
             ExecutorService executor = appCtx.getServiceContext().getControllerService().getExecutor();
             setState(ActivityState.TEMPORARILY_FAILED);
-            LOGGER.log(level, "Recovery task has been submitted");
+            LOGGER.debug("recovery task has been submitted");
             rt = createRecoveryTask();
             executor.submit(rt.recover());
         }
@@ -479,15 +471,11 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
         // Note: once we start sending stop messages, we can't go back until the entity is stopped
         final String nameBefore = Thread.currentThread().getName();
         try {
-            Thread.currentThread().setName(nameBefore + " : WaitForCompletionForJobId: " + jobId);
+            Thread.currentThread().setName(nameBefore + " : wait-for-ingestion-completion: " + jobId);
             sendStopMessages(metadataProvider, timeout, unit);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Waiting for its state to become " + waitFor);
-            }
+            LOGGER.debug("waiting for {} to become {}", jobId, waitFor);
             subscriber.sync();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Disconnect has been completed " + waitFor);
-            }
+            LOGGER.debug("disconnect has been completed {}", waitFor);
         } catch (InterruptedException ie) {
             forceStop(subscriber, ie);
             Thread.currentThread().interrupt();
@@ -517,12 +505,9 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             LOGGER.log(Level.INFO, "Sending stop messages to " + runtimeLocations);
         }
         for (String location : runtimeLocations.getLocations()) {
-            if (LOGGER.isInfoEnabled()) {
-                LOGGER.log(Level.INFO, "Sending to " + location);
-            }
             ActiveRuntimeId runtimeId = getActiveRuntimeId(partition++);
             messageBroker.sendApplicationMessageToNC(new ActiveManagerMessage(ActiveManagerMessage.Kind.STOP_ACTIVITY,
-                    runtimeId, new StopRuntimeParameters(timeout, unit)), location);
+                    runtimeId, new StopRuntimeParameters(timeout, unit), ""), location);
         }
     }
 
@@ -737,7 +722,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     @Override
     public String toString() {
-        return "{\"class\":\"" + getClass().getSimpleName() + "\"," + "\"entityId\":\"" + entityId + "\","
-                + "\"state\":\"" + state + "\"" + "}";
+        return "{\"class\":\"" + getClass().getSimpleName() + "\", \"entityId\":\"" + entityId + "\", \"state\":\""
+                + state + "\", \"prev state\":\"" + prevState + "\", \"suspended\":" + suspended + "}";
     }
 }

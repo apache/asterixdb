@@ -150,7 +150,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         IndexInfo iInfo = dsr == null ? null : dsr.getIndexInfo(resourceID);
 
         if (dsr == null || iInfo == null) {
-            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST);
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST, resourcePath);
         }
 
         PrimaryIndexOperationTracker opTracker = dsr.getOpTracker(iInfo.getPartition());

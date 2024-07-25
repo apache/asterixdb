@@ -578,9 +578,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
                 break;
             case EXTERNAL:
                 ExternalAdapterFactory extAdapterFactory = (ExternalAdapterFactory) adapterFactory;
-                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDataverse(),
-                        extAdapterFactory.getLibraryName(), extAdapterFactory.getClassName(), recordType,
-                        policyAccessor, factoryOutput.second);
+                feedIngestor = new FeedIntakeOperatorDescriptor(jobSpec, feed, extAdapterFactory.getLibraryDatabase(),
+                        extAdapterFactory.getLibraryDataverse(), extAdapterFactory.getLibraryName(),
+                        extAdapterFactory.getClassName(), recordType, policyAccessor, factoryOutput.second);
                 break;
             default:
                 break;
@@ -1928,6 +1928,9 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             validateNamespaceName(namespace, sourceLoc);
         }
         validateDatabaseObjectNameImpl(objectName, sourceLoc);
+        if (namespaceResolver.isUsingDatabase()) {
+            validateChars(objectName, sourceLoc);
+        }
     }
 
     private void validateDatabaseObjectNameImpl(String name, SourceLocation sourceLoc) throws AlgebricksException {

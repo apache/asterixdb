@@ -27,7 +27,7 @@ import java.nio.file.StandardCopyOption;
 
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.library.ILibraryManager;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -44,14 +44,14 @@ abstract class AbstractLibraryOperatorDescriptor extends AbstractSingleActivityO
 
     private static final long serialVersionUID = 1L;
 
-    protected final DataverseName dataverseName;
+    protected final Namespace namespace;
 
     protected final String libraryName;
 
-    public AbstractLibraryOperatorDescriptor(IOperatorDescriptorRegistry spec, DataverseName dataverseName,
+    public AbstractLibraryOperatorDescriptor(IOperatorDescriptorRegistry spec, Namespace namespace,
             String libraryName) {
         super(spec, 0, 0);
-        this.dataverseName = dataverseName;
+        this.namespace = namespace;
         this.libraryName = libraryName;
     }
 
@@ -77,7 +77,7 @@ abstract class AbstractLibraryOperatorDescriptor extends AbstractSingleActivityO
                     (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
             ioManager = runtimeCtx.getIoManager();
             libraryManager = runtimeCtx.getLibraryManager();
-            libraryDir = libraryManager.getLibraryDir(dataverseName, libraryName);
+            libraryDir = libraryManager.getLibraryDir(namespace, libraryName);
             try {
                 execute();
             } catch (IOException e) {
@@ -130,7 +130,7 @@ abstract class AbstractLibraryOperatorDescriptor extends AbstractSingleActivityO
         }
 
         protected void closeLibrary() throws HyracksDataException {
-            libraryManager.closeLibrary(dataverseName, libraryName);
+            libraryManager.closeLibrary(namespace, libraryName);
         }
 
         @Override

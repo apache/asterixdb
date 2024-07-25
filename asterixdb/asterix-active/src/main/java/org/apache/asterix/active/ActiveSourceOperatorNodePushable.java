@@ -27,7 +27,6 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.std.base.AbstractUnaryOutputSourceOperatorNodePushable;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -98,14 +97,14 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
         try {
             // notify cc that runtime has been registered
             ctx.sendApplicationMessageToCC(new ActivePartitionMessage(runtimeId, ctx.getJobletContext().getJobId(),
-                    Event.RUNTIME_REGISTERED, null), null);
+                    Event.RUNTIME_REGISTERED, null, ""), null);
             start();
         } catch (InterruptedException e) {
-            LOGGER.log(Level.INFO, "initialize() interrupted on ActiveSourceOperatorNodePushable", e);
+            LOGGER.info("ingestion op interrupted", e);
             Thread.currentThread().interrupt();
             throw HyracksDataException.create(e);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "initialize() failed on ActiveSourceOperatorNodePushable", e);
+            logIngestionFailure(e);
             throw HyracksDataException.create(e);
         } finally {
             synchronized (this) {
@@ -121,17 +120,25 @@ public abstract class ActiveSourceOperatorNodePushable extends AbstractUnaryOutp
         activeManager.deregisterRuntime(runtimeId);
         try {
             ctx.sendApplicationMessageToCC(new ActivePartitionMessage(runtimeId, ctx.getJobletContext().getJobId(),
-                    Event.RUNTIME_DEREGISTERED, null), null);
+                    Event.RUNTIME_DEREGISTERED, null, ""), null);
         } catch (Exception e) {
-            LOGGER.log(Level.INFO, "deinitialize() failed on ActiveSourceOperatorNodePushable", e);
+            LOGGER.info("ingestion op stopped w/ failure", e);
             throw HyracksDataException.create(e);
         } finally {
-            LOGGER.log(Level.INFO, "deinitialize() returning on ActiveSourceOperatorNodePushable");
+            LOGGER.info("ingestion op stopped");
         }
     }
 
     @Override
     public final IFrameWriter getInputFrameWriter(int index) {
         return null;
+    }
+
+    private void logIngestionFailure(Exception e) {
+        if (e.getCause() instanceof InterruptedException) {
+            LOGGER.info("ingestion op interrupted", e);
+        } else {
+            LOGGER.info("ingestion op failed", e);
+        }
     }
 }

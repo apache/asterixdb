@@ -59,6 +59,10 @@ public class PushdownUtil {
     public static final Set<FunctionIdentifier> FILTER_PUSHABLE_PATH_FUNCTIONS = createFilterPushablePathFunctions();
     public static final Set<FunctionIdentifier> COMPARE_FUNCTIONS = createCompareFunctions();
     public static final Set<FunctionIdentifier> RANGE_FILTER_PUSHABLE_FUNCTIONS = createRangeFilterPushableFunctions();
+    // Set of aggregate functions in a subplan that allows the SELECT in such subplan to be pushed (SOME and EXISTS)
+    public static final Set<FunctionIdentifier> FILTER_PUSHABLE_AGGREGATE_FUNCTIONS =
+            createFilterPushableAggregateFunctions();
+    public static final Set<FunctionIdentifier> FILTER_PROHIBITED_FUNCTIONS = createFilterProhibitedFunctions();
 
     private PushdownUtil() {
     }
@@ -147,7 +151,7 @@ public class PushdownUtil {
     }
 
     public static boolean isNestedFunction(FunctionIdentifier fid) {
-        return isObjectFunction(fid) || isArrayFunction(fid) || BuiltinFunctions.DEEP_EQUAL.equals(fid);
+        return isObjectFunction(fid) || isArrayOrAggregateFunction(fid) || BuiltinFunctions.DEEP_EQUAL.equals(fid);
     }
 
     public static boolean isObjectFunction(FunctionIdentifier fid) {
@@ -155,10 +159,11 @@ public class PushdownUtil {
         return functionName.contains("object") || BuiltinFunctions.PAIRS.equals(fid);
     }
 
-    public static boolean isArrayFunction(FunctionIdentifier fid) {
+    public static boolean isArrayOrAggregateFunction(FunctionIdentifier fid) {
         String functionName = fid.getName();
         return functionName.startsWith("array") || functionName.startsWith("strict") || functionName.startsWith("sql")
-                || BuiltinFunctions.GET_ITEM.equals(fid);
+                || BuiltinFunctions.GET_ITEM.equals(fid) || BuiltinFunctions.isBuiltinScalarAggregateFunction(fid)
+                || BuiltinFunctions.isBuiltinAggregateFunction(fid);
     }
 
     public static boolean isSameFunction(ILogicalExpression expr1, ILogicalExpression expr2) {
@@ -169,6 +174,17 @@ public class PushdownUtil {
 
     public static boolean isAllVariableExpressions(List<Mutable<ILogicalExpression>> arguments) {
         return arguments.stream().allMatch(arg -> arg.getValue().getExpressionTag() == LogicalExpressionTag.VARIABLE);
+    }
+
+    public static boolean isSupportedFilterAggregateFunction(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        return fid != null && FILTER_PUSHABLE_AGGREGATE_FUNCTIONS.contains(fid);
+    }
+
+    public static boolean isProhibitedFilterFunction(ILogicalExpression expression) {
+        FunctionIdentifier fid = getFunctionIdentifier(expression);
+        return fid != null && !RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(fid)
+                && (isNestedFunction(fid) || isTypeFunction(fid) || FILTER_PROHIBITED_FUNCTIONS.contains(fid));
     }
 
     public static IAObject getConstant(ILogicalExpression expr) {
@@ -246,5 +262,17 @@ public class PushdownUtil {
         pushableFunctions.add(AlgebricksBuiltinFunctions.OR);
         pushableFunctions.add(AlgebricksBuiltinFunctions.NOT);
         return pushableFunctions;
+    }
+
+    private static Set<FunctionIdentifier> createFilterPushableAggregateFunctions() {
+        Set<FunctionIdentifier> pushableFunctions = new HashSet<>();
+        pushableFunctions.add(BuiltinFunctions.NON_EMPTY_STREAM);
+        return pushableFunctions;
+    }
+
+    private static Set<FunctionIdentifier> createFilterProhibitedFunctions() {
+        Set<FunctionIdentifier> prohibitedFunctions = new HashSet<>();
+        prohibitedFunctions.add(BuiltinFunctions.EMPTY_STREAM);
+        return prohibitedFunctions;
     }
 }

@@ -69,10 +69,8 @@ public class CancelQueryRequest implements ICcAddressedMessage {
                 }
             }
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Sending CancelQueryResponse to {}. requestId:{}, uuid:{}, contextId:{}, status:{}", nodeId,
-                    requestId, uuid, contextId, status);
-        }
+        LOGGER.debug("sending CancelQueryResponse to {}. reqId:{}, uuid:{}, contextId:{}, status:{}", nodeId, requestId,
+                uuid, contextId, status);
         CancelQueryResponse response = new CancelQueryResponse(reqId, status);
         CCMessageBroker messageBroker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
         try {
@@ -82,4 +80,9 @@ public class CancelQueryRequest implements ICcAddressedMessage {
         }
     }
 
+    @Override
+    public String toString() {
+        return "CancelQueryRequest{from='" + nodeId + "', reqId=" + reqId + ", uuid='" + uuid + "', contextId='"
+                + contextId + "'}";
+    }
 }

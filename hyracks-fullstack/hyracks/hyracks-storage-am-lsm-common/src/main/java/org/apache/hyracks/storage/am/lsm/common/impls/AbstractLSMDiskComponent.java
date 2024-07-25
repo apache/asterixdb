@@ -145,7 +145,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
             // However, we cannot throw an exception here to be compatible with legacy datasets.
             // In this case, the disk component would always get a garbage Id [-1, -1], which makes the
             // component Id-based optimization useless but still correct.
-            LOGGER.warn("Component Id not found from disk component metadata");
+            LOGGER.warn("component id {} not found from disk component metadata {}", componentId, getIndex());
         }
         return componentId;
     }
@@ -160,9 +160,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
     @Override
     public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
         ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Marked as valid component with id: " + getId());
-        }
+        LOGGER.debug("marked {} as valid component with id {}", getIndex(), getId());
     }
 
     @Override
@@ -247,6 +245,7 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
 
     @Override
     public String toString() {
-        return "{\"class\":" + getClass().getSimpleName() + "\", \"index\":" + getIndex().toString() + "}";
+        return "{\"class\":" + getClass().getSimpleName() + "\", \"id\":" + componentId + ", \"index\":" + getIndex()
+                + "}";
     }
 }

@@ -23,7 +23,7 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private IExpectedSchemaNode child;
 
-    ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
+    public ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
             String functionName) {
         super(parent, sourceLocation, functionName);
     }

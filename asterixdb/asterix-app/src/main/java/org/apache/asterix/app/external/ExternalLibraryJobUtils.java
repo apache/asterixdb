@@ -28,7 +28,7 @@ import org.apache.asterix.common.cluster.ClusterPartition;
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.asterix.external.operators.LibraryDeployAbortOperatorDescriptor;
 import org.apache.asterix.external.operators.LibraryDeployCommitOperatorDescriptor;
@@ -51,30 +51,29 @@ public class ExternalLibraryJobUtils {
     }
 
     public static Triple<JobSpecification, JobSpecification, JobSpecification> buildCreateLibraryJobSpec(
-            DataverseName dataverseName, String libraryName, ExternalFunctionLanguage language, URI downloadURI,
+            Namespace namespace, String libraryName, ExternalFunctionLanguage language, URI downloadURI,
             String authToken, MetadataProvider metadataProvider) {
 
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = getSplitsAndConstraints(appCtx);
 
-        JobSpecification prepareJobSpec = createLibraryPrepareJobSpec(dataverseName, libraryName, language, downloadURI,
+        JobSpecification prepareJobSpec = createLibraryPrepareJobSpec(namespace, libraryName, language, downloadURI,
                 authToken, appCtx, splitsAndConstraint);
 
         JobSpecification commitJobSpec =
-                createLibraryCommitJobSpec(dataverseName, libraryName, appCtx, splitsAndConstraint);
+                createLibraryCommitJobSpec(namespace, libraryName, appCtx, splitsAndConstraint);
 
-        JobSpecification abortJobSpec =
-                createLibraryAbortJobSpec(dataverseName, libraryName, appCtx, splitsAndConstraint);
+        JobSpecification abortJobSpec = createLibraryAbortJobSpec(namespace, libraryName, appCtx, splitsAndConstraint);
 
         return new Triple<>(prepareJobSpec, commitJobSpec, abortJobSpec);
     }
 
-    private static JobSpecification createLibraryPrepareJobSpec(DataverseName dataverseName, String libraryName,
+    private static JobSpecification createLibraryPrepareJobSpec(Namespace namespace, String libraryName,
             ExternalFunctionLanguage language, URI downloadURI, String authToken, ICcApplicationContext appCtx,
             Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint) {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
-        IOperatorDescriptor opDesc = new LibraryDeployPrepareOperatorDescriptor(jobSpec, dataverseName, libraryName,
+        IOperatorDescriptor opDesc = new LibraryDeployPrepareOperatorDescriptor(jobSpec, namespace, libraryName,
                 language, downloadURI, authToken);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
                 splitsAndConstraint.second);
@@ -82,32 +81,32 @@ public class ExternalLibraryJobUtils {
         return jobSpec;
     }
 
-    private static JobSpecification createLibraryCommitJobSpec(DataverseName dataverseName, String libraryName,
+    private static JobSpecification createLibraryCommitJobSpec(Namespace namespace, String libraryName,
             ICcApplicationContext appCtx, Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint) {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
-        IOperatorDescriptor opDesc = new LibraryDeployCommitOperatorDescriptor(jobSpec, dataverseName, libraryName);
+        IOperatorDescriptor opDesc = new LibraryDeployCommitOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
                 splitsAndConstraint.second);
         return jobSpec;
     }
 
-    private static JobSpecification createLibraryAbortJobSpec(DataverseName dataverseName, String libraryName,
+    private static JobSpecification createLibraryAbortJobSpec(Namespace namespace, String libraryName,
             ICcApplicationContext appCtx, Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint) {
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
-        IOperatorDescriptor opDesc = new LibraryDeployAbortOperatorDescriptor(jobSpec, dataverseName, libraryName);
+        IOperatorDescriptor opDesc = new LibraryDeployAbortOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
                 splitsAndConstraint.second);
         return jobSpec;
     }
 
-    public static JobSpecification buildDropLibraryJobSpec(DataverseName dataverseName, String libraryName,
+    public static JobSpecification buildDropLibraryJobSpec(Namespace namespace, String libraryName,
             MetadataProvider metadataProvider) {
         ICcApplicationContext appCtx = metadataProvider.getApplicationContext();
 
         Pair<IFileSplitProvider, AlgebricksPartitionConstraint> splitsAndConstraint = getSplitsAndConstraints(appCtx);
 
         JobSpecification jobSpec = RuntimeUtils.createJobSpecification(appCtx);
-        IOperatorDescriptor opDesc = new LibraryUndeployOperatorDescriptor(jobSpec, dataverseName, libraryName);
+        IOperatorDescriptor opDesc = new LibraryUndeployOperatorDescriptor(jobSpec, namespace, libraryName);
         AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(jobSpec, opDesc,
                 splitsAndConstraint.second);
         jobSpec.addRoot(opDesc);

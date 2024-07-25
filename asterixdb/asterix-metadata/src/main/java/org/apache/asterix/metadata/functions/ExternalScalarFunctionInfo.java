@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.om.functions.ExternalFunctionInfo;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
@@ -34,10 +34,9 @@ public class ExternalScalarFunctionInfo extends ExternalFunctionInfo {
     private static final long serialVersionUID = 3L;
 
     public ExternalScalarFunctionInfo(FunctionIdentifier fid, List<IAType> parameterTypes, IAType returnType,
-            IResultTypeComputer rtc, ExternalFunctionLanguage language, DataverseName libraryDataverseName,
-            String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic,
-            boolean nullCall) {
-        super(fid, FunctionKind.SCALAR, parameterTypes, returnType, rtc, language, libraryDataverseName, libraryName,
+            IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace, String libraryName,
+            List<String> externalIdentifier, Map<String, String> resources, boolean deterministic, boolean nullCall) {
+        super(fid, FunctionKind.SCALAR, parameterTypes, returnType, rtc, language, libraryNamespace, libraryName,
                 externalIdentifier, resources, deterministic, nullCall);
     }
 }

@@ -271,8 +271,14 @@ public class EstimatedCostComputationVisitor implements ILogicalOperatorVisitor<
         Pair<Double, Double> cardCost = new Pair<>(0.0, 0.0);
 
         for (Map.Entry<String, Object> anno : op.getAnnotations().entrySet()) {
-            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_INPUT_CARDINALITY)) {
-                cardCost.setFirst((Double) anno.getValue());
+            if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_OUTPUT_CARDINALITY)) {
+                if (op.getSelectCondition() != null) {
+                    cardCost.setFirst((Double) anno.getValue());
+                }
+            } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_INPUT_CARDINALITY)) {
+                if (op.getSelectCondition() == null) {
+                    cardCost.setFirst((Double) anno.getValue());
+                }
             } else if (anno.getValue() != null && anno.getKey().equals(OperatorAnnotations.OP_COST_TOTAL)) {
                 cardCost.setSecond((Double) anno.getValue());
             }

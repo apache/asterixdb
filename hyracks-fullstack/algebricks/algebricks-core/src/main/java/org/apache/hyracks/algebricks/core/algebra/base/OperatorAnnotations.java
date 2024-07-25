@@ -35,13 +35,4 @@ public interface OperatorAnnotations {
     String OP_COST_LOCAL = "OP_COST";
     String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";
     String OP_RIGHT_EXCHANGE_COST = "RIGHT_EXCHANGE_COST";
-
-    /**
-     * An annotation to indicate that a SELECT predicate should not be pushed to data-scan.
-     * <p>
-     * Returns TRUE if it is disallowed, FALSE otherwise.
-     * <p>
-     * If the annotation is missing (i.e., {@code null}), it should mean FALSE.
-     */
-    String DISALLOW_FILTER_PUSHDOWN_TO_SCAN = "DISALLOW_FILTER_PUSHDOWN_TO_SCAN";
 }

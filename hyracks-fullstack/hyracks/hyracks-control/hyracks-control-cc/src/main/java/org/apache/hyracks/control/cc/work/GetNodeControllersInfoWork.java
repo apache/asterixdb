@@ -24,10 +24,12 @@ import org.apache.hyracks.api.client.NodeControllerInfo;
 import org.apache.hyracks.control.cc.cluster.INodeManager;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.common.work.IResultCallback;
+import org.apache.logging.log4j.Level;
 
 public class GetNodeControllersInfoWork extends AbstractWork {
+
     private final INodeManager nodeManager;
-    private IResultCallback<Map<String, NodeControllerInfo>> callback;
+    private final IResultCallback<Map<String, NodeControllerInfo>> callback;
 
     public GetNodeControllersInfoWork(INodeManager nodeManager,
             IResultCallback<Map<String, NodeControllerInfo>> callback) {
@@ -38,5 +40,10 @@ public class GetNodeControllersInfoWork extends AbstractWork {
     @Override
     public void run() {
         callback.setValue(nodeManager.getNodeControllerInfoMap());
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

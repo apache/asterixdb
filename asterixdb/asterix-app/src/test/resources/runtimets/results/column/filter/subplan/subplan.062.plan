@@ -1,0 +1,70 @@
+distribute result [$$63] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    join (true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- NESTED_LOOP  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          select (eq($$p.getField("arrayOrObject").getField("text"), "7")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STREAM_SELECT  |PARTITIONED|
+            project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$p] <- [$$p2] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- REPLICATE  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$p2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$62, $$p2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$p2.getField("arrayOrObject").getField("text"), "7"), and(ge(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "1"), le(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "2"))) range-filter on: or(eq($$p2.getField("arrayOrObject").getField("text"), "7"), and(ge(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "1"), le(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "2"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- BROADCAST_EXCHANGE  |PARTITIONED|
+        aggregate [$$63] <- [agg-sql-sum($$67)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- AGGREGATE  |UNPARTITIONED|
+          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$67] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- AGGREGATE  |PARTITIONED|
+              select (and(ge($$60, "1"), le($$60, "2"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_SELECT  |PARTITIONED|
+                project ([$$60]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$60] <- [$$ao.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$ao]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      unnest $$ao <- scan-collection($$65) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- UNNEST  |PARTITIONED|
+                        project ([$$65]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$65] <- [$$p2.getField("arrayOrObject")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ASSIGN  |PARTITIONED|
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- REPLICATE  |PARTITIONED|
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$p2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      data-scan []<-[$$62, $$p2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$p2.getField("arrayOrObject").getField("text"), "7"), and(ge(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "1"), le(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "2"))) range-filter on: or(eq($$p2.getField("arrayOrObject").getField("text"), "7"), and(ge(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "1"), le(scan-collection($$p2.getField("arrayOrObject")).getField("text"), "2"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

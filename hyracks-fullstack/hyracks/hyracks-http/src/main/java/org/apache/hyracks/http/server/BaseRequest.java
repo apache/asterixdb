@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.hyracks.http.api.IServletRequest;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpScheme;
@@ -37,26 +38,22 @@ import io.netty.handler.codec.http.QueryStringDecoder;
 public class BaseRequest implements IServletRequest {
 
     private static final List<String> NO_PARAM = Collections.singletonList(null);
+    private final Channel channel;
     protected final FullHttpRequest request;
     protected final Map<? extends CharSequence, List<String>> parameters;
-    protected final InetSocketAddress remoteAddress;
     protected final HttpScheme scheme;
-    protected final InetSocketAddress localAddress;
 
     public static IServletRequest create(ChannelHandlerContext ctx, FullHttpRequest request, HttpScheme scheme,
             boolean ignoreQueryParameters) {
         Map<? extends CharSequence, List<String>> param =
                 ignoreQueryParameters ? Collections.emptyMap() : new QueryStringDecoder(request.uri()).parameters();
-        InetSocketAddress remoteAddress = (InetSocketAddress) ctx.channel().remoteAddress();
-        InetSocketAddress localAddress = (InetSocketAddress) ctx.channel().localAddress();
-        return new BaseRequest(request, localAddress, remoteAddress, param, scheme);
+        return new BaseRequest(ctx.channel(), request, param, scheme);
     }
 
-    protected BaseRequest(FullHttpRequest request, InetSocketAddress localAddress, InetSocketAddress remoteAddress,
+    protected BaseRequest(Channel channel, FullHttpRequest request,
             Map<? extends CharSequence, List<String>> parameters, HttpScheme scheme) {
+        this.channel = channel;
         this.request = request;
-        this.localAddress = localAddress;
-        this.remoteAddress = remoteAddress;
         this.parameters = parameters;
         this.scheme = scheme;
     }
@@ -104,7 +101,7 @@ public class BaseRequest implements IServletRequest {
 
     @Override
     public InetSocketAddress getRemoteAddress() {
-        return remoteAddress;
+        return (InetSocketAddress) channel.remoteAddress();
     }
 
     @Override
@@ -114,6 +111,11 @@ public class BaseRequest implements IServletRequest {
 
     @Override
     public InetSocketAddress getLocalAddress() {
-        return localAddress;
+        return (InetSocketAddress) channel.localAddress();
+    }
+
+    @Override
+    public Channel getChannel() {
+        return channel;
     }
 }

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpScheme;
 
@@ -78,7 +79,9 @@ public interface IServletRequest {
      * @param name header name
      * @return the header or null if not found
      */
-    String getHeader(CharSequence name);
+    default String getHeader(CharSequence name) {
+        return getHttpRequest().headers().get(name);
+    }
 
     /**
      * Get a request header if found, return the default value, otherwise
@@ -110,4 +113,6 @@ public interface IServletRequest {
      * @return the remote address
      */
     InetSocketAddress getLocalAddress();
+
+    Channel getChannel();
 }

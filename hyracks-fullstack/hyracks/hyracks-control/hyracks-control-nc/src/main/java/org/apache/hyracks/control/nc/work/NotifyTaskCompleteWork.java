@@ -18,6 +18,8 @@
  */
 package org.apache.hyracks.control.nc.work;
 
+import org.apache.hyracks.api.dataflow.TaskAttemptId;
+import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.control.common.job.profiling.om.TaskProfile;
 import org.apache.hyracks.control.common.work.AbstractWork;
 import org.apache.hyracks.control.nc.NodeControllerService;
@@ -38,20 +40,27 @@ public class NotifyTaskCompleteWork extends AbstractWork {
 
     @Override
     public void run() {
-        TaskProfile taskProfile = new TaskProfile(task.getTaskAttemptId(), task.getPartitionSendProfile(),
+        JobId jobId = task.getJoblet().getJobId();
+        TaskAttemptId taskAttemptId = task.getTaskAttemptId();
+        LOGGER.debug("notifying CC of task complete {}:{}", jobId, taskAttemptId);
+        TaskProfile taskProfile = new TaskProfile(taskAttemptId, task.getPartitionSendProfile(),
                 task.getStatsCollector(), task.getWarnings(), task.getWarningCollector().getTotalWarningsCount());
         try {
-            ncs.getClusterController(task.getJobletContext().getJobId().getCcId()).notifyTaskComplete(
-                    task.getJobletContext().getJobId(), task.getTaskAttemptId(), ncs.getId(), taskProfile);
+            ncs.getClusterController(task.getJobletContext().getJobId().getCcId())
+                    .notifyTaskComplete(task.getJobletContext().getJobId(), taskAttemptId, ncs.getId(), taskProfile);
         } catch (Exception e) {
-            LOGGER.log(Level.ERROR, "Failed notifying task complete for " + task.getTaskAttemptId(), e);
+            LOGGER.log(Level.ERROR, "Failed notifying task complete for {}", taskAttemptId, e);
         }
         task.getJoblet().removeTask(task);
     }
 
     @Override
     public String toString() {
-        return getName() + ": [" + ncs.getId() + "[" + task.getJoblet().getJobId() + ":" + task.getTaskAttemptId()
-                + "]";
+        return getName() + ": [" + task.getJoblet().getJobId() + ":" + task.getTaskAttemptId() + "]";
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

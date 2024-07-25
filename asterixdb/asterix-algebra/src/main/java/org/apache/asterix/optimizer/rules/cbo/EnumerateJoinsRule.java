@@ -251,9 +251,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             opRef.setValue(root);
 
             if (LOGGER.isTraceEnabled()) {
-                String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
-                LOGGER.trace("viewInPlanAgain");
-                LOGGER.trace(viewInPlan);
                 String viewOutPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
                 LOGGER.trace("viewOutPlan");
                 LOGGER.trace(viewOutPlan);
@@ -793,7 +790,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 return i;
             }
         }
-
         return -1;
     }
 
@@ -1015,7 +1011,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // on top of that LeafInput. Modify the joinLeafInputsHashMap as well.
     private void pushAssignsIntoLeafInputs(IPlanPrettyPrinter pp, List<ILogicalOperator> leafInputs,
             List<AssignOperator> assignOps, List<ILogicalExpression> assignJoinExprs) throws AlgebricksException {
-        int pos = 0;
         for (ILogicalOperator lo : leafInputs) {
             ILogicalOperator joinLeafInput = lo;
             printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Incoming leaf Input");
@@ -1023,10 +1018,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (assignNumber != -1) {
                 joinLeafInput = addAssignToLeafInput(joinLeafInput, assignOps.get(assignNumber));
                 printPlan(pp, (AbstractLogicalOperator) joinLeafInput, "Modified leaf Input");
-                leafInputs.add(pos, joinLeafInput);
                 assignOps.remove(assignNumber);
             }
-            pos++;
         }
     }
 

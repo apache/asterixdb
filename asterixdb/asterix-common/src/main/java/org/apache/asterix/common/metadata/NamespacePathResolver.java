@@ -57,4 +57,9 @@ public class NamespacePathResolver implements INamespacePathResolver {
             return StoragePathUtil.prepareDataverseName(dataverseName);
         }
     }
+
+    @Override
+    public boolean usingDatabase() {
+        return usingDatabase;
+    }
 }

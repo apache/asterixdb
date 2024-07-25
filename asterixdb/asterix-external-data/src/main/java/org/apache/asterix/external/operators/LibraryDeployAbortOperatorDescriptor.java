@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -36,9 +36,9 @@ public final class LibraryDeployAbortOperatorDescriptor extends AbstractLibraryO
 
     private static final Logger LOGGER = LogManager.getLogger(LibraryDeployAbortOperatorDescriptor.class);
 
-    public LibraryDeployAbortOperatorDescriptor(IOperatorDescriptorRegistry spec, DataverseName dataverseName,
+    public LibraryDeployAbortOperatorDescriptor(IOperatorDescriptorRegistry spec, Namespace namespace,
             String libraryName) {
-        super(spec, dataverseName, libraryName);
+        super(spec, namespace, libraryName);
     }
 
     @Override
@@ -48,7 +48,7 @@ public final class LibraryDeployAbortOperatorDescriptor extends AbstractLibraryO
             @Override
             protected void execute() throws IOException {
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Abort deployment of library {}.{}", dataverseName, libraryName);
+                    LOGGER.info("Abort deployment of library {}.{}", namespace, libraryName);
                 }
 
                 FileReference libDir = getLibraryDir();

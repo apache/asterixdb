@@ -22,8 +22,10 @@ import org.apache.hyracks.api.comm.NetworkAddress;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
 
 public class GetResultDirectoryAddressWork extends SynchronizableWork {
+
     private final ClusterControllerService ccs;
 
     private final IResultCallback<NetworkAddress> callback;
@@ -41,5 +43,10 @@ public class GetResultDirectoryAddressWork extends SynchronizableWork {
         } catch (Exception e) {
             callback.setException(e);
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

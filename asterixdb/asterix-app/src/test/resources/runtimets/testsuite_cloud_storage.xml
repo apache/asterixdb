@@ -32,6 +32,14 @@
         <output-dir compare="Text">special-chars</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="cloud_storage">
+      <compilation-unit name="disallowed-chars">
+        <output-dir compare="Text">disallowed-chars</output-dir>
+        <expected-error>ASX1115: Invalid name for a database object: 'dv.with.dot'</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: 'col.with.dot'</expected-error>
+        <expected-error>ASX1115: Invalid name for a database object: 'db.with.dot'</expected-error>
+      </compilation-unit>
+    </test-case>
   </test-group>
   &sqlpp_queries;
 </test-suite>

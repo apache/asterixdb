@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.visitor;
 
-import static org.apache.asterix.metadata.utils.PushdownUtil.SUPPORTED_FUNCTIONS;
+import static org.apache.asterix.metadata.utils.PushdownUtil.FILTER_PUSHABLE_PATH_FUNCTIONS;
 
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.asterix.optimizer.rules.pushdown.schema.AbstractComplexExpectedSchemaNode;
@@ -98,7 +98,7 @@ public class ExpressionToExpectedSchemaNodeVisitor implements ILogicalExpression
 
     private IExpectedSchemaNode handleFunction(AbstractFunctionCallExpression expr) throws AlgebricksException {
         FunctionIdentifier fid = expr.getFunctionIdentifier();
-        if (!SUPPORTED_FUNCTIONS.contains(fid)) {
+        if (!FILTER_PUSHABLE_PATH_FUNCTIONS.contains(fid)) {
             // If not a supported function, return null
             return null;
         }

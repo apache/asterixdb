@@ -29,11 +29,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ApplicationMessageWork extends AbstractWork {
+
     private static final Logger LOGGER = LogManager.getLogger();
-    private byte[] message;
-    private DeploymentId deploymentId;
-    private String nodeId;
-    private NodeControllerService ncs;
+    private final byte[] message;
+    private final DeploymentId deploymentId;
+    private final String nodeId;
+    private final NodeControllerService ncs;
 
     public ApplicationMessageWork(NodeControllerService ncs, byte[] message, DeploymentId deploymentId, String nodeId) {
         this.ncs = ncs;
@@ -56,6 +57,11 @@ public class ApplicationMessageWork extends AbstractWork {
             LOGGER.warn("Error in application message delivery!", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 
     @Override

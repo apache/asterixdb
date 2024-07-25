@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -36,9 +36,9 @@ public final class LibraryDeployCommitOperatorDescriptor extends AbstractLibrary
 
     private static final Logger LOGGER = LogManager.getLogger(LibraryDeployCommitOperatorDescriptor.class);
 
-    public LibraryDeployCommitOperatorDescriptor(IOperatorDescriptorRegistry spec, DataverseName dataverseName,
+    public LibraryDeployCommitOperatorDescriptor(IOperatorDescriptorRegistry spec, Namespace namespace,
             String libraryName) {
-        super(spec, dataverseName, libraryName);
+        super(spec, namespace, libraryName);
     }
 
     @Override
@@ -48,7 +48,7 @@ public final class LibraryDeployCommitOperatorDescriptor extends AbstractLibrary
             @Override
             protected void execute() throws IOException {
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Commit deployment of library {}.{}", dataverseName, libraryName);
+                    LOGGER.info("Commit deployment of library {}.{}", namespace, libraryName);
                 }
 
                 // #. rename 'stage' dir into 'rev_1' dir

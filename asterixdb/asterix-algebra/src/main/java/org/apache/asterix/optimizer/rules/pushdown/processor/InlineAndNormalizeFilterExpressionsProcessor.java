@@ -25,6 +25,7 @@ import static org.apache.asterix.metadata.utils.PushdownUtil.isSameFunction;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.asterix.optimizer.rules.InlineAndRemoveRedundantBooleanExpressionsRule;
 import org.apache.asterix.optimizer.rules.pushdown.PushdownContext;
 import org.apache.asterix.optimizer.rules.pushdown.descriptor.ScanDefineDescriptor;
 import org.apache.commons.lang3.mutable.Mutable;
@@ -35,13 +36,15 @@ import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 /**
- * Inline filter expressions of a scan.
- * E.g.,
+ * Inline and normalize filter expressions of a scan.
+ * Inline example:
  * and(a > 2) --> a > 2
  * and(a > 2, and(b > 2)) --> and(a > 2, b > 2)
+ * Normalization example
+ * and(a, a) -> a
  */
-public class InlineFilterExpressionsProcessor extends AbstractPushdownProcessor {
-    public InlineFilterExpressionsProcessor(PushdownContext pushdownContext, IOptimizationContext context) {
+public class InlineAndNormalizeFilterExpressionsProcessor extends AbstractPushdownProcessor {
+    public InlineAndNormalizeFilterExpressionsProcessor(PushdownContext pushdownContext, IOptimizationContext context) {
         super(pushdownContext, context);
     }
 
@@ -89,6 +92,15 @@ public class InlineFilterExpressionsProcessor extends AbstractPushdownProcessor 
             args.clear();
             // Add the new inlined arguments
             args.addAll(inlinedArgs);
+        }
+
+        // Remove redundant expressions from AND/OR
+        if (isAnd(funcExpr) || isOr(funcExpr)) {
+            InlineAndRemoveRedundantBooleanExpressionsRule.removeRedundantExpressions(args);
+            if (args.size() == 1) {
+                // InlineAndRemoveRedundantBooleanExpressionsRule produced a single argument return it
+                return args.get(0).getValue();
+            }
         }
 
         // either the original expression or the inlined AND/OR expression

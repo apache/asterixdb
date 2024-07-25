@@ -24,7 +24,6 @@ import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYP
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
@@ -99,11 +98,11 @@ public class ExpectedSchemaNodeToIATypeTranslatorVisitor implements IExpectedSch
     }
 
     private ARecordType createRecordType(ObjectExpectedSchemaNode node, String arg) {
-        Set<Map.Entry<String, IExpectedSchemaNode>> children = node.getChildren();
+        Map<String, IExpectedSchemaNode> children = node.getChildren();
         String[] childrenFieldNames = new String[children.size()];
         IAType[] childrenTypes = new IAType[children.size()];
         int i = 0;
-        for (Map.Entry<String, IExpectedSchemaNode> child : children) {
+        for (Map.Entry<String, IExpectedSchemaNode> child : children.entrySet()) {
             childrenFieldNames[i] = child.getKey();
             childrenTypes[i++] = child.getValue().accept(this, String.valueOf(counter++));
         }

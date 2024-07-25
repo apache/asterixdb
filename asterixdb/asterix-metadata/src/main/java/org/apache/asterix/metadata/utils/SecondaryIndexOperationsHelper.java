@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.apache.asterix.common.cluster.PartitioningProperties;
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.OptimizationConfUtil;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -163,7 +164,8 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             MetadataProvider metadataProvider, SourceLocation sourceLoc) throws AlgebricksException {
 
         ISecondaryIndexOperationsHelper indexOperationsHelper;
-        switch (index.getIndexType()) {
+        DatasetConfig.IndexType indexType = index.getIndexType();
+        switch (indexType) {
             case ARRAY:
                 indexOperationsHelper =
                         new SecondaryArrayIndexBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
@@ -172,12 +174,14 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
                 indexOperationsHelper = new SecondaryBTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
             case RTREE:
+                ensureNotColumnar(dataset, indexType, sourceLoc);
                 indexOperationsHelper = new SecondaryRTreeOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
             case SINGLE_PARTITION_WORD_INVIX:
             case SINGLE_PARTITION_NGRAM_INVIX:
             case LENGTH_PARTITIONED_WORD_INVIX:
             case LENGTH_PARTITIONED_NGRAM_INVIX:
+                ensureNotColumnar(dataset, indexType, sourceLoc);
                 indexOperationsHelper =
                         new SecondaryInvertedIndexOperationsHelper(dataset, index, metadataProvider, sourceLoc);
                 break;
@@ -190,6 +194,21 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
         }
         indexOperationsHelper.init();
         return indexOperationsHelper;
+    }
+
+    /**
+     * Ensure only supported secondary indexes can be created against dataset
+     * in {@link DatasetConfig.DatasetFormat#COLUMN} format
+     *
+     * @param dataset   primary index
+     * @param indexType secondary index type
+     * @param sourceLoc source location
+     */
+    private static void ensureNotColumnar(Dataset dataset, DatasetConfig.IndexType indexType, SourceLocation sourceLoc)
+            throws AlgebricksException {
+        if (dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN) {
+            throw CompilationException.create(ErrorCode.UNSUPPORTED_INDEX_IN_COLUMNAR_FORMAT, indexType, sourceLoc);
+        }
     }
 
     @Override

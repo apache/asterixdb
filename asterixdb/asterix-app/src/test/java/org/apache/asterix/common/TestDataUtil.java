@@ -195,7 +195,7 @@ public class TestDataUtil {
         try {
             ActiveNotificationHandler activeNotificationHandler =
                     (ActiveNotificationHandler) ccAppCtx.getActiveNotificationHandler();
-            activeNotificationHandler.suspend(metadataProvider);
+            activeNotificationHandler.suspend(metadataProvider, "");
             try {
                 IMetadataLockManager lockManager = ccAppCtx.getMetadataLockManager();
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), database,

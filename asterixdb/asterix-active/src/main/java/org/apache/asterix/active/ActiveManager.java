@@ -103,8 +103,8 @@ public class ActiveManager {
         return ActiveManager.class.getSimpleName() + "[" + nodeId + "]";
     }
 
-    public void submit(ActiveManagerMessage message) throws HyracksDataException {
-        LOGGER.debug("Message of type {} received in {}", message.getKind(), nodeId);
+    public void handle(ActiveManagerMessage message) throws HyracksDataException {
+        LOGGER.debug("NC handling {}({})({})", message.getKind(), message.getRuntimeId(), message.getDesc());
         switch (message.getKind()) {
             case STOP_ACTIVITY:
                 stopRuntime(message);
@@ -125,7 +125,7 @@ public class ActiveManager {
             ActiveRuntimeId runtimeId = message.getRuntimeId();
             IActiveRuntime runtime = runtimes.get(runtimeId);
             if (runtime == null) {
-                LOGGER.warn("Request for a runtime {} that is not registered {}", runtimeId, message);
+                LOGGER.warn("not handling {} for a runtime {} that is not registered", message, runtimeId);
                 return;
             }
             runtime.handleGenericEvent(message);

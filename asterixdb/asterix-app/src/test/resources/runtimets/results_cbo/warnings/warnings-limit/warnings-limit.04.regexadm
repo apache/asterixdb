@@ -30,6 +30,7 @@
 \s*\Q"resultSize": \E[0-9]+\Q,\E
 \s*\Q"processedObjects": \E[0-9]+\Q,\E
 \s*\Q"bufferCacheHitRatio": "\E[^"]+\Q",\E
+\s*\Q"bufferCachePageReadCount": \E[0-9]+\Q,\E
 \s*\Q"warningCount": 10\E
 \s*\Q}\E
 \s*\Q}\E\s*

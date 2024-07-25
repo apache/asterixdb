@@ -273,7 +273,7 @@ public class RebalanceApiServlet extends AbstractServlet {
         try {
             ActiveNotificationHandler activeNotificationHandler =
                     (ActiveNotificationHandler) appCtx.getActiveNotificationHandler();
-            activeNotificationHandler.suspend(metadataProvider);
+            activeNotificationHandler.suspend(metadataProvider, "rebalance api");
             try {
                 IMetadataLockManager lockManager = appCtx.getMetadataLockManager();
                 lockManager.acquireDatasetExclusiveModificationLock(metadataProvider.getLocks(), database,

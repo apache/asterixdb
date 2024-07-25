@@ -1,0 +1,48 @@
+distribute result [$$188] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |LOCAL|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    aggregate [$$188] <- [agg-sql-sum($$213)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- AGGREGATE  |LOCAL|
+      aggregate [$$213] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- AGGREGATE  |LOCAL|
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+          union [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- UNION_ALL  |UNPARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                  limit 100 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_LIMIT  |PARTITIONED|
+                    project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$128, $$onek1] <- test.onek1 limit 100 project ({}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_LIMIT  |UNPARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                  limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_LIMIT  |PARTITIONED|
+                    project ([]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$129, $$onek1] <- test.onek1 limit 10 project ({}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

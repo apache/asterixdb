@@ -84,12 +84,12 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
         String dataverseCanonicalName = library.getDataverseName().getCanonicalForm();
 
         // write the key in the first 2 fields of the tuple
+        tupleBuilder.reset();
         if (libraryEntity.databaseNameIndex() >= 0) {
             aString.setValue(library.getDatabaseName());
             stringSerde.serialize(aString, tupleBuilder.getDataOutput());
             tupleBuilder.addFieldEndOffset();
         }
-        tupleBuilder.reset();
         aString.setValue(dataverseCanonicalName);
         stringSerde.serialize(aString, tupleBuilder.getDataOutput());
         tupleBuilder.addFieldEndOffset();
@@ -106,6 +106,7 @@ public class LibraryTupleTranslator extends AbstractTupleTranslator<Library> {
             stringSerde.serialize(aString, fieldValue.getDataOutput());
             recordBuilder.addField(libraryEntity.databaseNameIndex(), fieldValue);
         }
+
         // write field 0
         fieldValue.reset();
         aString.setValue(dataverseCanonicalName);

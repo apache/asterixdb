@@ -172,18 +172,18 @@ public class Stats {
 
     // The expression we get may not be a base condition. It could be comprised of ors and ands and nots. So have to
     //recursively find the overall selectivity.
-    private double getSelectivityFromAnnotation(AbstractFunctionCallExpression afcExpr, boolean join)
-            throws AlgebricksException {
+    private double getSelectivityFromAnnotation(AbstractFunctionCallExpression afcExpr, boolean join,
+            boolean singleDatasetPreds) throws AlgebricksException {
         double sel = 1.0;
 
         if (afcExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.OR)) {
-            double orSel = getSelectivityFromAnnotation(
-                    (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
-            for (int i = 1; i < afcExpr.getArguments().size(); i++) {
+            double orSel = 0.0;
+            for (int i = 0; i < afcExpr.getArguments().size(); i++) {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                     sel = getSelectivityFromAnnotation(
-                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join);
+                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
+                            singleDatasetPreds);
                     orSel = orSel + sel - orSel * sel;
                 }
             }
@@ -194,7 +194,8 @@ public class Stats {
                 ILogicalExpression lexpr = afcExpr.getArguments().get(i).getValue();
                 if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                     sel = getSelectivityFromAnnotation(
-                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join);
+                            (AbstractFunctionCallExpression) afcExpr.getArguments().get(i).getValue(), join,
+                            singleDatasetPreds);
                     andSel *= sel;
                 }
             }
@@ -203,44 +204,57 @@ public class Stats {
             ILogicalExpression lexpr = afcExpr.getArguments().get(0).getValue();
             if (lexpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
                 sel = getSelectivityFromAnnotation(
-                        (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join);
-                return 1.0 - sel;
+                        (AbstractFunctionCallExpression) afcExpr.getArguments().get(0).getValue(), join,
+                        singleDatasetPreds);
+                // We want to return 1.0 and not 0.0 if there was no annotation
+                return (sel == 1.0) ? 1.0 : 1.0 - sel;
             }
         }
 
         double s;
         PredicateCardinalityAnnotation pca = afcExpr.getAnnotation(PredicateCardinalityAnnotation.class);
-        if (pca != null) {
-            s = pca.getSelectivity();
-            if (s <= 0 || s >= 1) {
-                IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
-                if (warningCollector.shouldWarn()) {
-                    warningCollector.warn(Warning.of(afcExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
-                            "selectivity", "Selectivity specified: " + s
-                                    + ", has to be a decimal value greater than 0 and less than 1"));
+        if (!join) {
+            if (pca != null) {
+                s = pca.getSelectivity();
+                if (s <= 0 || s >= 1) {
+                    IWarningCollector warningCollector = joinEnum.optCtx.getWarningCollector();
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(afcExpr.getSourceLocation(), ErrorCode.INAPPLICABLE_HINT,
+                                "selectivity", "Selectivity specified: " + s
+                                        + ", has to be a decimal value greater than 0 and less than 1"));
+                    }
+                } else {
+                    sel *= s;
                 }
-            } else {
-                sel *= s;
+            } else if (singleDatasetPreds) {
+                // Single dataset predicates inside join predicates will have a selectivity annotation.
+                // If the annotation is not present, return -1, so we don't overwrite previously
+                // computed selectivity.
+                return -1;
             }
         } else {
             JoinProductivityAnnotation jpa = afcExpr.getAnnotation(JoinProductivityAnnotation.class);
             s = findJoinSelectivity(jpa, afcExpr);
             sel *= s;
         }
-        if (join && s == 1.0) {
+
+        List<LogicalVariable> usedVars = new ArrayList<>();
+        usedVars.clear();
+        afcExpr.getUsedVariables(usedVars);
+        if (join && sel == 1.0 && usedVars.size() == 1) {
             // assume no selectivity was assigned
             joinEnum.singleDatasetPreds.add(afcExpr);
         }
         return sel;
     }
 
-    protected double getSelectivityFromAnnotationMain(ILogicalExpression leExpr, boolean join)
-            throws AlgebricksException {
+    protected double getSelectivityFromAnnotationMain(ILogicalExpression leExpr, boolean join,
+            boolean singleDatasetPreds) throws AlgebricksException {
         double sel = 1.0;
 
         if (leExpr.getExpressionTag().equals(LogicalExpressionTag.FUNCTION_CALL)) {
             AbstractFunctionCallExpression afcExpr = (AbstractFunctionCallExpression) leExpr;
-            sel = getSelectivityFromAnnotation(afcExpr, join);
+            sel = getSelectivityFromAnnotation(afcExpr, join, singleDatasetPreds);
         }
 
         return sel;
@@ -258,7 +272,7 @@ public class Stats {
         while (op.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), join);
+                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), join, false);
             }
             if (op.getOperatorTag() == LogicalOperatorTag.SUBPLAN) {
                 sel *= getSelectivity((SubplanOperator) op);
@@ -275,7 +289,7 @@ public class Stats {
         while (true) {
             if (op.getOperatorTag() == LogicalOperatorTag.SELECT) {
                 SelectOperator selOper = (SelectOperator) op;
-                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), false);
+                sel *= getSelectivityFromAnnotationMain(selOper.getCondition().getValue(), false, false);
             }
             if (op.getInputs().size() > 0) {
                 op = op.getInputs().get(0).getValue();
@@ -415,7 +429,7 @@ public class Stats {
     }
 
     protected double findSelectivityForThisPredicate(SelectOperator selOp, AbstractFunctionCallExpression exp,
-            boolean arrayIndex, double datasetCard) throws AlgebricksException {
+            boolean arrayIndex) throws AlgebricksException {
         // replace the SelOp.condition with the new exp and replace it at the end
         // The Selop here is the start of the leafInput.
 
@@ -433,8 +447,6 @@ public class Stats {
 
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
-        // origDatasetCard must be equal to datasetCard. So we do not need datasetCard passed in here. VIJAY check if
-        // this parameter can be removed.
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
         if (sampleCard == 0) {
             sampleCard = 1;
@@ -506,9 +518,7 @@ public class Stats {
         }
 
         double predicateCardinality = findPredicateCardinality(result, false);
-        if (predicateCardinality == 0.0) {
-            predicateCardinality = 0.0001 * idxDetails.getSampleCardinalityTarget();
-        }
+        predicateCardinality = Math.max(predicateCardinality, 0.0001);
 
         if (arrayIndex) {
             // In case of array predicates, the sample cardinality should be computed as
@@ -618,7 +628,7 @@ public class Stats {
     // This one gets the cardinality and also projection sizes
     protected List<List<IAObject>> runSamplingQueryProjection(IOptimizationContext ctx, ILogicalOperator logOp,
             int dataset, LogicalVariable primaryKey) throws AlgebricksException {
-        LOGGER.info("***running sample query***");
+        LOGGER.info("***running projection sample query***");
 
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
 
@@ -725,7 +735,7 @@ public class Stats {
             LOGGER.trace(viewInPlan);
         }
 
-        LOGGER.info("***returning from sample query***");
+        LOGGER.info("***returning from projection sample query***");
         return AnalysisUtil.runQuery(Ref, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 

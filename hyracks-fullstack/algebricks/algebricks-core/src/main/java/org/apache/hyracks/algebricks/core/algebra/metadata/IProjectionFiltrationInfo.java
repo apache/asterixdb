@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.core.algebra.metadata;
 
 import java.io.IOException;
 
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -29,6 +30,15 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * {@link org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator}
  */
 public interface IProjectionFiltrationInfo {
+
+    /**
+     * Substitute filter expression variables
+     *
+     * @param oldVar old variable
+     * @param newVar new variable
+     */
+    void substituteFilterVariable(LogicalVariable oldVar, LogicalVariable newVar);
+
     /**
      * @return a copy of the {@link IProjectionFiltrationInfo}
      */

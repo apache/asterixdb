@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.asterix.algebra.base.ILangExpressionToPlanTranslator;
 import org.apache.asterix.algebra.operators.CommitOperator;
+import org.apache.asterix.common.annotations.ExistsComparisonExpressionAnnotation;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.config.MetadataProperties;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -1553,8 +1554,6 @@ abstract class LangExpressionToPlanTranslator
                         BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.NOT), notArgs);
                 notExpr.setSourceLocation(sourceLoc);
                 s = new SelectOperator(new MutableObject<>(notExpr));
-                // Disable pushdowns
-                s.getAnnotations().put(OperatorAnnotations.DISALLOW_FILTER_PUSHDOWN_TO_SCAN, Boolean.TRUE);
                 s.getInputs().add(eo2.second);
                 s.setSourceLocation(sourceLoc);
                 fAgg = BuiltinFunctions.makeAggregateFunctionExpression(BuiltinFunctions.EMPTY_STREAM,
@@ -2198,8 +2197,6 @@ abstract class LangExpressionToPlanTranslator
         NestedTupleSourceOperator ntsOp = new NestedTupleSourceOperator(new MutableObject<>(subplanOp));
         ntsOp.setSourceLocation(sourceLoc);
         SelectOperator select = new SelectOperator(selectExpr);
-        // Disable pushdowns
-        select.getAnnotations().put(OperatorAnnotations.DISALLOW_FILTER_PUSHDOWN_TO_SCAN, Boolean.TRUE);
         // The select operator cannot be moved up and down, otherwise it will cause
         // typing issues (ASTERIXDB-1203).
         OperatorPropertiesUtil.markMovable(select, false);
@@ -2233,6 +2230,10 @@ abstract class LangExpressionToPlanTranslator
         count.setSourceLocation(sourceLoc);
         AbstractFunctionCallExpression comparison = new ScalarFunctionCallExpression(
                 FunctionUtil.getFunctionInfo(not ? BuiltinFunctions.EQ : BuiltinFunctions.NEQ));
+        if (!not) {
+            // Indicate this comparison is for EXISTS
+            comparison.putAnnotation(ExistsComparisonExpressionAnnotation.INSTANCE);
+        }
         ConstantExpression eZero = new ConstantExpression(new AsterixConstantValue(new AInt64(0L)));
         eZero.setSourceLocation(sourceLoc);
         comparison.getArguments().add(new MutableObject<>(count));

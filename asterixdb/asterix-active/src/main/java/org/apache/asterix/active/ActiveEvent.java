@@ -20,6 +20,7 @@ package org.apache.asterix.active;
 
 import java.util.Objects;
 
+import org.apache.asterix.active.message.ActivePartitionMessage;
 import org.apache.hyracks.api.job.JobId;
 
 public class ActiveEvent {
@@ -65,7 +66,12 @@ public class ActiveEvent {
 
     @Override
     public String toString() {
-        return "JobId:" + jobId + "," + "EntityId:" + entityId + ", " + "Kind" + eventKind;
+        String kindDesc = "";
+        if (eventObject instanceof ActivePartitionMessage) {
+            ActivePartitionMessage partitionEvent = (ActivePartitionMessage) eventObject;
+            kindDesc = '-' + String.valueOf(partitionEvent.getEvent()) + '(' + partitionEvent.getDesc() + ')';
+        }
+        return jobId + ", " + "EntityId:" + entityId + ", " + "Kind:" + eventKind + kindDesc;
     }
 
     @Override

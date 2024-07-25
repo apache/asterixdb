@@ -35,8 +35,13 @@ import org.apache.hyracks.control.cc.job.JobRun;
 import org.apache.hyracks.control.common.deployment.DeploymentUtils;
 import org.apache.hyracks.control.common.work.IResultCallback;
 import org.apache.hyracks.control.common.work.SynchronizableWork;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JobStartWork extends SynchronizableWork {
+
+    private static final Logger LOGGER = LogManager.getLogger();
     private final ClusterControllerService ccs;
     private final byte[] acggfBytes;
     private final Set<JobFlag> jobFlags;
@@ -67,6 +72,7 @@ public class JobStartWork extends SynchronizableWork {
             JobId jobId;
             JobRun run;
             jobId = jobIdFactory.create();
+            LOGGER.debug("created {}", jobId);
             if (deployedJobSpecId == null) {
                 //Need to create the ActivityClusterGraph
                 IActivityClusterGraphGeneratorFactory acggf = (IActivityClusterGraphGeneratorFactory) DeploymentUtils
@@ -84,5 +90,10 @@ public class JobStartWork extends SynchronizableWork {
         } catch (Exception e) {
             callback.setException(e);
         }
+    }
+
+    @Override
+    public Level logLevel() {
+        return Level.TRACE;
     }
 }

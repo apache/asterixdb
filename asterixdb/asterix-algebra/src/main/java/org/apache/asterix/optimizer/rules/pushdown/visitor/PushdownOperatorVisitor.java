@@ -363,12 +363,14 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
                 && funcExpr.getArguments().get(0).getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT;
     }
 
-    private void visitSubplans(List<ILogicalPlan> nestedPlans) throws AlgebricksException {
+    private void visitNestedPlans(ILogicalOperator op, List<ILogicalPlan> nestedPlans) throws AlgebricksException {
+        ILogicalOperator previousSubplanOp = pushdownContext.enterSubplan(op);
         for (ILogicalPlan plan : nestedPlans) {
             for (Mutable<ILogicalOperator> root : plan.getRoots()) {
                 root.getValue().accept(this, null);
             }
         }
+        pushdownContext.exitSubplan(previousSubplanOp);
     }
 
     /*
@@ -386,7 +388,7 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitSubplanOperator(SubplanOperator op, Void arg) throws AlgebricksException {
         visitInputs(op);
-        visitSubplans(op.getNestedPlans());
+        visitNestedPlans(op, op.getNestedPlans());
         return null;
     }
 
@@ -410,7 +412,7 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitGroupByOperator(GroupByOperator op, Void arg) throws AlgebricksException {
         visitInputs(op, op.getVariables());
-        visitSubplans(op.getNestedPlans());
+        visitNestedPlans(op, op.getNestedPlans());
         return null;
     }
 
@@ -556,7 +558,7 @@ public class PushdownOperatorVisitor implements ILogicalOperatorVisitor<Void, Vo
     @Override
     public Void visitWindowOperator(WindowOperator op, Void arg) throws AlgebricksException {
         visitInputs(op);
-        visitSubplans(op.getNestedPlans());
+        visitNestedPlans(op, op.getNestedPlans());
         return null;
     }
 

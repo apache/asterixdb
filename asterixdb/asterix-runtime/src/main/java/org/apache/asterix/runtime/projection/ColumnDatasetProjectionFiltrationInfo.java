@@ -27,6 +27,7 @@ import java.util.Objects;
 
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.AlgebricksStringBuilderWriter;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -44,9 +45,18 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
     }
 
     private ColumnDatasetProjectionFiltrationInfo(ColumnDatasetProjectionFiltrationInfo other) {
-        super(other.projectedType, other.functionCallInfoMap, other.filterPaths, other.filterExpression, false);
+        super(other.projectedType, other.functionCallInfoMap, clonePaths(other.filterPaths),
+                cloneExpression(other.filterExpression), false);
         metaProjectedType = other.metaProjectedType;
-        rangeFilterExpression = other.rangeFilterExpression;
+        rangeFilterExpression = cloneExpression(other.rangeFilterExpression);
+    }
+
+    @Override
+    public void substituteFilterVariable(LogicalVariable oldVar, LogicalVariable newVar) {
+        super.substituteFilterVariable(oldVar, newVar);
+        if (rangeFilterExpression != null) {
+            rangeFilterExpression.substituteVar(oldVar, newVar);
+        }
     }
 
     @Override
@@ -127,10 +137,8 @@ public class ColumnDatasetProjectionFiltrationInfo extends ExternalDatasetProjec
         ColumnDatasetProjectionFiltrationInfo otherInfo = (ColumnDatasetProjectionFiltrationInfo) o;
         return projectedType.deepEqual(otherInfo.projectedType)
                 && Objects.equals(metaProjectedType, otherInfo.metaProjectedType)
-                && Objects.equals(functionCallInfoMap, otherInfo.functionCallInfoMap)
-                && Objects.equals(filterExpression, otherInfo.filterExpression)
-                && Objects.equals(filterPaths, otherInfo.filterPaths)
-                && Objects.equals(rangeFilterExpression, otherInfo.rangeFilterExpression);
+                && filterExpressionEquals(filterExpression, otherInfo.filterExpression)
+                && filterExpressionEquals(rangeFilterExpression, otherInfo.rangeFilterExpression);
     }
 
 }

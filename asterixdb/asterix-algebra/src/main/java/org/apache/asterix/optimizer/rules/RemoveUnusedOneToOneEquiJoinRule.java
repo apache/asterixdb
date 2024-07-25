@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.metadata.declared.DataSource;
 import org.apache.asterix.metadata.declared.DatasetDataSource;
 import org.apache.asterix.metadata.entities.Dataset;
@@ -165,10 +166,14 @@ public class RemoveUnusedOneToOneEquiJoinRule implements IAlgebraicRewriteRule {
         // Check that all datascans scan the same dataset, and that the join condition
         // only used primary key variables of those datascans.
         for (int i = 0; i < dataScans.size(); i++) {
+            DatasetDataSource currentDataSource = (DatasetDataSource) dataScans.get(i).getDataSource();
+            if (currentDataSource.getDataset().getDatasetType() == DatasetConfig.DatasetType.EXTERNAL) {
+                // The PK condition is not satisfied when external datasets are involved (no PKs)
+                return -1;
+            }
             if (i > 0) {
-                DatasetDataSource prevAqlDataSource = (DatasetDataSource) dataScans.get(i - 1).getDataSource();
-                DatasetDataSource currAqlDataSource = (DatasetDataSource) dataScans.get(i).getDataSource();
-                if (!prevAqlDataSource.getDataset().equals(currAqlDataSource.getDataset())) {
+                DatasetDataSource previousDataSource = (DatasetDataSource) dataScans.get(i - 1).getDataSource();
+                if (!previousDataSource.getDataset().equals(currentDataSource.getDataset())) {
                     return -1;
                 }
             }

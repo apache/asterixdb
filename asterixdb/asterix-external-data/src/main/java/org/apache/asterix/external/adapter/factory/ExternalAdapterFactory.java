@@ -29,6 +29,7 @@ import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibrary;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.external.api.IExternalDataSourceFactory;
 import org.apache.asterix.external.api.ITypedAdapterFactory;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
@@ -44,13 +45,14 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 
 public final class ExternalAdapterFactory implements ITypedAdapterFactory {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final DataverseName libraryDataverse;
 
     private final String libraryName;
 
     private final String className;
+    private final String libraryDatabase;
 
     private ARecordType outputType;
 
@@ -60,7 +62,9 @@ public final class ExternalAdapterFactory implements ITypedAdapterFactory {
 
     private transient ICCServiceContext serviceContext;
 
-    public ExternalAdapterFactory(DataverseName libraryDataverse, String libraryName, String className) {
+    public ExternalAdapterFactory(String libraryDatabase, DataverseName libraryDataverse, String libraryName,
+            String className) {
+        this.libraryDatabase = libraryDatabase;
         this.libraryDataverse = libraryDataverse;
         this.libraryName = libraryName;
         this.className = className;
@@ -85,7 +89,7 @@ public final class ExternalAdapterFactory implements ITypedAdapterFactory {
         INCServiceContext serviceCtx = ctx.getJobletContext().getServiceContext();
         INcApplicationContext appCtx = (INcApplicationContext) serviceCtx.getApplicationContext();
         ILibraryManager libraryManager = appCtx.getLibraryManager();
-        ILibrary library = libraryManager.getLibrary(libraryDataverse, libraryName);
+        ILibrary library = libraryManager.getLibrary(new Namespace(libraryDatabase, libraryDataverse), libraryName);
         if (ExternalFunctionLanguage.JAVA != library.getLanguage()) {
             throw new HyracksDataException("Unexpected library language: " + library.getLanguage());
         }
@@ -125,6 +129,10 @@ public final class ExternalAdapterFactory implements ITypedAdapterFactory {
     @Override
     public String getAlias() {
         return "external:" + className;
+    }
+
+    public String getLibraryDatabase() {
+        return libraryDatabase;
     }
 
     public DataverseName getLibraryDataverse() {

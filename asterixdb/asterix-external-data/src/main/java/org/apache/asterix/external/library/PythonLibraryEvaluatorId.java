@@ -20,18 +20,18 @@ package org.apache.asterix.external.library;
 
 import java.util.Objects;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 
 final class PythonLibraryEvaluatorId {
 
-    private final DataverseName libraryDataverseName;
+    private final Namespace libraryNamespace;
 
     private final String libraryName;
 
     private final Thread thread;
 
-    PythonLibraryEvaluatorId(DataverseName libraryDataverseName, String libraryName, Thread thread) {
-        this.libraryDataverseName = Objects.requireNonNull(libraryDataverseName);
+    PythonLibraryEvaluatorId(Namespace libraryNamespace, String libraryName, Thread thread) {
+        this.libraryNamespace = Objects.requireNonNull(libraryNamespace);
         this.libraryName = Objects.requireNonNull(libraryName);
         this.thread = Objects.requireNonNull(thread);
     }
@@ -43,17 +43,17 @@ final class PythonLibraryEvaluatorId {
         if (o == null || getClass() != o.getClass())
             return false;
         PythonLibraryEvaluatorId that = (PythonLibraryEvaluatorId) o;
-        return libraryDataverseName.equals(that.libraryDataverseName) && libraryName.equals(that.libraryName)
+        return libraryNamespace.equals(that.libraryNamespace) && libraryName.equals(that.libraryName)
                 && thread.equals(that.thread);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(libraryDataverseName, libraryName);
+        return Objects.hash(libraryNamespace, libraryName);
     }
 
-    public DataverseName getLibraryDataverseName() {
-        return libraryDataverseName;
+    public Namespace getLibraryNamespace() {
+        return libraryNamespace;
     }
 
     public String getLibraryName() {

@@ -49,7 +49,7 @@ public class RuntimeRegistration extends Action {
             subscriber.beforeExecute();
         }
         ActiveEvent event = new ActiveEvent(jobId, Kind.PARTITION_EVENT, entityId, new ActivePartitionMessage(
-                new ActiveRuntimeId(entityId, nc.getId(), partition), jobId, Event.RUNTIME_REGISTERED, null));
+                new ActiveRuntimeId(entityId, nc.getId(), partition), jobId, Event.RUNTIME_REGISTERED, null, ""));
         nc.getClusterController().activeEvent(event);
     }
 

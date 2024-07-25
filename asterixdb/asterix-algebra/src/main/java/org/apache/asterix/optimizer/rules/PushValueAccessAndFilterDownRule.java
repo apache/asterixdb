@@ -31,8 +31,9 @@ import org.apache.asterix.optimizer.rules.pushdown.PushdownProcessorsExecutor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnRangeFilterPushdownProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ColumnValueAccessPushdownProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.ConsolidateProjectionAndFilterExpressionsProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.processor.ExternalDatasetFilterPushdownProcessor;
-import org.apache.asterix.optimizer.rules.pushdown.processor.InlineFilterExpressionsProcessor;
+import org.apache.asterix.optimizer.rules.pushdown.processor.InlineAndNormalizeFilterExpressionsProcessor;
 import org.apache.asterix.optimizer.rules.pushdown.visitor.PushdownOperatorVisitor;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -91,7 +92,7 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         boolean changed = false;
         if (run) {
             // Context holds all the necessary information to perform pushdowns
-            PushdownContext pushdownContext = new PushdownContext();
+            PushdownContext pushdownContext = new PushdownContext(context);
             // Compute all the necessary pushdown information and performs inter-operator pushdown optimizations
             PushdownOperatorVisitor pushdownInfoComputer = new PushdownOperatorVisitor(pushdownContext, context);
             opRef.getValue().accept(pushdownInfoComputer, null);
@@ -117,8 +118,10 @@ public class PushValueAccessAndFilterDownRule implements IAlgebraicRewriteRule {
         }
         // Performs prefix pushdowns
         pushdownProcessorsExecutor.add(new ExternalDatasetFilterPushdownProcessor(pushdownContext, context));
+        pushdownProcessorsExecutor
+                .add(new ConsolidateProjectionAndFilterExpressionsProcessor(pushdownContext, context));
         // Inlines AND/OR expression (must be last to run)
-        pushdownProcessorsExecutor.add(new InlineFilterExpressionsProcessor(pushdownContext, context));
+        pushdownProcessorsExecutor.add(new InlineAndNormalizeFilterExpressionsProcessor(pushdownContext, context));
     }
 
     /**

@@ -29,23 +29,27 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.job.JobId;
 
 public class ActivePartitionMessage implements ICcAddressedMessage {
+
     public enum Event {
         RUNTIME_REGISTERED,
         RUNTIME_DEREGISTERED,
         GENERIC_EVENT
     }
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     private final ActiveRuntimeId activeRuntimeId;
     private final JobId jobId;
     private final Serializable payload;
+    private final String desc;
     private final Event event;
 
-    public ActivePartitionMessage(ActiveRuntimeId activeRuntimeId, JobId jobId, Event event, Serializable payload) {
+    public ActivePartitionMessage(ActiveRuntimeId activeRuntimeId, JobId jobId, Event event, Serializable payload,
+            String desc) {
         this.activeRuntimeId = activeRuntimeId;
         this.jobId = jobId;
         this.event = event;
         this.payload = payload;
+        this.desc = desc;
     }
 
     public ActiveRuntimeId getActiveRuntimeId() {
@@ -64,6 +68,10 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
         return event;
     }
 
+    public String getDesc() {
+        return desc;
+    }
+
     @Override
     public void handle(ICcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
         IActiveNotificationHandler activeListener = (IActiveNotificationHandler) appCtx.getActiveNotificationHandler();
@@ -72,7 +80,7 @@ public class ActivePartitionMessage implements ICcAddressedMessage {
 
     @Override
     public String toString() {
-        return activeRuntimeId + ":" + ActivePartitionMessage.class.getSimpleName() + '-' + event;
+        return activeRuntimeId + ":" + ActivePartitionMessage.class.getSimpleName() + '-' + event + '(' + desc + ')';
     }
 
     @Override

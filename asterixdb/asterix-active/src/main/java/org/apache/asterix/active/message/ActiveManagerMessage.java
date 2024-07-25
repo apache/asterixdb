@@ -34,15 +34,17 @@ public class ActiveManagerMessage extends CcIdentifiedMessage implements INcAddr
         GENERIC_EVENT
     }
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
     private final Kind kind;
     private final ActiveRuntimeId runtimeId;
     private final Serializable payload;
+    private final String desc;
 
-    public ActiveManagerMessage(Kind kind, ActiveRuntimeId runtimeId, Serializable payload) {
+    public ActiveManagerMessage(Kind kind, ActiveRuntimeId runtimeId, Serializable payload, String desc) {
         this.kind = kind;
         this.runtimeId = runtimeId;
         this.payload = payload;
+        this.desc = desc;
     }
 
     public Serializable getPayload() {
@@ -57,13 +59,18 @@ public class ActiveManagerMessage extends CcIdentifiedMessage implements INcAddr
         return kind;
     }
 
+    public String getDesc() {
+        return desc;
+    }
+
     @Override
     public void handle(INcApplicationContext appCtx) throws HyracksDataException, InterruptedException {
-        ((ActiveManager) appCtx.getActiveManager()).submit(this);
+        ((ActiveManager) appCtx.getActiveManager()).handle(this);
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + "{" + "kind=" + kind + ", runtimeId=" + runtimeId + '}';
+        return getClass().getSimpleName() + "{kind=" + kind + ", runtimeId=" + runtimeId
+                + (desc != null && !desc.isEmpty() ? ", desc=" + desc : "") + '}';
     }
 }

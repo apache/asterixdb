@@ -91,8 +91,9 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
         if (!arg.isCollection() && isNotCompatible(collectionType, arg)) {
             return MissingFieldSchemaNode.INSTANCE;
         }
-        AbstractCollectionSchemaNode collectionNode =
-                getActualNode(arg, arg.getTypeTag(), AbstractCollectionSchemaNode.class);
+
+        ATypeTag typeTag = arg.isCollection() ? arg.getTypeTag() : ATypeTag.ARRAY;
+        AbstractCollectionSchemaNode collectionNode = getActualNode(arg, typeTag, AbstractCollectionSchemaNode.class);
         AbstractSchemaNode newItemNode = collectionType.getItemType().accept(this, collectionNode.getItemNode());
         AbstractCollectionSchemaNode clippedCollectionNode =
                 AbstractCollectionSchemaNode.create(collectionType.getTypeTag());
@@ -138,6 +139,9 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
     }
 
     private boolean isNotCompatible(IAType requestedType, AbstractSchemaNode schemaNode) {
+        if (schemaNode.getTypeTag() == ATypeTag.MISSING) {
+            return true;
+        }
         ATypeTag requestedTypeTag = requestedType.getTypeTag();
         if (requestedTypeTag != schemaNode.getTypeTag()) {
             if (schemaNode.getTypeTag() != ATypeTag.UNION) {
@@ -163,7 +167,7 @@ public class SchemaClipperVisitor implements IATypeVisitor<AbstractSchemaNode, A
         if (ATypeHierarchy.isCompatible(requestedType.getTypeTag(), schemaNode.getTypeTag())) {
             return;
         }
-        if (warningCollector.shouldWarn()) {
+        if (warningCollector.shouldWarn() && functionCallInfoMap.containsKey(requestedType.getTypeName())) {
             Warning warning = functionCallInfoMap.get(requestedType.getTypeName())
                     .createWarning(requestedType.getTypeTag(), schemaNode.getTypeTag());
             if (warning != null) {

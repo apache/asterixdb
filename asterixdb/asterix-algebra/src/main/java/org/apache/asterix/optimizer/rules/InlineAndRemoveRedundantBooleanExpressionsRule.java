@@ -86,7 +86,7 @@ public class InlineAndRemoveRedundantBooleanExpressionsRule extends AbstractCond
         return changed;
     }
 
-    private boolean removeRedundantExpressions(List<Mutable<ILogicalExpression>> exprs) {
+    public static boolean removeRedundantExpressions(List<Mutable<ILogicalExpression>> exprs) {
         final int originalSize = exprs.size();
         int i = 0;
         while (i < exprs.size()) {

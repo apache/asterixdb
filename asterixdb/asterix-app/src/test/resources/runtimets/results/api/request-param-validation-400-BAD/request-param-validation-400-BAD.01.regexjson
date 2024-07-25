@@ -12,6 +12,7 @@
 		"resultSize": 0,
 		"processedObjects": 0,
 		"bufferCacheHitRatio": "0.00%",
+		"bufferCachePageReadCount": 0,
 		"errorCount": 1
 	}
 }

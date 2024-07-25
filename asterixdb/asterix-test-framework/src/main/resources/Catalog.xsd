@@ -175,7 +175,7 @@
                      <xs:complexType>
                         <xs:simpleContent>
                            <xs:extension base="xs:string">
-                              <xs:attribute name="replacers" type="test:str-list"/>
+                              <xs:attribute name="replacers" type="xs:string"/>
                            </xs:extension>
                         </xs:simpleContent>
                      </xs:complexType>
@@ -192,7 +192,7 @@
                      <xs:complexType>
                         <xs:simpleContent>
                            <xs:extension base="xs:string">
-                              <xs:attribute name="replacers" type="test:str-list"/>
+                              <xs:attribute name="replacers" type="xs:string"/>
                            </xs:extension>
                         </xs:simpleContent>
                      </xs:complexType>

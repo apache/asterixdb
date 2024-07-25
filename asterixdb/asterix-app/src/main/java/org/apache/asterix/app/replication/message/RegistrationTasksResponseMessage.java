@@ -100,4 +100,9 @@ public class RegistrationTasksResponseMessage extends CcIdentifiedMessage
     public MessageType getType() {
         return MessageType.REGISTRATION_TASKS_RESPONSE;
     }
+
+    @Override
+    public String toString() {
+        return "RegistrationTasksResponseMessage{from='" + nodeId + '}';
+    }
 }

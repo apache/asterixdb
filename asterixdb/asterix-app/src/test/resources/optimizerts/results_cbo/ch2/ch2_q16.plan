@@ -38,14 +38,14 @@
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                       -- HYBRID_HASH_JOIN [$$138][$$137]  |PARTITIONED|
-                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        -- HASH_PARTITION_EXCHANGE [$$138]  |PARTITIONED|
                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                             -- ASSIGN  |PARTITIONED|
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                 -- DATASOURCE_SCAN (test.stock)  |PARTITIONED|
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                        -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        -- HASH_PARTITION_EXCHANGE [$$137]  |PARTITIONED|
                                                           -- STREAM_SELECT  |PARTITIONED|
                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                               -- ASSIGN  |PARTITIONED|

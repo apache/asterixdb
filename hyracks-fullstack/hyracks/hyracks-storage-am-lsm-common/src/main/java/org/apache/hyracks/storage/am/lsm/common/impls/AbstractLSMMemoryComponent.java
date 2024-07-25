@@ -337,9 +337,7 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
             throw new IllegalStateException(
                     this + " receives illegal id. Old id " + this.componentId + ", new id " + componentId);
         }
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Component Id was reset from " + this.componentId + " to " + componentId);
-        }
+        LOGGER.debug("component id of {} was reset from {} to {}", getIndex(), this.componentId, componentId);
         this.componentId = componentId;
         if (componentId != null) {
             LSMComponentIdUtils.persist(this.componentId, metadata);
@@ -355,6 +353,6 @@ public abstract class AbstractLSMMemoryComponent extends AbstractLSMComponent im
     public String toString() {
         return "{\"class\":\"" + getClass().getSimpleName() + "\", \"state\":\"" + state + "\", \"writers\":"
                 + writerCount + ", \"readers\":" + readerCount + ", \"pendingFlushes\":" + pendingFlushes
-                + ", \"id\":\"" + componentId + "\"}";
+                + ", \"id\":\"" + componentId + "\", \"index\":" + getIndex() + "}";
     }
 }

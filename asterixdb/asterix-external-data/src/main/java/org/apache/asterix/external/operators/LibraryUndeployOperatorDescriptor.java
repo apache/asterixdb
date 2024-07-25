@@ -21,7 +21,7 @@ package org.apache.asterix.external.operators;
 
 import java.io.IOException;
 
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
 import org.apache.hyracks.api.dataflow.value.IRecordDescriptorProvider;
@@ -37,9 +37,9 @@ public final class LibraryUndeployOperatorDescriptor extends AbstractLibraryOper
 
     private static final Logger LOGGER = LogManager.getLogger(LibraryUndeployOperatorDescriptor.class);
 
-    public LibraryUndeployOperatorDescriptor(IOperatorDescriptorRegistry spec, DataverseName dataverseName,
+    public LibraryUndeployOperatorDescriptor(IOperatorDescriptorRegistry spec, Namespace namespace,
             String libraryName) {
-        super(spec, dataverseName, libraryName);
+        super(spec, namespace, libraryName);
     }
 
     @Override
@@ -49,7 +49,7 @@ public final class LibraryUndeployOperatorDescriptor extends AbstractLibraryOper
             @Override
             protected void execute() throws IOException {
                 if (LOGGER.isInfoEnabled()) {
-                    LOGGER.info("Undeploying library {}.{}", dataverseName, libraryName);
+                    LOGGER.info("Undeploying library {}.{}", namespace, libraryName);
                 }
 
                 try {

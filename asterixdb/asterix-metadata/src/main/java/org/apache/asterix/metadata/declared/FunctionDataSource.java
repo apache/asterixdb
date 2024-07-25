@@ -20,9 +20,7 @@ package org.apache.asterix.metadata.declared;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.functions.FunctionSignature;
@@ -121,13 +119,17 @@ public abstract class FunctionDataSource extends DataSource {
                 outputLimit);
     }
 
+    public boolean skipJobCapacityAssignment() {
+        return false;
+    }
+
     protected abstract IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations);
 
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm) {
-        String[] allPartitions = csm.getClusterLocations().getLocations();
-        Set<String> ncs = new HashSet<>(Arrays.asList(allPartitions));
-        return new AlgebricksAbsolutePartitionConstraint(ncs.toArray(new String[ncs.size()]));
+        String[] sortedLocations = csm.getSortedClusterLocations().getLocations();
+        return new AlgebricksAbsolutePartitionConstraint(
+                Arrays.stream(sortedLocations).distinct().toArray(String[]::new));
     }
 
     protected IDataParserFactory createDataParserFactory() {

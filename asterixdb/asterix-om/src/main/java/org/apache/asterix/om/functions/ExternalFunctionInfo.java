@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
@@ -36,22 +36,22 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
     private final List<IAType> parameterTypes;
     private final IAType returnType;
     private final ExternalFunctionLanguage language;
-    private final DataverseName libraryDataverseName;
+    private final Namespace libraryNamespace;
     private final String libraryName;
     private final List<String> externalIdentifier;
     private final Map<String, String> resources;
     private final boolean nullCall;
 
     public ExternalFunctionInfo(FunctionIdentifier fid, FunctionKind kind, List<IAType> parameterTypes,
-            IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language,
-            DataverseName libraryDataverseName, String libraryName, List<String> externalIdentifier,
-            Map<String, String> resources, boolean deterministic, boolean nullCall) {
+            IAType returnType, IResultTypeComputer rtc, ExternalFunctionLanguage language, Namespace libraryNamespace,
+            String libraryName, List<String> externalIdentifier, Map<String, String> resources, boolean deterministic,
+            boolean nullCall) {
         super(fid, rtc, deterministic);
         this.kind = kind;
         this.parameterTypes = parameterTypes;
         this.returnType = returnType;
         this.language = language;
-        this.libraryDataverseName = libraryDataverseName;
+        this.libraryNamespace = libraryNamespace;
         this.libraryName = libraryName;
         this.externalIdentifier = externalIdentifier;
         this.resources = resources;
@@ -78,8 +78,8 @@ public class ExternalFunctionInfo extends FunctionInfo implements IExternalFunct
         return language;
     }
 
-    public DataverseName getLibraryDataverseName() {
-        return libraryDataverseName;
+    public Namespace getLibraryNamespace() {
+        return libraryNamespace;
     }
 
     @Override

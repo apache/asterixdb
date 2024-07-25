@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
-import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
@@ -40,7 +40,7 @@ public interface IExternalFunctionInfo extends IFunctionInfo {
 
     ExternalFunctionLanguage getLanguage();
 
-    DataverseName getLibraryDataverseName();
+    Namespace getLibraryNamespace();
 
     String getLibraryName();
 

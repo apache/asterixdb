@@ -181,13 +181,13 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         try {
             if (localPath.equals("/") || localPath.equals("")) {
                 //TODO: nicer way to get this into display form?
-                Map<DataverseName, Map<String, String>> dvToLibHashes =
+                Map<Namespace, Map<String, String>> dvToLibHashes =
                         ExternalLibraryUtils.produceLibraryListing(libraryManager);
                 List<Map<String, Object>> libraryList = new ArrayList<>();
-                for (Map.Entry<DataverseName, Map<String, String>> dvAndLibs : dvToLibHashes.entrySet()) {
+                for (Map.Entry<Namespace, Map<String, String>> dvAndLibs : dvToLibHashes.entrySet()) {
                     for (Map.Entry<String, String> libsInDv : dvAndLibs.getValue().entrySet()) {
                         Map<String, Object> libraryEntry = new HashMap<>();
-                        libraryEntry.put(getDataverseKey(), dvAndLibs.getKey().getCanonicalForm());
+                        libraryEntry.put(getDataverseKey(), libraryManager.getNsOrDv(dvAndLibs.getKey()));
                         libraryEntry.put(NAME_KEY, libsInDv.getKey());
                         libraryEntry.put(FIELD_HASH, libsInDv.getValue());
                         libraryList.add(libraryEntry);

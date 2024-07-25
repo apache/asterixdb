@@ -333,7 +333,12 @@ public class FreeVariableVisitor extends AbstractSqlppQueryExpressionVisitor<Voi
 
     @Override
     public Void visit(LimitClause limitClause, Collection<VariableExpr> freeVars) throws CompilationException {
-        limitClause.getLimitExpr().accept(this, freeVars);
+        if (limitClause.hasLimitExpr()) {
+            limitClause.getLimitExpr().accept(this, freeVars);
+        }
+        if (limitClause.hasOffset()) {
+            limitClause.getOffset().accept(this, freeVars);
+        }
         return null;
     }
 

@@ -1,0 +1,74 @@
+distribute result [$$70] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$70] <- [agg-sql-sum($$76)] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+    -- AGGREGATE  |UNPARTITIONED|
+      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$76] <- [agg-sql-count(1)] [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+        -- AGGREGATE  |PARTITIONED|
+          exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 22.0]
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (or(eq($$71, "7"), neq($$69, 0))) [cardinality: 6.0, op-cost: 6.0, total-cost: 22.0]
+            -- NESTED_LOOP  |PARTITIONED|
+              exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$71]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$71] <- [$$p.getField("arrayOrObject").getField("text")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$p] <- [$$b2] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                      -- ASSIGN  |PARTITIONED|
+                        exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                          -- REPLICATE  |PARTITIONED|
+                            exchange [cardinality: 6.0, op-cost: 4.0, total-cost: 10.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$b2]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                              -- STREAM_PROJECT  |PARTITIONED|
+                                exchange [cardinality: 6.0, op-cost: 4.0, total-cost: 10.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  data-scan []<-[$$68, $$b2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange [cardinality: 1.0, op-cost: 4.0, total-cost: 10.0]
+              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$69] <- [agg-sum($$75)] [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
+                -- AGGREGATE  |UNPARTITIONED|
+                  exchange [cardinality: 1.0, op-cost: 4.0, total-cost: 10.0]
+                  -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$75] <- [agg-count(1)] [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
+                    -- AGGREGATE  |PARTITIONED|
+                      select (eq($$ao.getField("text"), "1")) [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
+                      -- STREAM_SELECT  |PARTITIONED|
+                        project ([$$ao]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                        -- STREAM_PROJECT  |PARTITIONED|
+                          unnest $$ao <- scan-collection($$72) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                          -- UNNEST  |PARTITIONED|
+                            project ([$$72]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$72] <- [$$b2.getField("arrayOrObject")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                              -- ASSIGN  |PARTITIONED|
+                                exchange [cardinality: 6.0, op-cost: 4.0, total-cost: 10.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                                  -- REPLICATE  |PARTITIONED|
+                                    exchange [cardinality: 6.0, op-cost: 4.0, total-cost: 10.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$b2]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                                      -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange [cardinality: 6.0, op-cost: 4.0, total-cost: 10.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          data-scan []<-[$$68, $$b2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

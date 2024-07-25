@@ -78,8 +78,8 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     }
 
     @Override
-    protected boolean isPushable(AbstractFunctionCallExpression expression) {
-        return RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(expression.getFunctionIdentifier());
+    protected boolean isNotPushable(AbstractFunctionCallExpression expression) {
+        return !RANGE_FILTER_PUSHABLE_FUNCTIONS.contains(expression.getFunctionIdentifier());
     }
 
     @Override

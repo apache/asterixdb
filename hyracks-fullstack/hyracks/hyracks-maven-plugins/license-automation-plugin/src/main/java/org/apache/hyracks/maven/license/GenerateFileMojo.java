@@ -538,11 +538,6 @@ public class GenerateFileMojo extends LicenseMojo {
             return;
         }
         Set<MavenProject> projects = new TreeSet<>(Comparator.comparing(MavenProject::getId));
-        if (!includeShadowedDependencies) {
-            getLog().info("Not gathering shadowed dependencies as 'includeShadowedDependencies' is set to "
-                    + includeShadowedDependencies);
-            return;
-        }
         projects.addAll(dependencyLicenseMap.keySet());
         for (MavenProject p : projects) {
             File artifactFile = p.getArtifact().getFile();

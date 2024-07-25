@@ -62,8 +62,7 @@ public class PythonLibraryDomainSocketEvaluator extends AbstractLibrarySocketEva
 
     public void start() throws IOException, AsterixException {
         PythonLibraryEvaluatorId fnId = (PythonLibraryEvaluatorId) id;
-        PythonLibrary library =
-                (PythonLibrary) libMgr.getLibrary(fnId.getLibraryDataverseName(), fnId.getLibraryName());
+        PythonLibrary library = (PythonLibrary) libMgr.getLibrary(fnId.getLibraryNamespace(), fnId.getLibraryName());
         String wd = library.getFile().getAbsolutePath();
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         SocketAddress sockAddr;
@@ -107,7 +106,7 @@ public class PythonLibraryDomainSocketEvaluator extends AbstractLibrarySocketEva
     static PythonLibraryDomainSocketEvaluator getInstance(IExternalFunctionInfo finfo, ILibraryManager libMgr,
             IHyracksTaskContext ctx, IWarningCollector warningCollector, SourceLocation sourceLoc)
             throws IOException, AsterixException {
-        PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(finfo.getLibraryDataverseName(),
+        PythonLibraryEvaluatorId evaluatorId = new PythonLibraryEvaluatorId(finfo.getLibraryNamespace(),
                 finfo.getLibraryName(), Thread.currentThread());
         PythonLibraryDomainSocketEvaluator evaluator =
                 (PythonLibraryDomainSocketEvaluator) ctx.getStateObject(evaluatorId);
