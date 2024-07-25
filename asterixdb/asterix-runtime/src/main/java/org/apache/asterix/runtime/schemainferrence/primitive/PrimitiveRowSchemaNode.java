@@ -29,7 +29,6 @@ import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisi
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
-
 /*
 A schema node for representing Asterix data types such as : String, Integer
  */
@@ -37,7 +36,6 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
     private final ATypeTag typeTag;
     private final boolean primaryKey;
     private IValueReference fieldName;
-
 
     public PrimitiveRowSchemaNode(ATypeTag typeTag, boolean primaryKey) {
 
@@ -52,8 +50,6 @@ public class PrimitiveRowSchemaNode extends AbstractRowSchemaNode {
         primaryKey = input.readBoolean();
 
     }
-
-
 
     @Override
     public final ATypeTag getTypeTag() {

@@ -21,7 +21,6 @@ package org.apache.asterix.runtime.schemainferrence;
 import java.util.ArrayList;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.collection.AbstractRowCollectionSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.ArrayRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.GenericListRowSchemaNode;
@@ -31,14 +30,13 @@ import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisi
 import org.apache.asterix.runtime.schemainferrence.primitive.PrimitiveRowSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.VoidPointable;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 
 public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<AbstractRowSchemaNode, AbstractRowSchemaNode> {
 
     private final RowMetadata rowMetadata;
-//    private final VoidPointable nonTaggedValue;
+    //    private final VoidPointable nonTaggedValue;
     private final ObjectRowSchemaNode root;
     private AbstractRowSchemaNestedNode currentParent;
     private int primaryKeysLength;
@@ -50,7 +48,7 @@ public class RowSchemaTransformer implements IObjectRowSchemaNodeVisitor<Abstrac
     public RowSchemaTransformer(RowMetadata rowMetadata, ObjectRowSchemaNode root) {
         this.rowMetadata = rowMetadata;
         this.root = root;
-//        nonTaggedValue = new VoidPointable();
+        //        nonTaggedValue = new VoidPointable();
     }
 
     /**

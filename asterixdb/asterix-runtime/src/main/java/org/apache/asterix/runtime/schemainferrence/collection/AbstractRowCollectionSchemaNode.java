@@ -21,10 +21,8 @@ package org.apache.asterix.runtime.schemainferrence.collection;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNestedNode;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.IRowSchemaNodeVisitor;

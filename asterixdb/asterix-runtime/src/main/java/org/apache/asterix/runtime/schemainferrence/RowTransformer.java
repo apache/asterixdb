@@ -24,7 +24,6 @@ import org.apache.asterix.om.lazy.FlatLazyVisitablePointable;
 import org.apache.asterix.om.lazy.ILazyVisitablePointableVisitor;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.collection.AbstractRowCollectionSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
@@ -94,7 +93,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
         AbstractRowSchemaNestedNode previousParent = currentParent;
 
         AbstractRowCollectionSchemaNode collectionNode = (AbstractRowCollectionSchemaNode) arg;
-//        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
+        //        RunRowLengthIntArray defLevels = rowMetadata.getDefinitionLevels(collectionNode);
         //the level at which an item is missing
         int missingLevel = rowMetadata.getLevel();
         currentParent = collectionNode;
@@ -108,7 +107,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
             /*
              * The array item may change (e.g., BIGINT --> UNION). Thus, new items would be considered as missing
              */
-//            defLevels.add(missingLevel);
+            //            defLevels.add(missingLevel);
         }
 
         rowMetadata.exitCollectionNode(collectionNode, numberOfChildren);
@@ -143,7 +142,7 @@ public class RowTransformer implements ILazyVisitablePointableVisitor<AbstractRo
             currentParent = previousParent;
             rowMetadata.exitNode(node);
         } else if (pointable.getTypeTag() == ATypeTag.NULL && node.isNested()) {
-            rowMetadata.addNestedNull( (AbstractRowSchemaNestedNode) node);
+            rowMetadata.addNestedNull((AbstractRowSchemaNestedNode) node);
         } else {
             pointable.accept(this, node);
         }

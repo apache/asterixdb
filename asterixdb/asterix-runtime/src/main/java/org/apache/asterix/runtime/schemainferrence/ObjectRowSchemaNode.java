@@ -25,16 +25,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisitor;
 import org.apache.asterix.runtime.schemainferrence.primitive.MissingRowFieldSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.annotations.CriticalPath;
-
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
@@ -70,7 +67,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
     public ObjectRowSchemaNode(IValueReference fieldName) {
         fieldNameIndexToChildIndexMap = new Int2IntOpenHashMap();
         children = new ArrayList<>();
-//        this.fieldName = fieldName;
+        //        this.fieldName = fieldName;
     }
 
     public ObjectRowSchemaNode() {
@@ -78,9 +75,7 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         children = new ArrayList<>();
     }
 
-    ObjectRowSchemaNode(DataInput input)
-            throws IOException {
-
+    ObjectRowSchemaNode(DataInput input) throws IOException {
 
         int numberOfChildren = input.readInt();
 
@@ -172,9 +167,8 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         }
     }
 
-    public void abort(DataInputStream input)
-            throws IOException {
-//        definitionLevels.put(this, new RunRowLengthIntArray());
+    public void abort(DataInputStream input) throws IOException {
+        //        definitionLevels.put(this, new RunRowLengthIntArray());
 
         int numberOfChildren = input.readInt();
 
@@ -194,7 +188,8 @@ public final class ObjectRowSchemaNode extends AbstractRowSchemaNestedNode {
         }
     }
 
-    private static void deserializeChildren(DataInput input, List<AbstractRowSchemaNode> children, int numberOfChildren) throws IOException {
+    private static void deserializeChildren(DataInput input, List<AbstractRowSchemaNode> children, int numberOfChildren)
+            throws IOException {
         for (int i = 0; i < numberOfChildren; i++) {
             children.add(AbstractRowSchemaNode.deserialize(input));
         }

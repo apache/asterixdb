@@ -20,11 +20,8 @@ package org.apache.asterix.runtime.schemainferrence.collection;
 
 import java.io.DataInput;
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
-import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNestedNode;
 import org.apache.asterix.runtime.schemainferrence.AbstractRowSchemaNode;
 import org.apache.hyracks.data.std.api.IValueReference;
 
@@ -40,8 +37,7 @@ public final class ArrayRowSchemaNode extends AbstractRowCollectionSchemaNode {
         this.fieldName = fieldName;
     }
 
-    public ArrayRowSchemaNode(DataInput input)
-            throws IOException {
+    public ArrayRowSchemaNode(DataInput input) throws IOException {
         super(input);
         this.fieldName = super.getFieldName();
     }

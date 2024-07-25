@@ -58,7 +58,6 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
-
 public abstract class AbstractSchemaAggregateFunction extends AbstractAggregateFunction {
 
     private final IEvaluatorContext context;

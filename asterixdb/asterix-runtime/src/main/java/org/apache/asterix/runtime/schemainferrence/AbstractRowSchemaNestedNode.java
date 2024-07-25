@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.runtime.schemainferrence;
 
-
 public abstract class AbstractRowSchemaNestedNode extends AbstractRowSchemaNode {
     @Override
     public final boolean isNested() {

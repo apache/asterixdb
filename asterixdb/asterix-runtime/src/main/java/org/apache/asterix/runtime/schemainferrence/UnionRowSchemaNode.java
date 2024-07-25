@@ -27,13 +27,11 @@ import java.util.Map;
 
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.hierachy.ATypeHierarchy;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.lazy.IObjectRowSchemaNodeVisitor;
 import org.apache.asterix.runtime.schemainferrence.primitive.MissingRowFieldSchemaNode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-
 
 public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
     private final AbstractRowSchemaNode originalType;
@@ -61,9 +59,7 @@ public final class UnionRowSchemaNode extends AbstractRowSchemaNestedNode {
         putChild(child2);
     }
 
-    UnionRowSchemaNode(DataInput input)
-            throws IOException {
-
+    UnionRowSchemaNode(DataInput input) throws IOException {
 
         ATypeTag originalTypeTag = ATypeTag.VALUE_TYPE_MAPPING[input.readByte()];
 

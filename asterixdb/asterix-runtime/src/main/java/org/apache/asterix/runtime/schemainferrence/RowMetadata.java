@@ -22,13 +22,9 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.asterix.om.api.IRowWriteMultiPageOp;
 import org.apache.asterix.om.types.ATypeTag;
-import org.apache.asterix.om.utils.RowValuesUtil;
-import org.apache.asterix.om.utils.RunRowLengthIntArray;
 import org.apache.asterix.runtime.schemainferrence.collection.AbstractRowCollectionSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.ArrayRowSchemaNode;
 import org.apache.asterix.runtime.schemainferrence.collection.MultisetRowSchemaNode;
@@ -75,7 +71,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         metaRoot = null;
         nullWriterIndexes = new IntArrayList();
         //Add definition levels for the root
-//        addDefinitionLevelsAndGet(root);
+        //        addDefinitionLevelsAndGet(root);
         serializedMetadata = new ArrayBackedValueStorage();
         changed = true;
         serializeColumnsMetadata();
@@ -88,8 +84,6 @@ public final class RowMetadata extends AbstractRowMetadata {
     public ObjectRowSchemaNode getRoot() {
         return root;
     }
-
-
 
     public Mutable<IRowWriteMultiPageOp> getMultiPageOpRef() {
         return multiPageOpRef;
@@ -185,7 +179,6 @@ public final class RowMetadata extends AbstractRowMetadata {
         return level;
     }
 
-
     // Create schema node
     public AbstractRowSchemaNode getOrCreateChild(AbstractRowSchemaNode child, ATypeTag childTypeTag)
             throws HyracksDataException {
@@ -217,8 +210,6 @@ public final class RowMetadata extends AbstractRowMetadata {
         return currentChild;
     }
 
-
-
     // Update schema level by incrementing
     public void enterNode(AbstractRowSchemaNode parent, AbstractRowSchemaNode node) throws HyracksDataException {
         //Flush all definition levels from parent to child
@@ -248,7 +239,6 @@ public final class RowMetadata extends AbstractRowMetadata {
 
     //TODO : CALVIN_DANI remove overhead
 
-
     // Create union and primitive node with fieldName
     private AbstractRowSchemaNode createChild(AbstractRowSchemaNode child, ATypeTag normalizedTypeTag,
             IValueReference fieldName) throws HyracksDataException {
@@ -259,8 +249,7 @@ public final class RowMetadata extends AbstractRowMetadata {
                 System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
             } else {
                 //Different type. Make union
-                createdChild =
-                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, fieldName));
+                createdChild = new UnionRowSchemaNode(child, createChild(normalizedTypeTag, fieldName));
             }
         } else {
             createdChild = createChild(normalizedTypeTag, fieldName);
@@ -279,8 +268,7 @@ public final class RowMetadata extends AbstractRowMetadata {
                 System.out.println("TO BE REIMPLEMENTED WITH THIS CASE : CALVIN DANI");
             } else {
                 //Different type. Make union
-                createdChild =
-                        new UnionRowSchemaNode(child, createChild(normalizedTypeTag, initFieldName));
+                createdChild = new UnionRowSchemaNode(child, createChild(normalizedTypeTag, initFieldName));
             }
         } else {
             createdChild = createChild(normalizedTypeTag, initFieldName);
@@ -305,9 +293,9 @@ public final class RowMetadata extends AbstractRowMetadata {
             case BIGINT:
             case STRING:
             case UUID:
-//                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
+                //                int columnIndex = nullWriterIndexes.isEmpty() ? this.sizeOfWriters : nullWriterIndexes.removeInt(0);
 
-                return new PrimitiveRowSchemaNode( normalizedTypeTag, false);
+                return new PrimitiveRowSchemaNode(normalizedTypeTag, false);
             default:
                 throw new IllegalStateException("Unsupported type " + normalizedTypeTag);
 
@@ -349,10 +337,7 @@ public final class RowMetadata extends AbstractRowMetadata {
         multiPageOpRef.setValue(null);
     }
 
-
-
-    public void addNestedNull(AbstractRowSchemaNestedNode node)
-            throws HyracksDataException {
+    public void addNestedNull(AbstractRowSchemaNestedNode node) throws HyracksDataException {
         //Add null value (+2) to say that both the parent and the child are present
         node.incrementCounter();
     }
