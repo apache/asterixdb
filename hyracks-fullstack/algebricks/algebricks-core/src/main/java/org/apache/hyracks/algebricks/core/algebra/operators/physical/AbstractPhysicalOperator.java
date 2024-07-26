@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.properties.PhysicalRequirement
 import org.apache.hyracks.algebricks.core.algebra.properties.StructuralPropertiesVector;
 import org.apache.hyracks.algebricks.core.jobgen.impl.JobGenContext;
 import org.apache.hyracks.algebricks.core.jobgen.impl.PlanCompiler;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.algebricks.runtime.base.AlgebricksPipeline;
 import org.apache.hyracks.algebricks.runtime.operators.meta.AlgebricksMetaOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
@@ -101,6 +102,11 @@ public abstract class AbstractPhysicalOperator implements IPhysicalOperator {
 
     @Override
     public void createLocalMemoryRequirements(ILogicalOperator op) {
+        localMemoryRequirements = LocalMemoryRequirements.fixedMemoryBudget(1);
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op, PhysicalOptimizationConfig physicalOpConfig) {
         localMemoryRequirements = LocalMemoryRequirements.fixedMemoryBudget(1);
     }
 

@@ -29,7 +29,7 @@ import java.util.Set;
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
-import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -53,8 +53,8 @@ public class UnstableCloudClient implements ICloudClient {
     }
 
     @Override
-    public IRequestProfiler getProfiler() {
-        return cloudClient.getProfiler();
+    public IRequestProfilerLimiter getProfilerLimiter() {
+        return cloudClient.getProfilerLimiter();
     }
 
     @Override

@@ -22,6 +22,7 @@ import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator.JoinKind;
 import org.apache.hyracks.algebricks.core.algebra.properties.LocalMemoryRequirements;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 
 public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
 
@@ -64,5 +65,10 @@ public abstract class AbstractJoinPOperator extends AbstractPhysicalOperator {
     @Override
     public void createLocalMemoryRequirements(ILogicalOperator op) {
         localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(MIN_FRAME_LIMIT_FOR_JOIN);
+    }
+
+    @Override
+    public void createLocalMemoryRequirements(ILogicalOperator op, PhysicalOptimizationConfig physicalOpConfig) {
+        localMemoryRequirements = LocalMemoryRequirements.variableMemoryBudget(physicalOpConfig.getMinJoinFrames());
     }
 }

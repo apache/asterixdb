@@ -67,6 +67,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.physical.Preclustere
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.ReplicatePOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.physical.StableSortPOperator;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
+import org.apache.hyracks.algebricks.core.rewriter.base.PhysicalOptimizationConfig;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,6 +79,7 @@ public class PlanStagesGeneratorTest {
     private static final int FRAME_SIZE = 32768;
     private static final int PARALLELISM = 10;
     private static final long MAX_BUFFER_PER_CONNECTION = 1L;
+    private static final PhysicalOptimizationConfig physicalConfig = new PhysicalOptimizationConfig();
 
     @Test
     public void noBlockingPlan() throws AlgebricksException {
@@ -336,7 +338,7 @@ public class PlanStagesGeneratorTest {
     private void assertRequiredMemory(List<PlanStage> stages, long expectedMemory) {
         for (PlanStage stage : stages) {
             for (ILogicalOperator op : stage.getOperators()) {
-                ((AbstractLogicalOperator) op).getPhysicalOperator().createLocalMemoryRequirements(op);
+                ((AbstractLogicalOperator) op).getPhysicalOperator().createLocalMemoryRequirements(op, physicalConfig);
             }
         }
         final IClusterCapacity clusterCapacity =

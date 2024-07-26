@@ -38,21 +38,35 @@ public final class S3ClientConfig {
     private final boolean anonymousAuth;
     private final long profilerLogInterval;
     private final int writeBufferSize;
+    private final long tokenAcquireTimeout;
+    private final int readMaxRequestsPerSeconds;
+    private final int writeMaxRequestsPerSeconds;
 
     public S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, int writeBufferSize) {
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, writeBufferSize, 1, 0, 0);
+    }
+
+    private S3ClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
+            long profilerLogInterval, int writeBufferSize, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
+            int readMaxRequestsPerSeconds) {
         this.region = Objects.requireNonNull(region, "region");
         this.endpoint = endpoint;
         this.prefix = Objects.requireNonNull(prefix, "prefix");
         this.anonymousAuth = anonymousAuth;
         this.profilerLogInterval = profilerLogInterval;
         this.writeBufferSize = writeBufferSize;
+        this.tokenAcquireTimeout = tokenAcquireTimeout;
+        this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
+        this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
     }
 
     public static S3ClientConfig of(CloudProperties cloudProperties) {
         return new S3ClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
-                cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize());
+                cloudProperties.getProfilerLogInterval(), cloudProperties.getWriteBufferSize(),
+                cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
+                cloudProperties.getReadMaxRequestsPerSecond());
     }
 
     public static S3ClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -98,7 +112,20 @@ public final class S3ClientConfig {
         return writeBufferSize;
     }
 
+    public long getTokenAcquireTimeout() {
+        return tokenAcquireTimeout;
+    }
+
+    public int getWriteMaxRequestsPerSeconds() {
+        return writeMaxRequestsPerSeconds;
+    }
+
+    public int getReadMaxRequestsPerSeconds() {
+        return readMaxRequestsPerSeconds;
+    }
+
     private boolean isS3Mock() {
         return endpoint != null && !endpoint.isEmpty();
     }
+
 }

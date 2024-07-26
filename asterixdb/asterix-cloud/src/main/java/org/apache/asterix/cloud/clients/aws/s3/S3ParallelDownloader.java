@@ -30,7 +30,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.asterix.cloud.clients.IParallelDownloader;
-import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -58,9 +58,9 @@ class S3ParallelDownloader implements IParallelDownloader {
     private final S3AsyncClient s3AsyncClient;
     private final S3TransferManager transferManager;
     private final S3ClientConfig config;
-    private final IRequestProfiler profiler;
+    private final IRequestProfilerLimiter profiler;
 
-    S3ParallelDownloader(String bucket, IOManager ioManager, S3ClientConfig config, IRequestProfiler profiler) {
+    S3ParallelDownloader(String bucket, IOManager ioManager, S3ClientConfig config, IRequestProfilerLimiter profiler) {
         this.bucket = bucket;
         this.ioManager = ioManager;
         this.config = config;

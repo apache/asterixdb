@@ -58,6 +58,9 @@ public class CloudProperties extends AbstractProperties {
         CLOUD_STORAGE_DEBUG_MODE_ENABLED(BOOLEAN, false),
         CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE(LONG_BYTE_UNIT, StorageUtil.getLongSizeInBytes(1, GIGABYTE)),
         CLOUD_PROFILER_LOG_INTERVAL(NONNEGATIVE_INTEGER, 5),
+        CLOUD_ACQUIRE_TOKEN_TIMEOUT(POSITIVE_INTEGER, 100),
+        CLOUD_MAX_WRITE_REQUESTS_PER_SECOND(NONNEGATIVE_INTEGER, 2500),
+        CLOUD_MAX_READ_REQUESTS_PER_SECOND(NONNEGATIVE_INTEGER, 4000),
         CLOUD_WRITE_BUFFER_SIZE(
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE)),
@@ -88,6 +91,9 @@ public class CloudProperties extends AbstractProperties {
                 case CLOUD_STORAGE_DEBUG_SWEEP_THRESHOLD_SIZE:
                 case CLOUD_STORAGE_DEBUG_MODE_ENABLED:
                 case CLOUD_PROFILER_LOG_INTERVAL:
+                case CLOUD_ACQUIRE_TOKEN_TIMEOUT:
+                case CLOUD_MAX_WRITE_REQUESTS_PER_SECOND:
+                case CLOUD_MAX_READ_REQUESTS_PER_SECOND:
                 case CLOUD_WRITE_BUFFER_SIZE:
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
                     return Section.COMMON;
@@ -146,6 +152,13 @@ public class CloudProperties extends AbstractProperties {
                     return "The waiting time (in minutes) to log cloud request statistics (default: 0, which means"
                             + " the profiler is disabled by default). The minimum is 1 minute."
                             + " NOTE: Enabling the profiler could perturb the performance of cloud requests";
+                case CLOUD_ACQUIRE_TOKEN_TIMEOUT:
+                    return "The waiting time (in milliseconds) if a requesting thread failed to acquire a token if the"
+                            + " rate limit of cloud requests exceeded (default: 100, min: 1, and max: 5000)";
+                case CLOUD_MAX_WRITE_REQUESTS_PER_SECOND:
+                    return "The maximum number of write requests per second (default: 2500, 0 means unlimited)";
+                case CLOUD_MAX_READ_REQUESTS_PER_SECOND:
+                    return "The maximum number of read requests per second (default: 4000, 0 means unlimited)";
                 case CLOUD_WRITE_BUFFER_SIZE:
                     return "The write buffer size in bytes. (default: 8MB, min: 5MB)";
                 case CLOUD_EVICTION_PLAN_REEVALUATE_THRESHOLD:
@@ -223,6 +236,19 @@ public class CloudProperties extends AbstractProperties {
     public long getProfilerLogInterval() {
         long interval = TimeUnit.MINUTES.toNanos(accessor.getInt(Option.CLOUD_PROFILER_LOG_INTERVAL));
         return interval == 0 ? 0 : Math.max(interval, TimeUnit.MINUTES.toNanos(1));
+    }
+
+    public long getTokenAcquireTimeout() {
+        int time = accessor.getInt(Option.CLOUD_PROFILER_LOG_INTERVAL);
+        return Math.max(time, 5000);
+    }
+
+    public int getWriteMaxRequestsPerSecond() {
+        return accessor.getInt(Option.CLOUD_MAX_WRITE_REQUESTS_PER_SECOND);
+    }
+
+    public int getReadMaxRequestsPerSecond() {
+        return accessor.getInt(Option.CLOUD_MAX_READ_REQUESTS_PER_SECOND);
     }
 
     public int getWriteBufferSize() {

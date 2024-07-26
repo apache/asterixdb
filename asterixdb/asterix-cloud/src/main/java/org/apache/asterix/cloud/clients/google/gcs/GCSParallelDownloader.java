@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.cloud.clients.IParallelDownloader;
-import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -55,10 +55,10 @@ public class GCSParallelDownloader implements IParallelDownloader {
     private final IOManager ioManager;
     private final Storage gcsClient;
     private final TransferManager transferManager;
-    private final IRequestProfiler profiler;
+    private final IRequestProfilerLimiter profiler;
 
-    public GCSParallelDownloader(String bucket, IOManager ioManager, GCSClientConfig config, IRequestProfiler profiler)
-            throws HyracksDataException {
+    public GCSParallelDownloader(String bucket, IOManager ioManager, GCSClientConfig config,
+            IRequestProfilerLimiter profiler) throws HyracksDataException {
         this.bucket = bucket;
         this.ioManager = ioManager;
         this.profiler = profiler;

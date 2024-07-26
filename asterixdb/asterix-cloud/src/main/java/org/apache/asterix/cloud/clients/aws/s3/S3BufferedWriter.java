@@ -25,7 +25,7 @@ import java.util.List;
 
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
-import org.apache.asterix.cloud.clients.profiler.IRequestProfiler;
+import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +47,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final S3Client s3Client;
-    private final IRequestProfiler profiler;
+    private final IRequestProfilerLimiter profiler;
     private final ICloudGuardian guardian;
     private final String bucket;
     private final String path;
@@ -56,7 +56,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
     private String uploadId;
     private int partNumber;
 
-    public S3BufferedWriter(S3Client s3client, IRequestProfiler profiler, ICloudGuardian guardian, String bucket,
+    public S3BufferedWriter(S3Client s3client, IRequestProfilerLimiter profiler, ICloudGuardian guardian, String bucket,
             String path) {
         this.s3Client = s3client;
         this.profiler = profiler;

@@ -40,9 +40,9 @@ import org.apache.hyracks.control.common.config.OptionTypes;
 public class OptimizationConfUtil {
 
     public static final int MIN_FRAME_LIMIT_FOR_SORT = AbstractStableSortPOperator.MIN_FRAME_LIMIT_FOR_SORT;
-    private static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = AbstractGroupByPOperator.MIN_FRAME_LIMIT_FOR_GROUP_BY;
-    private static final int MIN_FRAME_LIMIT_FOR_JOIN = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN;
-    private static final int MIN_FRAME_LIMIT_FOR_WINDOW = WindowPOperator.MIN_FRAME_LIMIT_FOR_WINDOW;
+    public static final int MIN_FRAME_LIMIT_FOR_GROUP_BY = AbstractGroupByPOperator.MIN_FRAME_LIMIT_FOR_GROUP_BY;
+    public static final int MIN_FRAME_LIMIT_FOR_JOIN = AbstractJoinPOperator.MIN_FRAME_LIMIT_FOR_JOIN;
+    public static final int MIN_FRAME_LIMIT_FOR_WINDOW = WindowPOperator.MIN_FRAME_LIMIT_FOR_WINDOW;
     public static final int MIN_FRAME_LIMIT_FOR_TEXT_SEARCH = 5; // see InvertedIndexPOperator
 
     private OptimizationConfUtil() {
@@ -119,6 +119,10 @@ public class OptimizationConfUtil {
         physOptConf.setForceJoinOrderMode(forceJoinOrder);
         physOptConf.setQueryPlanShapeMode(queryPlanShape);
         physOptConf.setColumnFilter(columnFilter);
+        physOptConf.setMinSortFrames(compilerProperties.getMinSortMemoryFrames());
+        physOptConf.setMinJoinFrames(compilerProperties.getMinJoinMemoryFrames());
+        physOptConf.setMinGroupFrames(compilerProperties.getMinGroupMemoryFrames());
+        physOptConf.setMinWindowFrames(compilerProperties.getMinWindowMemoryFrames());
 
         // We should have already validated the parameter names at this point...
         Set<String> filteredParameterNames = new HashSet<>(parameterNames);
