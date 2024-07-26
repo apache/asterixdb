@@ -1234,9 +1234,9 @@ public class JoinNode {
                 return;
             }
         }
-        ILogicalExpression hashJoinExpr = joinEnum.getHashJoinExpr(newJoinConditions);
-        ILogicalExpression nestedLoopJoinExpr = joinEnum.getNestedLoopJoinExpr(newJoinConditions);
         boolean outerJoin = joinEnum.lookForOuterJoins(newJoinConditions);
+        ILogicalExpression hashJoinExpr = joinEnum.getHashJoinExpr(newJoinConditions, outerJoin);
+        ILogicalExpression nestedLoopJoinExpr = joinEnum.getNestedLoopJoinExpr(newJoinConditions);
 
         double current_card = this.cardinality;
         if (current_card >= Cost.MAX_CARD) {

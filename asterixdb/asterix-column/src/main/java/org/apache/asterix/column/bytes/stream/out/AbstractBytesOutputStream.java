@@ -24,6 +24,7 @@ import java.io.OutputStream;
 import org.apache.asterix.column.bytes.stream.out.pointer.IReservedPointer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.parquet.bytes.AsterixParquetBytesInput;
 import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.column.values.ValuesWriter;
 
@@ -31,10 +32,10 @@ import org.apache.parquet.column.values.ValuesWriter;
  * Extends {@link OutputStream} to include methods needed by {@link ValuesWriter}
  */
 public abstract class AbstractBytesOutputStream extends OutputStream {
-    private final ParquetBytesInput bytesInput;
+    private final AsterixParquetBytesInput bytesInput;
 
     protected AbstractBytesOutputStream() {
-        bytesInput = new ParquetBytesInput(this);
+        bytesInput = new AsterixParquetBytesInput(this);
     }
 
     @Override

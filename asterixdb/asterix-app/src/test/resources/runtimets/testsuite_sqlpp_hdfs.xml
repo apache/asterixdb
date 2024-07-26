@@ -58,10 +58,12 @@
         <output-dir compare="Text">parquet</output-dir>
       </compilation-unit>
     </test-case>
+    <!-- ASTERIXDB-3468: iceberg tests failing due to unsupported version
       <test-case FilePath="hdfs">
           <compilation-unit name="iceberg">
               <output-dir compare="Text">iceberg</output-dir>
           </compilation-unit>
       </test-case>
+      -->
   </test-group>
 </test-suite>

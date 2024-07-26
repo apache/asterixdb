@@ -16,29 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.bytes.stream.out;
+package org.apache.parquet.bytes;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 import org.apache.asterix.column.bytes.encoder.ParquetDeltaBinaryPackingValuesWriterForLong;
-import org.apache.parquet.bytes.BytesInput;
+import org.apache.asterix.column.bytes.stream.out.AbstractBytesOutputStream;
+import org.apache.asterix.column.bytes.stream.out.ByteBufferOutputStream;
 
 /**
  * A wrapper for {@link BytesInput} which is used to concatenate multiple {@link AbstractBytesOutputStream}
  *
  * @see ParquetDeltaBinaryPackingValuesWriterForLong#getBytes() as an example
  */
-class ParquetBytesInput extends BytesInput {
+public class AsterixParquetBytesInput extends BytesInput {
     private final AbstractBytesOutputStream outputStream;
 
-    ParquetBytesInput(AbstractBytesOutputStream outputStream) {
+    public AsterixParquetBytesInput(AbstractBytesOutputStream outputStream) {
         this.outputStream = outputStream;
     }
 
     @Override
     public final void writeAllTo(OutputStream outputStream) throws IOException {
         this.outputStream.writeTo(outputStream);
+    }
+
+    @Override
+    void writeInto(ByteBuffer buffer) {
+        ByteBufferOutputStream adapter = new ByteBufferOutputStream();
+        adapter.reset(buffer);
+        try {
+            writeAllTo(adapter);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

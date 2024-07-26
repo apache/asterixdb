@@ -285,7 +285,7 @@ public class JoinEnum {
         return andExpr;
     }
 
-    protected ILogicalExpression getHashJoinExpr(List<Integer> newJoinConditions) {
+    protected ILogicalExpression getHashJoinExpr(List<Integer> newJoinConditions, boolean outerJoin) {
         if (newJoinConditions.size() == 0) {
             // this is a cartesian product
             return ConstantExpression.TRUE;
@@ -300,15 +300,18 @@ public class JoinEnum {
         ScalarFunctionCallExpression andExpr = new ScalarFunctionCallExpression(
                 BuiltinFunctions.getBuiltinFunctionInfo(AlgebricksBuiltinFunctions.AND));
 
-        // All the join predicates need to be equality predicates for a hash join to be possible.
+        // at least one equality predicate needs to be present for a hash join to be possible.
         boolean eqPredFound = false;
         for (int joinNum : newJoinConditions) {
             // need to AND all the expressions.
             JoinCondition jc = joinConditions.get(joinNum);
-            if (jc.comparisonType != JoinCondition.comparisonOp.OP_EQ) {
+            if (jc.comparisonType == JoinCondition.comparisonOp.OP_EQ) {
+                eqPredFound = true;
+            } else if (outerJoin) {
+                // For outer joins, non-eq predicates cannot be pulled up and applied after the
+                // join, so a hash join will not be possible.
                 return null;
             }
-            eqPredFound = true;
             andExpr.getArguments().add(new MutableObject<>(jc.joinCondition));
         }
         // return null if no equality predicates were found

@@ -153,7 +153,7 @@ public class JsonUtil {
         }
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "BC_UNCONFIRMED_CAST", justification = "Uses precondition to validate casts")
+    //@edu.umd.cs.findbugs.annotations.SuppressWarnings(value = "BC_UNCONFIRMED_CAST", justification = "Uses precondition to validate casts")
     public static <T> T visit(JsonNode node, JsonTreeVisitor<T> visitor) {
         switch (node.getNodeType()) {
             case OBJECT:
