@@ -58,8 +58,8 @@ public class ObjectExpectedSchemaNode extends AbstractComplexExpectedSchemaNode 
     public IExpectedSchemaNode replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
         String fieldName = getChildFieldName(oldNode);
         IExpectedSchemaNode child = children.get(fieldName);
-        if (child.getType() == newNode.getType()) {
-            // We are trying to replace with the same node type
+        if (child.getType() == newNode.getType() || isReplaceableAny(newNode)) {
+            // We are trying to replace with the same node type, or with a replaceable any, ignore.
             return child;
         } else if (isChildReplaceable(child, newNode)) {
             children.replace(fieldName, newNode);

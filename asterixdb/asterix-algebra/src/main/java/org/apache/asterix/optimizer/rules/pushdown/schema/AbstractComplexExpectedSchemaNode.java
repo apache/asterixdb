@@ -105,6 +105,13 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
                 || newType == ExpectedSchemaNodeType.UNION || !newNode.allowsReplacing());
     }
 
+    /**
+     * @return true if {@code newNode} is a replaceable {@link ExpectedSchemaNodeType#ANY} node, false otherwise
+     */
+    protected boolean isReplaceableAny(IExpectedSchemaNode newNode) {
+        return newNode.getType() == ExpectedSchemaNodeType.ANY && newNode.allowsReplacing();
+    }
+
     public static AbstractComplexExpectedSchemaNode createNestedNode(ExpectedSchemaNodeType type,
             AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation, String functionName) {
         switch (type) {
