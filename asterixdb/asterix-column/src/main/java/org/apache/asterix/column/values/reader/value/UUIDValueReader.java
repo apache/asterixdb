@@ -33,6 +33,7 @@ public final class UUIDValueReader extends AbstractValueReader {
 
     public UUIDValueReader() {
         ArrayBackedValueStorage storage = new ArrayBackedValueStorage(16);
+        storage.setSize(16);
         uuidReader = new ParquetPlainFixedLengthValuesReader(storage);
     }
 

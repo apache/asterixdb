@@ -16423,6 +16423,11 @@
         <output-dir compare="Text">upsert/002</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/003">
+        <output-dir compare="Text">upsert/003</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="column" check-warnings="true">
       <compilation-unit name="filter/001">
         <output-dir compare="Text">filter/001</output-dir>
