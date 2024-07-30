@@ -20,7 +20,7 @@ package org.apache.hyracks.api.comm;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
-public interface IFrameReader {
+public interface IFrameReader extends AutoCloseable {
     void open() throws HyracksDataException;
 
     boolean nextFrame(IFrame frame) throws HyracksDataException;
