@@ -129,17 +129,22 @@ public final class S3CloudClient implements ICloudClient {
     public int read(String bucket, String path, long offset, ByteBuffer buffer) throws HyracksDataException {
         guardian.checkReadAccess(bucket, path);
         profiler.objectGet();
+        long bytesToRead = buffer.remaining();
         long readTo = offset + buffer.remaining() - 1;
         GetObjectRequest rangeGetObjectRequest = GetObjectRequest.builder().range("bytes=" + offset + "-" + readTo)
                 .bucket(bucket).key(config.getPrefix() + path).build();
 
         int totalRead = 0;
-        int read = 0;
+        int read;
 
         // TODO(htowaileb): add retry logic here
         try (ResponseInputStream<GetObjectResponse> response = s3Client.getObject(rangeGetObjectRequest)) {
             while (buffer.remaining() > 0) {
                 read = response.read(buffer.array(), buffer.position(), buffer.remaining());
+                if (read == -1) {
+                    throw new IllegalStateException("Unexpected EOF encountered. File: " + path + ", expected bytes: "
+                            + bytesToRead + ", bytes read: " + totalRead);
+                }
                 buffer.position(buffer.position() + read);
                 totalRead += read;
             }
