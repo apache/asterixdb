@@ -54,11 +54,11 @@ public class ResultPrinter {
     private final Stats stats;
     private final ARecordType recordType;
 
-    private boolean indentJSON;
-    private boolean quoteRecord;
+    private final boolean indentJSON;
+    private final boolean quoteRecord;
 
     // Whether we are wrapping the output sequence in an array
-    private boolean wrapArray = false;
+    private final boolean wrapArray;
     // Whether this is the first instance being output
     private boolean notFirst = false;
 
@@ -72,6 +72,7 @@ public class ResultPrinter {
         this.recordType = recordType;
         this.indentJSON = conf.is(SessionConfig.FORMAT_INDENT_JSON);
         this.quoteRecord = conf.is(SessionConfig.FORMAT_QUOTE_RECORD);
+        this.wrapArray = conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY);
         this.resultDisplayFrameMgr = new FrameManager(appCtx.getCompilerProperties().getFrameSize());
         if (indentJSON) {
             this.om = new ObjectMapper();
@@ -106,7 +107,6 @@ public class ResultPrinter {
                 notfirst = true;
                 app.append('"').append(name.replace("\"", "\"\"")).append('"');
             }
-            app.append("\r\n");
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
@@ -126,9 +126,8 @@ public class ResultPrinter {
             throw HyracksDataException.create(e);
         }
 
-        if (conf.is(SessionConfig.FORMAT_WRAPPER_ARRAY)) {
+        if (wrapArray) {
             output.out().print("[ ");
-            wrapArray = true;
         }
 
         if (conf.fmt() == SessionConfig.OutputFormat.CSV && conf.is(SessionConfig.FORMAT_CSV_HEADER)) {
@@ -139,11 +138,13 @@ public class ResultPrinter {
                 StringWriter sw = new StringWriter();
                 appendCSVHeader(sw, recordType);
                 output.out().print(JSONUtil.quoteAndEscape(sw.toString()));
-                output.out().print("\n");
-                notFirst = true;
             } else {
                 appendCSVHeader(output.out(), recordType);
             }
+            if (!wrapArray) {
+                output.out().println();
+            }
+            notFirst = true;
         }
     }
 
@@ -172,10 +173,6 @@ public class ResultPrinter {
             } catch (IOException e) { // NOSONAR if JSON parsing fails, just use the original string
                 record = result;
             }
-        }
-        if (conf.fmt() == SessionConfig.OutputFormat.CSV) {
-            // TODO(tillw): this is inefficient as well
-            record = record + "\r\n";
         }
         if (quoteRecord) {
             // TODO(tillw): this is inefficient as well
@@ -210,16 +207,15 @@ public class ResultPrinter {
                 for (int tIndex = 0; tIndex < last; tIndex++) {
                     final int start = fta.getTupleStartOffset(tIndex);
                     int length = fta.getTupleEndOffset(tIndex) - start;
-                    if (conf.fmt() == SessionConfig.OutputFormat.CSV
-                            && ((length > 0) && (frameBytes[start + length - 1] == '\n'))) {
-                        length--;
-                    }
                     String result = new String(frameBytes, start, length, UTF_8);
                     if (wrapArray && notFirst) {
-                        output.out().print(", ");
+                        output.out().print(',');
                     }
                     notFirst = true;
                     displayRecord(result);
+                    if (!wrapArray) {
+                        output.out().println();
+                    }
                 }
                 frameBuffer.clear();
             }

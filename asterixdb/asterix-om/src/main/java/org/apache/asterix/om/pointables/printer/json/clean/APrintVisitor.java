@@ -38,12 +38,12 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public class APrintVisitor extends AbstractPrintVisitor {
     @Override
     protected AListPrinter createListPrinter(AListVisitablePointable accessor) {
-        return new AListPrinter("[ ", " ]", ", ");
+        return new AListPrinter("[", "]", ",");
     }
 
     @Override
     protected ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor) {
-        return new ARecordPrinter("{ ", " }", ", ", ": ");
+        return new ARecordPrinter("{", "}", ",", ":");
     }
 
     @Override
