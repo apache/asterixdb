@@ -56,7 +56,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
  * Note: If the call to {@link IFrameWriter#open()} failed, the {@link IFrameWriter#close()} must still be called by the
  * producer.
  */
-public interface IFrameWriter {
+public interface IFrameWriter extends AutoCloseable {
     /**
      * First call to allocate any resources.
      */
