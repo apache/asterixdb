@@ -63,6 +63,7 @@ import org.apache.hyracks.api.job.profiling.counters.ICounterContext;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.api.resources.IDeallocatable;
 import org.apache.hyracks.api.result.IResultPartitionManager;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.api.util.JavaSerializationUtils;
 import org.apache.hyracks.control.common.job.PartitionState;
@@ -406,6 +407,7 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
         if (aborted) {
             return;
         }
+        Throwable originalEx = null;
         try {
             collector.open();
             try {
@@ -430,23 +432,24 @@ public class Task implements IHyracksTaskContext, ICounterContext, Runnable {
                             buffer.compact();
                         }
                     } catch (Exception e) {
-                        try {
-                            writer.fail();
-                        } catch (HyracksDataException e1) {
-                            e.addSuppressed(e1);
-                        }
-                        throw e;
+                        originalEx = e;
+                        CleanupUtils.fail(writer, originalEx);
                     } finally {
-                        writer.close();
+                        originalEx = CleanupUtils.closeSilently(writer, originalEx);
                     }
                 } finally {
-                    reader.close();
+                    originalEx = CleanupUtils.closeSilently(reader, originalEx);
                 }
+            } catch (Exception e) {
+                originalEx = ExceptionUtils.suppress(originalEx, e);
             } finally {
-                collector.close();
+                originalEx = CleanupUtils.closeSilently(collector, originalEx);
             }
         } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            originalEx = ExceptionUtils.suppress(originalEx, e);
+        }
+        if (originalEx != null) {
+            throw HyracksDataException.create(originalEx);
         }
     }
 

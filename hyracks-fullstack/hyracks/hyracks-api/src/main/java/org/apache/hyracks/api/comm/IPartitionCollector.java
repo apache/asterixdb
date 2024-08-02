@@ -25,7 +25,7 @@ import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.partitions.PartitionId;
 
-public interface IPartitionCollector {
+public interface IPartitionCollector extends AutoCloseable {
     public JobId getJobId();
 
     public ConnectorDescriptorId getConnectorId();
