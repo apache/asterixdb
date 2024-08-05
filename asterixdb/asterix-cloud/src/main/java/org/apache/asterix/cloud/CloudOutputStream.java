@@ -22,9 +22,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import org.apache.asterix.cloud.clients.ICloudWriter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class CloudOutputStream extends OutputStream {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     private final ICloudWriter cloudWriter;
+    private boolean aborted = false;
 
     public CloudOutputStream(ICloudWriter cloudWriter) {
         this.cloudWriter = cloudWriter;
@@ -42,10 +47,19 @@ public final class CloudOutputStream extends OutputStream {
 
     @Override
     public void close() throws IOException {
+        if (aborted) {
+            LOGGER.debug("Skipping call to finish() as operation was aborted");
+            return;
+        }
         cloudWriter.finish();
     }
 
     public void abort() throws IOException {
+        if (aborted) {
+            LOGGER.debug("Skipping call to abort() as we have aborted already");
+            return;
+        }
+        aborted = true;
         cloudWriter.abort();
     }
 }
