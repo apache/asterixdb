@@ -19,12 +19,13 @@
 package org.apache.asterix.column.assembler.value;
 
 import org.apache.asterix.column.values.IColumnValuesReader;
+import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 class UUIDValueGetter extends AbstractFixedLengthValueGetter {
     UUIDValueGetter() {
-        super(ATypeTag.UUID, 16);
+        super(ATypeTag.UUID, AUUID.UUID_BYTES);
     }
 
     @Override
