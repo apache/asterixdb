@@ -383,10 +383,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         activeNamespace = handleUseDataverseStatement(metadataProvider, stmt);
                         break;
                     case CREATE_DATABASE:
-                        handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters);
+                        handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters,
+                                MetadataConstants.DEFAULT_OWNER);
                         break;
                     case CREATE_DATAVERSE:
-                        handleCreateDataverseStatement(metadataProvider, stmt, requestParameters);
+                        handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
+                                MetadataConstants.DEFAULT_OWNER);
                         break;
                     case DATASET_DECL:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -656,7 +658,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateDatabaseStatement(MetadataProvider metadataProvider, Statement stmt,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, String ownerName) throws Exception {
         CreateDatabaseStatement stmtCreateDatabase = (CreateDatabaseStatement) stmt;
         String database = stmtCreateDatabase.getDatabaseName().getValue();
         metadataProvider.validateDatabaseName(database, stmt.getSourceLocation());
@@ -665,14 +667,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDatabaseBegin(lockManager, metadataProvider.getLocks(), database);
         try {
-            doCreateDatabaseStatement(metadataProvider, stmtCreateDatabase, requestParameters);
+            doCreateDatabaseStatement(metadataProvider, stmtCreateDatabase, requestParameters, ownerName);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doCreateDatabaseStatement(MetadataProvider mdProvider, CreateDatabaseStatement stmtCreateDatabase,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, String ownerName) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         mdProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -687,8 +689,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             databaseName);
                 }
             }
+
             MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
-                    new Database(databaseName, false, MetadataUtil.PENDING_NO_OP));
+                    new Database(databaseName, false, ownerName, MetadataUtil.PENDING_NO_OP));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -698,7 +701,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, String ownerName) throws Exception {
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
         String dbName = stmtCreateDataverse.getDatabaseName();
@@ -709,7 +712,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), dbName, dvName);
         try {
-            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters);
+            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters, ownerName);
         } finally {
             metadataProvider.getLocks().unlock();
         }
@@ -717,7 +720,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @SuppressWarnings("squid:S00112")
     protected boolean doCreateDataverseStatement(MetadataProvider metadataProvider,
-            CreateDataverseStatement stmtCreateDataverse, IRequestParameters requestParameters) throws Exception {
+            CreateDataverseStatement stmtCreateDataverse, IRequestParameters requestParameters, String ownerName)
+            throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -740,8 +744,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             dvName);
                 }
             }
-            MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(),
-                    new Dataverse(dbName, dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP));
+            MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(), new Dataverse(dbName,
+                    dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP, ownerName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2068,8 +2072,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // second, inserting the database record with the PendingDropOp value into the 'Database' collection
             // Note: the delete operation fails if the database cannot be deleted due to metadata dependencies
             MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
-            MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
-                    new Database(databaseName, database.isSystemDatabase(), MetadataUtil.PENDING_DROP_OP));
+            MetadataManager.INSTANCE.addDatabase(mdTxnCtx, new Database(databaseName, database.isSystemDatabase(),
+                    MetadataConstants.DEFAULT_OWNER, MetadataUtil.PENDING_DROP_OP));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -2254,8 +2258,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // second, inserting the dataverse record with the PendingDropOp value into the DATAVERSE_DATASET
             // Note: the delete operation fails if the dataverse cannot be deleted due to metadata dependencies
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, databaseName, dataverseName);
-            MetadataManager.INSTANCE.addDataverse(mdTxnCtx,
-                    new Dataverse(databaseName, dataverseName, dv.getDataFormat(), MetadataUtil.PENDING_DROP_OP));
+            MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(databaseName, dataverseName,
+                    dv.getDataFormat(), MetadataUtil.PENDING_DROP_OP, MetadataConstants.DEFAULT_OWNER));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;

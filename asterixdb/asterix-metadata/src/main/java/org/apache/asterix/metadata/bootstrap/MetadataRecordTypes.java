@@ -130,6 +130,9 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_FULL_TEXT_FILTER_PIPELINE = "FullTextFilterPipeline";
     public static final String FIELD_NAME_FULL_TEXT_STOPWORD_LIST = "StopwordList";
 
+    //open field
+    public static final String FIELD_NAME_OWNER_NAME = "OwnerName";
+
     //---------------------------------- Record Types Creation ----------------------------------//
     //--------------------------------------- Properties ----------------------------------------//
     public static final int PROPERTIES_NAME_FIELD_INDEX = 0;

@@ -178,13 +178,13 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void dropDatabase(String databaseName) {
-        Database database = new Database(databaseName, false, MetadataUtil.PENDING_NO_OP);
+        Database database = new Database(databaseName, false, null, MetadataUtil.PENDING_NO_OP);
         droppedCache.addDatabaseIfNotExists(database);
         logAndApply(new MetadataLogicalOperation(database, false));
     }
 
     public void dropDataverse(String database, DataverseName dataverseName) {
-        Dataverse dataverse = new Dataverse(database, dataverseName, null, MetadataUtil.PENDING_NO_OP);
+        Dataverse dataverse = new Dataverse(database, dataverseName, null, MetadataUtil.PENDING_NO_OP, null);
         droppedCache.addDataverseIfNotExists(dataverse);
         logAndApply(new MetadataLogicalOperation(dataverse, false));
     }

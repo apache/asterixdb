@@ -30,19 +30,20 @@ import org.apache.asterix.runtime.formats.NonTaggedDataFormat;
 public class MetadataBuiltinEntities {
 
     //--------------------------------------- Databases ----------------------------------------//
-    public static final Database SYSTEM_DATABASE =
-            new Database(MetadataConstants.SYSTEM_DATABASE, true, MetadataUtil.PENDING_NO_OP);
+    public static final Database SYSTEM_DATABASE = new Database(MetadataConstants.SYSTEM_DATABASE, true,
+            MetadataConstants.DEFAULT_OWNER, MetadataUtil.PENDING_NO_OP);
 
-    public static final Database DEFAULT_DATABASE =
-            new Database(MetadataConstants.DEFAULT_DATABASE, false, MetadataUtil.PENDING_NO_OP);
+    public static final Database DEFAULT_DATABASE = new Database(MetadataConstants.DEFAULT_DATABASE, false,
+            MetadataConstants.DEFAULT_OWNER, MetadataUtil.PENDING_NO_OP);
 
     //--------------------------------------- Dataverses ----------------------------------------//
-    public static final Dataverse METADATA_DATAVERSE =
-            new Dataverse(MetadataConstants.SYSTEM_DATABASE, MetadataConstants.METADATA_DATAVERSE_NAME,
-                    NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT, MetadataUtil.PENDING_NO_OP);
+    public static final Dataverse METADATA_DATAVERSE = new Dataverse(MetadataConstants.SYSTEM_DATABASE,
+            MetadataConstants.METADATA_DATAVERSE_NAME, NonTaggedDataFormat.NON_TAGGED_DATA_FORMAT,
+            MetadataUtil.PENDING_NO_OP, MetadataConstants.DEFAULT_OWNER);
 
-    public static final Dataverse DEFAULT_DATAVERSE = new Dataverse(MetadataConstants.DEFAULT_DATABASE,
-            MetadataConstants.DEFAULT_DATAVERSE_NAME, NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP);
+    public static final Dataverse DEFAULT_DATAVERSE =
+            new Dataverse(MetadataConstants.DEFAULT_DATABASE, MetadataConstants.DEFAULT_DATAVERSE_NAME,
+                    NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP, MetadataConstants.DEFAULT_OWNER);
 
     //--------------------------------------- Datatypes -----------------------------------------//
     public static final Datatype ANY_OBJECT_DATATYPE =

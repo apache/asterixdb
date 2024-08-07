@@ -33,11 +33,13 @@ public class Database implements IMetadataEntity<Database> {
 
     private final String databaseName;
     private final boolean isSystemDatabase;
+    private final String owner;
     private final int pendingOp;
 
-    public Database(String databaseName, boolean isSystemDatabase, int pendingOp) {
+    public Database(String databaseName, boolean isSystemDatabase, String owner, int pendingOp) {
         this.databaseName = databaseName;
         this.isSystemDatabase = isSystemDatabase;
+        this.owner = owner;
         this.pendingOp = pendingOp;
     }
 
@@ -47,6 +49,10 @@ public class Database implements IMetadataEntity<Database> {
 
     public boolean isSystemDatabase() {
         return isSystemDatabase;
+    }
+
+    public String getOwnerName() {
+        return owner;
     }
 
     public int getPendingOp() {
