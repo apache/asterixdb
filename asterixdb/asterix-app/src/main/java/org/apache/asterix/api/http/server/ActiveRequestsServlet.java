@@ -55,7 +55,7 @@ public class ActiveRequestsServlet extends AbstractRequestsServlet {
     protected void delete(IServletRequest request, IServletResponse response) throws IOException {
         String uuid = request.getParameter(REQUEST_UUID_PARAM_NAME);
         String clientCtxId = request.getParameter(Parameter.CLIENT_ID.str());
-        LOGGER.debug("received cancel request, uuid={}, clientCtxId={}", uuid, clientCtxId);
+        LOGGER.info("received cancel request, uuid={}, clientContextId={}", uuid, clientCtxId);
         if (uuid == null && clientCtxId == null) {
             response.setStatus(HttpResponseStatus.BAD_REQUEST);
             return;
