@@ -111,8 +111,7 @@ public class ExpressionToExpectedSchemaNodeVisitor implements ILogicalExpression
         }
 
         AbstractComplexExpectedSchemaNode newParent = replaceIfNeeded(parent, expr);
-        IExpectedSchemaNode myNode =
-                new AnyExpectedSchemaNode(newParent, expr.getSourceLocation(), expr.getFunctionIdentifier().getName());
+        IExpectedSchemaNode myNode = new AnyExpectedSchemaNode(newParent, expr);
         ExpectedSchemaBuilder.addOrReplaceChild(expr, typeEnv, newParent, myNode);
         return myNode;
     }
@@ -120,7 +119,6 @@ public class ExpressionToExpectedSchemaNodeVisitor implements ILogicalExpression
     private AbstractComplexExpectedSchemaNode replaceIfNeeded(IExpectedSchemaNode parent,
             AbstractFunctionCallExpression funcExpr) {
         ExpectedSchemaNodeType expectedType = ExpectedSchemaBuilder.getExpectedNestedNodeType(funcExpr);
-        return (AbstractComplexExpectedSchemaNode) parent.replaceIfNeeded(expectedType, parent.getSourceLocation(),
-                parent.getFunctionName());
+        return (AbstractComplexExpectedSchemaNode) parent.replaceIfNeeded(expectedType, funcExpr, funcExpr);
     }
 }

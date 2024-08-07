@@ -18,14 +18,15 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private IExpectedSchemaNode child;
 
-    public ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
-        super(parent, sourceLocation, functionName);
+    public ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
+        super(parent, parentExpression, expression);
     }
 
     @Override

@@ -70,19 +70,23 @@ public class ExpectedSchemaMergerVisitor
 
         // combine
         RootExpectedSchemaNode mergedRoot = (RootExpectedSchemaNode) RootExpectedSchemaNode.ALL_FIELDS_ROOT_NODE
-                .replaceIfNeeded(ExpectedSchemaNodeType.OBJECT, node.getSourceLocation(), node.getFunctionName());
+                .replaceIfNeeded(ExpectedSchemaNodeType.OBJECT, null, null);
         mergeObjectFields(mergedRoot, node.getChildren(), argRoot.getChildren());
+        mergedRoot.addAllFieldNameIds(node);
+        mergedRoot.addAllFieldNameIds(argRoot);
         return mergedRoot;
     }
 
     @Override
     public IExpectedSchemaNode visit(ObjectExpectedSchemaNode node, IExpectedSchemaNode arg) {
         ObjectExpectedSchemaNode mergedObject =
-                new ObjectExpectedSchemaNode(currentParent, node.getSourceLocation(), node.getFunctionName());
+                new ObjectExpectedSchemaNode(currentParent, node.getParentExpression(), node.getExpression());
         Map<String, IExpectedSchemaNode> argChildren = Collections.emptyMap();
+        mergedObject.addAllFieldNameIds(node);
         if (arg != null) {
             ObjectExpectedSchemaNode argObject = (ObjectExpectedSchemaNode) arg;
             argChildren = argObject.getChildren();
+            mergedObject.addAllFieldNameIds(argObject);
         }
 
         mergeObjectFields(mergedObject, node.getChildren(), argChildren);
@@ -99,7 +103,7 @@ public class ExpectedSchemaMergerVisitor
             argItem = arrayArg.getChild();
         }
         ArrayExpectedSchemaNode mergedArray =
-                new ArrayExpectedSchemaNode(currentParent, node.getSourceLocation(), node.getFunctionName());
+                new ArrayExpectedSchemaNode(currentParent, node.getParentExpression(), node.getExpression());
         AbstractComplexExpectedSchemaNode previousParent = currentParent;
         currentParent = mergedArray;
         IExpectedSchemaNode mergedItem = merge(nodeItem, argItem);
@@ -111,8 +115,7 @@ public class ExpectedSchemaMergerVisitor
 
     @Override
     public IExpectedSchemaNode visit(UnionExpectedSchemaNode node, IExpectedSchemaNode arg) {
-        UnionExpectedSchemaNode union =
-                new UnionExpectedSchemaNode(currentParent, node.getSourceLocation(), node.getFunctionName());
+        UnionExpectedSchemaNode union = new UnionExpectedSchemaNode(currentParent, node.getParentExpression());
         AbstractComplexExpectedSchemaNode previousParent = currentParent;
         currentParent = union;
 
@@ -148,7 +151,7 @@ public class ExpectedSchemaMergerVisitor
 
     @Override
     public IExpectedSchemaNode visit(AnyExpectedSchemaNode node, IExpectedSchemaNode arg) {
-        return new AnyExpectedSchemaNode(currentParent, node.getSourceLocation(), node.getFunctionName());
+        return new AnyExpectedSchemaNode(currentParent, node.getParentExpression());
     }
 
     private void mergeObjectFields(ObjectExpectedSchemaNode objectNode, Map<String, IExpectedSchemaNode> left,
@@ -170,7 +173,7 @@ public class ExpectedSchemaMergerVisitor
             }
             IExpectedSchemaNode rightChild = right.get(fieldName);
             IExpectedSchemaNode mergedChild = merge(leftChild.getValue(), rightChild);
-            objectNode.addChild(fieldName, mergedChild);
+            objectNode.addChild(fieldName, -1, mergedChild);
             mergedFields.add(fieldName);
         }
     }
@@ -196,8 +199,7 @@ public class ExpectedSchemaMergerVisitor
     }
 
     private IExpectedSchemaNode createUnionNode(IExpectedSchemaNode leftChild, IExpectedSchemaNode rightChild) {
-        UnionExpectedSchemaNode union =
-                new UnionExpectedSchemaNode(currentParent, leftChild.getSourceLocation(), leftChild.getFunctionName());
+        UnionExpectedSchemaNode union = new UnionExpectedSchemaNode(currentParent, leftChild.getParentExpression());
         AbstractComplexExpectedSchemaNode previousParent = currentParent;
         currentParent = union;
         // Create a copy of leftChild
