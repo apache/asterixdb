@@ -35,6 +35,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -72,6 +73,7 @@ import org.apache.hyracks.control.common.heartbeat.HeartbeatSchema;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.ipc.ClusterControllerRemoteProxy;
 import org.apache.hyracks.control.common.job.profiling.om.JobProfile;
+import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.common.work.FutureValue;
 import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.control.nc.application.NCServiceContext;
@@ -145,7 +147,7 @@ public class NodeControllerService implements IControllerService {
 
     private final Map<JobId, JobParameterByteStore> jobParameterByteStoreMap = new HashMap<>();
 
-    private ExecutorService executor;
+    private ExecutorService executor = Executors.newCachedThreadPool(new HyracksThreadFactory("<bootstrap>"));
 
     private Map<CcId, HeartbeatManager> heartbeatManagers = new ConcurrentHashMap<>();
 
