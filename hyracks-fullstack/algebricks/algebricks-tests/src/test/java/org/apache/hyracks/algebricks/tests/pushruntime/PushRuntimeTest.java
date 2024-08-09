@@ -178,7 +178,7 @@ public class PushRuntimeTest {
 
         StringBuilder buf = new StringBuilder();
         readFileToString(outFile, buf);
-        Assert.assertEquals("400; 3", buf.toString());
+        Assert.assertEquals("400;3", buf.toString());
         outFile.delete();
     }
 
@@ -570,7 +570,7 @@ public class PushRuntimeTest {
 
         StringBuilder buf = new StringBuilder();
         readFileToString(outFile, buf);
-        Assert.assertEquals("400; 3", buf.toString());
+        Assert.assertEquals("400;3", buf.toString());
         outFile.delete();
     }
 
@@ -796,9 +796,9 @@ public class PushRuntimeTest {
         RecordDescriptor sortDesc = scannerDesc;
 
         String fileName = "scanMicroSortWrite.out";
-        String filePath = PATH_ACTUAL + SEPARATOR + fileName;
-        String resultFilePath = PATH_EXPECTED + SEPARATOR + fileName;
-        File outFile = new File(filePath);
+        String actualFilePath = PATH_ACTUAL + SEPARATOR + fileName;
+        String expectedFilePath = PATH_EXPECTED + SEPARATOR + fileName;
+        File outFile = new File(actualFilePath);
         SinkWriterRuntimeFactory writer = new SinkWriterRuntimeFactory(new int[] { 0, 1, 2, 3 },
                 new IPrinterFactory[] { IntegerPrinterFactory.INSTANCE, UTF8StringPrinterFactory.INSTANCE,
                         IntegerPrinterFactory.INSTANCE, UTF8StringPrinterFactory.INSTANCE },
@@ -814,7 +814,7 @@ public class PushRuntimeTest {
         spec.addRoot(algebricksOp);
         AlgebricksHyracksIntegrationUtil.runJob(spec);
 
-        compareFiles(filePath, resultFilePath);
+        compareFiles(expectedFilePath, actualFilePath);
         outFile.delete();
     }
 

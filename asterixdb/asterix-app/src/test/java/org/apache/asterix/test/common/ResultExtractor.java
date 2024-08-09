@@ -219,6 +219,7 @@ public class ResultExtractor {
         }
 
         final boolean isJsonFormat = isJsonFormat(fmt);
+        boolean firstResult = true;
 
         // if we have errors field in the results, we will always return it
         checkForErrors(result);
@@ -235,6 +236,10 @@ public class ResultExtractor {
             final JsonNode fieldValue = result.get(fieldName);
             switch (fieldKind) {
                 case RESULTS:
+                    if (!firstResult) {
+                        resultBuilder.append('\n');
+                    }
+                    firstResult = false;
                     if (fieldValue.size() <= 1) {
                         if (fieldValue.size() == 0) {
                             resultBuilder.append("");
@@ -257,7 +262,7 @@ public class ResultExtractor {
                         } else {
                             for (JsonNode f : fields) {
                                 if (f.isValueNode()) {
-                                    resultBuilder.append(f.asText());
+                                    resultBuilder.append(f.asText()).append('\n');
                                 } else {
                                     resultBuilder.append(prettyPrint(f)).append('\n');
                                 }

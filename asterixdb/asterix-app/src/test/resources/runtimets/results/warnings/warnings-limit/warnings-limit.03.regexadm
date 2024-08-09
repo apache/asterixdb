@@ -3,21 +3,7 @@
 \s*\Q"signature": {\E
 \s*\Q"*": "*"\E
 \s*\Q},\E
-\s*\Q"results": [ { "F1": { "a": 1 }, "F2": false }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": false }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q, { "F1": { "a": 1 }, "F2": null }\E
-\s*\Q]\E
+\s*\Q"results": [ {"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":false},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null},{"F1":{"a":1},"F2":null} ]\E
 \s*\Q,\E
 \s*\Q"plans":{},\E
 \s*\Q"warnings": [{\E\s*

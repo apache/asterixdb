@@ -7396,6 +7396,11 @@
         <output-dir compare="Text">query-ASTERIXDB-3419</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-3415">
+        <output-dir compare="Text">query-ASTERIXDB-3415</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="multipart-dataverse">
     <test-case FilePath="multipart-dataverse">
@@ -14309,7 +14314,7 @@
     <test-case FilePath="meta">
       <compilation-unit name="meta_after_gby">
         <output-dir compare="Text">meta_after_gby</output-dir>
-        <expected-error>Compilation error: Inappropriate use of function 'meta'. For example, after GROUP BY (in line 29, at column 21)</expected-error>
+        <expected-error>Compilation error: No source collection found for META(): collection not supported or cannot reference collection (in line 29, at column 21)</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="meta">
