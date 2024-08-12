@@ -79,7 +79,7 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
                     .withType(schema).withTypeInfo(typeInfo).withRowGroupSize(rowGroupSize).withPageSize(pageSize)
                     .withDictionaryPageSize(ExternalDataConstants.PARQUET_DICTIONARY_PAGE_SIZE)
                     .enableDictionaryEncoding().withValidation(false)
-                    .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_2_0).withConf(conf).build();
+                    .withWriterVersion(ParquetProperties.WriterVersion.PARQUET_1_0).withConf(conf).build();
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

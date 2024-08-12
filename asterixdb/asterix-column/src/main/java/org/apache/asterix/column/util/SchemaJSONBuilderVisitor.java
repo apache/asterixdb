@@ -21,7 +21,6 @@ package org.apache.asterix.column.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.column.metadata.schema.AbstractSchemaNode;
 import org.apache.asterix.column.metadata.schema.ISchemaNodeVisitor;
 import org.apache.asterix.column.metadata.schema.ObjectSchemaNode;
@@ -30,6 +29,7 @@ import org.apache.asterix.column.metadata.schema.collection.AbstractCollectionSc
 import org.apache.asterix.column.metadata.schema.primitive.PrimitiveSchemaNode;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.base.AString;
+import org.apache.asterix.om.dictionary.IFieldNamesDictionary;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleDataInputStream;

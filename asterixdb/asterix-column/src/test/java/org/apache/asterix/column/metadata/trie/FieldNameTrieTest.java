@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.asterix.column.metadata.dictionary.FieldNameTrie;
-import org.apache.asterix.column.metadata.dictionary.FieldNamesTrieDictionary;
+import org.apache.asterix.om.dictionary.FieldNameTrie;
+import org.apache.asterix.om.dictionary.FieldNamesTrieDictionary;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.primitive.UTF8StringPointable;

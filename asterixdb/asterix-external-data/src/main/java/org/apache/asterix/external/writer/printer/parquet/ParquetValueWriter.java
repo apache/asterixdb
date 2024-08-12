@@ -43,24 +43,19 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.PrimitiveType;
 
-public class ParquetRecordVisitorUtils {
-
+public class ParquetValueWriter {
     public static final String LIST_FIELD = "list";
     public static final String ELEMENT_FIELD = "element";
 
     public static final String GROUP_TYPE_ERROR_FIELD = "group";
     public static final String PRIMITIVE_TYPE_ERROR_FIELD = "primitive";
 
-    private VoidPointable voidPointable;
-    private ATypeTag typeTag;
+    private final VoidPointable voidPointable;
+    private final ResettableByteArrayOutputStream byteArrayOutputStream;
 
-    private byte[] b;
-    int s, l;
-    private ResettableByteArrayOutputStream byteArrayOutputStream;
-
-    public ParquetRecordVisitorUtils() {
+    ParquetValueWriter() {
         this.voidPointable = VoidPointable.FACTORY.createPointable();
-        byteArrayOutputStream = new ResettableByteArrayOutputStream();
+        this.byteArrayOutputStream = new ResettableByteArrayOutputStream();
     }
 
     private void addIntegerType(long value, PrimitiveType.PrimitiveTypeName primitiveTypeName, ATypeTag typeTag,
@@ -86,8 +81,9 @@ public class ParquetRecordVisitorUtils {
     public void addValueToColumn(RecordConsumer recordConsumer, FlatLazyVisitablePointable pointable,
             PrimitiveType type) throws HyracksDataException {
 
-        typeTag = pointable.getTypeTag();
-        b = pointable.getByteArray();
+        ATypeTag typeTag = pointable.getTypeTag();
+        byte[] b = pointable.getByteArray();
+        int s, l;
 
         if (pointable.isTagged()) {
             s = pointable.getStartOffset() + 1;
@@ -196,7 +192,5 @@ public class ParquetRecordVisitorUtils {
             default:
                 throw RuntimeDataException.create(ErrorCode.TYPE_MISMATCH_GENERIC, typeTag, primitiveTypeName);
         }
-
     }
-
 }

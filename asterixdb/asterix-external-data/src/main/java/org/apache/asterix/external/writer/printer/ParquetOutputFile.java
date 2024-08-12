@@ -31,6 +31,14 @@ import org.apache.parquet.io.PositionOutputStream;
 public class ParquetOutputFile implements OutputFile {
     private final FSDataOutputStream fs;
 
+    /*
+     This class wraps OutputStream as a file that Parquet SDK supports writing to.
+     By default, this assumes output stream doesn't support block size which distributed file systems use.
+     Hadoop File System Library use this as a default block size
+     Ref : https://github.com/apache/hadoop/blob/74ff00705cf67911f1ff8320c6c97354350d6952/hadoop-common-project/hadoop-common/src/main/java/org/apache/hadoop/fs/FileSystem.java#L2756
+     */
+    private static final long DEFAULT_BLOCK_SIZE = 33554432L;
+
     public ParquetOutputFile(OutputStream os) {
         this.fs = new FSDataOutputStream(os, new FileSystem.Statistics("test"));
     }
@@ -52,6 +60,6 @@ public class ParquetOutputFile implements OutputFile {
 
     @Override
     public long defaultBlockSize() {
-        return 33554432L;
+        return DEFAULT_BLOCK_SIZE;
     }
 }

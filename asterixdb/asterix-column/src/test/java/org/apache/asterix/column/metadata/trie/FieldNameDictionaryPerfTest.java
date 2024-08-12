@@ -20,11 +20,11 @@ package org.apache.asterix.column.metadata.trie;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.asterix.column.metadata.IFieldNamesDictionary;
-import org.apache.asterix.column.metadata.dictionary.FieldNamesHashDictionary;
-import org.apache.asterix.column.metadata.dictionary.FieldNamesTrieDictionary;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableString;
+import org.apache.asterix.om.dictionary.FieldNamesHashDictionary;
+import org.apache.asterix.om.dictionary.FieldNamesTrieDictionary;
+import org.apache.asterix.om.dictionary.IFieldNamesDictionary;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;

@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.column.metadata.schema;
 
-import static org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.DUMMY_FIELD_NAME_INDEX;
 
 import java.io.DataInput;
 import java.io.DataInputStream;

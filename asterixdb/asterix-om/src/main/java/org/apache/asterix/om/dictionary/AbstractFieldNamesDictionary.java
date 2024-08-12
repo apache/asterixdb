@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-package org.apache.asterix.column.metadata.dictionary;
+package org.apache.asterix.om.dictionary;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.asterix.column.metadata.IFieldNamesDictionary;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.base.AMutableString;
 import org.apache.hyracks.api.exceptions.HyracksDataException;

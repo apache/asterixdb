@@ -18,42 +18,35 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
-import org.apache.hyracks.api.dataflow.value.IBinaryHashFunction;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.asterix.om.dictionary.FieldNamesTrieDictionary;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.data.std.accessors.PointableBinaryHashFunctionFactory;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.primitive.UTF8StringPointable;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-
 public class FieldNamesDictionary {
-    private final IBinaryHashFunction fieldNameHashFunction;
-    private final Int2ObjectMap<String> hashToFieldNameIndexMap;
+    private final FieldNamesTrieDictionary trie;
+    private final List<String> fieldNames;
+    private final StringBuilder builder;
 
     public FieldNamesDictionary() {
-        fieldNameHashFunction =
-                new PointableBinaryHashFunctionFactory(UTF8StringPointable.FACTORY).createBinaryHashFunction();
-        hashToFieldNameIndexMap = new Int2ObjectOpenHashMap<>();
+        trie = new FieldNamesTrieDictionary();
+        fieldNames = new ArrayList<>();
+        builder = new StringBuilder();
     }
 
-    //TODO solve collision (they're so rare that I haven't seen any)
     public String getOrCreateFieldNameIndex(IValueReference pointable) throws HyracksDataException {
-
-        int hash = getHash(pointable);
-        if (!hashToFieldNameIndexMap.containsKey(hash)) {
-            String fieldName = UTF8StringUtil.toString(pointable.getByteArray(), pointable.getStartOffset());
-            hashToFieldNameIndexMap.put(hash, fieldName);
-            return fieldName;
+        int index = trie.getOrCreateFieldNameIndex(pointable);
+        if (index < fieldNames.size()) {
+            return fieldNames.get(index);
         }
-        return hashToFieldNameIndexMap.get(hash);
+
+        builder.setLength(0);
+        String fieldName = UTF8StringUtil.toString(pointable.getByteArray(), pointable.getStartOffset(), builder);
+        fieldNames.add(fieldName);
+        return fieldName;
     }
 
-    private int getHash(IValueReference fieldName) throws HyracksDataException {
-        byte[] object = fieldName.getByteArray();
-        int start = fieldName.getStartOffset();
-        int length = fieldName.getLength();
-        return fieldNameHashFunction.hash(object, start, length);
-    }
 }

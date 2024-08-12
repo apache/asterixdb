@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.column.metadata.dictionary;
+package org.apache.asterix.om.dictionary;
 
-import static org.apache.asterix.column.metadata.dictionary.AbstractFieldNamesDictionary.deserializeFieldNames;
+import static org.apache.asterix.om.dictionary.AbstractFieldNamesDictionary.deserializeFieldNames;
 
 import java.io.DataInput;
 import java.io.DataOutput;

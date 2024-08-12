@@ -332,6 +332,10 @@ public class UTF8StringUtil {
 
     public static String toString(byte[] bytes, int start) {
         StringBuilder builder = new StringBuilder();
+        return toString(bytes, start, builder);
+    }
+
+    public static String toString(byte[] bytes, int start, StringBuilder builder) {
         return toString(builder, bytes, start).toString();
     }
 

@@ -18,10 +18,10 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
-import static org.apache.asterix.external.writer.printer.parquet.ParquetRecordVisitorUtils.ELEMENT_FIELD;
-import static org.apache.asterix.external.writer.printer.parquet.ParquetRecordVisitorUtils.GROUP_TYPE_ERROR_FIELD;
-import static org.apache.asterix.external.writer.printer.parquet.ParquetRecordVisitorUtils.LIST_FIELD;
-import static org.apache.asterix.external.writer.printer.parquet.ParquetRecordVisitorUtils.PRIMITIVE_TYPE_ERROR_FIELD;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.ELEMENT_FIELD;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.GROUP_TYPE_ERROR_FIELD;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.LIST_FIELD;
+import static org.apache.asterix.external.writer.printer.parquet.ParquetValueWriter.PRIMITIVE_TYPE_ERROR_FIELD;
 
 import org.apache.asterix.om.lazy.AbstractLazyVisitablePointable;
 import org.apache.asterix.om.lazy.AbstractListLazyVisitablePointable;
@@ -48,7 +48,7 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
     private RecordConsumer recordConsumer;
     private FieldNamesDictionary fieldNamesDictionary;
 
-    private final ParquetRecordVisitorUtils parquetRecordVisitorUtils;
+    private final ParquetValueWriter parquetValueWriter;
 
     public ParquetRecordLazyVisitor(MessageType schema, IAType typeInfo) {
         this.schema = schema;
@@ -61,7 +61,7 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
             throw new RuntimeException("Type Unsupported for parquet printing");
         }
         this.fieldNamesDictionary = new FieldNamesDictionary();
-        this.parquetRecordVisitorUtils = new ParquetRecordVisitorUtils();
+        this.parquetValueWriter = new ParquetValueWriter();
     }
 
     public MessageType getSchema() {
@@ -150,7 +150,7 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
             throw new HyracksDataException(ErrorCode.RESULT_DOES_NOT_FOLLOW_SCHEMA, PRIMITIVE_TYPE_ERROR_FIELD,
                     GROUP_TYPE_ERROR_FIELD, type.getName());
         }
-        parquetRecordVisitorUtils.addValueToColumn(recordConsumer, pointable, type.asPrimitiveType());
+        parquetValueWriter.addValueToColumn(recordConsumer, pointable, type.asPrimitiveType());
         return null;
     }
 
