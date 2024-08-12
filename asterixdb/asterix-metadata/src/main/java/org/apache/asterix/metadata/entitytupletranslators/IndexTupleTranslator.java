@@ -385,11 +385,18 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                         Triple<IAType, Boolean, Boolean> projectTypeResult =
                                 KeyFieldTypeUtil.getKeyProjectType((ARecordType) inputTypePrime, projectPath, null);
                         if (projectTypeResult == null) {
-                            throw new AsterixException(ErrorCode.METADATA_ERROR, projectPath.toString());
+                            if (indexType != IndexType.BTREE) {
+                                throw new AsterixException(ErrorCode.METADATA_ERROR, projectPath.toString());
+                            }
+                            projectTypePrime = BuiltinType.ANY;
+                            // We do not want the type to be union of Any, null and missing. Any will cover it all.
+                            projectTypeNullable = false;
+                            projectTypeMissable = false;
+                        } else {
+                            projectTypePrime = projectTypeResult.first;
+                            projectTypeNullable = inputTypeNullable || projectTypeResult.second;
+                            projectTypeMissable = inputTypeMissable || projectTypeResult.third;
                         }
-                        projectTypePrime = projectTypeResult.first;
-                        projectTypeNullable = inputTypeNullable || projectTypeResult.second;
-                        projectTypeMissable = inputTypeMissable || projectTypeResult.third;
                     }
                     IAType projectType = projectTypePrime == null ? null
                             : KeyFieldTypeUtil.makeUnknownableType(projectTypePrime, projectTypeNullable,

@@ -6366,6 +6366,11 @@
         <expected-warn><![CDATA[ASX1132: Invalid specification for hint indexnl. ASX1001: Syntax error: In line 1 >>(8, idx_tenk2_1k_2k)<< Encountered <INTEGER_LITERAL> "8" at column 2.  (in line 35, at column 21)]]></expected-warn>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="index-join" check-warnings="true">
+      <compilation-unit name="secondary-heterogeneous-indexnl-params">
+        <output-dir compare="Text">secondary-heterogeneous-indexnl-params</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="index-join">
       <compilation-unit name="rtree-spatial-intersect-point_01">
         <output-dir compare="Text">rtree-spatial-intersect-point_01</output-dir>
@@ -6689,6 +6694,28 @@
     <test-case FilePath="index-selection">
       <compilation-unit name="verify">
         <output-dir compare="Text">verify</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="heterogeneous-index-select">
+        <output-dir compare="Text">heterogeneous-index-select</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="heterogeneous-index-type-and-heterogeneous-key">
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX1079: Compilation error: Typed keys cannot be combined with untyped keys in the index definition. (in line 29, at column 1)</expected-error>
+        <expected-error>ASX1079: Compilation error: Typed keys cannot be combined with untyped keys in the index definition. (in line 29, at column 1)</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="heterogeneous-index-bulkLoad">
+        <output-dir compare="Text">heterogeneous-index-bulkLoad</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
+      <compilation-unit name="heterogeneous-index-Leftouterjoin">
+        <output-dir compare="Text">heterogeneous-index-Leftouterjoin</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>

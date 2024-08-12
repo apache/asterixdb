@@ -49,6 +49,7 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionManager;
 import org.apache.asterix.om.typecomputer.impl.TypeComputeUtils;
 import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.evaluators.functions.AndDescriptor;
@@ -328,6 +329,10 @@ public abstract class SecondaryIndexOperationsHelper implements ISecondaryIndexO
             throws AlgebricksException {
         IFunctionManager funManger = metadataProvider.getFunctionManager();
         IDataFormat dataFormat = metadataProvider.getDataFormat();
+        //if the target type is "BuiltinType.ANY" there is no need to cast. If not we have to cast.
+        if (ATypeTag.ANY.equals(targetType.getTypeTag())) {
+            return fieldEvalFactory;
+        }
 
         // check IndexUtil.castDefaultNull(index), too, because we always want to cast even if the overriding type is
         // the same as the overridden type (this is for the case where overriding the type of closed field is allowed)

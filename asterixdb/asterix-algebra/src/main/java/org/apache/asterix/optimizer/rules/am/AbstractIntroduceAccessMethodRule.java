@@ -485,7 +485,9 @@ public abstract class AbstractIntroduceAccessMethodRule implements IAlgebraicRew
 
                     for (int j = 0; j < matchedTypes.size(); j++) {
                         for (int k = j + 1; k < matchedTypes.size(); k++) {
-                            typeMatch &= isMatched(elementTypes.get(j), elementTypes.get(k), jaccardSimilarity);
+                            if (!ATypeTag.ANY.equals(elementTypes.get(k).getTypeTag())) {
+                                typeMatch &= isMatched(elementTypes.get(j), elementTypes.get(k), jaccardSimilarity);
+                            }
                         }
                     }
 

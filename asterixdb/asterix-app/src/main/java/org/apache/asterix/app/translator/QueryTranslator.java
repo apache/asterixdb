@@ -1374,6 +1374,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             List<List<IAType>> indexFieldTypes = new ArrayList<>(indexedElementsCount);
             boolean hadUnnest = false;
             boolean overridesFieldTypes = false;
+            boolean isHeterogeneousIndex = false;
 
             // this set is used to detect duplicates in the specified keys in the create
             // index statement
@@ -1447,7 +1448,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         projectTypeNullable = inputTypeNullable;
                         projectTypeMissable = inputTypeMissable;
                     } else if (inputTypePrime == null) {
-                        projectTypePrime = null; // ANY
+                        projectTypePrime = null;
                         projectTypeNullable = projectTypeMissable = true;
                     } else {
                         if (inputTypePrime.getTypeTag() != ATypeTag.OBJECT) {
@@ -1528,38 +1529,50 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     }
 
                     if (fieldTypePrime == null) {
-                        if (projectPath != null) {
-                            String fieldName = LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(projectPath));
-                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                    indexedElement.getSourceLocation(),
-                                    "cannot find type of field '" + fieldName + "'");
+                        if (indexType != IndexType.BTREE) {
+                            if (projectPath != null) {
+                                String fieldName =
+                                        LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(projectPath));
+                                throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                        indexedElement.getSourceLocation(),
+                                        "cannot find type of field '" + fieldName + "'");
+                            }
+                            // projectPath == null should only be the case with array index having UNNESTs only
+                            if (indexedElement.hasUnnest()) {
+                                List<List<String>> unnestList = indexedElement.getUnnestList();
+                                List<String> arrayField = unnestList.get(unnestList.size() - 1);
+                                String fieldName =
+                                        LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(arrayField));
+                                throw new CompilationException(ErrorCode.COMPILATION_ERROR,
+                                        indexedElement.getSourceLocation(),
+                                        "cannot find type of elements of field '" + fieldName + "'");
+                            }
+                        } else {
+                            fieldTypePrime = BuiltinType.ANY;
+                            isHeterogeneousIndex = true;
+                            fieldTypeNullable = fieldTypeMissable = false;
                         }
-                        // projectPath == null should only be the case with array index having UNNESTs only
-                        if (indexedElement.hasUnnest()) {
-                            List<List<String>> unnestList = indexedElement.getUnnestList();
-                            List<String> arrayField = unnestList.get(unnestList.size() - 1);
-                            String fieldName = LogRedactionUtil.userData(RecordUtil.toFullyQualifiedName(arrayField));
-                            throw new CompilationException(ErrorCode.COMPILATION_ERROR,
-                                    indexedElement.getSourceLocation(),
-                                    "cannot find type of elements of field '" + fieldName + "'");
-                        }
-                        throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE,
-                                indexedElement.getSourceLocation(), "cannot find type of field");
+                    }
+                    if (ATypeTag.ANY.equals(fieldTypePrime.getTypeTag()) && stmtCreateIndex.hasExcludeUnknownKey()) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, indexedElement.getSourceLocation(),
+                                "Cannot specify exclude/include unknown for untyped keys in the index definition.");
                     }
                     validateIndexFieldType(indexType, fieldTypePrime, projectPath, indexedElement.getSourceLocation());
 
                     IAType fieldType =
                             KeyFieldTypeUtil.makeUnknownableType(fieldTypePrime, fieldTypeNullable, fieldTypeMissable);
+                    if (isHeterogeneousIndex && !ATypeTag.ANY.equals(fieldType.getTypeTag())) {
+                        throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,
+                                "Typed keys cannot be combined with untyped keys in the index definition.");
+                    }
                     fieldTypes.add(fieldType);
                 }
-
                 // Try to add the key & its source to the set of keys for duplicate detection.
                 if (!indexKeysSet.add(indexedElement.toIdentifier())) {
                     throw new AsterixException(ErrorCode.INDEX_ILLEGAL_REPETITIVE_FIELD,
                             indexedElement.getSourceLocation(),
                             LogRedactionUtil.userData(indexedElement.getProjectListDisplayForm()));
                 }
-
                 indexFieldTypes.add(fieldTypes);
             }
 

@@ -860,7 +860,7 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
 
                 AbstractFunctionCallExpression theFieldAccessFunc;
                 LogicalVariable fieldVar = context.newVar();
-                if (fieldType == null) {
+                if (fieldType == null && !ATypeTag.ANY.equals(skType.getTypeTag())) {
                     // Open field. must prevent inlining to maintain the cast before the primaryOp and
                     // make handling of records with incorrect value type for this field easier and cleaner
                     context.addNotToBeInlinedVar(fieldVar);
@@ -906,6 +906,9 @@ public class IntroduceSecondaryIndexInsertDeleteRule implements IAlgebraicRewrit
         FunctionIdentifier skFun = null;
         IAObject fmtArg = null;
         Pair<FunctionIdentifier, IAObject> castExpr;
+        if (ATypeTag.ANY.equals(skType.getTypeTag())) {
+            return new IndexFieldId(skSrc, skName, skType.getTypeTag(), skFun, fmtArg);
+        }
         if (fieldType == null) {
             // open field
             castExpr = getCastExpression(index, skType, srcLoc);

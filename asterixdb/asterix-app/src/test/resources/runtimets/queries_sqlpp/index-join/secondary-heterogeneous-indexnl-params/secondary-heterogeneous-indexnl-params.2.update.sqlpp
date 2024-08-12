@@ -1,0 +1,47 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+
+Upsert INTO tenk1 (
+    [{ "unique1": 5057, "unique2": 6, "two": 1, "four": 1, "ten": 7, "twenty": 17, "hundred": 57, "thousand": 57, "twothousand": 1057, "fivethous": 57, "tenthous": 5057, "odd100": 114, "even100": 115, "stringu1": "NMAAAA", "stringu2": "GAAAAA", "string4": "OOOOxx" }
+, { "unique1": 1891, "unique2": 1, "two": 1, "four": 3, "ten": 1, "twenty": 11, "hundred": 91, "thousand": 891, "twothousand": 1891, "fivethous": 1891, "tenthous": 1891, "odd100": 182, "even100": 183, "stringu1": "TUAAAA", "stringu2": "BAAAAA", "string4": "HHHHxx" }
+, { "unique1": 3420, "unique2": 2, "two": 0, "four": 0, "ten": 0, "twenty": 0, "hundred": 20, "thousand": 420, "twothousand": 1420, "fivethous": 3420, "tenthous": 3420, "odd100": 40, "even100": 41, "stringu1": "OBAAAA", "stringu2": "CAAAAA", "string4": "OOOOxx" }
+, { "unique1": 7164, "unique2": 4, "two": 0, "four": 0, "ten": 4, "twenty": 4, "hundred": 64, "thousand": 164, "twothousand": 1164, "fivethous": 2164, "tenthous": 7164, "odd100": 128, "even100": 129, "stringu1": "OPAAAA", "stringu2": "EAAAAA", "string4": "AAAAxx" }
+, { "unique1": 8800, "unique2": 0, "two": 0, "four": 0, "ten": 0, "twenty": 0, "hundred": 0, "thousand": 800, "twothousand": 800, "fivethous": 3800, "tenthous": 8800, "odd100": 0, "even100": 1, "stringu1": "MAAAAA", "stringu2": "AAAAAA", "string4": "AAAAxx" }
+, { "unique1": 4321, "unique2": 8, "two": 1, "four": 1, "ten": 1, "twenty": 1, "hundred": 21, "thousand": 321, "twothousand": 321, "fivethous": 4321, "tenthous": 4321, "odd100": 42, "even100": 43, "stringu1": "FKAAAA", "stringu2": "IAAAAA", "string4": "AAAAxx" }
+, { "unique1": 3043, "unique2": 9, "two": 1, "four": 3, "ten": 3, "twenty": 3, "hundred": 43, "thousand": 43, "twothousand": 1043, "fivethous": 3043, "tenthous": 3043, "odd100": 86, "even100": 87, "stringu1": "BNAAAA", "stringu2": "JAAAAA", "string4": "HHHHxx" }
+, { "unique1": 9850, "unique2": 3, "two": 0, "four": 2, "ten": 0, "twenty": 10, "hundred": 50, "thousand": 850, "twothousand": 1850, "fivethous": 4850, "tenthous": 9850, "odd100": 100, "even100": 101, "stringu1": "WOAAAA", "stringu2": "DAAAAA", "string4": "VVVVxx" }
+, { "unique1": 8009, "unique2": 5, "two": 1, "four": 1, "ten": 9, "twenty": 9, "hundred": 9, "thousand": 9, "twothousand": 9, "fivethous": 3009, "tenthous": 8009, "odd100": 18, "even100": 19, "stringu1": "BWAAAA", "stringu2": "FAAAAA", "string4": "HHHHxx" }
+, { "unique1": 6701, "unique2": 7, "two": 1, "four": 1, "ten": 1, "twenty": 1, "hundred": 1, "thousand": 701, "twothousand": 701, "fivethous": 1701, "tenthous": 6701, "odd100": 2, "even100": 3, "stringu1": "TXAAAA", "stringu2": "HAAAAA", "string4": "VVVVxx" }]);
+
+
+
+Upsert INTO tenk2 (
+    [{ "unique1": 5057, "unique2": 6, "two": 1, "four": 1, "ten": 7, "twenty": 17, "hundred": 57, "thousand": 57, "twothousand": 1057, "fivethous": 57, "tenthous": 5057, "odd100": 114, "even100": 115, "stringu1": "NMAAAA", "stringu2": "GAAAAA", "string4": "OOOOxx" }
+, { "unique1": 1891, "unique2": 1, "two": 1, "four": 3, "ten": 1, "twenty": 11, "hundred": 91, "thousand": 891, "twothousand": 1891, "fivethous": 1891, "tenthous": 1891, "odd100": 182, "even100": 183, "stringu1": "TUAAAA", "stringu2": "BAAAAA", "string4": "HHHHxx" }
+, { "unique1": 3420, "unique2": 2, "two": 0, "four": 0, "ten": 0, "twenty": 0, "hundred": 20, "thousand": 420, "twothousand": 1420, "fivethous": 3420, "tenthous": 3420, "odd100": 40, "even100": 41, "stringu1": "OBAAAA", "stringu2": "CAAAAA", "string4": "OOOOxx" }
+, { "unique1": 7164, "unique2": 4, "two": 0, "four": 0, "ten": 4, "twenty": 4, "hundred": 64, "thousand": 164, "twothousand": 1164, "fivethous": 2164, "tenthous": 7164, "odd100": 128, "even100": 129, "stringu1": "OPAAAA", "stringu2": "EAAAAA", "string4": "AAAAxx" }
+, { "unique1": 8800, "unique2": 0, "two": 0, "four": 0, "ten": 0, "twenty": 0, "hundred": 0, "thousand": 800, "twothousand": 800, "fivethous": 3800, "tenthous": 8800, "odd100": 0, "even100": 1, "stringu1": "MAAAAA", "stringu2": "AAAAAA", "string4": "AAAAxx" }
+, { "unique1": 4321, "unique2": 8, "two": 1, "four": 1, "ten": 1, "twenty": 1, "hundred": 21, "thousand": 321, "twothousand": 321, "fivethous": 4321, "tenthous": 4321, "odd100": 42, "even100": 43, "stringu1": "FKAAAA", "stringu2": "IAAAAA", "string4": "AAAAxx" }
+, { "unique1": 3043, "unique2": 9, "two": 1, "four": 3, "ten": 3, "twenty": 3, "hundred": 43, "thousand": 43, "twothousand": 1043, "fivethous": 3043, "tenthous": 3043, "odd100": 86, "even100": 87, "stringu1": "BNAAAA", "stringu2": "JAAAAA", "string4": "HHHHxx" }
+, { "unique1": 9850, "unique2": 3, "two": 0, "four": 2, "ten": 0, "twenty": 10, "hundred": 50, "thousand": 850, "twothousand": 1850, "fivethous": 4850, "tenthous": 9850, "odd100": 100, "even100": 101, "stringu1": "WOAAAA", "stringu2": "DAAAAA", "string4": "VVVVxx" }
+, { "unique1": 8009, "unique2": 5, "two": 1, "four": 1, "ten": 9, "twenty": 9, "hundred": 9, "thousand": 9, "twothousand": 9, "fivethous": 3009, "tenthous": 8009, "odd100": 18, "even100": 19, "stringu1": "BWAAAA", "stringu2": "FAAAAA", "string4": "HHHHxx" }
+, { "unique1": 6701, "unique2": 7, "two": 1, "four": 1, "ten": 1, "twenty": 1, "hundred": 1, "thousand": 701, "twothousand": 701, "fivethous": 1701, "tenthous": 6701, "odd100": 2, "even100": 3, "stringu1": "TXAAAA", "stringu2": "HAAAAA", "string4": "VVVVxx" }]);

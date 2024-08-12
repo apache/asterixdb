@@ -1,0 +1,8 @@
+{ "userId": 1, "email": "john.doe@example.com", "username": "johndoe", "isActive": true, "occupation": "teacher","age": 23}
+{ "userId": 2, "email": "jane.smith@example.com", "username": "janesmith", "isActive": false, "occupation": "firefighter" }
+{ "userId": 3, "email": "michael.brown@example.com", "username": "michaelb", "isActive": true, "age": "five", "occupation":4 }
+{ "userId": 4, "email": "emily.davis@example.com", "username": "emilyd", "isActive": true, "age": 23.1 }
+{ "userId": 5, "email": "chris.jones@example.com", "username": "chrisj", "isActive": false, "age": "old" }
+{ "userId": 6, "email": "patricia.garcia@example.com", "username": "patriciag", "isActive": true, "age": "45" }
+{ "userId": 7, "email": "linda.martinez@example.com", "username": "lindam", "isActive": false }
+{ "userId": 8, "email": "robert.lee@example.com", "username": "robertl", "isActive": true, "age": 31 }

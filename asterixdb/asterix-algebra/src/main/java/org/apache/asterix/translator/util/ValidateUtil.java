@@ -276,6 +276,7 @@ public class ValidateUtil {
                     case UUID:
                     case YEARMONTHDURATION:
                     case DAYTIMEDURATION:
+                    case ANY:
                         break;
                     default:
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR, sourceLoc,

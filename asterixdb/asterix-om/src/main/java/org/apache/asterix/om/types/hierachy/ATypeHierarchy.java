@@ -177,6 +177,13 @@ public class ATypeHierarchy {
         return null;
     }
 
+    /*
+    * Checks whether a type can be promoted (or converted) from one type (type1)
+    * to another (type2). This promotion typically follows certain rules defined
+    * within the class to allow safe type conversions,
+    * such as promoting a smaller numeric type (e.g., TINYINT) to a larger numeric type
+    * (e.g., INTEGER or DOUBLE), where no precision or range is lost.
+    */
     public static boolean canPromote(ATypeTag type1, ATypeTag type2) {
         return typePromotionHierachyMap.get(type1.ordinal() * ATypeTag.TYPE_COUNT + type2.ordinal());
     }

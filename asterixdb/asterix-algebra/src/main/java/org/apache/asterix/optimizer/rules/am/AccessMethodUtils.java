@@ -1133,20 +1133,40 @@ public class AccessMethodUtils {
         }
     }
 
-    private static AbstractUnnestMapOperator createFinalNonIndexOnlySearchPlan(Dataset dataset,
-            ILogicalOperator inputOp, IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput,
-            boolean retainMissing, boolean requiresBroadcast, boolean requiresDistinct,
-            List<LogicalVariable> primaryKeyVars, List<LogicalVariable> primaryIndexUnnestVars,
-            List<LogicalVariable> auxDistinctVars, List<Object> primaryIndexOutputTypes,
-            IAlgebricksConstantValue leftOuterMissingValue) throws AlgebricksException {
-        SourceLocation sourceLoc = inputOp.getSourceLocation();
+    private static AbstractUnnestMapOperator createFinalNonIndexOnlySearchPlan(
+            List<Mutable<ILogicalOperator>> afterTopOpRefs, Dataset dataset, ILogicalOperator inputOp,
+            IOptimizationContext context, boolean sortPrimaryKeys, boolean retainInput, boolean retainMissing,
+            boolean requiresBroadcast, boolean requiresDistinct, List<LogicalVariable> primaryKeyVars,
+            List<LogicalVariable> primaryIndexUnnestVars, List<LogicalVariable> auxDistinctVars,
+            List<Object> primaryIndexOutputTypes, IAlgebricksConstantValue leftOuterMissingValue,
+            ARecordType recordType, ARecordType metaRecordType, OptimizableOperatorSubTree subTree,
+            Index secondaryIndex, Mutable<ILogicalOperator> topOpRef,
+            List<Mutable<ILogicalOperator>> assignsBeforeTopOpRef, Mutable<ILogicalExpression> conditionRef,
+            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
 
+        SourceLocation sourceLoc = inputOp.getSourceLocation();
         // Sanity check: requiresDistinct and sortPrimaryKeys are mutually exclusive.
         if (requiresDistinct && sortPrimaryKeys) {
             throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
                     "Non-index search plan " + "cannot include a DISTINCT and an ORDER.");
         }
+        ILogicalOperator op = null;
+        IndexType idxType = secondaryIndex.getIndexType();
 
+        // for now the additional selection is only added just for the value index.
+        if (Index.IndexCategory.of(idxType) == Index.IndexCategory.VALUE) {
+            Index.ValueIndexDetails secondaryIndexDetails = (Index.ValueIndexDetails) secondaryIndex.getIndexDetails();
+            List<List<String>> chosenIndexFieldNames = secondaryIndexDetails.getKeyFieldNames();
+            List<IAType> secodaryKeysType = secondaryIndexDetails.getKeyFieldTypes();
+            if (idxType == IndexType.BTREE && secodaryKeysType.contains(BuiltinType.ANY)) {
+                op = additionalSelectForHeterogeneousIndex(chosenIndexFieldNames, afterTopOpRefs, dataset, inputOp,
+                        context, retainMissing, leftOuterMissingValue, recordType, metaRecordType, subTree,
+                        secondaryIndex, topOpRef, assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ);
+            }
+        }
+        if (op == null) {
+            op = inputOp;
+        }
         // If we have an array index, then we must only give unique keys to our primary-index scan.
         DistinctOperator distinct = null;
         if (requiresDistinct) {
@@ -1165,7 +1185,7 @@ public class AccessMethodUtils {
             }
             distinct = new DistinctOperator(distinctExprs);
             distinct.setSourceLocation(sourceLoc);
-            distinct.getInputs().add(new MutableObject<>(inputOp));
+            distinct.getInputs().add(new MutableObject<>(op));
             distinct.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(distinct);
         }
@@ -1182,7 +1202,7 @@ public class AccessMethodUtils {
                 order.getOrderExpressions().add(new Pair<>(OrderOperator.ASC_ORDER, vRef));
             }
             // The secondary-index search feeds into the sort.
-            order.getInputs().add(new MutableObject<>(inputOp));
+            order.getInputs().add(new MutableObject<>(op));
             order.setExecutionMode(ExecutionMode.LOCAL);
             context.computeAndSetTypeEnvironmentForOperator(order);
         }
@@ -1196,7 +1216,7 @@ public class AccessMethodUtils {
         } else if (sortPrimaryKeys) {
             primaryIndexUnnestMapOp.getInputs().add(new MutableObject<>(order));
         } else {
-            primaryIndexUnnestMapOp.getInputs().add(new MutableObject<>(inputOp));
+            primaryIndexUnnestMapOp.getInputs().add(new MutableObject<>(op));
         }
         context.computeAndSetTypeEnvironmentForOperator(primaryIndexUnnestMapOp);
         primaryIndexUnnestMapOp.setExecutionMode(ExecutionMode.PARTITIONED);
@@ -1831,9 +1851,12 @@ public class AccessMethodUtils {
                 joinPKVars = Collections.emptyList();
             }
 
-            return createFinalNonIndexOnlySearchPlan(dataset, inputOp, context, !isArrayIndex && sortPrimaryKeys,
-                    retainInput, retainMissing, requiresBroadcast, isArrayIndex, pkVarsFromSIdxUnnestMapOp,
-                    primaryIndexUnnestVars, joinPKVars, primaryIndexOutputTypes, leftOuterMissingValue);
+            return createFinalNonIndexOnlySearchPlan(afterTopOpRefs, dataset, inputOp, context,
+                    !isArrayIndex && sortPrimaryKeys, retainInput, retainMissing, requiresBroadcast, isArrayIndex,
+                    pkVarsFromSIdxUnnestMapOp, primaryIndexUnnestVars, joinPKVars, primaryIndexOutputTypes,
+                    leftOuterMissingValue, recordType, metaRecordType, indexSubTree, secondaryIndex, topOpRef,
+                    assignsBeforeTopOpRef, conditionRef, newMissingPlaceHolderForLOJ);
+
         } else if (!isArrayIndex) {
             // Index-only plan case: creates a UNIONALL operator that has two paths after the secondary unnest-map op,
             // and returns it.
@@ -3086,7 +3109,6 @@ public class AccessMethodUtils {
                     }
                 }
 
-                // Otherwise... recurse.
                 Pair<List<String>, Integer> parentFieldNames =
                         !isIndexOnFunction
                                 ? getFieldNameAndStepsFromSubTree(optFuncExpr, subTree, assignAndExpressionIndexes[0],
@@ -3336,5 +3358,156 @@ public class AccessMethodUtils {
             }
         }
         return isDataSourceVariableFound;
+    }
+
+    private static void splitIntoConjuncts(ILogicalExpression condition, List<Mutable<ILogicalExpression>> conjuncts) {
+        if (condition.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return;
+        }
+        AbstractFunctionCallExpression funcExpr = (AbstractFunctionCallExpression) condition;
+        if (funcExpr.getFunctionIdentifier() == BuiltinFunctions.AND) {
+            for (Mutable<ILogicalExpression> arg : funcExpr.getArguments()) {
+                splitIntoConjuncts(arg.getValue(), conjuncts);
+            }
+        } else {
+            conjuncts.add(new MutableObject<>(condition));
+        }
+    }
+
+    protected static ILogicalExpression filterCondition(ILogicalExpression condition,
+            Set<LogicalVariable> listOfAcceptableVAR) {
+        List<Mutable<ILogicalExpression>> conjuncts = new ArrayList<>();
+        List<Mutable<ILogicalExpression>> filteredConjuncts = new ArrayList<>();
+        splitIntoConjuncts(condition, conjuncts);
+        for (Mutable<ILogicalExpression> conjunct : conjuncts) {
+            if (containsOnlyAllowedVariables(conjunct.getValue(), listOfAcceptableVAR)) {
+                filteredConjuncts.add(conjunct);
+            }
+        }
+
+        if (filteredConjuncts.size() == 1) {
+            return filteredConjuncts.get(0).getValue();
+        } else if (!filteredConjuncts.isEmpty()) {
+            ScalarFunctionCallExpression combinedCondition =
+                    new ScalarFunctionCallExpression(BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.AND));
+            combinedCondition.getArguments().addAll(filteredConjuncts);
+            combinedCondition.setSourceLocation(condition.getSourceLocation());
+            return combinedCondition;
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean containsOnlyAllowedVariables(ILogicalExpression expression,
+            Set<LogicalVariable> allowedVars) {
+
+        Set<LogicalVariable> usedVars = new HashSet<>();
+        expression.getUsedVariables(usedVars);
+        for (LogicalVariable var : usedVars) {
+            if (!allowedVars.contains(var)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static ILogicalOperator additionalSelectForHeterogeneousIndex(List<List<String>> chosenIndexFieldNames,
+            List<Mutable<ILogicalOperator>> afterTopOpRefs, Dataset dataset, ILogicalOperator inputOp,
+            IOptimizationContext context, boolean retainMissing, IAlgebricksConstantValue leftOuterMissingValue,
+            ARecordType recordType, ARecordType metaRecordType, OptimizableOperatorSubTree subTree,
+            Index secondaryIndex, Mutable<ILogicalOperator> topOpRef,
+            List<Mutable<ILogicalOperator>> assignsBeforeTopOpRef, Mutable<ILogicalExpression> conditionRef,
+            LogicalVariable newMissingPlaceHolderForLOJ) throws AlgebricksException {
+        List<LogicalVariable> skVarsFromSIdxUnnestMap = AccessMethodUtils.getKeyVarsFromSecondaryUnnestMap(dataset,
+                recordType, metaRecordType, inputOp, secondaryIndex, SecondaryUnnestMapOutputVarType.SECONDARY_KEY);
+
+        List<LogicalVariable> usedVarsInConditionOp = new ArrayList<>();
+        // Constructs the variable mapping between newly constructed secondary
+        // key search (SK, PK) and those in the original plan (datasource scan).
+        LinkedHashMap<LogicalVariable, LogicalVariable> origVarToSIdxUnnestMapOpVarMap = new LinkedHashMap<>();
+        VariableUtilities.getUsedVariables(topOpRef.getValue(), usedVarsInConditionOp);
+        // Gets all variables from the right (inner) branch.
+        List<LogicalVariable> liveVarsInInnerBranch = new ArrayList<>();
+        VariableUtilities.getLiveVariables(subTree.getRootRef().getValue(), liveVarsInInnerBranch);
+        for (Iterator<LogicalVariable> iterator = usedVarsInConditionOp.iterator(); iterator.hasNext();) {
+            LogicalVariable v = iterator.next();
+            if (!liveVarsInInnerBranch.contains(v)) {
+                iterator.remove();
+            }
+        }
+        List<LogicalVariable> uniqueUsedVarsInConditionOp = new ArrayList<>();
+        copyVarsToAnotherList(usedVarsInConditionOp, uniqueUsedVarsInConditionOp);
+
+        List<LogicalVariable> producedVarsInAssignsBeforeCondtionOp = new ArrayList<>();
+        List<LogicalVariable> varsTmpList = new ArrayList<>();
+        if (assignsBeforeTopOpRef != null && !assignsBeforeTopOpRef.isEmpty()) {
+            for (int i = 0; i < assignsBeforeTopOpRef.size(); i++) {
+                ILogicalOperator assignBeforeTopOp = assignsBeforeTopOpRef.get(i).getValue();
+                varsTmpList.clear();
+                VariableUtilities.getProducedVariables(assignBeforeTopOp, varsTmpList);
+                copyVarsToAnotherList(varsTmpList, producedVarsInAssignsBeforeCondtionOp);
+            }
+        }
+        List<LogicalVariable> usedVarsAfterSelect = new ArrayList<>();
+        HashSet<LogicalVariable> varsTmpSet = new HashSet<>();
+        if (afterTopOpRefs != null) {
+            for (Mutable<ILogicalOperator> afterTopOpRef : afterTopOpRefs) {
+                varsTmpSet.clear();
+                OperatorPropertiesUtil.getFreeVariablesInOp(afterTopOpRef.getValue(), varsTmpSet);
+                copyVarsToAnotherList(varsTmpSet, usedVarsAfterSelect);
+            }
+        }
+
+        for (LogicalVariable tVar : usedVarsAfterSelect) {
+
+            int sIndexIdx = chosenIndexFieldNames.indexOf(subTree.getVarsToFieldNameMap().get(tVar));
+            if (sIndexIdx == -1) {
+                continue;
+            }
+            // Constructs the mapping between the PK from the original data-scan to the PK
+            // from the secondary index search since they are different logical variables.
+            origVarToSIdxUnnestMapOpVarMap.put(tVar, skVarsFromSIdxUnnestMap.get(sIndexIdx));
+        }
+
+        List<LogicalVariable> varsUsedInTopOpButNotAfterwards = new ArrayList<>();
+        copyVarsToAnotherList(uniqueUsedVarsInConditionOp, varsUsedInTopOpButNotAfterwards);
+        varsUsedInTopOpButNotAfterwards.removeAll(usedVarsAfterSelect);
+        // For B-Tree case: if the given secondary key field variable is used only in the select or
+        // join condition, we were not able to catch the mapping between the SK from the original
+        // data-scan and the SK from the secondary index search since they are different logical variables.
+        // (E.g., we are sending a query on a composite index but returns only one field.)
+        for (LogicalVariable v : varsUsedInTopOpButNotAfterwards) {
+            int sIndexIdx = chosenIndexFieldNames.indexOf(subTree.getVarsToFieldNameMap().get(v));
+            if (sIndexIdx == -1) {
+                continue;
+            }
+            origVarToSIdxUnnestMapOpVarMap.put(v, skVarsFromSIdxUnnestMap.get(sIndexIdx));
+        }
+
+        // The additional select which will be added after the secondary index search
+        // only the conditions which include the variables used before or in secondary index search
+        // any other predicates which includes other variables should not be added here.
+        List<LogicalVariable> usedVarInInput = new ArrayList<>();
+        VariableUtilities.getUsedVariables(inputOp, usedVarInInput);
+        Set<LogicalVariable> skAcceptableVars = new HashSet<>();
+        skAcceptableVars.addAll(origVarToSIdxUnnestMapOpVarMap.keySet());
+        skAcceptableVars.addAll(usedVarInInput);
+        ILogicalExpression conditionRefExpr =
+                filterCondition(conditionRef.getValue().cloneExpression(), skAcceptableVars);
+        if (conditionRefExpr != null) {
+            LogicalVariable newMissingPlaceHolderVar = null;
+            SelectOperator newSelectOp =
+                    retainMissing
+                            ? new SelectOperator(new MutableObject<>(conditionRefExpr), leftOuterMissingValue,
+                                    newMissingPlaceHolderVar)
+                            : new SelectOperator(new MutableObject<>(conditionRefExpr));
+            newSelectOp.setSourceLocation(conditionRefExpr.getSourceLocation());
+            newSelectOp.getInputs().add(new MutableObject(inputOp));
+            VariableUtilities.substituteVariables(newSelectOp, origVarToSIdxUnnestMapOpVarMap, context);
+            newSelectOp.setExecutionMode(ExecutionMode.PARTITIONED);
+            context.computeAndSetTypeEnvironmentForOperator(newSelectOp);
+            return newSelectOp;
+        }
+        return null;
     }
 }
