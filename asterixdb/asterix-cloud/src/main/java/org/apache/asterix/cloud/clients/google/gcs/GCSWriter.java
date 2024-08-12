@@ -18,11 +18,10 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
-import static org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig.WRITE_BUFFER_SIZE;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -40,14 +39,20 @@ public class GCSWriter implements ICloudWriter {
     private final String path;
     private final IRequestProfilerLimiter profiler;
     private final Storage gcsClient;
+    private final ICloudGuardian guardian;
+    private final int writeBufferSize;
+
     private WriteChannel writer = null;
     private long writtenBytes;
 
-    public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfilerLimiter profiler) {
+    public GCSWriter(String bucket, String path, Storage gcsClient, IRequestProfilerLimiter profiler,
+            ICloudGuardian guardian, int writeBufferSize) {
         this.bucket = bucket;
         this.path = path;
         this.profiler = profiler;
         this.gcsClient = gcsClient;
+        this.guardian = guardian;
+        this.writeBufferSize = writeBufferSize;
         writtenBytes = 0;
     }
 
@@ -58,6 +63,7 @@ public class GCSWriter implements ICloudWriter {
 
     @Override
     public int write(ByteBuffer page) throws HyracksDataException {
+        guardian.checkIsolatedWriteAccess(bucket, path);
         profiler.objectMultipartUpload();
         setUploadId();
         int written = 0;
@@ -93,6 +99,7 @@ public class GCSWriter implements ICloudWriter {
 
     @Override
     public void finish() throws HyracksDataException {
+        guardian.checkWriteAccess(bucket, path);
         setUploadId();
         profiler.objectMultipartUpload();
         try {
@@ -115,7 +122,7 @@ public class GCSWriter implements ICloudWriter {
     private void setUploadId() {
         if (writer == null) {
             writer = gcsClient.writer(BlobInfo.newBuilder(BlobId.of(bucket, path)).build());
-            writer.setChunkSize(WRITE_BUFFER_SIZE);
+            writer.setChunkSize(writeBufferSize);
             writtenBytes = 0;
             log("STARTED");
         }

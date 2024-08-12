@@ -40,8 +40,7 @@ import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
-import org.apache.asterix.cloud.clients.profiler.NoOpRequestProfilerLimiter;
-import org.apache.asterix.cloud.clients.profiler.limiter.NoOpRequestLimiter;
+import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
@@ -68,16 +67,19 @@ public class GCSCloudClient implements ICloudClient {
     private final GCSClientConfig config;
     private final ICloudGuardian guardian;
     private final IRequestProfilerLimiter profilerLimiter;
+    private final int writeBufferSize;
 
     public GCSCloudClient(GCSClientConfig config, Storage gcsClient, ICloudGuardian guardian) {
         this.gcsClient = gcsClient;
         this.config = config;
         this.guardian = guardian;
+        this.writeBufferSize = config.getWriteBufferSize();
         long profilerInterval = config.getProfilerLogInterval();
+        GCSRequestRateLimiter limiter = new GCSRequestRateLimiter(config);
         if (profilerInterval > 0) {
-            profilerLimiter = new CountRequestProfilerLimiter(profilerInterval, NoOpRequestLimiter.INSTANCE);
+            profilerLimiter = new CountRequestProfilerLimiter(profilerInterval, limiter);
         } else {
-            profilerLimiter = NoOpRequestProfilerLimiter.INSTANCE;
+            profilerLimiter = new RequestLimiterNoOpProfiler(limiter);
         }
         guardian.setCloudClient(this);
     }
@@ -88,7 +90,7 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public int getWriteBufferSize() {
-        return GCSClientConfig.WRITE_BUFFER_SIZE;
+        return writeBufferSize;
     }
 
     @Override
@@ -98,7 +100,7 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
-        return new GCSWriter(bucket, path, gcsClient, profilerLimiter);
+        return new GCSWriter(bucket, path, gcsClient, profilerLimiter, guardian, writeBufferSize);
     }
 
     @Override
@@ -119,6 +121,7 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public int read(String bucket, String path, long offset, ByteBuffer buffer) throws HyracksDataException {
+        guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
         BlobId blobId = BlobId.of(bucket, path);
         long readTo = offset + buffer.remaining();
@@ -140,6 +143,7 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public byte[] readAllBytes(String bucket, String path) {
+        guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
         BlobId blobId = BlobId.of(bucket, path);
         try {
@@ -151,6 +155,7 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public InputStream getObjectStream(String bucket, String path, long offset, long length) {
+        guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
         try (ReadChannel reader = gcsClient.reader(bucket, path).limit(offset + length)) {
             reader.seek(offset);
@@ -170,8 +175,9 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public void copy(String bucket, String srcPath, FileReference destPath) {
-        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(srcPath));
+        guardian.checkReadAccess(bucket, srcPath);
         profilerLimiter.objectsList();
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(srcPath));
         for (Blob blob : blobs.iterateAll()) {
             profilerLimiter.objectCopy();
             BlobId source = blob.getBlobId();

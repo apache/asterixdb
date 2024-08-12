@@ -25,38 +25,50 @@ import java.util.Map;
 
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-import org.apache.hyracks.util.StorageUtil;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.OAuth2Credentials;
 import com.google.cloud.NoCredentials;
 
 public class GCSClientConfig {
-    public static final int WRITE_BUFFER_SIZE = StorageUtil.getIntSizeInBytes(1, StorageUtil.StorageUnit.MEGABYTE);
+
     // The maximum number of files that can be deleted (GCS restriction): https://cloud.google.com/storage/quotas#json-requests
     static final int DELETE_BATCH_SIZE = 100;
     private final String region;
     private final String endpoint;
-    private final String prefix;
     private final boolean anonymousAuth;
     private final long profilerLogInterval;
+    private final long tokenAcquireTimeout;
+    private final int readMaxRequestsPerSeconds;
+    private final int writeMaxRequestsPerSeconds;
+    private final int writeBufferSize;
 
-    public GCSClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
-            long profilerLogInterval) {
+    private GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
+            long tokenAcquireTimeout, int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds,
+            int writeBufferSize) {
         this.region = region;
         this.endpoint = endpoint;
-        this.prefix = prefix;
         this.anonymousAuth = anonymousAuth;
         this.profilerLogInterval = profilerLogInterval;
+        this.tokenAcquireTimeout = tokenAcquireTimeout;
+        this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
+        this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
+        this.writeBufferSize = writeBufferSize;
+    }
+
+    public GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
+            int writeBufferSize) {
+        this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize);
     }
 
     public static GCSClientConfig of(CloudProperties cloudProperties) {
         return new GCSClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
-                cloudProperties.getStoragePrefix(), cloudProperties.isStorageAnonymousAuth(),
-                cloudProperties.getProfilerLogInterval());
+                cloudProperties.isStorageAnonymousAuth(), cloudProperties.getProfilerLogInterval(),
+                cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
+                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize());
     }
 
-    public static GCSClientConfig of(Map<String, String> configuration) {
+    public static GCSClientConfig of(Map<String, String> configuration, int writeBufferSize) {
         String endPoint = configuration.getOrDefault(ENDPOINT_FIELD_NAME, "");
         long profilerLogInterval = 0;
 
@@ -64,7 +76,7 @@ public class GCSClientConfig {
         String prefix = "";
         boolean anonymousAuth = false;
 
-        return new GCSClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval);
+        return new GCSClientConfig(region, endPoint, anonymousAuth, profilerLogInterval, writeBufferSize);
     }
 
     public String getRegion() {
@@ -73,10 +85,6 @@ public class GCSClientConfig {
 
     public String getEndpoint() {
         return endpoint;
-    }
-
-    public String getPrefix() {
-        return prefix;
     }
 
     public long getProfilerLogInterval() {
@@ -93,5 +101,21 @@ public class GCSClientConfig {
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    public long getTokenAcquireTimeout() {
+        return tokenAcquireTimeout;
+    }
+
+    public int getWriteMaxRequestsPerSeconds() {
+        return writeMaxRequestsPerSeconds;
+    }
+
+    public int getReadMaxRequestsPerSeconds() {
+        return readMaxRequestsPerSeconds;
+    }
+
+    public int getWriteBufferSize() {
+        return writeBufferSize;
     }
 }

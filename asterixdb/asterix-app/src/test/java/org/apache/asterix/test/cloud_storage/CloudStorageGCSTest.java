@@ -36,7 +36,6 @@ import org.junit.AfterClass;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -55,7 +54,6 @@ import com.google.cloud.storage.StorageOptions;
  */
 @RunWith(Parameterized.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@Ignore
 public class CloudStorageGCSTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
