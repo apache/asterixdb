@@ -20,11 +20,11 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCPoint;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 
 public class STYDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -32,12 +32,12 @@ public class STYDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STYDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        if (geometry instanceof OGCPoint) {
-            return ((OGCPoint) geometry).Y();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT)) {
+            return ((Point) geometry).getY();
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
     }
 

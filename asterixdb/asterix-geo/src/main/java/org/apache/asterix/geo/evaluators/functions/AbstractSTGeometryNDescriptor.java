@@ -25,7 +25,6 @@ import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
-import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicDescriptor;
 import org.apache.asterix.runtime.exceptions.InvalidDataFormatException;
@@ -38,14 +37,13 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public abstract class AbstractSTGeometryNDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     private static final long serialVersionUID = 1L;
 
-    abstract protected OGCGeometry evaluateOGCGeometry(OGCGeometry geometry, int n) throws HyracksDataException;
+    abstract protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException;
 
     @Override
     public IScalarEvaluatorFactory createEvaluatorFactory(final IScalarEvaluatorFactory[] args) {
@@ -101,13 +99,13 @@ public abstract class AbstractSTGeometryNDescriptor extends AbstractScalarFuncti
 
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
             DataInputStream dataIn = new DataInputStream(inStream);
-            OGCGeometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
+            Geometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
             int n = (int) AInt64SerializerDeserializer.getLong(data0, offset0 + 1);
 
-            OGCGeometry geometryN = evaluateOGCGeometry(geometry, n);
+            Geometry geometryN = evaluateOGCGeometry(geometry, n);
             try {
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                AGeometrySerializerDeserializer.INSTANCE.serialize(new AGeometry(geometryN), out);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(geometryN, out);
                 result.set(resultStorage);
             } catch (IOException e) {
                 throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,

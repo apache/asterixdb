@@ -20,35 +20,42 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.Polyline;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCLineString;
-import com.esri.core.geometry.ogc.OGCMultiPoint;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.MultiPoint;
 
 public class STLineFromMultiPointDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = STLineFromMultiPointDescriptor::new;
+    private final GeometryFactory geometryFactory;
+
+    public STLineFromMultiPointDescriptor() {
+        geometryFactory = new GeometryFactory();
+    }
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        if (geometry instanceof OGCMultiPoint) {
-            Polyline polyline = new Polyline();
-            OGCMultiPoint multiPoint = (OGCMultiPoint) geometry;
-            int numPoints = multiPoint.numGeometries();
-            polyline.startPath((Point) multiPoint.geometryN(0).getEsriGeometry());
-            for (int i = 1; i < numPoints; i++) {
-                polyline.lineTo((Point) multiPoint.geometryN(i).getEsriGeometry());
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_MULTIPOINT)) {
+            MultiPoint multiPoint = (MultiPoint) geometry;
+            int numPoints = multiPoint.getNumGeometries();
+
+            if (numPoints < 2) {
+                throw new UnsupportedOperationException("A LineString requires at least two points.");
             }
-            return new OGCLineString(polyline, 0, SpatialReference.create(4326));
+
+            Coordinate[] coordinates = new Coordinate[numPoints];
+            for (int i = 0; i < numPoints; i++) {
+                coordinates[i] = multiPoint.getGeometryN(i).getCoordinate();
+            }
+            return geometryFactory.createLineString(coordinates);
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
     }
 

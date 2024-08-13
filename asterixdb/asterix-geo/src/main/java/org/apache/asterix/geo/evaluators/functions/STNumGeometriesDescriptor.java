@@ -20,11 +20,10 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCGeometryCollection;
+import org.locationtech.jts.geom.Geometry;
 
 public class STNumGeometriesDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -32,9 +31,9 @@ public class STNumGeometriesDescriptor extends AbstractSTSingleGeometryDescripto
     public static final IFunctionDescriptorFactory FACTORY = STNumGeometriesDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        if (geometry instanceof OGCGeometryCollection) {
-            return ((OGCGeometryCollection) geometry).numGeometries();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_GEOMETRYCOLLECTION)) {
+            return geometry.getNumGeometries();
         } else if (!geometry.isEmpty()) {
             return 1;
         } else {

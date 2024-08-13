@@ -23,9 +23,10 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.ARecordSerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.JtsModule;
 import org.apache.asterix.geo.evaluators.GeoFunctionTypeInferers;
 import org.apache.asterix.om.base.AOrderedList;
 import org.apache.asterix.om.base.ARecord;
@@ -48,10 +49,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
+import org.locationtech.jts.geom.Geometry;
 
-import com.esri.core.geometry.MapOGCStructure;
-import com.esri.core.geometry.OperatorImportFromGeoJson;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -98,7 +98,7 @@ public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescrip
         private DataOutput out;
         private IPointable inputArg;
         private IScalarEvaluator eval;
-        private OperatorImportFromGeoJson geoJsonImporter;
+        private ObjectMapper objectMapper;
 
         public ParseGeoJSONEvaluator(IScalarEvaluatorFactory factory, IEvaluatorContext ctx)
                 throws HyracksDataException {
@@ -106,7 +106,8 @@ public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescrip
             out = resultStorage.getDataOutput();
             inputArg = new VoidPointable();
             eval = factory.createScalarEvaluator(ctx);
-            geoJsonImporter = OperatorImportFromGeoJson.local();
+            objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JtsModule());
         }
 
         @Override
@@ -123,15 +124,10 @@ public class ParseGeoJSONDescriptor extends AbstractScalarFunctionDynamicDescrip
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
             DataInput dataIn = new DataInputStream(inStream);
             try {
-                String geometry = recordToString(new ARecordSerializerDeserializer(recType).deserialize(dataIn));
-                MapOGCStructure structure = geoJsonImporter.executeOGC(0, geometry, null);
-                OGCGeometry ogcGeometry =
-                        OGCGeometry.createFromOGCStructure(structure.m_ogcStructure, structure.m_spatialReference);
-                ByteBuffer buffer = ogcGeometry.asBinary();
-                byte[] wKBGeometryBuffer = buffer.array();
+                String geometryGeoJSON = recordToString(new ARecordSerializerDeserializer(recType).deserialize(dataIn));
+                Geometry geometry = objectMapper.readValue(geometryGeoJSON, Geometry.class);
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                out.writeInt(wKBGeometryBuffer.length);
-                out.write(wKBGeometryBuffer);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(geometry, out);
                 result.set(resultStorage);
             } catch (IOException e) {
                 throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,

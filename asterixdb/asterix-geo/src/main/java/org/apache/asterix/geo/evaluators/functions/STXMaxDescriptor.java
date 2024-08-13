@@ -22,10 +22,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 
 public class STXMaxDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -33,15 +31,13 @@ public class STXMaxDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STXMaxDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        Geometry esriGeom = geometry.getEsriGeometry();
-        if (esriGeom != null) {
-            Envelope env = new Envelope();
-            esriGeom.queryEnvelope(env);
-            return env.getXMax();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        Envelope env = geometry.getEnvelopeInternal();
+        if (env != null) {
+            return env.getMaxX();
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
 
     }

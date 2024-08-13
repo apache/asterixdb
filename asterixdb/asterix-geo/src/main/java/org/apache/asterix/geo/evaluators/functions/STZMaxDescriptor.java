@@ -22,8 +22,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 
 public class STZMaxDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,8 +31,18 @@ public class STZMaxDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STZMaxDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.MaxZ();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        double maxZ = Double.NEGATIVE_INFINITY;
+        boolean foundZ = false;
+        for (Coordinate coord : geometry.getCoordinates()) {
+            if (!Double.isNaN(coord.getZ())) {
+                foundZ = true;
+                if (coord.getZ() > maxZ) {
+                    maxZ = coord.getZ();
+                }
+            }
+        }
+        return foundZ ? maxZ : Double.NaN;
     }
 
     @Override

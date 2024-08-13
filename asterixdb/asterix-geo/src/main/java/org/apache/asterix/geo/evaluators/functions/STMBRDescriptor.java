@@ -25,9 +25,8 @@ import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 
 public class STMBRDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -41,14 +40,12 @@ public class STMBRDescriptor extends AbstractSTSingleGeometryDescriptor {
     };
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
         AMutableRectangle aRectangle = new AMutableRectangle(null, null);
         AMutablePoint[] aPoint = { new AMutablePoint(0, 0), new AMutablePoint(0, 0) };
-        Envelope env = new Envelope();
-        geometry.getEsriGeometry().queryEnvelope(env);
-        aPoint[0].setValue(env.getXMin(), env.getYMin());
-        aPoint[1].setValue(env.getXMax(), env.getYMax());
+        Envelope envelope = geometry.getEnvelopeInternal();
+        aPoint[0].setValue(envelope.getMinX(), envelope.getMinY());
+        aPoint[1].setValue(envelope.getMaxX(), envelope.getMaxY());
         aRectangle.setValue(aPoint[0], aPoint[1]);
         return aRectangle;
     }

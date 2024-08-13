@@ -20,14 +20,13 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryCursor;
-import com.esri.core.geometry.MultiVertexGeometry;
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Polygon;
 
 public class STNPointsDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -35,31 +34,45 @@ public class STNPointsDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STNPointsDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        Geometry esriGeometry = geometry.getEsriGeometry();
-        if (esriGeometry instanceof MultiVertexGeometry) {
-            return ((MultiVertexGeometry) esriGeometry).getPointCount();
-        } else if (esriGeometry instanceof Point) {
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (geometry == null) {
+            return 0;
+        }
+        if (geometry.isEmpty()) {
+            return 0;
+        }
+
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POINT))
             return 1;
-        } else if (esriGeometry == null) {
-            int count = 0;
-            GeometryCursor geometryCursor = geometry.getEsriGeometryCursor();
-            esriGeometry = geometryCursor.next();
-            while (esriGeometry != null) {
-                if (esriGeometry instanceof MultiVertexGeometry) {
-                    count += ((MultiVertexGeometry) esriGeometry).getPointCount();
-                } else if (esriGeometry instanceof Point) {
-                    count += 1;
-                }
-                esriGeometry = geometryCursor.next();
+
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POLYGON)) {
+            Polygon polygon = (Polygon) geometry;
+            int count = polygon.getExteriorRing().getCoordinates().length - 1;
+            for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+                count += polygon.getInteriorRingN(i).getCoordinates().length - 1;
             }
             return count;
-        } else if (geometry.isEmpty()) {
-            return 0;
-        } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
         }
+
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_MULTIPOLYGON)) {
+            int count = 0;
+            MultiPolygon multiPolygon = (MultiPolygon) geometry;
+            for (int i = 0; i < multiPolygon.getNumGeometries(); i++) {
+                count += (int) evaluateOGCGeometry(multiPolygon.getGeometryN(i));
+            }
+            return count;
+        }
+
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_GEOMETRYCOLLECTION)) {
+            int count = 0;
+            GeometryCollection collection = (GeometryCollection) geometry;
+            for (int i = 0; i < collection.getNumGeometries(); i++) {
+                count += (int) evaluateOGCGeometry(collection.getGeometryN(i));
+            }
+            return count;
+        }
+
+        return geometry.getCoordinates().length;
     }
 
     @Override

@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.GeoFunctionUtils;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class STCoordDimDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,8 +31,8 @@ public class STCoordDimDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STCoordDimDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.coordinateDimension();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        return GeoFunctionUtils.getCoordinateDimension(geometry);
     }
 
     @Override

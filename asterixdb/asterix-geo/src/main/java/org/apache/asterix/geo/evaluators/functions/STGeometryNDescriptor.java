@@ -20,11 +20,10 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCGeometryCollection;
+import org.locationtech.jts.geom.Geometry;
 
 public class STGeometryNDescriptor extends AbstractSTGeometryNDescriptor {
 
@@ -38,12 +37,12 @@ public class STGeometryNDescriptor extends AbstractSTGeometryNDescriptor {
     }
 
     @Override
-    protected OGCGeometry evaluateOGCGeometry(OGCGeometry geometry, int n) throws HyracksDataException {
-        if (geometry instanceof OGCGeometryCollection) {
-            return ((OGCGeometryCollection) geometry).geometryN(n);
+    protected Geometry evaluateOGCGeometry(Geometry geometry, int n) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_GEOMETRYCOLLECTION)) {
+            return geometry.getGeometryN(n);
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
     }
 }

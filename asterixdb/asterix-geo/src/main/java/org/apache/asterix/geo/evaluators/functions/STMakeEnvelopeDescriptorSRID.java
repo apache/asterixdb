@@ -20,8 +20,8 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -35,10 +35,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
 
 public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
 
@@ -70,14 +69,19 @@ public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
         private DataOutput out;
         private IPointable inputArg0;
         private IScalarEvaluator eval0;
+        private Coordinate coordinate0;
         private IPointable inputArg1;
         private IScalarEvaluator eval1;
+        private Coordinate coordinate1;
         private IPointable inputArg2;
         private IScalarEvaluator eval2;
+        private Coordinate coordinate2;
         private IPointable inputArg3;
         private IScalarEvaluator eval3;
+        private Coordinate coordinate3;
         private IPointable inputArg4;
         private IScalarEvaluator eval4;
+        private final GeometryFactory geometryFactory;
 
         public STMakeEnvelopeEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
@@ -93,6 +97,11 @@ public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
             eval3 = args[3].createScalarEvaluator(ctx);
             inputArg4 = new VoidPointable();
             eval4 = args[4].createScalarEvaluator(ctx);
+            geometryFactory = new GeometryFactory();
+            coordinate0 = new Coordinate();
+            coordinate1 = new Coordinate();
+            coordinate2 = new Coordinate();
+            coordinate3 = new Coordinate();
         }
 
         @Override
@@ -116,23 +125,30 @@ public class STMakeEnvelopeDescriptorSRID extends AbstractGetValDescriptor {
             byte[] data3 = inputArg3.getByteArray();
             int offset3 = inputArg3.getStartOffset();
 
+            //Spatial Reference System Identifier (SRID), currently not used.
             eval4.evaluate(tuple, inputArg4);
             byte[] data4 = inputArg4.getByteArray();
             int offset4 = inputArg4.getStartOffset();
 
             try {
+                double xmin = getVal(data0, offset0);
+                double ymin = getVal(data1, offset1);
+                double xmax = getVal(data2, offset2);
+                double ymax = getVal(data3, offset3);
+                coordinate0.setX(xmin);
+                coordinate0.setY(ymin);
+                coordinate1.setX(xmin);
+                coordinate1.setY(ymax);
+                coordinate2.setX(xmax);
+                coordinate2.setY(ymax);
+                coordinate3.setX(xmax);
+                coordinate3.setY(ymin);
 
-                OGCGeometry ogcGeometry =
-                        OGCGeometry
-                                .createFromEsriGeometry(
-                                        new Envelope(getVal(data0, offset0), getVal(data1, offset1),
-                                                getVal(data2, offset2), getVal(data3, offset3)),
-                                        SpatialReference.create((int) getVal(data4, offset4)));
-                ByteBuffer buffer = ogcGeometry.asBinary();
-                byte[] bytes = buffer.array();
+                Coordinate[] coords =
+                        new Coordinate[] { coordinate0, coordinate1, coordinate2, coordinate3, coordinate0 };
+                Polygon polygon = geometryFactory.createPolygon(coords);
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                out.writeInt(bytes.length);
-                out.write(bytes);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(polygon, out);
                 result.set(resultStorage);
             } catch (IOException e) {
                 throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,

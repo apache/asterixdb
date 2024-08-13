@@ -22,15 +22,10 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCCurve;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCGeometryCollection;
-import com.esri.core.geometry.ogc.OGCMultiCurve;
-import com.esri.core.geometry.ogc.OGCMultiPoint;
-import com.esri.core.geometry.ogc.OGCMultiPolygon;
-import com.esri.core.geometry.ogc.OGCPoint;
-import com.esri.core.geometry.ogc.OGCPolygon;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
 
 public class STIsClosedDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -38,30 +33,36 @@ public class STIsClosedDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STIsClosedDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
         return isClosed(geometry);
     }
 
-    private boolean isClosed(OGCGeometry geometry) {
-        if (geometry instanceof OGCCurve) {
-            return ((OGCCurve) geometry).isClosed();
-        } else if (geometry instanceof OGCMultiCurve) {
-            return ((OGCMultiCurve) geometry).isClosed();
-        } else if (geometry instanceof OGCMultiPoint || geometry instanceof OGCMultiPolygon
-                || geometry instanceof OGCPolygon || geometry instanceof OGCPoint) {
-            return true;
-        } else if (geometry instanceof OGCGeometryCollection) {
-            OGCGeometryCollection geometryCollection = (OGCGeometryCollection) geometry;
-            int num = geometryCollection.numGeometries();
-            for (int i = 0; i < num; ++i) {
-                if (!isClosed(geometryCollection.geometryN(i))) {
-                    return false;
+    private boolean isClosed(Geometry geometry) {
+        switch (geometry.getGeometryType()) {
+            case Geometry.TYPENAME_LINESTRING:
+                return ((LineString) geometry).isClosed();
+
+            case Geometry.TYPENAME_MULTILINESTRING:
+                return ((MultiLineString) geometry).isClosed();
+
+            case Geometry.TYPENAME_MULTIPOINT:
+            case Geometry.TYPENAME_MULTIPOLYGON:
+            case Geometry.TYPENAME_POLYGON:
+            case Geometry.TYPENAME_POINT:
+                return true;
+
+            case Geometry.TYPENAME_GEOMETRYCOLLECTION:
+                GeometryCollection geometryCollection = (GeometryCollection) geometry;
+                int num = geometryCollection.getNumGeometries();
+                for (int i = 0; i < num; ++i) {
+                    if (!isClosed(geometryCollection.getGeometryN(i))) {
+                        return false;
+                    }
                 }
-            }
-            return true;
-        } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+                return true;
+
+            default:
+                throw new IllegalArgumentException("Unsupported geometry type: " + geometry.getGeometryType());
         }
     }
 

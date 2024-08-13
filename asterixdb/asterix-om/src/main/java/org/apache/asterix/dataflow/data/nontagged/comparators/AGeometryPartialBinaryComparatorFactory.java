@@ -51,7 +51,7 @@ public class AGeometryPartialBinaryComparatorFactory implements IBinaryComparato
         if (c == 0) {
             AGeometry geometry = AGeometrySerializerDeserializer.getAGeometryObject(b1, s1);
             c = (geometry.getGeometry()
-                    .Equals(AGeometrySerializerDeserializer.getAGeometryObject(b2, s2).getGeometry())) ? 0 : 1;
+                    .equals(AGeometrySerializerDeserializer.getAGeometryObject(b2, s2).getGeometry())) ? 0 : 1;
         }
         return c;
     }

@@ -42,11 +42,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCPoint;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 
 /**
  * STUnion aggregates a set of objects into one object. If the input is a set of overlapping polygons, their union is
@@ -55,14 +53,13 @@ import com.esri.core.geometry.ogc.OGCPoint;
  * output is a GeometryCollection.
  */
 public class STUnionAggregateFunction extends AbstractAggregateFunction {
-    /**Use WGS 84 (EPSG:4326) as the default coordinate reference system*/
-    public static final SpatialReference DEFAULT_CRS = SpatialReference.create(4326);
     @SuppressWarnings("unchecked")
     private ISerializerDeserializer<AGeometry> geometrySerde =
             SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AGEOMETRY);
     private IPointable inputVal = new VoidPointable();
     private IScalarEvaluator eval;
-    protected OGCGeometry geometry;
+    protected Geometry geometry;
+    protected GeometryFactory geometryFactory;
 
     private ArrayBackedValueStorage resultStorage = new ArrayBackedValueStorage();
 
@@ -75,7 +72,8 @@ public class STUnionAggregateFunction extends AbstractAggregateFunction {
     @Override
     public void init() throws HyracksDataException {
         // Initialize the resulting geometry with an empty point.
-        geometry = new OGCPoint(new Point(), DEFAULT_CRS);
+        geometryFactory = new GeometryFactory();
+        geometry = geometryFactory.createPoint((Coordinate) null);
     }
 
     @Override
@@ -91,7 +89,7 @@ public class STUnionAggregateFunction extends AbstractAggregateFunction {
             processNull();
         } else if (typeTag == ATypeTag.GEOMETRY) {
             DataInput dataIn = new DataInputStream(new ByteArrayInputStream(data, offset + 1, len - 1));
-            OGCGeometry geometry1 = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
+            Geometry geometry1 = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
             geometry = geometry.union(geometry1);
         }
     }

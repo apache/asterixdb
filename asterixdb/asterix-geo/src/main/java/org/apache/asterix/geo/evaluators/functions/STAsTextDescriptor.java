@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.GeoFunctionUtils;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKTWriter;
 
 public class STAsTextDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,8 +32,13 @@ public class STAsTextDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STAsTextDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.asText();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        try {
+            WKTWriter wktWriter = new WKTWriter(GeoFunctionUtils.getCoordinateDimension(geometry));
+            return wktWriter.write(geometry);
+        } catch (Exception e) {
+            throw new HyracksDataException("Failed to convert geometry to WKT: " + e.getMessage(), e);
+        }
     }
 
     @Override

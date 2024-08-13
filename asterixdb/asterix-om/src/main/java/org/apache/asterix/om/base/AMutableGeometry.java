@@ -18,29 +18,32 @@
  */
 package org.apache.asterix.om.base;
 
-import com.esri.core.geometry.OGCStructure;
-import com.esri.core.geometry.OperatorImportFromWkt;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.WktImportFlags;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 
 public class AMutableGeometry extends AGeometry {
+    private Geometry geometry;
+    private final WKTReader wktReader = new WKTReader();
 
-    private OperatorImportFromWkt wktImporter;
-
-    public AMutableGeometry(OGCGeometry geom) {
+    public AMutableGeometry(Geometry geom) {
         super(geom);
-        wktImporter = OperatorImportFromWkt.local();
-    }
-
-    public void setValue(OGCGeometry geom) {
         this.geometry = geom;
     }
 
-    public void parseWKT(String wkt) {
-        OGCStructure structure;
+    public void setValue(Geometry geom) {
+        this.geometry = geom;
+    }
 
-        structure = wktImporter.executeOGC(WktImportFlags.wktImportNonTrusted, wkt, null);
-        this.geometry = OGCGeometry.createFromOGCStructure(structure, SpatialReference.create(4326));
+    public Geometry getGeometry() {
+        return this.geometry;
+    }
+
+    public void parseWKT(String wkt) {
+        try {
+            this.geometry = wktReader.read(wkt);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

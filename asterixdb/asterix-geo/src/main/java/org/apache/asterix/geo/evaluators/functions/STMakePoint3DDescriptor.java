@@ -22,7 +22,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
-import org.apache.asterix.om.base.AGeometry;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.asterix.om.types.ATypeTag;
@@ -35,10 +34,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.Point;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCPoint;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 
 public class STMakePoint3DDescriptor extends AbstractGetValDescriptor {
 
@@ -73,7 +71,7 @@ public class STMakePoint3DDescriptor extends AbstractGetValDescriptor {
         private final IScalarEvaluator eval1;
         private final IScalarEvaluator eval2;
         private Point point;
-        private AGeometry pointGeometry;
+        private final GeometryFactory geometryFactory;
 
         public STMakePoint3DEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
@@ -85,8 +83,7 @@ public class STMakePoint3DDescriptor extends AbstractGetValDescriptor {
             eval0 = args[0].createScalarEvaluator(ctx);
             eval1 = args[1].createScalarEvaluator(ctx);
             eval2 = args[2].createScalarEvaluator(ctx);
-            point = new Point(0, 0, 0);
-            pointGeometry = new AGeometry(new OGCPoint(point, SpatialReference.create(4326)));
+            geometryFactory = new GeometryFactory();
         }
 
         @Override
@@ -105,10 +102,10 @@ public class STMakePoint3DDescriptor extends AbstractGetValDescriptor {
             resultStorage.reset();
             try {
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                point.setX(getVal(bytes0, offset0));
-                point.setY(getVal(bytes1, offset1));
-                point.setZ(getVal(bytes2, offset2));
-                AGeometrySerializerDeserializer.INSTANCE.serialize(pointGeometry, out);
+                Coordinate coordinate =
+                        new Coordinate(getVal(bytes0, offset0), getVal(bytes1, offset1), getVal(bytes2, offset2));
+                point = geometryFactory.createPoint(coordinate);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(point, out);
             } catch (IOException e1) {
                 throw HyracksDataException.create(e1);
             }

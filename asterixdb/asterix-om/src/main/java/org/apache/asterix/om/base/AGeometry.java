@@ -20,22 +20,23 @@ package org.apache.asterix.om.base;
 
 import java.io.IOException;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.JtsModule;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
+import org.locationtech.jts.geom.Geometry;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class AGeometry implements IAObject {
 
-    protected OGCGeometry geometry;
+    protected Geometry geometry;
 
-    public AGeometry(OGCGeometry geometry) {
+    public AGeometry(Geometry geometry) {
         this.geometry = geometry;
     }
 
-    public OGCGeometry getGeometry() {
+    public Geometry getGeometry() {
         return geometry;
     }
 
@@ -67,11 +68,13 @@ public class AGeometry implements IAObject {
     @Override
     public ObjectNode toJSON() {
         ObjectMapper om = new ObjectMapper();
-        ObjectNode json = null;
+        om.registerModule(new JtsModule());
+        ObjectNode json;
         try {
-            json = (ObjectNode) om.readTree(geometry.asGeoJson());
+            String geoJson = om.writeValueAsString(geometry);
+            json = (ObjectNode) om.readTree(geoJson);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            return om.createObjectNode();
         }
         return json;
     }

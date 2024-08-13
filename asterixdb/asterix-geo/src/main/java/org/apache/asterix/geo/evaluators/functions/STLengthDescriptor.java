@@ -20,14 +20,12 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryCursor;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCLineString;
-import com.esri.core.geometry.ogc.OGCMultiLineString;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.MultiLineString;
 
 public class STLengthDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -35,21 +33,20 @@ public class STLengthDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STLengthDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        if (geometry instanceof OGCLineString) {
-            return geometry.getEsriGeometry().calculateLength2D();
-        } else if (geometry instanceof OGCMultiLineString) {
-            GeometryCursor cursor = geometry.getEsriGeometryCursor();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_LINESTRING)) {
+            return geometry.getLength();
+        } else if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_MULTILINESTRING)) {
             double length = 0;
-            Geometry geometry1 = cursor.next();
-            while (geometry1 != null) {
-                length += geometry1.calculateLength2D();
-                geometry1 = cursor.next();
+            MultiLineString multiLine = (MultiLineString) geometry;
+            for (int i = 0; i < multiLine.getNumGeometries(); i++) {
+                LineString lineString = (LineString) multiLine.getGeometryN(i);
+                length += lineString.getLength();
             }
             return length;
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
     }
 

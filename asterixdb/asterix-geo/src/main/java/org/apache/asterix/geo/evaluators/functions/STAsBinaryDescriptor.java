@@ -18,12 +18,13 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.GeoFunctionUtils;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.WKBWriter;
 
 public class STAsBinaryDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,8 +32,10 @@ public class STAsBinaryDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STAsBinaryDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.asBinary().array();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        WKBWriter wkbWriter = new WKBWriter(GeoFunctionUtils.getCoordinateDimension(geometry),
+                GeoFunctionUtils.LITTLE_ENDIAN_BYTEORDER);
+        return wkbWriter.write(geometry);
     }
 
     @Override

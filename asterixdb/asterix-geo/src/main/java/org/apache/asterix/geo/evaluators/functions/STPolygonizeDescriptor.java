@@ -49,17 +49,21 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.ogc.OGCConcreteGeometryCollection;
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCGeometryCollection;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.GeometryFactory;
 
 public class STPolygonizeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
     public static final IFunctionDescriptorFactory FACTORY = STPolygonizeDescriptor::new;
 
     private static final long serialVersionUID = 1L;
+
+    private final GeometryFactory geometryFactory;
+
+    public STPolygonizeDescriptor() {
+        geometryFactory = new GeometryFactory();
+    }
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -116,13 +120,13 @@ public class STPolygonizeDescriptor extends AbstractScalarFunctionDynamicDescrip
             ByteArrayInputStream inStream = new ByteArrayInputStream(bytes, offset + 1, len - 1);
             DataInputStream dataIn = new DataInputStream(inStream);
             IACursor cursor = ((IACollection) serde.deserialize(dataIn)).getCursor();
-            List<OGCGeometry> list = new ArrayList<>();
+            List<Geometry> list = new ArrayList<>();
             while (cursor.next()) {
                 IAObject object = cursor.get();
                 list.add(((AGeometry) object).getGeometry());
             }
-            OGCGeometryCollection geometryCollection =
-                    new OGCConcreteGeometryCollection(list, SpatialReference.create(4326));
+            GeometryCollection geometryCollection =
+                    geometryFactory.createGeometryCollection(list.toArray(new Geometry[0]));
             try {
                 SerializerDeserializerProvider.INSTANCE.getSerializerDeserializer(BuiltinType.AGEOMETRY)
                         .serialize(new AGeometry(geometryCollection), out);

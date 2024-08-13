@@ -21,19 +21,18 @@ package org.apache.asterix.dataflow.data.nontagged.serde;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.GeoFunctionUtils;
 import org.apache.asterix.om.base.AGeometry;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.OperatorImportFromWkb;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.WkbImportFlags;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKBReader;
+import org.locationtech.jts.io.WKBWriter;
 
 public class AGeometrySerializerDeserializer implements ISerializerDeserializer<AGeometry> {
 
@@ -41,24 +40,19 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
 
     public static final AGeometrySerializerDeserializer INSTANCE = new AGeometrySerializerDeserializer();
 
-    /**Use WGS 84 (EPSG:4326) as the default coordinate reference system*/
-    public static final SpatialReference DEFAULT_CRS = SpatialReference.create(4326);
-
     private AGeometrySerializerDeserializer() {
     }
 
     @Override
     public AGeometry deserialize(DataInput in) throws HyracksDataException {
+        WKBReader wkbReader = new WKBReader();
         try {
             int length = in.readInt();
             byte[] bytes = new byte[length];
             in.readFully(bytes);
-            ByteBuffer buffer = ByteBuffer.wrap(bytes);
-            OGCGeometry geometry = OGCGeometry.createFromOGCStructure(
-                    OperatorImportFromWkb.local().executeOGC(WkbImportFlags.wkbImportDefaults, buffer, null),
-                    DEFAULT_CRS);
+            Geometry geometry = wkbReader.read(bytes);
             return new AGeometry(geometry);
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
             throw HyracksDataException.create(e);
         }
     }
@@ -66,8 +60,10 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
     @Override
     public void serialize(AGeometry instance, DataOutput out) throws HyracksDataException {
         try {
-            OGCGeometry geometry = instance.getGeometry();
-            byte[] buffer = geometry.asBinary().array();
+            Geometry geometry = instance.getGeometry();
+            WKBWriter wkbWriter = new WKBWriter(GeoFunctionUtils.getCoordinateDimension(geometry),
+                    GeoFunctionUtils.LITTLE_ENDIAN_BYTEORDER);
+            byte[] buffer = wkbWriter.write(geometry);
             // For efficiency, we store the size of the geometry in bytes in the first 32 bits
             // This allows AsterixDB to skip over this attribute if needed.
             out.writeInt(buffer.length);
@@ -77,24 +73,40 @@ public class AGeometrySerializerDeserializer implements ISerializerDeserializer<
         }
     }
 
-    public static int getAGeometrySizeOffset() throws HyracksDataException {
+    public void serialize(Geometry geometry, DataOutput out) throws HyracksDataException {
+        try {
+            WKBWriter wkbWriter = new WKBWriter(GeoFunctionUtils.getCoordinateDimension(geometry),
+                    GeoFunctionUtils.LITTLE_ENDIAN_BYTEORDER);
+            byte[] buffer = wkbWriter.write(geometry);
+            // For efficiency, we store the size of the geometry in bytes in the first 32 bits
+            // This allows AsterixDB to skip over this attribute if needed.
+            out.writeInt(buffer.length);
+            out.write(buffer);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    public static int getAGeometrySizeOffset() {
         return 0;
     }
 
     public static AGeometry getAGeometryObject(byte[] bytes, int startOffset) throws HyracksDataException {
         // Size of the AGeometry object is stored in bytes in the first 32 bits
         // See serialize method
+        WKBReader wkbReader = new WKBReader();
         int size = AInt32SerializerDeserializer.getInt(bytes, startOffset);
 
         if (bytes.length < startOffset + size + 4)
             // TODO(mmahin): this error code takes 5 parameters, and this is passing none, so I suspect this isn't right
             throw RuntimeDataException.create(ErrorCode.VALUE_OUT_OF_RANGE);
-
-        // Skip the size of the geometry in first 4 bytes
-        byte[] bytes1 = Arrays.copyOfRange(bytes, startOffset + 4, startOffset + size + 4);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes1);
-        OGCGeometry geometry = OGCGeometry.createFromOGCStructure(
-                OperatorImportFromWkb.local().executeOGC(WkbImportFlags.wkbImportDefaults, buffer, null), DEFAULT_CRS);
-        return new AGeometry(geometry);
+        try {
+            // Skip the size of the geometry in first 4 bytes
+            byte[] bytes1 = Arrays.copyOfRange(bytes, startOffset + 4, startOffset + size + 4);
+            Geometry geometry = wkbReader.read(bytes1);
+            return new AGeometry(geometry);
+        } catch (ParseException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 }

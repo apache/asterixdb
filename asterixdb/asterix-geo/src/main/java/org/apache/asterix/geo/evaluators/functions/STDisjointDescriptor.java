@@ -22,8 +22,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class STDisjointDescriptor extends AbstractSTDoubleGeometryDescriptor {
 
@@ -31,7 +30,7 @@ public class STDisjointDescriptor extends AbstractSTDoubleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STDisjointDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry0, OGCGeometry geometry1) throws HyracksDataException {
+    protected Object evaluateOGCGeometry(Geometry geometry0, Geometry geometry1) throws HyracksDataException {
         return geometry0.disjoint(geometry1);
     }
 

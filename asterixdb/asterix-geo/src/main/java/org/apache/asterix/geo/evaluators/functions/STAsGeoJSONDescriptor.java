@@ -18,21 +18,41 @@
  */
 package org.apache.asterix.geo.evaluators.functions;
 
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.JtsModule;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.locationtech.jts.geom.Geometry;
 
-import com.esri.core.geometry.ogc.OGCGeometry;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class STAsGeoJSONDescriptor extends AbstractSTSingleGeometryDescriptor {
 
     private static final long serialVersionUID = 1L;
     public static final IFunctionDescriptorFactory FACTORY = STAsGeoJSONDescriptor::new;
+    private static final Logger LOGGER = LogManager.getLogger();
+    private final ObjectMapper mapper;
+
+    public STAsGeoJSONDescriptor() {
+        mapper = new ObjectMapper();
+    }
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.asGeoJson();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        String geoJson = null;
+        try {
+            mapper.registerModule(new JtsModule());
+            geoJson = mapper.writeValueAsString(geometry);
+        } catch (JsonProcessingException e) {
+            LOGGER.debug("JSON Processing exception during STAsGeoJSON function");
+            throw HyracksDataException.create(ErrorCode.PARSING_ERROR);
+        }
+        return geoJson;
     }
 
     @Override

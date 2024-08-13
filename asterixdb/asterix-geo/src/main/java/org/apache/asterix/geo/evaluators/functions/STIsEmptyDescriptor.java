@@ -22,8 +22,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class STIsEmptyDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,7 +30,7 @@ public class STIsEmptyDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STIsEmptyDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
         return geometry.isEmpty();
     }
 

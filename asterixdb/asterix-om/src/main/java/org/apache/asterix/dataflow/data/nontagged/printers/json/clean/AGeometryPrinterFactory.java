@@ -23,11 +23,11 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.PrintStream;
 
+import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.hyracks.algebricks.data.IPrinter;
 import org.apache.hyracks.algebricks.data.IPrinterFactory;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class AGeometryPrinterFactory implements IPrinterFactory {
 
@@ -37,8 +37,8 @@ public class AGeometryPrinterFactory implements IPrinterFactory {
     public static final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {
         ByteArrayInputStream inStream = new ByteArrayInputStream(b, s + 1, l - 1);
         DataInput dataIn = new DataInputStream(inStream);
-        OGCGeometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
-        ps.print(geometry.asGeoJson());
+        Geometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
+        ps.print(PrintTools.geometryToGeoJSON(geometry));
     };
 
     @Override

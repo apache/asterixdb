@@ -22,8 +22,8 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 
 public class STZMinDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -31,8 +31,19 @@ public class STZMinDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STZMinDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        return geometry.MinZ();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        double minZ = Double.POSITIVE_INFINITY;
+        boolean foundZ = false;
+        for (Coordinate coord : geometry.getCoordinates()) {
+            if (!Double.isNaN(coord.getZ())) {
+                foundZ = true;
+                if (coord.getZ() < minZ) {
+                    minZ = coord.getZ();
+                }
+            }
+        }
+
+        return foundZ ? minZ : Double.NaN;
     }
 
     @Override

@@ -22,9 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.AGeometrySerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AStringSerializerDeserializer;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
@@ -41,12 +40,9 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.OGCStructure;
-import com.esri.core.geometry.OperatorImportFromWkt;
-import com.esri.core.geometry.SpatialReference;
-import com.esri.core.geometry.WktImportFlags;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 
 public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -80,7 +76,6 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
         private IScalarEvaluator eval;
         private IPointable inputArg0;
         private IScalarEvaluator eval0;
-        private OperatorImportFromWkt wktImporter;
 
         public STGeomFromTextSRIDEvaluator(IScalarEvaluatorFactory[] args, IEvaluatorContext ctx)
                 throws HyracksDataException {
@@ -90,7 +85,6 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
             eval = args[0].createScalarEvaluator(ctx);
             inputArg0 = new VoidPointable();
             eval0 = args[1].createScalarEvaluator(ctx);
-            wktImporter = OperatorImportFromWkt.local();
         }
 
         @Override
@@ -116,20 +110,13 @@ public class STGeomFromTextSRIDDescriptor extends AbstractScalarFunctionDynamicD
             ByteArrayInputStream inStream = new ByteArrayInputStream(data, offset + 1, len - 1);
             DataInputStream dataIn = new DataInputStream(inStream);
             try {
-                String geometry = AStringSerializerDeserializer.INSTANCE.deserialize(dataIn).getStringValue();
-                int srid = (int) AInt64SerializerDeserializer.getLong(data0, offset0 + 1);
-                OGCStructure structure;
-
-                structure = wktImporter.executeOGC(WktImportFlags.wktImportNonTrusted, geometry, null);
-                OGCGeometry ogcGeometry = OGCGeometry.createFromOGCStructure(structure, SpatialReference.create(srid));
-                ByteBuffer buffer = ogcGeometry.asBinary();
-                byte[] wKBGeometryBuffer = buffer.array();
+                WKTReader reader = new WKTReader();
+                String wktString = AStringSerializerDeserializer.INSTANCE.deserialize(dataIn).getStringValue();
+                Geometry geometry = reader.read(wktString);
                 out.writeByte(ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
-                out.writeInt(wKBGeometryBuffer.length);
-                out.write(wKBGeometryBuffer);
+                AGeometrySerializerDeserializer.INSTANCE.serialize(geometry, out);
                 result.set(resultStorage);
-
-            } catch (IOException e) {
+            } catch (ParseException | IOException e) {
                 throw new InvalidDataFormatException(sourceLoc, getIdentifier(), e,
                         ATypeTag.SERIALIZED_GEOMETRY_TYPE_TAG);
             }

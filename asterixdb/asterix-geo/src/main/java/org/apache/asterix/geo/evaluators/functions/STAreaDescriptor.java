@@ -21,12 +21,10 @@ package org.apache.asterix.geo.evaluators.functions;
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptor;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.Geometry;
-import com.esri.core.geometry.GeometryCursor;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Geometry;
 
 public class STAreaDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -39,18 +37,15 @@ public class STAreaDescriptor extends AbstractSTSingleGeometryDescriptor {
     };
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        double area;
-        if (!"GeometryCollection".equals(geometry.geometryType())) {
-            area = geometry.getEsriGeometry().calculateArea2D();
-        } else {
-            GeometryCursor cursor = geometry.getEsriGeometryCursor();
-            Geometry geometry1 = cursor.next();
-            area = 0;
-            while (geometry1 != null) {
-                area += geometry1.calculateArea2D();
-                geometry1 = cursor.next();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        double area = 0;
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_GEOMETRYCOLLECTION)) {
+            for (int i = 0; i < geometry.getNumGeometries(); i++) {
+                Geometry subGeom = geometry.getGeometryN(i);
+                area += subGeom.getArea();
             }
+        } else {
+            area = geometry.getArea();
         }
         return area;
     }

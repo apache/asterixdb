@@ -29,11 +29,16 @@ import org.apache.asterix.dataflow.data.nontagged.serde.ADoubleSerializerDeseria
 import org.apache.asterix.dataflow.data.nontagged.serde.AFloatSerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt64SerializerDeserializer;
+import org.apache.asterix.dataflow.data.nontagged.serde.jacksonjts.JtsModule;
 import org.apache.asterix.om.base.temporal.GregorianCalendarSystem;
 import org.apache.hyracks.algebricks.data.utils.WriteValueTools;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.bytes.HexPrinter;
 import org.apache.hyracks.util.string.UTF8StringUtil;
+import org.locationtech.jts.geom.Geometry;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PrintTools {
 
@@ -459,6 +464,25 @@ public class PrintTools {
         final int lowSurrogateSize = UTF8StringUtil.charSize(src, lowSurrogatePos);
         os.write(new String(new char[] { highSurrogate, lowSurrogate }).getBytes(StandardCharsets.UTF_8));
         return highSurrogateSize + lowSurrogateSize;
+    }
+
+    /**
+     * Converts a JTS Geometry to a GeoJSON string. Returns Empty String in case of exceptions
+     *
+     * @param geometry The JTS Geometry to be converted.
+     * @return A GeoJSON string representation of the Geometry or an error message.
+     */
+    public static String geometryToGeoJSON(Geometry geometry) {
+        if (geometry == null) {
+            return "";
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JtsModule());
+        try {
+            return mapper.writeValueAsString(geometry);
+        } catch (JsonProcessingException e) {
+            return "";
+        }
     }
 
 }

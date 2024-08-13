@@ -45,8 +45,8 @@ import org.apache.hyracks.data.std.api.IPointable;
 import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.Envelope;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
 
 public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
 
@@ -257,25 +257,25 @@ public class CreateMBREvalFactory implements IScalarEvaluatorFactory {
                                 }
                                 break;
                             case GEOMETRY:
-                                Envelope record = new Envelope();
-                                AGeometrySerializerDeserializer.getAGeometryObject(data0, startOffset0 + 1)
-                                        .getGeometry().getEsriGeometry().queryEnvelope(record);
+                                Geometry geometry = AGeometrySerializerDeserializer
+                                        .getAGeometryObject(data0, startOffset0 + 1).getGeometry();
+                                Envelope envelope = geometry.getEnvelopeInternal();
                                 switch (coordinate) {
                                     case 0:
-                                        value = record.getXMin();
+                                        value = envelope.getMinX();
                                         break;
                                     case 1:
-                                        value = record.getYMin();
+                                        value = envelope.getMinY();
                                         break;
                                     case 2:
-                                        value = record.getXMax();
+                                        value = envelope.getMaxX();
                                         break;
                                     case 3:
-                                        value = record.getYMax();
+                                        value = envelope.getMaxY();
                                         break;
                                     default:
-                                        throw new NotImplementedException(
-                                                coordinate + "is not a valid coordinate option");
+                                        throw new IllegalArgumentException(
+                                                coordinate + " is not a valid coordinate option");
                                 }
                                 break;
                             case CIRCLE:

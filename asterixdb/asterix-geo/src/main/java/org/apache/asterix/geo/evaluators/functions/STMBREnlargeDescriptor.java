@@ -46,9 +46,9 @@ import org.apache.hyracks.data.std.primitive.VoidPointable;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 import org.apache.hyracks.data.std.util.ByteArrayAccessibleInputStream;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
-
-import com.esri.core.geometry.Envelope;
-import com.esri.core.geometry.ogc.OGCGeometry;
+import org.locationtech.jts.geom.Envelope;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 
 public class STMBREnlargeDescriptor extends AbstractScalarFunctionDynamicDescriptor {
 
@@ -60,6 +60,12 @@ public class STMBREnlargeDescriptor extends AbstractScalarFunctionDynamicDescrip
             return new STMBREnlargeDescriptor();
         }
     };
+
+    private final GeometryFactory geometryFactory;
+
+    public STMBREnlargeDescriptor() {
+        geometryFactory = new GeometryFactory();
+    }
 
     @Override
     public FunctionIdentifier getIdentifier() {
@@ -114,14 +120,13 @@ public class STMBREnlargeDescriptor extends AbstractScalarFunctionDynamicDescrip
                         }
 
                         inStream.setContent(data0, offset0 + 1, len - 1);
-                        OGCGeometry geometry =
-                                AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
-                        geometry.getEsriGeometry().queryEnvelope(env);
+                        Geometry geometry = AGeometrySerializerDeserializer.INSTANCE.deserialize(dataIn).getGeometry();
+                        Envelope env = geometry.getEnvelopeInternal();
                         double expandValue =
                                 ATypeHierarchy.getDoubleValue(getIdentifier().getName(), 0, data1, offset1);
                         AMutableRectangle expandedMBR = new AMutableRectangle(
-                                new AMutablePoint(env.getXMin() - expandValue, env.getYMin() - expandValue),
-                                new AMutablePoint(env.getXMax() + expandValue, env.getYMax() + expandValue));
+                                new AMutablePoint(env.getMinX() - expandValue, env.getMinY() - expandValue),
+                                new AMutablePoint(env.getMaxX() + expandValue, env.getMaxY() + expandValue));
                         rectangleSerde.serialize(expandedMBR, out);
                         result.set(resultStorage);
                     }

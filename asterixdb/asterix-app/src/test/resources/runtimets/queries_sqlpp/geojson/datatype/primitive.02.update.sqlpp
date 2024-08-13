@@ -27,7 +27,13 @@ INSERT INTO Geometries ([
 {"id": 129, "myGeometry": st_geom_from_geojson({"type": "MultiPolygon","coordinates": [[[[40, 40], [20, 45], [45, 30], [40, 40]]],[[[20, 35], [10, 30], [10, 10], [30, 5], [45, 20], [20, 35]],[[30, 20], [20, 15], [20, 25], [30, 20]]]]})},
 {"id": 130, "myGeometry": st_make_point(-71.1043443253471, 42.3150676015829)},
 {"id": 131, "myGeometry": st_make_point(1.0,2.0,3.0)},
-{"id": 132, "myGeometry": st_make_point(1.0,2.0,3.0,4.0)},
+/* The query below is intentionally commented as JTS WKBWriter does not support 4 dimensional coordinates https://github.com/locationtech/jts/issues/733, If uncommented add the below assertions to the files mentioned
+line 9 at result.03.adm should have the result { "Geometries": { "id": 132, "myGeometry": {"type":"Point","coordinates":[1,2,3,4]} } }
+line 9 at result.04.adm should have the result {{ "Type": "Point", "Area": 0.0, "Coordinate dimension": 4, "Dimension": 0, "NPoints": 1, "XMax": 1.0, "XMin": 1.0, "YMax": 2.0, "YMin": 2.0, "Binary": hex("01B90B0000000000000000F03F000000000000004000000000000008400000000000001040"), "GeoJSON": "{\"type\":\"Point\",\"coordinates\":[1,2,3,4]}", "WKT": "POINT ZM (1 2 3 4)" }
+line 4 at result.05.adm should have the result { "X": 1.0, "Y": 2.0, "Z": 3.0, "M": 4.0 }
+line 9 at result.09.adm should have the result { "IsClosed": true, "IsCollection": false, "IsEmpty": false, "IsSimple": true }
+*/
+/* {"id": 132, "myGeometry": st_make_point(1.0,2.0,3.0,4.0)}, */
 {"id": 133, "myGeometry": st_geom_from_text('POLYGON((743238 2967416,743238 2967450,743265 2967450,743265.625 2967416,743238 2967416))')},
 {"id": 134, "myGeometry": st_geom_from_wkb(hex("0102000000020000001F85EB51B87E5CC0D34D621058994340105839B4C87E5CC0295C8FC2F5984340"))},
 {"id": 135, "myGeometry": st_line_from_multipoint(st_geom_from_text('MULTIPOINT(1 2 , 4 5 , 7 8 )'))},

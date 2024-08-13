@@ -45,8 +45,7 @@ import org.apache.hadoop.io.DataInputByteBuffer;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.esri.core.geometry.ogc.OGCPoint;
+import org.locationtech.jts.geom.Point;
 
 public class ADMDataParserTest {
 
@@ -192,10 +191,10 @@ public class ADMDataParserTest {
                     SerializerDeserializerProvider.INSTANCE.getNonTaggedSerializerDeserializer(BuiltinType.AGEOMETRY);
             Object point = geomDeser.deserialize(dataIn);
             Assert.assertTrue(point instanceof AGeometry);
-            Assert.assertTrue(((AGeometry) point).getGeometry() instanceof OGCPoint);
-            OGCPoint p = (OGCPoint) ((AGeometry) point).getGeometry();
-            Assert.assertEquals(3.0, p.X(), 1E-5);
-            Assert.assertEquals(4.0, p.Y(), 1E-5);
+            Assert.assertTrue(((AGeometry) point).getGeometry() instanceof Point);
+            Point p = (Point) ((AGeometry) point).getGeometry();
+            Assert.assertEquals(3.0, p.getX(), 1E-5);
+            Assert.assertEquals(4.0, p.getY(), 1E-5);
         } catch (IOException e) {
             e.printStackTrace();
             Assert.fail("Error in parsing");

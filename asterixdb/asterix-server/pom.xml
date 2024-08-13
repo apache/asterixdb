@@ -612,6 +612,22 @@
               <contentFile>protobuf_2.5.0_LICENSE.txt</contentFile>
             </license>
             <license>
+              <displayName>Eclipse Distribution License - v 1.0</displayName>
+              <url>https://www.eclipse.org/org/documents/edl-v10.php</url>
+              <aliasUrls>
+                <aliasUrl>https://github.com/locationtech/jts/blob/master/LICENSE_EDLv1.txt</aliasUrl>
+              </aliasUrls>
+              <metric>1050</metric>
+            </license>
+            <license>
+              <displayName>Eclipse Public License, Version 2.0</displayName>
+              <url>https://www.eclipse.org/legal/epl-2.0/</url>
+              <aliasUrls>
+                <aliasUrl>https://github.com/locationtech/jts/blob/master/LICENSE_EPLv2.txt</aliasUrl>
+              </aliasUrls>
+              <metric>1100</metric>
+            </license>
+            <license>
               <displayName>a BSD 3-clause license</displayName>
               <url>https://github.com/codehaus/paranamer-git/blob/paranamer-2.3/LICENSE.txt</url>
               <contentFile>paranamer-2.3_LICENSE.txt</contentFile>

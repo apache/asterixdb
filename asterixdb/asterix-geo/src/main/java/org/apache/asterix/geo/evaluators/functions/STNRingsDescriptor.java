@@ -20,12 +20,12 @@ package org.apache.asterix.geo.evaluators.functions;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.asterix.om.functions.IFunctionDescriptorFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
-
-import com.esri.core.geometry.ogc.OGCGeometry;
-import com.esri.core.geometry.ogc.OGCMultiPolygon;
-import com.esri.core.geometry.ogc.OGCPolygon;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Polygon;
 
 public class STNRingsDescriptor extends AbstractSTSingleGeometryDescriptor {
 
@@ -33,22 +33,22 @@ public class STNRingsDescriptor extends AbstractSTSingleGeometryDescriptor {
     public static final IFunctionDescriptorFactory FACTORY = STNRingsDescriptor::new;
 
     @Override
-    protected Object evaluateOGCGeometry(OGCGeometry geometry) throws HyracksDataException {
-        if (geometry instanceof OGCPolygon) {
-            return ((OGCPolygon) geometry).numInteriorRing() + 1;
-        } else if (geometry instanceof OGCMultiPolygon) {
-            OGCMultiPolygon polygon = (OGCMultiPolygon) geometry;
-            int numGeometries = polygon.numGeometries();
+    protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException {
+        if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POLYGON)) {
+            return ((Polygon) geometry).getNumInteriorRing() + 1;
+        } else if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_MULTIPOLYGON)) {
+            MultiPolygon polygon = (MultiPolygon) geometry;
+            int numGeometries = polygon.getNumGeometries();
             int count = 0;
             for (int i = 1; i < numGeometries + 1; i++) {
-                if (polygon.geometryN(i) instanceof OGCPolygon) {
-                    count += ((OGCPolygon) polygon.geometryN(i)).numInteriorRing() + 1;
+                if (StringUtils.equals(geometry.getGeometryType(), Geometry.TYPENAME_POLYGON)) {
+                    count += ((Polygon) polygon.getGeometryN(i)).getNumInteriorRing() + 1;
                 }
             }
             return count;
         } else {
-            throw new UnsupportedOperationException(
-                    "The operation " + getIdentifier() + " is not supported for the type " + geometry.geometryType());
+            throw new UnsupportedOperationException("The operation " + getIdentifier()
+                    + " is not supported for the type " + geometry.getGeometryType());
         }
     }
 
