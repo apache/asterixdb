@@ -75,7 +75,7 @@
     <snappy.version>1.1.10.5</snappy.version>
     <jackson.version>2.14.3</jackson.version>
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
-    <netty.version>4.1.101.Final</netty.version>
+    <netty.version>4.1.112.Final</netty.version>
     <asm.version>9.3</asm.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
