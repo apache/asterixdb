@@ -190,6 +190,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.DatasourceAdapter;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.entities.EntityDetails;
 import org.apache.asterix.metadata.entities.ExternalDatasetDetails;
 import org.apache.asterix.metadata.entities.Feed;
 import org.apache.asterix.metadata.entities.FeedConnection;
@@ -205,6 +206,7 @@ import org.apache.asterix.metadata.entities.Synonym;
 import org.apache.asterix.metadata.entities.ViewDetails;
 import org.apache.asterix.metadata.feeds.FeedMetadataUtil;
 import org.apache.asterix.metadata.functions.ExternalFunctionCompilerUtil;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
@@ -385,11 +387,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case CREATE_DATABASE:
                         handleCreateDatabaseStatement(metadataProvider, stmt, requestParameters,
-                                MetadataConstants.DEFAULT_OWNER);
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case CREATE_DATAVERSE:
                         handleCreateDataverseStatement(metadataProvider, stmt, requestParameters,
-                                MetadataConstants.DEFAULT_OWNER);
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case DATASET_DECL:
                         handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -659,7 +661,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateDatabaseStatement(MetadataProvider metadataProvider, Statement stmt,
-            IRequestParameters requestParameters, String ownerName) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         CreateDatabaseStatement stmtCreateDatabase = (CreateDatabaseStatement) stmt;
         String database = stmtCreateDatabase.getDatabaseName().getValue();
         metadataProvider.validateDatabaseName(database, stmt.getSourceLocation());
@@ -668,14 +670,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDatabaseBegin(lockManager, metadataProvider.getLocks(), database);
         try {
-            doCreateDatabaseStatement(metadataProvider, stmtCreateDatabase, requestParameters, ownerName);
+            doCreateDatabaseStatement(metadataProvider, stmtCreateDatabase, requestParameters, creator);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected boolean doCreateDatabaseStatement(MetadataProvider mdProvider, CreateDatabaseStatement stmtCreateDatabase,
-            IRequestParameters requestParameters, String ownerName) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         mdProvider.setMetadataTxnContext(mdTxnCtx);
         try {
@@ -691,8 +693,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
+            beforeTxnCommit(mdProvider, creator, databaseName, null, null, EntityDetails.EntityType.DATABASE);
             MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
-                    new Database(databaseName, false, ownerName, MetadataUtil.PENDING_NO_OP));
+                    new Database(databaseName, false, MetadataUtil.PENDING_NO_OP, creator));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -702,7 +705,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateDataverseStatement(MetadataProvider metadataProvider, Statement stmt,
-            IRequestParameters requestParameters, String ownerName) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         CreateDataverseStatement stmtCreateDataverse = (CreateDataverseStatement) stmt;
         DataverseName dvName = stmtCreateDataverse.getDataverseName();
         String dbName = stmtCreateDataverse.getDatabaseName();
@@ -713,7 +716,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createDataverseBegin(lockManager, metadataProvider.getLocks(), dbName, dvName);
         try {
-            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters, ownerName);
+            doCreateDataverseStatement(metadataProvider, stmtCreateDataverse, requestParameters, creator);
         } finally {
             metadataProvider.getLocks().unlock();
         }
@@ -721,7 +724,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     @SuppressWarnings("squid:S00112")
     protected boolean doCreateDataverseStatement(MetadataProvider metadataProvider,
-            CreateDataverseStatement stmtCreateDataverse, IRequestParameters requestParameters, String ownerName)
+            CreateDataverseStatement stmtCreateDataverse, IRequestParameters requestParameters, Creator creator)
             throws Exception {
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -745,8 +748,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             dvName);
                 }
             }
+            beforeTxnCommit(metadataProvider, creator, dbName, dvName, null, EntityDetails.EntityType.DATAVERSE);
             MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(), new Dataverse(dbName,
-                    dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP, ownerName));
+                    dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP, creator));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return true;
         } catch (Exception e) {
@@ -2074,7 +2078,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Note: the delete operation fails if the database cannot be deleted due to metadata dependencies
             MetadataManager.INSTANCE.dropDatabase(mdTxnCtx, databaseName);
             MetadataManager.INSTANCE.addDatabase(mdTxnCtx, new Database(databaseName, database.isSystemDatabase(),
-                    MetadataConstants.DEFAULT_OWNER, MetadataUtil.PENDING_DROP_OP));
+                    MetadataUtil.PENDING_DROP_OP, database.getCreator()));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -2260,7 +2264,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // Note: the delete operation fails if the dataverse cannot be deleted due to metadata dependencies
             MetadataManager.INSTANCE.dropDataverse(mdTxnCtx, databaseName, dataverseName);
             MetadataManager.INSTANCE.addDataverse(mdTxnCtx, new Dataverse(databaseName, dataverseName,
-                    dv.getDataFormat(), MetadataUtil.PENDING_DROP_OP, MetadataConstants.DEFAULT_OWNER));
+                    dv.getDataFormat(), MetadataUtil.PENDING_DROP_OP, dv.getCreator()));
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
@@ -5818,6 +5822,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         for (JobSpecification jobSpec : jobsToExecute) {
             runJob(hcc, jobSpec);
         }
+    }
+
+    protected void beforeTxnCommit(MetadataProvider metadataProvider, Creator creator, String databaseName,
+            DataverseName dataverseName, String objectName, Object objectType) throws AlgebricksException {
+        //no op
     }
 
     protected enum CreateResult {

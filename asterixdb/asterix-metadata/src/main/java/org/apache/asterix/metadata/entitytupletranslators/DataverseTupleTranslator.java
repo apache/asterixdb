@@ -21,17 +21,18 @@ package org.apache.asterix.metadata.entitytupletranslators;
 
 import java.util.Calendar;
 
+import org.apache.asterix.builders.RecordBuilder;
 import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.metadata.bootstrap.DataverseEntity;
 import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.entities.Dataverse;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.om.base.AInt32;
 import org.apache.asterix.om.base.AMutableInt32;
 import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
-import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
@@ -54,29 +55,22 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
 
     @Override
     protected Dataverse createMetadataEntityFromARecord(ARecord dataverseRecord) throws AlgebricksException {
-        ARecordType recType = dataverseRecord.getType();
-
         String dataverseCanonicalName =
                 ((AString) dataverseRecord.getValueByPos(dataverseEntity.dataverseNameIndex())).getStringValue();
         DataverseName dataverseName = DataverseName.createFromCanonicalForm(dataverseCanonicalName);
         int databaseNameIndex = dataverseEntity.databaseNameIndex();
-        int ownerNameIndex = recType.getFieldIndex(MetadataRecordTypes.FIELD_NAME_OWNER_NAME);
-        String databaseName, ownerName;
+
+        String databaseName;
         if (databaseNameIndex >= 0) {
             databaseName = ((AString) dataverseRecord.getValueByPos(databaseNameIndex)).getStringValue();
         } else {
             databaseName = MetadataUtil.databaseFor(dataverseName);
         }
-
-        if (ownerNameIndex >= 0) {
-            ownerName = ((AString) dataverseRecord.getValueByPos(ownerNameIndex)).getStringValue();
-        } else {
-            ownerName = MetadataConstants.DEFAULT_OWNER;
-        }
         String format = ((AString) dataverseRecord.getValueByPos(dataverseEntity.dataFormatIndex())).getStringValue();
         int pendingOp = ((AInt32) dataverseRecord.getValueByPos(dataverseEntity.pendingOpIndex())).getIntegerValue();
+        Creator creator = Creator.createOrDefault(dataverseRecord);
 
-        return new Dataverse(databaseName, dataverseName, format, pendingOp, ownerName);
+        return new Dataverse(databaseName, dataverseName, format, pendingOp, creator);
     }
 
     @Override
@@ -139,17 +133,36 @@ public class DataverseTupleTranslator extends AbstractTupleTranslator<Dataverse>
     }
 
     protected void writeOpenFields(Dataverse dataverse) throws HyracksDataException {
-        writeDataverseOwner(dataverse);
+        writeDataverseCreator(dataverse);
     }
 
-    private void writeDataverseOwner(Dataverse dataverse) throws HyracksDataException {
+    private void writeDataverseCreator(Dataverse dataverse) throws HyracksDataException {
         if (dataverseEntity.databaseNameIndex() >= 0) {
-            fieldValue.reset();
-            aString.setValue(MetadataRecordTypes.FIELD_NAME_OWNER_NAME);
+            RecordBuilder creatorObject = new RecordBuilder();
+            creatorObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+            Creator creatorInfo = dataverse.getCreator();
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_NAME);
             stringSerde.serialize(aString, fieldName.getDataOutput());
             fieldValue.reset();
-            aString.setValue(dataverse.getOwnerName());
+            aString.setValue(creatorInfo.getName());
             stringSerde.serialize(aString, fieldValue.getDataOutput());
+            creatorObject.addField(fieldName, fieldValue);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_UUID);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(creatorInfo.getUuid());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            creatorObject.addField(fieldName, fieldValue);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            creatorObject.write(fieldValue.getDataOutput(), true);
             recordBuilder.addField(fieldName, fieldValue);
         }
     }

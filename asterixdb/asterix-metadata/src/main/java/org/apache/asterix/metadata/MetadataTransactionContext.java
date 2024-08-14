@@ -178,7 +178,7 @@ public class MetadataTransactionContext extends MetadataCache {
     }
 
     public void dropDatabase(String databaseName) {
-        Database database = new Database(databaseName, false, null, MetadataUtil.PENDING_NO_OP);
+        Database database = new Database(databaseName, false, MetadataUtil.PENDING_NO_OP, null);
         droppedCache.addDatabaseIfNotExists(database);
         logAndApply(new MetadataLogicalOperation(database, false));
     }

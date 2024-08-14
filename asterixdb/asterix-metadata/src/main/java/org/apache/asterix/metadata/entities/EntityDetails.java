@@ -25,7 +25,9 @@ public class EntityDetails {
     public enum EntityType {
         DATASET,
         VIEW,
-        FUNCTION
+        FUNCTION,
+        DATABASE,
+        DATAVERSE
     }
 
     private final String databaseName;

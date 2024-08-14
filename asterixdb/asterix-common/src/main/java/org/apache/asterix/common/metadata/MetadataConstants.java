@@ -38,8 +38,9 @@ public class MetadataConstants {
     public static final String SYSTEM_DATABASE = "System";
     public static final String DEFAULT_DATABASE = "Default";
 
-    // Pre-defined owner
-    public static final String DEFAULT_OWNER = "@sys";
+    // Pre-defined creator
+    public static final String DEFAULT_CREATOR = "@sys";
+    public static final String DEFAULT_CREATOR_UUID = "97c793f3-bcbf-4595-8bf0-e9d6a5953523";
 
     // Name of the dataverse the metadata lives in.
     public static final DataverseName METADATA_DATAVERSE_NAME = DataverseName.createBuiltinDataverseName("Metadata");

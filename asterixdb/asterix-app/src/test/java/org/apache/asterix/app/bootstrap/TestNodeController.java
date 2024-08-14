@@ -36,7 +36,6 @@ import org.apache.asterix.common.context.TransactionSubsystemProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.LSMInsertDeleteOperatorNodePushable;
 import org.apache.asterix.common.exceptions.ACIDException;
-import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.metadata.Namespace;
 import org.apache.asterix.common.metadata.NamespacePathResolver;
@@ -54,6 +53,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Dataverse;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.NoOpLSMTupleFilterCallbackFactory;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.metadata.utils.SplitsAndConstraintsUtil;
 import org.apache.asterix.om.types.ARecordType;
@@ -501,7 +501,7 @@ public class TestNodeController {
         PrimaryIndexInfo primaryIndexInfo = new PrimaryIndexInfo(dataset, primaryKeyTypes, recordType, metaType,
                 mergePolicy.first, mergePolicy.second, filterFields, primaryKeyIndexes, primaryKeyIndicators);
         Dataverse dataverse = new Dataverse(dataset.getDatabaseName(), dataset.getDataverseName(),
-                NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP, MetadataConstants.DEFAULT_OWNER);
+                NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
         Namespace namespace = new Namespace(dataverse.getDatabaseName(), dataverse.getDataverseName());
         MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), namespace);
@@ -527,9 +527,9 @@ public class TestNodeController {
         org.apache.hyracks.algebricks.common.utils.Pair<ILSMMergePolicyFactory, Map<String, String>> mergePolicy =
                 DatasetUtil.getMergePolicyFactory(primaryIndexInfo.dataset, mdTxnCtx);
         MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
-        Dataverse dataverse = new Dataverse(primaryIndexInfo.dataset.getDatabaseName(),
-                primaryIndexInfo.dataset.getDataverseName(), NonTaggedDataFormat.class.getName(),
-                MetadataUtil.PENDING_NO_OP, MetadataConstants.DEFAULT_OWNER);
+        Dataverse dataverse =
+                new Dataverse(primaryIndexInfo.dataset.getDatabaseName(), primaryIndexInfo.dataset.getDataverseName(),
+                        NonTaggedDataFormat.class.getName(), MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
         Namespace namespace = new Namespace(dataverse.getDatabaseName(), dataverse.getDataverseName());
         MetadataProvider mdProvider = MetadataProvider.create(
                 (ICcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext(), namespace);

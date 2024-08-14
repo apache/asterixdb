@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.utils.Creator;
 
 /**
  * Metadata describing a database.
@@ -33,14 +34,14 @@ public class Database implements IMetadataEntity<Database> {
 
     private final String databaseName;
     private final boolean isSystemDatabase;
-    private final String owner;
     private final int pendingOp;
+    private final Creator creator;
 
-    public Database(String databaseName, boolean isSystemDatabase, String owner, int pendingOp) {
+    public Database(String databaseName, boolean isSystemDatabase, int pendingOp, Creator creator) {
         this.databaseName = databaseName;
         this.isSystemDatabase = isSystemDatabase;
-        this.owner = owner;
         this.pendingOp = pendingOp;
+        this.creator = creator;
     }
 
     public String getDatabaseName() {
@@ -51,12 +52,12 @@ public class Database implements IMetadataEntity<Database> {
         return isSystemDatabase;
     }
 
-    public String getOwnerName() {
-        return owner;
-    }
-
     public int getPendingOp() {
         return pendingOp;
+    }
+
+    public Creator getCreator() {
+        return creator;
     }
 
     @Override

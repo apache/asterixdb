@@ -131,7 +131,9 @@ public final class MetadataRecordTypes {
     public static final String FIELD_NAME_FULL_TEXT_STOPWORD_LIST = "StopwordList";
 
     //open field
-    public static final String FIELD_NAME_OWNER_NAME = "OwnerName";
+    public static final String FIELD_NAME_CREATOR_NAME = "Name";
+    public static final String FIELD_NAME_CREATOR_UUID = "Uuid";
+    public static final String CREATOR_ARECORD_FIELD_NAME = "Creator";
 
     //---------------------------------- Record Types Creation ----------------------------------//
     //--------------------------------------- Properties ----------------------------------------//
