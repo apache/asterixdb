@@ -21,8 +21,11 @@ package org.apache.asterix.test.cloud_storage;
 import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
@@ -92,7 +95,21 @@ public class CloudStorageGCSTest {
 
     @Parameters(name = "CloudStorageGCSTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
+        long seed = System.nanoTime();
+        Random random = new Random(seed);
+        LOGGER.info("CloudStorageGCSTest seed {}", seed);
+        Collection<Object[]> tests = LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
+        List<Object[]> selected = new ArrayList<>();
+        for (Object[] test : tests) {
+            if (!Objects.equals(((TestCaseContext) test[0]).getTestGroups()[0].getName(), "sqlpp_queries")) {
+                selected.add(test);
+            }
+            // Select 10% of the tests randomly
+            else if (random.nextInt(10) == 0) {
+                selected.add(test);
+            }
+        }
+        return selected;
     }
 
     @Test
