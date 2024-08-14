@@ -18,14 +18,15 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private IExpectedSchemaNode child;
 
-    public ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
-        super(parent, sourceLocation, functionName);
+    public ArrayExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
+        super(parent, parentExpression, expression);
     }
 
     @Override
@@ -48,8 +49,8 @@ public class ArrayExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
 
     @Override
     public IExpectedSchemaNode replaceChild(IExpectedSchemaNode oldNode, IExpectedSchemaNode newNode) {
-        if (child.getType() == newNode.getType()) {
-            // We are trying to replace with the same node type
+        if (child.getType() == newNode.getType() || isReplaceableAny(newNode)) {
+            // We are trying to replace with the same node type, or with a replaceable any, ignore.
             return child;
         } else if (isChildReplaceable(child, newNode)) {
             child = newNode;

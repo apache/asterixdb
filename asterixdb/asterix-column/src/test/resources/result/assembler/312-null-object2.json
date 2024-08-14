@@ -1,4 +1,4 @@
-{ "a": { "b": 1, "c": null } }
-{ "a": { "b": null, "c": 5 } }
-{ "a": null }
-{ "a": null }
+{"a":{"b":1,"c":null}}
+{"a":{"b":null,"c":5}}
+{"a":null}
+{"a":null}

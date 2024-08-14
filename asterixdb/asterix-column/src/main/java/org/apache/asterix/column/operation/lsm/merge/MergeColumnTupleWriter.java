@@ -192,21 +192,23 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             columnReader.write(columnWriter, count);
         } catch (ColumnarValueException e) {
             ObjectNode node = e.createNode(getClass().getSimpleName());
-            node.put("numberOfWrittenPrimaryKeys", primaryKeyWriters[0].getCount());
-            node.put("writtenComponents", writtenComponents.toString());
+            appendExceptionCommonInfo(node, componentIndex, count);
             node.put("blockIndex", blockIndex);
-            node.put("componentIndex", componentIndex);
-            node.put("count", count);
-            node.put("numberOFAntiMatters", numberOfAntiMatter);
             throw e;
         }
     }
 
     private void skipReaders(int componentIndex, int count) throws HyracksDataException {
         MergeColumnTupleReference componentTuple = componentsTuples[componentIndex];
-        for (int j = columnMetadata.getNumberOfPrimaryKeys(); j < columnMetadata.getNumberOfColumns(); j++) {
-            IColumnValuesReader columnReader = componentTuple.getReader(j);
-            columnReader.skip(count);
+        try {
+            for (int j = columnMetadata.getNumberOfPrimaryKeys(); j < columnMetadata.getNumberOfColumns(); j++) {
+                IColumnValuesReader columnReader = componentTuple.getReader(j);
+                columnReader.skip(count);
+            }
+        } catch (ColumnarValueException e) {
+            ObjectNode node = e.createNode(getClass().getSimpleName());
+            appendExceptionCommonInfo(node, componentIndex, count);
+            throw e;
         }
     }
 
@@ -240,5 +242,13 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
             numberOfTuplesUsingMaxSize = maxLeafNodeSize / bytesPerTuple;
         }
         return Math.min(maxNumberOfTuples, numberOfTuplesUsingMaxSize);
+    }
+
+    private void appendExceptionCommonInfo(ObjectNode node, int componentIndex, int count) {
+        node.put("numberOfWrittenPrimaryKeys", primaryKeyWriters[0].getCount());
+        node.put("writtenComponents", writtenComponents.toString());
+        node.put("numberOFAntiMatters", numberOfAntiMatter);
+        node.put("componentIndex", componentIndex);
+        node.put("count", count);
     }
 }

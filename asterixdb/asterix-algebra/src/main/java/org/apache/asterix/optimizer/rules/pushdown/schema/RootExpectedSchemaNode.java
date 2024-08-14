@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
     //Root with zero fields
@@ -56,7 +57,7 @@ public class RootExpectedSchemaNode extends ObjectExpectedSchemaNode {
 
     @Override
     public AbstractComplexExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
-            SourceLocation sourceLocation, String functionName) {
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
         if (rootType == ALL_FIELDS_ROOT) {
             //ALL_FIELDS_ROOT. Return a new CLIPPED_ROOT root
             return new RootExpectedSchemaNode();

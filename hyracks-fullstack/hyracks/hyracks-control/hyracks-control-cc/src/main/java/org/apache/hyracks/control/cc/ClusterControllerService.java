@@ -34,6 +34,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.hyracks.api.application.IApplication;
 import org.apache.hyracks.api.application.ICCApplication;
@@ -78,6 +79,7 @@ import org.apache.hyracks.control.common.deployment.DeploymentRun;
 import org.apache.hyracks.control.common.ipc.CCNCFunctions;
 import org.apache.hyracks.control.common.logs.LogFile;
 import org.apache.hyracks.control.common.shutdown.ShutdownRun;
+import org.apache.hyracks.control.common.utils.HyracksThreadFactory;
 import org.apache.hyracks.control.common.work.WorkQueue;
 import org.apache.hyracks.ipc.api.IIPCI;
 import org.apache.hyracks.ipc.impl.IPCSystem;
@@ -118,7 +120,7 @@ public class ClusterControllerService implements IControllerService {
 
     private final WorkQueue workQueue;
 
-    private ExecutorService executor;
+    private ExecutorService executor = Executors.newCachedThreadPool(new HyracksThreadFactory("<bootstrap>"));
 
     private final Timer timer;
 

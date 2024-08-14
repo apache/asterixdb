@@ -1,0 +1,22 @@
+distribute result [$$32] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$32]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$32] <- [{"$1": get-item(get-item(get-item($$33, 0).getField("f2"), 0), 0), "$2": get-item($$49.getField("f3"), 1), "$3": get-item(get-item($$49.getField("f2"), 1), 1), "x": $$c.getField("x")}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ASSIGN  |PARTITIONED|
+        assign [$$49] <- [get-item($$33, 1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ASSIGN  |PARTITIONED|
+          assign [$$33] <- [$$c.getField("f1")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$c]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$34, $$c] <- test.ColumnDataset project ({x:any,f1:[{f2:[[any]],f3:[any]}]}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -4,7 +4,7 @@
 		"*": "*"
 	},
 	"type": "application/x-adm",
-	"results": [ "{ \"v\": 1 }\n", "{ \"v\": 2 }\n" ],
+	"results": [ "{ \"v\": 1 }", "{ \"v\": 2 }" ],
 	"plans": "R{.*}",
 	"status": "success",
 	"metrics": {
@@ -13,7 +13,7 @@
 		"compileTime": "R{.*}",
 		"queueWaitTime": "R{.*}",
 		"resultCount": 2,
-		"resultSize": 32,
+		"resultSize": "R{.*}",
 		"processedObjects": 0
 	}
 }

@@ -88,6 +88,27 @@ public class PushdownUtil {
         }
     }
 
+    public static int getFieldNameId(AbstractFunctionCallExpression fieldAccessExpr) {
+        if (!BuiltinFunctions.FIELD_ACCESS_BY_INDEX.equals(fieldAccessExpr.getFunctionIdentifier())) {
+            return -1;
+        }
+
+        Integer fieldNameId = ConstantExpressionUtil.getIntArgument(fieldAccessExpr, 1);
+        if (fieldNameId == null) {
+            return -1;
+        }
+
+        return fieldNameId;
+    }
+
+    public static String getFieldName(AbstractFunctionCallExpression fieldAccessExpr) {
+        if (!BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fieldAccessExpr.getFunctionIdentifier())) {
+            throw new IllegalStateException(
+                    "Cannot get field name from " + fieldAccessExpr.getFunctionIdentifier().getName());
+        }
+        return ConstantExpressionUtil.getStringArgument(fieldAccessExpr, 1);
+    }
+
     public static String getFieldName(AbstractFunctionCallExpression fieldAccessExpr, IVariableTypeEnvironment typeEnv)
             throws AlgebricksException {
         if (BuiltinFunctions.FIELD_ACCESS_BY_NAME.equals(fieldAccessExpr.getFunctionIdentifier())) {

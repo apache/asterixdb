@@ -18,7 +18,8 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 /**
@@ -42,9 +43,19 @@ public interface IExpectedSchemaNode {
     String getFunctionName();
 
     /**
+     * @return function expression of which determined the type of the parent node
+     */
+    AbstractFunctionCallExpression getParentExpression();
+
+    /**
      * @return the parent of a node
      */
     AbstractComplexExpectedSchemaNode getParent();
+
+    /**
+     * @return this node's expression
+     */
+    ILogicalExpression getExpression();
 
     /**
      * Set parent of a node
@@ -75,11 +86,11 @@ public interface IExpectedSchemaNode {
      * - {@link ExpectedSchemaNodeType#OBJECT} to {@link ExpectedSchemaNodeType#UNION}
      *
      * @param expectedNodeType what is the other expected type
-     * @param sourceLocation   source location of the value access
-     * @param functionName     function name as in {@link FunctionIdentifier#getName()}
-     * @see AbstractComplexExpectedSchemaNode#replaceIfNeeded(ExpectedSchemaNodeType, SourceLocation, String)
-     * @see UnionExpectedSchemaNode#replaceIfNeeded(ExpectedSchemaNodeType, SourceLocation, String)
+     * @param parentExpression parent expression
+     * @param expression       this node's expression
+     * @see IExpectedSchemaNode#replaceIfNeeded(ExpectedSchemaNodeType, AbstractFunctionCallExpression, ILogicalExpression)
+     * @see IExpectedSchemaNode#replaceIfNeeded(ExpectedSchemaNodeType, AbstractFunctionCallExpression, ILogicalExpression)
      */
-    IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType, SourceLocation sourceLocation,
-            String functionName);
+    IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression);
 }

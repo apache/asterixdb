@@ -18,20 +18,22 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import static org.apache.asterix.optimizer.rules.pushdown.schema.AbstractComplexExpectedSchemaNode.createNestedNode;
+
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class AnyExpectedSchemaNode extends AbstractExpectedSchemaNode {
     private boolean replaceable;
 
-    public AnyExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
-        super(parent, sourceLocation, functionName);
+    public AnyExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, AbstractFunctionCallExpression expression) {
+        super(parent, expression, expression);
         replaceable = true;
     }
 
-    protected AnyExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName, boolean replaceable) {
-        super(parent, sourceLocation, functionName);
+    protected AnyExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, AbstractFunctionCallExpression expression,
+            boolean replaceable) {
+        super(parent, expression, expression);
         this.replaceable = replaceable;
     }
 
@@ -45,8 +47,8 @@ public class AnyExpectedSchemaNode extends AbstractExpectedSchemaNode {
     }
 
     @Override
-    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType, SourceLocation sourceLocation,
-            String functionName) {
+    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
         if (expectedNodeType == ExpectedSchemaNodeType.ANY) {
             return this;
         }
@@ -57,8 +59,8 @@ public class AnyExpectedSchemaNode extends AbstractExpectedSchemaNode {
          * the given nested type.
          */
         AbstractComplexExpectedSchemaNode parent = getParent();
-        AbstractComplexExpectedSchemaNode nestedNode = AbstractComplexExpectedSchemaNode
-                .createNestedNode(expectedNodeType, parent, getSourceLocation(), functionName);
+        AbstractComplexExpectedSchemaNode nestedNode =
+                createNestedNode(expectedNodeType, parent, this.parentExpression, expression);
         return parent.replaceChild(this, nestedNode);
     }
 

@@ -1,0 +1,24 @@
+distribute result [$$35] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$35]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$35] <- [{"$1": get-item(get-item(get-item($$36, 0).getField("f2"), 0), 0), "$2": get-item($$42, 1), "$3": get-item(get-item($$54.getField("f2"), 1), 1), "f4": $$42.getField("f4")}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ASSIGN  |PARTITIONED|
+        assign [$$42] <- [$$54.getField("f3")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- ASSIGN  |PARTITIONED|
+          assign [$$54] <- [get-item($$36, 1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$36]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$36] <- [$$p.getField("f1")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  data-scan []<-[$$p] <- test.ParquetDataset1 project ({f1:[{f2:[[any]],f3:<[any],{f4:any}>}]}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

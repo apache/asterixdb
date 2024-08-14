@@ -18,13 +18,14 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpectedSchemaNode {
 
-    AbstractComplexExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
-        super(parent, sourceLocation, functionName);
+    AbstractComplexExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
+        super(parent, parentExpression, expression);
     }
 
     @Override
@@ -33,8 +34,8 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
     }
 
     @Override
-    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType, SourceLocation sourceLocation,
-            String functionName) {
+    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
         //If no change is required, return the same node
         IExpectedSchemaNode node = this;
         if (expectedNodeType == ExpectedSchemaNodeType.ANY) {
@@ -47,7 +48,7 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
              * In this case, we first saw (t.hashtags[*].text), but the next expression (t.hashtags) requested
              * the entire hashtags. So, the expected type for hashtags should be ANY
              */
-            node = new AnyExpectedSchemaNode(getParent(), getSourceLocation(), getFunctionName(), false);
+            node = new AnyExpectedSchemaNode(getParent(), getParentExpression(), false);
             getParent().replaceChild(this, node);
         } else if (expectedNodeType != getType()) {
             /*
@@ -56,8 +57,7 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
              */
 
             //Create UNION node and its parent is the parent of this
-            UnionExpectedSchemaNode unionSchemaNode =
-                    new UnionExpectedSchemaNode(getParent(), getSourceLocation(), getFunctionName());
+            UnionExpectedSchemaNode unionSchemaNode = new UnionExpectedSchemaNode(getParent(), getParentExpression());
 
             //Add this as a child of UNION
             unionSchemaNode.addChild(this);
@@ -78,7 +78,7 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
              * Before: UNION <-- this
              * After:  UNION <-- (this, newChild)
              */
-            unionSchemaNode.createChild(expectedNodeType, sourceLocation, functionName);
+            unionSchemaNode.createChild(expectedNodeType, parentExpression, expression);
             node = unionSchemaNode;
         }
         return node;
@@ -105,15 +105,23 @@ public abstract class AbstractComplexExpectedSchemaNode extends AbstractExpected
                 || newType == ExpectedSchemaNodeType.UNION || !newNode.allowsReplacing());
     }
 
+    /**
+     * @return true if {@code newNode} is a replaceable {@link ExpectedSchemaNodeType#ANY} node, false otherwise
+     */
+    protected boolean isReplaceableAny(IExpectedSchemaNode newNode) {
+        return newNode.getType() == ExpectedSchemaNodeType.ANY && newNode.allowsReplacing();
+    }
+
     public static AbstractComplexExpectedSchemaNode createNestedNode(ExpectedSchemaNodeType type,
-            AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation, String functionName) {
+            AbstractComplexExpectedSchemaNode parent, AbstractFunctionCallExpression parentExpression,
+            ILogicalExpression myExpr) {
         switch (type) {
             case ARRAY:
-                return new ArrayExpectedSchemaNode(parent, sourceLocation, functionName);
+                return new ArrayExpectedSchemaNode(parent, parentExpression, myExpr);
             case OBJECT:
-                return new ObjectExpectedSchemaNode(parent, sourceLocation, functionName);
+                return new ObjectExpectedSchemaNode(parent, parentExpression, myExpr);
             case UNION:
-                return new UnionExpectedSchemaNode(parent, sourceLocation, functionName);
+                return new UnionExpectedSchemaNode(parent, parentExpression);
             default:
                 throw new IllegalStateException(type + " is not nested or unknown");
         }

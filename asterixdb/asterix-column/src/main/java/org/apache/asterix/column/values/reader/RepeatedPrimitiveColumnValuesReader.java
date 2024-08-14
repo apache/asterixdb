@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.column.values.reader;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.apache.asterix.column.values.IColumnValuesWriter;
@@ -96,23 +95,15 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
     @Override
     public void write(IColumnValuesWriter writer, boolean callNext) throws HyracksDataException {
         //We always call next as repeated values cannot be primary keys
-        if (!next()) {
-            ColumnarValueException e = new ColumnarValueException();
-            appendReaderInformation(e.createNode(getClass().getSimpleName()));
-            throw e;
-        }
+        doNextAndCheck();
 
         if (isRepeatedValue()) {
             while (!isLastDelimiter()) {
                 writer.writeLevel(level);
                 if (isValue()) {
-                    try {
-                        writer.writeValue(this);
-                    } catch (IOException e) {
-                        throw HyracksDataException.create(e);
-                    }
+                    writer.writeValue(this);
                 }
-                next();
+                doNextAndCheck();
             }
         }
         //Add last delimiter, or NULL/MISSING
@@ -132,10 +123,10 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
     @Override
     public void skip(int count) throws HyracksDataException {
         for (int i = 0; i < count; i++) {
-            next();
+            doNextAndCheck();
             if (isRepeatedValue()) {
                 while (!isLastDelimiter()) {
-                    next();
+                    doNextAndCheck();
                 }
             }
         }
@@ -161,5 +152,13 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
         node.put("levelToDelimiterMap", Arrays.toString(levelToDelimiterMap));
         node.put("delimiterIndex", delimiterIndex);
         node.put("isDelimiter", isDelimiter());
+    }
+
+    private void doNextAndCheck() throws HyracksDataException {
+        if (!next()) {
+            ColumnarValueException e = new ColumnarValueException();
+            appendReaderInformation(e.createNode(getClass().getSimpleName()));
+            throw e;
+        }
     }
 }
