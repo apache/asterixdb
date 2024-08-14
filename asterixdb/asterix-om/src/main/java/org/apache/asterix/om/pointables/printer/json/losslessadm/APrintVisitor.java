@@ -39,7 +39,7 @@ public class APrintVisitor extends AbstractPrintVisitor {
 
     @Override
     protected AListPrinter createListPrinter(AListVisitablePointable accessor) {
-        return new AListPrinter("[ ", " ]", ", ") {
+        return new AListPrinter("[", "]", ",") {
             @Override
             protected ATypeTag getItemTypeTag(IVisitablePointable item, ATypeTag typeTag) {
                 // avoid MISSING to NULL conversion, because we print MISSING as is in this format
@@ -50,7 +50,7 @@ public class APrintVisitor extends AbstractPrintVisitor {
 
     @Override
     protected ARecordPrinter createRecordPrinter(ARecordVisitablePointable accessor) {
-        return new ARecordPrinter("{ ", " }", ", ", ": ") {
+        return new ARecordPrinter("{", "}", ",", ":") {
             @Override
             protected void printFieldName(PrintStream ps, IPrintVisitor visitor, IVisitablePointable fieldName)
                     throws HyracksDataException {

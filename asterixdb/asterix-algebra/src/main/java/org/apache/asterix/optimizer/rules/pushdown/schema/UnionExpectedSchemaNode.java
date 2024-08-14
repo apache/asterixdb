@@ -22,14 +22,15 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hyracks.api.exceptions.SourceLocation;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 
 public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
     private final Map<ExpectedSchemaNodeType, AbstractComplexExpectedSchemaNode> children;
 
-    public UnionExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
-        super(parent, sourceLocation, functionName);
+    public UnionExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent,
+            AbstractFunctionCallExpression expression) {
+        super(parent, expression, expression);
         children = new EnumMap<>(ExpectedSchemaNodeType.class);
     }
 
@@ -46,8 +47,13 @@ public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
         children.put(node.getType(), node);
     }
 
-    public void createChild(ExpectedSchemaNodeType nodeType, SourceLocation sourceLocation, String functionName) {
-        children.computeIfAbsent(nodeType, k -> createNestedNode(k, this, sourceLocation, functionName));
+    public void createChild(ExpectedSchemaNodeType nodeType, AbstractFunctionCallExpression parentExpression,
+            ILogicalExpression expression) {
+        if (parentExpression == null) {
+            // Should never happen
+            throw new NullPointerException("expression is null");
+        }
+        children.computeIfAbsent(nodeType, k -> createNestedNode(k, this, parentExpression, expression));
     }
 
     public AbstractComplexExpectedSchemaNode getChild(ExpectedSchemaNodeType type) {
@@ -73,15 +79,15 @@ public class UnionExpectedSchemaNode extends AbstractComplexExpectedSchemaNode {
      * UNION type - we simply return this. In case we want to fallback to ANY node, we call the super method.
      *
      * @param expectedNodeType the expected type
-     * @param sourceLocation   source location of the value access
-     * @param functionName     function name of the expression
+     * @param parentExpression
+     * @param expression
      * @return ANY or this
      */
     @Override
-    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType, SourceLocation sourceLocation,
-            String functionName) {
+    public IExpectedSchemaNode replaceIfNeeded(ExpectedSchemaNodeType expectedNodeType,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
         if (expectedNodeType == ExpectedSchemaNodeType.ANY) {
-            return super.replaceIfNeeded(expectedNodeType, sourceLocation, functionName);
+            return super.replaceIfNeeded(expectedNodeType, parentExpression, expression);
         }
         return this;
     }

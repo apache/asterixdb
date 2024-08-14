@@ -65,9 +65,11 @@ public final class FunctionManager implements IFunctionManager {
         Pair<FunctionIdentifier, Integer> key = new Pair<>(fid, fid.getArity());
         IFunctionDescriptorFactory factory = functions.get(key);
         if (factory == null) {
-            String msg = "Inappropriate use of function '" + fid.getName() + "'";
+            String msg;
             if (fid.equals(BuiltinFunctions.META)) {
-                msg = msg + ". For example, after GROUP BY";
+                msg = "No source collection found for META(): collection not supported or cannot reference collection";
+            } else {
+                msg = "Could not resolve function '" + fid.getName() + "'";
             }
             throw AsterixException.create(ErrorCode.COMPILATION_ERROR, src, msg);
         }

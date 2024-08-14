@@ -18,18 +18,21 @@
  */
 package org.apache.asterix.optimizer.rules.pushdown.schema;
 
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 
 abstract class AbstractExpectedSchemaNode implements IExpectedSchemaNode {
+    protected final AbstractFunctionCallExpression parentExpression;
+    protected final ILogicalExpression expression;
     private AbstractComplexExpectedSchemaNode parent;
-    private final SourceLocation sourceLocation;
-    private final String functionName;
 
-    AbstractExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent, SourceLocation sourceLocation,
-            String functionName) {
+    AbstractExpectedSchemaNode(AbstractComplexExpectedSchemaNode parent,
+            AbstractFunctionCallExpression parentExpression, ILogicalExpression expression) {
+        this.parentExpression = parentExpression;
+        this.expression = expression;
         this.parent = parent;
-        this.sourceLocation = sourceLocation;
-        this.functionName = functionName;
     }
 
     @Override
@@ -39,12 +42,25 @@ abstract class AbstractExpectedSchemaNode implements IExpectedSchemaNode {
 
     @Override
     public final SourceLocation getSourceLocation() {
-        return sourceLocation;
+        return expression.getSourceLocation();
     }
 
     @Override
     public final String getFunctionName() {
-        return functionName;
+        if (expression.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+            return ((AbstractFunctionCallExpression) expression).getFunctionIdentifier().getName();
+        }
+        return null;
+    }
+
+    @Override
+    public AbstractFunctionCallExpression getParentExpression() {
+        return parentExpression;
+    }
+
+    @Override
+    public ILogicalExpression getExpression() {
+        return expression;
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.asterix.column.bytes.decoder.ParquetPlainFixedLengthValuesReader;
 import org.apache.asterix.column.bytes.stream.in.AbstractBytesInputStream;
 import org.apache.asterix.dataflow.data.nontagged.comparators.AUUIDPartialBinaryComparatorFactory;
+import org.apache.asterix.om.base.AUUID;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
@@ -32,7 +33,8 @@ public final class UUIDValueReader extends AbstractValueReader {
     private IValueReference nextValue;
 
     public UUIDValueReader() {
-        ArrayBackedValueStorage storage = new ArrayBackedValueStorage(16);
+        ArrayBackedValueStorage storage = new ArrayBackedValueStorage(AUUID.UUID_BYTES);
+        storage.setSize(AUUID.UUID_BYTES);
         uuidReader = new ParquetPlainFixedLengthValuesReader(storage);
     }
 

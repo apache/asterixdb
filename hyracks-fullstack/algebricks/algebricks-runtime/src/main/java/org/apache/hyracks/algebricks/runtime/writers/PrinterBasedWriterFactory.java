@@ -61,11 +61,10 @@ public class PrinterBasedWriterFactory implements IAWriterFactory {
                             + tAccess.getFieldStartOffset(tIdx, fields[i]);
                     int fldLen = tAccess.getFieldLength(tIdx, fields[i]);
                     if (i > 0) {
-                        printStream.print("; ");
+                        printStream.print(';');
                     }
                     printers[i].print(tAccess.getBuffer().array(), fldStart, fldLen, printStream);
                 }
-                printStream.println();
             }
         };
     }

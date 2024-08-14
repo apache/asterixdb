@@ -1,0 +1,28 @@
+distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+    -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        project ([$$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          assign [$$19] <- [{"payload": $$20.getField("payload")}] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+          -- ASSIGN  |PARTITIONED|
+            limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+            -- STREAM_LIMIT  |PARTITIONED|
+              project ([$$20]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                assign [$$20] <- [$$o.getField("v")] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                -- ASSIGN  |PARTITIONED|
+                  project ([$$o]) [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      data-scan []<-[$$21, $$o] <- test.ColumnDataset condition (eq($$o.getField("v").getField("type"), "WeMo")) limit 10 project ({v:{payload:any,type:any}}) filter on: eq($$o.getField("v").getField("type"), "WeMo") range-filter on: eq($$o.getField("v").getField("type"), "WeMo") [cardinality: 0.0, op-cost: 2.0, total-cost: 2.0]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
