@@ -752,14 +752,6 @@
     </profile>
     <profile>
       <id>azurite-tests</id>
-      <activation>
-        <os>
-          <family>unix</family>
-        </os>
-        <property>
-          <name>!skipTests</name>
-        </property>
-      </activation>
       <properties>
         <azurite.npm.install.stage>process-classes</azurite.npm.install.stage>
         <azurite.install.stage>generate-test-resources</azurite.install.stage>
