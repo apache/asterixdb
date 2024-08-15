@@ -96,6 +96,9 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
                     }
                 }
                 for (int i = 0; i < numberOfitems; i++) {
+                    if (isNullMissingTagWritten(typeTag)) {
+                        in.readByte();
+                    }
                     IAObject v = (IAObject) currentDeserializer.deserialize(in);
                     items.add(v);
                 }
@@ -105,6 +108,12 @@ public class AOrderedListSerializerDeserializer implements ISerializerDeserializ
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
+    }
+
+    private boolean isNullMissingTagWritten(ATypeTag serializedTypeTag) {
+        ATypeTag itemTypeTag = itemType.getTypeTag();
+        boolean toWriteTag = itemTypeTag == ATypeTag.NULL && serializedTypeTag == ATypeTag.NULL;
+        return toWriteTag || (itemTypeTag == ATypeTag.MISSING && serializedTypeTag == ATypeTag.MISSING);
     }
 
     @SuppressWarnings("unchecked")
