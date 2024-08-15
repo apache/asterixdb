@@ -87,20 +87,17 @@ public class LSMColumnBTree extends LSMBTree {
     @Override
     public synchronized void activate() throws HyracksDataException {
         super.activate();
-        postLoadingDiskComponents();
     }
 
     @Override
-    protected void postLoadingDiskComponents() throws HyracksDataException {
+    protected void completeActivation() throws HyracksDataException {
         if (diskComponents.isEmpty()) {
             columnMetadata = columnManager.activate();
         } else {
             IComponentMetadata componentMetadata = diskComponents.get(0).getMetadata();
             columnMetadata = columnManager.activate(ColumnUtil.getColumnMetadataCopy(componentMetadata));
         }
-
         diskCacheManager.activate(columnMetadata.getNumberOfColumns(), diskComponents, diskBufferCache);
-        super.postLoadingDiskComponents();
     }
 
     @Override
