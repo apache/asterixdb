@@ -16599,6 +16599,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="large-schema">
+        <output-dir compare="Text">large-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="validation">
         <output-dir compare="Text">validation</output-dir>
         <expected-error>ASX1191: Merge policy 'correlated-prefix' is not supported with columnar storage format</expected-error>

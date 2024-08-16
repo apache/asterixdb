@@ -23,36 +23,24 @@ import java.nio.ByteBuffer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.util.HyracksConstants;
 import org.apache.hyracks.data.std.api.IValueReference;
-import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
-import org.apache.hyracks.storage.am.common.freepage.MutableArrayValueReference;
-import org.apache.hyracks.storage.am.lsm.btree.column.api.IColumnManager;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupleProjector;
-import org.apache.hyracks.storage.am.lsm.btree.column.impls.lsm.LSMColumnBTree;
 import org.apache.hyracks.storage.am.lsm.common.api.IComponentMetadata;
 import org.apache.hyracks.storage.common.IIndexAccessParameters;
 
 public class ColumnUtil {
-    /**
-     * Used to get the columns info from {@link IComponentMetadata#get(IValueReference, ArrayBackedValueStorage)}
-     *
-     * @see LSMColumnBTree#activate()
-     * @see IColumnManager#activate(IValueReference)
-     */
-    private static final MutableArrayValueReference COLUMNS_METADATA_KEY =
-            new MutableArrayValueReference("COLUMNS_METADATA".getBytes());
+    // Currently, ColumnMetadataReaderWriter is thread safe as the snappy compressor/decompressor is thread safe
+    private static final ColumnMetadataReaderWriter READER_WRITER = new ColumnMetadataReaderWriter();
 
     private ColumnUtil() {
     }
 
     public static IValueReference getColumnMetadataCopy(IComponentMetadata src) throws HyracksDataException {
-        ArrayBackedValueStorage storage = new ArrayBackedValueStorage();
-        src.get(COLUMNS_METADATA_KEY, storage);
-        return storage;
+        return READER_WRITER.readMetadata(src);
     }
 
     public static void putColumnsMetadataValue(IValueReference columnsMetadataValue, IComponentMetadata dest)
             throws HyracksDataException {
-        dest.put(COLUMNS_METADATA_KEY, columnsMetadataValue);
+        READER_WRITER.writeMetadata(columnsMetadataValue, dest);
     }
 
     public static int getColumnPageIndex(int columnOffset, int pageSize) {

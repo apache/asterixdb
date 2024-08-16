@@ -29,15 +29,24 @@ import org.xerial.snappy.Snappy;
  * Built-in Snappy compressor/decompressor wrapper
  */
 public class SnappyCompressorDecompressor implements ICompressorDecompressor {
-    protected static final SnappyCompressorDecompressor INSTANCE = new SnappyCompressorDecompressor();
+    public static final SnappyCompressorDecompressor INSTANCE = new SnappyCompressorDecompressor();
 
     private SnappyCompressorDecompressor() {
-
     }
 
     @Override
     public int computeCompressedBufferSize(int uncompressedBufferSize) {
         return Snappy.maxCompressedLength(uncompressedBufferSize);
+    }
+
+    @Override
+    public int compress(byte[] src, int srcOffset, int srcLen, byte[] dest, int destOffset)
+            throws HyracksDataException {
+        try {
+            return Snappy.compress(src, srcOffset, srcLen, dest, destOffset);
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
     }
 
     @Override
@@ -47,6 +56,16 @@ public class SnappyCompressorDecompressor implements ICompressorDecompressor {
                     cBuffer.array(), cBuffer.position());
             cBuffer.limit(cBuffer.position() + cLength);
             return cBuffer;
+        } catch (IOException e) {
+            throw HyracksDataException.create(e);
+        }
+    }
+
+    @Override
+    public int uncompress(byte[] src, int srcOffset, int srcLen, byte[] dest, int destOffset)
+            throws HyracksDataException {
+        try {
+            return Snappy.uncompress(src, srcOffset, srcLen, dest, destOffset);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

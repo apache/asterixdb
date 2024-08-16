@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.storage.am.common.freepage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IPointable;
@@ -40,108 +43,36 @@ import org.apache.hyracks.storage.common.file.BufferedFileHandle;
 
 public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager {
     private final IBufferCache bufferCache;
+    private final ITreeIndexMetadataFrameFactory frameFactory;
+    private final List<ICachedPage> metadataPages;
     private int metadataPage = IBufferCache.INVALID_PAGEID;
     private int fileId = -1;
-    private final ITreeIndexMetadataFrameFactory frameFactory;
-    private ICachedPage confiscatedPage;
+    private ICachedPage currentPage;
+    private ICachedPage firstPage;
     private boolean ready = false;
 
     public AppendOnlyLinkedMetadataPageManager(IBufferCache bufferCache, ITreeIndexMetadataFrameFactory frameFactory) {
         this.bufferCache = bufferCache;
         this.frameFactory = frameFactory;
+        metadataPages = new ArrayList<>();
     }
 
     @Override
-    public void releasePage(ITreeIndexMetadataFrame metaFrame, int freePageNum) throws HyracksDataException {
-        ICachedPage metaPage = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()));
-        metaPage.acquireWriteLatch();
-        try {
-            metaFrame.setPage(metaPage);
-            if (metaFrame.getSpace() > Integer.BYTES) {
-                metaFrame.addFreePage(freePageNum);
-            } else {
-                int newPageNum = metaFrame.getFreePage();
-                if (newPageNum < 0) {
-                    throw new HyracksDataException(
-                            "Inconsistent Meta Page State. It has no space, but it also has no entries.");
-                }
-                ICachedPage newNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, newPageNum));
-                newNode.acquireWriteLatch();
-                try {
-                    int metaMaxPage = metaFrame.getMaxPage();
-                    System.arraycopy(metaPage.getBuffer().array(), 0, newNode.getBuffer().array(), 0,
-                            metaPage.getBuffer().capacity());
-                    metaFrame.init();
-                    metaFrame.setNextMetadataPage(newPageNum);
-                    metaFrame.setMaxPage(metaMaxPage);
-                    metaFrame.addFreePage(freePageNum);
-                } finally {
-                    newNode.releaseWriteLatch(true);
-                    bufferCache.unpin(newNode);
-                }
-            }
-        } finally {
-            metaPage.releaseWriteLatch(true);
-            bufferCache.unpin(metaPage);
-        }
+    public void releasePage(ITreeIndexMetadataFrame metaFrame, int freePageNum) {
+        throw new IllegalAccessError("On-disk pages must be immutable");
     }
 
     @Override
-    public void releaseBlock(ITreeIndexMetadataFrame metaFrame, int startingPage, int count)
-            throws HyracksDataException {
-        for (int i = 0; i < count; i++) {
-            releasePage(metaFrame, startingPage + i);
-        }
+    public void releaseBlock(ITreeIndexMetadataFrame metaFrame, int startingPage, int count) {
+        throw new IllegalAccessError("On-disk pages must be immutable");
     }
 
     @Override
     public int takePage(ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
-        confiscatedPage.acquireWriteLatch();
-        int freePage = IBufferCache.INVALID_PAGEID;
-        try {
-            metaFrame.setPage(confiscatedPage);
-            freePage = metaFrame.getFreePage();
-            if (freePage < 0) { // no free page entry on this page
-                int nextPage = metaFrame.getNextMetadataPage();
-                if (nextPage > 0) { // sibling may have free pages
-                    ICachedPage nextNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, nextPage));
-                    nextNode.acquireWriteLatch();
-                    // we copy over the free space entries of nextpage into the
-                    // first meta page (metaDataPage)
-                    // we need to link the first page properly to the next page
-                    // of nextpage
-                    try {
-                        // remember entries that remain unchanged
-                        int maxPage = metaFrame.getMaxPage();
-                        // copy entire page (including sibling pointer, free
-                        // page entries, and all other info)
-                        // after this copy nextPage is considered a free page
-                        System.arraycopy(nextNode.getBuffer().array(), 0, confiscatedPage.getBuffer().array(), 0,
-                                nextNode.getBuffer().capacity());
-                        // reset unchanged entry
-                        metaFrame.setMaxPage(maxPage);
-                        freePage = metaFrame.getFreePage();
-                        // sibling also has no free pages, this "should" not
-                        // happen, but we deal with it anyway just to be safe
-                        if (freePage < 0) {
-                            freePage = nextPage;
-                        } else {
-                            metaFrame.addFreePage(nextPage);
-                        }
-                    } finally {
-                        nextNode.releaseWriteLatch(true);
-                        bufferCache.unpin(nextNode);
-                    }
-                } else {
-                    freePage = metaFrame.getMaxPage();
-                    freePage++;
-                    metaFrame.setMaxPage(freePage);
-                }
-            }
-        } finally {
-            confiscatedPage.releaseWriteLatch(false);
-        }
-        return freePage;
+        metaFrame.setPage(firstPage);
+        int maxPage = metaFrame.getMaxPage() + 1;
+        metaFrame.setMaxPage(maxPage);
+        return maxPage;
     }
 
     @Override
@@ -154,23 +85,22 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     @Override
     public int getMaxPageId(ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
         ICachedPage metaNode;
-        if (confiscatedPage == null) {
+        if (firstPage == null) {
             int mdPage = getMetadataPageId();
             if (mdPage < 0) {
                 return IBufferCache.INVALID_PAGEID;
             }
             metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, mdPage));
         } else {
-            metaNode = confiscatedPage;
+            metaNode = firstPage;
         }
-        metaNode.acquireReadLatch();
+
         int maxPage = -1;
         try {
             metaFrame.setPage(metaNode);
             maxPage = metaFrame.getMaxPage();
         } finally {
-            metaNode.releaseReadLatch();
-            if (confiscatedPage == null) {
+            if (firstPage == null) {
                 bufferCache.unpin(metaNode);
             }
         }
@@ -195,48 +125,31 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
         int pages = bufferCache.getNumPagesOfFile(fileId);
         //if there are no pages in the file yet, we're just initializing
         if (pages == 0) {
-            if (confiscatedPage != null) {
+            if (firstPage != null) {
                 throw new HyracksDataException("Metadata Page Manager is already initialized");
             }
             ITreeIndexMetadataFrame metaFrame = createMetadataFrame();
-            ICachedPage metaNode = bufferCache.confiscatePage(BufferCache.INVALID_DPID);
-            try {
-                metaFrame.setPage(metaNode);
-                metaFrame.init();
-                metaFrame.setMaxPage(-1);
-            } finally {
-                confiscatedPage = metaNode;
-            }
+            // First to confiscate
+            confiscateNext(metaFrame);
+            firstPage = currentPage;
+            metaFrame.setMaxPage(-1);
         }
     }
 
     @Override
     public void close(IPageWriteFailureCallback failureCallback) throws HyracksDataException {
         if (ready) {
-            IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback,
-                    DefaultBufferCacheWriteContext.INSTANCE);
-            ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
-            confiscatedPage.acquireWriteLatch();
-            try {
-                metaFrame.setPage(confiscatedPage);
-                metaFrame.setValid(true);
-            } finally {
-                confiscatedPage.releaseWriteLatch(false);
-            }
-            int finalMetaPage = getMaxPageId(metaFrame) + 1;
-            confiscatedPage.setDiskPageId(BufferedFileHandle.getDiskPageId(fileId, finalMetaPage));
-            final ICompressedPageWriter compressedPageWriter = bufferCache.getCompressedPageWriter(fileId);
-            compressedPageWriter.prepareWrite(confiscatedPage);
-            // WARNING: flushing the metadata page should be done after releasing the write latch; otherwise, the page
-            // won't be flushed to disk because it won't be dirty until the write latch has been released.
-            pageWriter.write(confiscatedPage);
-            compressedPageWriter.endWriting();
+            persist(failureCallback);
             metadataPage = getMetadataPageId();
             ready = false;
-        } else if (confiscatedPage != null) {
-            bufferCache.returnPage(confiscatedPage, false);
+        } else if (!metadataPages.isEmpty()) {
+            for (ICachedPage page : metadataPages) {
+                bufferCache.returnPage(page, false);
+            }
         }
-        confiscatedPage = null;
+        currentPage = null;
+        firstPage = null;
+        metadataPages.clear();
     }
 
     /**
@@ -270,32 +183,26 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     @Override
     public void setRootPageId(int rootPage) throws HyracksDataException {
         ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
-        confiscatedPage.acquireWriteLatch();
-        try {
-            metaFrame.setPage(confiscatedPage);
-            metaFrame.setRootPageId(rootPage);
-        } finally {
-            confiscatedPage.releaseWriteLatch(false);
-        }
+        metaFrame.setPage(firstPage);
+        metaFrame.setRootPageId(rootPage);
         ready = true;
     }
 
     @Override
     public int getRootPageId() throws HyracksDataException {
         ICachedPage metaNode;
-        if (confiscatedPage == null) {
+        if (firstPage == null) {
             metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()));
         } else {
-            metaNode = confiscatedPage;
+            metaNode = firstPage;
         }
         ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
-        metaNode.acquireReadLatch();
+
         try {
             metaFrame.setPage(metaNode);
             return metaFrame.getRootPageId();
         } finally {
-            metaNode.releaseReadLatch();
-            if (confiscatedPage == null) {
+            if (firstPage == null) {
                 bufferCache.unpin(metaNode);
             }
         }
@@ -309,58 +216,122 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
     @Override
     public void put(ITreeIndexMetadataFrame frame, IValueReference key, IValueReference value)
             throws HyracksDataException {
-        if (confiscatedPage == null) {
+        if (currentPage == null) {
             throw HyracksDataException.create(ErrorCode.ILLEGAL_WRITE_AFTER_FLUSH_ATTEMPT);
         }
-        confiscatedPage.acquireWriteLatch();
-        try {
-            frame.setPage(confiscatedPage);
-            frame.put(key, value);
-        } finally {
-            confiscatedPage.releaseWriteLatch(false);
+
+        frame.setPage(currentPage);
+
+        if (frame.getSpace() < key.getLength() + value.getLength() + frame.getKeyValueStorageOverhead()) {
+            // If there's no space, confiscate an extra page
+            confiscateNext(frame);
+        }
+
+        frame.put(key, value);
+        if (frame.getSpace() == 0) {
+            /*
+             * Most likely a user is writing chunks, confiscate a new page so the next call to
+             * getFreeSpace() will not return 0.
+             */
+            confiscateNext(frame);
         }
     }
 
-    private ICachedPage pinPage() throws HyracksDataException {
-        return confiscatedPage == null ? bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()))
-                : confiscatedPage;
+    @Override
+    public boolean get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value)
+            throws HyracksDataException {
+        int nextPage = getNextPageId(frame, -1);
+        while (nextPage != -1) {
+            ICachedPage page = pinPage(nextPage);
+            try {
+                frame.setPage(page);
+                if (frame.get(key, value)) {
+                    return true;
+                }
+                nextPage = getNextPageId(frame, nextPage);
+            } finally {
+                unpinPage(page);
+            }
+        }
+
+        // To preserve the old behavior
+        value.set(null, 0, 0);
+        return false;
+    }
+
+    @Override
+    public int getPageSize() {
+        return bufferCache.getPageSize();
+    }
+
+    @Override
+    public int getFreeSpace() throws HyracksDataException {
+        if (currentPage == null) {
+            throw HyracksDataException.create(ErrorCode.ILLEGAL_WRITE_AFTER_FLUSH_ATTEMPT);
+        }
+        ITreeIndexMetadataFrame frame = createMetadataFrame();
+        frame.setPage(currentPage);
+        return frame.getSpace() - frame.getKeyValueStorageOverhead();
+    }
+
+    private int getNextPageId(ITreeIndexMetadataFrame frame, int previousPageIdx) throws HyracksDataException {
+        if (metadataPages.isEmpty()) {
+            // Read-only (immutable)
+            return previousPageIdx == -1 ? getMetadataPageId() : frame.getNextMetadataPage();
+        }
+
+        // Write (still mutable)
+        int nextPageIdx = previousPageIdx + 1;
+        return nextPageIdx < metadataPages.size() ? nextPageIdx : -1;
+    }
+
+    private ICachedPage pinPage(int pageId) throws HyracksDataException {
+        if (!metadataPages.isEmpty()) {
+            return metadataPages.get(pageId);
+        }
+
+        return bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, pageId));
     }
 
     private void unpinPage(ICachedPage page) throws HyracksDataException {
-        if (confiscatedPage == null) {
+        if (metadataPages.isEmpty()) {
             bufferCache.unpin(page);
         }
     }
 
-    @Override
-    public void get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value) throws HyracksDataException {
-        ICachedPage page = pinPage();
-        page.acquireReadLatch();
+    private void confiscateNext(ITreeIndexMetadataFrame metaFrame) throws HyracksDataException {
+        ICachedPage metaNode = bufferCache.confiscatePage(BufferCache.INVALID_DPID);
         try {
-            frame.setPage(page);
-            frame.get(key, value);
+            metaFrame.setPage(metaNode);
+            metaFrame.init();
         } finally {
-            page.releaseReadLatch();
-            unpinPage(page);
+            metadataPages.add(metaNode);
+            currentPage = metaNode;
         }
     }
 
-    @Override
-    public long getFileOffset(ITreeIndexMetadataFrame frame, IValueReference key) throws HyracksDataException {
-        int pageId = getMetadataPageId();
-        if (pageId != IBufferCache.INVALID_PAGEID) {
-            ICachedPage page = pinPage();
-            page.acquireReadLatch();
-            try {
-                frame.setPage(page);
-                int inPageOffset = frame.getOffset(key);
-                return inPageOffset >= 0 ? ((long) pageId * bufferCache.getPageSizeWithHeader()) + frame.getOffset(key)
-                        + IBufferCache.RESERVED_HEADER_BYTES : -1L;
-            } finally {
-                page.releaseReadLatch();
-                unpinPage(page);
-            }
+    private void persist(IPageWriteFailureCallback failureCallback) throws HyracksDataException {
+        IFIFOPageWriter pageWriter = bufferCache.createFIFOWriter(NoOpPageWriteCallback.INSTANCE, failureCallback,
+                DefaultBufferCacheWriteContext.INSTANCE);
+        ITreeIndexMetadataFrame metaFrame = frameFactory.createFrame();
+        // Last page will have nextPage as -1
+        int nextPage = -1;
+        int pageId = getMaxPageId(metaFrame) + 1;
+        final ICompressedPageWriter compressedPageWriter = bufferCache.getCompressedPageWriter(fileId);
+
+        // Write pages in reverse order (first confiscated page will be the last one to be written)
+        for (int i = metadataPages.size() - 1; i >= 0; i--) {
+            ICachedPage page = metadataPages.get(i);
+            metaFrame.setPage(page);
+            metaFrame.setNextMetadataPage(nextPage);
+            // The validity bit matters in the last written page only. No harm for setting this flag for all pages.
+            metaFrame.setValid(true);
+
+            page.setDiskPageId(BufferedFileHandle.getDiskPageId(fileId, pageId));
+            compressedPageWriter.prepareWrite(page);
+            pageWriter.write(page);
+            nextPage = pageId++;
         }
-        return -1L;
+        compressedPageWriter.endWriting();
     }
 }

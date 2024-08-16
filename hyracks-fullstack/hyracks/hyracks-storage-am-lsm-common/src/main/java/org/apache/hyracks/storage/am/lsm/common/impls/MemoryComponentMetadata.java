@@ -38,6 +38,16 @@ public class MemoryComponentMetadata implements IComponentMetadata {
     private final List<org.apache.commons.lang3.tuple.Pair<IValueReference, ArrayBackedValueStorage>> store =
             new ArrayList<>();
 
+    @Override
+    public int getPageSize() {
+        return -1;
+    }
+
+    @Override
+    public int getAvailableSpace() throws HyracksDataException {
+        return Integer.MAX_VALUE;
+    }
+
     /**
      * Note: for memory metadata, it is expected that the key will be constant
      *
@@ -64,14 +74,18 @@ public class MemoryComponentMetadata implements IComponentMetadata {
      * @throws HyracksDataException
      */
     @Override
-    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
+    public boolean get(IValueReference key, ArrayBackedValueStorage storage) throws HyracksDataException {
         lock.readLock().lock();
         try {
-            value.reset();
+            storage.reset();
             ArrayBackedValueStorage stored = get(key);
             if (stored != null) {
-                value.append(stored);
+                storage.append(stored);
+                return true;
             }
+
+            // Key does not exist
+            return false;
         } finally {
             lock.readLock().unlock();
         }

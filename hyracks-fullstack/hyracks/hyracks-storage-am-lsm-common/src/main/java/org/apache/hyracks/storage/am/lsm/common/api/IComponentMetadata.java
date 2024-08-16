@@ -23,23 +23,31 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.data.std.util.ArrayBackedValueStorage;
 
 public interface IComponentMetadata {
+    /**
+     * @return page size
+     */
+    int getPageSize();
+
+    /**
+     * @return the available space to store a value
+     */
+    int getAvailableSpace() throws HyracksDataException;
 
     /**
      * Put the key value pair in this metadata, overwrite if it exists
      *
      * @param key
      * @param value
-     * @throws HyracksDataException
-     *             if the component is immutable
+     * @throws HyracksDataException if the component is immutable
      */
     void put(IValueReference key, IValueReference value) throws HyracksDataException;
 
     /**
      * Get the value of the key from the metadata, 0 length value if not exists
      *
-     * @param key
-     * @param value
-     * @throws HyracksDataException
+     * @param key     of the value
+     * @param storage storage used to store the retrieved value
+     * @return true if the key exists, false otherwise
      */
-    void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException;
+    boolean get(IValueReference key, ArrayBackedValueStorage storage) throws HyracksDataException;
 }

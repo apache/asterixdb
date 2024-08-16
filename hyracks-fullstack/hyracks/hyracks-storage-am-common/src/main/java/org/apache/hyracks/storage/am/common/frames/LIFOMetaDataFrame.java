@@ -36,7 +36,6 @@ import org.apache.hyracks.storage.common.buffercache.ICachedPage;
  * ....
  * ....
  * [free page 5][free page 4][free page 3][free page 2][free page 1]
- *
  */
 public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
 
@@ -167,17 +166,22 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
     }
 
     @Override
-    public void get(IValueReference key, IPointable value) {
+    public int getKeyValueStorageOverhead() {
+        return Integer.BYTES * 2;
+    }
+
+    @Override
+    public boolean get(IValueReference key, IPointable value) {
         int tupleCount = getTupleCount();
         int tupleStart = getTupleStart(0);
         for (int i = 0; i < tupleCount; i++) {
             if (isInner(key, tupleStart)) {
                 get(tupleStart + key.getLength() + Integer.BYTES, value);
-                return;
+                return true;
             }
             tupleStart = getNextTupleStart(tupleStart);
         }
-        value.set(null, 0, 0);
+        return false;
     }
 
     private int find(IValueReference key) {
@@ -197,7 +201,7 @@ public class LIFOMetaDataFrame implements ITreeIndexMetadataFrame {
         value.set(buf.array(), offset + Integer.BYTES, valueLength);
     }
 
-    private static final int compare(byte[] b1, int s1, byte[] b2, int s2, int l) {
+    private static int compare(byte[] b1, int s1, byte[] b2, int s2, int l) {
         for (int i = 0; i < l; i++) {
             if (b1[s1 + i] != b2[s2 + i]) {
                 return b1[s1 + i] - b2[s2 + i];
