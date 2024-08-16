@@ -118,9 +118,7 @@ public class Stats {
             // Since there is a left and right dataset here, expecting only two variables.
             return 1.0;
         }
-        if (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ))) {
-            return 0.5; // we will assume half; rest of the code assumes EQ joins
-        }
+
         int idx1, idx2;
         if (joinEnum.varLeafInputIds.containsKey(exprUsedVars.get(0))) {
             idx1 = joinEnum.varLeafInputIds.get(exprUsedVars.get(0));
@@ -168,6 +166,9 @@ public class Stats {
         } else {
             ILogicalOperator leafInput;
             LogicalVariable var;
+            if (!(joinExpr.getFunctionIdentifier().equals(AlgebricksBuiltinFunctions.EQ))) {
+                return 0.5; // we will assume half; rest of the code assumes EQ joins
+            }
             // choose the smaller side sample; better results this way for sure!
             if (card1 < card2) {
                 leafInput = joinEnum.leafInputs.get(idx1 - 1);
