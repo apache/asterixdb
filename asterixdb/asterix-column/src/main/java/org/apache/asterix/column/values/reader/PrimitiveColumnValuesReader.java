@@ -100,7 +100,7 @@ public final class PrimitiveColumnValuesReader extends AbstractColumnValuesReade
             throw e;
         }
 
-        writer.writeLevel(level);
+        writeLevel(writer);
         if (primaryKey || isValue()) {
             try {
                 writer.writeValue(this);

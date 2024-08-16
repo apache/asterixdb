@@ -99,15 +99,16 @@ public final class RepeatedPrimitiveColumnValuesReader extends AbstractColumnVal
 
         if (isRepeatedValue()) {
             while (!isLastDelimiter()) {
-                writer.writeLevel(level);
+                writeLevel(writer);
                 if (isValue()) {
                     writer.writeValue(this);
                 }
                 doNextAndCheck();
             }
         }
+
         //Add last delimiter, or NULL/MISSING
-        writer.writeLevel(level);
+        writeLevel(writer);
     }
 
     @Override

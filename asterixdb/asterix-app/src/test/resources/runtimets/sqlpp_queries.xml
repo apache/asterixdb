@@ -16369,6 +16369,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/007">
+        <output-dir compare="Text">missing-null-values/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/008">
+        <output-dir compare="Text">missing-null-values/008</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="empty-array/001">
         <output-dir compare="Text">empty-array/001</output-dir>
       </compilation-unit>
