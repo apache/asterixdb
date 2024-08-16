@@ -29,6 +29,7 @@ public class JoinCondition {
     protected boolean outerJoin;
     private boolean derived = false;
     protected boolean partOfComposite = false;
+    protected boolean deleted = false;
     protected int numberOfVars = 0; // how many variables
     protected int componentNumber = 0; // for identifying if join graph is connected
     protected int datasetBits;

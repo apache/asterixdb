@@ -446,7 +446,10 @@ public class JoinNode {
         if (this.applicableJoinConditions.size() >= 3) {
             redundantSel = removeRedundantPred(this.applicableJoinConditions);
         }
-
+        // mark all conditions back to non deleted state
+        for (JoinCondition jc : joinConditions) {
+            jc.deleted = false;
+        }
         // By dividing by redundantSel, we are undoing the earlier multiplication of all the selectivities.
         return joinCard / redundantSel;
     }
@@ -456,7 +459,7 @@ public class JoinNode {
         if (jc1.comparisonType == JoinCondition.comparisonOp.OP_EQ
                 && jc2.comparisonType == JoinCondition.comparisonOp.OP_EQ
                 && jc3.comparisonType == JoinCondition.comparisonOp.OP_EQ) {
-            sel = findRedundantSel(jc1.selectivity, jc2.selectivity, jc3.selectivity);
+            sel = findRedundantSel(jc1, jc2, jc3);
         } else {
             // at least one of the predicates in not an equality predicate
             //this can get messy here, as 1, or 2 or all 3 can be non equality
@@ -472,6 +475,35 @@ public class JoinNode {
         return sel;
     }
 
+    private static double findRedundantSel(JoinCondition jc1, JoinCondition jc2, JoinCondition jc3) {
+        // find middle selectivity
+        if (jc2.selectivity <= jc1.selectivity && jc1.selectivity <= jc3.selectivity) {
+            jc1.deleted = true;
+            return jc1.selectivity;
+        }
+        if (jc3.selectivity <= jc1.selectivity && jc1.selectivity <= jc2.selectivity) {
+            jc1.deleted = true;
+            return jc1.selectivity;
+        }
+        if (jc1.selectivity <= jc2.selectivity && jc2.selectivity <= jc3.selectivity) {
+            jc2.deleted = true;
+            return jc2.selectivity;
+        }
+        if (jc3.selectivity <= jc2.selectivity && jc2.selectivity <= jc1.selectivity) {
+            jc2.deleted = true;
+            return jc2.selectivity;
+        }
+        if (jc1.selectivity <= jc3.selectivity && jc3.selectivity <= jc2.selectivity) {
+            jc3.deleted = true;
+            return jc3.selectivity;
+        }
+        if (jc2.selectivity <= jc3.selectivity && jc3.selectivity <= jc1.selectivity) {
+            jc3.deleted = true;
+            return jc3.selectivity;
+        }
+        return 1.0; // keep compiler happy
+    }
+
     // if a redundant edge is found, we need to eliminate one of the edges.
     // If two triangles share an edge, removing the common edge will suffice
     // Each edge has two vertices. So we can only handle predicate with exactly two tables such as R.a = S.a
@@ -485,21 +517,21 @@ public class JoinNode {
         int[] verticesCopy = new int[6];
         for (int i = 0; i <= applicablePredicatesInCurrentJn.size() - 3; i++) {
             jc1 = joinConditions.get(applicablePredicatesInCurrentJn.get(i));
-            if (jc1.partOfComposite) {
+            if (jc1.partOfComposite || jc1.deleted) {
                 continue; // must ignore these or the same triangles will be found more than once.
             }
             vertices[0] = jc1.leftSideBits;
             vertices[1] = jc1.rightSideBits;
             for (int j = i + 1; j <= applicablePredicatesInCurrentJn.size() - 2; j++) {
                 jc2 = joinConditions.get(applicablePredicatesInCurrentJn.get(j));
-                if (jc2.partOfComposite) {
+                if (jc2.partOfComposite || jc2.deleted) {
                     continue;
                 }
                 vertices[2] = jc2.leftSideBits;
                 vertices[3] = jc2.rightSideBits;
                 for (int k = j + 1; k <= applicablePredicatesInCurrentJn.size() - 1; k++) {
                     jc3 = joinConditions.get(applicablePredicatesInCurrentJn.get(k));
-                    if (jc3.partOfComposite) {
+                    if (jc3.partOfComposite || jc3.deleted) {
                         continue;
                     }
                     vertices[4] = jc3.leftSideBits;
@@ -510,22 +542,14 @@ public class JoinNode {
                     if (verticesCopy[0] == verticesCopy[1] && verticesCopy[2] == verticesCopy[3]
                             && verticesCopy[4] == verticesCopy[5]) {
                         // redundant edge found
-                        redundantSel *= adjustSelectivities(jc1, jc2, jc3);
+                        if (!(jc1.deleted || jc2.deleted || jc3.deleted)) {
+                            redundantSel *= adjustSelectivities(jc1, jc2, jc3);
+                        }
                     }
                 }
             }
         }
         return redundantSel;
-    }
-
-    private static double findRedundantSel(double sel1, double sel2, double sel3) {
-        double[] sels = new double[3];
-        sels[0] = sel1;
-        sels[1] = sel2;
-        sels[2] = sel3;
-
-        Arrays.sort(sels); // we are sorting to make this deterministic
-        return sels[1]; // the middle one is closest to one of the extremes
     }
 
     protected int addSingleDatasetPlans() {
