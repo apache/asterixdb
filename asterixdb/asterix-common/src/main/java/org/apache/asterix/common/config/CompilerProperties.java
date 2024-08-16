@@ -152,7 +152,11 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_COPY_TO_WRITE_BUFFER_SIZE(
                 getRangedIntegerType(5, Integer.MAX_VALUE),
                 StorageUtil.getIntSizeInBytes(8, StorageUtil.StorageUnit.MEGABYTE),
-                "The COPY TO write buffer size in bytes. (default: 8MB, min: 5MB)");
+                "The COPY TO write buffer size in bytes. (default: 8MB, min: 5MB)"),
+        COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING(
+                getRangedIntegerType(0, Integer.MAX_VALUE),
+                128,
+                "Maximum occurrences of a variable allowed in an expression for inlining");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -233,6 +237,9 @@ public class CompilerProperties extends AbstractProperties {
     public static final String COMPILER_QUERY_PLAN_SHAPE_KEY = Option.COMPILER_QUERYPLANSHAPE.ini();
 
     public static final String COMPILER_COLUMN_FILTER_KEY = Option.COMPILER_COLUMN_FILTER.ini();
+
+    public static final String COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY =
+            Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -368,5 +375,9 @@ public class CompilerProperties extends AbstractProperties {
 
     public int getCopyToWriteBufferSize() {
         return accessor.getInt(Option.COMPILER_COPY_TO_WRITE_BUFFER_SIZE);
+    }
+
+    public int getMaxVariableOccurrencesForInlining() {
+        return accessor.getInt(Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING);
     }
 }

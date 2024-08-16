@@ -1,0 +1,105 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+/*
+ * Description: This test case is to verify the fix for ASTERIXDB-3410
+ */
+
+use test;
+
+SELECT VALUE OBJECT_REMOVE(t, 'categories')
+FROM (
+  SELECT t.*,
+         to_bigint(CONTAINS(categories, "Category 1")) AS `Category 1`
+  FROM (
+    SELECT t.*,
+           to_bigint(CONTAINS(categories, "Category 2")) AS `Category 2`
+    FROM (
+      SELECT t.*,
+             to_bigint(CONTAINS(categories, "Category 3")) AS `Category 3`
+      FROM (
+        SELECT t.*,
+               to_bigint(CONTAINS(categories, "Category 4")) AS `Category 4`
+        FROM (
+          SELECT t.*,
+                 to_bigint(CONTAINS(categories, "Category 5")) AS `Category 5`
+          FROM (
+            SELECT t.*,
+                   to_bigint(CONTAINS(categories, "Category 6")) AS `Category 6`
+            FROM (
+              SELECT t.*,
+                     to_bigint(CONTAINS(categories, "Category 7")) AS `Category 7`
+              FROM (
+                SELECT t.*,
+                       to_bigint(CONTAINS(categories, "Category 8")) AS `Category 8`
+                FROM (
+                  SELECT t.*,
+                         to_bigint(CONTAINS(categories, "Category 9")) AS `Category 9`
+                  FROM (
+                    SELECT t.*,
+                           to_bigint(CONTAINS(categories, "Category 10")) AS `Category 10`
+                    FROM (
+                      SELECT t.*,
+                             to_bigint(CONTAINS(categories, "Category 11")) AS `Category 11`
+                      FROM (
+                        SELECT t.*,
+                               to_bigint(CONTAINS(categories, "Category 12")) AS `Category 12`
+                        FROM (
+                          SELECT t.*,
+                                 to_bigint(CONTAINS(categories, "Category 13")) AS `Category 13`
+                          FROM (
+                            SELECT t.*,
+                                   to_bigint(CONTAINS(categories, "Category 14")) AS `Category 14`
+                            FROM (
+                              SELECT t.*,
+                                     to_bigint(CONTAINS(categories, "Category 15")) AS `Category 15`
+                              FROM (
+                                SELECT t.*,
+                                       to_bigint(CONTAINS(categories, "Category 16")) AS `Category 16`
+                                FROM (
+                                  SELECT t.*,
+                                         to_bigint(CONTAINS(categories, "Category 17")) AS `Category 17`
+                                  FROM (
+                                    SELECT t.*,
+                                           to_bigint(CONTAINS(categories, "Category 18")) AS `Category 18`
+                                    FROM (
+                                      SELECT t.*,
+                                             to_bigint(CONTAINS(categories, "Category 19")) AS `Category 19`
+                                      FROM (
+                                        SELECT t.*,
+                                               to_bigint(CONTAINS(categories, "Category 20")) AS `Category 20`
+                                        FROM (
+                                          SELECT t.*,
+                                                 to_bigint(CONTAINS(categories, "Category 21")) AS `Category 21`
+                                          FROM (
+                                            SELECT t.*,
+                                                   to_bigint(CONTAINS(categories, "Category 22")) AS `Category 22`
+                                            FROM (
+                                              SELECT t.*,
+                                                     to_bigint(CONTAINS(categories, "Category 23")) AS `Category 23`
+                                              FROM (
+                                                SELECT t.*,
+                                                       to_bigint(CONTAINS(categories, "Category 24")) AS `Category 24`
+                                                FROM (
+                                                  SELECT t.*,
+                                                         to_bigint(CONTAINS(categories, "Category 25")) AS `Category 25`
+                                                  FROM (
+                                                    SELECT t.*,
+                                                           to_bigint(CONTAINS(categories, "Category 26")) AS `Category 26`
+                                                    FROM collection1 t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ) AS t ORDER BY itemid;

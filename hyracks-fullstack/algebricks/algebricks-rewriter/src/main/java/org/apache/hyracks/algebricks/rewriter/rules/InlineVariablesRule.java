@@ -19,6 +19,7 @@
 package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -84,6 +85,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
     private final List<LogicalVariable> usedVars = new ArrayList<>();
     // map of variables and the counts of how many times they were used
     private final Map<LogicalVariable, MutableInt> usedVariableCounter = new HashMap<>();
+    private final Map<LogicalVariable, Map<LogicalVariable, Integer>> totalLeafVariableCounter = new HashMap<>();
 
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
@@ -113,6 +115,7 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         inlineVisitor.setContext(context);
         subTreesDone.clear();
         usedVariableCounter.clear();
+        totalLeafVariableCounter.clear();
     }
 
     protected boolean performBottomUpAction(ILogicalOperator op) throws AlgebricksException {
@@ -165,6 +168,20 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         for (Mutable<ILogicalOperator> inputOpRef : op.getInputs()) {
             if (inlineVariables(inputOpRef, context)) {
                 modified = true;
+            }
+        }
+
+        if (op.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+            AssignOperator assignOp = (AssignOperator) op;
+            computeLeafVariablesCount(assignOp);
+            List<LogicalVariable> vars = assignOp.getVariables();
+            for (LogicalVariable variable : vars) {
+                // Don't inline variables that potentially reference a large number of the same leaf variable.
+                Map<LogicalVariable, Integer> varMap = totalLeafVariableCounter.get(variable);
+                if (varMap != null && !varMap.isEmpty() && Collections.max(varMap.values()) > context
+                        .getPhysicalOptimizationConfig().getMaxVariableOccurrencesForInlining()) {
+                    varAssignRhs.remove(variable);
+                }
             }
         }
 
@@ -256,6 +273,28 @@ public class InlineVariablesRule implements IAlgebraicRewriteRule {
         for (LogicalVariable variable : usedVars) {
             MutableInt counter = usedVariableCounter.computeIfAbsent(variable, k -> new MutableInt(0));
             counter.increment();
+        }
+    }
+
+    private void computeLeafVariablesCount(AssignOperator assignOp) {
+        List<LogicalVariable> vars = assignOp.getVariables();
+        List<Mutable<ILogicalExpression>> exprs = assignOp.getExpressions();
+        for (int i = 0; i < vars.size(); i++) {
+            LogicalVariable variable = vars.get(i);
+            ILogicalExpression expr = exprs.get(i).getValue();
+            usedVars.clear();
+            expr.getUsedVariables(usedVars);
+            Map<LogicalVariable, Integer> varMap =
+                    totalLeafVariableCounter.computeIfAbsent(variable, k -> new HashMap<>());
+            for (LogicalVariable usedVar : usedVars) {
+                if (totalLeafVariableCounter.containsKey(usedVar)) {
+                    for (Map.Entry<LogicalVariable, Integer> entry : totalLeafVariableCounter.get(usedVar).entrySet()) {
+                        varMap.put(entry.getKey(), entry.getValue() + varMap.getOrDefault(entry.getKey(), 0));
+                    }
+                } else {
+                    varMap.put(usedVar, 1);
+                }
+            }
         }
     }
 

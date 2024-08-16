@@ -95,6 +95,8 @@ public class OptimizationConfUtil {
                 compilerProperties.getQueryPlanShapeMode());
         boolean columnFilter = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_COLUMN_FILTER_KEY,
                 compilerProperties.isColumnFilter());
+        int maxVariableOccurrencesForInlining =
+                getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -123,6 +125,7 @@ public class OptimizationConfUtil {
         physOptConf.setMinJoinFrames(compilerProperties.getMinJoinMemoryFrames());
         physOptConf.setMinGroupFrames(compilerProperties.getMinGroupMemoryFrames());
         physOptConf.setMinWindowFrames(compilerProperties.getMinWindowMemoryFrames());
+        physOptConf.setMaxVariableOccurrencesForInlining(maxVariableOccurrencesForInlining);
 
         // We should have already validated the parameter names at this point...
         Set<String> filteredParameterNames = new HashSet<>(parameterNames);
@@ -218,5 +221,17 @@ public class OptimizationConfUtil {
             return valueInQuery;
         }
         return defaultValue;
+    }
+
+    private static int getMaxVariableOccurrencesForInlining(CompilerProperties compilerProperties,
+            Map<String, Object> querySpecificConfig, SourceLocation sourceLoc) throws AsterixException {
+        String valueInQuery =
+                (String) querySpecificConfig.get(CompilerProperties.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY);
+        try {
+            return valueInQuery == null ? compilerProperties.getMaxVariableOccurrencesForInlining()
+                    : OptionTypes.NONNEGATIVE_INTEGER.parse(valueInQuery);
+        } catch (IllegalArgumentException e) {
+            throw AsterixException.create(ErrorCode.COMPILATION_ERROR, sourceLoc, e.getMessage());
+        }
     }
 }

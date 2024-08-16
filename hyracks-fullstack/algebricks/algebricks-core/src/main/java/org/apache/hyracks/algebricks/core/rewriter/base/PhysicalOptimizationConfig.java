@@ -62,6 +62,7 @@ public class PhysicalOptimizationConfig {
     private static final String MIN_JOIN_FRAMES = "MIN_JOIN_FRAMES";
     private static final String MIN_GROUP_FRAMES = "MIN_GROUP_FRAMES";
     private static final String MIN_WINDOW_FRAMES = "MIN_WINDOW_FRAMES";
+    private static final String MAX_VARIABLE_OCCURRENCES_INLINING = "MAX_VARIABLE_OCCURRENCES_INLINING";
 
     private final Properties properties = new Properties();
 
@@ -381,6 +382,14 @@ public class PhysicalOptimizationConfig {
 
     public Object getExtensionProperty(String property) {
         return properties.getProperty(property);
+    }
+
+    public int getMaxVariableOccurrencesForInlining() {
+        return getInt(MAX_VARIABLE_OCCURRENCES_INLINING, AlgebricksConfig.MAX_VARIABLE_OCCURRENCES_INLINING_DEFAULT);
+    }
+
+    public void setMaxVariableOccurrencesForInlining(int maxVariableOccurrencesForInlining) {
+        setInt(MAX_VARIABLE_OCCURRENCES_INLINING, maxVariableOccurrencesForInlining);
     }
 
     private void setInt(String property, int value) {

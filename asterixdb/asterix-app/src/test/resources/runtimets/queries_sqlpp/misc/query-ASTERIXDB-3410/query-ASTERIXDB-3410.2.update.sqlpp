@@ -1,0 +1,35 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into collection1
+([
+    {
+       "categories": "Category 1, Category 2, Category 6, Category 9, Category 10, Category 12, Category 13, Category 14, Category 16, Category 17, Category 18, Category 19, Category 20, Category 21, Category 22",
+       "itemid":10,
+       "description":"ABC"
+    },
+    {
+           "categories": "Category 1, Category 3, Category 5, Category 7, Category 8, Category 9, Category 10, Category 19, Category 10, Category 20, Category 21, Category 22, Category 23, Category 31, Category 32",
+           "itemid":12,
+           "description":"XYZ"
+        }
+]);
+
