@@ -71,6 +71,7 @@ import org.apache.asterix.metadata.entities.Library;
 import org.apache.asterix.metadata.entities.Node;
 import org.apache.asterix.metadata.entities.NodeGroup;
 import org.apache.asterix.metadata.feeds.BuiltinFeedPolicies;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.BuiltinTypeMap;
 import org.apache.asterix.om.types.IAType;
@@ -221,13 +222,12 @@ public class MetadataBootstrap {
             IDatasetDetails id = new InternalDatasetDetails(FileStructure.BTREE, PartitioningStrategy.HASH,
                     indexes[i].getPartitioningExpr(), indexes[i].getPartitioningExpr(), null,
                     indexes[i].getPartitioningExprType(), false, null, null);
-            MetadataManager.INSTANCE.addDataset(mdTxnCtx,
-                    new Dataset(indexes[i].getDatabaseName(), indexes[i].getDataverseName(),
-                            indexes[i].getIndexedDatasetName(), indexes[i].getDatabaseName(),
-                            indexes[i].getDataverseName(), indexes[i].getPayloadRecordType().getTypeName(),
-                            indexes[i].getNodeGroupName(), StorageConstants.DEFAULT_COMPACTION_POLICY_NAME,
-                            StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<>(),
-                            DatasetType.INTERNAL, indexes[i].getDatasetId().getId(), MetadataUtil.PENDING_NO_OP));
+            MetadataManager.INSTANCE.addDataset(mdTxnCtx, new Dataset(indexes[i].getDatabaseName(),
+                    indexes[i].getDataverseName(), indexes[i].getIndexedDatasetName(), indexes[i].getDatabaseName(),
+                    indexes[i].getDataverseName(), indexes[i].getPayloadRecordType().getTypeName(),
+                    indexes[i].getNodeGroupName(), StorageConstants.DEFAULT_COMPACTION_POLICY_NAME,
+                    StorageConstants.DEFAULT_COMPACTION_POLICY_PROPERTIES, id, new HashMap<>(), DatasetType.INTERNAL,
+                    indexes[i].getDatasetId().getId(), MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR));
         }
         if (LOGGER.isInfoEnabled()) {
             LOGGER.info("Finished inserting initial datasets.");

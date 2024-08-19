@@ -394,7 +394,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 Creator.DEFAULT_CREATOR);
                         break;
                     case DATASET_DECL:
-                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters);
+                        handleCreateDatasetStatement(metadataProvider, stmt, hcc, requestParameters,
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case CREATE_INDEX:
                         handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -460,7 +461,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case CREATE_VIEW:
-                        handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters);
+                        handleCreateViewStatement(metadataProvider, stmt, stmtRewriter, requestParameters,
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case VIEW_DROP:
                         handleViewDropStatement(metadataProvider, stmt, requestParameters);
@@ -693,7 +695,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
             }
 
-            beforeTxnCommit(mdProvider, creator, databaseName, null, null, EntityDetails.EntityType.DATABASE);
+            beforeTxnCommit(mdProvider, creator, EntityDetails.newDatabase(databaseName));
             MetadataManager.INSTANCE.addDatabase(mdTxnCtx,
                     new Database(databaseName, false, MetadataUtil.PENDING_NO_OP, creator));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -748,7 +750,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             dvName);
                 }
             }
-            beforeTxnCommit(metadataProvider, creator, dbName, dvName, null, EntityDetails.EntityType.DATAVERSE);
+            beforeTxnCommit(metadataProvider, creator, EntityDetails.newDataverse(dbName, dvName));
             MetadataManager.INSTANCE.addDataverse(metadataProvider.getMetadataTxnContext(), new Dataverse(dbName,
                     dvName, stmtCreateDataverse.getFormat(), MetadataUtil.PENDING_NO_OP, creator));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
@@ -797,7 +799,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateDatasetStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters, Creator creator) throws Exception {
         DatasetDecl dd = (DatasetDecl) stmt;
         String datasetName = dd.getName().getValue();
         metadataProvider.validateDatabaseObjectName(dd.getNamespace(), datasetName, stmt.getSourceLocation());
@@ -847,7 +849,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         try {
             doCreateDatasetStatement(metadataProvider, dd, stmtActiveNamespace, datasetName, itemTypeNamespace,
                     itemTypeExpr, itemTypeName, metaItemTypeExpr, metaItemTypeNamespace, metaItemTypeName, hcc,
-                    requestParameters);
+                    requestParameters, creator);
             if (dd.getQuery() != null) {
                 final IResultSet resultSet = requestParameters.getResultSet();
                 final ResultDelivery resultDelivery = requestParameters.getResultProperties().getDelivery();
@@ -869,8 +871,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected Optional<? extends Dataset> doCreateDatasetStatement(MetadataProvider metadataProvider, DatasetDecl dd,
             Namespace namespace, String datasetName, Namespace itemTypeNamespace, TypeExpression itemTypeExpr,
             String itemTypeName, TypeExpression metaItemTypeExpr, Namespace metaItemTypeNamespace,
-            String metaItemTypeName, IHyracksClientConnection hcc, IRequestParameters requestParameters)
-            throws Exception {
+            String metaItemTypeName, IHyracksClientConnection hcc, IRequestParameters requestParameters,
+            Creator creator) throws Exception {
         DataverseName dataverseName = namespace.getDataverseName();
         String databaseName = namespace.getDatabaseName();
 
@@ -1043,7 +1045,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             dataset = (Dataset) createDataset(dd, databaseName, dataverseName, datasetName, itemTypeDatabaseName,
                     itemTypeDataverseName, itemTypeName, metaItemTypeDatabaseName, metaItemTypeDataverseName,
                     metaItemTypeName, dsType, compactionPolicy, compactionPolicyProperties, compressionScheme,
-                    datasetFormatInfo, datasetDetails, ngName);
+                    datasetFormatInfo, datasetDetails, ngName, creator);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
 
             if (itemTypeIsInline) {
@@ -1077,6 +1079,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     datasetName, requestParameters.isForceDropDataset());
             dataset.setPendingOp(MetadataUtil.PENDING_NO_OP);
             MetadataManager.INSTANCE.addDataset(metadataProvider.getMetadataTxnContext(), dataset);
+            beforeTxnCommit(metadataProvider, creator,
+                    EntityDetails.newDataset(databaseName, dataverseName, datasetName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1144,11 +1148,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             String metaItemTypeDatabase, DataverseName metaItemTypeDataverseName, String metaItemTypeName,
             DatasetType dsType, String compactionPolicy, Map<String, String> compactionPolicyProperties,
             String compressionScheme, DatasetFormatInfo datasetFormatInfo, IDatasetDetails datasetDetails,
-            String ngName) throws AlgebricksException {
+            String ngName, Creator creator) throws AlgebricksException {
         return new Dataset(database, dataverseName, datasetName, itemTypeDatabase, itemTypeDataverseName, itemTypeName,
                 metaItemTypeDatabase, metaItemTypeDataverseName, metaItemTypeName, ngName, compactionPolicy,
                 compactionPolicyProperties, datasetDetails, dd.getHints(), dsType, DatasetIdFactory.generateDatasetId(),
-                MetadataUtil.PENDING_ADD_OP, compressionScheme, datasetFormatInfo);
+                MetadataUtil.PENDING_ADD_OP, compressionScheme, datasetFormatInfo, creator);
     }
 
     protected Triple<Namespace, String, Boolean> extractDatasetItemTypeName(Namespace datasetNamespace,
@@ -2758,7 +2762,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateViewStatement(MetadataProvider metadataProvider, Statement stmt,
-            IStatementRewriter stmtRewriter, IRequestParameters requestParameters) throws Exception {
+            IStatementRewriter stmtRewriter, IRequestParameters requestParameters, Creator creator) throws Exception {
         CreateViewStatement cvs = (CreateViewStatement) stmt;
         String viewName = cvs.getViewName();
         metadataProvider.validateDatabaseObjectName(cvs.getNamespace(), viewName, stmt.getSourceLocation());
@@ -2792,7 +2796,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 null, false, null, null, true, DatasetType.VIEW, null, metadataProvider);
         try {
             doCreateView(metadataProvider, cvs, databaseName, dataverseName, viewName, itemTypeDatabaseName,
-                    viewItemTypeDataverseName, viewItemTypeName, stmtRewriter, requestParameters);
+                    viewItemTypeDataverseName, viewItemTypeName, stmtRewriter, requestParameters, creator);
         } finally {
             metadataProvider.getLocks().unlock();
             metadataProvider.setDefaultNamespace(activeNamespace);
@@ -2802,7 +2806,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected CreateResult doCreateView(MetadataProvider metadataProvider, CreateViewStatement cvs, String databaseName,
             DataverseName dataverseName, String viewName, String itemTypeDatabaseName,
             DataverseName itemTypeDataverseName, String itemTypeName, IStatementRewriter stmtRewriter,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         SourceLocation sourceLoc = cvs.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -2968,10 +2972,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ViewDetails viewDetails = new ViewDetails(cvs.getViewBody(), dependencies, cvs.getDefaultNull(),
                     primaryKeyFields, foreignKeys, datetimeFormat, dateFormat, timeFormat);
 
-            Dataset view =
-                    new Dataset(databaseName, dataverseName, viewName, itemTypeDatabaseName, itemTypeDataverseName,
-                            itemTypeName, MetadataConstants.METADATA_NODEGROUP_NAME, "", Collections.emptyMap(),
-                            viewDetails, Collections.emptyMap(), DatasetType.VIEW, 0, MetadataUtil.PENDING_NO_OP);
+            Dataset view = new Dataset(databaseName, dataverseName, viewName, itemTypeDatabaseName,
+                    itemTypeDataverseName, itemTypeName, MetadataConstants.METADATA_NODEGROUP_NAME, "",
+                    Collections.emptyMap(), viewDetails, Collections.emptyMap(), DatasetType.VIEW, 0,
+                    MetadataUtil.PENDING_NO_OP, creator);
             if (existingDataset == null) {
                 if (itemTypeIsInline) {
                     MetadataManager.INSTANCE.addDatatype(mdTxnCtx, itemTypeEntity);
@@ -2983,6 +2987,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 }
                 MetadataManager.INSTANCE.updateDataset(mdTxnCtx, view);
             }
+            beforeTxnCommit(metadataProvider, creator, EntityDetails.newView(databaseName, dataverseName, viewName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return existingDataset != null ? CreateResult.REPLACED : CreateResult.CREATED;
         } catch (Exception e) {
@@ -5480,6 +5485,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                             participatingDatasetIds, numParticipatingNodes, numParticipatingPartitions));
                 }
             }
+
             jobId = runTrackJob(hcc, jobSpec, jobFlags, reqId, requestParameters.getClientContextId(), clientRequest);
             if (jId != null) {
                 jId.setValue(jobId);
@@ -5824,8 +5830,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void beforeTxnCommit(MetadataProvider metadataProvider, Creator creator, String databaseName,
-            DataverseName dataverseName, String objectName, Object objectType) throws AlgebricksException {
+    protected void beforeTxnCommit(MetadataProvider metadataProvider, Creator creator, EntityDetails entityDetails)
+            throws AlgebricksException {
         //no op
     }
 

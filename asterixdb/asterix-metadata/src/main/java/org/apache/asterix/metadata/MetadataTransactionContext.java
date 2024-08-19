@@ -165,7 +165,7 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropDataset(String database, DataverseName dataverseName, String datasetName) {
         Dataset dataset = new Dataset(database, dataverseName, datasetName, null, null, null, null, null, null, null,
-                null, null, -1, MetadataUtil.PENDING_NO_OP);
+                null, null, -1, MetadataUtil.PENDING_NO_OP, null);
         droppedCache.addDatasetIfNotExists(dataset);
         logAndApply(new MetadataLogicalOperation(dataset, false));
     }

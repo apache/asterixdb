@@ -28,6 +28,7 @@ import org.apache.asterix.metadata.IDatasetDetails;
 import org.apache.asterix.metadata.declared.MetadataProvider;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.DatasetUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.transaction.management.resource.DatasetLocalResourceFactory;
@@ -54,7 +55,7 @@ public class TestDataset extends Dataset {
         super(MetadataUtil.databaseFor(dataverseName), dataverseName, datasetName,
                 MetadataUtil.databaseFor(recordTypeDataverseName), recordTypeDataverseName, recordTypeName,
                 nodeGroupName, compactionPolicy, compactionPolicyProperties, datasetDetails, hints, datasetType,
-                datasetId, pendingOp);
+                datasetId, pendingOp, Creator.DEFAULT_CREATOR);
     }
 
     @Override

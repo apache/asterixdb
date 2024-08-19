@@ -20,6 +20,10 @@ package org.apache.asterix.metadata.entities;
 
 import org.apache.asterix.common.metadata.DataverseName;
 
+/**
+ * This class provides static factory methods for creating entity details.
+ */
+
 public class EntityDetails {
 
     public enum EntityType {
@@ -33,13 +37,33 @@ public class EntityDetails {
     private final String databaseName;
     private final DataverseName dataverseName;
     private final String entityName;
-    private final EntityType entityType;
+    private EntityType entityType;
 
-    public EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType) {
+    private EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType) {
         this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.entityName = entityName;
         this.entityType = entityType;
+    }
+
+    public static EntityDetails newDatabase(String databaseName) {
+        return new EntityDetails(databaseName, null, null, EntityType.DATABASE);
+    }
+
+    public static EntityDetails newDataverse(String databaseName, DataverseName dataverseName) {
+        return new EntityDetails(databaseName, dataverseName, null, EntityType.DATAVERSE);
+    }
+
+    public static EntityDetails newDataset(String databaseName, DataverseName dataverseName, String datasetName) {
+        return new EntityDetails(databaseName, dataverseName, datasetName, EntityType.DATASET);
+    }
+
+    public static EntityDetails newView(String databaseName, DataverseName dataverseName, String viewName) {
+        return new EntityDetails(databaseName, dataverseName, viewName, EntityType.VIEW);
+    }
+
+    public static EntityDetails newFunction(String databaseName, DataverseName dataverseName, String functionName) {
+        return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION);
     }
 
     public String getDatabaseName() {

@@ -41,6 +41,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.FileStructure;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -76,7 +77,7 @@ public class IndexTupleTranslatorTest {
             Dataset dataset = new Dataset(dvTestDatabase, dvTest, "d1", itemTypeDatabase, dvFoo, "LogType",
                     metaTypeDatabase, dvCB, "MetaType", "DEFAULT_NG_ALL_NODES", "prefix", compactionPolicyProperties,
                     details, Collections.emptyMap(), DatasetType.INTERNAL, 115, 0, CompressionManager.NONE,
-                    DatasetFormatInfo.SYSTEM_DEFAULT);
+                    DatasetFormatInfo.SYSTEM_DEFAULT, Creator.DEFAULT_CREATOR);
 
             Index index = new Index(dvTestDatabase, dvTest, "d1", "i1", IndexType.BTREE,
                     Collections.singletonList(Collections.singletonList("row_id")),

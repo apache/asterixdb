@@ -84,8 +84,13 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
                 }
             }
 
-            context.getMetadataProvider()
-                    .addAccessedEntity(new EntityDetails(databaseName, dataverseName, datasetName, entityType));
+            if (entityType == EntityDetails.EntityType.VIEW) {
+                context.getMetadataProvider()
+                        .addAccessedEntity(EntityDetails.newView(databaseName, dataverseName, datasetName));
+            } else {
+                context.getMetadataProvider()
+                        .addAccessedEntity(EntityDetails.newDataset(databaseName, dataverseName, datasetName));
+            }
 
         } else {
             FunctionSignature signature = expression.getFunctionSignature();
@@ -94,8 +99,8 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
                 return;
             }
             String functionName = signature.getName() + "(" + signature.getArity() + ")";
-            context.getMetadataProvider().addAccessedEntity(new EntityDetails(signature.getDatabaseName(),
-                    signature.getDataverseName(), functionName, EntityDetails.EntityType.FUNCTION));
+            context.getMetadataProvider().addAccessedEntity(
+                    EntityDetails.newFunction(signature.getDatabaseName(), signature.getDataverseName(), functionName));
         }
     }
 }

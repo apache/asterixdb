@@ -325,7 +325,7 @@ public class MetadataTxnTest {
         Dataset dataset = new Dataset(source.getDatabaseName(), source.getDataverseName(), "ds_" + datasetPostfix,
                 source.getDatabaseName(), source.getDataverseName(), source.getDatasetType().name(),
                 source.getNodeGroupName(), NoMergePolicyFactory.NAME, null, source.getDatasetDetails(),
-                source.getHints(), DatasetConfig.DatasetType.INTERNAL, datasetPostfix, 0);
+                source.getHints(), DatasetConfig.DatasetType.INTERNAL, datasetPostfix, 0, source.getCreator());
         MetadataProvider metadataProvider = MetadataProvider.createWithDefaultNamespace(appCtx);
         final MetadataTransactionContext writeTxn = MetadataManager.INSTANCE.beginTransaction();
         metadataProvider.setMetadataTxnContext(writeTxn);
