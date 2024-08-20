@@ -1120,7 +1120,8 @@ abstract class LangExpressionToPlanTranslator
             }
             if (!function.isExternal()) {
                 // all non-external UDFs should've been inlined by now
-                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, signature);
+                throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc,
+                        "UDF not inlined: " + signature);
             }
             IFunctionInfo finfo = ExternalFunctionCompilerUtil.getExternalFunctionInfo(metadataProvider, function);
             AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(finfo, args);

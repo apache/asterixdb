@@ -13192,6 +13192,11 @@
   </test-group>
   <test-group name="user-defined-functions">
     <test-case FilePath="user-defined-functions">
+      <compilation-unit name="inline-in-expr">
+        <output-dir compare="Text">inline-in-expr</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="user-defined-functions">
       <compilation-unit name="bad-function-ddl-1">
         <output-dir compare="Text">bad-function-ddl-1</output-dir>
         <expected-error replacers="cloud:Default.experiments|def:experiments">Cannot find dataset TweetMessages in dataverse {0} nor an alias with name TweetMessages</expected-error>
