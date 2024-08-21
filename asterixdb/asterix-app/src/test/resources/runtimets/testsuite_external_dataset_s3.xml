@@ -301,6 +301,25 @@
       </compilation-unit>
     </test-case>
     <!-- Parquet Tests End -->
+    <!-- Deltalake Tests Start -->
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-multiple-file-read">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-multiple-file-read</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-empty">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-empty</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-modified-data">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-modified-data</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/avro/avro-types/avro-map">
         <placeholder name="adapter" value="S3" />

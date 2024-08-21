@@ -97,6 +97,7 @@ public enum ErrorCode implements IError {
     UNSUPPORTED_COLUMN_TYPE(67),
     INVALID_KEY_TYPE(68),
     FAILED_TO_READ_KEY(69),
+    INVALID_DELTA_PARAMETER(70),
 
     UNSUPPORTED_JRE(100),
 
