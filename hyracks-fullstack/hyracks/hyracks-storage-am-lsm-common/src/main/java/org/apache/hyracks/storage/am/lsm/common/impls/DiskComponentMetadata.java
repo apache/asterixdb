@@ -33,13 +33,23 @@ public class DiskComponentMetadata implements IComponentMetadata {
     }
 
     @Override
+    public int getPageSize() {
+        return mdpManager.getPageSize();
+    }
+
+    @Override
+    public int getAvailableSpace() throws HyracksDataException {
+        return mdpManager.getFreeSpace();
+    }
+
+    @Override
     public void put(IValueReference key, IValueReference value) throws HyracksDataException {
         mdpManager.put(mdpManager.createMetadataFrame(), key, value);
     }
 
     @Override
-    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
-        mdpManager.get(mdpManager.createMetadataFrame(), key, value);
+    public boolean get(IValueReference key, ArrayBackedValueStorage storage) throws HyracksDataException {
+        return mdpManager.get(mdpManager.createMetadataFrame(), key, storage);
     }
 
     public void put(MemoryComponentMetadata metadata) throws HyracksDataException {

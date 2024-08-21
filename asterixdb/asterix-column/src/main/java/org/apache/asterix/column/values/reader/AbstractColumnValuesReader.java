@@ -202,6 +202,15 @@ abstract class AbstractColumnValuesReader implements IColumnValuesReader {
         }
     }
 
+    protected final void writeLevel(IColumnValuesWriter writer) throws HyracksDataException {
+        if (isNull()) {
+            // This will prepend the nullBitMask
+            writer.writeNull(level);
+        } else {
+            writer.writeLevel(level);
+        }
+    }
+
     protected void appendCommon(ObjectNode node) {
         node.put("typeTag", getTypeTag().toString());
         node.put("columnIndex", columnIndex);

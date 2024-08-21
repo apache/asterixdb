@@ -29,6 +29,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 public interface IMetadataPageManager extends IPageManager {
     /**
      * put the key value pair in the metadata page using the passed frame
+     *
      * @param frame
      * @param key
      * @param value
@@ -38,19 +39,22 @@ public interface IMetadataPageManager extends IPageManager {
 
     /**
      * get the value of the key from the metadata page using the passed frame
+     *
      * @param frame
      * @param key
      * @param value
+     * @return true if the key exists, false otherwise
      * @throws HyracksDataException
      */
-    void get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value) throws HyracksDataException;
+    boolean get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value) throws HyracksDataException;
 
     /**
-     * @param frame
-     * @param key
-     * @return The byte offset in the index file for the entry with the passed key if the index is valid and the key
-     *         exists, returns -1 otherwise. use the passed frame to read the metadata page
-     * @throws HyracksDataException
+     * @return page size
      */
-    long getFileOffset(ITreeIndexMetadataFrame frame, IValueReference key) throws HyracksDataException;
+    int getPageSize();
+
+    /**
+     * @return free space of the current page
+     */
+    int getFreeSpace() throws HyracksDataException;
 }
