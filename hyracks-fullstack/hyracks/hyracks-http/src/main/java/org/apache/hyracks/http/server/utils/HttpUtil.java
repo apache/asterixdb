@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -236,7 +237,8 @@ public class HttpUtil {
         try {
             return readFuture.get();
         } catch (InterruptedException ex) { // NOSONAR -- interrupt or rethrow
-            executor.submit(() -> {
+            // we don't use the executor here, since it might be shutting down- this avoids ugly logging at shutdown
+            ForkJoinPool.commonPool().submit(() -> {
                 try {
                     response.close();
                 } catch (IOException e) {
