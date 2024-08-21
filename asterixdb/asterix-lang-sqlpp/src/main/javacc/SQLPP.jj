@@ -4407,7 +4407,7 @@ AbstractAccessor IndexAccessor(Expression inputExpr) throws ParseException:
   (
     <MUL> { star = true; }
     |
-    ( expr1 = Expression() ( <COLON> { slice = true; } ( expr2 = Expression() )? )? )
+    ( (expr1 = Expression()) ? ( <COLON> { slice = true; } ( expr2 = Expression() )? )? )
   )
   <RIGHTBRACKET>
   {
@@ -4418,10 +4418,14 @@ AbstractAccessor IndexAccessor(Expression inputExpr) throws ParseException:
       ensureIntegerLiteral( (LiteralExpr) expr2, "Index");
     }
     AbstractAccessor resultAccessor;
-    if (slice) {
+
+    if (star) {
+          resultAccessor = new IndexAccessor(inputExpr, IndexAccessor.IndexKind.STAR, null);
+    } else if (slice || expr1 == null) {
+      if (expr1 == null) {
+        expr1 = new LiteralExpr(new LongIntegerLiteral(0L));
+      }
       resultAccessor = new ListSliceExpression(inputExpr, expr1, expr2);
-    } else if (star) {
-      resultAccessor = new IndexAccessor(inputExpr, IndexAccessor.IndexKind.STAR, null);
     } else {
       resultAccessor = new IndexAccessor(inputExpr, IndexAccessor.IndexKind.ELEMENT, expr1);
     }

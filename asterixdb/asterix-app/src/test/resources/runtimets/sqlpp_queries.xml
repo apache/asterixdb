@@ -3121,6 +3121,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="array_fun">
+      <compilation-unit name="array_slice/array_slice_bracket_notation">
+        <output-dir compare="Text">array_slice/array_slice_bracket_notation</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="array_fun">
       <compilation-unit name="array_slice/array_slice_double_argument">
         <output-dir compare="Text">array_slice/array_slice_double_argument</output-dir>
       </compilation-unit>
