@@ -108,6 +108,10 @@ import org.apache.iceberg.Table;
 import org.apache.iceberg.hadoop.HadoopTables;
 import org.apache.iceberg.io.CloseableIterable;
 
+import io.delta.standalone.DeltaLog;
+import io.delta.standalone.Snapshot;
+import io.delta.standalone.actions.AddFile;
+
 public class ExternalDataUtils {
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
     private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
@@ -469,6 +473,10 @@ public class ExternalDataUtils {
         }
 
         if (configuration.containsKey(ExternalDataConstants.TABLE_FORMAT)) {
+            if (configuration.get(ExternalDataConstants.TABLE_FORMAT).equals(ExternalDataConstants.FORMAT_DELTA)) {
+                configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_NOOP);
+                configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_PARQUET);
+            }
             prepareTableFormat(configuration);
         }
     }
@@ -478,68 +486,96 @@ public class ExternalDataUtils {
      *
      * @param configuration external data configuration
      */
+    public static boolean isDeltaTable(Map<String, String> configuration) {
+        return configuration.containsKey(ExternalDataConstants.TABLE_FORMAT)
+                && configuration.get(ExternalDataConstants.TABLE_FORMAT).equals(ExternalDataConstants.FORMAT_DELTA);
+    }
+
+    public static void validateDeltaTableProperties(Map<String, String> configuration) throws CompilationException {
+        if (!(configuration.get(ExternalDataConstants.KEY_FORMAT) == null
+                || configuration.get(ExternalDataConstants.KEY_FORMAT).equals(ExternalDataConstants.FORMAT_PARQUET))) {
+            throw new CompilationException(ErrorCode.INVALID_DELTA_PARAMETER);
+        }
+    }
+
+    public static void prepareDeltaTableFormat(Map<String, String> configuration, Configuration conf,
+            String tableMetadataPath) {
+        DeltaLog deltaLog = DeltaLog.forTable(conf, tableMetadataPath);
+        Snapshot snapshot = deltaLog.snapshot();
+        List<AddFile> dataFiles = snapshot.getAllFiles();
+        StringBuilder builder = new StringBuilder();
+        for (AddFile batchFile : dataFiles) {
+            builder.append(",");
+            String path = batchFile.getPath();
+            builder.append(tableMetadataPath).append('/').append(path);
+        }
+        if (builder.length() > 0) {
+            builder.deleteCharAt(0);
+        }
+        configuration.put(ExternalDataConstants.KEY_PATH, builder.toString());
+    }
+
+    public static void prepareIcebergTableFormat(Map<String, String> configuration, Configuration conf,
+            String tableMetadataPath) throws AlgebricksException {
+        HadoopTables tables = new HadoopTables(conf);
+        Table icebergTable = tables.load(tableMetadataPath);
+
+        if (icebergTable instanceof BaseTable) {
+            BaseTable baseTable = (BaseTable) icebergTable;
+
+            if (baseTable.operations().current()
+                    .formatVersion() != ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION) {
+                throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_FORMAT_VERSION,
+                        "AsterixDB only supports Iceberg version up to "
+                                + ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION);
+            }
+
+            try (CloseableIterable<FileScanTask> fileScanTasks = baseTable.newScan().planFiles()) {
+
+                StringBuilder builder = new StringBuilder();
+
+                for (FileScanTask task : fileScanTasks) {
+                    builder.append(",");
+                    String path = task.file().path().toString();
+                    builder.append(path);
+                }
+
+                if (builder.length() > 0) {
+                    builder.deleteCharAt(0);
+                }
+
+                configuration.put(ExternalDataConstants.KEY_PATH, builder.toString());
+
+            } catch (IOException e) {
+                throw new AsterixException(ErrorCode.ERROR_READING_ICEBERG_METADATA, e);
+            }
+
+        } else {
+            throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_TABLE,
+                    "Invalid iceberg base table. Please remove metadata specifiers");
+        }
+    }
+
     public static void prepareTableFormat(Map<String, String> configuration) throws AlgebricksException {
+        Configuration conf = new Configuration();
+        String tableMetadataPath = configuration.get(ExternalDataConstants.TABLE_METADATA_LOCATION);
+
+        // If the table is in S3
+        if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
+
+            conf.set(S3Constants.HADOOP_ACCESS_KEY_ID, configuration.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME));
+            conf.set(S3Constants.HADOOP_SECRET_ACCESS_KEY, configuration.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME));
+            tableMetadataPath = S3Constants.HADOOP_S3_PROTOCOL + "://"
+                    + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
+                    + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
+        } else if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.READER_HDFS)) {
+            conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI,
+                    configuration.get(ExternalDataConstants.KEY_HDFS_URL));
+            tableMetadataPath = configuration.get(ExternalDataConstants.KEY_HDFS_URL) + '/' + tableMetadataPath;
+        }
         // Apache Iceberg table format
         if (configuration.get(ExternalDataConstants.TABLE_FORMAT).equals(ExternalDataConstants.FORMAT_APACHE_ICEBERG)) {
-            Configuration conf = new Configuration();
-
-            String metadata_path = configuration.get(ExternalDataConstants.ICEBERG_METADATA_LOCATION);
-
-            // If the table is in S3
-            if (configuration.get(ExternalDataConstants.KEY_READER)
-                    .equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
-
-                conf.set(S3Constants.HADOOP_ACCESS_KEY_ID, configuration.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME));
-                conf.set(S3Constants.HADOOP_SECRET_ACCESS_KEY,
-                        configuration.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME));
-                metadata_path = S3Constants.HADOOP_S3_PROTOCOL + "://"
-                        + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
-                        + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
-            } else if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.READER_HDFS)) {
-                conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI,
-                        configuration.get(ExternalDataConstants.KEY_HDFS_URL));
-                metadata_path = configuration.get(ExternalDataConstants.KEY_HDFS_URL) + '/' + metadata_path;
-            }
-
-            HadoopTables tables = new HadoopTables(conf);
-
-            Table icebergTable = tables.load(metadata_path);
-
-            if (icebergTable instanceof BaseTable) {
-                BaseTable baseTable = (BaseTable) icebergTable;
-
-                if (baseTable.operations().current()
-                        .formatVersion() != ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION) {
-                    throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_FORMAT_VERSION,
-                            "AsterixDB only supports Iceberg version up to "
-                                    + ExternalDataConstants.SUPPORTED_ICEBERG_FORMAT_VERSION);
-                }
-
-                try (CloseableIterable<FileScanTask> fileScanTasks = baseTable.newScan().planFiles()) {
-
-                    StringBuilder builder = new StringBuilder();
-
-                    for (FileScanTask task : fileScanTasks) {
-                        builder.append(",");
-                        String path = task.file().path().toString();
-                        builder.append(path);
-                    }
-
-                    if (builder.length() > 0) {
-                        builder.deleteCharAt(0);
-                    }
-
-                    configuration.put(ExternalDataConstants.KEY_PATH, builder.toString());
-
-                } catch (IOException e) {
-                    throw new AsterixException(ErrorCode.ERROR_READING_ICEBERG_METADATA, e);
-                }
-
-            } else {
-                throw new AsterixException(ErrorCode.UNSUPPORTED_ICEBERG_TABLE,
-                        "Invalid iceberg base table. Please remove metadata specifiers");
-            }
-
+            prepareIcebergTableFormat(configuration, conf, tableMetadataPath);
         }
     }
 

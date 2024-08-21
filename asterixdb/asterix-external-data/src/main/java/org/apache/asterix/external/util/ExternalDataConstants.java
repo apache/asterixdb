@@ -124,7 +124,7 @@ public class ExternalDataConstants {
     // a string representing the format of the record (for adapters which produces records with additional information like pk or metadata)
     public static final String KEY_RECORD_FORMAT = "record-format";
     public static final String TABLE_FORMAT = "table-format";
-    public static final String ICEBERG_METADATA_LOCATION = "metadata-path";
+    public static final String TABLE_METADATA_LOCATION = "metadata-path";
     public static final int SUPPORTED_ICEBERG_FORMAT_VERSION = 1;
     public static final String KEY_META_TYPE_NAME = "meta-type-name";
     public static final String KEY_ADAPTER_NAME = "adapter-name";
@@ -219,6 +219,7 @@ public class ExternalDataConstants {
     public static final String DUMMY_TYPE_NAME = "typeName";
     public static final String DUMMY_DATAVERSE_NAME = "a.b.c";
     public static final String FORMAT_APACHE_ICEBERG = "apache-iceberg";
+    public static final String FORMAT_DELTA = "delta";
     public static final Set<String> ALL_FORMATS;
     public static final Set<String> TEXTUAL_FORMATS;
 

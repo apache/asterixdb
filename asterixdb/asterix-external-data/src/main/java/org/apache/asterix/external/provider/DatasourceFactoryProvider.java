@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.provider;
 
+import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -121,6 +123,10 @@ public class DatasourceFactoryProvider {
         if (factories.containsKey(adaptorName)) {
             Map<String, Class<?>> formatClassMap = factories.get(adaptorName);
             String format = configuration.get(ExternalDataConstants.KEY_FORMAT);
+            if (isDeltaTable(configuration)) {
+                format = configuration.get(ExternalDataConstants.TABLE_FORMAT);
+                return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
+            }
             return getInstance(formatClassMap.getOrDefault(format, formatClassMap.get(DEFAULT_FORMAT)));
         }
 

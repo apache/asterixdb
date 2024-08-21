@@ -22,6 +22,7 @@ import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createAvroFilesRecursively;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFiles;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createBinaryFilesRecursively;
+import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.createDeltaTable;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setDataPaths;
 import static org.apache.asterix.test.external_dataset.ExternalDatasetTestUtils.setUploaders;
 import static org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil.DEFAULT_PARQUET_SRC_PATH;
@@ -199,6 +200,7 @@ public class AwsS3ExternalDatasetTest {
         createBinaryFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
         createAvroFiles(DEFAULT_PARQUET_SRC_PATH);
         createAvroFilesRecursively(EXTERNAL_FILTER_DATA_PATH);
+        createDeltaTable();
         setNcEndpoints(testExecutor);
         startAwsS3MockServer();
     }
