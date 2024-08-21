@@ -300,10 +300,10 @@ public class JoinNode {
         parent.getInputs().get(0).setValue(deepCopyofScan);
         finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
         sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        boolean unnest = joinEnum.findUnnestOp(selOp);
+        boolean unnest = joinEnum.findUnnestOp(leafInput);
         if (unnest) {
             ILogicalExpression saveExpr = selOp.getCondition().getValue();
-            double unnestSampleCard = joinEnum.stats.computeUnnestedOriginalCardinality(selOp);
+            double unnestSampleCard = joinEnum.stats.computeUnnestedOriginalCardinality(leafInput);
             selOp.getCondition().setValue(saveExpr); // restore the expression
             unnestFactor = unnestSampleCard / sampleCard;
             sampleCard = unnestSampleCard;

@@ -538,11 +538,11 @@ public class Stats {
         return record.numberOfFields();
     }
 
-    public double computeUnnestedOriginalCardinality(SelectOperator selOp) throws AlgebricksException {
+    public double computeUnnestedOriginalCardinality(ILogicalOperator op) throws AlgebricksException {
         // Replace ALL SELECTS with TRUE, restore them after running the sampling query.
-        List<ILogicalExpression> selExprs = storeSelectConditionsAndMakeThemTrue(selOp, null);
-        List<List<IAObject>> result = runSamplingQuery(optCtx, selOp);
-        restoreAllSelectConditions(selOp, selExprs, null);
+        List<ILogicalExpression> selExprs = storeSelectConditionsAndMakeThemTrue(op, null);
+        List<List<IAObject>> result = runSamplingQuery(optCtx, op);
+        restoreAllSelectConditions(op, selExprs, null);
         return findPredicateCardinality(result, false);
     }
 
