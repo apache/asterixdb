@@ -319,24 +319,18 @@ public class LinkedMetaDataPageManager implements IMetadataPageManager {
     }
 
     @Override
-    public void get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value) throws HyracksDataException {
+    public boolean get(ITreeIndexMetadataFrame frame, IValueReference key, IPointable value)
+            throws HyracksDataException {
         throw new HyracksDataException("Unsupported Operation");
     }
 
     @Override
-    public long getFileOffset(ITreeIndexMetadataFrame frame, IValueReference key) throws HyracksDataException {
-        int metadataPageNum = getMetadataPageId();
-        if (metadataPageNum != IBufferCache.INVALID_PAGEID) {
-            ICachedPage metaNode = bufferCache.pin(BufferedFileHandle.getDiskPageId(fileId, getMetadataPageId()));
-            metaNode.acquireReadLatch();
-            try {
-                frame.setPage(metaNode);
-                return ((long) metadataPageNum * bufferCache.getPageSizeWithHeader()) + frame.getOffset(key);
-            } finally {
-                metaNode.releaseReadLatch();
-                bufferCache.unpin(metaNode);
-            }
-        }
-        return -1;
+    public int getPageSize() {
+        return bufferCache.getPageSize();
+    }
+
+    @Override
+    public int getFreeSpace() throws HyracksDataException {
+        throw new HyracksDataException("Unsupported Operation");
     }
 }

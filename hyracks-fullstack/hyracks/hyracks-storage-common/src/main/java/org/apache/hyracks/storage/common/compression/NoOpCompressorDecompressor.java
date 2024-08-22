@@ -21,7 +21,6 @@ package org.apache.hyracks.storage.common.compression;
 import java.nio.ByteBuffer;
 
 import org.apache.hyracks.api.compression.ICompressorDecompressor;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class NoOpCompressorDecompressor implements ICompressorDecompressor {
     public static final NoOpCompressorDecompressor INSTANCE = new NoOpCompressorDecompressor();
@@ -35,12 +34,24 @@ public class NoOpCompressorDecompressor implements ICompressorDecompressor {
     }
 
     @Override
-    public ByteBuffer compress(ByteBuffer uBuffer, ByteBuffer cBuffer) throws HyracksDataException {
+    public int compress(byte[] src, int srcOffset, int srcLen, byte[] dest, int destOffset) {
+        System.arraycopy(src, srcOffset, dest, destOffset, srcLen);
+        return srcLen;
+    }
+
+    @Override
+    public ByteBuffer compress(ByteBuffer uBuffer, ByteBuffer cBuffer) {
         return uBuffer;
     }
 
     @Override
-    public ByteBuffer uncompress(ByteBuffer cBuffer, ByteBuffer uBuffer) throws HyracksDataException {
+    public int uncompress(byte[] src, int srcOffset, int srcLen, byte[] dest, int destOffset) {
+        System.arraycopy(src, srcOffset, dest, destOffset, srcLen);
+        return srcLen;
+    }
+
+    @Override
+    public ByteBuffer uncompress(ByteBuffer cBuffer, ByteBuffer uBuffer) {
         return cBuffer;
     }
 }

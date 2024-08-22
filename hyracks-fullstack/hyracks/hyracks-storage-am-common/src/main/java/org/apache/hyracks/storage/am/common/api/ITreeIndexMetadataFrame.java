@@ -36,6 +36,7 @@ public interface ITreeIndexMetadataFrame {
 
     /**
      * Set the page in the frame
+     *
      * @param page
      */
     void setPage(ICachedPage page);
@@ -53,6 +54,7 @@ public interface ITreeIndexMetadataFrame {
 
     /**
      * Set the page level
+     *
      * @param level
      */
     void setLevel(byte level);
@@ -60,12 +62,14 @@ public interface ITreeIndexMetadataFrame {
     /**
      * Get the next metadata page if this page is linked to other metadata pages
      * Return a negative value otherwise
+     *
      * @return
      */
     int getNextMetadataPage();
 
     /**
      * Link this metadata page to another one
+     *
      * @param nextPage
      */
     void setNextMetadataPage(int nextPage);
@@ -77,37 +81,44 @@ public interface ITreeIndexMetadataFrame {
 
     /**
      * Set the max page of the file
+     *
      * @param maxPage
      */
     void setMaxPage(int maxPage);
 
     /**
      * Get a free page from the page
+     *
      * @return
      */
     int getFreePage();
 
     /**
      * Get the remaining space in the metadata page
+     *
      * @return
      */
     int getSpace();
 
     /**
      * add a new free page to the metadata page
+     *
      * @param freePage
      */
     void addFreePage(int freePage);
 
     /**
      * get the value with the key = key
+     *
      * @param key
      * @param value
+     * @return true if the key exists, false otherwise
      */
-    void get(IValueReference key, IPointable value);
+    boolean get(IValueReference key, IPointable value);
 
     /**
      * set the value with the key = key
+     *
      * @param key
      * @param value
      * @throws HyracksDataException
@@ -121,18 +132,21 @@ public interface ITreeIndexMetadataFrame {
 
     /**
      * Sets the index to be valid in the metadata page
+     *
      * @param valid
      */
     void setValid(boolean valid);
 
     /**
      * Get the storage version associated with this index
+     *
      * @return
      */
     int getVersion();
 
     /**
      * Set the index root page id
+     *
      * @param rootPage
      */
     void setRootPageId(int rootPage);
@@ -149,6 +163,7 @@ public interface ITreeIndexMetadataFrame {
 
     /**
      * return the offset to the entry of the passed key, -1, otherwise
+     *
      * @param key
      */
     int getOffset(IValueReference key);
@@ -162,4 +177,9 @@ public interface ITreeIndexMetadataFrame {
      * @return true if the inspected page is a free page, false otherwise
      */
     boolean isFreePage();
+
+    /**
+     * @return the overhead (in bytes) to store a key-value pair
+     */
+    int getKeyValueStorageOverhead();
 }

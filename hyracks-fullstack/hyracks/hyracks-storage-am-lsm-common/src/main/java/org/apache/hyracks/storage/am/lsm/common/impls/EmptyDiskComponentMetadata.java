@@ -35,7 +35,7 @@ public class EmptyDiskComponentMetadata extends DiskComponentMetadata {
     }
 
     @Override
-    public void get(IValueReference key, ArrayBackedValueStorage value) throws HyracksDataException {
+    public boolean get(IValueReference key, ArrayBackedValueStorage storage) throws HyracksDataException {
         throw new IllegalStateException("Attempt to read metadata of empty component");
     }
 

@@ -190,13 +190,18 @@ public class ColumnTransformer implements ILazyVisitablePointableVisitor<Abstrac
             currentParent = unionNode;
 
             ATypeTag childTypeTag = pointable.getTypeTag();
-            AbstractSchemaNode actualNode;
+
             if (childTypeTag == ATypeTag.NULL || childTypeTag == ATypeTag.MISSING) {
-                actualNode = unionNode.getOriginalType();
+                /*
+                 * NULL and MISSING are tracked since the start to be written in the originalType (i.e., the type
+                 * before injecting a union between the parent and the original node).
+                 */
+                AbstractSchemaNode actualNode = unionNode.getOriginalType();
+                acceptActualNode(pointable, actualNode);
             } else {
-                actualNode = unionNode.getOrCreateChild(pointable.getTypeTag(), columnMetadata);
+                AbstractSchemaNode actualNode = unionNode.getOrCreateChild(pointable.getTypeTag(), columnMetadata);
+                pointable.accept(this, actualNode);
             }
-            pointable.accept(this, actualNode);
 
             currentParent = previousParent;
             columnMetadata.exitNode(node);
