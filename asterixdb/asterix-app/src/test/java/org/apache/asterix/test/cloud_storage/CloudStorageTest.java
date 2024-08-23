@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.test.cloud_storage;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,6 +41,12 @@ import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import software.amazon.awssdk.auth.credentials.AnonymousCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+
 /**
  * Run tests in cloud deployment environment
  */
@@ -56,6 +63,11 @@ public class CloudStorageTest {
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String EXCLUDED_TESTS = "MP";
 
+    private static final String PLAYGROUND_CONTAINER = "playground";
+    private static final String MOCK_SERVER_REGION = "us-west-2";
+    private static final int MOCK_SERVER_PORT = 8001;
+    private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
+
     public CloudStorageTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
@@ -68,6 +80,15 @@ public class CloudStorageTest {
         testExecutor.stripSubstring = "//DB:";
         LangExecutionUtil.setUp(CONFIG_FILE_NAME, testExecutor);
         System.setProperty(GlobalConfig.CONFIG_FILE_PROPERTY, CONFIG_FILE_NAME);
+
+        // create the playground bucket and leave it empty, just for external collection-based tests
+        S3ClientBuilder builder = S3Client.builder();
+        URI endpoint = URI.create(MOCK_SERVER_HOSTNAME); // endpoint pointing to S3 mock server
+        builder.region(Region.of(MOCK_SERVER_REGION)).credentialsProvider(AnonymousCredentialsProvider.create())
+                .endpointOverride(endpoint);
+        S3Client client = builder.build();
+        client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_CONTAINER).build());
+        client.close();
     }
 
     @AfterClass

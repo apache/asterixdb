@@ -66,7 +66,7 @@ public class CloudStorageUnstableTest {
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
-        LocalCloudUtil.startS3CloudEnvironment(true);
+        LocalCloudUtil.startS3CloudEnvironment(true, true);
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";

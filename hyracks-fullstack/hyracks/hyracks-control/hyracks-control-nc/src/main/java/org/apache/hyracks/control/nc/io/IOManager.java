@@ -40,6 +40,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.api.exceptions.ErrorCode;
@@ -67,6 +68,7 @@ public class IOManager implements IIOManager {
      */
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String WORKSPACE_FILE_SUFFIX = ".waf";
+    private static final String STORAGE_ROOT_DIR_NAME = "storage";
     private static final FilenameFilter WORKSPACE_FILES_FILTER = (dir, name) -> name.endsWith(WORKSPACE_FILE_SUFFIX);
     /*
      * Finals
@@ -599,6 +601,36 @@ public class IOManager implements IIOManager {
     @Override
     public void performBulkOperation(IIOBulkOperation bulkOperation) throws HyracksDataException {
         ((AbstractBulkOperation) bulkOperation).performOperation();
+    }
+
+    @Override
+    public long getSize(Predicate<String> relativePathFilter) {
+        long totalSize = 0;
+
+        // get cached files (read from disk)
+        for (IODeviceHandle deviceHandle : getIODevices()) {
+            FileReference storageRoot = deviceHandle.createFileRef(STORAGE_ROOT_DIR_NAME);
+
+            Set<FileReference> deviceFiles;
+            try {
+                deviceFiles = list(storageRoot, IoUtil.NO_OP_FILTER);
+            } catch (Throwable th) {
+                LOGGER.info("Failed to get local storage files for root {}", storageRoot.getRelativePath(), th);
+                continue;
+            }
+
+            for (FileReference fileReference : deviceFiles) {
+                try {
+                    if (relativePathFilter.test(fileReference.getRelativePath())) {
+                        totalSize += fileReference.getFile().length();
+                    }
+                } catch (Throwable th) {
+                    LOGGER.info("Encountered issue for local storage file {}", fileReference.getRelativePath(), th);
+                }
+            }
+        }
+
+        return totalSize;
     }
 
     public void setSpaceMaker(IDiskSpaceMaker spaceMaker) {

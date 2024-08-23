@@ -44,5 +44,65 @@
       </compilation-unit>
     </test-case>
   </test-group>
+  <test-group name="storage-size">
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="collection-exists">
+        <output-dir compare="Clean-JSON">collection-exists</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="non-constant-argument">
+        <output-dir compare="Clean-JSON">non-constant-argument</output-dir>
+        <expected-error>Compilation error: Function asterix.storage-size expects constant arguments while arg[0] is of type VARIABLE</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="collection-does-not-exist">
+        <output-dir compare="Clean-JSON">collection-does-not-exist</output-dir>
+        <expected-error>Cannot find dataset with name doesNotExistCollection in dataverse testDatabase.testScope</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="non-string-argument">
+        <output-dir compare="Clean-JSON">non-string-argument</output-dir>
+        <expected-error>Type mismatch: function storage-size expects its 1st input parameter to be of type string, but the actual input type is bigint</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="view-not-collection">
+        <output-dir compare="Clean-JSON">view-not-collection</output-dir>
+        <expected-error>Cannot find dataset with name testCollection_vw in dataverse testDatabase.testScope</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="external-collection">
+        <output-dir compare="Clean-JSON">external-collection</output-dir>
+        <expected-error>Retrieving storage size is not applicable to type: EXTERNAL.</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="index-exists">
+        <output-dir compare="Clean-JSON">index-exists</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="index-does-not-exist">
+        <output-dir compare="Clean-JSON">index-does-not-exist</output-dir>
+        <expected-error>Cannot find index with name testCollection_idx_fake</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="invalid-arguments-count">
+        <output-dir compare="Clean-JSON">invalid-arguments-count</output-dir>
+        <expected-error>Invalid number of arguments for function storage-size</expected-error>
+        <expected-error>Invalid number of arguments for function storage-size</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="cloud_storage/storage-size/datasource-function">
+      <compilation-unit name="sanity">
+        <output-dir compare="Clean-JSON">sanity</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
   &sqlpp_queries;
 </test-suite>

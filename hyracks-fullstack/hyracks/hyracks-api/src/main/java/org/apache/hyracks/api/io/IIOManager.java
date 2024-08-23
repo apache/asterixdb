@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 
@@ -296,4 +297,12 @@ public interface IIOManager extends Closeable {
      * @param bulkOperation the operation to perform
      */
     void performBulkOperation(IIOBulkOperation bulkOperation) throws HyracksDataException;
+
+    /**
+     * Lists the storage files and apply the provided predicate to calculate the total size of the resource
+     *
+     * @param relativePathFilter predicate
+     * @return total size of resource accepting the predicate
+     */
+    long getSize(Predicate<String> relativePathFilter);
 }

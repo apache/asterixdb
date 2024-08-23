@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.asterix.cloud.bulk.DeleteBulkCloudOperation;
 import org.apache.asterix.cloud.bulk.NoOpDeleteBulkCallBack;
@@ -70,6 +71,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public abstract class AbstractCloudIOManager extends IOManager implements IPartitionBootstrapper, ICloudIOManager {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final byte[] EMPTY_FILE_BYTES = "empty".getBytes();
+    private static final Predicate<String> NO_OP_LIST_FILES_FILTER = (path) -> true;
+
     protected final ICloudClient cloudClient;
     protected final ICloudGuardian guardian;
     protected final IWriteBufferProvider writeBufferProvider;
@@ -472,11 +475,20 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     }
 
     public long getTotalRemoteStorageSizeForNodeBytes() {
-        long size = 0;
-        for (CloudFile file : list()) {
-            size += file.getSize();
+        return getSize(NO_OP_LIST_FILES_FILTER);
+    }
+
+    @Override
+    public long getSize(Predicate<String> relativePathFilter) {
+        long totalSize = localIoManager.getSize(relativePathFilter);
+
+        // get uncached files from uncached files tracker
+        for (UncachedFileReference uncachedFile : getUncachedFiles()) {
+            if (relativePathFilter.test(uncachedFile.getRelativePath())) {
+                totalSize += uncachedFile.getSize();
+            }
         }
-        return size;
+        return totalSize;
     }
 
     @Override

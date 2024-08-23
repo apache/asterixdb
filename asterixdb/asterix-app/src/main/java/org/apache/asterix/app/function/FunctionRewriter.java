@@ -85,6 +85,9 @@ public abstract class FunctionRewriter implements IFunctionToDataSourceRewriter 
     }
 
     protected boolean invalidArgs(List<Mutable<ILogicalExpression>> args) {
+        if (functionId.getArity() == FunctionIdentifier.VARARGS) {
+            return false;
+        }
         return args.size() != functionId.getArity();
     }
 

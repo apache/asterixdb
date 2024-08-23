@@ -57,6 +57,10 @@ public class LocalCloudUtil {
     }
 
     public static S3Mock startS3CloudEnvironment(boolean cleanStart) {
+        return startS3CloudEnvironment(cleanStart, false);
+    }
+
+    public static S3Mock startS3CloudEnvironment(boolean cleanStart, boolean createPlaygroundContainer) {
         if (cleanStart) {
             FileUtils.deleteQuietly(new File(MOCK_FILE_BACKEND));
         }
@@ -79,6 +83,12 @@ public class LocalCloudUtil {
         S3Client client = builder.build();
         client.createBucket(CreateBucketRequest.builder().bucket(CLOUD_STORAGE_BUCKET).build());
         LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
+
+        // added for convenience since some non-external-based tests include an external collection test on this bucket
+        if (createPlaygroundContainer) {
+            client.createBucket(CreateBucketRequest.builder().bucket("playground").build());
+            LOGGER.info("Created bucket {}", "playground");
+        }
         client.close();
         return s3MockServer;
     }

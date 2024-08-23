@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+import org.apache.asterix.api.common.LocalCloudUtil;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -76,6 +77,7 @@ public class CloudStorageGCSTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        LocalCloudUtil.startS3CloudEnvironment(true, true);
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
         cleanup(storage);
