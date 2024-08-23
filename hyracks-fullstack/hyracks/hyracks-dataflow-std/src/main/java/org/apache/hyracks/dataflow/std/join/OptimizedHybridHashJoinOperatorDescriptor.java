@@ -47,6 +47,7 @@ import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.job.profiling.NoOpOperatorStats;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAccessor;
 import org.apache.hyracks.dataflow.common.comm.io.FrameTupleAppender;
@@ -440,6 +441,7 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                         }
                         return;
                     }
+                    Throwable ex = null;
                     try {
                         try {
                             state.hybridHJ.completeProbe(writer);
@@ -470,19 +472,21 @@ public class OptimizedHybridHashJoinOperatorDescriptor extends AbstractOperatorD
                             joinPartitionPair(bReader, pReader, bSize, pSize, 1);
                         }
                     } catch (Exception e) {
+                        ex = e;
                         if (state.hybridHJ != null) {
                             state.hybridHJ.fail();
                         }
                         // Since writer.nextFrame() is called in the above "try" body, we have to call writer.fail()
                         // to send the failure signal to the downstream, when there is a throwable thrown.
-                        writer.fail();
+                        CleanupUtils.fail(writer, ex);
                         // Clear temp files as this.fail() nor this.close() will no longer be called after close().
                         state.hybridHJ.clearBuildTempFiles();
                         state.hybridHJ.clearProbeTempFiles();
-                        // Re-throw the whatever is caught.
-                        throw e;
                     } finally {
-                        writer.close();
+                        ex = CleanupUtils.close(writer, ex);
+                    }
+                    if (ex != null) {
+                        throw HyracksDataException.create(ex);
                     }
                 }
 
