@@ -88,6 +88,11 @@ public final class QueryColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
+    protected void skipMegaLeafNode() {
+        assembler.reset(0);
+    }
+
+    @Override
     protected boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples)
             throws HyracksDataException {
         //Skip to filters

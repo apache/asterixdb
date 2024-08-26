@@ -60,6 +60,11 @@ public final class MergeColumnTupleReference extends AbstractAsterixColumnTupleR
     }
 
     @Override
+    protected void skipMegaLeafNode() {
+        // no-op
+    }
+
+    @Override
     protected boolean startNewPage(ByteBuffer pageZero, int numberOfColumns, int numberOfTuples) {
         //Skip filters
         pageZero.position(pageZero.position() + numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE);

@@ -110,6 +110,15 @@ public final class ColumnAssembler {
     }
 
     public int skip(int count) throws HyracksDataException {
+        try {
+            return doSkip(count);
+        } catch (ColumnarValueException e) {
+            appendInformation(e);
+            throw e;
+        }
+    }
+
+    private int doSkip(int count) throws HyracksDataException {
         if (numberOfTuples == 0 || count == 0) {
             // Avoid advancing tupleIndex and numberOfSkips if a mega leaf node is filtered out
             return 0;
