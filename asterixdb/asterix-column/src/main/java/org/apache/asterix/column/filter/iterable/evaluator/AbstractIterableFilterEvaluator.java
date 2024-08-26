@@ -62,11 +62,18 @@ abstract class AbstractIterableFilterEvaluator implements IColumnIterableFilterE
     @Override
     public final void setAt(int index) throws HyracksDataException {
         // -1 as we want to evaluate the value at 'index'
-        int count = index - this.tupleIndex - 1;
+        // ColumnAssembler.tupleIndex starts at Zero, hence on skipping X tuples
+        // will return the Xth tuple,
+        // i.e. after skipping 2 tuples, it should be at
+        // 0(skip) --> 1(skip) --> 2nd tuple
+        // so the gap between index and tupleIndex is count.
+        // and after increasing by (count - 1), evaluate() for the Xth tuple.
+        int count = index - this.tupleIndex;
         if (count > 0) {
             tupleIndex += count - 1;
             // skip(int) returns the number of skipped values (i.e., without anti-matters)
             valueIndex += skip(count - 1);
+            evaluate();
         }
     }
 
