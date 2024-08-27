@@ -66,4 +66,31 @@
       </test-case>
       -->
   </test-group>
+  <test-group name="copy-to">
+    <test-case FilePath="copy-to-hdfs">
+      <compilation-unit name="parquet-simple">
+        <output-dir compare="Text">parquet-simple</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to-hdfs">
+      <compilation-unit name="parquet-tweet">
+        <output-dir compare="Text">parquet-tweet</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to-hdfs">
+      <compilation-unit name="parquet-utf8">
+        <output-dir compare="Text">parquet-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to-hdfs">
+      <compilation-unit name="parquet-cover-data-types">
+        <output-dir compare="Text">parquet-cover-data-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to-hdfs">
+      <compilation-unit name="parquet-empty-array">
+        <output-dir compare="Text">parquet-empty-array</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

@@ -29,6 +29,7 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.security.UserGroupInformation;
 
 public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V> {
     protected RecordReader<K, V> reader;
@@ -43,9 +44,11 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
     protected JobConf conf;
     protected IRawRecord<V> record;
     private boolean firstInputSplit;
+    protected UserGroupInformation ugi;
 
     public AbstractHDFSRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf) {
+            JobConf conf, UserGroupInformation ugi) {
+        this.ugi = ugi;
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
@@ -58,7 +61,8 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
     }
 
     public AbstractHDFSRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            IRawRecord<V> record, JobConf conf) {
+            IRawRecord<V> record, JobConf conf, UserGroupInformation ugi) {
+        this.ugi = ugi;
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;

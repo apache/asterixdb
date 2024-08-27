@@ -23,10 +23,12 @@ import static org.apache.asterix.external.util.ExternalDataConstants.FORMAT_PARQ
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
@@ -51,6 +53,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
@@ -85,12 +89,25 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
     private String nodeName;
     private Class recordReaderClazz;
     private IExternalFilterEvaluatorFactory filterEvaluatorFactory;
+    private transient Credentials credentials;
+    private byte[] serializedCredentials;
+    private transient UserGroupInformation ugi;
 
     @Override
     public void configure(IServiceContext serviceCtx, Map<String, String> configuration,
             IWarningCollector warningCollector, IExternalFilterEvaluatorFactory filterEvaluatorFactory)
             throws AlgebricksException, HyracksDataException {
         JobConf hdfsConf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
+        credentials = HDFSUtils.configureHadoopAuthentication(configuration, hdfsConf);
+        try {
+            if (credentials != null) {
+                serializedCredentials = HDFSUtils.serialize(credentials);
+                ugi = UserGroupInformation.createRemoteUser(UUID.randomUUID().toString());
+                ugi.addCredentials(credentials);
+            }
+        } catch (IOException ex) {
+            throw HyracksDataException.create(ex);
+        }
         configureHdfsConf(hdfsConf, configuration);
     }
 
@@ -103,13 +120,20 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         return HDFSUtils.configureHDFSJobConf(configuration);
     }
 
-    protected void configureHdfsConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
+    protected void configureHdfsConf(JobConf conf, Map<String, String> configuration)
+            throws AlgebricksException, HyracksDataException {
         String formatString = configuration.get(ExternalDataConstants.KEY_FORMAT);
         try {
             confFactory = new ConfFactory(conf);
             clusterLocations = getPartitionConstraint();
             int numPartitions = clusterLocations.getLocations().length;
-            InputSplit[] configInputSplits = getInputSplits(conf, numPartitions);
+            InputSplit[] configInputSplits;
+            if (credentials != null) {
+                configInputSplits =
+                        ugi.doAs((PrivilegedExceptionAction<InputSplit[]>) () -> getInputSplits(conf, numPartitions));
+            } else {
+                configInputSplits = getInputSplits(conf, numPartitions);
+            }
             readSchedule = hdfsScheduler.getLocationConstraints(configInputSplits);
             inputSplitsFactory = new InputSplitsFactory(configInputSplits);
             read = new boolean[readSchedule.length];
@@ -125,6 +149,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
                 recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
                 this.recordClass = char[].class;
             }
+        } catch (InterruptedException e) {
+            throw HyracksDataException.create(e);
         } catch (IOException e) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e, getMessageOrToString(e));
         } catch (Exception e) {
@@ -157,7 +183,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
     public AsterixInputStream createInputStream(IHyracksTaskContext ctx) throws HyracksDataException {
         try {
             restoreConfig(ctx);
-            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration);
+            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, ugi);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -169,6 +195,16 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
             inputSplits = inputSplitsFactory.getSplits();
             nodeName = ctx.getJobletContext().getServiceContext().getNodeId();
             configured = true;
+            try {
+                if (serializedCredentials != null) {
+                    credentials = new Credentials();
+                    HDFSUtils.deserialize(serializedCredentials, credentials);
+                    ugi = UserGroupInformation.createRemoteUser(UUID.randomUUID().toString());
+                    ugi.addCredentials(credentials);
+                }
+            } catch (IOException ex) {
+                throw HyracksDataException.create(ex);
+            }
         }
     }
 
@@ -237,7 +273,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
                  */
                 readerConf = confFactory.getConf();
             }
-            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf, context);
+            return createRecordReader(configuration, read, inputSplits, readSchedule, nodeName, readerConf, context,
+                    ugi);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -262,12 +299,12 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
 
     private static IRecordReader<?> createRecordReader(Map<String, String> configuration, boolean[] read,
             InputSplit[] inputSplits, String[] readSchedule, String nodeName, JobConf conf,
-            IExternalDataRuntimeContext context) {
-        if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT.trim())
+            IExternalDataRuntimeContext context, UserGroupInformation ugi) {
+        if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim()
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
-            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context);
+            return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi);
         } else {
-            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf);
+            return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, ugi);
         }
     }
 }

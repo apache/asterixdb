@@ -698,6 +698,9 @@ public class ExternalDataUtils {
             case ExternalDataConstants.KEY_ADAPTER_NAME_GCS:
                 validateProperties(configuration, srcLoc, collector);
                 break;
+            case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
+                HDFSUtils.validateProperties(configuration, srcLoc, collector);
+                break;
             default:
                 // Nothing needs to be done
                 break;

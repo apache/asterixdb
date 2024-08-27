@@ -30,6 +30,7 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataUtils;
+import org.apache.asterix.external.writer.HDFSExternalFileWriterFactory;
 import org.apache.asterix.external.writer.LocalFSExternalFileWriterFactory;
 import org.apache.asterix.external.writer.compressor.GzipExternalFileCompressStreamFactory;
 import org.apache.asterix.external.writer.compressor.IExternalFileCompressStreamFactory;
@@ -77,6 +78,7 @@ public class ExternalWriterProvider {
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_LOCALFS, LocalFSExternalFileWriterFactory.PROVIDER);
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3, S3ExternalFileWriterFactory.PROVIDER);
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_GCS, GCSExternalFileWriterFactory.PROVIDER);
+        addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_HDFS, HDFSExternalFileWriterFactory.PROVIDER);
     }
 
     private static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,

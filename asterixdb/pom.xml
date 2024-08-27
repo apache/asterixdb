@@ -96,7 +96,7 @@
     <log4j.version>2.22.1</log4j.version>
     <awsjavasdk.version>2.24.9</awsjavasdk.version>
     <awsjavasdk.crt.version>0.29.10</awsjavasdk.crt.version>
-    <parquet.version>1.14.1</parquet.version>
+    <parquet.version>1.14.3</parquet.version>
     <hadoop-awsjavasdk.version>1.12.637</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>

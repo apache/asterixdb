@@ -2424,6 +2424,8 @@ public class TestExecutor {
                     str = applyAzureSubstitution(str, placeholders);
                 } else if (placeholder.getValue().equalsIgnoreCase("GCS")) {
                     str = applyGCSSubstitution(str, placeholders);
+                } else if (placeholder.getValue().equalsIgnoreCase("HDFS")) {
+                    str = applyHDFSSubstitution(str, placeholders);
                 }
             } else {
                 // Any other place holders, just replace with the value
@@ -2534,6 +2536,11 @@ public class TestExecutor {
         return str;
     }
 
+    protected String applyHDFSSubstitution(String str, List<Placeholder> placeholders) {
+        str = setHDFSTemplateDefault(str);
+        return str;
+    }
+
     protected String setAzureTemplate(String str) {
         return str.replace("%template%", TEMPLATE);
     }
@@ -2543,6 +2550,10 @@ public class TestExecutor {
     }
 
     protected String setGCSTemplateDefault(String str) {
+        return str;
+    }
+
+    protected String setHDFSTemplateDefault(String str) {
         return str;
     }
 

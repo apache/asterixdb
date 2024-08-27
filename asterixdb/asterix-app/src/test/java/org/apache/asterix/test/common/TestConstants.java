@@ -82,4 +82,12 @@ public class TestConstants {
                 + BLOB_ENDPOINT_PLACEHOLDER + "\")";
         public static final String TEMPLATE_DEFAULT = TEMPLATE;
     }
+
+    public static class HDFS {
+        public static final String HDFS_AUTHENTICATION_DEFAULT = "kerberos";
+        public static final String KERBEROS_PRINCIPAL_DEFAULT = "hdfsuser@EXAMPLE.COM";
+        public static final String KERBEROS_PASSWORD_DEFAULT = "hdfspassword";
+        public static final String KERBEROS_REALM_DEFAULT = "EXAMPLE.COM";
+        public static final String KERBEROS_KDC_DEFAULT = "localhost:8800";
+    }
 }

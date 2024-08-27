@@ -161,6 +161,7 @@ public class ExternalDataConstants {
     public static final String KEY_ADAPTER_NAME_AZURE_BLOB = "AZUREBLOB";
     public static final String KEY_ADAPTER_NAME_AZURE_DATA_LAKE = "AZUREDATALAKE";
     public static final String KEY_ADAPTER_NAME_GCS = "GCS";
+    public static final String KEY_ADAPTER_NAME_HDFS = "HDFS";
 
     /**
      * HDFS class names
@@ -178,6 +179,29 @@ public class ExternalDataConstants {
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
     public static final String INPUT_FORMAT_PARQUET = "parquet-input-format";
+
+    public static final String HDFS_BLOCKSIZE = "blocksize";
+    public static final String HDFS_REPLICATION = "replication";
+    public static final String HADOOP_AUTHENTICATION = "authentication";
+    public static final String KERBEROS_PROTOCOL = "kerberos";
+    public static final String KERBEROS_REALM = "realm";
+    public static final String KERBEROS_KDC = "kdc";
+    public static final String HDFS_USE_DATANODE_HOSTNAME = "use-datanode-hostname";
+    public static final String KERBEROS_PRINCIPAL = "principal";
+    public static final String KERBEROS_PASSWORD = "password";
+
+    public static final String KEY_HDFS_BLOCKSIZE = "dfs.blocksize";
+    public static final String KEY_HDFS_REPLICATION = "dfs.replication";
+    public static final String KEY_HADOOP_AUTHENTICATION = "hadoop.security.authentication";
+    public static final String KEY_KERBEROS_CONF = "java.security.krb5.conf";
+    public static final String KEY_NAMENODE_PRINCIPAL_PATTERN = "dfs.namenode.kerberos.principal.pattern";
+    public static final String KEY_HDFS_USE_DATANODE_HOSTNAME = "dfs.client.use.datanode.hostname";
+    public static final String KERBEROS_LOGIN_MODULE = "com.sun.security.auth.module.Krb5LoginModule";
+    public static final String KERBEROS_CONFIG_REFRESH = "refreshKrb5Config";
+    public static final String KERBEROS_CONFIG_FILE_CONTENT =
+            "[libdefaults]\n\tdefault_realm = %1$s\n\n[realms]\n\t%1$s = {\n\t\tkdc = %2$s\n\t}";
+    public static final String[] KERBEROS_CONFIG_FILE_PATTERN = { "krb5", ".conf" };
+
     /**
      * Builtin streams
      */
@@ -358,7 +382,7 @@ public class ExternalDataConstants {
     static {
         WRITER_SUPPORTED_FORMATS = Set.of(FORMAT_JSON_LOWER_CASE, FORMAT_PARQUET, FORMAT_CSV_LOWER_CASE);
         WRITER_SUPPORTED_ADAPTERS = Set.of(ALIAS_LOCALFS_ADAPTER.toLowerCase(), KEY_ADAPTER_NAME_AWS_S3.toLowerCase(),
-                KEY_ADAPTER_NAME_GCS.toLowerCase());
+                KEY_ADAPTER_NAME_GCS.toLowerCase(), KEY_ADAPTER_NAME_HDFS.toLowerCase());
         TEXTUAL_WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
         PARQUET_WRITER_SUPPORTED_COMPRESSION =
                 Set.of(KEY_COMPRESSION_GZIP, KEY_COMPRESSION_SNAPPY, KEY_COMPRESSION_ZSTD);

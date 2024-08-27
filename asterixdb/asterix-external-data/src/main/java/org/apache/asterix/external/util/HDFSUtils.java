@@ -18,8 +18,11 @@
  */
 package org.apache.asterix.external.util;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.REQUIRED_PARAM_IF_PARAM_IS_PRESENT;
+import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYPE;
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,14 +30,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import javax.security.auth.Subject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.login.AppConfigurationEntry;
+import javax.security.auth.login.LoginContext;
+import javax.security.auth.login.LoginException;
 
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.config.DatasetConfig.ExternalFilePendingOp;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.external.indexing.ExternalFile;
@@ -45,22 +63,29 @@ import org.apache.asterix.external.util.ExternalDataConstants.ParquetOptions;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.ExternalDatasetProjectionFiltrationInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hadoop.security.Credentials;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.ICCServiceContext;
 import org.apache.hyracks.api.context.ICCContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.HyracksException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
@@ -223,7 +248,149 @@ public class HDFSUtils {
                     configuration.get(ExternalDataConstants.S3A_CHANGE_DETECTION_REQUIRED));
         }
 
+        String useDatanodeHostname = configuration.get(ExternalDataConstants.HDFS_USE_DATANODE_HOSTNAME);
+        if (useDatanodeHostname != null) {
+            conf.set(ExternalDataConstants.KEY_HDFS_USE_DATANODE_HOSTNAME, useDatanodeHostname);
+        }
         return conf;
+    }
+
+    public static Configuration configureHDFSwrite(Map<String, String> configuration) {
+        Configuration conf = new Configuration();
+        String url = configuration.get(ExternalDataConstants.KEY_HDFS_URL);
+        String blocksize = configuration.get(ExternalDataConstants.HDFS_BLOCKSIZE);
+        String replication = configuration.get(ExternalDataConstants.HDFS_REPLICATION);
+        String useDatanodeHostname = configuration.get(ExternalDataConstants.HDFS_USE_DATANODE_HOSTNAME);
+        if (url != null) {
+            conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI, url);
+        }
+        if (blocksize != null) {
+            conf.set(ExternalDataConstants.KEY_HDFS_BLOCKSIZE, blocksize);
+        }
+        if (replication != null) {
+            conf.set(ExternalDataConstants.KEY_HDFS_REPLICATION, replication);
+        }
+        if (useDatanodeHostname != null) {
+            conf.set(ExternalDataConstants.KEY_HDFS_USE_DATANODE_HOSTNAME, useDatanodeHostname);
+        }
+        return conf;
+    }
+
+    public synchronized static Credentials configureHadoopAuthentication(Map<String, String> configuration,
+            Configuration conf) throws AlgebricksException {
+        UserGroupInformation.reset();
+        if (Objects.equals(configuration.get(ExternalDataConstants.HADOOP_AUTHENTICATION),
+                ExternalDataConstants.KERBEROS_PROTOCOL)) {
+            conf.set(ExternalDataConstants.KEY_HADOOP_AUTHENTICATION, ExternalDataConstants.KERBEROS_PROTOCOL);
+            conf.set(ExternalDataConstants.KEY_NAMENODE_PRINCIPAL_PATTERN, "*");
+
+            String kerberosRealm = configuration.get(ExternalDataConstants.KERBEROS_REALM);
+            String kerberosKdc = configuration.get(ExternalDataConstants.KERBEROS_KDC);
+            String kerberosPrincipal = configuration.get(ExternalDataConstants.KERBEROS_PRINCIPAL);
+            String kerberosPassword = configuration.get(ExternalDataConstants.KERBEROS_PASSWORD);
+
+            javax.security.auth.login.Configuration config = new JaasConfiguration();
+            java.nio.file.Path krb5conf = null;
+            try {
+                krb5conf = createKerberosConf(kerberosRealm, kerberosKdc);
+                System.setProperty(ExternalDataConstants.KEY_KERBEROS_CONF, krb5conf.toString());
+
+                Subject subject = new Subject();
+                LoginContext loginContext =
+                        new LoginContext("", subject, new callbackHandler(kerberosPrincipal, kerberosPassword), config);
+                loginContext.login();
+
+                // Hadoop libraries use rules to ensure that a principal is associated with a realm.
+                // The default realm is static and needs to be modified in order to work with a different realm.
+                KerberosName.resetDefaultRealm();
+                UserGroupInformation.setConfiguration(conf);
+                UserGroupInformation ugi = UserGroupInformation.getUGIFromSubject(subject);
+                Credentials credentials = new Credentials();
+                ugi.doAs((PrivilegedExceptionAction<Void>) () -> {
+                    try (FileSystem fs = FileSystem.get(conf)) {
+                        fs.addDelegationTokens(ugi.getUserName(), credentials);
+                    }
+                    return null;
+                });
+                loginContext.logout();
+                return credentials;
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                throw CompilationException.create(ErrorCode.COULD_NOT_CREATE_TOKENS);
+            } catch (LoginException | IOException ex) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+            } finally {
+                System.clearProperty(ExternalDataConstants.KEY_KERBEROS_CONF);
+                UserGroupInformation.reset();
+                if (krb5conf != null) {
+                    FileUtils.deleteQuietly(krb5conf.toFile());
+                }
+            }
+        }
+        return null;
+    }
+
+    private static java.nio.file.Path createKerberosConf(String kerberosRealm, String kerberosKdc)
+            throws AlgebricksException {
+        java.nio.file.Path krb5conf;
+        try {
+            krb5conf = Files.createTempFile(ExternalDataConstants.KERBEROS_CONFIG_FILE_PATTERN[0],
+                    ExternalDataConstants.KERBEROS_CONFIG_FILE_PATTERN[1]);
+            Files.writeString(krb5conf,
+                    String.format(ExternalDataConstants.KERBEROS_CONFIG_FILE_CONTENT, kerberosRealm, kerberosKdc));
+        } catch (IOException ex) {
+            throw AsterixException.create(ErrorCode.COULD_NOT_CREATE_FILE,
+                    String.join("", ExternalDataConstants.KERBEROS_CONFIG_FILE_PATTERN));
+        }
+        return krb5conf;
+    }
+
+    private static class JaasConfiguration extends javax.security.auth.login.Configuration {
+        @Override
+        public AppConfigurationEntry[] getAppConfigurationEntry(String name) {
+            Map<String, Object> options =
+                    Map.of(ExternalDataConstants.KERBEROS_CONFIG_REFRESH, ExternalDataConstants.TRUE);
+
+            return new AppConfigurationEntry[] { new AppConfigurationEntry(ExternalDataConstants.KERBEROS_LOGIN_MODULE,
+                    AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, options) };
+        }
+    }
+
+    public static byte[] serialize(Writable writable) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                DataOutputStream oos = new DataOutputStream(bos)) {
+            writable.write(oos);
+            return bos.toByteArray();
+        }
+    }
+
+    public static void deserialize(byte[] data, Writable writable) throws IOException {
+        try (DataInputStream din = new DataInputStream(new ByteArrayInputStream(data))) {
+            writable.readFields(din);
+        }
+    }
+
+    private static class callbackHandler implements CallbackHandler {
+        private final String principal;
+        private final String password;
+
+        public callbackHandler(String principal, String password) {
+            this.principal = principal;
+            this.password = password;
+        }
+
+        @Override
+        public void handle(Callback[] callbacks) throws UnsupportedCallbackException {
+            for (Callback callback : callbacks) {
+                if (callback instanceof NameCallback) {
+                    ((NameCallback) callback).setName(principal);
+                } else if (callback instanceof PasswordCallback) {
+                    ((PasswordCallback) callback).setPassword(password.toCharArray());
+                } else {
+                    throw new UnsupportedCallbackException(callback);
+                }
+            }
+        }
     }
 
     private static void configureParquet(Map<String, String> configuration, JobConf conf) {
@@ -355,5 +522,42 @@ public class HDFSUtils {
      */
     public static boolean isEmpty(JobConf job) {
         return job.get(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, "").isEmpty();
+    }
+
+    public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
+            IWarningCollector collector) throws CompilationException {
+        if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
+        }
+        if (configuration.get(ExternalDataConstants.KEY_PATH) == null) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_PATH);
+        }
+
+        if (Objects.equals(configuration.get(ExternalDataConstants.HADOOP_AUTHENTICATION),
+                ExternalDataConstants.KERBEROS_PROTOCOL)) {
+            String kerberosRealm = configuration.get(ExternalDataConstants.KERBEROS_REALM);
+            String kerberosKdc = configuration.get(ExternalDataConstants.KERBEROS_KDC);
+            String kerberosPrincipal = configuration.get(ExternalDataConstants.KERBEROS_PRINCIPAL);
+            String kerberosPassword = configuration.get(ExternalDataConstants.KERBEROS_PASSWORD);
+
+            if (kerberosRealm == null) {
+                throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT,
+                        ExternalDataConstants.KERBEROS_REALM, ExternalDataConstants.HADOOP_AUTHENTICATION);
+            }
+            if (kerberosKdc == null) {
+                throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT,
+                        ExternalDataConstants.KERBEROS_KDC, ExternalDataConstants.HADOOP_AUTHENTICATION);
+            }
+            if (kerberosPrincipal == null) {
+                throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT,
+                        ExternalDataConstants.KERBEROS_PRINCIPAL, ExternalDataConstants.HADOOP_AUTHENTICATION);
+            }
+            if (kerberosPassword == null) {
+                throw CompilationException.create(REQUIRED_PARAM_IF_PARAM_IS_PRESENT,
+                        ExternalDataConstants.KERBEROS_PASSWORD, ExternalDataConstants.HADOOP_AUTHENTICATION);
+            }
+        }
+
+        validateIncludeExclude(configuration);
     }
 }

@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.reader.hdfs.parquet;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.input.record.ValueReferenceRecord;
@@ -28,6 +29,8 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 
@@ -39,8 +42,8 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     private final IWarningCollector warningCollector;
 
     public ParquetFileRecordReader(boolean[] read, InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, IExternalDataRuntimeContext context) {
-        super(read, inputSplits, readSchedule, nodeName, new ValueReferenceRecord<>(), conf);
+            JobConf conf, IExternalDataRuntimeContext context, UserGroupInformation ugi) {
+        super(read, inputSplits, readSchedule, nodeName, new ValueReferenceRecord<>(), conf, ugi);
         this.warningCollector = context.getTaskContext().getWarningCollector();
         ((MapredParquetInputFormat) inputFormat).setValueEmbedder(context.getValueEmbedder());
     }
@@ -61,11 +64,20 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     @Override
     protected RecordReader<Void, V> getRecordReader(int splitIndex) throws IOException {
         try {
-            ParquetRecordReaderWrapper readerWrapper = (ParquetRecordReaderWrapper) inputFormat
-                    .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+            ParquetRecordReaderWrapper readerWrapper;
+            if (ugi != null) {
+                readerWrapper = ugi
+                        .doAs((PrivilegedExceptionAction<ParquetRecordReaderWrapper>) () -> (ParquetRecordReaderWrapper) inputFormat
+                                .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL));
+            } else {
+                readerWrapper = (ParquetRecordReaderWrapper) inputFormat.getRecordReader(inputSplits[splitIndex], conf,
+                        Reporter.NULL);
+            }
             reader = (RecordReader<Void, V>) readerWrapper;
         } catch (AsterixParquetRuntimeException e) {
             throw e.getHyracksDataException();
+        } catch (InterruptedException e) {
+            throw HyracksDataException.create(e);
         }
         if (value == null) {
             value = reader.createValue();
