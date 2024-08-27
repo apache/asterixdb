@@ -56,6 +56,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
     private final Storage gcsClient;
     private final TransferManager transferManager;
     private final IRequestProfilerLimiter profiler;
+    private final GCSClientConfig config;
 
     public GCSParallelDownloader(String bucket, IOManager ioManager, GCSClientConfig config,
             IRequestProfilerLimiter profiler) throws HyracksDataException {
@@ -70,18 +71,21 @@ public class GCSParallelDownloader implements IParallelDownloader {
         this.gcsClient = builder.build().getService();
         this.transferManager =
                 TransferManagerConfig.newBuilder().setStorageOptions(builder.build()).build().getService();
+        this.config = config;
     }
 
     @Override
     public void downloadFiles(Collection<FileReference> toDownload) throws HyracksDataException {
-        ParallelDownloadConfig.Builder config = ParallelDownloadConfig.newBuilder().setBucketName(bucket);
+        ParallelDownloadConfig.Builder downConfig =
+                ParallelDownloadConfig.newBuilder().setBucketName(bucket).setStripPrefix(this.config.getPrefix());
+
         Map<Path, List<BlobInfo>> pathListMap = new HashMap<>();
         try {
             for (FileReference fileReference : toDownload) {
                 profiler.objectGet();
                 FileUtils.createParentDirectories(fileReference.getFile());
-                addToMap(pathListMap, fileReference.getDeviceHandle().getMount().toPath(),
-                        BlobInfo.newBuilder(BlobId.of(bucket, fileReference.getRelativePath())).build());
+                addToMap(pathListMap, fileReference.getDeviceHandle().getMount().toPath(), BlobInfo
+                        .newBuilder(BlobId.of(bucket, config.getPrefix() + fileReference.getRelativePath())).build());
             }
         } catch (IOException e) {
             throw HyracksDataException.create(e);
@@ -89,7 +93,7 @@ public class GCSParallelDownloader implements IParallelDownloader {
         List<DownloadJob> downloadJobs = new ArrayList<>(pathListMap.size());
         for (Map.Entry<Path, List<BlobInfo>> entry : pathListMap.entrySet()) {
             downloadJobs.add(transferManager.downloadBlobs(entry.getValue(),
-                    config.setDownloadDirectory(entry.getKey()).build()));
+                    downConfig.setDownloadDirectory(entry.getKey()).build()));
         }
         downloadJobs.forEach(DownloadJob::getDownloadResults);
     }
@@ -98,20 +102,22 @@ public class GCSParallelDownloader implements IParallelDownloader {
     public Collection<FileReference> downloadDirectories(Collection<FileReference> toDownload)
             throws HyracksDataException {
         Set<FileReference> failedFiles = new HashSet<>();
-        ParallelDownloadConfig.Builder config = ParallelDownloadConfig.newBuilder().setBucketName(bucket);
+        ParallelDownloadConfig.Builder config =
+                ParallelDownloadConfig.newBuilder().setBucketName(bucket).setStripPrefix(this.config.getPrefix());
 
         Map<Path, List<BlobInfo>> pathListMap = new HashMap<>();
         for (FileReference fileReference : toDownload) {
             profiler.objectMultipartDownload();
-            Page<Blob> blobs = gcsClient.list(bucket, Storage.BlobListOption.prefix(fileReference.getRelativePath()));
+            Page<Blob> blobs = gcsClient.list(bucket,
+                    Storage.BlobListOption.prefix(this.config.getPrefix() + fileReference.getRelativePath()));
             for (Blob blob : blobs.iterateAll()) {
                 addToMap(pathListMap, fileReference.getDeviceHandle().getMount().toPath(), blob.asBlobInfo());
             }
         }
         List<DownloadJob> downloadJobs = new ArrayList<>(pathListMap.size());
         for (Map.Entry<Path, List<BlobInfo>> entry : pathListMap.entrySet()) {
-            downloadJobs.add(transferManager.downloadBlobs(entry.getValue(),
-                    config.setDownloadDirectory(entry.getKey()).build()));
+            ParallelDownloadConfig parallelDownloadConfig = config.setDownloadDirectory(entry.getKey()).build();
+            downloadJobs.add(transferManager.downloadBlobs(entry.getValue(), parallelDownloadConfig));
         }
         List<DownloadResult> results;
         for (DownloadJob job : downloadJobs) {

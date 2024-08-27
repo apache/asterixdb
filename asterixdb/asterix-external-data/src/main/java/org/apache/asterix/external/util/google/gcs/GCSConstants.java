@@ -26,6 +26,7 @@ public class GCSConstants {
     public static final String APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME = "applicationDefaultCredentials";
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
+    public static final String STORAGE_PREFIX = "prefix";
 
     /*
      * Hadoop internal configuration

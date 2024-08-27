@@ -19,6 +19,7 @@
 package org.apache.asterix.cloud.clients.google.gcs;
 
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
+import static org.apache.asterix.external.util.google.gcs.GCSConstants.STORAGE_PREFIX;
 
 import java.io.IOException;
 import java.util.Map;
@@ -42,10 +43,11 @@ public class GCSClientConfig {
     private final int readMaxRequestsPerSeconds;
     private final int writeMaxRequestsPerSeconds;
     private final int writeBufferSize;
+    private final String prefix;
 
     private GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
             long tokenAcquireTimeout, int writeMaxRequestsPerSeconds, int readMaxRequestsPerSeconds,
-            int writeBufferSize) {
+            int writeBufferSize, String prefix) {
         this.region = region;
         this.endpoint = endpoint;
         this.anonymousAuth = anonymousAuth;
@@ -54,18 +56,20 @@ public class GCSClientConfig {
         this.writeMaxRequestsPerSeconds = writeMaxRequestsPerSeconds;
         this.readMaxRequestsPerSeconds = readMaxRequestsPerSeconds;
         this.writeBufferSize = writeBufferSize;
+        this.prefix = prefix;
     }
 
     public GCSClientConfig(String region, String endpoint, boolean anonymousAuth, long profilerLogInterval,
-            int writeBufferSize) {
-        this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize);
+            int writeBufferSize, String prefix) {
+        this(region, endpoint, anonymousAuth, profilerLogInterval, 1, 0, 0, writeBufferSize, prefix);
     }
 
     public static GCSClientConfig of(CloudProperties cloudProperties) {
         return new GCSClientConfig(cloudProperties.getStorageRegion(), cloudProperties.getStorageEndpoint(),
                 cloudProperties.isStorageAnonymousAuth(), cloudProperties.getProfilerLogInterval(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
-                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize());
+                cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize(),
+                cloudProperties.getStoragePrefix());
     }
 
     public static GCSClientConfig of(Map<String, String> configuration, int writeBufferSize) {
@@ -73,10 +77,10 @@ public class GCSClientConfig {
         long profilerLogInterval = 0;
 
         String region = "";
-        String prefix = "";
+        String prefix = configuration.getOrDefault(STORAGE_PREFIX, "");
         boolean anonymousAuth = false;
 
-        return new GCSClientConfig(region, endPoint, anonymousAuth, profilerLogInterval, writeBufferSize);
+        return new GCSClientConfig(region, endPoint, anonymousAuth, profilerLogInterval, writeBufferSize, prefix);
     }
 
     public String getRegion() {
@@ -117,5 +121,9 @@ public class GCSClientConfig {
 
     public int getWriteBufferSize() {
         return writeBufferSize;
+    }
+
+    public String getPrefix() {
+        return prefix;
     }
 }

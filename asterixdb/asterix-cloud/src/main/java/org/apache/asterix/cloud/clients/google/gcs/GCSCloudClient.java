@@ -100,20 +100,20 @@ public class GCSCloudClient implements ICloudClient {
 
     @Override
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
-        return new GCSWriter(bucket, path, gcsClient, profilerLimiter, guardian, writeBufferSize);
+        return new GCSWriter(bucket, config.getPrefix() + path, gcsClient, profilerLimiter, guardian, writeBufferSize);
     }
 
     @Override
     public Set<CloudFile> listObjects(String bucket, String path, FilenameFilter filter) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectsList();
-        Page<Blob> blobs =
-                gcsClient.list(bucket, BlobListOption.prefix(path), BlobListOption.fields(Storage.BlobField.SIZE));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path),
+                BlobListOption.fields(Storage.BlobField.SIZE));
 
         Set<CloudFile> files = new HashSet<>();
         for (Blob blob : blobs.iterateAll()) {
             if (filter.accept(null, IoUtil.getFileNameFromPath(blob.getName()))) {
-                files.add(CloudFile.of(blob.getName(), blob.getSize()));
+                files.add(CloudFile.of(stripCloudPrefix(blob.getName()), blob.getSize()));
             }
         }
         return files;
@@ -123,7 +123,7 @@ public class GCSCloudClient implements ICloudClient {
     public int read(String bucket, String path, long offset, ByteBuffer buffer) throws HyracksDataException {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        BlobId blobId = BlobId.of(bucket, path);
+        BlobId blobId = BlobId.of(bucket, config.getPrefix() + path);
         long readTo = offset + buffer.remaining();
         int totalRead = 0;
         try (ReadChannel from = gcsClient.reader(blobId).limit(readTo)) {
@@ -145,7 +145,7 @@ public class GCSCloudClient implements ICloudClient {
     public byte[] readAllBytes(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        BlobId blobId = BlobId.of(bucket, path);
+        BlobId blobId = BlobId.of(bucket, config.getPrefix() + path);
         try {
             return gcsClient.readAllBytes(blobId);
         } catch (StorageException e) {
@@ -157,7 +157,7 @@ public class GCSCloudClient implements ICloudClient {
     public InputStream getObjectStream(String bucket, String path, long offset, long length) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        try (ReadChannel reader = gcsClient.reader(bucket, path).limit(offset + length)) {
+        try (ReadChannel reader = gcsClient.reader(bucket, config.getPrefix() + path).limit(offset + length)) {
             reader.seek(offset);
             return Channels.newInputStream(reader);
         } catch (StorageException | IOException e) {
@@ -169,7 +169,7 @@ public class GCSCloudClient implements ICloudClient {
     public void write(String bucket, String path, byte[] data) {
         guardian.checkWriteAccess(bucket, path);
         profilerLimiter.objectWrite();
-        BlobInfo blobInfo = BlobInfo.newBuilder(bucket, path).build();
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucket, config.getPrefix() + path).build();
         gcsClient.create(blobInfo, data);
     }
 
@@ -177,7 +177,7 @@ public class GCSCloudClient implements ICloudClient {
     public void copy(String bucket, String srcPath, FileReference destPath) {
         guardian.checkReadAccess(bucket, srcPath);
         profilerLimiter.objectsList();
-        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(srcPath));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + srcPath));
         for (Blob blob : blobs.iterateAll()) {
             profilerLimiter.objectCopy();
             BlobId source = blob.getBlobId();
@@ -200,7 +200,7 @@ public class GCSCloudClient implements ICloudClient {
         while (pathIter.hasNext()) {
             batchRequest = gcsClient.batch();
             for (int i = 0; pathIter.hasNext() && i < DELETE_BATCH_SIZE; i++) {
-                BlobId blobId = BlobId.of(bucket, pathIter.next());
+                BlobId blobId = BlobId.of(bucket, config.getPrefix() + pathIter.next());
                 guardian.checkWriteAccess(bucket, blobId.getName());
                 batchRequest.delete(blobId);
             }
@@ -214,7 +214,8 @@ public class GCSCloudClient implements ICloudClient {
     public long getObjectSize(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        Blob blob = gcsClient.get(bucket, path, Storage.BlobGetOption.fields(Storage.BlobField.SIZE));
+        Blob blob =
+                gcsClient.get(bucket, config.getPrefix() + path, Storage.BlobGetOption.fields(Storage.BlobField.SIZE));
         if (blob == null) {
             return 0;
         }
@@ -225,7 +226,8 @@ public class GCSCloudClient implements ICloudClient {
     public boolean exists(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        Blob blob = gcsClient.get(bucket, path, Storage.BlobGetOption.fields(Storage.BlobField.values()));
+        Blob blob = gcsClient.get(bucket, config.getPrefix() + path,
+                Storage.BlobGetOption.fields(Storage.BlobField.values()));
         return blob != null && blob.exists();
     }
 
@@ -233,7 +235,7 @@ public class GCSCloudClient implements ICloudClient {
     public boolean isEmptyPrefix(String bucket, String path) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectsList();
-        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(path));
+        Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path));
         return !blobs.hasNextPage();
     }
 
@@ -277,5 +279,9 @@ public class GCSCloudClient implements ICloudClient {
             builder.setHost(config.getEndpoint());
         }
         return builder.build().getService();
+    }
+
+    private String stripCloudPrefix(String objectName) {
+        return objectName.substring(config.getPrefix().length());
     }
 }
