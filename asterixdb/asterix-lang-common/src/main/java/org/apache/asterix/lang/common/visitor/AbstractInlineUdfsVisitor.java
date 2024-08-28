@@ -154,7 +154,14 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
     public Boolean visit(IndexAccessor fa, Void arg) throws CompilationException {
         Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(fa.getExpr());
         fa.setExpr(p.second);
-        return p.first;
+        boolean inlined = p.first;
+        Expression indexExpr = fa.getIndexExpr();
+        if (indexExpr != null) {
+            Pair<Boolean, Expression> p2 = inlineUdfsAndViewsInExpr(indexExpr);
+            fa.setIndexExpr(p2.second);
+            inlined |= p2.first;
+        }
+        return inlined;
     }
 
     @Override
@@ -251,7 +258,9 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
 
     @Override
     public Boolean visit(UnaryExpr u, Void arg) throws CompilationException {
-        return u.getExpr().accept(this, arg);
+        Pair<Boolean, Expression> p = inlineUdfsAndViewsInExpr(u.getExpr());
+        u.setExpr(p.second);
+        return p.first;
     }
 
     @Override
@@ -276,7 +285,7 @@ public abstract class AbstractInlineUdfsVisitor extends AbstractQueryExpressionV
         if (returnExpression != null) {
             Pair<Boolean, Expression> rewrittenReturnExpr = inlineUdfsAndViewsInExpr(returnExpression);
             insert.setReturnExpression(rewrittenReturnExpr.second);
-            changed |= rewrittenReturnExpr.first;
+            changed = rewrittenReturnExpr.first;
         }
         Pair<Boolean, Expression> rewrittenBodyExpression = inlineUdfsAndViewsInExpr(insert.getBody());
         insert.setBody(rewrittenBodyExpression.second);
