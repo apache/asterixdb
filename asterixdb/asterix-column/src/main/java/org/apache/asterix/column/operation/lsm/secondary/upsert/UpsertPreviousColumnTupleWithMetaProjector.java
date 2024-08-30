@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.column.operation.lsm.secondary.upsert;
 
+import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.MODIFY;
+
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
@@ -43,7 +45,7 @@ final class UpsertPreviousColumnTupleWithMetaProjector implements IColumnTuplePr
         builder = new ArrayTupleBuilder(numberOfPrimaryKeys + 2);
         projector = new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
                 Collections.emptyMap(), metaType, NoOpColumnFilterEvaluatorFactory.INSTANCE,
-                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null);
+                NoOpColumnFilterEvaluatorFactory.INSTANCE, NoOpWarningCollector.INSTANCE, null, MODIFY);
     }
 
     @Override

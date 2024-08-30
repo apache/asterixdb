@@ -68,6 +68,6 @@ public class QueryColumnTupleProjectorFactory implements ITupleProjectorFactory 
         // The dataset has a meta part
         return new QueryColumnWithMetaTupleProjector(datasetType, metaType, numberOfPrimaryKeys, requestedType,
                 functionCallInfo, requestedMetaType, rangeFilterEvaluatorFactory, columnFilterEvaluatorFactory,
-                warningCollector, context);
+                warningCollector, context, QUERY);
     }
 }
