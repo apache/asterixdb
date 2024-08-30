@@ -213,7 +213,8 @@ public class InvokeUtil {
         }
     }
 
-    @SuppressWarnings({ "squid:S1181", "squid:S1193", "ConstantConditions" }) // catching Throwable, instanceofs
+    @SuppressWarnings({ "squid:S1181", "squid:S1193", "ConstantConditions", "UnreachableCode" })
+    // catching Throwable, instanceofs, false-positive unreachable code
     public static void tryWithCleanups(ThrowingAction action, ThrowingAction... cleanups) throws Exception {
         Throwable savedT = null;
         boolean suppressedInterrupted = false;
@@ -284,6 +285,32 @@ public class InvokeUtil {
             throw (IOException) savedT;
         } else {
             throw HyracksDataException.create(savedT);
+        }
+    }
+
+    public static void tryWithCleanupsUnchecked(Runnable action, Runnable... cleanups) {
+        Throwable savedT = null;
+        try {
+            action.run();
+        } catch (Throwable t) {
+            savedT = t;
+        } finally {
+            for (Runnable cleanup : cleanups) {
+                try {
+                    cleanup.run();
+                } catch (Throwable t) {
+                    if (savedT != null) {
+                        savedT.addSuppressed(t);
+                    } else {
+                        savedT = t;
+                    }
+                }
+            }
+        }
+        if (savedT instanceof Error) {
+            throw (Error) savedT;
+        } else if (savedT != null) {
+            throw new UncheckedExecutionException(savedT);
         }
     }
 
