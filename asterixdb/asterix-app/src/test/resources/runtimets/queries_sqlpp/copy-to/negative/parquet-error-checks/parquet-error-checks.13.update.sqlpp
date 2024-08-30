@@ -24,11 +24,7 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks13")
-TYPE ( {
-             id :  int,
-             name : string,
-             list : [int,string]
-           } )
+TYPE ( { id :  int,  name : string, list : [int,string]} )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",

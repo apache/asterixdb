@@ -336,6 +336,7 @@ public class ExternalDataConstants {
     public static final Set<String> WRITER_SUPPORTED_ADAPTERS;
     public static final Set<String> TEXTUAL_WRITER_SUPPORTED_COMPRESSION;
     public static final Set<String> PARQUET_WRITER_SUPPORTED_COMPRESSION;
+    public static final Set<String> PARQUET_WRITER_SUPPORTED_VERSION;
     public static final int PARQUET_DICTIONARY_PAGE_SIZE = 1048576;
 
     static {
@@ -345,6 +346,7 @@ public class ExternalDataConstants {
         TEXTUAL_WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
         PARQUET_WRITER_SUPPORTED_COMPRESSION =
                 Set.of(KEY_COMPRESSION_GZIP, KEY_COMPRESSION_SNAPPY, KEY_COMPRESSION_ZSTD);
+        PARQUET_WRITER_SUPPORTED_VERSION = Set.of(PARQUET_WRITER_VERSION_VALUE_1, PARQUET_WRITER_VERSION_VALUE_2);
     }
 
     public static class ParquetOptions {

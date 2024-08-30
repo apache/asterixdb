@@ -25,16 +25,7 @@ COPY (
 ) toWriter
 TO S3
 PATH ("copy-to-result", "parquet-error-checks6")
-TYPE ( {
-            id : bigint,
-            name : {
-             first : string
-            },
-            nested:{
-             first : string,
-             second : string
-            }
-           } )
+TYPE ( {id : bigint,name : {  first : string },nested:{first : string,second : string} } )
 WITH {
     "accessKeyId":"dummyAccessKey",
     "secretAccessKey":"dummySecretKey",

@@ -157,14 +157,12 @@ public class ExternalWriterProvider {
     }
 
     private static ParquetProperties.WriterVersion getParquetWriterVersion(Map<String, String> configuration) {
-
-        if (configuration.get(ExternalDataConstants.PARQUET_WRITER_VERSION_KEY) == null) {
-            return ParquetProperties.WriterVersion.PARQUET_1_0;
-        } else if (configuration.get(ExternalDataConstants.PARQUET_WRITER_VERSION_KEY)
-                .equals(ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_2)) {
+        String writerVersionString = configuration.getOrDefault(ExternalDataConstants.PARQUET_WRITER_VERSION_KEY,
+                ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_1);
+        if (writerVersionString.equals(ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_2)) {
             return ParquetProperties.WriterVersion.PARQUET_2_0;
-        } else
-            return ParquetProperties.WriterVersion.PARQUET_1_0;
+        }
+        return ParquetProperties.WriterVersion.PARQUET_1_0;
     }
 
     private static String getRowGroupSize(Map<String, String> configuration) {

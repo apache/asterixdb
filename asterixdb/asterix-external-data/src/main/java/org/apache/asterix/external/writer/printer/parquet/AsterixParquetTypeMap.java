@@ -31,7 +31,7 @@ public class AsterixParquetTypeMap {
                     Map.entry(ATypeTag.STRING, PrimitiveType.PrimitiveTypeName.BINARY),
                     Map.entry(ATypeTag.TINYINT, PrimitiveType.PrimitiveTypeName.INT32),
                     Map.entry(ATypeTag.SMALLINT, PrimitiveType.PrimitiveTypeName.INT32),
-                    Map.entry(ATypeTag.INTEGER, PrimitiveType.PrimitiveTypeName.INT64),
+                    Map.entry(ATypeTag.INTEGER, PrimitiveType.PrimitiveTypeName.INT32),
                     Map.entry(ATypeTag.BIGINT, PrimitiveType.PrimitiveTypeName.INT64),
                     Map.entry(ATypeTag.FLOAT, PrimitiveType.PrimitiveTypeName.FLOAT),
                     Map.entry(ATypeTag.DOUBLE, PrimitiveType.PrimitiveTypeName.DOUBLE),

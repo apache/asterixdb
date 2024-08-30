@@ -27,8 +27,6 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PARQUET_ROW_GROUP_SIZE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_WRITER_MAX_RESULT;
 import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_WRITER_VERSION_KEY;
-import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_1;
-import static org.apache.asterix.external.util.ExternalDataConstants.PARQUET_WRITER_VERSION_VALUE_2;
 import static org.apache.asterix.external.util.ExternalDataConstants.WRITER_MAX_RESULT_MINIMUM;
 
 import java.util.List;
@@ -79,18 +77,14 @@ public class WriterValidationUtil {
         validateParquetCompression(configuration, sourceLocation);
         validateParquetRowGroupSize(configuration);
         validateParquetPageSize(configuration);
-        validateVersion(configuration);
+        validateVersion(configuration, sourceLocation);
     }
 
-    private static void validateVersion(Map<String, String> configuration) throws CompilationException {
+    private static void validateVersion(Map<String, String> configuration, SourceLocation sourceLocation)
+            throws CompilationException {
         String version = configuration.get(PARQUET_WRITER_VERSION_KEY);
-        if (version == null) {
-            return;
-        }
-        if (version.equals(PARQUET_WRITER_VERSION_VALUE_1) || version.equals(PARQUET_WRITER_VERSION_VALUE_2)) {
-            return;
-        }
-        throw CompilationException.create(ErrorCode.INVALID_PARQUET_WRITER_VERSION);
+        checkSupported(PARQUET_WRITER_VERSION_KEY, version, ExternalDataConstants.PARQUET_WRITER_SUPPORTED_VERSION,
+                ErrorCode.INVALID_PARQUET_WRITER_VERSION, sourceLocation, true);
     }
 
     private static void validateParquetRowGroupSize(Map<String, String> configuration) throws CompilationException {
