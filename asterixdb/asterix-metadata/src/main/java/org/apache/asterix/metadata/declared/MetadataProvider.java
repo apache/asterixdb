@@ -960,7 +960,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
-        return appCtx.getClusterStateManager().getClusterLocations();
+        return appCtx.getClusterStateManager().getSortedClusterLocations();
     }
 
     public Pair<IOperatorDescriptor, AlgebricksPartitionConstraint> buildExternalDataLookupRuntime(
