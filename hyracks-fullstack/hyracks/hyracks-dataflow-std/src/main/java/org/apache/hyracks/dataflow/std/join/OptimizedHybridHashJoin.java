@@ -255,7 +255,7 @@ public class OptimizedHybridHashJoin {
         }
     }
 
-    public void fail() throws HyracksDataException {
+    public void fail() {
         for (RunFileWriter writer : buildRFWriters) {
             if (writer != null) {
                 CleanupUtils.fail(writer, null);

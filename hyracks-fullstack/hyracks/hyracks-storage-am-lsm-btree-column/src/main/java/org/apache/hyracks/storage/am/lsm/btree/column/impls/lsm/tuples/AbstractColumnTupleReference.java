@@ -155,11 +155,14 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
              */
             skip(Math.max(skipCount, 0));
         } else {
+            skipMegaLeafNode();
             numOfSkippedMegaLeafNodes++;
         }
 
         totalNumberOfMegaLeafNodes++;
     }
+
+    protected abstract void skipMegaLeafNode();
 
     @Override
     public final void setAt(int startIndex) throws HyracksDataException {
