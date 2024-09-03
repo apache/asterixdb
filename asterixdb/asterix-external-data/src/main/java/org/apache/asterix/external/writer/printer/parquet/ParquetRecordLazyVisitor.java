@@ -122,23 +122,25 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
         }
 
         recordConsumer.startGroup();
-        recordConsumer.startField(LIST_FIELD, groupType.getFieldIndex(LIST_FIELD));
 
-        for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
-            pointable.nextChild();
-            AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
+        if (pointable.getNumberOfChildren() > 0) {
+            recordConsumer.startField(LIST_FIELD, groupType.getFieldIndex(LIST_FIELD));
 
-            recordConsumer.startGroup();
-            recordConsumer.startField(ELEMENT_FIELD, listType.getFieldIndex(ELEMENT_FIELD));
+            for (int i = 0; i < pointable.getNumberOfChildren(); i++) {
+                pointable.nextChild();
+                AbstractLazyVisitablePointable child = pointable.getChildVisitablePointable();
 
-            child.accept(this, listType.getType(ELEMENT_FIELD));
+                recordConsumer.startGroup();
+                recordConsumer.startField(ELEMENT_FIELD, listType.getFieldIndex(ELEMENT_FIELD));
+                child.accept(this, listType.getType(ELEMENT_FIELD));
+                recordConsumer.endField(ELEMENT_FIELD, listType.getFieldIndex(ELEMENT_FIELD));
+                recordConsumer.endGroup();
 
-            recordConsumer.endField(ELEMENT_FIELD, listType.getFieldIndex(ELEMENT_FIELD));
-            recordConsumer.endGroup();
+            }
 
+            recordConsumer.endField(LIST_FIELD, groupType.getFieldIndex(LIST_FIELD));
         }
 
-        recordConsumer.endField(LIST_FIELD, groupType.getFieldIndex(LIST_FIELD));
         recordConsumer.endGroup();
         return null;
     }

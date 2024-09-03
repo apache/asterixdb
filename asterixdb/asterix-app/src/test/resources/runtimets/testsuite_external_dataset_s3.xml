@@ -60,6 +60,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-empty-array">
+        <output-dir compare="Text">parquet-empty-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="empty-path">
         <output-dir compare="Text">empty-path</output-dir>
       </compilation-unit>
