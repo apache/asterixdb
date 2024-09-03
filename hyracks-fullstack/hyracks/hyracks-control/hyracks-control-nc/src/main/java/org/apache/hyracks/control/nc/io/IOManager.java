@@ -76,7 +76,7 @@ public class IOManager implements IIOManager {
     private final ExecutorService executor;
     private final BlockingQueue<IoRequest> submittedRequests;
     private final BlockingQueue<IoRequest> freeRequests;
-    private final List<IODeviceHandle> ioDevices;
+    protected final List<IODeviceHandle> ioDevices;
     private final List<IODeviceHandle> workspaces;
     private final IFileDeviceResolver deviceComputer;
     /*

@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.FileStore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -51,6 +52,7 @@ import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.cloud.filesystem.PhysicalDrive;
 import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
 import org.apache.hyracks.cloud.io.request.ICloudRequest;
@@ -76,6 +78,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     protected final List<FileReference> partitionPaths;
     protected final IOManager localIoManager;
     protected final INamespacePathResolver nsPathResolver;
+    private final List<FileStore> drivePaths;
 
     public AbstractCloudIOManager(IOManager ioManager, CloudProperties cloudProperties,
             INamespacePathResolver nsPathResolver, ICloudGuardian guardian) throws HyracksDataException {
@@ -90,6 +93,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         partitions = new HashSet<>();
         partitionPaths = new ArrayList<>();
         this.localIoManager = ioManager;
+        drivePaths = PhysicalDrive.getDrivePaths(ioDevices);
     }
 
     /*
@@ -473,5 +477,10 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
             size += file.getSize();
         }
         return size;
+    }
+
+    @Override
+    public long getTotalDiskUsage() {
+        return PhysicalDrive.getUsedSpace(drivePaths);
     }
 }

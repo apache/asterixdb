@@ -53,17 +53,18 @@ public final class PhysicalDrive implements IPhysicalDrive {
 
     @Override
     public boolean computeAndCheckIsPressured() {
-        long usedSpace = getUsedSpace();
+        long usedSpace = getUsedSpace(drivePaths);
         long pressureCapacity = diskSpace.getPressureCapacity();
         boolean isPressured = usedSpace > pressureCapacity;
         this.usedSpace.set(usedSpace);
 
-        if (isPressured) {
-            LOGGER.info("Used space: {}, pressureCapacity: {} (isPressured: {})",
+        if (usedSpace >= diskSpace.getAllocatedCapacity()) {
+            LOGGER.warn(
+                    "Allocated disk space has been exceeded. Used space: {}, pressureCapacity: {} (isPressured: {})",
                     StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureCapacity),
                     true);
-        } else if (usedSpace >= diskSpace.getAllocatedCapacity()) {
-            LOGGER.warn("Allocated disk space has been exceeded. Used space: {}, pressureCapacity: {}",
+        } else if (isPressured) {
+            LOGGER.info("Used space: {}, pressureCapacity: {} (isPressured: {})",
                     StorageUtil.toHumanReadableSize(usedSpace), StorageUtil.toHumanReadableSize(pressureCapacity),
                     true);
         } else {
@@ -85,10 +86,9 @@ public final class PhysicalDrive implements IPhysicalDrive {
         return usedSpace.get() < diskSpace.getPressureCapacity();
     }
 
-    private long getUsedSpace() {
+    public static long getUsedSpace(List<FileStore> drivePaths) {
         long totalUsedSpace = 0;
-        for (int i = 0; i < drivePaths.size(); i++) {
-            FileStore device = drivePaths.get(i);
+        for (FileStore device : drivePaths) {
             try {
                 totalUsedSpace += getTotalSpace(device) - getUsableSpace(device);
             } catch (HyracksDataException e) {
@@ -121,7 +121,7 @@ public final class PhysicalDrive implements IPhysicalDrive {
         return new DiskSpace(allocatedCapacity, pressureCapacity);
     }
 
-    private static List<FileStore> getDrivePaths(List<IODeviceHandle> deviceHandles) throws HyracksDataException {
+    public static List<FileStore> getDrivePaths(List<IODeviceHandle> deviceHandles) throws HyracksDataException {
         Set<String> distinctDrives = new HashSet<>();
         List<FileStore> fileStores = new ArrayList<>();
         for (IODeviceHandle handle : deviceHandles) {

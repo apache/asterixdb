@@ -36,7 +36,7 @@ public abstract class AbstractIndexUnit {
 
     public final void open() {
         lastAccessTime.set(System.nanoTime());
-        openCounter.get();
+        openCounter.incrementAndGet();
     }
 
     public final void close() {
