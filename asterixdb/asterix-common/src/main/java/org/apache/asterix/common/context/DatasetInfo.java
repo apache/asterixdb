@@ -292,6 +292,20 @@ public class DatasetInfo extends Info implements Comparable<DatasetInfo> {
         }
     }
 
+    public void waitForFlushes() throws HyracksDataException {
+        logManager.log(waitLog);
+        synchronized (this) {
+            while (pendingFlushes > 0) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw HyracksDataException.create(e);
+                }
+            }
+        }
+    }
+
     public synchronized int getPendingFlushes() {
         return pendingFlushes;
     }
