@@ -72,6 +72,7 @@ public final class BooleanColumnValuesWriter extends AbstractColumnValuesWriter 
     protected void addValue(IColumnValuesReader reader) throws IOException {
         int value = reader.getBoolean() ? 1 : 0;
         booleanWriter.writeInt(value);
+        filterWriter.addLong(value);
     }
 
     @Override
