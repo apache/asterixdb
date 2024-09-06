@@ -43,6 +43,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 
@@ -157,11 +158,13 @@ public class GCSCloudClient implements ICloudClient {
     public InputStream getObjectStream(String bucket, String path, long offset, long length) {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectGet();
-        try (ReadChannel reader = gcsClient.reader(bucket, config.getPrefix() + path).limit(offset + length)) {
+        ReadChannel reader = null;
+        try {
+            reader = gcsClient.reader(bucket, config.getPrefix() + path).limit(offset + length);
             reader.seek(offset);
             return Channels.newInputStream(reader);
-        } catch (StorageException | IOException e) {
-            throw new IllegalStateException(e);
+        } catch (StorageException | IOException ex) {
+            throw new RuntimeException(CleanupUtils.close(reader, ex));
         }
     }
 
