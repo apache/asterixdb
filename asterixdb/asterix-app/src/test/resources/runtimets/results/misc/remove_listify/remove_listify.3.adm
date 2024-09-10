@@ -1,0 +1,15 @@
+{ "counts": 1, "f1": 101 }
+{ "counts": 1, "f1": 102 }
+{ "counts": 2, "f1": 102 }
+{ "counts": 2, "f1": 102 }
+{ "counts": 1, "f1": 103 }
+{ "counts": 1, "f1": 103 }
+{ "counts": 1, "f1": 103 }
+{ "counts": 2, "f1": 103 }
+{ "counts": 3, "f1": 103 }
+{ "counts": 1, "f1": 104 }
+{ "counts": 1, "f1": 104 }
+{ "counts": 2, "f1": 104 }
+{ "counts": 0, "f1": 105 }
+{ "counts": 1, "f1": 105 }
+{ "counts": 2, "f1": 105 }

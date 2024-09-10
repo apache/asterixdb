@@ -1,0 +1,100 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+use test;
+
+insert into collection1
+([
+
+    {
+        "uid":1,
+        "f1":101,
+        "f2": 24
+    },
+    {
+        "uid":2,
+        "f1":102,
+        "f2": 25
+    },
+    {
+        "uid":3,
+        "f1":102,
+        "f2": 25
+    },
+    {
+        "uid":4,
+        "f1":102,
+        "f2": 31
+    },
+    {
+        "uid":5,
+        "f1":103,
+        "f2": 24
+    },
+    {
+        "uid":6,
+        "f1":103,
+        "f2": 30
+    },
+    {
+        "uid":7,
+        "f1":103,
+        "f2": 31
+    },
+    {
+        "uid":8,
+        "f1":103,
+        "f2": 35
+    },
+    {
+        "uid":9,
+        "f1":103,
+        "f2": 41
+    },
+    {
+        "uid":10,
+        "f1":104,
+        "f2": 42
+    },
+    {
+        "uid":11,
+        "f1":104,
+        "f2": 24
+    },
+    {
+        "uid":12,
+        "f1":104,
+        "f2": 25
+    },
+    {
+        "uid":13,
+        "f1":105,
+        "f2": 24
+    },
+    {
+        "uid":14,
+        "f1":105,
+        "f2": 25
+    },
+    {
+        "uid":15,
+        "f1":105,
+        "f2": "40"
+    }
+])
