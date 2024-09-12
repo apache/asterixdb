@@ -28,6 +28,7 @@ import org.apache.asterix.om.functions.BuiltinFunctions;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import org.apache.hyracks.algebricks.common.utils.ListSet;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
@@ -119,6 +120,10 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
         AbstractLogicalOperator op = (AbstractLogicalOperator) opRef.getValue();
         VariableUtilities.getUsedVariables(op, varSet);
         if (op.hasNestedPlans()) {
+            // Variables used by the parent operators should be live at op.
+            Set<LogicalVariable> localLiveVars = new ListSet<>();
+            VariableUtilities.getLiveVariables(op, localLiveVars);
+            varSet.retainAll(localLiveVars);
             AbstractOperatorWithNestedPlans aonp = (AbstractOperatorWithNestedPlans) op;
             for (ILogicalPlan p : aonp.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
@@ -198,8 +203,9 @@ public class CancelUnnestWithNestedListifyRule implements IAlgebraicRewriteRule 
             return false;
         }
 
-        if (OperatorManipulationUtil.ancestorOfOperators(agg, ImmutableSet.of(LogicalOperatorTag.LIMIT,
-                LogicalOperatorTag.ORDER, LogicalOperatorTag.GROUP, LogicalOperatorTag.DISTINCT))) {
+        if (OperatorManipulationUtil.ancestorOfOperatorsExcludeCurrent(agg,
+                ImmutableSet.of(LogicalOperatorTag.LIMIT, LogicalOperatorTag.ORDER, LogicalOperatorTag.GROUP,
+                        LogicalOperatorTag.DISTINCT, LogicalOperatorTag.AGGREGATE))) {
             return false;
         }
 
