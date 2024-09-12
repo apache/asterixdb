@@ -376,30 +376,17 @@ public class FunctionUtil {
             return expr1.equals(expr2);
         }
 
-        return commutativeEquals(expr1, expr2, new BitSet());
-    }
-
-    private static boolean commutativeEquals(ILogicalExpression expr1, ILogicalExpression expr2, BitSet matched) {
-        if (expr1.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL
-                || expr2.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
-            return expr1.equals(expr2);
-        }
-
-        AbstractFunctionCallExpression funcExpr1 = (AbstractFunctionCallExpression) expr1;
-        AbstractFunctionCallExpression funcExpr2 = (AbstractFunctionCallExpression) expr2;
-
         List<Mutable<ILogicalExpression>> args1 = funcExpr1.getArguments();
         List<Mutable<ILogicalExpression>> args2 = funcExpr2.getArguments();
 
-        BitSet childrenSet = new BitSet();
+        BitSet matched = new BitSet();
         int numberOfMatches = 0;
         for (Mutable<ILogicalExpression> arg1 : args1) {
             int prevNumberOfMatches = numberOfMatches;
 
             for (int i = 0; i < args2.size(); i++) {
                 Mutable<ILogicalExpression> arg2 = args2.get(i);
-                childrenSet.clear();
-                if (!matched.get(i) && commutativeEquals(arg1.getValue(), arg2.getValue(), childrenSet)) {
+                if (!matched.get(i) && commutativeEquals(arg1.getValue(), arg2.getValue())) {
                     matched.set(i);
                     numberOfMatches++;
                     break;

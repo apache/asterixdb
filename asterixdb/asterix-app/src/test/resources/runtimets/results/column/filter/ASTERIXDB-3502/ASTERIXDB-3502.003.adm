@@ -1,0 +1,1 @@
+{ "sample_collection": { "primary_key_id": "1", "int_field1": 69114320, "decimal_field1": 9610, "datetime_field1": "2005-11-08 00:00:00", "bool_field1": true, "varchar_field1": "abcdefgh", "char_field1": "C" } }
