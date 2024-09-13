@@ -1056,8 +1056,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
     }
 
     public AlgebricksAbsolutePartitionConstraint getClusterLocations() {
-        //TODO(partitioning): should this be removed and getSortedClusterLocations() is used instead?
-        return appCtx.getClusterStateManager().getClusterLocations();
+        return dataPartitioningProvider.getClusterLocations();
     }
 
     public DataPartitioningProvider getDataPartitioningProvider() {

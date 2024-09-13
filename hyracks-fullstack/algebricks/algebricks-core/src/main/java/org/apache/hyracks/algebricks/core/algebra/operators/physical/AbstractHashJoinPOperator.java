@@ -166,7 +166,9 @@ public abstract class AbstractHashJoinPOperator extends AbstractJoinPOperator {
                                         EquivalenceClass ecFst = eqmap.get(v2);
                                         for (LogicalVariable vset1 : set1) {
                                             if (vset1 == v2 || ecFst != null && eqmap.get(vset1) == ecFst) {
-                                                covered.add(vset1);
+                                                if (!covered.add(vset1)) {
+                                                    continue;
+                                                }
                                                 modifuppreq.add(r);
                                                 break;
                                             }

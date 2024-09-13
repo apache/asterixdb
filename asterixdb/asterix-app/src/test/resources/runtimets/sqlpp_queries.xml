@@ -91,6 +91,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="api">
+      <compilation-unit name="cache-residency">
+        <output-dir compare="Text">cache-residency</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="api">
       <compilation-unit name="request-param">
         <output-dir compare="Text">request-param</output-dir>
       </compilation-unit>
@@ -1614,6 +1619,11 @@
     </test-case>
   </test-group>
   <test-group name="aggregate-sql">
+    <test-case FilePath="aggregate-sql">
+      <compilation-unit name="median">
+        <output-dir compare="Text">median</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="aggregate-sql">
       <compilation-unit name="min_max_arrays">
         <output-dir compare="Text">min_max_arrays</output-dir>
@@ -7367,11 +7377,6 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
-      <compilation-unit name="query-ASTERIXDB-3316">
-        <output-dir compare="Text">query-ASTERIXDB-3316</output-dir>
-      </compilation-unit>
-    </test-case>
-    <test-case FilePath="misc">
       <compilation-unit name="query-ASTERIXDB-3334">
         <output-dir compare="Text">query-ASTERIXDB-3334</output-dir>
       </compilation-unit>
@@ -7397,13 +7402,23 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
-      <compilation-unit name="query-ASTERIXDB-3415">
-        <output-dir compare="Text">query-ASTERIXDB-3415</output-dir>
+      <compilation-unit name="query-ASTERIXDB-3481">
+        <output-dir compare="Text">query-ASTERIXDB-3481</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
-      <compilation-unit name="query-ASTERIXDB-3481">
-        <output-dir compare="Text">query-ASTERIXDB-3481</output-dir>
+      <compilation-unit name="query-ASTERIXDB-3490">
+        <output-dir compare="Text">query-ASTERIXDB-3490</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-3316">
+        <output-dir compare="Text">query-ASTERIXDB-3316</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
+      <compilation-unit name="remove_listify">
+        <output-dir compare="Text">remove_listify</output-dir>
       </compilation-unit>
     </test-case>
   </test-group>
@@ -11498,6 +11513,11 @@
     </test-case>
   </test-group>
   <test-group name="subquery">
+    <test-case FilePath="subquery">
+      <compilation-unit name="select_element">
+        <output-dir compare="Text">select_element</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="subquery">
       <compilation-unit name="aggregate_join">
         <output-dir compare="Text">aggregate_join</output-dir>
