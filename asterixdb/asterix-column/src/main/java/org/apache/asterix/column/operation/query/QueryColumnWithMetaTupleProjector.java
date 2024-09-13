@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.column.operation.query;
 
-import static org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType.QUERY;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
@@ -37,6 +35,7 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
+import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.ColumnProjectorType;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnProjectionInfo;
 
 public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector {
@@ -47,9 +46,9 @@ public class QueryColumnWithMetaTupleProjector extends QueryColumnTupleProjector
             ARecordType requestedType, Map<String, FunctionCallInformation> functionCallInfoMap,
             ARecordType requestedMetaType, IColumnRangeFilterEvaluatorFactory filterEvaluator,
             IColumnIterableFilterEvaluatorFactory columnFilterEvaluatorFactory, IWarningCollector warningCollector,
-            IHyracksTaskContext context) {
+            IHyracksTaskContext context, ColumnProjectorType projectorType) {
         super(datasetType, numberOfPrimaryKeys, requestedType, functionCallInfoMap, filterEvaluator,
-                columnFilterEvaluatorFactory, warningCollector, context, QUERY);
+                columnFilterEvaluatorFactory, warningCollector, context, projectorType);
         this.metaType = metaType;
         this.requestedMetaType = requestedMetaType;
     }

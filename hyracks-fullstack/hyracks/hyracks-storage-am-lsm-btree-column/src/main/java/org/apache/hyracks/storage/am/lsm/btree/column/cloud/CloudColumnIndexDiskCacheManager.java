@@ -28,7 +28,6 @@ import org.apache.hyracks.storage.am.lsm.btree.column.api.projection.IColumnTupl
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.IColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read.CloudColumnReadContext;
-import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.read.DefaultColumnReadContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.buffercache.write.CloudColumnWriteContext;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweepPlanner;
 import org.apache.hyracks.storage.am.lsm.btree.column.cloud.sweep.ColumnSweeper;
@@ -73,9 +72,8 @@ public final class CloudColumnIndexDiskCacheManager implements IColumnIndexDiskC
         if (projectorType == ColumnProjectorType.QUERY) {
             planner.access(projectionInfo);
         } else if (projectorType == ColumnProjectorType.MODIFY) {
-            planner.setIndexedColumns(projectionInfo);
             // Requested (and indexed) columns will be persisted if space permits
-            return DefaultColumnReadContext.INSTANCE;
+            planner.setIndexedColumns(projectionInfo);
         }
         return new CloudColumnReadContext(projectionInfo, drive, planner.getPlanCopy());
     }

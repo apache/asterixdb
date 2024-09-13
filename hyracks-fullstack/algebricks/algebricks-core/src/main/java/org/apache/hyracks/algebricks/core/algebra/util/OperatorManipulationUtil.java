@@ -361,6 +361,15 @@ public class OperatorManipulationUtil {
         return false;
     }
 
+    public static boolean ancestorOfOperatorsExcludeCurrent(ILogicalOperator op, Set<LogicalOperatorTag> tags) {
+        for (Mutable<ILogicalOperator> children : op.getInputs()) {
+            if (ancestorOfOperators(children.getValue(), tags)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Returns all descendants of an operator that are leaf operators
      *
