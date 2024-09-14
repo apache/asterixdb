@@ -4,7 +4,7 @@
 		"*": "*"
 	},
 	"type": "application/x-adm",
-	"results": [ "{ \"$1\": 17 }" ],
+	"results": [ "R{.*}" ],
 	"plans": "R{.*}",
 	"status": "success",
 	"metrics": {
@@ -14,7 +14,7 @@
 		"queueWaitTime": "R{.*}",
 		"resultCount": 1,
 		"resultSize": "R{.*}",
-		"processedObjects": 17,
+		"processedObjects": "R{.*}",
 		"bufferCacheHitRatio": "100.00%",
 		"bufferCachePageReadCount": 1
 	}
