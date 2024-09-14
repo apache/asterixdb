@@ -51,8 +51,9 @@ public class CancellationTestExecutor extends TestExecutor {
 
     @Override
     public InputStream executeQueryService(String str, TestCaseContext.OutputFormat fmt, URI uri,
-            List<TestCase.CompilationUnit.Parameter> params, boolean jsonEncoded, Charset responseCharset,
-            Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
+            List<TestCase.CompilationUnit.Parameter> params, List<TestCase.CompilationUnit.Placeholder> placeholders,
+            boolean jsonEncoded, Charset responseCharset, Predicate<Integer> responseCodeValidator, boolean cancellable)
+            throws Exception {
         cancellable = cancellable && !containsClientContextID(str);
         String clientContextId = UUID.randomUUID().toString();
         final List<TestCase.CompilationUnit.Parameter> newParams =
@@ -60,7 +61,7 @@ public class CancellationTestExecutor extends TestExecutor {
         Callable<InputStream> query = () -> {
             try {
                 return CancellationTestExecutor.super.executeQueryService(str, fmt, uri,
-                        constructQueryParameters(str, fmt, newParams), jsonEncoded, responseCharset,
+                        constructQueryParameters(str, fmt, newParams), placeholders, jsonEncoded, responseCharset,
                         responseCodeValidator, true);
             } catch (Exception e) {
                 e.printStackTrace();

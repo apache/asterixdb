@@ -27,17 +27,14 @@ COPY (
            c.year
     FROM Customer c
 ) toWrite
-TO S3
+TO %adapter%
 PATH ("copy-to-result/someMissing", company)
 OVER (
    PARTITION BY toWrite.company company
 )
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

@@ -22,13 +22,13 @@ import java.io.IOException;
 
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
-import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
-import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
+import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageClientConfig;
+import org.apache.asterix.cloud.clients.azure.blobstorage.AzBlobStorageCloudClient;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
-import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
+import org.apache.asterix.external.util.azure.blob_storage.AzureUtils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -39,16 +39,17 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 
-import software.amazon.awssdk.core.exception.SdkException;
+import com.azure.core.exception.AzureException;
+
 import software.amazon.awssdk.services.s3.model.NoSuchBucketException;
 
-public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory {
+public final class AzureExternalFileWriterFactory extends AbstractCloudExternalFileWriterFactory {
     private static final long serialVersionUID = 4551318140901866805L;
     static final char SEPARATOR = '/';
     public static final IExternalFileWriterFactoryProvider PROVIDER = new IExternalFileWriterFactoryProvider() {
         @Override
         public IExternalFileWriterFactory create(ExternalFileWriterConfiguration configuration) {
-            return new S3ExternalFileWriterFactory(configuration);
+            return new AzureExternalFileWriterFactory(configuration);
         }
 
         @Override
@@ -57,26 +58,26 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
         }
     };
 
-    private S3ExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
+    private AzureExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
         super(externalConfig);
         cloudClient = null;
     }
 
     @Override
     ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
-        S3ClientConfig config = S3ClientConfig.of(configuration, writeBufferSize);
-        return new S3CloudClient(config, S3AuthUtils.buildAwsS3Client(appCtx, configuration),
+        AzBlobStorageClientConfig config = AzBlobStorageClientConfig.of(configuration, writeBufferSize);
+        return new AzBlobStorageCloudClient(config, AzureUtils.buildAzureBlobClient(appCtx, configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
     @Override
     String getAdapterName() {
-        return ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3;
+        return ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB;
     }
 
     @Override
     int getPathMaxLengthInBytes() {
-        return S3Constants.MAX_KEY_LENGTH_IN_BYTES;
+        return AzureConstants.MAX_KEY_LENGTH_IN_BYTES;
     }
 
     @Override
@@ -86,7 +87,7 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
 
     @Override
     boolean isSdkException(Throwable e) {
-        return e instanceof SdkException;
+        return e instanceof AzureException;
     }
 
     @Override
@@ -96,7 +97,7 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         IExternalPrinter printer = printerFactory.createPrinter();
         IWarningCollector warningCollector = context.getWarningCollector();
-        return new S3ExternalFileWriter(printer, cloudClient, bucket, staticPath == null, warningCollector,
+        return new AzureExternalFileWriter(printer, cloudClient, bucket, staticPath == null, warningCollector,
                 pathSourceLocation);
     }
 

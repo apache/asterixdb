@@ -27,6 +27,7 @@ import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.google.gcs.GCSConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
@@ -66,6 +67,16 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
         GCSClientConfig config = GCSClientConfig.of(configuration, writeBufferSize);
         return new GCSCloudClient(config, GCSUtils.buildClient(configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
+    }
+
+    @Override
+    String getAdapterName() {
+        return ExternalDataConstants.KEY_ADAPTER_NAME_GCS;
+    }
+
+    @Override
+    int getPathMaxLengthInBytes() {
+        return GCSConstants.MAX_KEY_LENGTH_IN_BYTES;
     }
 
     @Override

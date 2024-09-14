@@ -372,6 +372,7 @@ public class AzureBlobStorageExternalDatasetTest {
                 String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
                 MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
                 throws Exception {
+            statement = applyExternalDatasetSubstitution(statement, cUnit.getPlaceholder());
             String[] lines;
             switch (ctx.getType()) {
                 case "container":
@@ -380,10 +381,13 @@ public class AzureBlobStorageExternalDatasetTest {
                     String lastLine = lines[lines.length - 1];
                     String[] command = lastLine.trim().split(" ");
                     int length = command.length;
-                    if (length != 3) {
-                        throw new Exception("invalid create container format");
+                    if (length == 1) {
+                        createBucket(command[0]);
+                    } else if (length == 3) {
+                        dropRecreateContainer(command[0], command[1], command[2]);
+                    } else {
+                        throw new Exception("invalid create bucket format");
                     }
-                    dropRecreateContainer(command[0], command[1], command[2]);
                     break;
                 default:
                     super.executeTestFile(testCaseCtx, ctx, variableCtx, statement, isDmlRecoveryTest, pb, cUnit,
@@ -391,6 +395,17 @@ public class AzureBlobStorageExternalDatasetTest {
             }
         }
 
+    }
+
+    private static void createBucket(String bucketName) {
+        LOGGER.info("Deleting container " + bucketName);
+        try {
+            blobServiceClient.deleteBlobContainer(bucketName);
+        } catch (Exception ex) {
+            // Ignore
+        }
+        LOGGER.info("Creating container " + bucketName);
+        blobServiceClient.getBlobContainerClient(bucketName).createIfNotExists();
     }
 
     private static void dropRecreateContainer(String containerName, String definition, String files) {
@@ -407,7 +422,8 @@ public class AzureBlobStorageExternalDatasetTest {
 
         BlobContainerClient containerClient;
         LOGGER.info("Creating container " + containerName);
-        containerClient = blobServiceClient.createBlobContainer(containerName);
+        containerClient = blobServiceClient.getBlobContainerClient(containerName);
+        containerClient.createIfNotExists();
         LOGGER.info("Uploading to container " + containerName + " definition " + definitionPath);
         fileNames.clear();
         for (String fileSplit : fileSplits) {

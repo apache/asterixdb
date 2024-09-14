@@ -19,12 +19,9 @@
 
 USE test;
 
-CREATE EXTERNAL DATASET CustomerCopy(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
+CREATE EXTERNAL DATASET CustomerCopy(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
     ("definition"="copy-to-result/company-year/{company:string}/{year:int}"),
     ("embed-filter-values" = "false"),
     ("format"="json")

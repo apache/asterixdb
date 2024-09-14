@@ -23,18 +23,15 @@ COPY (
    SELECT DISTINCT UPPERCASE(c.company) company, c.year
    FROM Customer c
 ) toWriter
-TO S3
+TO %adapter%
 PATH ("copy-to-result", "company-year", company, year)
 OVER (
    PARTITION BY toWriter.company company,
                 toWriter.year year
 )
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json",
     "compression":"gzip",
     "gzipCompressionLevel": "1"

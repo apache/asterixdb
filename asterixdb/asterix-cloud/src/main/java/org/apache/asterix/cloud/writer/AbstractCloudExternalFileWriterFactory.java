@@ -63,6 +63,10 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
 
     abstract ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException;
 
+    abstract String getAdapterName();
+
+    abstract int getPathMaxLengthInBytes();
+
     abstract boolean isNoContainerFoundException(IOException e);
 
     abstract boolean isSdkException(Throwable e);
@@ -110,8 +114,7 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
         if (staticPath != null) {
             if (isExceedingMaxLength(staticPath, S3ExternalFileWriter.MAX_LENGTH_IN_BYTES)) {
                 throw new CompilationException(ErrorCode.WRITE_PATH_LENGTH_EXCEEDS_MAX_LENGTH, pathSourceLocation,
-                        staticPath, S3ExternalFileWriter.MAX_LENGTH_IN_BYTES,
-                        ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3);
+                        staticPath, getPathMaxLengthInBytes(), getAdapterName());
             }
 
             if (!testClient.isEmptyPrefix(bucket, staticPath)) {

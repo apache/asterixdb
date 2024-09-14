@@ -62,7 +62,8 @@ import com.azure.core.http.rest.Response;
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.BlobContainerClientBuilder;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.batch.BlobBatchClient;
 import com.azure.storage.blob.batch.BlobBatchClientBuilder;
 import com.azure.storage.blob.models.BlobErrorCode;
@@ -85,9 +86,9 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
     private static final int SUCCESS_RESPONSE_CODE = 202;
     private final ICloudGuardian guardian;
-    private BlobContainerClient blobContainerClient;
-    private AzBlobStorageClientConfig config;
-    private IRequestProfilerLimiter profiler;
+    private final BlobContainerClient blobContainerClient;
+    private final AzBlobStorageClientConfig config;
+    private final IRequestProfilerLimiter profiler;
     private final BlobBatchClient blobBatchClient;
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -95,9 +96,10 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         this(config, buildClient(config), guardian);
     }
 
-    public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobContainerClient blobContainerClient,
+    public AzBlobStorageCloudClient(AzBlobStorageClientConfig config, BlobServiceClient blobServiceClient,
             ICloudGuardian guardian) {
-        this.blobContainerClient = blobContainerClient;
+        this.blobContainerClient = blobServiceClient.getBlobContainerClient(config.getBucket());
+        this.blobContainerClient.createIfNotExists();
         this.config = config;
         this.guardian = guardian;
         long profilerInterval = config.getProfilerLogInterval();
@@ -348,8 +350,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         profiler.objectsList();
         ListBlobsOptions listBlobsOptions = new ListBlobsOptions().setPrefix(config.getPrefix() + path);
         //MAX_VALUE below represents practically no timeout
-        PagedIterable<BlobItem> blobItems =
-                blobContainerClient.listBlobs(listBlobsOptions, Duration.ofDays(Long.MAX_VALUE));
+        PagedIterable<BlobItem> blobItems = blobContainerClient.listBlobs(listBlobsOptions, Duration.ofMinutes(2));
         return blobItems.stream().findAny().isEmpty();
     }
 
@@ -391,17 +392,15 @@ public class AzBlobStorageCloudClient implements ICloudClient {
         // Hence this implementation is a no op.
     }
 
-    private static BlobContainerClient buildClient(AzBlobStorageClientConfig config) {
-        BlobContainerClientBuilder blobContainerClientBuilder =
-                new BlobContainerClientBuilder().containerName(config.getBucket()).endpoint(getEndpoint(config));
-        blobContainerClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
-        configCredentialsToAzClient(blobContainerClientBuilder, config);
-        BlobContainerClient blobContainerClient = blobContainerClientBuilder.buildClient();
-        blobContainerClient.createIfNotExists();
-        return blobContainerClient;
+    private static BlobServiceClient buildClient(AzBlobStorageClientConfig config) {
+        BlobServiceClientBuilder blobServiceClientBuilder = new BlobServiceClientBuilder();
+        blobServiceClientBuilder.endpoint(getEndpoint(config));
+        blobServiceClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
+        configCredentialsToAzClient(blobServiceClientBuilder, config);
+        return blobServiceClientBuilder.buildClient();
     }
 
-    private static void configCredentialsToAzClient(BlobContainerClientBuilder builder,
+    private static void configCredentialsToAzClient(BlobServiceClientBuilder builder,
             AzBlobStorageClientConfig config) {
         if (config.isAnonymousAuth()) {
             StorageSharedKeyCredential creds =

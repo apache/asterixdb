@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.zip.Deflater;
 
 import org.apache.asterix.cloud.parquet.ParquetSinkExternalWriterFactory;
+import org.apache.asterix.cloud.writer.AzureExternalFileWriterFactory;
 import org.apache.asterix.cloud.writer.GCSExternalFileWriterFactory;
 import org.apache.asterix.cloud.writer.S3ExternalFileWriterFactory;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
@@ -79,6 +80,7 @@ public class ExternalWriterProvider {
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3, S3ExternalFileWriterFactory.PROVIDER);
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_GCS, GCSExternalFileWriterFactory.PROVIDER);
         addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_HDFS, HDFSExternalFileWriterFactory.PROVIDER);
+        addCreator(ExternalDataConstants.KEY_ADAPTER_NAME_AZURE_BLOB, AzureExternalFileWriterFactory.PROVIDER);
     }
 
     private static IExternalFileWriterFactory createWriterFactory(ICcApplicationContext appCtx, IWriteDataSink sink,

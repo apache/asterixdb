@@ -480,13 +480,16 @@ public class AwsS3ExternalDatasetTest {
                 String statement, boolean isDmlRecoveryTest, ProcessBuilder pb, TestCase.CompilationUnit cUnit,
                 MutableInt queryCount, List<TestFileContext> expectedResultFileCtxs, File testFile, String actualPath)
                 throws Exception {
+            statement = applyExternalDatasetSubstitution(statement, cUnit.getPlaceholder());
             String[] lines;
+            String lastLine;
+            String[] command;
             switch (ctx.getType()) {
                 case "container":
                     // <bucket> <def> <sub-path:new_fname:src_file1,sub-path:new_fname:src_file2,sub-path:src_file3>
                     lines = TestExecutor.stripAllComments(statement).trim().split("\n");
-                    String lastLine = lines[lines.length - 1];
-                    String[] command = lastLine.trim().split(" ");
+                    lastLine = lines[lines.length - 1];
+                    command = lastLine.trim().split(" ");
                     int length = command.length;
                     if (length == 1) {
                         createBucket(command[0]);

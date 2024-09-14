@@ -19,22 +19,16 @@
 
 USE test;
 
-CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="empty-bucket1"),
+CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING %adapter% (
+    %template%,
+    ("container"="emptybucket1"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
-CREATE EXTERNAL DATASET CustomerCopy2(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="empty-bucket2"),
+CREATE EXTERNAL DATASET CustomerCopy2(OpenType) USING %adapter% (
+    %template%,
+    ("container"="emptybucket2"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );

@@ -18,9 +18,12 @@
  */
 package org.apache.asterix.cloud.clients.azure.blobstorage;
 
+import java.util.Map;
 import java.util.Objects;
 
 import org.apache.asterix.common.config.CloudProperties;
+import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
 
 import com.azure.identity.DefaultAzureCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
@@ -39,6 +42,11 @@ public class AzBlobStorageClientConfig {
     private final long tokenAcquireTimeout;
     private final int writeMaxRequestsPerSeconds;
     private final int readMaxRequestsPerSeconds;
+
+    public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
+            long profilerLogInterval, String bucket, int writeBufferSize) {
+        this(region, endpoint, prefix, anonymousAuth, profilerLogInterval, bucket, 1, 0, 0, writeBufferSize);
+    }
 
     public AzBlobStorageClientConfig(String region, String endpoint, String prefix, boolean anonymousAuth,
             long profilerLogInterval, String bucket, long tokenAcquireTimeout, int writeMaxRequestsPerSeconds,
@@ -61,6 +69,22 @@ public class AzBlobStorageClientConfig {
                 cloudProperties.getProfilerLogInterval(), cloudProperties.getStorageBucket(),
                 cloudProperties.getTokenAcquireTimeout(), cloudProperties.getWriteMaxRequestsPerSecond(),
                 cloudProperties.getReadMaxRequestsPerSecond(), cloudProperties.getWriteBufferSize());
+    }
+
+    public static AzBlobStorageClientConfig of(Map<String, String> configuration, int writeBufferSize) {
+        // Used to determine local vs. actual azure
+        String endPoint = configuration.getOrDefault(AzureConstants.ENDPOINT_FIELD_NAME, "");
+        String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
+        // Disabled
+        long profilerLogInterval = 0;
+
+        // Dummy values;
+        String region = "";
+        String prefix = "";
+        boolean anonymousAuth = false;
+
+        return new AzBlobStorageClientConfig(region, endPoint, prefix, anonymousAuth, profilerLogInterval, bucket,
+                writeBufferSize);
     }
 
     public String getRegion() {

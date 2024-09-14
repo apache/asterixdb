@@ -23,6 +23,9 @@ public class S3Constants {
         throw new AssertionError("do not instantiate");
     }
 
+    // Key max length
+    public static final int MAX_KEY_LENGTH_IN_BYTES = 1024;
+
     // Authentication specific parameters
     public static final String REGION_FIELD_NAME = "region";
     public static final String CROSS_REGION_FIELD_NAME = "crossRegion";

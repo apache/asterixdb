@@ -85,6 +85,9 @@ public class TestConstants {
                 + "(\"accountKey\"=\"" + AZURITE_ACCOUNT_KEY_DEFAULT + "\"),\n" + "(\"endpoint\"=\""
                 + BLOB_ENDPOINT_PLACEHOLDER + "\")";
         public static final String TEMPLATE_DEFAULT = TEMPLATE;
+        public static final String TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS =
+                "\"accountName\":\"" + AZURITE_ACCOUNT_NAME_DEFAULT + "\",\n" + "\"accountKey\":\""
+                        + AZURITE_ACCOUNT_KEY_DEFAULT + "\",\n" + "\"endpoint\":\"" + BLOB_ENDPOINT_PLACEHOLDER + "\"";
     }
 
     public static class HDFS {

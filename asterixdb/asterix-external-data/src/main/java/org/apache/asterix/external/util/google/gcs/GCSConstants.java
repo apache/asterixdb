@@ -23,6 +23,9 @@ public class GCSConstants {
         throw new AssertionError("do not instantiate");
     }
 
+    // Key max length
+    public static final int MAX_KEY_LENGTH_IN_BYTES = 1024;
+
     public static final String APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME = "applicationDefaultCredentials";
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";

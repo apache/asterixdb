@@ -933,9 +933,9 @@ public class TestExecutor {
     }
 
     public InputStream executeQueryService(String str, TestFileContext ctx, OutputFormat fmt, URI uri,
-            List<Parameter> params, boolean jsonEncoded, Charset responseCharset,
+            List<Parameter> params, List<Placeholder> placeholders, boolean jsonEncoded, Charset responseCharset,
             Predicate<Integer> responseCodeValidator, boolean cancellable) throws Exception {
-        return executeQueryService(str, fmt, uri, constructQueryParameters(str, fmt, params), jsonEncoded,
+        return executeQueryService(str, fmt, uri, constructQueryParameters(str, fmt, params), placeholders, jsonEncoded,
                 responseCharset, responseCodeValidator, cancellable);
     }
 
@@ -1311,9 +1311,10 @@ public class TestExecutor {
                                 : expectedResultFileCtxs.get(queryCount.intValue()).getFile();
                 File actualResultFile = expectedResultFile == null ? null
                         : testCaseCtx.getActualResultFile(cUnit, expectedResultFile, new File(actualPath));
-                ExtractedResult extractedResult = executeQuery(OutputFormat.forCompilationUnit(cUnit), statement,
-                        variableCtx, ctx, expectedResultFile, actualResultFile, queryCount,
-                        expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
+                ExtractedResult extractedResult =
+                        executeQuery(OutputFormat.forCompilationUnit(cUnit), statement, variableCtx, ctx,
+                                expectedResultFile, actualResultFile, queryCount, expectedResultFileCtxs.size(),
+                                cUnit.getParameter(), cUnit.getPlaceholder(), ComparisonEnum.TEXT);
 
                 validateWarning(extractedResult, testCaseCtx, cUnit, testFile);
                 break;
@@ -1327,7 +1328,7 @@ public class TestExecutor {
                         + cUnit.getName() + '.' + ctx.getSeqNum() + ".adm");
                 executeQuery(OutputFormat.forCompilationUnit(cUnit), statement, variableCtx, ctx, null,
                         actualResultFile, queryCount, expectedResultFileCtxs.size(), cUnit.getParameter(),
-                        ComparisonEnum.TEXT);
+                        cUnit.getPlaceholder(), ComparisonEnum.TEXT);
                 variableCtx.put(key, actualResultFile);
                 break;
             case "validate":
@@ -1407,7 +1408,7 @@ public class TestExecutor {
                                     + " (start <test server name> <port> [<arg1>][<arg2>][<arg3>]...");
                         }
                         String name = command[1];
-                        Integer port = new Integer(command[2]);
+                        Integer port = Integer.valueOf(command[2]);
                         if (runningTestServers.containsKey(port)) {
                             throw new Exception("server with port " + port + " is already running");
                         }
@@ -1423,7 +1424,7 @@ public class TestExecutor {
                             }
                             runningTestServers.clear();
                         } else {
-                            Integer port = new Integer(command[1]);
+                            Integer port = Integer.valueOf(command[1]);
                             ITestServer server = runningTestServers.get(port);
                             if (server == null) {
                                 throw new Exception("no server is listening to port " + port);
@@ -1569,7 +1570,7 @@ public class TestExecutor {
                 + cUnit.getName() + '.' + ctx.getSeqNum() + ".adm");
         executeQuery(OutputFormat.forCompilationUnit(cUnit), statement, variableCtx,
                 new TestFileContext(testFile, "validate"), expectedResultFile, actualResultFile, queryCount,
-                expectedResultFileCtxs.size(), cUnit.getParameter(), ComparisonEnum.TEXT);
+                expectedResultFileCtxs.size(), cUnit.getParameter(), cUnit.getPlaceholder(), ComparisonEnum.TEXT);
     }
 
     protected void executeHttpRequest(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
@@ -1642,7 +1643,8 @@ public class TestExecutor {
 
     public ExtractedResult executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
             TestFileContext ctx, File expectedResultFile, File actualResultFile, MutableInt queryCount,
-            int numResultFiles, List<Parameter> params, ComparisonEnum compare, URI uri) throws Exception {
+            int numResultFiles, List<Parameter> params, List<Placeholder> placeholders, ComparisonEnum compare, URI uri)
+            throws Exception {
 
         String delivery = DELIVERY_IMMEDIATE;
         String reqType = ctx.getType();
@@ -1660,8 +1662,8 @@ public class TestExecutor {
         final String variablesReplaced = replaceVarRefRelaxed(statement, variableCtx);
         String resultVar = getResultVariable(statement); //Is the result of the statement/query to be used in later tests
         if (DELIVERY_IMMEDIATE.equals(delivery)) {
-            resultStream = executeQueryService(variablesReplaced, ctx, fmt, uri, params, isJsonEncoded, responseCharset,
-                    null, isCancellable(reqType));
+            resultStream = executeQueryService(variablesReplaced, ctx, fmt, uri, params, placeholders, isJsonEncoded,
+                    responseCharset, null, isCancellable(reqType));
             switch (reqType) {
                 case METRICS_QUERY_TYPE:
                     resultStream = ResultExtractor.extractMetrics(resultStream, responseCharset);
@@ -1724,10 +1726,11 @@ public class TestExecutor {
 
     public ExtractedResult executeQuery(OutputFormat fmt, String statement, Map<String, Object> variableCtx,
             TestFileContext ctx, File expectedResultFile, File actualResultFile, MutableInt queryCount,
-            int numResultFiles, List<Parameter> params, ComparisonEnum compare) throws Exception {
+            int numResultFiles, List<Parameter> params, List<Placeholder> placeholders, ComparisonEnum compare)
+            throws Exception {
         URI uri = getEndpoint(Servlets.QUERY_SERVICE, FilenameUtils.getExtension(ctx.getFile().getName()));
         return executeQuery(fmt, statement, variableCtx, ctx, expectedResultFile, actualResultFile, queryCount,
-                numResultFiles, params, compare, uri);
+                numResultFiles, params, placeholders, compare, uri);
     }
 
     private void polldynamic(TestCaseContext testCaseCtx, TestFileContext ctx, Map<String, Object> variableCtx,
@@ -2554,7 +2557,11 @@ public class TestExecutor {
     }
 
     protected String setAzureTemplateDefault(String str) {
-        return str.replace("%template%", TEMPLATE_DEFAULT);
+        if (str.contains("%template%")) {
+            return str.replace("%template%", TEMPLATE_DEFAULT);
+        } else {
+            return str.replace("%template_colons%", TestConstants.Azure.TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS);
+        }
     }
 
     protected String setGCSTemplateDefault(String str) {

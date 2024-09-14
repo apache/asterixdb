@@ -30,6 +30,9 @@ public class AzureConstants {
         throw new AssertionError("do not instantiate");
     }
 
+    // Key max length
+    public static final int MAX_KEY_LENGTH_IN_BYTES = 1024;
+
     public static final HttpLogOptions HTTP_LOG_OPTIONS = new HttpLogOptions();
     static {
         HTTP_LOG_OPTIONS.setLogLevel(HttpLogDetailLevel.BASIC);
