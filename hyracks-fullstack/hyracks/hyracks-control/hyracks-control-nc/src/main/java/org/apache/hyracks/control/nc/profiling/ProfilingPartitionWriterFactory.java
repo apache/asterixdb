@@ -24,7 +24,10 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.comm.IPartitionWriterFactory;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
+import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.job.profiling.IOperatorStats;
+import org.apache.hyracks.api.job.profiling.OperatorStats;
 import org.apache.hyracks.api.partitions.PartitionId;
 import org.apache.hyracks.control.common.job.profiling.counters.MultiResolutionEventProfiler;
 import org.apache.hyracks.control.common.job.profiling.om.PartitionProfile;
@@ -53,45 +56,42 @@ public class ProfilingPartitionWriterFactory implements IPartitionWriterFactory 
     public IFrameWriter createFrameWriter(final int receiverIndex) throws HyracksDataException {
         final IFrameWriter writer = new ConnectorSenderProfilingFrameWriter(ctx,
                 delegate.createFrameWriter(receiverIndex), cd.getConnectorId(), senderIndex, receiverIndex);
-        return new IFrameWriter() {
+        return new ProfiledFrameWriter(writer) {
             private long openTime;
-
             private long closeTime;
 
             MultiResolutionEventProfiler mrep = new MultiResolutionEventProfiler(N_SAMPLES);
 
+            IOperatorStats stats = new OperatorStats(cd.getDisplayName(), cd.getConnectorId().toString());
+
             @Override
             public void open() throws HyracksDataException {
+                super.setInputStats(stats);
                 openTime = System.currentTimeMillis();
-                writer.open();
+                super.open();
             }
 
             @Override
             public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
                 mrep.reportEvent();
-                writer.nextFrame(buffer);
-            }
-
-            @Override
-            public void fail() throws HyracksDataException {
-                writer.fail();
+                super.nextFrame(buffer);
             }
 
             @Override
             public void close() throws HyracksDataException {
                 closeTime = System.currentTimeMillis();
-                try {
-                    ((Task) ctx).setPartitionSendProfile(
-                            new PartitionProfile(new PartitionId(ctx.getJobletContext().getJobId(), cd.getConnectorId(),
-                                    senderIndex, receiverIndex), openTime, closeTime, mrep));
-                } finally {
-                    writer.close();
+                long ownTime = getTotalTime();
+                if (stats != null) {
+                    stats.getTimeCounter().set(ownTime);
                 }
-            }
-
-            @Override
-            public void flush() throws HyracksDataException {
-                writer.flush();
+                try {
+                    ((Task) ctx).setPartitionSendProfile(new PartitionProfile(
+                            new PartitionId(ctx.getJobletContext().getJobId(), cd.getConnectorId(), senderIndex,
+                                    receiverIndex),
+                            openTime, closeTime, super.getTotalTime(), stats.getTupleCounter().get(), mrep));
+                } finally {
+                    super.close();
+                }
             }
         };
     }

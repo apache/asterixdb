@@ -70,7 +70,7 @@ public class ProfiledPushRuntime extends ProfiledFrameWriter implements IPushRun
     public void setOutputFrameWriter(int index, IFrameWriter writer, RecordDescriptor recordDesc) {
         if (writer instanceof ITimedWriter) {
             ITimedWriter wrapper = (ITimedWriter) writer;
-            wrapper.setUpstreamStats(stats);
+            wrapper.setInputStats(stats);
             outputs.put(index, wrapper);
         }
         wrapped.setOutputFrameWriter(index, writer, recordDesc);

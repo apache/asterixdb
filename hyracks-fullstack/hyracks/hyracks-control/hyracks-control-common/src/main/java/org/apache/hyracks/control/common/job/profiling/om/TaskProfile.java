@@ -103,6 +103,7 @@ public class TaskProfile extends AbstractProfile {
                 ppObj.set("partition-id", pidObj);
                 ppObj.put("open-time", pp.getOpenTime());
                 ppObj.put("close-time", pp.getCloseTime());
+                ppObj.put("cardinality", pp.getCardinality());
                 MultiResolutionEventProfiler samples = pp.getSamples();
                 ppObj.put("offset", samples.getOffset());
                 int resolution = samples.getResolution();

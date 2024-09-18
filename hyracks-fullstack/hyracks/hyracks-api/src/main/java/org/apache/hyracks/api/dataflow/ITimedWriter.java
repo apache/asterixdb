@@ -22,7 +22,7 @@ import org.apache.hyracks.api.comm.IFrameWriter;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 
 public interface ITimedWriter extends IFrameWriter {
-    void setUpstreamStats(IOperatorStats stats);
+    void setInputStats(IOperatorStats stats);
 
     long getTotalTime();
 }

@@ -35,6 +35,8 @@ public class PartitionProfile implements IWritable, Serializable {
     private long openTime;
 
     private long closeTime;
+    private long totalTime;
+    private long card;
 
     private MultiResolutionEventProfiler mrep;
 
@@ -48,10 +50,13 @@ public class PartitionProfile implements IWritable, Serializable {
 
     }
 
-    public PartitionProfile(PartitionId pid, long openTime, long closeTime, MultiResolutionEventProfiler mrep) {
+    public PartitionProfile(PartitionId pid, long openTime, long closeTime, long totalTime, long card,
+            MultiResolutionEventProfiler mrep) {
         this.pid = pid;
         this.openTime = openTime;
         this.closeTime = closeTime;
+        this.totalTime = totalTime;
+        this.card = card;
         this.mrep = mrep;
     }
 
@@ -67,6 +72,10 @@ public class PartitionProfile implements IWritable, Serializable {
         return closeTime;
     }
 
+    public long getCardinality() {
+        return card;
+    }
+
     public MultiResolutionEventProfiler getSamples() {
         return mrep;
     }
@@ -75,6 +84,8 @@ public class PartitionProfile implements IWritable, Serializable {
     public void writeFields(DataOutput output) throws IOException {
         output.writeLong(closeTime);
         output.writeLong(openTime);
+        output.writeLong(totalTime);
+        output.writeLong(card);
         mrep.writeFields(output);
         pid.writeFields(output);
     }
@@ -83,6 +94,8 @@ public class PartitionProfile implements IWritable, Serializable {
     public void readFields(DataInput input) throws IOException {
         closeTime = input.readLong();
         openTime = input.readLong();
+        totalTime = input.readLong();
+        card = input.readLong();
         mrep = MultiResolutionEventProfiler.create(input);
         pid = PartitionId.create(input);
     }

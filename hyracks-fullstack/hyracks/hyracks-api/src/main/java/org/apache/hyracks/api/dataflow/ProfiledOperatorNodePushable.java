@@ -77,9 +77,9 @@ public class ProfiledOperatorNodePushable implements IOperatorNodePushable, ISta
         if (writer instanceof ITimedWriter) {
             ITimedWriter wrapper = (ITimedWriter) writer;
             if (op instanceof ISelfProfilingNodePushable) {
-                wrapper.setUpstreamStats(((ISelfProfilingNodePushable) op).getStats());
+                wrapper.setInputStats(((ISelfProfilingNodePushable) op).getStats());
             } else {
-                wrapper.setUpstreamStats(stats);
+                wrapper.setInputStats(stats);
             }
             outputs.put(index, wrapper);
         }

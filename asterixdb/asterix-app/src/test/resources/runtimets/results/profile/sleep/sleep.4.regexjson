@@ -24,6 +24,7 @@
                             },
                             "open-time": "R{[0-9]+}",
                             "close-time": "R{[0-9]+}",
+                            "cardinality": "R{[0-9]+}",
                             "offset": "R{[0-9]+}",
                             "frame-times": [
                                 0
@@ -35,7 +36,11 @@
                         {
                             "name": "R{.+}",
                             "run-time": "R{[0-9.]+}",
-                            "runtime-id": "R{.+}"
+                            "runtime-id": "R{.+}",
+                            "cardinality-out": "R{[0-9.]+}",
+                            "avg-tuple-size": "R{[0-9.]+}",
+                            "min-tuple-size": "R{[0-9.]+}",
+                            "max-tuple-size": "R{[0-9.]+}"
                         }
                     ]
                 },

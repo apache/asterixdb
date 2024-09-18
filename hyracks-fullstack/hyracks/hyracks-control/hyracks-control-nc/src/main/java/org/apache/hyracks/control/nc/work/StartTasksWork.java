@@ -38,6 +38,7 @@ import org.apache.hyracks.api.dataflow.EnforceFrameWriter;
 import org.apache.hyracks.api.dataflow.IActivity;
 import org.apache.hyracks.api.dataflow.IConnectorDescriptor;
 import org.apache.hyracks.api.dataflow.IOperatorNodePushable;
+import org.apache.hyracks.api.dataflow.ProfiledFrameWriter;
 import org.apache.hyracks.api.dataflow.TaskAttemptId;
 import org.apache.hyracks.api.dataflow.TaskId;
 import org.apache.hyracks.api.dataflow.connectors.IConnectorPolicy;
@@ -182,7 +183,12 @@ public class StartTasksWork extends AbstractWork {
                         LOGGER.trace("input: {}: {}", i, conn.getConnectorId());
                         IFrameWriter writer = conn.createPartitioner(task, recordDesc, pwFactory, partition,
                                 partitionCount, td.getOutputPartitionCounts()[i]);
-                        writer = (enforce && !profile) ? EnforceFrameWriter.enforce(writer) : writer;
+                        if (profile) {
+                            //needed to propagate cardinality to the last operator before an exchange
+                            writer = new ProfiledFrameWriter(writer);
+                        } else {
+                            writer = enforce ? EnforceFrameWriter.enforce(writer) : writer;
+                        }
                         operator.setOutputFrameWriter(i, writer, recordDesc);
                     }
                 }

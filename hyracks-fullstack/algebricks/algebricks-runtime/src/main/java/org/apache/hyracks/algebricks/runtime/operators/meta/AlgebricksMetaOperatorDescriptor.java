@@ -265,7 +265,7 @@ public class AlgebricksMetaOperatorDescriptor extends AbstractSingleActivityOper
             }
 
             @Override
-            public void setUpstreamStats(IOperatorStats stats) {
+            public void setInputStats(IOperatorStats stats) {
                 parentStats = stats;
             }
 

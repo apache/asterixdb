@@ -41,11 +41,12 @@ public class ProfiledFrameWriter implements ITimedWriter {
 
     // The downstream data consumer of this writer.
     private final IFrameWriter writer;
-    protected IOperatorStats upstreamStats = NoOpOperatorStats.INSTANCE;
+    protected IOperatorStats inputStats = NoOpOperatorStats.INSTANCE;
     private int minSz = Integer.MAX_VALUE;
     private int maxSz = -1;
     private long avgSz;
-    private ICounter totalTime;
+
+    private final ICounter totalTime;
 
     public ProfiledFrameWriter(IFrameWriter writer) {
         this.writer = writer;
@@ -53,8 +54,8 @@ public class ProfiledFrameWriter implements ITimedWriter {
     }
 
     @Override
-    public void setUpstreamStats(IOperatorStats stats) {
-        this.upstreamStats = stats;
+    public void setInputStats(IOperatorStats stats) {
+        this.inputStats = stats;
     }
 
     public static void timeMethod(HyracksRunnable r, ICounter c) throws HyracksDataException {
@@ -78,14 +79,14 @@ public class ProfiledFrameWriter implements ITimedWriter {
     }
 
     @Override
-    public final void open() throws HyracksDataException {
+    public void open() throws HyracksDataException {
         timeMethod(writer::open, totalTime);
     }
 
     private void updateTupleStats(ByteBuffer buffer) {
         int tupleCountOffset = FrameHelper.getTupleCountOffset(buffer.limit());
         int tupleCount = IntSerDeUtils.getInt(buffer.array(), tupleCountOffset);
-        ICounter tupleCounter = upstreamStats.getTupleCounter();
+        ICounter tupleCounter = inputStats.getTupleCounter();
         long prevCount = tupleCounter.get();
         for (int i = 0; i < tupleCount; i++) {
             int tupleLen = getTupleLength(i, tupleCountOffset, buffer);
@@ -99,25 +100,25 @@ public class ProfiledFrameWriter implements ITimedWriter {
             avgSz = (prev + tupleLen) / (prevCount + 1);
             prevCount++;
         }
-        upstreamStats.getMaxTupleSz().set(maxSz);
-        upstreamStats.getMinTupleSz().set(minSz);
-        upstreamStats.getAverageTupleSz().set(avgSz);
+        inputStats.getMaxTupleSz().set(maxSz);
+        inputStats.getMinTupleSz().set(minSz);
+        inputStats.getAverageTupleSz().set(avgSz);
         tupleCounter.update(tupleCount);
     }
 
     @Override
-    public final void nextFrame(ByteBuffer buffer) throws HyracksDataException {
+    public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         updateTupleStats(buffer);
         timeMethod(writer::nextFrame, buffer);
     }
 
     @Override
-    public final void flush() throws HyracksDataException {
+    public void flush() throws HyracksDataException {
         timeMethod(writer::flush, totalTime);
     }
 
     @Override
-    public final void fail() throws HyracksDataException {
+    public void fail() throws HyracksDataException {
         timeMethod(writer::fail, totalTime);
     }
 
