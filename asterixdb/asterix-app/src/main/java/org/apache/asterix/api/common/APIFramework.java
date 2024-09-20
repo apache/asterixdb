@@ -234,9 +234,14 @@ public class APIFramework {
 
         ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
         CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
-        Map<String, Object> querySpecificConfig = validateConfig(metadataProvider.getConfig(), sourceLoc);
+        Map<String, Object> config = metadataProvider.getConfig();
+        Map<String, Object> querySpecificConfig = validateConfig(config, sourceLoc);
         final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.createPhysicalOptimizationConf(
                 compilerProperties, querySpecificConfig, configurableParameterNames, sourceLoc);
+        if (!config.containsKey(CompilerProperties.COMPILER_ORDERFIELDS_KEY)) {
+            config.put(CompilerProperties.COMPILER_ORDERFIELDS_KEY, Boolean.toString(physOptConf.isOrderField()));
+        }
+
         boolean cboMode = physOptConf.getCBOMode() || physOptConf.getCBOTestMode();
         HeuristicCompilerFactoryBuilder builder =
                 new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);

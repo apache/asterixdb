@@ -24,9 +24,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.asterix.common.annotations.RecordFieldOrderAnnotation;
+import org.apache.asterix.common.config.CompilerProperties;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.om.typecomputer.base.IResultTypeComputer;
@@ -43,6 +45,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvironment;
 import org.apache.hyracks.algebricks.core.algebra.metadata.IMetadataProvider;
+import org.apache.hyracks.algebricks.core.config.AlgebricksConfig;
 import org.apache.hyracks.util.LogRedactionUtil;
 
 public class OpenRecordConstructorResultType implements IResultTypeComputer {
@@ -60,6 +63,13 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         ARecordType type = (ARecordType) TypeCastUtils.getRequiredType(f);
         if (type != null) {
             return type;
+        }
+
+        boolean orderFields = AlgebricksConfig.ORDERED_FIELDS;
+        if (metadataProvider != null) {
+            Map<String, Object> config = metadataProvider.getConfig();
+            orderFields = Boolean.parseBoolean((String) config.getOrDefault(CompilerProperties.COMPILER_ORDERFIELDS_KEY,
+                    String.valueOf(orderFields)));
         }
 
         Iterator<Mutable<ILogicalExpression>> argIter = f.getArguments().iterator();
@@ -102,7 +112,12 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         IAType[] fieldTypes = typesList.toArray(new IAType[0]);
         ARecordType resultType;
         if (isOpen && canProvideAdditionFieldInfo) {
-            resultType = new ARecordType(null, fieldNames, fieldTypes, isOpen, allPossibleAdditionalFieldNames);
+            if (orderFields) {
+                resultType = new ARecordType(null, fieldNames, fieldTypes, isOpen, allPossibleAdditionalFieldNames,
+                        allPossibleFieldNamesOrdered);
+            } else {
+                resultType = new ARecordType(null, fieldNames, fieldTypes, isOpen, allPossibleAdditionalFieldNames);
+            }
             resultType.getAnnotations().add(new RecordFieldOrderAnnotation(allPossibleFieldNamesOrdered));
         } else {
             resultType = new ARecordType(null, fieldNames, fieldTypes, isOpen);

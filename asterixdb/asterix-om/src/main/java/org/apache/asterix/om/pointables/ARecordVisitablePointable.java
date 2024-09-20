@@ -22,6 +22,7 @@ package org.apache.asterix.om.pointables;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.asterix.dataflow.data.nontagged.serde.AInt32SerializerDeserializer;
@@ -38,6 +39,8 @@ import org.apache.asterix.om.utils.RecordUtil;
 import org.apache.asterix.om.utils.ResettableByteArrayOutputStream;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.util.string.UTF8StringWriter;
+
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 
 /**
  * This class interprets the binary data representation of a record. One can
@@ -56,6 +59,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     // access results: field names, field types, and field values
     private final List<IVisitablePointable> fieldNames = new ArrayList<>();
     private final List<IVisitablePointable> fieldValues = new ArrayList<>();
+    private final IntArrayList reverseLookupClosedFields = new IntArrayList();
+    private int numFields = 0;
 
     // pointable allocator
     private final PointableAllocator allocator = new PointableAllocator();
@@ -63,6 +68,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     private final ResettableByteArrayOutputStream typeBos = new ResettableByteArrayOutputStream();
 
     private final ResettableByteArrayOutputStream dataBos = new ResettableByteArrayOutputStream();
+
     private final DataOutputStream dataDos = new DataOutputStream(dataBos);
 
     private final ARecordType inputRecType;
@@ -91,6 +97,22 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
         try {
             final DataOutputStream typeDos = new DataOutputStream(typeBos);
             final UTF8StringWriter utf8Writer = new UTF8StringWriter();
+            LinkedHashSet<String> allOrderedFields = inputType.getAllOrderedFields();
+            if (allOrderedFields != null) {
+                numFields = allOrderedFields.size();
+                for (String field : allOrderedFields) {
+                    int nameStart = typeBos.size();
+                    typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                    utf8Writer.writeUTF8(field, typeDos);
+                    int nameEnd = typeBos.size();
+                    IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
+                    typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
+                    fieldNames.add(typeNameReference);
+                    fieldValues.add(missingReference);
+                }
+            }
+
+            int index = 0;
             for (int i = 0; i < numberOfSchemaFields; i++) {
                 // add type name Reference (including a string type tag)
                 int nameStart = typeBos.size();
@@ -99,7 +121,17 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                 int nameEnd = typeBos.size();
                 IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
                 typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
-                fieldNames.add(typeNameReference);
+                for (; index < numFields; index++) {
+                    if (fieldNames.get(index).equals(typeNameReference)) {
+                        break;
+                    }
+                }
+                if (index == numFields) {
+                    fieldNames.add(typeNameReference);
+                    reverseLookupClosedFields.add(fieldNames.size() - 1);
+                    continue;
+                }
+                reverseLookupClosedFields.add(index);
             }
 
             // initialize a constant: null value bytes reference
@@ -113,6 +145,7 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             typeDos.writeByte(ATypeTag.SERIALIZED_MISSING_TYPE_TAG);
             int missingFieldEnd = typeBos.size();
             missingReference.set(typeBos.getByteArray(), missingFieldStart, missingFieldEnd - missingFieldStart);
+
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -126,11 +159,22 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
         // reset the allocator
         allocator.reset();
 
+        int removeTill = numFields;
+        if (numFields == 0) {
+            removeTill = numberOfSchemaFields;
+        }
         // clean up the returned containers
-        for (int i = fieldNames.size() - 1; i >= numberOfSchemaFields; i--) {
+        for (int i = fieldNames.size() - 1; i >= removeTill; i--) {
             fieldNames.remove(i);
         }
-        fieldValues.clear();
+
+        for (int i = fieldValues.size() - 1; i >= numFields; i--) {
+            fieldValues.remove(i);
+        }
+
+        for (int i = 0; i < numFields; i++) {
+            fieldValues.set(i, missingReference);
+        }
     }
 
     @Override
@@ -176,16 +220,25 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     offsetArrayOffset += 4;
                 }
                 for (int fieldNumber = 0; fieldNumber < numberOfSchemaFields; fieldNumber++) {
+                    int index = reverseLookupClosedFields.get(fieldNumber);
                     if (hasOptionalFields) {
                         byte b1 = b[nullBitMapOffset + fieldNumber / 4];
                         if (RecordUtil.isNull(b1, fieldNumber)) {
                             // set null value (including type tag inside)
-                            fieldValues.add(nullReference);
+                            if (index < numFields) {
+                                fieldValues.set(index, nullReference);
+                            } else {
+                                fieldValues.add(nullReference);
+                            }
                             continue;
                         }
                         if (RecordUtil.isMissing(b1, fieldNumber)) {
                             // set missing value (including type tag inside)
-                            fieldValues.add(missingReference);
+                            if (index < numFields) {
+                                fieldValues.set(index, missingReference);
+                            } else {
+                                fieldValues.add(missingReference);
+                            }
                             continue;
                         }
                     }
@@ -212,12 +265,18 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     int fend = dataBos.size();
                     IVisitablePointable fieldValue = allocator.allocateFieldValue(fieldType);
                     fieldValue.set(dataBos.getByteArray(), fstart, fend - fstart);
-                    fieldValues.add(fieldValue);
+                    if (index < numFields) {
+                        fieldValues.set(index, fieldValue);
+                    } else {
+                        fieldValues.add(fieldValue);
+                    }
                 }
             }
             if (isExpanded) {
                 int numberOfOpenFields = AInt32SerializerDeserializer.getInt(b, openPartOffset);
                 int fieldOffset = openPartOffset + 4 + (8 * numberOfOpenFields);
+                int currentCheck = 0;
+                int reverseLookupIndex = 0;
                 for (int i = 0; i < numberOfOpenFields; i++) {
                     // set the field name (including a type tag, which is a string)
                     int fieldValueLength =
@@ -228,7 +287,22 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     int fnend = dataBos.size();
                     IVisitablePointable fieldName = allocator.allocateEmpty();
                     fieldName.set(dataBos.getByteArray(), fnstart, fnend - fnstart);
-                    fieldNames.add(fieldName);
+                    boolean addItToNumFields = true;
+                    for (; currentCheck < numFields; currentCheck++) {
+                        if (reverseLookupIndex < reverseLookupClosedFields.size()
+                                && currentCheck == reverseLookupClosedFields.get(reverseLookupIndex)) {
+                            reverseLookupIndex++;
+                            continue;
+                        }
+
+                        if (fieldNames.get(currentCheck).equals(fieldName)) {
+                            break;
+                        }
+                    }
+                    if (currentCheck >= numFields) {
+                        addItToNumFields = false;
+                        fieldNames.add(fieldName);
+                    }
                     fieldOffset += fieldValueLength;
 
                     typeTag = EnumDeserializer.ATYPETAGDESERIALIZER.deserialize(b[fieldOffset]);
@@ -238,7 +312,12 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     // allocate
                     IVisitablePointable fieldValueAccessor = allocator.allocateFieldValue(typeTag, b, fieldOffset + 1);
                     fieldValueAccessor.set(b, fieldOffset, fieldValueLength);
-                    fieldValues.add(fieldValueAccessor);
+                    if (!addItToNumFields) {
+                        fieldValues.add(fieldValueAccessor);
+                    } else {
+                        fieldValues.set(currentCheck, fieldValueAccessor);
+                        currentCheck++;
+                    }
                     fieldOffset += fieldValueLength;
                 }
             }
@@ -263,5 +342,4 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
     public <R, T> R accept(IVisitablePointableVisitor<R, T> vistor, T tag) throws HyracksDataException {
         return vistor.visit(this, tag);
     }
-
 }

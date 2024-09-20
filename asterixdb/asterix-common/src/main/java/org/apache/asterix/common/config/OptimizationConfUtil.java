@@ -97,6 +97,8 @@ public class OptimizationConfUtil {
                 compilerProperties.isColumnFilter());
         int maxVariableOccurrencesForInlining =
                 getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
+        boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERFIELDS_KEY,
+                compilerProperties.isOrderedFields());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();
         physOptConf.setFrameSize(frameSize);
@@ -126,6 +128,7 @@ public class OptimizationConfUtil {
         physOptConf.setMinGroupFrames(compilerProperties.getMinGroupMemoryFrames());
         physOptConf.setMinWindowFrames(compilerProperties.getMinWindowMemoryFrames());
         physOptConf.setMaxVariableOccurrencesForInlining(maxVariableOccurrencesForInlining);
+        physOptConf.setOrderFields(orderFields);
 
         // We should have already validated the parameter names at this point...
         Set<String> filteredParameterNames = new HashSet<>(parameterNames);

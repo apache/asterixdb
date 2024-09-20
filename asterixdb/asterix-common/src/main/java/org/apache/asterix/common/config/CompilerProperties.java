@@ -156,7 +156,8 @@ public class CompilerProperties extends AbstractProperties {
         COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING(
                 getRangedIntegerType(0, Integer.MAX_VALUE),
                 128,
-                "Maximum occurrences of a variable allowed in an expression for inlining");
+                "Maximum occurrences of a variable allowed in an expression for inlining"),
+        COMPILER_ORDERFIELDS(BOOLEAN, AlgebricksConfig.ORDERED_FIELDS, "Enable/disable select order list");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -240,6 +241,8 @@ public class CompilerProperties extends AbstractProperties {
 
     public static final String COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING_KEY =
             Option.COMPILER_MAX_VARIABLE_OCCURRENCES_INLINING.ini();
+
+    public static final String COMPILER_ORDERFIELDS_KEY = Option.COMPILER_ORDERFIELDS.ini();
 
     public static final int COMPILER_PARALLELISM_AS_STORAGE = 0;
 
@@ -367,6 +370,10 @@ public class CompilerProperties extends AbstractProperties {
 
     public boolean isColumnFilter() {
         return accessor.getBoolean(Option.COMPILER_COLUMN_FILTER);
+    }
+
+    public boolean isOrderedFields() {
+        return accessor.getBoolean(Option.COMPILER_ORDERFIELDS);
     }
 
     public int getRuntimeMemoryOverheadPercentage() {

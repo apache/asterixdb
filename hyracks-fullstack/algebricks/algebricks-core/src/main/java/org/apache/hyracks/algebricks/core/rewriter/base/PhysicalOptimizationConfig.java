@@ -64,6 +64,8 @@ public class PhysicalOptimizationConfig {
     private static final String MIN_WINDOW_FRAMES = "MIN_WINDOW_FRAMES";
     private static final String MAX_VARIABLE_OCCURRENCES_INLINING = "MAX_VARIABLE_OCCURRENCES_INLINING";
 
+    private static final String ORDER_FIELDS = "ORDER_FIELDS";
+
     private final Properties properties = new Properties();
 
     public PhysicalOptimizationConfig() {
@@ -160,6 +162,10 @@ public class PhysicalOptimizationConfig {
         setInt(MAX_FRAMES_FOR_TEXTSEARCH, frameLimit);
     }
 
+    public void setOrderFields(boolean orderFields) {
+        setBoolean(ORDER_FIELDS, orderFields);
+    }
+
     public int getHashGroupByTableSize() {
         return getInt(DEFAULT_HASH_GROUP_TABLE_SIZE, 10485767);
     }
@@ -234,6 +240,10 @@ public class PhysicalOptimizationConfig {
 
     public boolean getSortParallel() {
         return getBoolean(SORT_PARALLEL, AlgebricksConfig.SORT_PARALLEL_DEFAULT);
+    }
+
+    public boolean isOrderField() {
+        return getBoolean(ORDER_FIELDS, AlgebricksConfig.ORDERED_FIELDS);
     }
 
     public void setSortParallel(boolean sortParallel) {

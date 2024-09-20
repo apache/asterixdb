@@ -176,9 +176,9 @@ public class TypeResolverUtil {
         IAType[] fieldTypesArray = fieldTypes.toArray(new IAType[0]);
         ARecordType resultType;
         if (resultTypeIsOpen && knowsAdditonalFieldNames) {
-            resultType = new ARecordType("generalized-record-type", fieldNamesArray, fieldTypesArray, resultTypeIsOpen,
-                    allPossibleAdditionalFieldNames);
             LinkedHashSet<String> resultFieldOrder = generalizeRecordFieldOrderHint(leftType, rightType);
+            resultType = new ARecordType("generalized-record-type", fieldNamesArray, fieldTypesArray, resultTypeIsOpen,
+                    allPossibleAdditionalFieldNames, resultFieldOrder);
             if (resultFieldOrder != null) {
                 resultType.getAnnotations().add(new RecordFieldOrderAnnotation(resultFieldOrder));
             }

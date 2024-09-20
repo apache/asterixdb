@@ -47,6 +47,7 @@
     "compiler\.min\.memory\.allocation" : true,
     "compiler.min.sortmemory" : 524288,
     "compiler.min.windowmemory" : 524288,
+    "compiler.orderfields" : false,
     "compiler\.parallelism" : 3,
     "compiler.queryplanshape" : "zigzag",
     "compiler.runtime.memory.overhead" : 5,

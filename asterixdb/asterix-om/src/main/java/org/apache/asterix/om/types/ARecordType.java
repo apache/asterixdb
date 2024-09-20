@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,10 +55,15 @@ public class ARecordType extends AbstractComplexType {
 
     private static final long serialVersionUID = 1L;
     private static final JavaType SET = OBJECT_MAPPER.getTypeFactory().constructCollectionType(Set.class, String.class);
+
+    private static final JavaType LIST =
+            OBJECT_MAPPER.getTypeFactory().constructCollectionType(LinkedHashSet.class, String.class);
     private static final String IS_OPEN = "isOpen";
     private static final String FIELD_NAMES = "fieldNames";
     private static final String FIELD_TYPES = "fieldTypes";
     private static final String ADDITIONAL_FIELDS = "additionalFieldNames";
+
+    private static final String ORDERED_FIELDS = "orderedFields";
     private final String[] fieldNames;
     private final IAType[] fieldTypes;
     private final Map<String, Integer> fieldNameToIndexMap = new HashMap<>();
@@ -71,6 +77,8 @@ public class ARecordType extends AbstractComplexType {
     // the bounded set of all possible additional field names.
     private final Set<String> allPossibleAdditionalFieldNames;
 
+    private final LinkedHashSet<String> allOrderedFields;
+
     /**
      * @param typeName   the name of the type
      * @param fieldNames the names of the closed fields
@@ -78,7 +86,31 @@ public class ARecordType extends AbstractComplexType {
      * @param isOpen     whether the record is open
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen) {
-        this(typeName, fieldNames, fieldTypes, isOpen, null);
+        this(typeName, fieldNames, fieldTypes, isOpen, null, null);
+    }
+
+    /**
+     * @param typeName   the name of the type
+     * @param fieldNames the names of the closed fields
+     * @param fieldTypes the types of the closed fields
+     * @param isOpen     whether the record is open
+     * @param allPossibleAdditionalFieldNames, all possible additional field names.
+     */
+    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen,
+            Set<String> allPossibleAdditionalFieldNames) {
+        this(typeName, fieldNames, fieldTypes, isOpen, allPossibleAdditionalFieldNames, null);
+    }
+
+    /**
+     * @param typeName   the name of the type
+     * @param fieldNames the names of the closed fields
+     * @param fieldTypes the types of the closed fields
+     * @param isOpen     whether the record is open
+     * @param allOrderedFields fields in order.
+     */
+    public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen,
+            LinkedHashSet<String> allOrderedFields) {
+        this(typeName, fieldNames, fieldTypes, isOpen, null, allOrderedFields);
     }
 
     /**
@@ -86,10 +118,11 @@ public class ARecordType extends AbstractComplexType {
      * @param fieldNames                       the names of the closed fields
      * @param fieldTypes                       the types of the closed fields
      * @param isOpen                           whether the record is open
-     * @param allPossibleAdditionalFieldNames, all possible additional field names.
+     * @param allPossibleAdditionalFieldNames, all possible additional field names
+     * @param allOrderedFields fields in order.
      */
     public ARecordType(String typeName, String[] fieldNames, IAType[] fieldTypes, boolean isOpen,
-            Set<String> allPossibleAdditionalFieldNames) {
+            Set<String> allPossibleAdditionalFieldNames, LinkedHashSet<String> allOrderedFields) {
         super(typeName);
         this.fieldNames = fieldNames;
         this.fieldTypes = fieldTypes;
@@ -100,6 +133,7 @@ public class ARecordType extends AbstractComplexType {
             fieldNameToIndexMap.put(fieldNames[index], index);
         }
         this.allPossibleAdditionalFieldNames = allPossibleAdditionalFieldNames;
+        this.allOrderedFields = allOrderedFields;
     }
 
     public boolean canContainField(String fieldName) {
@@ -383,6 +417,7 @@ public class ARecordType extends AbstractComplexType {
         jsonObject.put(IS_OPEN, isOpen);
         jsonObject.putPOJO(FIELD_NAMES, fieldNames);
         jsonObject.putPOJO(ADDITIONAL_FIELDS, allPossibleAdditionalFieldNames);
+        jsonObject.putPOJO(ORDERED_FIELDS, allOrderedFields);
         ArrayNode fieldTypesArray = OBJECT_MAPPER.createArrayNode();
         for (int i = 0; i < fieldTypes.length; i++) {
             fieldTypesArray.add(fieldTypes[i].toJson(registry));
@@ -397,12 +432,17 @@ public class ARecordType extends AbstractComplexType {
         boolean isOpen = json.get(IS_OPEN).asBoolean();
         String[] fieldNames = OBJECT_MAPPER.convertValue(json.get(FIELD_NAMES), String[].class);
         Set<String> additionalFields = OBJECT_MAPPER.convertValue(json.get(ADDITIONAL_FIELDS), SET);
+        LinkedHashSet<String> orderedFields = OBJECT_MAPPER.convertValue(json.get(ORDERED_FIELDS), LIST);
         ArrayNode fieldTypesNode = (ArrayNode) json.get(FIELD_TYPES);
         IAType[] fieldTypes = new IAType[fieldTypesNode.size()];
         for (int i = 0; i < fieldTypesNode.size(); i++) {
             fieldTypes[i] = (IAType) registry.deserialize(fieldTypesNode.get(i));
         }
-        return new ARecordType(typeName, fieldNames, fieldTypes, isOpen, additionalFields);
+        return new ARecordType(typeName, fieldNames, fieldTypes, isOpen, additionalFields, orderedFields);
+    }
+
+    public LinkedHashSet<String> getAllOrderedFields() {
+        return allOrderedFields;
     }
 
     public List<IAType> getFieldTypes(List<List<String>> fields) throws AlgebricksException {

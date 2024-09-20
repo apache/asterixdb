@@ -59,8 +59,8 @@ public class ARecordPrinter {
 
         ps.print(startRecord);
 
-        final int size = fieldNames.size();
         boolean first = true;
+        final int size = fieldNames.size();
         for (int i = 0; i < size; ++i) {
             final IVisitablePointable fieldName = fieldNames.get(i);
             final IVisitablePointable fieldValue = fieldValues.get(i);
