@@ -83,7 +83,7 @@ public class ColumnRangeFilterPushdownProcessor extends ColumnFilterPushdownProc
     }
 
     @Override
-    protected boolean handleCompare(AbstractFunctionCallExpression expression) throws AlgebricksException {
+    protected boolean handleCompare(AbstractFunctionCallExpression expression, int depth) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> args = expression.getArguments();
 
         Mutable<ILogicalExpression> leftRef = args.get(0);

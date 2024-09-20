@@ -16567,6 +16567,11 @@
         <output-dir compare="Text">filter/007</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/008">
+        <output-dir compare="Text">filter/008</output-dir>
+      </compilation-unit>
+    </test-case>
     <test-case FilePath="column" check-warnings="true">
       <compilation-unit name="filter/boolean">
         <output-dir compare="Text">filter/boolean</output-dir>
