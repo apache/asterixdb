@@ -16324,6 +16324,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3504">
+        <output-dir compare="Text">assembly/ASTERIXDB-3504</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="assembly/ASTERIXDB-3491-2">
         <output-dir compare="Text">assembly/ASTERIXDB-3491-2</output-dir>
       </compilation-unit>

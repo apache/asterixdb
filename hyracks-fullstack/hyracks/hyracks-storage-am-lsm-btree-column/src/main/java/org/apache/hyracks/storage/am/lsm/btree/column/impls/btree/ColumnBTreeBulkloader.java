@@ -123,7 +123,6 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         setSplitKey(splitKey, tuple);
         if (setLowKey) {
             setSplitKey(lowKey, tuple);
-            lowKey.getTuple().resetByTupleOffset(lowKey.getBuffer().array(), 0);
             setLowKey = false;
         }
     }
@@ -236,6 +235,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         int splitKeySize = tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
     }
 
     private void log(String status, int numberOfTempConfiscatedPages) {
