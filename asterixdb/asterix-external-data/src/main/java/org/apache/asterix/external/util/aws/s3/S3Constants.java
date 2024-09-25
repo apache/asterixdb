@@ -28,6 +28,8 @@ public class S3Constants {
     public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
     public static final String SECRET_ACCESS_KEY_FIELD_NAME = "secretAccessKey";
     public static final String SESSION_TOKEN_FIELD_NAME = "sessionToken";
+    public static final String ROLE_ARN_FIELD_NAME = "roleArn";
+    public static final String EXTERNAL_ID_FIELD_NAME = "externalId";
     public static final String SERVICE_END_POINT_FIELD_NAME = "serviceEndpoint";
 
     // AWS S3 specific error codes
