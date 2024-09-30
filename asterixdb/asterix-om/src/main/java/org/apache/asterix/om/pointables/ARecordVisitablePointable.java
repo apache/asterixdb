@@ -100,6 +100,8 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
             LinkedHashSet<String> allOrderedFields = inputType.getAllOrderedFields();
             if (allOrderedFields != null) {
                 numFields = allOrderedFields.size();
+                int index = 0;
+                int nameInClosedField = 0;
                 for (String field : allOrderedFields) {
                     int nameStart = typeBos.size();
                     typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
@@ -109,29 +111,24 @@ public class ARecordVisitablePointable extends AbstractVisitablePointable {
                     typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
                     fieldNames.add(typeNameReference);
                     fieldValues.add(missingReference);
-                }
-            }
-
-            int index = 0;
-            for (int i = 0; i < numberOfSchemaFields; i++) {
-                // add type name Reference (including a string type tag)
-                int nameStart = typeBos.size();
-                typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
-                utf8Writer.writeUTF8(fieldNameStrs[i], typeDos);
-                int nameEnd = typeBos.size();
-                IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
-                typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
-                for (; index < numFields; index++) {
-                    if (fieldNames.get(index).equals(typeNameReference)) {
-                        break;
+                    if (nameInClosedField < numberOfSchemaFields && field.equals(fieldNameStrs[nameInClosedField])) {
+                        reverseLookupClosedFields.add(index);
+                        nameInClosedField++;
                     }
+                    index++;
                 }
-                if (index == numFields) {
+            } else {
+                for (int i = 0; i < numberOfSchemaFields; i++) {
+                    // add type name Reference (including a string type tag)
+                    int nameStart = typeBos.size();
+                    typeDos.writeByte(ATypeTag.SERIALIZED_STRING_TYPE_TAG);
+                    utf8Writer.writeUTF8(fieldNameStrs[i], typeDos);
+                    int nameEnd = typeBos.size();
+                    IVisitablePointable typeNameReference = AFlatValuePointable.FACTORY.create(null);
+                    typeNameReference.set(typeBos.getByteArray(), nameStart, nameEnd - nameStart);
                     fieldNames.add(typeNameReference);
                     reverseLookupClosedFields.add(fieldNames.size() - 1);
-                    continue;
                 }
-                reverseLookupClosedFields.add(index);
             }
 
             // initialize a constant: null value bytes reference
