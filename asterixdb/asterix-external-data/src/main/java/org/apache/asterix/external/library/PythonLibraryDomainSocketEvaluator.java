@@ -50,7 +50,6 @@ public class PythonLibraryDomainSocketEvaluator extends AbstractLibrarySocketEva
     private final ILibraryManager libMgr;
     private final Path sockPath;
     SocketChannel chan;
-    ProcessHandle pid;
     private static final Logger LOGGER = LogManager.getLogger(ExternalLibraryManager.class);
 
     public PythonLibraryDomainSocketEvaluator(JobId jobId, PythonLibraryEvaluatorId evaluatorId, ILibraryManager libMgr,
@@ -83,7 +82,6 @@ public class PythonLibraryDomainSocketEvaluator extends AbstractLibrarySocketEva
         proto = new PythonDomainSocketProto(Channels.newOutputStream(chan), chan, wd);
         proto.start();
         proto.helo();
-        this.pid = ((PythonDomainSocketProto) proto).getPid();
     }
 
     @Override
@@ -97,9 +95,6 @@ public class PythonLibraryDomainSocketEvaluator extends AbstractLibrarySocketEva
             }
         } catch (IOException e) {
             LOGGER.error("Caught exception exiting Python UDF:", e);
-        }
-        if (pid != null && pid.isAlive()) {
-            LOGGER.error("Python UDF " + pid.pid() + " did not exit as expected.");
         }
     }
 
