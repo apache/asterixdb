@@ -31,7 +31,8 @@ public class EntityDetails {
         VIEW,
         FUNCTION,
         DATABASE,
-        DATAVERSE
+        DATAVERSE,
+        SYNONYM
     }
 
     private final String databaseName;
@@ -64,6 +65,10 @@ public class EntityDetails {
 
     public static EntityDetails newFunction(String databaseName, DataverseName dataverseName, String functionName) {
         return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION);
+    }
+
+    public static EntityDetails newSynonym(String databaseName, DataverseName dataverseName, String synonymName) {
+        return new EntityDetails(databaseName, dataverseName, synonymName, EntityType.SYNONYM);
     }
 
     public String getDatabaseName() {

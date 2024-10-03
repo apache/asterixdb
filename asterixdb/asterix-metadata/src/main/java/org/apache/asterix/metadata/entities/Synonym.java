@@ -24,6 +24,7 @@ import java.util.Objects;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.utils.Creator;
 
 public class Synonym implements IMetadataEntity<Synonym> {
 
@@ -40,15 +41,17 @@ public class Synonym implements IMetadataEntity<Synonym> {
     private final DataverseName objectDataverseName;
 
     private final String objectName;
+    private final Creator creator;
 
     public Synonym(String databaseName, DataverseName dataverseName, String synonymName, String objectDatabaseName,
-            DataverseName objectDataverseName, String objectName) {
+            DataverseName objectDataverseName, String objectName, Creator creator) {
         this.databaseName = Objects.requireNonNull(databaseName);
         this.dataverseName = Objects.requireNonNull(dataverseName);
         this.synonymName = Objects.requireNonNull(synonymName);
         this.objectDatabaseName = Objects.requireNonNull(objectDatabaseName);
         this.objectDataverseName = Objects.requireNonNull(objectDataverseName);
         this.objectName = Objects.requireNonNull(objectName);
+        this.creator = creator;
     }
 
     public String getDatabaseName() {
@@ -73,6 +76,10 @@ public class Synonym implements IMetadataEntity<Synonym> {
 
     public String getObjectName() {
         return objectName;
+    }
+
+    public Creator getCreator() {
+        return creator;
     }
 
     @Override

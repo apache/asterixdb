@@ -455,7 +455,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         handleLibraryDropStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case CREATE_SYNONYM:
-                        handleCreateSynonymStatement(metadataProvider, stmt, requestParameters);
+                        handleCreateSynonymStatement(metadataProvider, stmt, requestParameters,
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case SYNONYM_DROP:
                         handleDropSynonymStatement(metadataProvider, stmt, requestParameters);
@@ -3823,7 +3824,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     protected void handleCreateSynonymStatement(MetadataProvider metadataProvider, Statement stmt,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         CreateSynonymStatement css = (CreateSynonymStatement) stmt;
         metadataProvider.validateDatabaseObjectName(css.getNamespace(), css.getSynonymName(), css.getSourceLocation());
         Namespace stmtActiveNamespace = getActiveNamespace(css.getNamespace());
@@ -3837,14 +3838,16 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
         lockUtil.createSynonymBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName, synonymName);
         try {
-            doCreateSynonym(metadataProvider, css, stmtActiveNamespace, synonymName, objectNamespace, objectName);
+            doCreateSynonym(metadataProvider, css, stmtActiveNamespace, synonymName, objectNamespace, objectName,
+                    creator);
         } finally {
             metadataProvider.getLocks().unlock();
         }
     }
 
     protected CreateResult doCreateSynonym(MetadataProvider metadataProvider, CreateSynonymStatement css,
-            Namespace namespace, String synonymName, Namespace objectNamespace, String objectName) throws Exception {
+            Namespace namespace, String synonymName, Namespace objectNamespace, String objectName, Creator creator)
+            throws Exception {
         String databaseName = namespace.getDatabaseName();
         DataverseName dataverseName = namespace.getDataverseName();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -3869,8 +3872,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 throw new CompilationException(ErrorCode.SYNONYM_EXISTS, css.getSourceLocation(), synonymName);
             }
             synonym = new Synonym(databaseName, dataverseName, synonymName, objectNamespace.getDatabaseName(),
-                    objectNamespace.getDataverseName(), objectName);
+                    objectNamespace.getDataverseName(), objectName, creator);
             MetadataManager.INSTANCE.addSynonym(metadataProvider.getMetadataTxnContext(), synonym);
+            beforeTxnCommit(metadataProvider, creator,
+                    EntityDetails.newSynonym(databaseName, dataverseName, synonymName));
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             return CreateResult.CREATED;
         } catch (Exception e) {
