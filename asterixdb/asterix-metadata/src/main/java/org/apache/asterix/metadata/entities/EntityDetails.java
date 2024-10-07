@@ -39,13 +39,24 @@ public class EntityDetails {
     private final String databaseName;
     private final DataverseName dataverseName;
     private final String entityName;
-    private EntityType entityType;
+    private final EntityType entityType;
+    // The number of arguments that the function accepts. Relevant only for function entity.
+    private int functionArity;
 
     private EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType) {
         this.databaseName = databaseName;
         this.dataverseName = dataverseName;
         this.entityName = entityName;
         this.entityType = entityType;
+    }
+
+    private EntityDetails(String databaseName, DataverseName dataverseName, String entityName, EntityType entityType,
+            int functionArity) {
+        this.databaseName = databaseName;
+        this.dataverseName = dataverseName;
+        this.entityName = entityName;
+        this.entityType = entityType;
+        this.functionArity = functionArity;
     }
 
     public static EntityDetails newDatabase(String databaseName) {
@@ -64,8 +75,9 @@ public class EntityDetails {
         return new EntityDetails(databaseName, dataverseName, viewName, EntityType.VIEW);
     }
 
-    public static EntityDetails newFunction(String databaseName, DataverseName dataverseName, String functionName) {
-        return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION);
+    public static EntityDetails newFunction(String databaseName, DataverseName dataverseName, String functionName,
+            int functionArity) {
+        return new EntityDetails(databaseName, dataverseName, functionName, EntityType.FUNCTION, functionArity);
     }
 
     public static EntityDetails newSynonym(String databaseName, DataverseName dataverseName, String synonymName) {
@@ -90,5 +102,9 @@ public class EntityDetails {
 
     public EntityType getEntityType() {
         return entityType;
+    }
+
+    public int getFunctionArity() {
+        return functionArity;
     }
 }

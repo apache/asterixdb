@@ -99,8 +99,8 @@ public class SqlppLoadAccessedDataset extends AbstractSqlppSimpleExpressionVisit
                 return;
             }
             String functionName = signature.getName() + "(" + signature.getArity() + ")";
-            context.getMetadataProvider().addAccessedEntity(
-                    EntityDetails.newFunction(signature.getDatabaseName(), signature.getDataverseName(), functionName));
+            context.getMetadataProvider().addAccessedEntity(EntityDetails.newFunction(signature.getDatabaseName(),
+                    signature.getDataverseName(), functionName, 0));
         }
     }
 }
