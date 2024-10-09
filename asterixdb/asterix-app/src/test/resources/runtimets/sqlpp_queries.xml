@@ -16424,6 +16424,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3504">
+        <output-dir compare="Text">assembly/ASTERIXDB-3504</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="assembly/ASTERIXDB-3491-2">
         <output-dir compare="Text">assembly/ASTERIXDB-3491-2</output-dir>
       </compilation-unit>
@@ -16660,6 +16665,11 @@
     <test-case FilePath="column">
       <compilation-unit name="filter/007">
         <output-dir compare="Text">filter/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/008">
+        <output-dir compare="Text">filter/008</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="column" check-warnings="true">

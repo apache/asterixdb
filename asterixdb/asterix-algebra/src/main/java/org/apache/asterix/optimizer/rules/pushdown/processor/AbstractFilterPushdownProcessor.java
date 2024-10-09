@@ -120,7 +120,8 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
      * @param expression compare expression
      * @return true if the pushdown should continue, false otherwise
      */
-    protected abstract boolean handleCompare(AbstractFunctionCallExpression expression) throws AlgebricksException;
+    protected abstract boolean handleCompare(AbstractFunctionCallExpression expression, int depth)
+            throws AlgebricksException;
 
     /**
      * Handle a value access path expression
@@ -253,7 +254,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
 
         // Prepare for pushdown
         preparePushdown(useDescriptor, scanDefineDescriptor);
-        if (pushdownFilterExpression(inlinedExpr)) {
+        if (pushdownFilterExpression(inlinedExpr, 0)) {
             putFilterInformation(scanDefineDescriptor, inlinedExpr);
             changed = true;
         }
@@ -261,41 +262,46 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         return changed;
     }
 
-    protected final boolean pushdownFilterExpression(ILogicalExpression expression) throws AlgebricksException {
+    protected final boolean pushdownFilterExpression(ILogicalExpression expression, int depth)
+            throws AlgebricksException {
         boolean pushdown = false;
         if (isConstant(expression)) {
             IAObject constantValue = getConstant(expression);
             // Only non-derived types are allowed
             pushdown = !constantValue.getType().getTypeTag().isDerivedType();
         } else if (isAnd(expression)) {
-            pushdown = handleAnd((AbstractFunctionCallExpression) expression);
+            pushdown = handleAnd((AbstractFunctionCallExpression) expression, depth);
         } else if (isCompare(expression)) {
-            pushdown = handleCompare((AbstractFunctionCallExpression) expression);
+            pushdown = handleCompare((AbstractFunctionCallExpression) expression, depth);
         } else if (isFilterPath(expression)) {
             pushdown = handlePath((AbstractFunctionCallExpression) expression);
         } else if (expression.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
             // All functions including OR
-            pushdown = handleFunction((AbstractFunctionCallExpression) expression);
+            pushdown = handleFunction((AbstractFunctionCallExpression) expression, depth);
         }
         // PK variable should have (pushdown = false) as we should not involve the PK (at least currently)
         return pushdown;
     }
 
-    private boolean handleAnd(AbstractFunctionCallExpression expression) throws AlgebricksException {
+    private boolean handleAnd(AbstractFunctionCallExpression expression, int depth) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> args = expression.getArguments();
         Iterator<Mutable<ILogicalExpression>> argIter = args.iterator();
         while (argIter.hasNext()) {
             ILogicalExpression arg = argIter.next().getValue();
             // Allow for partial pushdown of AND operands
-            if (!pushdownFilterExpression(arg)) {
-                // Remove the expression that cannot be pushed down
-                argIter.remove();
+            if (!pushdownFilterExpression(arg, depth + 1)) {
+                if (depth == 0) {
+                    // Remove the expression that cannot be pushed down
+                    argIter.remove();
+                } else {
+                    return false;
+                }
             }
         }
         return !args.isEmpty();
     }
 
-    private boolean handleFunction(AbstractFunctionCallExpression expression) throws AlgebricksException {
+    private boolean handleFunction(AbstractFunctionCallExpression expression, int depth) throws AlgebricksException {
         if (!expression.getFunctionInfo().isFunctional() || isNotPushable(expression)) {
             return false;
         }
@@ -303,7 +309,7 @@ abstract class AbstractFilterPushdownProcessor extends AbstractPushdownProcessor
         for (Mutable<ILogicalExpression> argRef : expression.getArguments()) {
             ILogicalExpression arg = argRef.getValue();
             // Either all arguments are pushable or none
-            if (!pushdownFilterExpression(arg)) {
+            if (!pushdownFilterExpression(arg, depth + 1)) {
                 return false;
             }
         }

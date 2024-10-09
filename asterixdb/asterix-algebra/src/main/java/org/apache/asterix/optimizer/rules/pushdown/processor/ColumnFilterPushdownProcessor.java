@@ -107,7 +107,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
     }
 
     @Override
-    protected boolean handleCompare(AbstractFunctionCallExpression expression) throws AlgebricksException {
+    protected boolean handleCompare(AbstractFunctionCallExpression expression, int depth) throws AlgebricksException {
         List<Mutable<ILogicalExpression>> args = expression.getArguments();
 
         Mutable<ILogicalExpression> leftRef = args.get(0);
@@ -116,7 +116,7 @@ public class ColumnFilterPushdownProcessor extends AbstractFilterPushdownProcess
         ILogicalExpression left = leftRef.getValue();
         ILogicalExpression right = rightRef.getValue();
 
-        return pushdownFilterExpression(left) && pushdownFilterExpression(right);
+        return pushdownFilterExpression(left, depth + 1) && pushdownFilterExpression(right, depth + 1);
     }
 
     @Override

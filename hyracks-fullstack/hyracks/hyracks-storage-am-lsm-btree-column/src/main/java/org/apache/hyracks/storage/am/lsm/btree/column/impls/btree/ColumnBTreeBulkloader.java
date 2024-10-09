@@ -112,7 +112,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getOccupiedSpace();
         //min and max tuples' sizes
-        requiredFreeSpace += lowKey.getTuple().getTupleSize() + splitKey.getTuple().getTupleSize();
+        requiredFreeSpace += lowKey.getTuple().getTupleSize() + getSplitKeySize(tuple);
         //New tuple required space
         requiredFreeSpace += columnWriter.bytesRequired(tuple);
         return bufferCache.getPageSize() <= requiredFreeSpace;
@@ -123,7 +123,6 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         setSplitKey(splitKey, tuple);
         if (setLowKey) {
             setSplitKey(lowKey, tuple);
-            lowKey.getTuple().resetByTupleOffset(lowKey.getBuffer().array(), 0);
             setLowKey = false;
         }
     }
@@ -233,9 +232,14 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
     }
 
     private void setSplitKey(ISplitKey splitKey, ITupleReference tuple) {
-        int splitKeySize = tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
+        int splitKeySize = getSplitKeySize(tuple);
         splitKey.initData(splitKeySize);
         tupleWriter.writeTupleFields(tuple, 0, cmp.getKeyFieldCount(), splitKey.getBuffer().array(), 0);
+        splitKey.getTuple().resetByTupleOffset(splitKey.getBuffer().array(), 0);
+    }
+
+    private int getSplitKeySize(ITupleReference tuple) {
+        return tupleWriter.bytesRequired(tuple, 0, cmp.getKeyFieldCount());
     }
 
     private void log(String status, int numberOfTempConfiscatedPages) {
