@@ -51,6 +51,7 @@ import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails.PartitioningStrategy;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.asterix.om.types.IAType;
@@ -174,7 +175,8 @@ public class CheckpointInSecondaryIndexTest {
                 null, DatasetType.INTERNAL, DATASET_ID, 0);
         String database = MetadataUtil.databaseFor(dvName);
         secondaryIndex = new Index(database, dvName, DATASET_NAME, INDEX_NAME, INDEX_TYPE, INDEX_FIELD_NAMES,
-                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0, OptionalBoolean.of(false));
+                INDEX_FIELD_INDICATORS, INDEX_FIELD_TYPES, false, false, false, 0, OptionalBoolean.of(false),
+                Creator.DEFAULT_CREATOR);
         taskCtx = null;
         primaryIndexDataflowHelper = null;
         secondaryIndexDataflowHelper = null;

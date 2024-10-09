@@ -189,7 +189,7 @@ public class LSMFlushRecoveryTest {
         secondaryIndexEntity = new Index(dataset.getDatabaseName(), dataset.getDataverseName(),
                 dataset.getDatasetName(), SECONDARY_INDEX_NAME, SECONDARY_INDEX_TYPE, SECONDARY_INDEX_FIELD_NAMES,
                 SECONDARY_INDEX_FIELD_INDICATORS, SECONDARY_INDEX_FIELD_TYPES, false, false, false, 0,
-                OptionalBoolean.of(false));
+                OptionalBoolean.of(false), dataset.getCreator());
 
         primaryIndexInfos = new PrimaryIndexInfo[NUM_PARTITIONS];
         secondaryIndexInfo = new SecondaryIndexInfo[NUM_PARTITIONS];

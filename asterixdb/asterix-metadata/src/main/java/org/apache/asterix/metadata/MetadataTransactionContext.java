@@ -172,7 +172,7 @@ public class MetadataTransactionContext extends MetadataCache {
 
     public void dropIndex(String database, DataverseName dataverseName, String datasetName, String indexName) {
         Index index = new Index(database, dataverseName, datasetName, indexName, null, null, false, false,
-                MetadataUtil.PENDING_NO_OP);
+                MetadataUtil.PENDING_NO_OP, null);
         droppedCache.addIndexIfNotExists(index);
         logAndApply(new MetadataLogicalOperation(index, false));
     }

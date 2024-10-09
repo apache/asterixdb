@@ -34,6 +34,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.transactions.IRecoveryManager.ResourceType;
 import org.apache.asterix.metadata.MetadataCache;
 import org.apache.asterix.metadata.api.IMetadataEntity;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.IndexUtil;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.AUnionType;
@@ -66,10 +67,11 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
     private final boolean isEnforced;
     // Type of pending operations with respect to atomic DDL operation
     private int pendingOp;
+    private final Creator creator;
 
     public Index(String databaseName, DataverseName dataverseName, String datasetName, String indexName,
-            IndexType indexType, IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex,
-            int pendingOp) {
+            IndexType indexType, IIndexDetails indexDetails, boolean isEnforced, boolean isPrimaryIndex, int pendingOp,
+            Creator creator) {
         boolean categoryOk = (indexType == null && indexDetails == null) || (IndexCategory
                 .of(Objects.requireNonNull(indexType)) == ((AbstractIndexDetails) Objects.requireNonNull(indexDetails))
                         .getIndexCategory());
@@ -85,26 +87,27 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
         this.isPrimaryIndex = isPrimaryIndex;
         this.isEnforced = isEnforced;
         this.pendingOp = pendingOp;
+        this.creator = creator;
     }
 
     @Deprecated
     public Index(String database, DataverseName dataverseName, String datasetName, String indexName,
             IndexType indexType, List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators,
             List<IAType> keyFieldTypes, boolean overrideKeyFieldTypes, boolean isEnforced, boolean isPrimaryIndex,
-            int pendingOp, OptionalBoolean excludeUnknownKey) {
+            int pendingOp, OptionalBoolean excludeUnknownKey, Creator creator) {
         this(database, dataverseName, datasetName,
                 indexName, indexType, createSimpleIndexDetails(indexType, keyFieldNames, keyFieldSourceIndicators,
                         keyFieldTypes, overrideKeyFieldTypes, excludeUnknownKey),
-                isEnforced, isPrimaryIndex, pendingOp);
+                isEnforced, isPrimaryIndex, pendingOp, creator);
     }
 
     public static Index createPrimaryIndex(String database, DataverseName dataverseName, String datasetName,
             List<List<String>> keyFieldNames, List<Integer> keyFieldSourceIndicators, List<IAType> keyFieldTypes,
-            int pendingOp) {
-        return new Index(database, dataverseName, datasetName,
-                datasetName, IndexType.BTREE, new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators,
-                        keyFieldTypes, false, OptionalBoolean.empty(), OptionalBoolean.empty(), null, null, null),
-                false, true, pendingOp);
+            int pendingOp, Creator creator) {
+        return new Index(database, dataverseName, datasetName, datasetName, IndexType.BTREE,
+                new ValueIndexDetails(keyFieldNames, keyFieldSourceIndicators, keyFieldTypes, false,
+                        OptionalBoolean.empty(), OptionalBoolean.empty(), null, null, null),
+                false, true, pendingOp, creator);
     }
 
     public String getDatabaseName() {
@@ -153,6 +156,10 @@ public class Index implements IMetadataEntity<Index>, Comparable<Index> {
 
     public boolean isSecondaryIndex() {
         return !isPrimaryIndex();
+    }
+
+    public Creator getCreator() {
+        return creator;
     }
 
     public boolean isPrimaryKeyIndex() {

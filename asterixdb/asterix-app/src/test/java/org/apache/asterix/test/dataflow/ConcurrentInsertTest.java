@@ -130,7 +130,7 @@ public class ConcurrentInsertTest {
                 StorageTestUtils.DATASET.getDataverseName(), StorageTestUtils.DATASET.getDatasetName(), "TestIndex",
                 IndexType.BTREE, Arrays.asList(Arrays.asList(StorageTestUtils.RECORD_TYPE.getFieldNames()[1])),
                 Arrays.asList(Index.RECORD_INDICATOR), Arrays.asList(BuiltinType.AINT64), false, false, false, 0,
-                OptionalBoolean.of(false));
+                OptionalBoolean.of(false), StorageTestUtils.DATASET.getCreator());
 
         SecondaryIndexInfo secondaryIndexInfo =
                 nc.createSecondaryIndex(primaryIndexInfo, secondaryIndexEntity, StorageTestUtils.STORAGE_MANAGER, 0);
@@ -142,10 +142,10 @@ public class ConcurrentInsertTest {
         secondaryIndex = (TestLsmBtree) secondaryDataflowHelper.getIndexInstance();
         secondaryDataflowHelper.close();
 
-        Index primaryKeyIndexEntity =
-                new Index(StorageTestUtils.DATASET.getDatabaseName(), StorageTestUtils.DATASET.getDataverseName(),
-                        StorageTestUtils.DATASET.getDatasetName(), "PrimaryKeyIndex", IndexType.BTREE, Arrays.asList(),
-                        Arrays.asList(), Arrays.asList(), false, false, false, 0, OptionalBoolean.empty());
+        Index primaryKeyIndexEntity = new Index(StorageTestUtils.DATASET.getDatabaseName(),
+                StorageTestUtils.DATASET.getDataverseName(), StorageTestUtils.DATASET.getDatasetName(),
+                "PrimaryKeyIndex", IndexType.BTREE, Arrays.asList(), Arrays.asList(), Arrays.asList(), false, false,
+                false, 0, OptionalBoolean.empty(), StorageTestUtils.DATASET.getCreator());
 
         SecondaryIndexInfo primaryKeyIndexInfo =
                 nc.createSecondaryIndex(primaryIndexInfo, primaryKeyIndexEntity, StorageTestUtils.STORAGE_MANAGER, 0);

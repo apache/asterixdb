@@ -42,10 +42,12 @@ import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
 import org.apache.asterix.metadata.MetadataNode;
 import org.apache.asterix.metadata.bootstrap.IndexEntity;
+import org.apache.asterix.metadata.bootstrap.MetadataRecordTypes;
 import org.apache.asterix.metadata.declared.MetadataManagerUtil;
 import org.apache.asterix.metadata.entities.Dataset;
 import org.apache.asterix.metadata.entities.Datatype;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.metadata.utils.Creator;
 import org.apache.asterix.metadata.utils.KeyFieldTypeUtil;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ACollectionCursor;
@@ -60,6 +62,7 @@ import org.apache.asterix.om.base.ARecord;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IACursor;
 import org.apache.asterix.om.base.IAObject;
+import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.AOrderedListType;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.ATypeTag;
@@ -535,9 +538,10 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
             isEnforcingKeys = ((ABoolean) indexRecord.getValueByPos(isEnforcedFieldPos)).getBoolean();
         }
         int pendingOp = ((AInt32) indexRecord.getValueByPos(indexEntity.pendingOpIndex())).getIntegerValue();
+        Creator creator = Creator.createOrDefault(indexRecord);
 
         return new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails, isEnforcingKeys,
-                isPrimaryIndex, pendingOp);
+                isPrimaryIndex, pendingOp, creator);
     }
 
     @Override
@@ -683,6 +687,7 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
         writeExcludeUnknownKey(index);
         writeCast(index);
         writeSampleDetails(index);
+        writeIndexCreator(index);
     }
 
     private void writeComplexSearchKeys(Index.ArrayIndexDetails indexDetails) throws HyracksDataException {
@@ -1012,6 +1017,37 @@ public class IndexTupleTranslator extends AbstractTupleTranslator<Index> {
                 indexesStatsListBuilder.write(fieldValue.getDataOutput(), true);
                 recordBuilder.addField(nameValue, fieldValue);
             }
+        }
+    }
+
+    private void writeIndexCreator(Index index) throws HyracksDataException {
+        if (indexEntity.databaseNameIndex() >= 0) {
+            Creator creatorInfo = index.getCreator();
+            RecordBuilder creatorObject = new RecordBuilder();
+            creatorObject.reset(DefaultOpenFieldType.NESTED_OPEN_RECORD_TYPE);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(creatorInfo.getName());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            creatorObject.addField(fieldName, fieldValue);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.FIELD_NAME_CREATOR_UUID);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            aString.setValue(creatorInfo.getUuid());
+            stringSerde.serialize(aString, fieldValue.getDataOutput());
+            creatorObject.addField(fieldName, fieldValue);
+
+            fieldName.reset();
+            aString.setValue(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);
+            stringSerde.serialize(aString, fieldName.getDataOutput());
+            fieldValue.reset();
+            creatorObject.write(fieldValue.getDataOutput(), true);
+            recordBuilder.addField(fieldName, fieldValue);
         }
     }
 }

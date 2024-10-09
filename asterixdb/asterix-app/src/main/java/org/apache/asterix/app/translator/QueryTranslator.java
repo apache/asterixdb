@@ -398,7 +398,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 Creator.DEFAULT_CREATOR);
                         break;
                     case CREATE_INDEX:
-                        handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters);
+                        handleCreateIndexStatement(metadataProvider, stmt, hcc, requestParameters,
+                                Creator.DEFAULT_CREATOR);
                         break;
                     case CREATE_FULL_TEXT_FILTER:
                         handleCreateFullTextFilterStatement(metadataProvider, stmt);
@@ -1289,7 +1290,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     public void handleCreateIndexStatement(MetadataProvider metadataProvider, Statement stmt,
-            IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
+            IHyracksClientConnection hcc, IRequestParameters requestParameters, Creator creator) throws Exception {
         CreateIndexStatement stmtCreateIndex = (CreateIndexStatement) stmt;
         String datasetName = stmtCreateIndex.getDatasetName().getValue();
         String indexName = stmtCreateIndex.getIndexName().getValue();
@@ -1306,7 +1307,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                 fullTextConfigName);
         try {
             doCreateIndex(metadataProvider, stmtCreateIndex, databaseName, dataverseName, datasetName, hcc,
-                    requestParameters);
+                    requestParameters, creator);
         } finally {
             metadataProvider.getLocks().unlock();
         }
@@ -1314,7 +1315,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
     protected void doCreateIndex(MetadataProvider metadataProvider, CreateIndexStatement stmtCreateIndex,
             String databaseName, DataverseName dataverseName, String datasetName, IHyracksClientConnection hcc,
-            IRequestParameters requestParameters) throws Exception {
+            IRequestParameters requestParameters, Creator creator) throws Exception {
         SourceLocation sourceLoc = stmtCreateIndex.getSourceLocation();
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
@@ -1639,10 +1640,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
 
             Index newIndex = new Index(databaseName, dataverseName, datasetName, indexName, indexType, indexDetails,
-                    stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP);
+                    stmtCreateIndex.isEnforced(), false, MetadataUtil.PENDING_ADD_OP, creator);
 
             bActiveTxn = false; // doCreateIndexImpl() takes over the current transaction
-            doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc);
+            EntityDetails entityDetails = EntityDetails.newIndex(databaseName, dataverseName, indexName);
+            doCreateIndexImpl(hcc, metadataProvider, ds, newIndex, jobFlags, sourceLoc, creator, entityDetails);
 
         } catch (Exception e) {
             if (bActiveTxn) {
@@ -1787,7 +1789,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     }
 
     private void doCreateIndexImpl(IHyracksClientConnection hcc, MetadataProvider metadataProvider, Dataset ds,
-            Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc) throws Exception {
+            Index index, EnumSet<JobFlag> jobFlags, SourceLocation sourceLoc, Creator creator,
+            EntityDetails entityDetails) throws Exception {
         ProgressState progress = ProgressState.NO_PROGRESS;
         boolean bActiveTxn = true;
         MetadataTransactionContext mdTxnCtx = metadataProvider.getMetadataTxnContext();
@@ -1866,6 +1869,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         "Failed to create job spec for creating index '" + ds.getDatasetName() + "."
                                 + index.getIndexName() + "'");
             }
+            beforeTxnCommit(metadataProvider, creator, entityDetails);
+
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
             bActiveTxn = false;
             progress = ProgressState.ADDED_PENDINGOP_RECORD_TO_METADATA;
@@ -4885,7 +4890,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget, 0, 0,
                     sampleSeed, Collections.emptyMap());
             newIndexPendingAdd = new Index(databaseName, dataverseName, datasetName, newIndexName, sampleIndexType,
-                    newIndexDetailsPendingAdd, false, false, MetadataUtil.PENDING_ADD_OP);
+                    newIndexDetailsPendingAdd, false, false, MetadataUtil.PENDING_ADD_OP, Creator.DEFAULT_CREATOR);
 
             // #. add a new index with PendingAddOp
             MetadataManager.INSTANCE.addIndex(metadataProvider.getMetadataTxnContext(), newIndexPendingAdd);
@@ -4927,7 +4932,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     dsDetails.getKeySourceIndicator(), dsDetails.getPrimaryKeyType(), sampleCardinalityTarget,
                     stats.getCardinality(), stats.getAvgTupleSize(), sampleSeed, stats.getIndexesStats());
             Index newIndexFinal = new Index(databaseName, dataverseName, datasetName, newIndexName, sampleIndexType,
-                    newIndexDetailsFinal, false, false, MetadataUtil.PENDING_NO_OP);
+                    newIndexDetailsFinal, false, false, MetadataUtil.PENDING_NO_OP, Creator.DEFAULT_CREATOR);
 
             // #. begin new metadataTxn
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
@@ -5191,7 +5196,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             MetadataManager.INSTANCE.addIndex(mdTxnCtx,
                     new Index(databaseName, dataverseName, datasetName, indexName, index.getIndexType(),
                             index.getIndexDetails(), index.isEnforced(), index.isPrimaryIndex(),
-                            MetadataUtil.PENDING_DROP_OP));
+                            MetadataUtil.PENDING_DROP_OP, index.getCreator()));
         }
     }
 

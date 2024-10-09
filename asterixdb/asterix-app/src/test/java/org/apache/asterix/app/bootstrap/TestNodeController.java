@@ -747,7 +747,7 @@ public class TestNodeController {
             }
             index = Index.createPrimaryIndex(dataset.getDatabaseName(), dataset.getDataverseName(),
                     dataset.getDatasetName(), keyFieldNames, primaryKeyIndicators, keyFieldTypes,
-                    MetadataUtil.PENDING_NO_OP);
+                    MetadataUtil.PENDING_NO_OP, dataset.getCreator());
             List<String> nodes = Collections.singletonList(ExecutionTestUtil.integrationUtil.ncs[0].getId());
             CcApplicationContext appCtx =
                     (CcApplicationContext) ExecutionTestUtil.integrationUtil.cc.getApplicationContext();
