@@ -51,6 +51,11 @@ public class Creator implements Serializable {
         return uuid;
     }
 
+    @Override
+    public String toString() {
+        return String.format("Creator{name='%s', uuid='%s'}", name, uuid);
+    }
+
     public static Creator createOrDefault(ARecord record) {
         ARecordType recType = record.getType();
         int creatorIndex = recType.getFieldIndex(MetadataRecordTypes.CREATOR_ARECORD_FIELD_NAME);

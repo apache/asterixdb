@@ -88,6 +88,10 @@ public class EntityDetails {
         return new EntityDetails(databaseName, dataverseName, indexName, EntityType.INDEX);
     }
 
+    public static EntityDetails newExtension(String extensionName) {
+        return new EntityDetails(null, null, extensionName, null);
+    }
+
     public String getDatabaseName() {
         return databaseName;
     }
@@ -106,5 +110,9 @@ public class EntityDetails {
 
     public int getFunctionArity() {
         return functionArity;
+    }
+
+    public static String getFunctionNameWithArity(String functionName, int functionArity) {
+        return functionName + "(" + functionArity + ")";
     }
 }

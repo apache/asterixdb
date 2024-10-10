@@ -296,7 +296,7 @@ public class ExpressionUtils {
                         if (seenFunctions.add(signature)) {
                             String functionName = signature.getName() + "(" + signature.getArity() + ")";
                             metadataProvider.addAccessedEntity(EntityDetails.newFunction(signature.getDatabaseName(),
-                                    signature.getDataverseName(), functionName, 0));
+                                    signature.getDataverseName(), functionName, signature.getArity()));
                             outFunctionDependencies.add(new DependencyFullyQualifiedName(signature.getDatabaseName(),
                                     signature.getDataverseName(), signature.getName(),
                                     Integer.toString(signature.getArity())));
