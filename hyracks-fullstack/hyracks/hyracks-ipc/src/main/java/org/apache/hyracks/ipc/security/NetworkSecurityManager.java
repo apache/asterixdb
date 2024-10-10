@@ -18,6 +18,7 @@
  */
 package org.apache.hyracks.ipc.security;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -37,7 +38,7 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
 
     private volatile INetworkSecurityConfig config;
     protected final ISocketChannelFactory sslSocketFactory;
-    public static final String TSL_VERSION = "TLSv1.2";
+    public static final String TLS_VERSION = "TLSv1.2";
 
     public NetworkSecurityManager(INetworkSecurityConfig config) {
         this.config = config;
@@ -45,15 +46,16 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
     }
 
     @Override
-    public SSLContext newSSLContext() {
-        return newSSLContext(config);
+    public SSLContext newSSLContext(boolean clientMode) {
+        return newSSLContext(config, clientMode);
     }
 
     @Override
-    public SSLEngine newSSLEngine() {
+    public SSLEngine newSSLEngine(boolean clientMode) {
         try {
-            SSLContext ctx = newSSLContext();
-            return ctx.createSSLEngine();
+            SSLEngine sslEngine = newSSLContext(clientMode).createSSLEngine();
+            sslEngine.setUseClientMode(clientMode);
+            return sslEngine;
         } catch (Exception ex) {
             throw new IllegalStateException("Failed to create SSLEngine", ex);
         }
@@ -76,12 +78,22 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         this.config = config;
     }
 
-    public static SSLContext newSSLContext(INetworkSecurityConfig config) {
+    public static SSLContext newSSLContext(INetworkSecurityConfig config, boolean clientMode) {
         try {
-            final char[] password = getKeyStorePassword(config);
-            KeyStore engineKeyStore = config.getKeyStore();
-            if (engineKeyStore == null) {
-                engineKeyStore = loadKeyStoreFromFile(password, config);
+            KeyStore engineKeyStore;
+            final char[] password;
+            if (clientMode) {
+                password = config.getClientKeyStorePassword().orElse(null);
+                engineKeyStore = config.getClientKeyStore().orElse(null);
+                if (engineKeyStore == null) {
+                    engineKeyStore = loadKeyStoreFromFile(password, config.getClientKeyStoreFile());
+                }
+            } else {
+                password = config.getKeyStorePassword().orElse(null);
+                engineKeyStore = config.getKeyStore().orElse(null);
+                if (engineKeyStore == null) {
+                    engineKeyStore = loadKeyStoreFromFile(password, config.getKeyStoreFile());
+                }
             }
             final String defaultAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(defaultAlgorithm);
@@ -89,10 +101,10 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
             keyManagerFactory.init(engineKeyStore, password);
             KeyStore trustStore = config.getTrustStore();
             if (trustStore == null) {
-                trustStore = loadTrustStoreFromFile(password, config);
+                trustStore = loadKeyStoreFromFile(password, config.getTrustStoreFile());
             }
             trustManagerFactory.init(trustStore);
-            SSLContext ctx = SSLContext.getInstance(TSL_VERSION);
+            SSLContext ctx = SSLContext.getInstance(TLS_VERSION);
             ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
             return ctx;
         } catch (Exception ex) {
@@ -100,28 +112,14 @@ public class NetworkSecurityManager implements INetworkSecurityManager {
         }
     }
 
-    private static KeyStore loadKeyStoreFromFile(char[] password, INetworkSecurityConfig config) {
+    private static KeyStore loadKeyStoreFromFile(char[] password, File keystoreFile) {
         try {
             final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks.load(new FileInputStream(config.getKeyStoreFile()), password);
+            ks.load(new FileInputStream(keystoreFile), password);
             return ks;
         } catch (Exception e) {
             throw new IllegalStateException("failed to load key store", e);
         }
     }
 
-    private static KeyStore loadTrustStoreFromFile(char[] password, INetworkSecurityConfig config) {
-        try {
-            final KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-            ks.load(new FileInputStream(config.getTrustStoreFile()), password);
-            return ks;
-        } catch (Exception e) {
-            throw new IllegalStateException("failed to load trust store", e);
-        }
-    }
-
-    private static char[] getKeyStorePassword(INetworkSecurityConfig config) {
-        final String pass = config.getKeyStorePassword();
-        return pass == null || pass.isEmpty() ? null : pass.toCharArray();
-    }
 }

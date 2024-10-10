@@ -46,7 +46,7 @@ public class RMIServerFactory implements RMIServerSocketFactory {
     public ServerSocket createServerSocket(int port) throws IOException {
         ServerSocketFactory socketFactory;
         if (securityManager.getConfiguration().isSslEnabled()) {
-            socketFactory = securityManager.newSSLContext().getServerSocketFactory();
+            socketFactory = securityManager.newSSLContext(false).getServerSocketFactory();
         } else {
             socketFactory = ServerSocketFactory.getDefault();
         }

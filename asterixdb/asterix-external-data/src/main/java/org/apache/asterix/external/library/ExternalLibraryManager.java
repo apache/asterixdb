@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
@@ -657,11 +658,10 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
             final INetworkSecurityConfig configuration = networkSecurityManager.getConfiguration();
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             try (FileInputStream trustStoreFile = new FileInputStream(configuration.getTrustStoreFile())) {
-                String ksPassword = configuration.getKeyStorePassword();
-                trustStore.load(trustStoreFile,
-                        ksPassword == null || ksPassword.isEmpty() ? null : ksPassword.toCharArray());
+                Optional<char[]> ksPassword = configuration.getKeyStorePassword();
+                trustStore.load(trustStoreFile, ksPassword.orElse(null));
             }
-            SSLContext sslcontext = NetworkSecurityManager.newSSLContext(configuration);
+            SSLContext sslcontext = NetworkSecurityManager.newSSLContext(configuration, false);
             SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslcontext, new String[] { "TLSv1.2" },
                     null, SSLConnectionSocketFactory.getDefaultHostnameVerifier());
             return HttpClients.custom().setSSLSocketFactory(sslsf).build();

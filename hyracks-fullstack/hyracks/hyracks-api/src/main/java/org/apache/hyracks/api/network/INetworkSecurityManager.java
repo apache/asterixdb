@@ -28,14 +28,14 @@ public interface INetworkSecurityManager {
      *
      * @return a new ssl context
      */
-    SSLContext newSSLContext();
+    SSLContext newSSLContext(boolean clientMode);
 
     /**
      * Creates a new ssl engine based on the current configuration of this {@link INetworkSecurityManager}
      *
      * @return a new ssl engine
      */
-    SSLEngine newSSLEngine();
+    SSLEngine newSSLEngine(boolean clientMode);
 
     /**
      * Sets the configuration to be used for this {@link INetworkSecurityManager}

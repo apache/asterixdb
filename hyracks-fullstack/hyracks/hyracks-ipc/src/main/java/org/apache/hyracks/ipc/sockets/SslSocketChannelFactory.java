@@ -36,15 +36,13 @@ public class SslSocketChannelFactory implements ISocketChannelFactory {
 
     @Override
     public ISocketChannel createServerChannel(SocketChannel socketChannel) {
-        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine();
-        sslEngine.setUseClientMode(false);
+        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine(false);
         return new SslSocketChannel(socketChannel, sslEngine);
     }
 
     @Override
     public ISocketChannel createClientChannel(SocketChannel socketChannel) {
-        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine();
-        sslEngine.setUseClientMode(true);
+        final SSLEngine sslEngine = networkSecurityManager.newSSLEngine(true);
         return new SslSocketChannel(socketChannel, sslEngine);
     }
 }
