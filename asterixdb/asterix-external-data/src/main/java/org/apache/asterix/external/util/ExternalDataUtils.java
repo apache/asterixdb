@@ -473,7 +473,7 @@ public class ExternalDataUtils {
         }
 
         if (configuration.containsKey(ExternalDataConstants.TABLE_FORMAT)) {
-            if (configuration.get(ExternalDataConstants.TABLE_FORMAT).equals(ExternalDataConstants.FORMAT_DELTA)) {
+            if (isDeltaTable(configuration)) {
                 configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_NOOP);
                 configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_PARQUET);
             }
@@ -494,7 +494,8 @@ public class ExternalDataUtils {
     public static void validateDeltaTableProperties(Map<String, String> configuration) throws CompilationException {
         if (!(configuration.get(ExternalDataConstants.KEY_FORMAT) == null
                 || configuration.get(ExternalDataConstants.KEY_FORMAT).equals(ExternalDataConstants.FORMAT_PARQUET))) {
-            throw new CompilationException(ErrorCode.INVALID_DELTA_PARAMETER);
+            throw new CompilationException(ErrorCode.INVALID_DELTA_TABLE_FORMAT,
+                    configuration.get(ExternalDataConstants.KEY_FORMAT));
         }
     }
 

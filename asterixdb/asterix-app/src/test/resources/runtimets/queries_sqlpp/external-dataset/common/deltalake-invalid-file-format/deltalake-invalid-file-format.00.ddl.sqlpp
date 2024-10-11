@@ -17,7 +17,7 @@
  * under the License.
  */
 
- DROP DATAVERSE test IF EXISTS;
+DROP DATAVERSE test IF EXISTS;
  CREATE DATAVERSE test;
 
  USE test;
@@ -30,6 +30,7 @@
  (
    %template%,
    ("container"="playground"),
-   ("definition"="my-table-empty"),
-   ("table-format" = "delta")
+   ("definition"="delta-data/my-table-empty"),
+   ("table-format" = "delta"),
+   ("format" = "avro")
  );
