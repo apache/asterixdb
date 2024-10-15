@@ -97,7 +97,7 @@ public class OptimizationConfUtil {
                 compilerProperties.isColumnFilter());
         int maxVariableOccurrencesForInlining =
                 getMaxVariableOccurrencesForInlining(compilerProperties, querySpecificConfig, sourceLoc);
-        boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERFIELDS_KEY,
+        boolean orderFields = getBoolean(querySpecificConfig, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 compilerProperties.isOrderedFields());
 
         PhysicalOptimizationConfig physOptConf = new PhysicalOptimizationConfig();

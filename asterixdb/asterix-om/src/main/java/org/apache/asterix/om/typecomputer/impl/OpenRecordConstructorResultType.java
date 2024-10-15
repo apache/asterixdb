@@ -68,8 +68,8 @@ public class OpenRecordConstructorResultType implements IResultTypeComputer {
         boolean orderFields = AlgebricksConfig.ORDERED_FIELDS;
         if (metadataProvider != null) {
             Map<String, Object> config = metadataProvider.getConfig();
-            orderFields = Boolean.parseBoolean((String) config.getOrDefault(CompilerProperties.COMPILER_ORDERFIELDS_KEY,
-                    String.valueOf(orderFields)));
+            orderFields = Boolean.parseBoolean((String) config
+                    .getOrDefault(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY, String.valueOf(orderFields)));
         }
 
         Iterator<Mutable<ILogicalExpression>> argIter = f.getArguments().iterator();

@@ -3035,7 +3035,7 @@ public class TestExecutor {
                         LOGGER.error("was expecting the following warnings: ");
                     }
                     for (int i = expectedWarnings.nextSetBit(0); i >= 0; i = expectedWarnings.nextSetBit(i + 1)) {
-                        LOGGER.error(expectedWarn.get(i));
+                        LOGGER.error(expectedWarn.get(i).getValue());
                     }
                     throw new Exception(msg);
                 }

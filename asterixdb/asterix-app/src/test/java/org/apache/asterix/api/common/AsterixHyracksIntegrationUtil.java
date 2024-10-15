@@ -74,6 +74,7 @@ public class AsterixHyracksIntegrationUtil {
     public static final int DEFAULT_HYRACKS_CC_CLUSTER_PORT = 1099;
     public static final String RESOURCES_PATH = joinPath(getProjectPath().toString(), "src", "test", "resources");
     public static final String DEFAULT_CONF_FILE = joinPath(RESOURCES_PATH, "cc.conf");
+    public static final String DEFAULT_MAIN_CONF_FILE = joinPath(RESOURCES_PATH, "cc-main.conf");
     private static final String DEFAULT_STORAGE_PATH = joinPath("target", "io", "dir");
     private static String storagePath = DEFAULT_STORAGE_PATH;
     private static final long RESULT_TTL = TimeUnit.MINUTES.toMillis(30);
@@ -469,7 +470,7 @@ public class AsterixHyracksIntegrationUtil {
     private static String getConfPath() {
         String providedPath = System.getProperty("conf.path");
         if (providedPath == null) {
-            return DEFAULT_CONF_FILE;
+            return DEFAULT_MAIN_CONF_FILE;
         }
         return joinPath(RESOURCES_PATH, providedPath);
     }

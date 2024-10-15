@@ -238,8 +238,8 @@ public class APIFramework {
         Map<String, Object> querySpecificConfig = validateConfig(config, sourceLoc);
         final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.createPhysicalOptimizationConf(
                 compilerProperties, querySpecificConfig, configurableParameterNames, sourceLoc);
-        if (!config.containsKey(CompilerProperties.COMPILER_ORDERFIELDS_KEY)) {
-            config.put(CompilerProperties.COMPILER_ORDERFIELDS_KEY, Boolean.toString(physOptConf.isOrderField()));
+        if (!config.containsKey(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY)) {
+            config.put(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY, Boolean.toString(physOptConf.isOrderField()));
         }
 
         boolean cboMode = physOptConf.getCBOMode() || physOptConf.getCBOTestMode();

@@ -90,7 +90,7 @@ public class SqlppCompilationProvider implements ILangCompilationProvider {
                 CompilerProperties.COMPILER_SORT_SAMPLES_KEY, CompilerProperties.COMPILER_EXTERNALSCANMEMORY_KEY,
                 CompilerProperties.COMPILER_INDEXONLY_KEY, CompilerProperties.COMPILER_INTERNAL_SANITYCHECK_KEY,
                 CompilerProperties.COMPILER_EXTERNAL_FIELD_PUSHDOWN_KEY, CompilerProperties.COMPILER_SUBPLAN_MERGE_KEY,
-                CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, CompilerProperties.COMPILER_ORDERFIELDS_KEY,
+                CompilerProperties.COMPILER_SUBPLAN_NESTEDPUSHDOWN_KEY, CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
                 CompilerProperties.COMPILER_ARRAYINDEX_KEY, CompilerProperties.COMPILER_CBO_KEY,
                 CompilerProperties.COMPILER_CBO_TEST_KEY, CompilerProperties.COMPILER_FORCE_JOIN_ORDER_KEY,
                 CompilerProperties.COMPILER_QUERY_PLAN_SHAPE_KEY, CompilerProperties.COMPILER_MIN_MEMORY_ALLOCATION_KEY,
