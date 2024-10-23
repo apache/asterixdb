@@ -42,6 +42,7 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.GroupByOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.RunningAggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnionAllOperator;
@@ -163,9 +164,15 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
             if (!canRemoveOperator(op, opInSubplan, parentOp)) {
                 break;
             }
-            op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
-            opRef.setValue(op);
-            assignVarsSetForThisOp = removeAssignVarFromConsideration(opRef);
+            if (op.getOperatorTag() == LogicalOperatorTag.AGGREGATE) {
+                op = new EmptyTupleSourceOperator();
+                context.computeAndSetTypeEnvironmentForOperator(op);
+                opRef.setValue(op);
+            } else {
+                op = (AbstractLogicalOperator) op.getInputs().get(0).getValue();
+                opRef.setValue(op);
+                assignVarsSetForThisOp = removeAssignVarFromConsideration(opRef);
+            }
             isTransformed = true;
         }
 
@@ -445,7 +452,7 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
 
     private static boolean canRemoveOperator(ILogicalOperator op, boolean opInsideSubplan, ILogicalOperator parentOp) {
         LogicalOperatorTag opTag = op.getOperatorTag();
-        if (opTag == LogicalOperatorTag.AGGREGATE || opTag == LogicalOperatorTag.UNIONALL) {
+        if ((opTag == LogicalOperatorTag.AGGREGATE && opInsideSubplan) || opTag == LogicalOperatorTag.UNIONALL) {
             return false;
         }
         if (!opInsideSubplan) {
