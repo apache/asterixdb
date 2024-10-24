@@ -7422,6 +7422,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="misc">
+      <compilation-unit name="query-ASTERIXDB-3512">
+        <output-dir compare="Text">query-ASTERIXDB-3512</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="misc">
       <compilation-unit name="remove_listify">
         <output-dir compare="Text">remove_listify</output-dir>
       </compilation-unit>
