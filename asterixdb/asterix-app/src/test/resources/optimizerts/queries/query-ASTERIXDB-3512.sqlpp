@@ -1,0 +1,44 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+drop dataverse test if exists;
+create dataverse test;
+
+use test;
+
+create type dt1 as {id: int};
+
+create dataset collection1(dt1) PRIMARY KEY id;
+create dataset collection2(dt1) PRIMARY KEY id;
+
+CREATE INDEX idx1 ON collection2 (date: STRING, oid: STRING, sym: STRING, reg: BIGINT);
+
+with tmp1 AS (
+    SELECT S.sym
+    FROM  collection1 AS S
+    WHERE S.date < print_date(current_date(), 'YYYY-MM-DD')),
+  tmp2 AS (
+    SELECT O.sym
+    FROM collection2 AS O
+    WHERE O.date < print_date(current_date(), 'YYYY-MM-DD'))
+SELECT sl1.sym
+FROM tmp1 AS sl1
+UNION ALL
+SELECT sl2.sym
+FROM tmp2 as sl2;
