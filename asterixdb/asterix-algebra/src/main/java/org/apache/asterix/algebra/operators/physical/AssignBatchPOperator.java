@@ -74,13 +74,13 @@ public final class AssignBatchPOperator extends AbstractAssignPOperator {
                         fi.toString());
             }
             fnDescs[i] = ExternalFunctionDescriptorProvider.resolveExternalFunction(callExpr, inputTypeEnv, context);
-            fnArgColumns[i] = getColumns(callExpr.getArguments(), opSchema, op.getSourceLocation());
+            fnArgColumns[i] = getColumns(callExpr.getArguments(), inputSchemas[0], op.getSourceLocation());
         }
 
         return new ExternalAssignBatchRuntimeFactory(outColumns, fnDescs, fnArgColumns, projectionList);
     }
 
-    private int[] getColumns(List<Mutable<ILogicalExpression>> exprList, IOperatorSchema opSchema,
+    private int[] getColumns(List<Mutable<ILogicalExpression>> exprList, IOperatorSchema inputSchema,
             SourceLocation sourceLoc) throws CompilationException {
         int n = exprList.size();
         int[] columns = new int[n];
@@ -92,7 +92,7 @@ public final class AssignBatchPOperator extends AbstractAssignPOperator {
             }
             VariableReferenceExpression argVarRef = (VariableReferenceExpression) expr;
             LogicalVariable argVar = argVarRef.getVariableReference();
-            int argColumn = opSchema.findVariable(argVar);
+            int argColumn = inputSchema.findVariable(argVar);
             if (argColumn < 0) {
                 throw new CompilationException(ErrorCode.COMPILATION_ILLEGAL_STATE, sourceLoc, String.valueOf(argVar));
             }

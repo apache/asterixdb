@@ -1,9 +1,14 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ASSIGN  |PARTITIONED|
-        -- STREAM_PROJECT  |PARTITIONED|
-          -- STREAM_SELECT  |PARTITIONED|
+    -- ASSIGN  |PARTITIONED|
+      -- STREAM_PROJECT  |PARTITIONED|
+        -- STREAM_SELECT  |PARTITIONED|
+          -- SUBPLAN  |PARTITIONED|
+                  {
+                    -- AGGREGATE  |LOCAL|
+                      -- STREAM_SELECT  |LOCAL|
+                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                  }
             -- SUBPLAN  |PARTITIONED|
                     {
                       -- AGGREGATE  |LOCAL|
@@ -16,14 +21,8 @@
                           -- STREAM_SELECT  |LOCAL|
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
                       }
-                -- SUBPLAN  |PARTITIONED|
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- STREAM_SELECT  |LOCAL|
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
-                  -- STREAM_PROJECT  |PARTITIONED|
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (sampdb.samptable)  |PARTITIONED|
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                -- STREAM_PROJECT  |PARTITIONED|
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    -- DATASOURCE_SCAN (sampdb.samptable)  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

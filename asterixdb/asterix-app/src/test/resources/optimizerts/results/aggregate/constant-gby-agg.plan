@@ -1,24 +1,22 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ASSIGN  |PARTITIONED|
-        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- SORT_GROUP_BY[$$47]  |PARTITIONED|
-                  {
-                    -- AGGREGATE  |LOCAL|
-                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$43]  |PARTITIONED|
-                      {
-                        -- AGGREGATE  |LOCAL|
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
-                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    -- ASSIGN  |PARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        -- SORT_GROUP_BY[$$50]  |PARTITIONED|
+                {
+                  -- AGGREGATE  |LOCAL|
+                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                }
+          -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
+            -- SORT_GROUP_BY[$$46]  |PARTITIONED|
+                    {
+                      -- AGGREGATE  |LOCAL|
+                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                    }
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
-                    -- ASSIGN  |PARTITIONED|
-                      -- STREAM_PROJECT  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

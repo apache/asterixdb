@@ -31,16 +31,16 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 /**
  * @author Nicola
  */
-public abstract class AbstractAssignOperator extends AbstractLogicalOperator {
+public abstract class AbstractAssignOperator extends AbstractProjectingOperator {
     protected final List<LogicalVariable> variables;
     protected final List<Mutable<ILogicalExpression>> expressions;
 
     public AbstractAssignOperator() {
-        this.variables = new ArrayList<LogicalVariable>();
-        this.expressions = new ArrayList<Mutable<ILogicalExpression>>();
+        this(new ArrayList<>(), new ArrayList<>());
     }
 
     public AbstractAssignOperator(List<LogicalVariable> variables, List<Mutable<ILogicalExpression>> expressions) {
+        super();
         this.variables = variables;
         this.expressions = expressions;
     }
@@ -56,6 +56,12 @@ public abstract class AbstractAssignOperator extends AbstractLogicalOperator {
     @Override
     public void recomputeSchema() {
         schema = new ArrayList<LogicalVariable>();
+        if (isProjectPushed()) {
+            for (LogicalVariable p : getProjectVariables()) {
+                schema.add(p);
+            }
+            return;
+        }
         schema.addAll(inputs.get(0).getValue().getSchema());
         schema.addAll(variables);
     }
@@ -75,6 +81,12 @@ public abstract class AbstractAssignOperator extends AbstractLogicalOperator {
         return new VariablePropagationPolicy() {
             @Override
             public void propagateVariables(IOperatorSchema target, IOperatorSchema... sources) {
+                if (isProjectPushed()) {
+                    for (LogicalVariable p : getProjectVariables()) {
+                        target.addVariable(p);
+                    }
+                    return;
+                }
                 if (propagateInputVars) {
                     target.addAllVariables(sources[0]);
                 }

@@ -1,77 +1,73 @@
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    -- STREAM_PROJECT  |UNPARTITIONED|
-      -- ASSIGN  |UNPARTITIONED|
-        -- AGGREGATE  |UNPARTITIONED|
-          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            -- AGGREGATE  |PARTITIONED|
-              -- STREAM_SELECT  |PARTITIONED|
-                -- STREAM_PROJECT  |PARTITIONED|
-                  -- SUBPLAN  |PARTITIONED|
-                          {
-                            -- AGGREGATE  |LOCAL|
-                              -- SUBPLAN  |LOCAL|
-                                      {
-                                        -- AGGREGATE  |LOCAL|
-                                          -- UNNEST  |LOCAL|
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
-                                -- ASSIGN  |LOCAL|
-                                  -- UNNEST  |LOCAL|
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
+    -- ASSIGN  |UNPARTITIONED|
+      -- AGGREGATE  |UNPARTITIONED|
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          -- AGGREGATE  |PARTITIONED|
+            -- STREAM_SELECT  |PARTITIONED|
+              -- STREAM_PROJECT  |PARTITIONED|
+                -- SUBPLAN  |PARTITIONED|
+                        {
+                          -- AGGREGATE  |LOCAL|
+                            -- SUBPLAN  |LOCAL|
+                                    {
+                                      -- AGGREGATE  |LOCAL|
+                                        -- UNNEST  |LOCAL|
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                    }
+                              -- ASSIGN  |LOCAL|
+                                -- UNNEST  |LOCAL|
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        }
+                  -- ASSIGN  |PARTITIONED|
                     -- STREAM_PROJECT  |PARTITIONED|
-                      -- ASSIGN  |PARTITIONED|
-                        -- STREAM_PROJECT  |PARTITIONED|
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        -- BTREE_SEARCH (TestYelp.YelpCheckinB.YelpCheckinB)  |PARTITIONED|
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (TestYelp.YelpCheckinB.YelpCheckinB)  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- STREAM_PROJECT  |PARTITIONED|
+                                -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                    -- STABLE_SORT [$$142(ASC), $$143(ASC)]  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- STABLE_SORT [$$134(ASC), $$135(ASC)]  |PARTITIONED|
+                                        -- STREAM_PROJECT  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- STREAM_PROJECT  |PARTITIONED|
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (TestYelp.YelpCheckinB.IdxYelpCheckinDatesB)  |PARTITIONED|
-                                                  -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                    -- RUNNING_AGGREGATE  |PARTITIONED|
+                                            -- BTREE_SEARCH (TestYelp.YelpCheckinB.IdxYelpCheckinDatesB)  |PARTITIONED|
+                                              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                -- RUNNING_AGGREGATE  |PARTITIONED|
+                                                  -- STREAM_PROJECT  |PARTITIONED|
+                                                    -- STREAM_SELECT  |PARTITIONED|
                                                       -- STREAM_PROJECT  |PARTITIONED|
-                                                        -- STREAM_SELECT  |PARTITIONED|
-                                                          -- STREAM_PROJECT  |PARTITIONED|
-                                                            -- SUBPLAN  |PARTITIONED|
-                                                                    {
-                                                                      -- AGGREGATE  |LOCAL|
-                                                                        -- SUBPLAN  |LOCAL|
-                                                                                {
-                                                                                  -- AGGREGATE  |LOCAL|
-                                                                                    -- UNNEST  |LOCAL|
-                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                                }
-                                                                          -- ASSIGN  |LOCAL|
-                                                                            -- UNNEST  |LOCAL|
-                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                                    }
-                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                -- ASSIGN  |PARTITIONED|
-                                                                  -- STREAM_PROJECT  |PARTITIONED|
-                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- BTREE_SEARCH (TestYelp.YelpCheckinA.YelpCheckinA)  |PARTITIONED|
-                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          -- STREAM_PROJECT  |PARTITIONED|
-                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  -- STABLE_SORT [$$132(ASC), $$116(ASC)]  |PARTITIONED|
-                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          -- BTREE_SEARCH (TestYelp.YelpCheckinA.IdxYelpCheckinDatesA)  |PARTITIONED|
-                                                                                            -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                -- ASSIGN  |PARTITIONED|
-                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                    -- DATASOURCE_SCAN (TestYelp.YelpCheckinDateMarkers)  |PARTITIONED|
-                                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                        -- SUBPLAN  |PARTITIONED|
+                                                                {
+                                                                  -- AGGREGATE  |LOCAL|
+                                                                    -- SUBPLAN  |LOCAL|
+                                                                            {
+                                                                              -- AGGREGATE  |LOCAL|
+                                                                                -- UNNEST  |LOCAL|
+                                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                            }
+                                                                      -- ASSIGN  |LOCAL|
+                                                                        -- UNNEST  |LOCAL|
+                                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                }
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                -- BTREE_SEARCH (TestYelp.YelpCheckinA.YelpCheckinA)  |PARTITIONED|
+                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            -- STABLE_SORT [$$140(ASC), $$124(ASC)]  |PARTITIONED|
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                -- STREAM_PROJECT  |PARTITIONED|
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    -- BTREE_SEARCH (TestYelp.YelpCheckinA.IdxYelpCheckinDatesA)  |PARTITIONED|
+                                                                                      -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                                        -- ASSIGN  |PARTITIONED|
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            -- DATASOURCE_SCAN (TestYelp.YelpCheckinDateMarkers)  |PARTITIONED|
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

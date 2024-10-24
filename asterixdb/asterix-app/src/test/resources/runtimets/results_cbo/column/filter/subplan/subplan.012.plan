@@ -23,17 +23,15 @@ distribute result [$$53] [cardinality: 2.0, op-cost: 0.0, total-cost: 6.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                    } [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
             -- SUBPLAN  |PARTITIONED|
-              project ([$$57]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-              -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$57] <- [$$p.getField("arrayOrObject")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                -- ASSIGN  |PARTITIONED|
-                  project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                  -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$52, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$p.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$p.getField("arrayOrObject")).getField("text"), "1")) range-filter on: or(eq($$p.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$p.getField("arrayOrObject")).getField("text"), "1")) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
-                      -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              assign [$$57] <- [$$p.getField("arrayOrObject")] project : [$$57] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$52, $$p] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$p.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$p.getField("arrayOrObject")).getField("text"), "1")) range-filter on: or(eq($$p.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$p.getField("arrayOrObject")).getField("text"), "1")) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

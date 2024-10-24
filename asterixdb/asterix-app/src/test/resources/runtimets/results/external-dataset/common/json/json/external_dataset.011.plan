@@ -1,48 +1,42 @@
-distribute result [$$48] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    project ([$$48]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-    -- STREAM_PROJECT  |UNPARTITIONED|
-      assign [$$48] <- [{"cnt": $$51}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-      -- ASSIGN  |UNPARTITIONED|
-        aggregate [$$51] <- [agg-sql-sum($$53)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-        -- AGGREGATE  |UNPARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-          -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-            aggregate [$$53] <- [agg-sql-count($$49)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-            -- AGGREGATE  |PARTITIONED|
-              project ([$$49]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-              -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  join (eq($$49, $$50)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- HYBRID_HASH_JOIN [$$49][$$50]  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
-                      project ([$$49]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$49] <- [$$a.getField("quarter")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ASSIGN  |PARTITIONED|
+    assign [$$50] <- [{"cnt": $$53}] project : [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$55] <- [agg-sql-count($$51)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- AGGREGATE  |PARTITIONED|
+            project ([$$51]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$51, $$52)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- HYBRID_HASH_JOIN [$$51][$$52]  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
+                    assign [$$51] <- [$$a.getField("quarter")] project : [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$a] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$a] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
-                      project ([$$50]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        assign [$$50] <- [$$b.getField("quarter")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                    assign [$$52] <- [$$b.getField("quarter")] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

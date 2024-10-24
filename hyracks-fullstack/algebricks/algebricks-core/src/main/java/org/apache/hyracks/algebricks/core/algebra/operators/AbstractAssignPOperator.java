@@ -66,12 +66,29 @@ public abstract class AbstractAssignPOperator extends AbstractPhysicalOperator {
         AssignOperator assign = (AssignOperator) op;
         List<LogicalVariable> variables = assign.getVariables();
         int[] outColumns = new int[variables.size()];
-        for (int i = 0; i < outColumns.length; i++) {
-            outColumns[i] = opSchema.findVariable(variables.get(i));
-        }
+        int[] projectionList;
 
-        // TODO push projections into the operator
-        int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
+        if (assign.isProjectPushed()) {
+            for (int i = 0; i < outColumns.length; i++) {
+                outColumns[i] = inputSchemas[0].getSize() + i;
+            }
+            List<LogicalVariable> projectVars = assign.getProjectVariables();
+
+            projectionList = new int[projectVars.size()];
+            int c = 0;
+            for (LogicalVariable projectVar : projectVars) {
+                if (variables.contains(projectVar)) {
+                    projectionList[c++] = inputSchemas[0].getSize() + variables.indexOf(projectVar);
+                } else {
+                    projectionList[c++] = inputSchemas[0].findVariable(projectVar);
+                }
+            }
+        } else {
+            for (int i = 0; i < outColumns.length; i++) {
+                outColumns[i] = opSchema.findVariable(variables.get(i));
+            }
+            projectionList = JobGenHelper.projectAllVariables(opSchema);
+        }
 
         IPushRuntimeFactory runtime =
                 createRuntimeFactory(context, assign, opSchema, inputSchemas, outColumns, projectionList);

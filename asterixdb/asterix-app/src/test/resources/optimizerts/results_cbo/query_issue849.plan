@@ -16,14 +16,13 @@
               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ASSIGN  |PARTITIONED|
-        -- STREAM_PROJECT  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.s.s)  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
-                  -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
-                    -- ASSIGN  |UNPARTITIONED|
-                      -- UNNEST  |UNPARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+    -- ASSIGN  |PARTITIONED|
+      -- STREAM_PROJECT  |PARTITIONED|
+        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          -- BTREE_SEARCH (test.s.s)  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
+                -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
+                  -- ASSIGN  |UNPARTITIONED|
+                    -- UNNEST  |UNPARTITIONED|
+                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

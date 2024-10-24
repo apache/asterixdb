@@ -1,44 +1,42 @@
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    -- STREAM_PROJECT  |UNPARTITIONED|
-      -- ASSIGN  |UNPARTITIONED|
-        -- STREAM_PROJECT  |UNPARTITIONED|
-          -- WINDOW  |UNPARTITIONED|
-                  {
-                    -- AGGREGATE  |UNPARTITIONED|
-                      -- STREAM_SELECT  |UNPARTITIONED|
-                        -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                  }
-            -- STREAM_PROJECT  |UNPARTITIONED|
-              -- WINDOW  |UNPARTITIONED|
-                      {
-                        -- AGGREGATE  |UNPARTITIONED|
-                          -- STREAM_SELECT  |UNPARTITIONED|
-                            -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                      }
-                -- STREAM_PROJECT  |UNPARTITIONED|
-                  -- WINDOW  |UNPARTITIONED|
-                          {
-                            -- AGGREGATE  |LOCAL|
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
-                    -- SORT_MERGE_EXCHANGE [$$twenty(ASC) ]  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$201]  |PARTITIONED|
-                              {
-                                -- AGGREGATE  |LOCAL|
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
-                        -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
-                          -- SORT_GROUP_BY[$$183]  |PARTITIONED|
-                                  {
-                                    -- AGGREGATE  |LOCAL|
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                  }
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    -- ASSIGN  |UNPARTITIONED|
+      -- STREAM_PROJECT  |UNPARTITIONED|
+        -- WINDOW  |UNPARTITIONED|
+                {
+                  -- AGGREGATE  |UNPARTITIONED|
+                    -- STREAM_SELECT  |UNPARTITIONED|
+                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                }
+          -- STREAM_PROJECT  |UNPARTITIONED|
+            -- WINDOW  |UNPARTITIONED|
+                    {
+                      -- AGGREGATE  |UNPARTITIONED|
+                        -- STREAM_SELECT  |UNPARTITIONED|
+                          -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                    }
+              -- STREAM_PROJECT  |UNPARTITIONED|
+                -- WINDOW  |UNPARTITIONED|
+                        {
+                          -- AGGREGATE  |LOCAL|
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        }
+                  -- SORT_MERGE_EXCHANGE [$$twenty(ASC) ]  |PARTITIONED|
+                    -- SORT_GROUP_BY[$$201]  |PARTITIONED|
+                            {
+                              -- AGGREGATE  |LOCAL|
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            }
+                      -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
+                        -- SORT_GROUP_BY[$$183]  |PARTITIONED|
+                                {
+                                  -- AGGREGATE  |LOCAL|
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                }
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
-                                -- ASSIGN  |PARTITIONED|
-                                  -- STREAM_PROJECT  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

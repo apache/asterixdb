@@ -2,93 +2,85 @@
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- UNION_ALL  |PARTITIONED|
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- STREAM_PROJECT  |PARTITIONED|
-          -- ASSIGN  |PARTITIONED|
-            -- STREAM_PROJECT  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- PRE_CLUSTERED_GROUP_BY[$$156]  |PARTITIONED|
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$124(ASC)]  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$129(ASC)]  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$156(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
-                        -- NESTED_LOOP  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- STREAM_PROJECT  |PARTITIONED|
-                              -- ASSIGN  |PARTITIONED|
-                                -- STREAM_PROJECT  |PARTITIONED|
-                                  -- ASSIGN  |PARTITIONED|
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- REPLICATE  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
-                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- STREAM_PROJECT  |PARTITIONED|
-                              -- ASSIGN  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- REPLICATE  |PARTITIONED|
-                                    -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                      -- STREAM_PROJECT  |PARTITIONED|
-                                        -- ASSIGN  |PARTITIONED|
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
-                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- STREAM_PROJECT  |PARTITIONED|
-          -- ASSIGN  |PARTITIONED|
-            -- STREAM_PROJECT  |PARTITIONED|
-              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- PRE_CLUSTERED_GROUP_BY[$$157]  |PARTITIONED|
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$142(ASC)]  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
-                        {
-                          -- AGGREGATE  |LOCAL|
-                            -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
-                              -- MICRO_STABLE_SORT [$$147(ASC)]  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- STABLE_SORT [$$157(ASC)]  |PARTITIONED|
-                      -- HASH_PARTITION_EXCHANGE [$$157]  |PARTITIONED|
-                        -- NESTED_LOOP  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- STREAM_PROJECT  |PARTITIONED|
-                              -- ASSIGN  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- REPLICATE  |PARTITIONED|
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- STREAM_PROJECT  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- REPLICATE  |PARTITIONED|
-                              -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                -- STREAM_PROJECT  |PARTITIONED|
+        -- ASSIGN  |PARTITIONED|
+          -- STREAM_PROJECT  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- PRE_CLUSTERED_GROUP_BY[$$156]  |PARTITIONED|
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                            -- MICRO_STABLE_SORT [$$124(ASC)]  |LOCAL|
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                            -- MICRO_STABLE_SORT [$$129(ASC)]  |LOCAL|
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- STABLE_SORT [$$156(ASC)]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$156]  |PARTITIONED|
+                      -- NESTED_LOOP  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- ASSIGN  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                -- REPLICATE  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- STREAM_PROJECT  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- REPLICATE  |PARTITIONED|
+                                -- BROADCAST_EXCHANGE  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        -- ASSIGN  |PARTITIONED|
+          -- STREAM_PROJECT  |PARTITIONED|
+            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              -- PRE_CLUSTERED_GROUP_BY[$$157]  |PARTITIONED|
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                            -- MICRO_STABLE_SORT [$$142(ASC)]  |LOCAL|
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                      {
+                        -- AGGREGATE  |LOCAL|
+                          -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                            -- MICRO_STABLE_SORT [$$147(ASC)]  |LOCAL|
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      }
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- STABLE_SORT [$$157(ASC)]  |PARTITIONED|
+                    -- HASH_PARTITION_EXCHANGE [$$157]  |PARTITIONED|
+                      -- NESTED_LOOP  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              -- REPLICATE  |PARTITIONED|
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  -- STREAM_PROJECT  |PARTITIONED|
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          -- REPLICATE  |PARTITIONED|
+                            -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              -- ASSIGN  |PARTITIONED|
+                                -- STREAM_PROJECT  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

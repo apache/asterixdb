@@ -23,17 +23,15 @@ distribute result [$$67] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                    } [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
             -- SUBPLAN  |PARTITIONED|
-              project ([$$68]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-              -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$68] <- [$$p.getField("arrayOrObject")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                -- ASSIGN  |PARTITIONED|
-                  project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                  -- STREAM_PROJECT  |PARTITIONED|
-                    exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$66, $$p] <- test.ColumnDataset project ({arrayOrObject:[{text:any}]}) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
-                      -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              assign [$$68] <- [$$p.getField("arrayOrObject")] project : [$$68] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$66, $$p] <- test.ColumnDataset project ({arrayOrObject:[{text:any}]}) [cardinality: 6.0, op-cost: 6.0, total-cost: 6.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

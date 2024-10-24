@@ -119,6 +119,7 @@ import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateLeftOuterJoinSele
 import org.apache.hyracks.algebricks.rewriter.rules.ConsolidateSelectsRule;
 import org.apache.hyracks.algebricks.rewriter.rules.CopyLimitDownRule;
 import org.apache.hyracks.algebricks.rewriter.rules.EliminateGroupByEmptyKeyRule;
+import org.apache.hyracks.algebricks.rewriter.rules.EmbedProjectRule;
 import org.apache.hyracks.algebricks.rewriter.rules.EnforceOrderByAfterSubplan;
 import org.apache.hyracks.algebricks.rewriter.rules.EnforceStructuralPropertiesRule;
 import org.apache.hyracks.algebricks.rewriter.rules.ExtractCommonExpressionsRule;
@@ -466,6 +467,8 @@ public final class RuleCollections {
         prepareForJobGenRewrites.add(new PopulateResultMetadataRule());
         prepareForJobGenRewrites.add(new AnnotateOperatorCostCardinalityRule());
         prepareForJobGenRewrites.add(new EnsureColumnarSupportedTypesRule());
+        // EmbedProjectRule should run last. The assumption is that this rules set will run once
+        prepareForJobGenRewrites.add(new EmbedProjectRule());
         return prepareForJobGenRewrites;
     }
 }

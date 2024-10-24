@@ -261,6 +261,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     public Void visitAssignOperator(AssignOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("assign ").append(str(op.getVariables())).append(" <- ");
         pprintExprList(op.getExpressions(), indent);
+        if (op.isProjectPushed()) {
+            buffer.append(" project : ").append(str(op.getProjectVariables()));
+        }
         return null;
     }
 
