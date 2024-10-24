@@ -20,6 +20,7 @@ package org.apache.asterix.app.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
@@ -66,6 +67,14 @@ public class QueryIndexDatasource extends FunctionDataSource {
         this.indexName = indexName;
         this.storageLocations = storageLocations;
         this.numSecKeys = numSecKeys;
+    }
+
+    public Dataset getDataset() {
+        return ds;
+    }
+
+    public String getIndexName() {
+        return indexName;
     }
 
     @Override
@@ -125,5 +134,14 @@ public class QueryIndexDatasource extends FunctionDataSource {
     private static DataSourceId createQueryIndexDataSourceId(Dataset dataset, String indexName) {
         return new DataSourceId(dataset.getDataverseName(), dataset.getDatasetName(),
                 new String[] { indexName, QueryIndexRewriter.QUERY_INDEX.getName() });
+    }
+
+    @Override
+    public boolean sameFunctionDatasource(FunctionDataSource other) {
+        if (!Objects.equals(this.functionId, other.getFunctionId())) {
+            return false;
+        }
+        QueryIndexDatasource that = (QueryIndexDatasource) other;
+        return Objects.equals(this.ds, that.getDataset()) && Objects.equals(this.indexName, that.getIndexName());
     }
 }

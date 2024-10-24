@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.external.api.IDataParserFactory;
 import org.apache.asterix.external.parser.factory.JSONDataParserFactory;
@@ -25,6 +27,7 @@ import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
 import org.apache.asterix.metadata.declared.MetadataProvider;
+import org.apache.asterix.metadata.entities.Index;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.properties.INodeDomain;
@@ -40,15 +43,21 @@ public class DumpIndexDatasource extends FunctionDataSource {
     private final RecordDescriptor recDesc;
     private final IBinaryComparatorFactory[] comparatorFactories;
     private final AlgebricksAbsolutePartitionConstraint storageLocations;
+    private final Index index;
 
     public DumpIndexDatasource(INodeDomain domain, IndexDataflowHelperFactory indexDataflowHelperFactory,
             RecordDescriptor recDesc, IBinaryComparatorFactory[] comparatorFactories,
-            AlgebricksAbsolutePartitionConstraint storageLocations) throws AlgebricksException {
+            AlgebricksAbsolutePartitionConstraint storageLocations, Index index) throws AlgebricksException {
         super(DUMP_INDEX_DATASOURCE_ID, DumpIndexRewriter.DUMP_INDEX, domain);
         this.indexDataflowHelperFactory = indexDataflowHelperFactory;
         this.recDesc = recDesc;
         this.comparatorFactories = comparatorFactories;
         this.storageLocations = storageLocations;
+        this.index = index;
+    }
+
+    public Index getIndex() {
+        return index;
     }
 
     @Override
@@ -65,5 +74,14 @@ public class DumpIndexDatasource extends FunctionDataSource {
     @Override
     protected IDataParserFactory createDataParserFactory() {
         return new JSONDataParserFactory();
+    }
+
+    @Override
+    public boolean sameFunctionDatasource(FunctionDataSource other) {
+        if (!Objects.equals(this.functionId, other.getFunctionId())) {
+            return false;
+        }
+        DumpIndexDatasource that = (DumpIndexDatasource) other;
+        return Objects.equals(this.index, that.getIndex());
     }
 }
