@@ -117,8 +117,8 @@
         <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
         <expected-error>HYR0131: Result does not follow the schema, group type expected but found primitive type at 'nested'</expected-error>
         <expected-error>HYR0131: Result does not follow the schema, primitive type expected but found group type at 'name'</expected-error>
-        <expected-error>ASX1201: Storage units expected for the field 'row-group-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
-        <expected-error>ASX1201: Storage units expected for the field 'page-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
+        <expected-error>ASX1206: Storage units expected for the field 'row-group-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
+        <expected-error>ASX1206: Storage units expected for the field 'page-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
         <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for parquet are [gzip, snappy, zstd]</expected-error>
         <expected-error>ASX1001: Syntax error</expected-error>
         <expected-error>ASX1204: 'binary' type not supported in parquet format</expected-error>
