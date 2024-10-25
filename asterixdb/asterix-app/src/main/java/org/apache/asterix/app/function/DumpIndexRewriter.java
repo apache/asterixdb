@@ -73,6 +73,6 @@ public class DumpIndexRewriter extends FunctionRewriter {
                 (AlgebricksAbsolutePartitionConstraint) secondaryIndexHelper.getSecondaryPartitionConstraint();
         return new DumpIndexDatasource(context.getComputationNodeDomain(), indexDataflowHelperFactory,
                 secondaryIndexHelper.getSecondaryRecDesc(), secondaryIndexHelper.getSecondaryComparatorFactories(),
-                secondaryPartitionConstraint);
+                secondaryPartitionConstraint, index);
     }
 }

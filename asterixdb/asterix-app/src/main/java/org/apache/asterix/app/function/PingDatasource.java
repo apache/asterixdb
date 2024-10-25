@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
@@ -40,4 +42,8 @@ public class PingDatasource extends FunctionDataSource {
         return new PingFunction(locations);
     }
 
+    @Override
+    protected boolean sameFunctionDatasource(FunctionDataSource other) {
+        return Objects.equals(this.functionId, other.getFunctionId());
+    }
 }

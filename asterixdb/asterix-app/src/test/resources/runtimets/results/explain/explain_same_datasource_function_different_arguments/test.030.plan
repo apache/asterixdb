@@ -1,0 +1,38 @@
+distribute result [$$11] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    union ($$16, $$17, $$11) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- UNION_ALL  |UNPARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+        project ([$$16]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |UNPARTITIONED|
+          assign [$$16] <- [cast({"intIndex": $$13})] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |UNPARTITIONED|
+            aggregate [$$13] <- [listify($$12)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- AGGREGATE  |UNPARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$12] <- asterix.dump-index. [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+        project ([$$17]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |UNPARTITIONED|
+          assign [$$17] <- [cast({"stringIndex": $$15})] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- ASSIGN  |UNPARTITIONED|
+            aggregate [$$15] <- [listify($$14)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- AGGREGATE  |UNPARTITIONED|
+              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$14] <- asterix.dump-index. [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

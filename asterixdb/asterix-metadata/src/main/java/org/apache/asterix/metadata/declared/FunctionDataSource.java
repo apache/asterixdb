@@ -126,4 +126,20 @@ public abstract class FunctionDataSource extends DataSource {
     protected static DataSourceId createDataSourceId(FunctionIdentifier fid, String... parameters) {
         return new DataSourceId(FunctionSignature.getDataverseName(fid), fid.getName(), parameters);
     }
+
+    protected abstract boolean sameFunctionDatasource(FunctionDataSource other);
+
+    @Override
+    public boolean sameAs(IDataSource<?> other) {
+        if (!super.sameAs(other)) {
+            return false;
+        }
+
+        if (!(other instanceof FunctionDataSource)) {
+            return false;
+        }
+
+        FunctionDataSource that = (FunctionDataSource) other;
+        return sameFunctionDatasource(that);
+    }
 }
