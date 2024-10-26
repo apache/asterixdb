@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
@@ -39,5 +41,10 @@ public class JobSummariesDatasource extends FunctionDataSource {
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
         return new JobSummariesFunction(AlgebricksAbsolutePartitionConstraint.randomLocation(locations.getLocations()));
+    }
+
+    @Override
+    protected boolean sameFunctionDatasource(FunctionDataSource other) {
+        return Objects.equals(this.functionId, other.getFunctionId());
     }
 }

@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.app.message.ClientRequestsRequest;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -47,5 +49,10 @@ public class CompletedRequestsDatasource extends FunctionDataSource {
     @Override
     public boolean skipJobCapacityAssignment() {
         return true;
+    }
+
+    @Override
+    protected boolean sameFunctionDatasource(FunctionDataSource other) {
+        return Objects.equals(this.functionId, other.getFunctionId());
     }
 }

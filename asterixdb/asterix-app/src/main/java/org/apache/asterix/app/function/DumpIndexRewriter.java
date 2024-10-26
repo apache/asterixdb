@@ -89,7 +89,7 @@ public class DumpIndexRewriter extends FunctionRewriter {
                 (AlgebricksAbsolutePartitionConstraint) partitioningProperties.getConstraints();
         return new DumpIndexDatasource(context.getComputationNodeDomain(), indexDataflowHelperFactory,
                 secondaryIndexHelper.getSecondaryRecDesc(), secondaryIndexHelper.getSecondaryComparatorFactories(),
-                secondaryPartitionConstraint, partitioningProperties.getComputeStorageMap());
+                secondaryPartitionConstraint, partitioningProperties.getComputeStorageMap(), index);
     }
 
     @Override
