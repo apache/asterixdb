@@ -48,7 +48,5 @@ public interface IDataSource<T> {
 
     public Map<String, Serializable> getProperties();
 
-    default boolean compareProperties() {
-        return false;
-    }
+    boolean sameAs(IDataSource<?> other);
 }

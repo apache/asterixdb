@@ -342,6 +342,11 @@
         <expected-error>ASX1001: Syntax error: EXPLAIN is not supported for this kind of statement</expected-error>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="explain">
+      <compilation-unit name="explain_same_datasource_function_different_arguments">
+        <output-dir compare="Text">explain_same_datasource_function_different_arguments</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="aggregate">
     <test-case FilePath="aggregate">

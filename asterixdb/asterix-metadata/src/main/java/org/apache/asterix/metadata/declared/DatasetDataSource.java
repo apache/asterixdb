@@ -199,9 +199,4 @@ public class DatasetDataSource extends DataSource {
     public boolean isScanAccessPathALeaf() {
         return dataset.getDatasetType() == DatasetType.EXTERNAL;
     }
-
-    @Override
-    public boolean compareProperties() {
-        return dataset.getDatasetType() == DatasetType.EXTERNAL;
-    }
 }

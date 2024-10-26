@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
 import org.apache.asterix.metadata.declared.FunctionDataSource;
@@ -38,9 +40,22 @@ public class StorageComponentsDatasource extends FunctionDataSource {
         this.datasetId = datasetId;
     }
 
+    public int getDatasetId() {
+        return datasetId;
+    }
+
     @Override
     protected IDatasourceFunction createFunction(MetadataProvider metadataProvider,
             AlgebricksAbsolutePartitionConstraint locations) {
         return new StorageComponentsFunction(locations, datasetId);
+    }
+
+    @Override
+    public boolean sameFunctionDatasource(FunctionDataSource other) {
+        if (!Objects.equals(this.functionId, other.getFunctionId())) {
+            return false;
+        }
+        StorageComponentsDatasource that = (StorageComponentsDatasource) other;
+        return Objects.equals(this.datasetId, that.getDatasetId());
     }
 }
