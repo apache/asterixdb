@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.asterix.active.ActiveEvent;
 import org.apache.asterix.active.ActiveEvent.Kind;
@@ -68,23 +69,27 @@ public class ActiveNotificationHandler extends SingleThreadEventProcessor<Active
 
     @Override
     protected void handle(ActiveEvent event) {
+        resolveListenerForEvent(event).ifPresent(listener -> listener.notify(event));
+    }
+
+    private synchronized Optional<IActiveEntityEventsListener> resolveListenerForEvent(ActiveEvent event) {
         JobId jobId = event.getJobId();
         Kind eventKind = event.getEventKind();
         EntityId entityId = jobId2EntityId.get(jobId);
+        IActiveEntityEventsListener listener = null;
         if (entityId != null) {
-            IActiveEntityEventsListener listener = entityEventListeners.get(entityId);
+            listener = entityEventListeners.get(entityId);
             if (eventKind == Kind.JOB_FINISHED) {
                 LOGGER.debug("removing ingestion job {}", jobId);
                 jobId2EntityId.remove(jobId);
             }
-            if (listener != null) {
-                listener.notify(event);
-            } else {
-                LOGGER.debug("listener not found for entity {} on event={}", entityId, event);
+            if (listener == null) {
+                LOGGER.debug("listener not found for entity {} on event {} for job {}", entityId, event, jobId);
             }
         } else {
-            LOGGER.error("entity not found for event {}", event);
+            LOGGER.log(Level.ERROR, "entity not found for event {} for job {}", eventKind, jobId);
         }
+        return Optional.ofNullable(listener);
     }
 
     // *** IJobLifecycleListener
