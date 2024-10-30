@@ -31,7 +31,7 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
     private static final Logger LOGGER = LogManager.getLogger();
     protected final String name;
     private final LinkedBlockingQueue<T> eventInbox;
-    private volatile Thread executorThread;
+    private final Thread executorThread;
     private volatile boolean stopped = false;
 
     public SingleThreadEventProcessor(String threadName) {
@@ -43,18 +43,22 @@ public abstract class SingleThreadEventProcessor<T> implements Runnable {
 
     @Override
     public final void run() {
-        LOGGER.log(Level.INFO, "Started " + Thread.currentThread().getName());
+        LOGGER.info("Started {}", name);
         while (!stopped) {
             try {
                 T event = eventInbox.take();
                 handle(event);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                if (!stopped) {
+                    LOGGER.warn("Interrupt while waiting for an event and !stopped");
+                }
+                break;
             } catch (Exception e) {
-                LOGGER.log(Level.ERROR, "Error handling an event", e);
+                LOGGER.error("Error handling an event", e);
             }
         }
-        LOGGER.log(Level.WARN, "Stopped " + Thread.currentThread().getName());
+        LOGGER.info("Stopped {}", name);
     }
 
     protected abstract void handle(T event) throws Exception; //NOSONAR
