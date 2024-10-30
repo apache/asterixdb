@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.app.function;
 
+import java.util.Objects;
+
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
 import org.apache.asterix.metadata.declared.DataSourceId;
@@ -40,6 +42,10 @@ public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
             FunctionIdentifier functionIdentifier) throws AlgebricksException {
         super(createDataSourceId(scalingFactor), functionIdentifier, domain);
         this.scalingFactor = scalingFactor;
+    }
+
+    public double getScalingFactor() {
+        return scalingFactor;
     }
 
     /**
@@ -65,5 +71,14 @@ public class TPCDSAllTablesDataGeneratorDatasource extends FunctionDataSource {
     @Override
     protected AlgebricksAbsolutePartitionConstraint getLocations(IClusterStateManager csm, MetadataProvider md) {
         return md.getDataPartitioningProvider().getClusterLocations();
+    }
+
+    @Override
+    public boolean sameFunctionDatasource(FunctionDataSource other) {
+        if (!Objects.equals(this.functionId, other.getFunctionId())) {
+            return false;
+        }
+        TPCDSAllTablesDataGeneratorDatasource that = (TPCDSAllTablesDataGeneratorDatasource) other;
+        return Objects.equals(this.scalingFactor, that.getScalingFactor());
     }
 }

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
@@ -167,4 +168,27 @@ public abstract class DataSource implements IDataSource<DataSourceId> {
             ITupleFilterFactory tupleFilterFactory, long outputLimit, IOperatorSchema opSchema,
             IVariableTypeEnvironment typeEnv, JobGenContext context, JobSpecification jobSpec, Object implConfig,
             IProjectionFiltrationInfo projectionFiltrationInfo) throws AlgebricksException;
+
+    @Override
+    public boolean sameAs(IDataSource<?> other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (!(other instanceof DataSource)) {
+            return false;
+        }
+
+        DataSource that = (DataSource) other;
+        if (!Objects.equals(this.id, that.getId()) || !Objects.equals(this.datasourceType, that.getDatasourceType())) {
+            return false;
+        }
+
+        if (this.datasourceType == Type.EXTERNAL_DATASET && that.getDatasourceType() == Type.EXTERNAL_DATASET
+                && !Objects.equals(this.getProperties(), other.getProperties())) {
+            return false;
+        }
+
+        return true;
+    }
 }

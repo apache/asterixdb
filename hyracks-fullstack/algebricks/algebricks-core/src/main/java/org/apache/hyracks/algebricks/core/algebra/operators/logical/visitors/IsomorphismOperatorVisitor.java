@@ -483,20 +483,21 @@ public class IsomorphismOperatorVisitor implements ILogicalOperatorVisitor<Boole
         if (aop.getOperatorTag() != LogicalOperatorTag.DATASOURCESCAN) {
             return Boolean.FALSE;
         }
-        DataSourceScanOperator argScan = (DataSourceScanOperator) arg;
-        boolean isomorphic = op.getDataSource().getId().equals(argScan.getDataSource().getId())
-                && op.getOutputLimit() == argScan.getOutputLimit()
-                && Objects.equals(op.getProjectionFiltrationInfo(), argScan.getProjectionFiltrationInfo());
 
+        DataSourceScanOperator argScan = (DataSourceScanOperator) arg;
+        IDataSource<?> dataSource = op.getDataSource();
+        IDataSource<?> argDataSource = argScan.getDataSource();
+        boolean isomorphic = dataSource.sameAs(argDataSource);
         if (!isomorphic) {
             return Boolean.FALSE;
         }
-        IDataSource<?> dataSource = op.getDataSource();
-        IDataSource<?> argDataSource = argScan.getDataSource();
-        if (dataSource.compareProperties() && argDataSource.compareProperties()
-                && !Objects.equals(dataSource.getProperties(), argDataSource.getProperties())) {
+
+        isomorphic = op.getOutputLimit() == argScan.getOutputLimit()
+                && Objects.equals(op.getProjectionFiltrationInfo(), argScan.getProjectionFiltrationInfo());
+        if (!isomorphic) {
             return Boolean.FALSE;
         }
+
         DataSourceScanOperator scanOpArg = (DataSourceScanOperator) copyAndSubstituteVar(op, arg);
         ILogicalExpression opCondition = op.getSelectCondition() != null ? op.getSelectCondition().getValue() : null;
         ILogicalExpression argCondition =

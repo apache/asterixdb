@@ -20,6 +20,7 @@ package org.apache.asterix.app.function;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.metadata.api.IDatasourceFunction;
@@ -66,6 +67,14 @@ public class QueryPartitionDatasource extends FunctionDataSource {
         this.partitionNum = partitionNum;
         this.ds = ds;
         this.storageLocations = storageLocations;
+    }
+
+    public Dataset getDatasource() {
+        return ds;
+    }
+
+    public int getPartitionNumber() {
+        return partitionNum;
     }
 
     @Override
@@ -127,5 +136,15 @@ public class QueryPartitionDatasource extends FunctionDataSource {
     private static DataSourceId createQueryPartitionDataSourceId(Dataset dataset) {
         return new DataSourceId(dataset.getDatabaseName(), dataset.getDataverseName(), dataset.getDatasetName(),
                 new String[] { dataset.getDatasetName(), QueryPartitionRewriter.QUERY_PARTITION.getName() });
+    }
+
+    @Override
+    public boolean sameFunctionDatasource(FunctionDataSource other) {
+        if (!Objects.equals(this.functionId, other.getFunctionId())) {
+            return false;
+        }
+        QueryPartitionDatasource that = (QueryPartitionDatasource) other;
+        return Objects.equals(this.ds, that.getDatasource())
+                && Objects.equals(this.partitionNum, that.getPartitionNumber());
     }
 }
