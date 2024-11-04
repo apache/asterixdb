@@ -18,7 +18,10 @@
  */
 
 // For OBJECT_PUT.
+// ASTERIXDB-3522 disable parallel sort. enable when fixed
+
 USE     TestDataverse;
+set `compiler.sort.parallel` "false";
 LET     openUValues = (
           FROM    UsersOpen U2
           WHERE   U2._id = 4

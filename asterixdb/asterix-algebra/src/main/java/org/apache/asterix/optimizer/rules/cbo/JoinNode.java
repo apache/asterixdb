@@ -637,14 +637,14 @@ public class JoinNode {
                 if (selectivityAnnotation != null) {
                     sel = selectivityAnnotation.getSelectivity();
                 } else {
-                    if (leafInput.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
-                        selOp = (SelectOperator) joinEnum.getStatsHandle().findSelectOpWithExpr(leafInput, afce);
-                        if (selOp == null) {
+                    selOp = (SelectOperator) joinEnum.getStatsHandle().findSelectOpWithExpr(leafInput, afce);
+                    if (selOp == null) {
+                        if (leafInput.getOperatorTag().equals(LogicalOperatorTag.SELECT)) {
                             selOp = (SelectOperator) leafInput;
+                        } else {
+                            selOp = new SelectOperator(new MutableObject<>(afce));
+                            selOp.getInputs().add(new MutableObject<>(leafInput));
                         }
-                    } else {
-                        selOp = new SelectOperator(new MutableObject<>(afce));
-                        selOp.getInputs().add(new MutableObject<>(leafInput));
                     }
                     sel = joinEnum.getStatsHandle().findSelectivityForThisPredicate(selOp, afce,
                             chosenIndex.getIndexType().equals(DatasetConfig.IndexType.ARRAY)
