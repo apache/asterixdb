@@ -108,10 +108,6 @@ import org.apache.iceberg.Table;
 import org.apache.iceberg.hadoop.HadoopTables;
 import org.apache.iceberg.io.CloseableIterable;
 
-import io.delta.standalone.DeltaLog;
-import io.delta.standalone.Snapshot;
-import io.delta.standalone.actions.AddFile;
-
 public class ExternalDataUtils {
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
     private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
@@ -474,8 +470,8 @@ public class ExternalDataUtils {
 
         if (configuration.containsKey(ExternalDataConstants.TABLE_FORMAT)) {
             if (isDeltaTable(configuration)) {
-                configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_NOOP);
-                configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_PARQUET);
+                configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
+                configuration.put(ExternalDataConstants.KEY_FORMAT, ExternalDataConstants.FORMAT_DELTA);
             }
             prepareTableFormat(configuration);
         }
@@ -497,23 +493,6 @@ public class ExternalDataUtils {
             throw new CompilationException(ErrorCode.INVALID_DELTA_TABLE_FORMAT,
                     configuration.get(ExternalDataConstants.KEY_FORMAT));
         }
-    }
-
-    public static void prepareDeltaTableFormat(Map<String, String> configuration, Configuration conf,
-            String tableMetadataPath) {
-        DeltaLog deltaLog = DeltaLog.forTable(conf, tableMetadataPath);
-        Snapshot snapshot = deltaLog.snapshot();
-        List<AddFile> dataFiles = snapshot.getAllFiles();
-        StringBuilder builder = new StringBuilder();
-        for (AddFile batchFile : dataFiles) {
-            builder.append(",");
-            String path = batchFile.getPath();
-            builder.append(tableMetadataPath).append('/').append(path);
-        }
-        if (builder.length() > 0) {
-            builder.deleteCharAt(0);
-        }
-        configuration.put(ExternalDataConstants.KEY_PATH, builder.toString());
     }
 
     public static void prepareIcebergTableFormat(Map<String, String> configuration, Configuration conf,

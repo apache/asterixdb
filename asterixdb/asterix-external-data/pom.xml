@@ -575,6 +575,22 @@
     </dependency>
     <dependency>
       <groupId>io.delta</groupId>
+      <artifactId>delta-kernel-api</artifactId>
+      <version>3.2.1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.delta</groupId>
+      <artifactId>delta-kernel-defaults</artifactId>
+      <version>3.2.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client-api</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>io.delta</groupId>
       <artifactId>delta-standalone_2.12</artifactId>
       <version>3.0.0</version>
     </dependency>

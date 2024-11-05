@@ -32,6 +32,7 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.external.input.record.reader.aws.delta.DeltaFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.AvroRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -111,8 +112,9 @@ public class StreamRecordReaderProvider {
         if (format != null) {
             if (format.equalsIgnoreCase(ExternalDataConstants.FORMAT_AVRO)) {
                 return AvroRecordReader.class;
-            }
-            if (recordReaders.containsKey(format)) {
+            } else if (format.equalsIgnoreCase(ExternalDataConstants.FORMAT_DELTA)) {
+                return DeltaFileRecordReader.class;
+            } else if (recordReaders.containsKey(format)) {
                 return findRecordReaderClazzWithConfig(configuration, format);
             }
             throw new AsterixException(ErrorCode.PROVIDER_STREAM_RECORD_READER_UNKNOWN_FORMAT, format);
