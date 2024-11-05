@@ -6682,6 +6682,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="index-selection">
+      <compilation-unit name="like-expression">
+        <output-dir compare="Text">like-expression</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="index-selection">
       <compilation-unit name="verify">
         <output-dir compare="Text">verify</output-dir>
       </compilation-unit>

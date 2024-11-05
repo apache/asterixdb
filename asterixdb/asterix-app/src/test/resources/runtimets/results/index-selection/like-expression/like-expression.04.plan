@@ -1,0 +1,38 @@
+distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$19]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$19] <- [{"ds1": $$ds1}] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$ds1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          select (and(ge($$20, "fsdxv😀"), lt($$20, "fsdxv😁"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- STREAM_SELECT  |PARTITIONED|
+            assign [$$20] <- [$$ds1.getField(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- ASSIGN  |PARTITIONED|
+              project ([$$ds1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  unnest-map [$$21, $$ds1] <- index-search("ds1", 0, "Default", "test", "ds1", false, false, 1, $$25, 1, $$25, true, true, true) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$25) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$25]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STREAM_PROJECT  |PARTITIONED|
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              unnest-map [$$24, $$25] <- index-search("ds1_name", 0, "Default", "test", "ds1", false, false, 1, $$22, 1, $$23, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$22, $$23] <- ["fsdxv😀", "fsdxv😁"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -10,13 +10,7 @@ OrderedListConstructor [
     LiteralExpr [STRING] [A8BBB]
     LiteralExpr [STRING] [_6%]
   ]
-  FunctionCall asterix.like@2[
-    LiteralExpr [STRING] [+0300]
-    LiteralExpr [STRING] [+03%]
-  ]
-  FunctionCall asterix.like@2[
-    LiteralExpr [STRING] [?0300]
-    LiteralExpr [STRING] [?03%]
-  ]
+  LiteralExpr [STRING] [+0300]
+  LiteralExpr [STRING] [?0300]
 ]
 ]
