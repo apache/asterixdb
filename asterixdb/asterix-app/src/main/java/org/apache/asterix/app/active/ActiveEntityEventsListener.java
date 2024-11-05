@@ -105,6 +105,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
     protected int numDeRegistered;
     protected volatile RecoveryTask rt;
     protected volatile boolean suspended = false;
+    private long suspendCount;
     // failures
     protected Exception jobFailure;
     protected Exception resumeFailure;
@@ -263,6 +264,10 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
 
     public JobId getJobId() {
         return jobId;
+    }
+
+    public long getSuspendCount() {
+        return suspendCount;
     }
 
     @Override
@@ -568,6 +573,7 @@ public abstract class ActiveEntityEventsListener implements IActiveEntityControl
             LOGGER.log(level, "{} waiting for ongoing activities", jobId);
             waitForNonTransitionState();
             LOGGER.log(level, "{} proceeding with suspension. current state is {}", jobId, state);
+            suspendCount++;
             if (state == ActivityState.STOPPED) {
                 suspended = true;
                 return;
