@@ -121,6 +121,7 @@ public class RecoveryTask {
     protected Void doRecover(IRetryPolicy policy) throws AlgebricksException, InterruptedException {
         LOGGER.log(level, "Actual Recovery task has started");
         Exception failure;
+        long prevSuspendCount;
         do {
             synchronized (listener) {
                 while (!cancelRecovery && !canStartRecovery()) {
@@ -153,6 +154,7 @@ public class RecoveryTask {
                 listener.setState(ActivityState.TEMPORARILY_FAILED);
                 failure = e;
             } finally {
+                prevSuspendCount = listener.getSuspendCount();
                 releaseRecoveryLocks(metadataProvider);
             }
         } while (policy.retry(failure));
@@ -173,20 +175,28 @@ public class RecoveryTask {
         }
         IMetadataLockManager lockManager = metadataProvider.getApplicationContext().getMetadataLockManager();
         IMetadataLockUtil lockUtil = metadataProvider.getApplicationContext().getMetadataLockUtil();
+        boolean retryRecovery = false;
         try {
             acquirePostRecoveryLocks(lockManager, lockUtil);
             synchronized (listener) {
                 if (!cancelRecovery && listener.getState() == ActivityState.TEMPORARILY_FAILED) {
-                    LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
-                    listener.setState(ActivityState.STOPPED);
-                    listener.setRunning(metadataProvider, false);
+                    if (prevSuspendCount == listener.getSuspendCount()) {
+                        LOGGER.warn("Recovery for {} permanently failed", listener.getEntityId());
+                        listener.setState(ActivityState.STOPPED);
+                        listener.setRunning(metadataProvider, false);
+                    } else {
+                        LOGGER.log(level,
+                                "Retrying recovery on non-retryable failure due to interleaving suspend/resume for {}",
+                                listener.getEntityId());
+                        retryRecovery = true;
+                    }
                 }
                 listener.notifyAll();
             }
         } finally {
             releasePostRecoveryLocks();
         }
-        return null;
+        return retryRecovery ? doRecover(policy) : null;
     }
 
     protected void acquireRecoveryLocks(IMetadataLockManager lockManager, IMetadataLockUtil lockUtil)
