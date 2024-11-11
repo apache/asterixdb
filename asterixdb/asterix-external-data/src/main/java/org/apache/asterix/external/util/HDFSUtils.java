@@ -89,9 +89,13 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.api.network.INetworkSecurityManager;
 import org.apache.hyracks.hdfs.scheduler.Scheduler;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.parquet.hadoop.ParquetInputFormat;
 
 public class HDFSUtils {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private HDFSUtils() {
     }
@@ -339,8 +343,8 @@ public class HDFSUtils {
             Files.writeString(krb5conf,
                     String.format(ExternalDataConstants.KERBEROS_CONFIG_FILE_CONTENT, kerberosRealm, kerberosKdc));
         } catch (IOException ex) {
-            throw AsterixException.create(ErrorCode.COULD_NOT_CREATE_FILE,
-                    String.join("", ExternalDataConstants.KERBEROS_CONFIG_FILE_PATTERN));
+            LOGGER.error("Failed to create kerberos config file", ex);
+            throw AsterixException.create(ErrorCode.COULD_NOT_CREATE_TOKENS);
         }
         return krb5conf;
     }
