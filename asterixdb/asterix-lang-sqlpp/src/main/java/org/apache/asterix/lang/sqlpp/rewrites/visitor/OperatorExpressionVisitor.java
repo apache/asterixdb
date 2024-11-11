@@ -19,8 +19,11 @@
 
 package org.apache.asterix.lang.sqlpp.rewrites.visitor;
 
+import static org.apache.asterix.common.utils.ConstantUtil.LIKE_ESCAPE;
 import static org.apache.asterix.common.utils.ConstantUtil.PERCENT;
 import static org.apache.asterix.common.utils.ConstantUtil.UNDERSCORE;
+import static org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor.LikePattern.EQUAL;
+import static org.apache.asterix.lang.sqlpp.rewrites.visitor.OperatorExpressionVisitor.LikePattern.PREFIX;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,29 +91,26 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
     }
 
     private Expression processLikeOperator(OperatorExpr operatorExpr, OperatorType opType) throws CompilationException {
-        CallExpr likeExpr =
-                new CallExpr(new FunctionSignature(BuiltinFunctions.STRING_LIKE), operatorExpr.getExprList());
-        likeExpr.addHints(operatorExpr.getHints());
-        likeExpr.setSourceLocation(operatorExpr.getSourceLocation());
         switch (opType) {
             case LIKE:
                 Expression target = operatorExpr.getExprList().get(0);
                 Expression patternExpr = operatorExpr.getExprList().get(1);
                 String patternStr = ExpressionUtils.getStringLiteral(patternExpr);
-                if (patternStr != null && patternStr.endsWith(PERCENT) && patternStr.length() > 1) {
-                    String prefix = patternStr.substring(0, patternStr.length() - 1);
-                    if (!prefix.contains(PERCENT) && !prefix.contains(UNDERSCORE)) {
-                        return convertLikeToRange(operatorExpr, target, prefix);
+                if (patternStr != null) {
+                    StringBuilder likePatternStr = new StringBuilder();
+                    LikePattern likePattern = processPattern(patternStr, likePatternStr);
+                    if (likePattern == PREFIX) {
+                        return convertLikeToRange(operatorExpr, target, likePatternStr.toString());
+                    } else if (likePattern == EQUAL) {
+                        Expression processedExpr = new LiteralExpr(new StringLiteral(likePatternStr.toString()));
+                        return createOperatorExpression(OperatorType.EQ, target, processedExpr, operatorExpr.getHints(),
+                                operatorExpr.getSourceLocation());
                     }
-                }
-                if (patternStr != null && !patternStr.contains(PERCENT) && !patternStr.contains(UNDERSCORE)) {
-                    return createOperatorExpression(OperatorType.EQ, target, patternExpr, operatorExpr.getHints(),
-                            operatorExpr.getSourceLocation());
                 }
                 return createLikeExpression(operatorExpr);
             case NOT_LIKE:
                 CallExpr notLikeExpr = new CallExpr(new FunctionSignature(BuiltinFunctions.NOT),
-                        new ArrayList<>(Collections.singletonList(likeExpr)));
+                        new ArrayList<>(Collections.singletonList(createLikeExpression(operatorExpr))));
                 notLikeExpr.setSourceLocation(operatorExpr.getSourceLocation());
                 return notLikeExpr;
             default:
@@ -300,5 +300,35 @@ public class OperatorExpressionVisitor extends AbstractSqlppExpressionScopingVis
         likeExpr.addHints(operatorExpr.getHints());
         likeExpr.setSourceLocation(operatorExpr.getSourceLocation());
         return likeExpr;
+    }
+
+    private static LikePattern processPattern(String pattern, StringBuilder likePatternStr) {
+        // note: similar logic is applied in StringLikeDescriptor
+        LikePattern likePattern = EQUAL;
+        for (int i = 0, length = pattern.length(); i < length; i++) {
+            char c = pattern.charAt(i);
+            if (c == LIKE_ESCAPE) {
+                char nextChar;
+                // escape character can't be last, and only %, _ and the escape char are allowed after it
+                if (i >= length - 1 || ((nextChar = pattern.charAt(i + 1)) != PERCENT && nextChar != UNDERSCORE
+                        && nextChar != LIKE_ESCAPE)) {
+                    return null;
+                }
+                likePatternStr.append(nextChar);
+                ++i;
+            } else if (c == PERCENT && i == pattern.length() - 1) {
+                likePattern = PREFIX;
+            } else if (c == UNDERSCORE || c == PERCENT) {
+                return null;
+            } else {
+                likePatternStr.append(c);
+            }
+        }
+        return likePattern;
+    }
+
+    enum LikePattern {
+        PREFIX,
+        EQUAL
     }
 }

@@ -112,6 +112,7 @@ public class StringLikeDescriptor extends AbstractScalarFunctionDynamicDescripto
 
         @Override
         public String toRegExpPatternString(String pattern) throws HyracksDataException {
+            // note: similar logic is applied in OperatorExpressionVisitor
             tempStringBuilder.setLength(0);
             for (int i = 0, length = pattern.length(); i < length; i++) {
                 char c = pattern.charAt(i);

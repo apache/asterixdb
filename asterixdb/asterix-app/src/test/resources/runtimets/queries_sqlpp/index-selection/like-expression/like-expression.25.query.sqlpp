@@ -17,11 +17,6 @@
  * under the License.
  */
 
-package org.apache.asterix.common.utils;
+use test;
 
-public class ConstantUtil {
-    public static final char LIKE_ESCAPE = '\\';
-    public static final char PERCENT = '%';
-    public static final char UNDERSCORE = '_';
-
-}
+explain select * from ds1 where name like "h\\\\axx\\%";

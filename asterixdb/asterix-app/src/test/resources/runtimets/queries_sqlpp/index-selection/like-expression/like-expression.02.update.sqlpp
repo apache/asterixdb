@@ -29,5 +29,14 @@ UPSERT INTO ds1 ([
 {"id":7, "name": "fsdxv😁", "age": 17},
 {"id":8, "name": "Join", "age": 21},
 {"id":9, "name": "sxvfjshfjisciis", "age": 13},
-{"id":10, "name": "syvgjshfjisciis", "age": 123}
+{"id":10, "name": "h\\axx%", "age": 123},
+{"id":11, "name": "h\\\\%axx%", "age": 11},
+{"id":12, "name": "h\\\\_axx%", "age": 43},
+{"id":13, "name": "h\\\\ax\\%", "age": 21},
+{"id":14, "name": "h\\\\ax\\%", "age": 4},
+{"id":15, "name": "ax\\_%", "age": 6},
+{"id":16, "name": "axnvtxb", "age": 53},
+{"id":17, "name": "fvbn\"", "age": 23},
+{"id":18, "name": "fv%%\\bn\"", "age": 99},
+{"id":19, "name": "fv%%\\bn\"", "age": 101}
 ]);
