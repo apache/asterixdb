@@ -5755,11 +5755,28 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
+    /**
+     * Normalizes the value of the adapter and ensures that it is supported
+     *
+     * @param details external details
+     * @param sourceLoc source location
+     */
+    private void normalizeAdapters(ExternalDetailsDecl details, SourceLocation sourceLoc) throws CompilationException {
+        String adapter = details.getAdapter();
+        Optional<String> normalizedAdapter = ExternalDataConstants.EXTERNAL_READ_ADAPTERS.stream()
+                .filter(k -> k.equalsIgnoreCase(adapter)).findFirst();
+        if (normalizedAdapter.isEmpty()) {
+            throw CompilationException.create(ErrorCode.UNKNOWN_ADAPTER, sourceLoc, adapter);
+        }
+        details.setAdapter(normalizedAdapter.get());
+    }
+
     protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
             Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx,
             IApplicationContext appCtx, MetadataProvider metadataProvider)
             throws AlgebricksException, HyracksDataException {
         // Validate adapter specific properties
+        normalizeAdapters(externalDetails, srcLoc);
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);

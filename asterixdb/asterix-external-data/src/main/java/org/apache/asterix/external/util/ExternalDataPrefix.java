@@ -75,7 +75,8 @@ public final class ExternalDataPrefix implements Serializable {
 
     public ExternalDataPrefix(Map<String, String> configuration) throws AlgebricksException {
         String prefix = ExternalDataUtils.getDefinitionOrPath(configuration);
-        this.original = prefix != null ? prefix : "";
+        this.original = HDFSUtils.isSourceTypeHdfs(configuration) ? HDFSUtils.updateRootPath(prefix, true)
+                : (prefix != null ? prefix : "");
         this.endsWithSlash = this.original.endsWith("/");
         protocolContainerPair = ExternalDataUtils.getProtocolContainerPair(configuration);
         segments = extractPrefixSegments(original);

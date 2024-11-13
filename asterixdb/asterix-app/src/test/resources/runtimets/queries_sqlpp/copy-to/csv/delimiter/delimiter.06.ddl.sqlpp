@@ -23,17 +23,13 @@
 
 USE test;
 
-CREATE EXTERNAL DATASET DatasetCopyWrong(ColumnType) USING S3
+CREATE EXTERNAL DATASET DatasetCopyWrong(ColumnType) USING %adapter%
 (
-("accessKeyId"="dummyAccessKey"),
-("secretAccessKey"="dummySecretKey"),
-("sessionToken"="dummySessionToken"),
-("header"="false"),
-("delimiter"=","),
-("region"="us-west-2"),
-  ("serviceEndpoint"="http://127.0.0.1:8001"),
-  ("container"="playground"),
-  ("definition"="copy-to-result/csv/delimiter"),
+  %template%,
+  ("header"="false"),
+  ("delimiter"=","),
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/csv/delimiter"),
   ("format" = "csv"),
   ("requireVersionChangeDetection"="false"),
   ("include"="*.csv")

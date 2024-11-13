@@ -23,17 +23,14 @@ COPY (
    SELECT c.company make
    FROM Customer c
 ) x
-TO S3
-PATH ("copy-to-result", "order-by2")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "order-by2")
 -- We do not have a way to determine the output is sorted
 -- However, this test ensures that there's no regressions when having ORDER BY only in the OVER-clause
 OVER (ORDER BY x.make)
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

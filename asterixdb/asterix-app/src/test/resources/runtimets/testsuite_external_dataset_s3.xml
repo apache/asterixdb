@@ -26,6 +26,11 @@
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="simple-write">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">simple-write</output-dir>
       </compilation-unit>
     </test-case>
@@ -36,41 +41,81 @@
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="default-namespace">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">default-namespace</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-simple">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-simple</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-tweet">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-tweet</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-partition-heterogeneous">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-partition-heterogeneous</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-utf8">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-utf8</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-heterogeneous">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-heterogeneous</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-cover-data-types">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-cover-data-types</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="parquet-empty-array">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-empty-array</output-dir>
       </compilation-unit>
     </test-case>
@@ -81,11 +126,20 @@
     </test-case>
     <test-case FilePath="copy-to">
       <compilation-unit name="order-by">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">order-by</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="early-missing">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">early-missing</output-dir>
         <expected-error>ASX0064: Path expression produced a value of type 'missing'. Path must be of type string</expected-error>
         <expected-error>ASX0064: Path expression produced a value of type 'null'. Path must be of type string</expected-error>
@@ -101,6 +155,11 @@
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="non-empty-folder">
         <output-dir compare="Text">non-empty-folder</output-dir>
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <expected-error>ASX0062: Cannot write to a non-empty directory 'copy-to-result/duplicate-write'</expected-error>
       </compilation-unit>
     </test-case>
@@ -113,6 +172,11 @@
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="supported-adapter-format-compression">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">supported-adapter-format-compression</output-dir>
         <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [gcs, hdfs, localfs, s3]</expected-error>
         <expected-error>ASX1189: Unsupported writing format 'avro'. Supported formats: [csv, json, parquet]</expected-error>
@@ -121,6 +185,11 @@
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="parquet-error-checks">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">parquet-error-checks</output-dir>
         <expected-error>ASX0037: Type mismatch: expected value of type BINARY, but got the value of type bigint</expected-error>
         <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
@@ -136,16 +205,26 @@
         <expected-error>ASX1209: Maximum value allowed for 'max-schemas' is 10. Found 15</expected-error>
         <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
         <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
-        </compilation-unit>
+      </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="empty-over">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">empty-over</output-dir>
         <expected-error>ASX1001: Syntax error: OVER-clause cannot be empty</expected-error>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="bad-max-objects-per-file">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">bad-max-objects-per-file</output-dir>
         <expected-error>Minimum value allowed for 'max-objects-per-file' is 1000. Found 2</expected-error>
         <expected-error>Expected integer value, got hello</expected-error>
@@ -153,6 +232,11 @@
     </test-case>
     <test-case FilePath="copy-to/negative">
       <compilation-unit name="csv-error-checks">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">csv-error-checks</output-dir>
         <expected-error>ASX1079: Compilation error: TYPE/AS Expression is required for csv format</expected-error>
         <expected-error>ASX1082: Cannot find datatype with name wrongDataType (in line 27, at column 4)</expected-error>
@@ -169,26 +253,51 @@
   <test-group name="copy-to/csv">
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="simple-csv">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">simple-csv</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="type-mismatch">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">type-mismatch</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="delimiter">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">delimiter</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="header">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">header</output-dir>
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to/csv">
       <compilation-unit name="quote-escape">
+        <placeholder name="adapter" value="S3" />
+        <placeholder name="pathprefix" value="" />
+        <placeholder name="path_prefix" value="" />
+        <placeholder name="additionalProperties" value='"container":"playground",' />
+        <placeholder name="additional_Properties" value='("container"="playground")' />
         <output-dir compare="Text">quote-escape</output-dir>
       </compilation-unit>
     </test-case>
@@ -223,16 +332,16 @@
         <output-dir compare="Text">common/csv/csv</output-dir>
       </compilation-unit>
     </test-case><test-case FilePath="external-dataset">
-      <compilation-unit name="common/csv/gz">
-        <placeholder name="adapter" value="S3" />
-        <output-dir compare="Text">common/csv/gz</output-dir>
-      </compilation-unit>
-    </test-case><test-case FilePath="external-dataset">
-      <compilation-unit name="common/csv/mixed">
-        <placeholder name="adapter" value="S3" />
-        <output-dir compare="Text">common/csv/mixed</output-dir>
-      </compilation-unit>
-    </test-case>
+    <compilation-unit name="common/csv/gz">
+      <placeholder name="adapter" value="S3" />
+      <output-dir compare="Text">common/csv/gz</output-dir>
+    </compilation-unit>
+  </test-case><test-case FilePath="external-dataset">
+    <compilation-unit name="common/csv/mixed">
+      <placeholder name="adapter" value="S3" />
+      <output-dir compare="Text">common/csv/mixed</output-dir>
+    </compilation-unit>
+  </test-case>
     <test-case FilePath="external-dataset">
       <compilation-unit name="common/tsv/tsv">
         <placeholder name="adapter" value="S3" />

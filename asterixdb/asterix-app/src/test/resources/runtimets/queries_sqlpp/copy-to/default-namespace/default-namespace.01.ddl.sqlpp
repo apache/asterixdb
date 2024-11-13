@@ -20,13 +20,10 @@
 CREATE TYPE OpenType AS {
 };
 
-CREATE EXTERNAL DATASET Customer(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="external-filter/car/{company:string}/customer/{customer_id:int}"),
+CREATE EXTERNAL DATASET Customer(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
+    ("definition"="%path_prefix%external-filter/car/{company:string}/customer/{customer_id:int}"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );

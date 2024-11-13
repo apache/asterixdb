@@ -22,12 +22,11 @@ USE test;
 
 
 
-CREATE EXTERNAL DATASET DummyTweetDatasetCopy(ColumnType2) USING S3
+CREATE EXTERNAL DATASET DummyTweetDatasetCopy(ColumnType2) USING %adapter%
 (
-  ("serviceEndpoint"="http://127.0.0.1:8001"),
-  ("region"="us-west-2"),
-  ("container"="playground"),
-  ("definition"="copy-to-result/parquet-tweet/"),
+  %template%,
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/parquet-tweet/"),
   ("include"="*.parquet"),
   ("requireVersionChangeDetection"="false"),
   ("format" = "parquet")

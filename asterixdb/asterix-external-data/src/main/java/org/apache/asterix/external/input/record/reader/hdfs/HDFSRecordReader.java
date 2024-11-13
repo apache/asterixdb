@@ -36,24 +36,24 @@ public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordR
         super(read, inputSplits, readSchedule, nodeName, conf, ugi);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected RecordReader<K, V> getRecordReader(int splitIndex) throws IOException {
-        if (ugi != null) {
-            try {
-                reader = ugi.doAs((PrivilegedExceptionAction<RecordReader<K, V>>) () -> (RecordReader<K, V>) inputFormat
-                        .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL));
-            } catch (InterruptedException ex) {
-                throw HyracksDataException.create(ex);
-            }
-        } else {
-            reader = (RecordReader<K, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+        try {
+            reader = ugi == null ? getReader(splitIndex)
+                    : ugi.doAs((PrivilegedExceptionAction<RecordReader<K, V>>) () -> getReader(splitIndex));
+        } catch (InterruptedException ex) {
+            throw HyracksDataException.create(ex);
         }
         if (key == null) {
             key = reader.createKey();
             value = reader.createValue();
         }
         return reader;
+    }
+
+    @SuppressWarnings("unchecked")
+    private RecordReader<K, V> getReader(int splitIndex) throws IOException {
+        return (RecordReader<K, V>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
     }
 
     @Override

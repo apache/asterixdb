@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.asterix.testframework.context.TestCaseContext;
+import org.apache.asterix.testframework.xml.TestCase;
 import org.apache.commons.io.IOUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -54,6 +55,22 @@ public class AnalyzingTestExecutor extends TestExecutor {
         Matcher dsMatcher = loadPattern.matcher(statement);
         Matcher upsertMatcher = upsertPattern.matcher(statement);
         ExtractedResult res = super.executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP));
+        analyzeFromRegex(dsMatcher, dv, 3);
+        analyzeFromRegex(upsertMatcher, dv, 2);
+        return res;
+    }
+
+    @Override
+    public ExtractedResult executeSqlppUpdateOrDdl(String statement, TestCaseContext.OutputFormat outputFormat,
+            TestCase.CompilationUnit cUnit) throws Exception {
+        Matcher dvMatcher = usePattern.matcher(statement);
+        String dv = "";
+        if (dvMatcher.find()) {
+            dv = dvMatcher.group(2) + ".";
+        }
+        Matcher dsMatcher = loadPattern.matcher(statement);
+        Matcher upsertMatcher = upsertPattern.matcher(statement);
+        ExtractedResult res = super.executeUpdateOrDdl(statement, outputFormat, getQueryServiceUri(SQLPP), cUnit);
         analyzeFromRegex(dsMatcher, dv, 3);
         analyzeFromRegex(upsertMatcher, dv, 2);
         return res;

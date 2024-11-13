@@ -1274,7 +1274,11 @@ public class TestExecutor {
                 if (isDmlRecoveryTest && statement.contains("nc1://")) {
                     statement = statement.replaceAll("nc1://", "127.0.0.1://../../../../../../asterix-app/");
                 }
-                executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
+                if (cUnit.getPlaceholder().isEmpty()) {
+                    executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit));
+                } else {
+                    executeSqlppUpdateOrDdl(statement, OutputFormat.forCompilationUnit(cUnit), cUnit);
+                }
                 break;
             case "pollget":
             case "pollquery":
@@ -2453,7 +2457,7 @@ public class TestExecutor {
     }
 
     protected boolean noTemplateRequired(String str) {
-        return !str.contains("%template%");
+        return !str.contains("%template%") && !str.contains("%template_colons%");
     }
 
     protected String applyS3Substitution(String str, List<Placeholder> placeholders) {
@@ -2504,7 +2508,11 @@ public class TestExecutor {
     }
 
     protected String setS3TemplateDefault(String str) {
-        return str.replace("%template%", TestConstants.S3_TEMPLATE_DEFAULT);
+        if (str.contains("%template%")) {
+            return str.replace("%template%", TestConstants.S3_TEMPLATE_DEFAULT);
+        } else {
+            return str.replace("%template_colons%", TestConstants.S3_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS);
+        }
     }
 
     protected String applyAzureSubstitution(String str, List<Placeholder> placeholders) {
@@ -2554,7 +2562,12 @@ public class TestExecutor {
     }
 
     protected String setHDFSTemplateDefault(String str) {
-        return str;
+        if (str.contains("%template%")) {
+            return str.replace("%template%", TestConstants.HDFS.HDFS_TEMPLATE_DEFAULT);
+        } else {
+            return str.replace("%template_colons%",
+                    TestConstants.HDFS.HDFS_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS);
+        }
     }
 
     protected void fail(boolean runDiagnostics, TestCaseContext testCaseCtx, CompilationUnit cUnit,

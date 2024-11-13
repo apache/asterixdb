@@ -21,15 +21,12 @@ USE test;
 COPY (
    SELECT id, name, amount, accountNumber FROM TestCollection
 ) toWriter
-TO S3
-PATH ("copy-to-result", "csv", "escape", "1")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "csv", "escape", "1")
 AS (id bigint, name STRING, amount float, accountNumber double)
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"csv",
     "header":"true",
     "escape":"|",

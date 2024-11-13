@@ -19,9 +19,12 @@
 package org.apache.asterix.external.writer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -32,6 +35,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.data.std.api.IValueReference;
+import org.apache.parquet.hadoop.util.HiddenFileFilter;
 
 public class HDFSExternalFileWriter implements IExternalFileWriter {
 
@@ -40,6 +44,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
     private final boolean partitionedPath;
     private final SourceLocation pathSourceLocation;
     private FSDataOutputStream outputStream = null;
+    private final List<Path> paths = new ArrayList<>();
 
     HDFSExternalFileWriter(IExternalPrinter printer, FileSystem fs, boolean partitionedPath,
             SourceLocation pathSourceLocation) {
@@ -57,6 +62,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
     @Override
     public void validate(String directory) throws HyracksDataException {
         if (partitionedPath) {
+            directory = HDFSUtils.updateRootPath(directory, true);
             Path dirPath = new Path(directory);
             try {
                 if (fs.exists(dirPath)) {
@@ -65,7 +71,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
                         throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation, directory);
                     }
                     if (fileStatus.isDirectory()) {
-                        FileStatus[] fileStatuses = fs.listStatus(dirPath);
+                        FileStatus[] fileStatuses = fs.listStatus(dirPath, HiddenFileFilter.INSTANCE);
                         if (fileStatuses.length != 0) {
                             throw new RuntimeDataException(ErrorCode.DIRECTORY_IS_NOT_EMPTY, pathSourceLocation,
                                     directory);
@@ -80,9 +86,11 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public boolean newFile(String directory, String fileName) throws HyracksDataException {
-        Path path = new Path(directory, fileName);
+        directory = HDFSUtils.updateRootPath(directory, true);
+        Path path = new Path(directory, "." + fileName);
         try {
             outputStream = fs.create(path, false);
+            paths.add(path);
             printer.newStream(outputStream);
         } catch (FileAlreadyExistsException e) {
             return false;
@@ -99,14 +107,25 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
 
     @Override
     public void abort() throws HyracksDataException {
-        if (outputStream != null) {
-            outputStream.abort();
+        try {
+            printer.close();
+            for (Path path : paths) {
+                fs.delete(path, false);
+            }
+        } catch (IOException ex) {
+            throw HyracksDataException.create(ex);
         }
-        printer.close();
     }
 
     @Override
     public void close() throws HyracksDataException {
         printer.close();
+        try {
+            for (Path path : paths) {
+                fs.rename(path, new Path(path.getParent(), path.getName().substring(1)));
+            }
+        } catch (IOException ex) {
+            throw HyracksDataException.create(ex);
+        }
     }
 }

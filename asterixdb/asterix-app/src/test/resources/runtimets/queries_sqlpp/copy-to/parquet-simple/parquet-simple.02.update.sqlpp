@@ -23,15 +23,12 @@ USE test;
 COPY (
    select "123" as id
 ) toWriter
-TO S3
-PATH ("copy-to-result", "parquet-simple")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "parquet-simple")
 TYPE ( {id:string} )
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"parquet",
     "version" : "2"
 };

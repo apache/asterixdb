@@ -21,18 +21,15 @@ COPY (
    SELECT DISTINCT UPPERCASE(c.company) company, c.year
    FROM Customer c
 ) AS toWriter
-TO S3
-PATH ("copy-to-result/default-namespace3", company, year)
+TO %adapter%
+PATH (%pathprefix% "copy-to-result/default-namespace3", company, year)
 OVER (
    PARTITION BY toWriter.company company,
                 toWriter.year year
 )
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

@@ -168,19 +168,12 @@ public class HDFSInputStream extends AsterixInputStream {
         return false;
     }
 
-    @SuppressWarnings("unchecked")
     private RecordReader<Object, Text> getRecordReader(int splitIndex) throws IOException {
-        if (ugi != null) {
-            try {
-                reader = ugi
-                        .doAs((PrivilegedExceptionAction<RecordReader<Object, Text>>) () -> (RecordReader<Object, Text>) inputFormat
-                                .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL));
-            } catch (InterruptedException ex) {
-                throw HyracksDataException.create(ex);
-            }
-        } else {
-            reader = (RecordReader<Object, Text>) inputFormat.getRecordReader(inputSplits[splitIndex], conf,
-                    Reporter.NULL);
+        try {
+            reader = ugi == null ? getReader(splitIndex)
+                    : ugi.doAs((PrivilegedExceptionAction<RecordReader<Object, Text>>) () -> getReader(splitIndex));
+        } catch (InterruptedException ex) {
+            throw HyracksDataException.create(ex);
         }
 
         if (key == null) {
@@ -188,5 +181,10 @@ public class HDFSInputStream extends AsterixInputStream {
             value = reader.createValue();
         }
         return reader;
+    }
+
+    @SuppressWarnings("unchecked")
+    private RecordReader<Object, Text> getReader(int splitIndex) throws IOException {
+        return (RecordReader<Object, Text>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
     }
 }

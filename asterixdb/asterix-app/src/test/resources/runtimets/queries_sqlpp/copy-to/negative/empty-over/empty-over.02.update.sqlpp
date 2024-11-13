@@ -20,15 +20,12 @@
 USE test;
 
 COPY Customer c
-TO S3
-PATH ("copy-to-result-with-over")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result-with-over")
 OVER()
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

@@ -233,7 +233,13 @@ public class HDFSUtils {
                     ExternalDataConstants.CLASS_NAME_HDFS_FILESYSTEM);
             conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI, url);
         }
-        conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, configuration.get(ExternalDataConstants.KEY_PATH).trim());
+
+        // In case KEY_PATH is not being used, it means DEFINITION_FIELD_NAME is being used,
+        // and the property KEY_HADOOP_INPUT_DIR will be set in HDFSDatasourceFactory based on the provided definition.
+        String path = configuration.get(ExternalDataConstants.KEY_PATH);
+        if (path != null) {
+            HDFSUtils.setInputDir(conf, path.trim());
+        }
         conf.setClassLoader(HDFSInputStream.class.getClassLoader());
         conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_FORMAT, formatClassName);
 
@@ -397,6 +403,13 @@ public class HDFSUtils {
         }
     }
 
+    public static String updateRootPath(String path, boolean updateNullPath) {
+        if (path != null && path.isEmpty()) {
+            return "/";
+        }
+        return path != null ? path : (updateNullPath ? "/" : null);
+    }
+
     private static void configureParquet(Map<String, String> configuration, JobConf conf) {
         //Parquet configurations
         conf.set(ParquetInputFormat.READ_SUPPORT_CLASS, ParquetReadSupport.class.getName());
@@ -528,13 +541,15 @@ public class HDFSUtils {
         return job.get(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, "").isEmpty();
     }
 
+    public static void setInputDir(JobConf conf, String path) {
+        conf.set(ExternalDataConstants.KEY_HADOOP_INPUT_DIR, path);
+    }
+
     public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector) throws CompilationException {
-        if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
-            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
-        }
-        if (configuration.get(ExternalDataConstants.KEY_PATH) == null) {
-            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_PATH);
+        if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT) == null) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc,
+                    ExternalDataConstants.KEY_INPUT_FORMAT);
         }
 
         if (Objects.equals(configuration.get(ExternalDataConstants.HADOOP_AUTHENTICATION),
@@ -562,6 +577,17 @@ public class HDFSUtils {
             }
         }
 
+        // For validation purposes for external data prefixes
         validateIncludeExclude(configuration);
+        try {
+            new ExternalDataPrefix(configuration);
+        } catch (AlgebricksException ex) {
+            throw new CompilationException(ErrorCode.FAILED_TO_CALCULATE_COMPUTED_FIELDS, ex);
+        }
+    }
+
+    public static boolean isSourceTypeHdfs(Map<String, String> configuration) {
+        return ExternalDataConstants.KEY_ADAPTER_NAME_HDFS
+                .equalsIgnoreCase(configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE));
     }
 }

@@ -25,12 +25,11 @@ CREATE TYPE ColumnType2 AS {
 
 
 
-CREATE EXTERNAL DATASET TestDataset(ColumnType2) USING S3
+CREATE EXTERNAL DATASET TestDataset(ColumnType2) USING %adapter%
 (
-  ("serviceEndpoint"="http://127.0.0.1:8001"),
-  ("region"="us-west-2"),
-  ("container"="playground"),
-  ("definition"="copy-to-result/parquet-cover-data-types/"),
+  %template%,
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/parquet-cover-data-types/"),
   ("include"="*.parquet"),
   ("requireVersionChangeDetection"="false"),
   ("format" = "parquet")

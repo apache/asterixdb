@@ -18,14 +18,11 @@
  */
 
 COPY Customer c
-TO S3
-PATH ("copy-to-result", "default-namespace1")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "default-namespace1")
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

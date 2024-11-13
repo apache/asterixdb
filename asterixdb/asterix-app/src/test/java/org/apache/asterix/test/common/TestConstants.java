@@ -34,6 +34,10 @@ public class TestConstants {
     public static final String S3_TEMPLATE_DEFAULT = "(\"accessKeyId\"=\"" + S3_ACCESS_KEY_ID_DEFAULT + "\"),\n"
             + "(\"secretAccessKey\"=\"" + S3_SECRET_ACCESS_KEY_DEFAULT + "\"),\n" + "(\"region\"=\"" + S3_REGION_DEFAULT
             + "\"),\n" + "(\"serviceEndpoint\"=\"" + S3_SERVICE_ENDPOINT_DEFAULT + "\")";
+    public static final String S3_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS =
+            "\"accessKeyId\":\"" + S3_ACCESS_KEY_ID_DEFAULT + "\",\n" + "\"secretAccessKey\":\""
+                    + S3_SECRET_ACCESS_KEY_DEFAULT + "\",\n" + "\"region\":\"" + S3_REGION_DEFAULT + "\",\n"
+                    + "\"serviceEndpoint\":\"" + S3_SERVICE_ENDPOINT_DEFAULT + "\"";
 
     // Azure blob storage constants and placeholders
     public static class Azure {
@@ -89,5 +93,10 @@ public class TestConstants {
         public static final String KERBEROS_PASSWORD_DEFAULT = "hdfspassword";
         public static final String KERBEROS_REALM_DEFAULT = "EXAMPLE.COM";
         public static final String KERBEROS_KDC_DEFAULT = "localhost:8800";
+        public static final String HDFS_ENDPOINT_DEFAULT = "hdfs://localhost:31888";
+
+        public static final String HDFS_TEMPLATE_DEFAULT = "(\"hdfs\"=\"" + HDFS_ENDPOINT_DEFAULT + "\")";
+        public static final String HDFS_TEMPLATE_DEFAULT_NO_PARENTHESES_WITH_COLONS =
+                "\"hdfs\":\"" + HDFS_ENDPOINT_DEFAULT + "\"";
     }
 }

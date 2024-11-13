@@ -23,17 +23,13 @@
 
 USE test;
 
-CREATE EXTERNAL DATASET DatasetCopyCustomNull(ColumnType) USING S3
+CREATE EXTERNAL DATASET DatasetCopyCustomNull(ColumnType) USING %adapter%
 (
-("accessKeyId"="dummyAccessKey"),
-("secretAccessKey"="dummySecretKey"),
-("sessionToken"="dummySessionToken"),
-("header"="true"),
-("delimiter"="|"),
-("region"="us-west-2"),
-  ("serviceEndpoint"="http://127.0.0.1:8001"),
-  ("container"="playground"),
-  ("definition"="copy-to-result/csv/custom/null"),
+  %template%,
+  ("header"="true"),
+  ("delimiter"="|"),
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/csv/custom/null"),
   ("format" = "csv"),
   ("requireVersionChangeDetection"="false"),
   ("include"="*.csv")

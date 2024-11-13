@@ -18,18 +18,15 @@
  */
 
 COPY Customer AS c
-TO S3
-PATH ("copy-to-result/default-namespace2", company, "customer", customer_id)
+TO %adapter%
+PATH (%pathprefix% "copy-to-result/default-namespace2", company, "customer", customer_id)
 OVER (
    PARTITION BY c.company company,
                 c.customer_id customer_id
 )
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"json"
 }
 

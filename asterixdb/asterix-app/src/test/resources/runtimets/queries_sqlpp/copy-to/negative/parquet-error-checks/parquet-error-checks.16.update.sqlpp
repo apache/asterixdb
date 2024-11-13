@@ -35,14 +35,11 @@ insert into TestCollection({"id":19, "name": [[[[[[1]]]]]] });
 COPY (
 select id,name from TestCollection c
     ) toWriter
-TO S3
-PATH ("copy-to-result", "parquet-error-checks16")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "parquet-error-checks16")
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"parquet",
     "max-schemas" : "2"
     }

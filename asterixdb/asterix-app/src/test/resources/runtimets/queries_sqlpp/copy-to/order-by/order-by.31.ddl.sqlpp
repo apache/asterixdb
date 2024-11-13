@@ -19,13 +19,10 @@
 
 USE test;
 
-CREATE EXTERNAL DATASET CustomerCarMake2(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="copy-to-result/order-by2"),
+CREATE EXTERNAL DATASET CustomerCarMake2(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
+    ("definition"="%path_prefix%copy-to-result/order-by2"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );

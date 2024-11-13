@@ -21,14 +21,11 @@ USE test;
 COPY (
    SELECT "123" as id
 ) toWriter
-TO S3
-PATH ("copy-to-result", "csv", "type-mismatch")
+TO %adapter%
+PATH (%pathprefix% "copy-to-result", "csv", "type-mismatch")
 AS (id bigint)
 WITH {
-    "accessKeyId":"dummyAccessKey",
-    "secretAccessKey":"dummySecretKey",
-    "region":"us-west-2",
-    "serviceEndpoint":"http://127.0.0.1:8001",
-    "container":"playground",
+    %template_colons%,
+    %additionalProperties%
     "format":"csv"
 }

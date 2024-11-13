@@ -73,7 +73,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
 
     private HDFSExternalFileWriterFactory(ExternalFileWriterConfiguration externalConfig) {
         configuration = externalConfig.getConfiguration();
-        staticPath = externalConfig.getStaticPath();
+        staticPath = HDFSUtils.updateRootPath(externalConfig.getStaticPath(), false);
         pathSourceLocation = externalConfig.getPathSourceLocation();
     }
 
@@ -165,10 +165,10 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
         }
         Path path = new Path(staticPath, "testFile");
         try {
-            FSDataOutputStream outputStream = fs.create(path);
-            fs.deleteOnExit(path);
-            outputStream.write(0);
-            outputStream.close();
+            try (FSDataOutputStream outputStream = fs.create(path)) {
+                fs.deleteOnExit(path);
+                outputStream.write(0);
+            }
         } catch (IOException ex) {
             throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }

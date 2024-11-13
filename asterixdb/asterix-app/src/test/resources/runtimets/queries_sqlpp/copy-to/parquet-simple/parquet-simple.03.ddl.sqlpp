@@ -20,15 +20,11 @@
 USE test;
 
 
-CREATE EXTERNAL DATASET DatasetCopy(ColumnType2) USING S3
+CREATE EXTERNAL DATASET DatasetCopy(ColumnType2) USING %adapter%
 (
-("accessKeyId"="dummyAccessKey"),
-("secretAccessKey"="dummySecretKey"),
-("sessionToken"="dummySessionToken"),
-("region"="us-west-2"),
-  ("serviceEndpoint"="http://127.0.0.1:8001"),
-  ("container"="playground"),
-  ("definition"="copy-to-result/parquet-simple"),
+  %template%,
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/parquet-simple"),
   ("format" = "parquet"),
   ("requireVersionChangeDetection"="false"),
   ("include"="*.parquet")

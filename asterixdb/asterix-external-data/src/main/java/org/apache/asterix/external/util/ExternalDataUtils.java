@@ -27,7 +27,6 @@ import static org.apache.asterix.external.util.ExternalDataConstants.KEY_EXTERNA
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_INCLUDE;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_PATH;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_QUOTE;
-import static org.apache.asterix.external.util.ExternalDataConstants.KEY_READER;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_END;
 import static org.apache.asterix.external.util.ExternalDataConstants.KEY_RECORD_START;
 import static org.apache.asterix.external.util.azure.blob_storage.AzureUtils.validateAzureBlobProperties;
@@ -559,7 +558,8 @@ public class ExternalDataUtils {
             tableMetadataPath = S3Constants.HADOOP_S3_PROTOCOL + "://"
                     + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
                     + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
-        } else if (configuration.get(ExternalDataConstants.KEY_READER).equals(ExternalDataConstants.READER_HDFS)) {
+        } else if (configuration.get(ExternalDataConstants.KEY_READER)
+                .equals(ExternalDataConstants.KEY_ADAPTER_NAME_HDFS)) {
             conf.set(ExternalDataConstants.KEY_HADOOP_FILESYSTEM_URI,
                     configuration.get(ExternalDataConstants.KEY_HDFS_URL));
             tableMetadataPath = configuration.get(ExternalDataConstants.KEY_HDFS_URL) + '/' + tableMetadataPath;
@@ -1103,7 +1103,7 @@ public class ExternalDataUtils {
                 String[] nodePathPair = path.trim().split("://");
                 protocol = nodePathPair[0];
                 break;
-            case ExternalDataConstants.KEY_HDFS_URL:
+            case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
                 protocol = ExternalDataConstants.KEY_HDFS_URL;
                 break;
             default:

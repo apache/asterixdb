@@ -64,15 +64,8 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
     @Override
     protected RecordReader<Void, V> getRecordReader(int splitIndex) throws IOException {
         try {
-            ParquetRecordReaderWrapper readerWrapper;
-            if (ugi != null) {
-                readerWrapper = ugi
-                        .doAs((PrivilegedExceptionAction<ParquetRecordReaderWrapper>) () -> (ParquetRecordReaderWrapper) inputFormat
-                                .getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL));
-            } else {
-                readerWrapper = (ParquetRecordReaderWrapper) inputFormat.getRecordReader(inputSplits[splitIndex], conf,
-                        Reporter.NULL);
-            }
+            ParquetRecordReaderWrapper readerWrapper = ugi == null ? getReader(splitIndex)
+                    : ugi.doAs((PrivilegedExceptionAction<ParquetRecordReaderWrapper>) () -> getReader(splitIndex));
             reader = (RecordReader<Void, V>) readerWrapper;
         } catch (AsterixParquetRuntimeException e) {
             throw e.getHyracksDataException();
@@ -83,5 +76,9 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
             value = reader.createValue();
         }
         return reader;
+    }
+
+    private ParquetRecordReaderWrapper getReader(int splitIndex) throws IOException {
+        return (ParquetRecordReaderWrapper) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
     }
 }

@@ -92,5 +92,261 @@
         <output-dir compare="Text">parquet-empty-array</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="simple-write">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">simple-write</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="default-namespace">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">default-namespace</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-simple">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-simple</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-tweet">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-tweet</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-partition-heterogeneous">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-partition-heterogeneous</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-utf8">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-heterogeneous">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-heterogeneous</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-cover-data-types">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-cover-data-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="parquet-empty-array">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "parquet-input-format")' />
+        <output-dir compare="Text">parquet-empty-array</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
+      <compilation-unit name="order-by">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">order-by</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="early-missing">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">early-missing</output-dir>
+        <expected-error>ASX0064: Path expression produced a value of type 'missing'. Path must be of type string</expected-error>
+        <expected-error>ASX0064: Path expression produced a value of type 'null'. Path must be of type string</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="non-empty-folder">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">non-empty-folder</output-dir>
+        <expected-error>ASX0062: Cannot write to a non-empty directory '/playground/copy-to-result/duplicate-write'</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="supported-adapter-format-compression">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">supported-adapter-format-compression</output-dir>
+        <expected-error>ASX1188: Unsupported writing adapter 'AZUREBLOB'. Supported adapters: [gcs, hdfs, localfs, s3]</expected-error>
+        <expected-error>ASX1189: Unsupported writing format 'avro'. Supported formats: [csv, json, parquet]</expected-error>
+        <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for json are [gzip]</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="parquet-error-checks">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <output-dir compare="Text">parquet-error-checks</output-dir>
+        <expected-error>ASX0037: Type mismatch: expected value of type BINARY, but got the value of type bigint</expected-error>
+        <expected-error>HYR0132: Extra field in the result, field 'second' does not exist at 'nested' in the schema</expected-error>
+        <expected-error>HYR0131: Result does not follow the schema, group type expected but found primitive type at 'nested'</expected-error>
+        <expected-error>HYR0131: Result does not follow the schema, primitive type expected but found group type at 'name'</expected-error>
+        <expected-error>ASX1206: Storage units expected for the field 'row-group-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
+        <expected-error>ASX1206: Storage units expected for the field 'page-size' (e.g., 0.1KB, 100kb, 1mb, 3MB, 8.5GB ...). Provided 'random'</expected-error>
+        <expected-error>ASX1202: Unsupported compression scheme rar. Supported schemes for parquet are [gzip, snappy, zstd]</expected-error>
+        <expected-error>ASX1001: Syntax error</expected-error>
+        <expected-error>ASX1204: 'binary' type not supported in parquet format</expected-error>
+        <expected-error>ASX1205: Invalid Parquet Writer Version provided '3'. Supported values: [1, 2]</expected-error>
+        <expected-error>ASX0039: Expected integer value, got yvghc (in line 22, at column 6)</expected-error>
+        <expected-error>ASX1209: Maximum value allowed for 'max-schemas' is 10. Found 15</expected-error>
+        <expected-error>HYR0133: Schema could not be inferred, empty types found in the result</expected-error>
+        <expected-error>HYR0134: Schema Limit exceeded, maximum number of heterogeneous schemas allowed : '2'</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="empty-over">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">empty-over</output-dir>
+        <expected-error>ASX1001: Syntax error: OVER-clause cannot be empty</expected-error>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="bad-max-objects-per-file">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">bad-max-objects-per-file</output-dir>
+        <expected-error>Minimum value allowed for 'max-objects-per-file' is 1000. Found 2</expected-error>
+        <expected-error>Expected integer value, got hello</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/negative">
+      <compilation-unit name="csv-error-checks">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">csv-error-checks</output-dir>
+        <expected-error>ASX1079: Compilation error: TYPE/AS Expression is required for csv format</expected-error>
+        <expected-error>ASX1082: Cannot find datatype with name wrongDataType (in line 27, at column 4)</expected-error>
+        <expected-error>ASX3124: 'ABCD' is not a valid quote. The length of a quote should be 1</expected-error>
+        <expected-error>ASX3049: 'wrongDelimiter' is not a valid delimiter. The length of a delimiter should be 1</expected-error>
+        <expected-error>ASX3126: 'wrongEscape' is not a valid escape. The length of a escape should be 1</expected-error>
+        <expected-error>ASX3125: 'ABCD' is not a valid force-quote input. The length of a force-quote input should be 1 character</expected-error>
+        <expected-error>ASX1207: 'object' type not supported in csv format</expected-error>
+        <expected-error>ASX1207: 'array' type not supported in csv format</expected-error>
+        <expected-error>Syntax error: Both 'TYPE()' and 'AS()' are provided. Please use either 'TYPE()' or 'AS()'.</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+  </test-group>
+  <test-group name="copy-to/csv">
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="simple-csv">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">simple-csv</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="type-mismatch">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">type-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="delimiter">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">delimiter</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to/csv">
+      <compilation-unit name="header">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">header</output-dir>
+      </compilation-unit>
+    </test-case>
+    <!--    TODO: This test is failing: ASTERIXDB-3529-->
+    <!--    <test-case FilePath="copy-to/csv">-->
+    <!--      <compilation-unit name="quote-escape">-->
+    <!--        <placeholder name="adapter" value="HDFS" />-->
+    <!--        <placeholder name="pathprefix" value='"/playground", ' />-->
+    <!--        <placeholder name="path_prefix" value="/playground/" />-->
+    <!--        <placeholder name="additionalProperties" value="" />-->
+    <!--        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />-->
+    <!--        <output-dir compare="Text">quote-escape</output-dir>-->
+    <!--      </compilation-unit>-->
+    <!--    </test-case>-->
   </test-group>
 </test-suite>

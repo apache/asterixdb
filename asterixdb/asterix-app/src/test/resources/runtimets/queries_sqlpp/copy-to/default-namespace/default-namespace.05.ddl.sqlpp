@@ -17,35 +17,26 @@
  * under the License.
  */
 
-CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="copy-to-result/default-namespace1"),
+CREATE EXTERNAL DATASET CustomerCopy1(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
+    ("definition"="%path_prefix%copy-to-result/default-namespace1"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
-CREATE EXTERNAL DATASET CustomerCopy2(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="copy-to-result/default-namespace2/{company:string}/customer/{customer_id:int}"),
+CREATE EXTERNAL DATASET CustomerCopy2(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
+    ("definition"="%path_prefix%copy-to-result/default-namespace2/{company:string}/customer/{customer_id:int}"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );
 
-CREATE EXTERNAL DATASET CustomerCopy3(OpenType) USING S3 (
-    ("accessKeyId"="dummyAccessKey"),
-    ("secretAccessKey"="dummySecretKey"),
-    ("region"="us-west-2"),
-    ("serviceEndpoint"="http://127.0.0.1:8001"),
-    ("container"="playground"),
-    ("definition"="copy-to-result/default-namespace3/{company:string}/{year:int}"),
+CREATE EXTERNAL DATASET CustomerCopy3(OpenType) USING %adapter% (
+    %template%,
+    %additional_Properties%,
+    ("definition"="%path_prefix%copy-to-result/default-namespace3/{company:string}/{year:int}"),
     ("embed-filter-values" = "false"),
     ("format"="json")
 );
