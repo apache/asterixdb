@@ -50,14 +50,12 @@
         <output-dir compare="Clean-JSON">python_open_type_validation</output-dir>
       </compilation-unit>
     </test-case>
-    <!-- TODO(Ian): disabling this test as it is intermittently failing as the output is dependent on the python version running on the test machine
     <test-case FilePath="external-library" check-warnings="true">
       <compilation-unit name="py_function_error">
         <output-dir compare="Clean-JSON">py_function_error</output-dir>
         <expected-warn>ArithmeticError: oof</expected-warn>
       </compilation-unit>
     </test-case>
-    -->
     <test-case FilePath="external-library">
       <compilation-unit name="mysentiment_twitter">
         <output-dir compare="Text">mysentiment_twitter</output-dir>
