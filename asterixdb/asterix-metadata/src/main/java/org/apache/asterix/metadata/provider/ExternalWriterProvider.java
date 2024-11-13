@@ -148,7 +148,7 @@ public class ExternalWriterProvider {
         String staticPath = staticPathExpr != null ? ConstantExpressionUtil.getStringConstant(staticPathExpr) : null;
         IExternalFileWriterFactory fileWriterFactory =
                 ExternalWriterProvider.createWriterFactory(appCtx, sink, staticPath, pathSourceLocation);
-        fileWriterFactory.validate();
+        fileWriterFactory.validate(appCtx);
         String fileExtension = ExternalWriterProvider.getFileExtension(sink);
         int maxResult = ExternalWriterProvider.getMaxResult(sink);
 

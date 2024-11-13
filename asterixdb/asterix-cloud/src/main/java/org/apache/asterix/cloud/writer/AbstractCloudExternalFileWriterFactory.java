@@ -30,6 +30,7 @@ import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.WriterSingleBufferProvider;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudWriter;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -60,17 +61,17 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
         writeBufferSize = externalConfig.getWriteBufferSize();
     }
 
-    abstract ICloudClient createCloudClient() throws CompilationException;
+    abstract ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException;
 
     abstract boolean isNoContainerFoundException(IOException e);
 
     abstract boolean isSdkException(Throwable e);
 
-    final void buildClient() throws HyracksDataException {
+    final void buildClient(IApplicationContext appCtx) throws HyracksDataException {
         try {
             synchronized (this) {
                 if (cloudClient == null) {
-                    cloudClient = createCloudClient();
+                    cloudClient = createCloudClient(appCtx);
                 }
             }
         } catch (CompilationException e) {
@@ -79,8 +80,8 @@ abstract class AbstractCloudExternalFileWriterFactory implements IExternalFileWr
     }
 
     @Override
-    public final void validate() throws AlgebricksException {
-        ICloudClient testClient = createCloudClient();
+    public final void validate(IApplicationContext appCtx) throws AlgebricksException {
+        ICloudClient testClient = createCloudClient(appCtx);
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
         if (bucket == null || bucket.isEmpty()) {

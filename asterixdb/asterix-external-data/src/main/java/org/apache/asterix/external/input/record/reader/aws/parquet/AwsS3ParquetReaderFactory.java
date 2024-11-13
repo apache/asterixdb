@@ -18,7 +18,7 @@
  */
 package org.apache.asterix.external.input.record.reader.aws.parquet;
 
-import static org.apache.asterix.external.util.aws.s3.S3Utils.configureAwsS3HdfsJobConf;
+import static org.apache.asterix.external.util.aws.s3.S3AuthUtils.configureAwsS3HdfsJobConf;
 import static org.apache.asterix.external.util.aws.s3.S3Utils.listS3Objects;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
@@ -73,7 +74,8 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
             configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
             String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-            List<S3Object> filesOnly = listS3Objects(configuration, includeExcludeMatcher, warningCollector,
+            IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
+            List<S3Object> filesOnly = listS3Objects(appCtx, configuration, includeExcludeMatcher, warningCollector,
                     externalDataPrefix, evaluator);
             path = buildPathURIs(container, filesOnly);
         }

@@ -24,9 +24,10 @@ import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.aws.s3.S3ClientConfig;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3Utils;
+import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
 import org.apache.asterix.runtime.writer.ExternalFileWriterConfiguration;
 import org.apache.asterix.runtime.writer.IExternalFileWriter;
 import org.apache.asterix.runtime.writer.IExternalFileWriterFactory;
@@ -61,9 +62,9 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
     }
 
     @Override
-    ICloudClient createCloudClient() throws CompilationException {
+    ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         S3ClientConfig config = S3ClientConfig.of(configuration, writeBufferSize);
-        return new S3CloudClient(config, S3Utils.buildAwsS3Client(configuration),
+        return new S3CloudClient(config, S3AuthUtils.buildAwsS3Client(appCtx, configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
     }
 
@@ -80,7 +81,7 @@ public final class S3ExternalFileWriterFactory extends AbstractCloudExternalFile
     @Override
     public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
-        buildClient();
+        buildClient(((IApplicationContext) context.getJobletContext().getServiceContext().getApplicationContext()));
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         IExternalPrinter printer = printerFactory.createPrinter();
         IWarningCollector warningCollector = context.getWarningCollector();

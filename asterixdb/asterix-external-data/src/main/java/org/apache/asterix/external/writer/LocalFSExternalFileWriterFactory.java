@@ -20,6 +20,7 @@ package org.apache.asterix.external.writer;
 
 import java.io.File;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -80,7 +81,7 @@ public final class LocalFSExternalFileWriterFactory implements IExternalFileWrit
     }
 
     @Override
-    public void validate() throws AlgebricksException {
+    public void validate(IApplicationContext appCtx) throws AlgebricksException {
         // A special case validation for a single node cluster
         if (singleNodeCluster && staticPath != null) {
             if (isNonEmptyDirectory(new File(staticPath))) {

@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
+import org.apache.asterix.app.external.ExternalCredentialsCache;
+import org.apache.asterix.app.external.ExternalCredentialsCacheUpdater;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.common.api.IConfigValidator;
 import org.apache.asterix.common.api.IConfigValidatorFactory;
@@ -55,6 +57,8 @@ import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.dataflow.IDataPartitioningProvider;
 import org.apache.asterix.common.external.IAdapterFactoryService;
+import org.apache.asterix.common.external.IExternalCredentialsCache;
+import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
 import org.apache.asterix.common.metadata.IMetadataBootstrap;
 import org.apache.asterix.common.metadata.IMetadataLockUtil;
 import org.apache.asterix.common.replication.INcLifecycleCoordinator;
@@ -127,6 +131,8 @@ public class CcApplicationContext implements ICcApplicationContext {
     private final IOManager ioManager;
     private final INamespacePathResolver namespacePathResolver;
     private final INamespaceResolver namespaceResolver;
+    private final IExternalCredentialsCache externalCredentialsCache;
+    private final IExternalCredentialsCacheUpdater externalCredentialsCacheUpdater;
 
     public CcApplicationContext(ICCServiceContext ccServiceCtx, HyracksConnection hcc,
             Supplier<IMetadataBootstrap> metadataBootstrapSupplier, IGlobalRecoveryManager globalRecoveryManager,
@@ -177,6 +183,8 @@ public class CcApplicationContext implements ICcApplicationContext {
         this.globalTxManager = globalTxManager;
         this.ioManager = ioManager;
         dataPartitioningProvider = DataPartitioningProvider.create(this);
+        externalCredentialsCache = new ExternalCredentialsCache();
+        externalCredentialsCacheUpdater = new ExternalCredentialsCacheUpdater(this);
     }
 
     @Override
@@ -414,5 +422,15 @@ public class CcApplicationContext implements ICcApplicationContext {
     @Override
     public IOManager getIoManager() {
         return ioManager;
+    }
+
+    @Override
+    public IExternalCredentialsCache getExternalCredentialsCache() {
+        return externalCredentialsCache;
+    }
+
+    @Override
+    public IExternalCredentialsCacheUpdater getExternalCredentialsCacheUpdater() {
+        return externalCredentialsCacheUpdater;
     }
 }

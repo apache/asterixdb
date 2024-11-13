@@ -16,14 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.runtime.writer;
+package org.apache.asterix.common.external;
 
-import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
+import java.util.Map;
 
-public interface IExternalWriterFactoryValidator {
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
+public interface IExternalCredentialsCacheUpdater {
+
     /**
-     * Perform the necessary validation to ensure the writer has the proper permissions
+     * Generates new credentials and caches them
+     *
+     * @param configuration configuration containing external collection details
      */
-    void validate(IApplicationContext appCtx) throws AlgebricksException;
+    Object generateAndCacheCredentials(Map<String, String> configuration)
+            throws HyracksDataException, CompilationException;
 }

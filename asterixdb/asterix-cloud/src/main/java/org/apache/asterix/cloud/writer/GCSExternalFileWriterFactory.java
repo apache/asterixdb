@@ -24,6 +24,7 @@ import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.google.gcs.GCSClientConfig;
 import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
@@ -61,7 +62,7 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     }
 
     @Override
-    ICloudClient createCloudClient() throws CompilationException {
+    ICloudClient createCloudClient(IApplicationContext appCtx) throws CompilationException {
         GCSClientConfig config = GCSClientConfig.of(configuration, writeBufferSize);
         return new GCSCloudClient(config, GCSUtils.buildClient(configuration),
                 ICloudGuardian.NoOpCloudGuardian.INSTANCE);
@@ -80,7 +81,7 @@ public final class GCSExternalFileWriterFactory extends AbstractCloudExternalFil
     @Override
     public IExternalFileWriter createWriter(IHyracksTaskContext context, IExternalPrinterFactory printerFactory)
             throws HyracksDataException {
-        buildClient();
+        buildClient(((IApplicationContext) context.getJobletContext().getServiceContext().getApplicationContext()));
         String bucket = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
         IExternalPrinter printer = printerFactory.createPrinter();
         IWarningCollector warningCollector = context.getWarningCollector();

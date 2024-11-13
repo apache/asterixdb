@@ -994,6 +994,7 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             Map<String, String> configuration, ARecordType itemType, IWarningCollector warningCollector,
             IExternalFilterEvaluatorFactory filterEvaluatorFactory) throws AlgebricksException {
         try {
+            configuration.put(ExternalDataConstants.KEY_DATASET, dataset.getDatasetName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATABASE, dataset.getDatabaseName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());

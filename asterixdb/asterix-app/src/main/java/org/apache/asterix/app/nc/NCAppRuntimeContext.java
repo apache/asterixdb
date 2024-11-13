@@ -32,6 +32,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 
 import org.apache.asterix.active.ActiveManager;
+import org.apache.asterix.app.external.ExternalCredentialsCache;
+import org.apache.asterix.app.external.ExternalCredentialsCacheUpdater;
 import org.apache.asterix.app.result.ResultReader;
 import org.apache.asterix.cloud.CloudConfigurator;
 import org.apache.asterix.cloud.LocalPartitionBootstrapper;
@@ -63,6 +65,8 @@ import org.apache.asterix.common.context.DatasetLifecycleManager;
 import org.apache.asterix.common.context.DiskWriteRateLimiterProvider;
 import org.apache.asterix.common.context.GlobalVirtualBufferCache;
 import org.apache.asterix.common.context.IStorageComponentProvider;
+import org.apache.asterix.common.external.IExternalCredentialsCache;
+import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
 import org.apache.asterix.common.library.ILibraryManager;
 import org.apache.asterix.common.replication.IReplicationChannel;
 import org.apache.asterix.common.replication.IReplicationManager;
@@ -186,6 +190,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private final INamespacePathResolver namespacePathResolver;
     private final INamespaceResolver namespaceResolver;
     private IDiskCacheMonitoringService diskCacheService;
+    protected IExternalCredentialsCache externalCredentialsCache;
+    protected IExternalCredentialsCacheUpdater externalCredentialsCacheUpdater;
 
     public NCAppRuntimeContext(INCServiceContext ncServiceContext, NCExtensionManager extensionManager,
             IPropertiesFactory propertiesFactory, INamespaceResolver namespaceResolver,
@@ -210,6 +216,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         cacheManager = new CacheManager();
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
+        this.externalCredentialsCache = new ExternalCredentialsCache();
+        this.externalCredentialsCacheUpdater = new ExternalCredentialsCacheUpdater(this);
     }
 
     @Override
@@ -747,5 +755,15 @@ public class NCAppRuntimeContext implements INcApplicationContext {
     private int getResourceIdBlockSize() {
         return isCloudDeployment() ? storageProperties.getStoragePartitionsCount()
                 : ncServiceContext.getIoManager().getIODevices().size();
+    }
+
+    @Override
+    public IExternalCredentialsCache getExternalCredentialsCache() {
+        return externalCredentialsCache;
+    }
+
+    @Override
+    public IExternalCredentialsCacheUpdater getExternalCredentialsCacheUpdater() {
+        return externalCredentialsCacheUpdater;
     }
 }

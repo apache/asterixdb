@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
@@ -47,8 +48,10 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
     public AsterixInputStream createInputStream(IExternalDataRuntimeContext context) throws HyracksDataException {
         IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
         int partition = context.getPartition();
-        return new AwsS3InputStream(configuration, partitionWorkLoadsBasedOnSize.get(partition).getFilePaths(),
-                valueEmbedder);
+        IApplicationContext ncAppCtx = (IApplicationContext) context.getTaskContext().getJobletContext()
+                .getServiceContext().getApplicationContext();
+        return new AwsS3InputStream(ncAppCtx, configuration,
+                partitionWorkLoadsBasedOnSize.get(partition).getFilePaths(), valueEmbedder);
     }
 
     @Override
@@ -65,7 +68,8 @@ public class AwsS3InputStreamFactory extends AbstractExternalInputStreamFactory 
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         // get the items
-        List<S3Object> filesOnly = S3Utils.listS3Objects(configuration, includeExcludeMatcher, warningCollector,
+        IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
+        List<S3Object> filesOnly = S3Utils.listS3Objects(appCtx, configuration, includeExcludeMatcher, warningCollector,
                 externalDataPrefix, evaluator);
 
         // Distribute work load amongst the partitions

@@ -26,6 +26,7 @@ import java.security.PrivilegedExceptionAction;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -123,7 +124,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
     }
 
     @Override
-    public void validate() throws AlgebricksException {
+    public void validate(IApplicationContext appCtx) throws AlgebricksException {
         Configuration conf = HDFSUtils.configureHDFSwrite(configuration);
         credentials = HDFSUtils.configureHadoopAuthentication(configuration, conf);
         try {
