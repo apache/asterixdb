@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.external.parser;
 
-import static org.apache.avro.Schema.Type.NULL;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.builders.IARecordBuilder;
@@ -34,7 +34,8 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.aws.delta.converter.DeltaConverterContext;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -63,11 +64,11 @@ import io.delta.kernel.types.TimestampNTZType;
 import io.delta.kernel.types.TimestampType;
 
 public class DeltaDataParser extends AbstractDataParser implements IRecordDataParser<Row> {
-    private final ParserContext parserContext;
+    private final DeltaConverterContext parserContext;
     private final IExternalFilterValueEmbedder valueEmbedder;
 
-    public DeltaDataParser(IExternalDataRuntimeContext context) {
-        parserContext = new ParserContext();
+    public DeltaDataParser(IExternalDataRuntimeContext context, Map<String, String> conf) {
+        parserContext = new DeltaConverterContext(conf);
         valueEmbedder = context.getValueEmbedder();
     }
 
@@ -160,7 +161,6 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         if (isNull) {
             return ATypeTag.NULL;
         }
-
         if (schema instanceof BooleanType) {
             return ATypeTag.BOOLEAN;
         } else if (schema instanceof ShortType || schema instanceof IntegerType || schema instanceof LongType) {
@@ -170,15 +170,24 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         } else if (schema instanceof StringType) {
             return ATypeTag.STRING;
         } else if (schema instanceof DateType) {
-            return ATypeTag.BIGINT;
+            if (parserContext.isDateAsInt()) {
+                return ATypeTag.INTEGER;
+            }
+            return ATypeTag.DATE;
         } else if (schema instanceof TimestampType || schema instanceof TimestampNTZType) {
-            return ATypeTag.BIGINT;
+            if (parserContext.isTimestampAsLong()) {
+                return ATypeTag.BIGINT;
+            }
+            return ATypeTag.DATETIME;
         } else if (schema instanceof BinaryType) {
             return ATypeTag.BINARY;
         } else if (schema instanceof ArrayType) {
             return ATypeTag.ARRAY;
         } else if (schema instanceof StructType) {
             return ATypeTag.OBJECT;
+        } else if (schema instanceof DecimalType) {
+            ensureDecimalToDoubleEnabled(schema, parserContext);
+            return ATypeTag.DOUBLE;
         } else {
             throw createUnsupportedException(schema);
         }
@@ -204,11 +213,26 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         } else if (schema instanceof StringType) {
             serializeString(row.getString(index), out);
         } else if (schema instanceof DateType) {
-            serializeDate(row.getInt(index), out);
+            if (parserContext.isDateAsInt()) {
+                serializeLong(row.getInt(index), out);
+            } else {
+                parserContext.serializeDate(row.getInt(index), out);
+            }
         } else if (schema instanceof TimestampType) {
-            serializeTimestamp(row.getLong(index), out);
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(row.getLong(index));
+            int offset = parserContext.getTimeZoneOffset();
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis + offset, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis + offset, out);
+            }
         } else if (schema instanceof TimestampNTZType) {
-            serializeTimestamp(row.getLong(index), out);
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(row.getLong(index));
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
         } else if (schema instanceof StructType) {
             parseObject(row.getStruct(index), out);
         } else if (schema instanceof ArrayType) {
@@ -240,11 +264,26 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         } else if (schema instanceof StringType) {
             serializeString(column.getString(index), out);
         } else if (schema instanceof DateType) {
-            serializeDate(column.getInt(index), out);
+            if (parserContext.isDateAsInt()) {
+                serializeLong(column.getInt(index), out);
+            } else {
+                parserContext.serializeDate(column.getInt(index), out);
+            }
         } else if (schema instanceof TimestampType) {
-            serializeTimestamp(column.getLong(index), out);
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(column.getLong(index));
+            int offset = parserContext.getTimeZoneOffset();
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis + offset, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis + offset, out);
+            }
         } else if (schema instanceof TimestampNTZType) {
-            serializeTimestamp(column.getLong(index), out);
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(column.getLong(index));
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
         } else if (schema instanceof ArrayType) {
             parseArray((ArrayType) schema, column.getArray(index), out);
         } else if (schema instanceof StructType) {
@@ -273,21 +312,19 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         stringSerde.serialize(aString, out);
     }
 
-    private void serializeDate(Object value, DataOutput out) throws HyracksDataException {
-        aInt32.setValue((Integer) value);
-        int32Serde.serialize(aInt32, out);
-    }
-
-    private void serializeTimestamp(Object value, DataOutput out) throws HyracksDataException {
-        aInt64.setValue(TimeUnit.MICROSECONDS.toMillis((Long) value));
-        int64Serde.serialize(aInt64, out);
-    }
-
     private void serializeDecimal(BigDecimal value, DataOutput out) throws HyracksDataException {
         serializeDouble(value.doubleValue(), out);
     }
 
     private static HyracksDataException createUnsupportedException(DataType schema) {
         return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Delta Parser", schema.toString());
+    }
+
+    private static void ensureDecimalToDoubleEnabled(DataType type, DeltaConverterContext context)
+            throws RuntimeDataException {
+        if (!context.isDecimalToDoubleEnabled()) {
+            throw new RuntimeDataException(ErrorCode.PARQUET_SUPPORTED_TYPE_WITH_OPTION, type.toString(),
+                    ExternalDataConstants.ParquetOptions.DECIMAL_TO_DOUBLE);
+        }
     }
 }

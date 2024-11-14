@@ -48,6 +48,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.TimeZone;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,6 +111,8 @@ import org.apache.iceberg.hadoop.HadoopTables;
 import org.apache.iceberg.io.CloseableIterable;
 
 public class ExternalDataUtils {
+
+    private static final Set<String> validTimeZones = Set.of(TimeZone.getAvailableIDs());
     private static final Map<ATypeTag, IValueParserFactory> valueParserFactoryMap = new EnumMap<>(ATypeTag.class);
     private static final int DEFAULT_MAX_ARGUMENT_SZ = 1024 * 1024;
     private static final int HEADER_FUDGE = 64;
@@ -492,6 +496,11 @@ public class ExternalDataUtils {
                 || configuration.get(ExternalDataConstants.KEY_FORMAT).equals(ExternalDataConstants.FORMAT_PARQUET))) {
             throw new CompilationException(ErrorCode.INVALID_DELTA_TABLE_FORMAT,
                     configuration.get(ExternalDataConstants.KEY_FORMAT));
+        }
+        if (configuration.containsKey(ExternalDataConstants.DeltaOptions.TIMEZONE)
+                && !validTimeZones.contains(configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE))) {
+            throw new CompilationException(ErrorCode.INVALID_TIMEZONE,
+                    configuration.get(ExternalDataConstants.DeltaOptions.TIMEZONE));
         }
     }
 
@@ -928,7 +937,7 @@ public class ExternalDataUtils {
             if (datasetRecordType.getFieldTypes().length != 0) {
                 throw new CompilationException(ErrorCode.UNSUPPORTED_TYPE_FOR_PARQUET, datasetRecordType.getTypeName());
             } else if (properties.containsKey(ParquetOptions.TIMEZONE)
-                    && !ParquetOptions.VALID_TIME_ZONES.contains(properties.get(ParquetOptions.TIMEZONE))) {
+                    && !validTimeZones.contains(properties.get(ParquetOptions.TIMEZONE))) {
                 //Ensure the configured time zone id is correct
                 throw new CompilationException(ErrorCode.INVALID_TIMEZONE, properties.get(ParquetOptions.TIMEZONE));
             }

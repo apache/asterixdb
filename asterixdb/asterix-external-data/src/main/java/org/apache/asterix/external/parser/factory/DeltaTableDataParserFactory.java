@@ -60,7 +60,6 @@ public class DeltaTableDataParserFactory extends AbstractGenericDataParserFactor
     }
 
     private DeltaDataParser createParser(IExternalDataRuntimeContext context) {
-        return new DeltaDataParser(context);
+        return new DeltaDataParser(context, configuration);
     }
-
 }

@@ -19,7 +19,6 @@
 package org.apache.asterix.external.util;
 
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -328,6 +327,16 @@ public class ExternalDataConstants {
         WRITER_SUPPORTED_COMPRESSION = Set.of(KEY_COMPRESSION_GZIP);
     }
 
+    public static class DeltaOptions {
+        private DeltaOptions() {
+        }
+
+        public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
+        public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
+        public static final String DATE_AS_INT = "date-to-int";
+        public static final String TIMEZONE = "timezone";
+    }
+
     public static class ParquetOptions {
         private ParquetOptions() {
         }
@@ -357,10 +366,5 @@ public class ExternalDataConstants {
          */
         public static final String TIMEZONE = "timezone";
         public static final String HADOOP_TIMEZONE = ASTERIX_HADOOP_PREFIX + TIMEZONE;
-
-        /**
-         * Valid time zones that are supported by Java
-         */
-        public static final Set<String> VALID_TIME_ZONES = Set.of(TimeZone.getAvailableIDs());
     }
 }
