@@ -25,8 +25,6 @@ import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_TYPE;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_UNAUTHENTICATED;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_ENDPOINT;
@@ -37,7 +35,6 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +56,10 @@ import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.json.JsonReadFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.paging.Page;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.BaseServiceException;
@@ -71,6 +72,11 @@ public class GCSUtils {
     private GCSUtils() {
         throw new AssertionError("do not instantiate");
 
+    }
+
+    private static final ObjectMapper JSON_CREDENTIALS_OBJECT_MAPPER = new ObjectMapper();
+    static {
+        JSON_CREDENTIALS_OBJECT_MAPPER.configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
     }
 
     /**
@@ -218,7 +224,8 @@ public class GCSUtils {
      * @param configuration      properties
      * @param numberOfPartitions number of partitions in the cluster
      */
-    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration, int numberOfPartitions) {
+    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration, int numberOfPartitions)
+            throws AlgebricksException {
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
         String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
 
@@ -234,15 +241,25 @@ public class GCSUtils {
         //        conf.set(GCSConstants.HADOOP_BATCH_THREADS, String.valueOf(numberOfPartitions));
 
         // authentication method
-        // TODO(htowaileb): find a way to pass the content instead of the path to keyfile, this line is temporary
-        Path credentials = Path.of("credentials.json");
         if (jsonCredentials == null) {
             // anonymous access
             conf.set(HADOOP_AUTH_TYPE, HADOOP_AUTH_UNAUTHENTICATED);
         } else {
-            // TODO(htowaileb) need to pass the file content
-            conf.set(HADOOP_AUTH_TYPE, HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE);
-            conf.set(HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH, credentials.toAbsolutePath().toString());
+            try {
+                JsonNode jsonCreds = JSON_CREDENTIALS_OBJECT_MAPPER.readTree(jsonCredentials);
+                // Setting these values instead of HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH is supported
+                // in com.google.cloud.bigdataoss:util-hadoop only up to version hadoop3-2.2.x and is removed in
+                // version 3.x.y, which also removed support for hadoop-2
+                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.PRIVATE_KEY_ID,
+                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.PRIVATE_KEY_ID).asText());
+                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.PRIVATE_KEY,
+                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.PRIVATE_KEY).asText());
+                conf.set(GCSConstants.HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS.CLIENT_EMAIL,
+                        jsonCreds.get(GCSConstants.JSON_CREDENTIALS_FIELDS.CLIENT_EMAIL).asText());
+            } catch (JsonProcessingException e) {
+                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "Unable to parse Json Credentials",
+                        getMessageOrToString(e));
+            }
         }
 
         // set endpoint if provided, default is https://storage.googleapis.com/
