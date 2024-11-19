@@ -26,4 +26,11 @@ public interface IRateLimiter {
      * Acquire permit or wait if rate limit exceeded
      */
     void acquire();
+
+    /**
+     * Get the number of throttled requests
+     *
+     * @return the number of throttled requests
+     */
+    long getThrottleCount();
 }

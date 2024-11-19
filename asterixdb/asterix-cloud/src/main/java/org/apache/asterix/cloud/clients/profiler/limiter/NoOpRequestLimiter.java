@@ -38,4 +38,14 @@ public final class NoOpRequestLimiter implements IRequestRateLimiter {
     public void listRequest() {
         // NoOp
     }
+
+    @Override
+    public long getReadThrottleCount() {
+        return 0;
+    }
+
+    @Override
+    public long getWriteThrottleCount() {
+        return 0;
+    }
 }

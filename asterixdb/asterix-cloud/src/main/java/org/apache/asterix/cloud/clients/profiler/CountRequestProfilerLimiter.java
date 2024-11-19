@@ -140,6 +140,16 @@ public class CountRequestProfilerLimiter implements IRequestProfilerLimiter {
         return multipartDownloadCounter.get();
     }
 
+    @Override
+    public long getReadThrottleCount() {
+        return limiter.getReadThrottleCount();
+    }
+
+    @Override
+    public long getWriteThrottleCount() {
+        return limiter.getWriteThrottleCount();
+    }
+
     private void log() {
         if (LOGGER.isEnabled(LOG_LEVEL)) {
             long currentTime = System.nanoTime();

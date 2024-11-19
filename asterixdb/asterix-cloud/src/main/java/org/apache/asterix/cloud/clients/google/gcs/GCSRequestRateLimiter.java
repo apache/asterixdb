@@ -18,40 +18,12 @@
  */
 package org.apache.asterix.cloud.clients.google.gcs;
 
-import org.apache.asterix.cloud.clients.profiler.limiter.IRateLimiter;
-import org.apache.asterix.cloud.clients.profiler.limiter.IRequestRateLimiter;
-import org.apache.asterix.cloud.clients.profiler.limiter.NoOpRateLimiter;
-import org.apache.asterix.cloud.clients.profiler.limiter.TokenBasedRateLimiter;
+import org.apache.asterix.cloud.clients.AbstractCloudRequestRateLimiter;
 
-public class GCSRequestRateLimiter implements IRequestRateLimiter {
-    private final IRateLimiter writeLimiter;
-    private final IRateLimiter readLimiter;
+public class GCSRequestRateLimiter extends AbstractCloudRequestRateLimiter {
 
     public GCSRequestRateLimiter(GCSClientConfig config) {
-        long tokenAcquireTimeout = config.getTokenAcquireTimeout();
-        this.writeLimiter = createLimiter(config.getWriteMaxRequestsPerSeconds(), tokenAcquireTimeout);
-        this.readLimiter = createLimiter(config.getReadMaxRequestsPerSeconds(), tokenAcquireTimeout);
-    }
-
-    @Override
-    public void writeRequest() {
-        writeLimiter.acquire();
-    }
-
-    @Override
-    public void readRequest() {
-        readLimiter.acquire();
-    }
-
-    @Override
-    public void listRequest() {
-        readLimiter.acquire();
-    }
-
-    private static IRateLimiter createLimiter(int maxRequestsPerSecond, long tokeAcquireTimeout) {
-        if (maxRequestsPerSecond > 0) {
-            return new TokenBasedRateLimiter(maxRequestsPerSecond, tokeAcquireTimeout);
-        }
-        return NoOpRateLimiter.INSTANCE;
+        super(config.getWriteMaxRequestsPerSeconds(), config.getReadMaxRequestsPerSeconds(),
+                config.getTokenAcquireTimeout());
     }
 }

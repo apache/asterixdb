@@ -28,6 +28,7 @@ import org.apache.logging.log4j.Logger;
 public final class TokenBasedRateLimiter implements IRateLimiter {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long SECOND_NANO = TimeUnit.SECONDS.toNanos(1);
+    private final AtomicLong throttleCount = new AtomicLong();
     private final long acquireTimeoutNano;
     private final int maxTokensPerSecond;
     private final Semaphore semaphore;
@@ -54,12 +55,18 @@ public final class TokenBasedRateLimiter implements IRateLimiter {
                 if (semaphore.tryAcquire(acquireTimeoutNano, TimeUnit.NANOSECONDS)) {
                     return;
                 }
+                throttleCount.incrementAndGet();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 LOGGER.debug("Interrupted while waiting for acquiring a request token", e);
                 return;
             }
         }
+    }
+
+    @Override
+    public long getThrottleCount() {
+        return throttleCount.get();
     }
 
     private void refillTokens() {

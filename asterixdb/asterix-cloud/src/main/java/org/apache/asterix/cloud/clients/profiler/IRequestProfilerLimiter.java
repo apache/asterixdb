@@ -47,4 +47,7 @@ public interface IRequestProfilerLimiter {
 
     long objectMultipartDownloadCount();
 
+    long getReadThrottleCount();
+
+    long getWriteThrottleCount();
 }

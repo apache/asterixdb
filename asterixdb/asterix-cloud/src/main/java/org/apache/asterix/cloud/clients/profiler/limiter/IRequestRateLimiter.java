@@ -37,4 +37,18 @@ public interface IRequestRateLimiter {
      * Perform a list request
      */
     void listRequest();
+
+    /**
+     * Get the number of throttled read requests
+     *
+     * @return the number of throttled read requests
+     */
+    long getReadThrottleCount();
+
+    /**
+     * Get the number of throttled write requests
+     *
+     * @return the number of throttled write requests
+     */
+    long getWriteThrottleCount();
 }

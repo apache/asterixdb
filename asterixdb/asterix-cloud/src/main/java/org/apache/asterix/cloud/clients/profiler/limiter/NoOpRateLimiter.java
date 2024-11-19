@@ -28,4 +28,9 @@ public class NoOpRateLimiter implements IRateLimiter {
     public void acquire() {
         // NoOp
     }
+
+    @Override
+    public long getThrottleCount() {
+        return 0;
+    }
 }

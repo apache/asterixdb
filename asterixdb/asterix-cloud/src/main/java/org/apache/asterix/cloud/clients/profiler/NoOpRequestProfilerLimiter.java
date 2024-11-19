@@ -93,4 +93,14 @@ public class NoOpRequestProfilerLimiter implements IRequestProfilerLimiter {
     public long objectMultipartDownloadCount() {
         return 0;
     }
+
+    @Override
+    public long getReadThrottleCount() {
+        return 0;
+    }
+
+    @Override
+    public long getWriteThrottleCount() {
+        return 0;
+    }
 }
