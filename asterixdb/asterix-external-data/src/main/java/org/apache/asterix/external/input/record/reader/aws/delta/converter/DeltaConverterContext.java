@@ -19,6 +19,7 @@
 package org.apache.asterix.external.input.record.reader.aws.delta.converter;
 
 import java.io.DataOutput;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -32,6 +33,7 @@ import org.apache.asterix.om.base.AMutableDateTime;
 import org.apache.asterix.om.types.BuiltinType;
 import org.apache.hyracks.api.dataflow.value.ISerializerDeserializer;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.Warning;
 
 public class DeltaConverterContext extends ParserContext {
     @SuppressWarnings("unchecked")
@@ -47,8 +49,10 @@ public class DeltaConverterContext extends ParserContext {
     private final int timeZoneOffset;
     private final AMutableDate mutableDate = new AMutableDate(0);
     private final AMutableDateTime mutableDateTime = new AMutableDateTime(0);
+    private final List<Warning> warnings;
 
-    public DeltaConverterContext(Map<String, String> configuration) {
+    public DeltaConverterContext(Map<String, String> configuration, List<Warning> warnings) {
+        this.warnings = warnings;
         decimalToDouble = Boolean.parseBoolean(configuration
                 .getOrDefault(ExternalDataConstants.DeltaOptions.DECIMAL_TO_DOUBLE, ExternalDataConstants.FALSE));
         timestampAsLong = Boolean.parseBoolean(configuration
@@ -95,5 +99,9 @@ public class DeltaConverterContext extends ParserContext {
 
     public boolean isDateAsInt() {
         return dateAsInt;
+    }
+
+    public List<Warning> getWarnings() {
+        return warnings;
     }
 }

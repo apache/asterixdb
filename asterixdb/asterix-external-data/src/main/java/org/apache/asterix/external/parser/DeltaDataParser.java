@@ -23,6 +23,8 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +44,7 @@ import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 
@@ -68,7 +71,8 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
     private final IExternalFilterValueEmbedder valueEmbedder;
 
     public DeltaDataParser(IExternalDataRuntimeContext context, Map<String, String> conf) {
-        parserContext = new DeltaConverterContext(conf);
+        List<Warning> warnings = new ArrayList<>();
+        parserContext = new DeltaConverterContext(conf, warnings);
         valueEmbedder = context.getValueEmbedder();
     }
 
@@ -91,7 +95,7 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         for (int i = 0; i < schema.fields().size(); i++) {
             DataType fieldSchema = schema.fields().get(i).getDataType();
             String fieldName = schema.fieldNames().get(i);
-            ATypeTag typeTag = getTypeTag(fieldSchema, record.isNullAt(i));
+            ATypeTag typeTag = getTypeTag(fieldSchema, record.isNullAt(i), parserContext);
             IValueReference value = null;
             if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
                 value = valueEmbedder.getEmbeddedValue();
@@ -120,7 +124,7 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         for (int i = 0; i < schema.fields().size(); i++) {
             DataType fieldSchema = schema.fields().get(i).getDataType();
             String fieldName = schema.fieldNames().get(i);
-            ATypeTag typeTag = getTypeTag(fieldSchema, column.getChild(i).isNullAt(index));
+            ATypeTag typeTag = getTypeTag(fieldSchema, column.getChild(i).isNullAt(index), parserContext);
             IValueReference value = null;
             if (valueEmbedder.shouldEmbed(fieldName, typeTag)) {
                 value = valueEmbedder.getEmbeddedValue();
@@ -157,7 +161,8 @@ public class DeltaDataParser extends AbstractDataParser implements IRecordDataPa
         parserContext.exitCollection(valueBuffer, arrayBuilder);
     }
 
-    private ATypeTag getTypeTag(DataType schema, boolean isNull) throws HyracksDataException {
+    public static ATypeTag getTypeTag(DataType schema, boolean isNull, DeltaConverterContext parserContext)
+            throws HyracksDataException {
         if (isNull) {
             return ATypeTag.NULL;
         }

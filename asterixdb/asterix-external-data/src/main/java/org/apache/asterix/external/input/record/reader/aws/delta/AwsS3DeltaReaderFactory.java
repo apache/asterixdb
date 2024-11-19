@@ -20,6 +20,7 @@ package org.apache.asterix.external.input.record.reader.aws.delta;
 
 import static org.apache.asterix.external.util.aws.s3.S3Constants.SERVICE_END_POINT_FIELD_NAME;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -34,8 +35,12 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.record.reader.aws.delta.converter.DeltaConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
+import org.apache.asterix.om.types.ARecordType;
+import org.apache.asterix.runtime.projection.FunctionCallInformation;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
@@ -43,6 +48,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.application.IServiceContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -52,6 +58,7 @@ import io.delta.kernel.data.FilteredColumnarBatch;
 import io.delta.kernel.data.Row;
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
+import io.delta.kernel.types.StructType;
 import io.delta.kernel.utils.CloseableIterator;
 
 public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
@@ -87,6 +94,10 @@ public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
         if (serviceEndpoint != null) {
             conf.set(S3Constants.HADOOP_SERVICE_END_POINT, serviceEndpoint);
         }
+        conf.set(ExternalDataConstants.KEY_REQUESTED_FIELDS,
+                configuration.getOrDefault(ExternalDataConstants.KEY_REQUESTED_FIELDS, ""));
+        conf.set(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION,
+                configuration.getOrDefault(ExternalDataConstants.KEY_HADOOP_ASTERIX_FUNCTION_CALL_INFORMATION, ""));
         String tableMetadataPath = S3Constants.HADOOP_S3_PROTOCOL + "://"
                 + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
                 + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
@@ -96,7 +107,21 @@ public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
         Engine engine = DefaultEngine.create(conf);
         io.delta.kernel.Table table = io.delta.kernel.Table.forPath(engine, tableMetadataPath);
         Snapshot snapshot = table.getLatestSnapshot(engine);
-        Scan scan = snapshot.getScanBuilder(engine).withReadSchema(engine, snapshot.getSchema(engine)).build();
+
+        List<Warning> warnings = new ArrayList<>();
+        DeltaConverterContext converterContext = new DeltaConverterContext(configuration, warnings);
+        AsterixTypeToDeltaTypeVisitor visitor = new AsterixTypeToDeltaTypeVisitor(converterContext);
+        StructType requiredSchema;
+        try {
+            ARecordType expectedType = HDFSUtils.getExpectedType(conf);
+            Map<String, FunctionCallInformation> functionCallInformationMap =
+                    HDFSUtils.getFunctionCallInformationMap(conf);
+            StructType fileSchema = snapshot.getSchema(engine);
+            requiredSchema = visitor.clipType(expectedType, fileSchema, functionCallInformationMap);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Scan scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
         scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
         CloseableIterator<FilteredColumnarBatch> iter = scan.getScanFiles(engine);
 
@@ -112,6 +137,18 @@ public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
         locationConstraints = configureLocationConstraints(appCtx);
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
         distributeFiles();
+        issueWarnings(warnings, warningCollector);
+    }
+
+    private void issueWarnings(List<Warning> warnings, IWarningCollector warningCollector) {
+        if (!warnings.isEmpty() && warningCollector.shouldWarn()) {
+            for (Warning warning : warnings) {
+                if (warningCollector.shouldWarn()) {
+                    warningCollector.warn(warning);
+                }
+            }
+        }
+        warnings.clear();
     }
 
     private AlgebricksAbsolutePartitionConstraint configureLocationConstraints(ICcApplicationContext appCtx) {
