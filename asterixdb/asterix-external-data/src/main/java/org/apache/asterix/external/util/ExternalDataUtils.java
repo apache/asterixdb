@@ -921,7 +921,7 @@ public class ExternalDataUtils {
     }
 
     public static boolean supportsPushdown(Map<String, String> properties) {
-        //Currently, only Apache Parquet format is supported
+        //Currently, only Apache Parquet/Delta table format is supported
         return isParquetFormat(properties) || isDeltaTable(properties);
     }
 

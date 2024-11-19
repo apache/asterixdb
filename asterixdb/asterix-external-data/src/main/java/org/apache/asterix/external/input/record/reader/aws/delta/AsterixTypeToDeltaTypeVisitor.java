@@ -124,7 +124,7 @@ public class AsterixTypeToDeltaTypeVisitor implements IATypeVisitor<DataType, Da
         try {
             actualType = DeltaDataParser.getTypeTag(type, false, context);
         } catch (HyracksDataException e) {
-            throw new RuntimeException(e);
+            throw new AsterixDeltaRuntimeException(e);
         }
         ATypeTag expectedType = node.getTypeTag();
 
