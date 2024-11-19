@@ -293,6 +293,11 @@ public class LSMPrimaryUpsertOperatorNodePushable extends LSMIndexInsertUpdateDe
                 }
 
                 @Override
+                public void beforeExit(boolean success) throws HyracksDataException {
+                    callback.beforeExit(success);
+                }
+
+                @Override
                 public void close() throws IOException {
                     callback.close();
                 }

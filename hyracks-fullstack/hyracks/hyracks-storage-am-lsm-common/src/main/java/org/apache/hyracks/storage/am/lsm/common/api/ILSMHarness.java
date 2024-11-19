@@ -228,7 +228,8 @@ public interface ILSMHarness {
 
     void enter(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException;
 
-    void exit(ILSMIndexOperationContext ctx, LSMOperationType op) throws HyracksDataException;
+    void exit(ILSMIndexOperationContext ctx, IFrameOperationCallback callback, boolean success, LSMOperationType op)
+            throws HyracksDataException;
 
     /**
      * Rollback components that match the passed predicate

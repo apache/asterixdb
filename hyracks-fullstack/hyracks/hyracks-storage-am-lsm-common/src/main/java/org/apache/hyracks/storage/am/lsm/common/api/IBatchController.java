@@ -23,7 +23,9 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IBatchController {
     String KEY_BATCH_CONTROLLER = "BATCH_CONTROLLER";
 
-    void batchEnter(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) throws HyracksDataException;
+    void batchEnter(ILSMIndexOperationContext ctx, ILSMHarness lsmHarness, IFrameOperationCallback callback)
+            throws HyracksDataException;
 
-    void batchExit(ILSMHarness lsmHarness, ILSMIndexOperationContext ctx) throws HyracksDataException;
+    void batchExit(ILSMIndexOperationContext ctx, ILSMHarness lsmHarness, IFrameOperationCallback callback,
+            boolean batchSuccessful) throws HyracksDataException;
 }

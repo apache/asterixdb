@@ -698,8 +698,18 @@ public class LSMHarness implements ILSMHarness {
     }
 
     @Override
-    public void exit(ILSMIndexOperationContext ctx, LSMOperationType op) throws HyracksDataException {
-        getAndExitComponentsAndComplete(ctx, op);
+    public void exit(ILSMIndexOperationContext ctx, IFrameOperationCallback callback, boolean success,
+            LSMOperationType op) throws HyracksDataException {
+        try {
+            callback.beforeExit(success);
+        } catch (Throwable th) {
+            // TODO(mblow): we don't distinguish between the three distinct phases we can encounter
+            //              failures in the callback API- we might need this eventually
+            callback.fail(th);
+            throw th;
+        } finally {
+            getAndExitComponentsAndComplete(ctx, op);
+        }
     }
 
     private void getAndExitComponentsAndComplete(ILSMIndexOperationContext ctx, LSMOperationType op)
@@ -717,10 +727,12 @@ public class LSMHarness implements ILSMHarness {
             IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, IBatchController batchController)
             throws HyracksDataException {
         processor.start();
-        batchController.batchEnter(this, ctx);
+        batchController.batchEnter(ctx, this, frameOpCallback);
+        boolean success = false;
         try {
             try {
                 processFrame(accessor, tuple, processor);
+                success = true;
                 frameOpCallback.frameCompleted();
             } catch (Throwable th) {
                 processor.fail(th);
@@ -732,7 +744,7 @@ public class LSMHarness implements ILSMHarness {
             LOGGER.warn("Failed to process frame", e);
             throw e;
         } finally {
-            batchController.batchExit(this, ctx);
+            batchController.batchExit(ctx, this, frameOpCallback, success);
             ctx.logPerformanceCounters(accessor.getTupleCount());
         }
     }
