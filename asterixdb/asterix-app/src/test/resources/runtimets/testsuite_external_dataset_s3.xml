@@ -321,6 +321,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-all-type">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-all-type</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-field-access-pushdown">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
       <compilation-unit name="common/deltalake-invalid-file-format">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">none</output-dir>

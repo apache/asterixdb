@@ -37,6 +37,7 @@ import java.nio.file.Paths;
 import java.util.Collection;
 
 import org.apache.asterix.test.external_dataset.avro.AvroFileConverterUtil;
+import org.apache.asterix.test.external_dataset.deltalake.DeltaAllTypeGenerator;
 import org.apache.asterix.test.external_dataset.deltalake.DeltaTableGenerator;
 import org.apache.asterix.test.external_dataset.parquet.BinaryFileConverterUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
@@ -122,6 +123,7 @@ public class ExternalDatasetTestUtils {
         // cleaning directory
         BinaryFileConverterUtil.cleanBinaryDirectory(basePath, DELTA_GEN_BASEDIR);
         DeltaTableGenerator.prepareDeltaTableContainer(new Configuration());
+        DeltaAllTypeGenerator.createTableInsertData(new Configuration());
     }
 
     /**
@@ -434,6 +436,8 @@ public class ExternalDatasetTestUtils {
         loadDeltaDirectory(generatedDataBasePath, "/modified_delta_table/_delta_log", JSON_FILTER, "delta-data/");
         loadDeltaDirectory(generatedDataBasePath, "/multiple_file_delta_table", PARQUET_FILTER, "delta-data/");
         loadDeltaDirectory(generatedDataBasePath, "/multiple_file_delta_table/_delta_log", JSON_FILTER, "delta-data/");
+        loadDeltaDirectory(generatedDataBasePath, "/delta_all_type/_delta_log", JSON_FILTER, "delta-data/");
+        loadDeltaDirectory(generatedDataBasePath, "/delta_all_type", PARQUET_FILTER, "delta-data/");
     }
 
     private static void loadDeltaDirectory(String dataBasePath, String rootPath, FilenameFilter filter,
