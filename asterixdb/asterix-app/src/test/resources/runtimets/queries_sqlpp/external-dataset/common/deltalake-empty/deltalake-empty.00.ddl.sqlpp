@@ -30,6 +30,6 @@
  (
    %template%,
    ("container"="playground"),
-   ("definition"="my-table-empty"),
+   ("definition"="delta-data/empty_delta_table"),
    ("table-format" = "delta")
  );

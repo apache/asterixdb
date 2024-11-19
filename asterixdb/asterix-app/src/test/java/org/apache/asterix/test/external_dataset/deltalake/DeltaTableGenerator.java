@@ -196,7 +196,7 @@ public class DeltaTableGenerator {
             Metadata metaData = txn.metadata().copyBuilder().partitionColumns(new ArrayList<>())
                     .schema(new StructType().add(new StructField("id", new IntegerType(), true))
                             .add(new StructField("name", new StringType(), true))
-                            .add(new StructField("age", new IntegerType(), true)))
+                            .add(new StructField("age", new StringType(), true)))
                     .build();
             txn.updateMetadata(metaData);
             txn.commit(actions, new Operation(Operation.Name.CREATE_TABLE), "deltalake-table-create");
