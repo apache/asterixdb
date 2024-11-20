@@ -39,7 +39,6 @@ public interface ILSMHarness {
      * @param tuple
      *            the operation tuple
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void forceModify(ILSMIndexOperationContext ctx, ITupleReference tuple) throws HyracksDataException;
 
@@ -54,7 +53,6 @@ public interface ILSMHarness {
      *            the operation tuple
      * @return
      * @throws HyracksDataException
-     * @throws IndexException
      */
     boolean modify(ILSMIndexOperationContext ctx, boolean tryOperation, ITupleReference tuple)
             throws HyracksDataException;
@@ -69,7 +67,6 @@ public interface ILSMHarness {
      * @param pred
      *            the search predicate
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void search(ILSMIndexOperationContext ctx, IIndexCursor cursor, ISearchPredicate pred) throws HyracksDataException;
 
@@ -104,9 +101,7 @@ public interface ILSMHarness {
      * Schedule a merge
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
-     * @throws IndexException
      */
     ILSMIOOperation scheduleMerge(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
@@ -114,9 +109,7 @@ public interface ILSMHarness {
      * Schedule full merge
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
-     * @throws IndexException
      */
     ILSMIOOperation scheduleFullMerge(ILSMIndexOperationContext ctx) throws HyracksDataException;
 
@@ -125,7 +118,6 @@ public interface ILSMHarness {
      *
      * @param operation
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void merge(ILSMIOOperation operation) throws HyracksDataException;
 
@@ -133,7 +125,6 @@ public interface ILSMHarness {
      * Schedule a flush
      *
      * @param ctx
-     * @param callback
      * @throws HyracksDataException
      */
     ILSMIOOperation scheduleFlush(ILSMIndexOperationContext ctx) throws HyracksDataException;
@@ -143,7 +134,6 @@ public interface ILSMHarness {
      *
      * @param operation
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void flush(ILSMIOOperation operation) throws HyracksDataException;
 
@@ -153,7 +143,6 @@ public interface ILSMHarness {
      * @param ioOperation
      *            the io operation that added the new component
      * @throws HyracksDataException
-     * @throws IndexException
      */
     void addBulkLoadedComponent(ILSMIOOperation ioOperation) throws HyracksDataException;
 
@@ -225,20 +214,22 @@ public interface ILSMHarness {
     /**
      * Perform batch operation on all tuples in the passed frame tuple accessor
      *
-     * @param ctx
-     *            the operation ctx
-     * @param accessor
-     *            the frame tuple accessor
-     * @param tuple
-     *            the mutable tuple used to pass the tuple to the processor
-     * @param processor
-     *            the tuple processor
-     * @param frameOpCallback
-     *            the callback at the end of the frame
+     * @param ctx             the operation ctx
+     * @param accessor        the frame tuple accessor
+     * @param tuple           the mutable tuple used to pass the tuple to the processor
+     * @param processor       the tuple processor
+     * @param frameOpCallback the callback at the end of the frame
+     * @param batchController
      * @throws HyracksDataException
      */
     void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException;
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, IBatchController batchController)
+            throws HyracksDataException;
+
+    void enter(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException;
+
+    void exit(ILSMIndexOperationContext ctx, IFrameOperationCallback callback, boolean success, LSMOperationType op)
+            throws HyracksDataException;
 
     /**
      * Rollback components that match the passed predicate

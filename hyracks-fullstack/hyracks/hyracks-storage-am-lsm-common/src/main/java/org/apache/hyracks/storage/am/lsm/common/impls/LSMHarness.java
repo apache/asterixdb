@@ -33,6 +33,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.FrameTupleReference;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.common.impls.NoOpIndexAccessParameters;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
+import org.apache.hyracks.storage.am.lsm.common.api.IBatchController;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponent;
@@ -688,15 +689,27 @@ public class LSMHarness implements ILSMHarness {
         lsmIndex.updateFilter(ctx, tuple);
     }
 
-    private void enter(ILSMIndexOperationContext ctx) throws HyracksDataException {
+    @Override
+    public void enter(ILSMIndexOperationContext ctx, LSMOperationType op) throws HyracksDataException {
         if (!lsmIndex.isMemoryComponentsAllocated()) {
             lsmIndex.allocateMemoryComponents();
         }
-        getAndEnterComponents(ctx, LSMOperationType.MODIFICATION, false);
+        getAndEnterComponents(ctx, op, false);
     }
 
-    private void exit(ILSMIndexOperationContext ctx) throws HyracksDataException {
-        getAndExitComponentsAndComplete(ctx, LSMOperationType.MODIFICATION);
+    @Override
+    public void exit(ILSMIndexOperationContext ctx, IFrameOperationCallback callback, boolean success,
+            LSMOperationType op) throws HyracksDataException {
+        try {
+            callback.beforeExit(success);
+        } catch (Throwable th) {
+            // TODO(mblow): we don't distinguish between the three distinct phases we can encounter
+            //              failures in the callback API- we might need this eventually
+            callback.fail(th);
+            throw th;
+        } finally {
+            getAndExitComponentsAndComplete(ctx, op);
+        }
     }
 
     private void getAndExitComponentsAndComplete(ILSMIndexOperationContext ctx, LSMOperationType op)
@@ -711,12 +724,15 @@ public class LSMHarness implements ILSMHarness {
 
     @Override
     public void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback) throws HyracksDataException {
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, IBatchController batchController)
+            throws HyracksDataException {
         processor.start();
-        enter(ctx);
+        batchController.batchEnter(ctx, this, frameOpCallback);
+        boolean success = false;
         try {
             try {
                 processFrame(accessor, tuple, processor);
+                success = true;
                 frameOpCallback.frameCompleted();
             } catch (Throwable th) {
                 processor.fail(th);
@@ -728,7 +744,7 @@ public class LSMHarness implements ILSMHarness {
             LOGGER.warn("Failed to process frame", e);
             throw e;
         } finally {
-            exit(ctx);
+            batchController.batchExit(ctx, this, frameOpCallback, success);
             ctx.logPerformanceCounters(accessor.getTupleCount());
         }
     }
