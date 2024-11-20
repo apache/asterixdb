@@ -133,9 +133,13 @@ public class DeltaFileRecordReader implements IRecordReader<Row> {
             scanFile = scanFiles.get(fileIndex);
             fileStatus = InternalScanFileUtils.getAddFileStatus(scanFile);
             physicalReadSchema = ScanStateRow.getPhysicalDataReadSchema(engine, scanState);
-            physicalDataIter = engine.getParquetHandler().readParquetFiles(singletonCloseableIterator(fileStatus),
-                    physicalReadSchema, Optional.empty());
-            dataIter = Scan.transformPhysicalData(engine, scanState, scanFile, physicalDataIter);
+            try {
+                physicalDataIter = engine.getParquetHandler().readParquetFiles(singletonCloseableIterator(fileStatus),
+                        physicalReadSchema, Optional.empty());
+                dataIter = Scan.transformPhysicalData(engine, scanState, scanFile, physicalDataIter);
+            } catch (IOException e) {
+                throw HyracksDataException.create(e);
+            }
             return this.hasNext();
         } else {
             return false;
