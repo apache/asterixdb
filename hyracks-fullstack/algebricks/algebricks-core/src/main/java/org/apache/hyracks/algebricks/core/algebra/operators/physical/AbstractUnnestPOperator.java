@@ -24,6 +24,7 @@ import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.AbstractFunctionCallExpression.FunctionKind;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionRuntimeProvider;
@@ -64,7 +65,6 @@ public abstract class AbstractUnnestPOperator extends AbstractScanPOperator {
             IOperatorSchema opSchema, IOperatorSchema[] inputSchemas, IOperatorSchema outerPlanSchema)
             throws AlgebricksException {
         AbstractUnnestNonMapOperator unnest = (AbstractUnnestNonMapOperator) op;
-        int outCol = opSchema.findVariable(unnest.getVariable());
         ILogicalExpression unnestExpr = unnest.getExpressionRef().getValue();
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         boolean exit = false;
@@ -83,14 +83,40 @@ public abstract class AbstractUnnestPOperator extends AbstractScanPOperator {
         UnnestingFunctionCallExpression agg = (UnnestingFunctionCallExpression) unnestExpr;
         IUnnestingEvaluatorFactory unnestingFactory = expressionRuntimeProvider.createUnnestingFunctionFactory(agg,
                 context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
-        int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
         IUnnestingPositionWriterFactory positionWriterFactory =
                 unnest.hasPositionalVariable() ? context.getUnnestingPositionWriterFactory() : null;
         IMissingWriterFactory missingWriterFactory = leftOuter
                 ? JobGenHelper.getMissingWriterFactory(context, ((LeftOuterUnnestOperator) op).getMissingValue())
                 : null;
-        UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, unnestingFactory, projectionList,
-                positionWriterFactory, leftOuter, missingWriterFactory);
+
+        int outCol;
+        int positionalCol;
+        int[] projectionList;
+
+        if (unnest.isProjectPushed()) {
+            outCol = -1;
+            positionalCol = -1;
+            projectionList = new int[unnest.getProjectVariables().size()];
+            int c = 0;
+            for (LogicalVariable projectVar : unnest.getProjectVariables()) {
+                if (projectVar.equals(unnest.getVariable())) {
+                    outCol = inputSchemas[0].getSize();
+                    projectionList[c++] = inputSchemas[0].getSize();
+                } else if (unnest.hasPositionalVariable() && projectVar.equals(unnest.getPositionalVariable())) {
+                    positionalCol = inputSchemas[0].getSize() + 1;
+                    projectionList[c++] = inputSchemas[0].getSize() + 1;
+                } else {
+                    projectionList[c++] = inputSchemas[0].findVariable(projectVar);
+                }
+            }
+        } else {
+            outCol = opSchema.findVariable(unnest.getVariable());
+            positionalCol = unnest.hasPositionalVariable() ? opSchema.findVariable(unnest.getPositionalVariable()) : -1;
+            projectionList = JobGenHelper.projectAllVariables(opSchema);
+        }
+
+        UnnestRuntimeFactory unnestRuntime = new UnnestRuntimeFactory(outCol, positionalCol, unnestingFactory,
+                projectionList, positionWriterFactory, leftOuter, missingWriterFactory);
         unnestRuntime.setSourceLocation(unnest.getSourceLocation());
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);
         builder.contributeMicroOperator(unnest, unnestRuntime, recDesc);

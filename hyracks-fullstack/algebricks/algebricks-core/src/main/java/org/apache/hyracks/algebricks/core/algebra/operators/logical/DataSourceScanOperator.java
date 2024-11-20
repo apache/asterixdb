@@ -18,8 +18,6 @@
  */
 package org.apache.hyracks.algebricks.core.algebra.operators.logical;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.mutable.Mutable;
@@ -37,10 +35,6 @@ import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionRef
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
 public class DataSourceScanOperator extends AbstractDataSourceOperator {
-    private final List<LogicalVariable> projectVars;
-
-    private boolean projectPushed = false;
-
     private List<Mutable<ILogicalExpression>> additionalFilteringExpressions;
     private List<LogicalVariable> minFilterVars;
     private List<LogicalVariable> maxFilterVars;
@@ -61,7 +55,6 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
             Mutable<ILogicalExpression> selectCondition, long outputLimit,
             IProjectionFiltrationInfo projectionFiltrationInfo) {
         super(variables, dataSource);
-        projectVars = new ArrayList<>();
         this.selectCondition = selectCondition;
         this.outputLimit = outputLimit;
         setProjectionFiltrationInfo(projectionFiltrationInfo);
@@ -93,19 +86,6 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
         return false;
     }
 
-    public void addProjectVariables(Collection<LogicalVariable> vars) {
-        projectVars.addAll(vars);
-        projectPushed = true;
-    }
-
-    public List<LogicalVariable> getProjectVariables() {
-        return projectVars;
-    }
-
-    public boolean isProjectPushed() {
-        return projectPushed;
-    }
-
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
         return new VariablePropagationPolicy() {
@@ -115,7 +95,7 @@ public class DataSourceScanOperator extends AbstractDataSourceOperator {
                 if (sources.length > 0) {
                     target.addAllVariables(sources[0]);
                 }
-                List<LogicalVariable> outputVariables = projectPushed ? projectVars : variables;
+                List<LogicalVariable> outputVariables = isProjectPushed() ? getProjectVariables() : variables;
                 for (LogicalVariable v : outputVariables) {
                     target.addVariable(v);
                 }

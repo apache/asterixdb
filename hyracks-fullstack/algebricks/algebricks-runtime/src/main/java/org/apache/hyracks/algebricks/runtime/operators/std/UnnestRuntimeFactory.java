@@ -21,6 +21,7 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.hyracks.algebricks.data.IUnnestingPositionWriter;
 import org.apache.hyracks.algebricks.data.IUnnestingPositionWriterFactory;
@@ -41,34 +42,35 @@ import org.apache.hyracks.dataflow.common.comm.io.ArrayTupleBuilder;
 
 public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactory {
 
+    /**
+     * @param projection[i] is the input field index of the i-th field in the output tuple
+     * @param projection[i] should be @param outCol if i-th field is the unnest field
+     * @param projection[i] should be @param positionalCol if i-th field is the positional field
+     * @param outCol,positionalCol can be -1 if the output tuple does not contain the unnest/positional field
+     * @param outCol,positionalCol should not be in the input field index range to avoid ambiguity
+     */
+
     private static final long serialVersionUID = 1L;
 
     private final int outCol;
+    private final int positionalCol;
     private final IUnnestingEvaluatorFactory unnestingFactory;
-    private final boolean unnestColIsProjected;
     private final IUnnestingPositionWriterFactory positionWriterFactory;
     private final boolean leftOuter;
     private final IMissingWriterFactory missingWriterFactory;
-    private int outColPos;
 
     public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList,
             boolean leftOuter, IMissingWriterFactory missingWriterFactory) {
-        this(outCol, unnestingFactory, projectionList, null, leftOuter, missingWriterFactory);
+        this(outCol, -1, unnestingFactory, projectionList, null, leftOuter, missingWriterFactory);
     }
 
-    public UnnestRuntimeFactory(int outCol, IUnnestingEvaluatorFactory unnestingFactory, int[] projectionList,
-            IUnnestingPositionWriterFactory positionWriterFactory, boolean leftOuter,
+    public UnnestRuntimeFactory(int outCol, int positionalCol, IUnnestingEvaluatorFactory unnestingFactory,
+            int[] projectionList, IUnnestingPositionWriterFactory positionWriterFactory, boolean leftOuter,
             IMissingWriterFactory missingWriterFactory) {
         super(projectionList);
         this.outCol = outCol;
+        this.positionalCol = positionalCol;
         this.unnestingFactory = unnestingFactory;
-        outColPos = -1;
-        for (int f = 0; f < projectionList.length; f++) {
-            if (projectionList[f] == outCol) {
-                outColPos = f;
-            }
-        }
-        unnestColIsProjected = outColPos >= 0;
         this.positionWriterFactory = positionWriterFactory;
         this.leftOuter = leftOuter;
         this.missingWriterFactory = missingWriterFactory;
@@ -76,7 +78,8 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
     @Override
     public String toString() {
-        return "unnest " + outCol + " <- " + unnestingFactory;
+        return "unnest " + outCol + (positionalCol >= 0 ? " at " + positionalCol : "") + " <- " + unnestingFactory
+                + " project: " + Arrays.toString(projectionList);
     }
 
     @Override
@@ -134,34 +137,24 @@ public class UnnestRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
 
             private void writeOutput(int t, int positionIndex, boolean missing)
                     throws HyracksDataException, IOException {
-                if (!unnestColIsProjected && positionWriter == null) {
-                    appendProjectionToFrame(t, projectionList);
-                    appendToFrameFromTupleBuilder(tupleBuilder);
-                    return;
-                }
-
                 tupleBuilder.reset();
-                for (int f = 0; f < outColPos; f++) {
-                    tupleBuilder.addField(tAccess, t, f);
-                }
-                if (unnestColIsProjected) {
-                    if (missing) {
-                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
+                for (int f = 0; f < projectionList.length; f++) {
+                    int col = projectionList[f];
+                    if (col == outCol) {
+                        if (missing) {
+                            tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
+                        } else {
+                            tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
+                        }
+                    } else if (col == positionalCol) {
+                        if (missing) {
+                            tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
+                        } else {
+                            positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
+                            tupleBuilder.addFieldEndOffset();
+                        }
                     } else {
-                        tupleBuilder.addField(p.getByteArray(), p.getStartOffset(), p.getLength());
-                    }
-                }
-                for (int f = unnestColIsProjected ? outColPos + 1 : outColPos; f < (positionWriter != null
-                        ? projectionList.length - 1 : projectionList.length); f++) {
-                    tupleBuilder.addField(tAccess, t, f);
-                }
-                if (positionWriter != null) {
-                    // Write the positional variable
-                    if (missing) {
-                        tupleBuilder.addField(missingBytes.getByteArray(), 0, missingBytes.size());
-                    } else {
-                        positionWriter.write(tupleBuilder.getDataOutput(), positionIndex);
-                        tupleBuilder.addFieldEndOffset();
+                        tupleBuilder.addField(tAccess, t, projectionList[f]);
                     }
                 }
                 appendToFrameFromTupleBuilder(tupleBuilder);

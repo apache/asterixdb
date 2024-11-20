@@ -69,35 +69,31 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- RUNNING_AGGREGATE  |PARTITIONED|
                                                     assign [$$104] <- [$$ht1.getField("text")] project: [$$102, $$104] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ASSIGN  |PARTITIONED|
-                                                      project ([$$102, $$ht1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                        unnest $$ht1 <- scan-collection($$105) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- UNNEST  |PARTITIONED|
-                                                          assign [$$105, $$102] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] project: [$$105, $$102] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- ASSIGN  |PARTITIONED|
-                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              data-scan []<-[$$p1] <- test.ParquetDataset1 project ({entities:{hashtags:[{text:any}]},user:{name:any}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                              -- DATASOURCE_SCAN  |PARTITIONED|
-                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
-                                                  assign [$$111, $$88] <- [true, $$ht2.getField("text")] project: [$$111, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- ASSIGN  |PARTITIONED|
-                                                    project ([$$ht2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                    -- STREAM_PROJECT  |PARTITIONED|
-                                                      unnest $$ht2 <- scan-collection($$106) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      unnest $$ht1 <- scan-collection($$105) project: [$$102, $$ht1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- UNNEST  |PARTITIONED|
-                                                        assign [$$106] <- [$$p2.getField("entities").getField("hashtags")] project: [$$106] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        assign [$$105, $$102] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] project: [$$105, $$102] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- ASSIGN  |PARTITIONED|
                                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            data-scan []<-[$$p2] <- test.ParquetDataset2 project ({entities:{hashtags:[{text:any}]}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            data-scan []<-[$$p1] <- test.ParquetDataset1 project ({entities:{hashtags:[{text:any}]},user:{name:any}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                 empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
+                                                  assign [$$111, $$88] <- [true, $$ht2.getField("text")] project: [$$111, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    unnest $$ht2 <- scan-collection($$106) project: [$$ht2] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- UNNEST  |PARTITIONED|
+                                                      assign [$$106] <- [$$p2.getField("entities").getField("hashtags")] project: [$$106] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- ASSIGN  |PARTITIONED|
+                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          data-scan []<-[$$p2] <- test.ParquetDataset2 project ({entities:{hashtags:[{text:any}]}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

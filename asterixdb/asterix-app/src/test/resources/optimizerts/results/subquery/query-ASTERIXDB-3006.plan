@@ -24,13 +24,12 @@
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- HYBRID_HASH_JOIN [$$b][$$51]  |PARTITIONED|
                                 -- HASH_PARTITION_EXCHANGE [$$b]  |PARTITIONED|
-                                  -- STREAM_PROJECT  |PARTITIONED|
-                                    -- UNNEST  |PARTITIONED|
-                                      -- ASSIGN  |PARTITIONED|
-                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
-                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  -- UNNEST  |PARTITIONED|
+                                    -- ASSIGN  |PARTITIONED|
+                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
+                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
                                   -- ASSIGN  |PARTITIONED|
                                     -- STREAM_PROJECT  |PARTITIONED|

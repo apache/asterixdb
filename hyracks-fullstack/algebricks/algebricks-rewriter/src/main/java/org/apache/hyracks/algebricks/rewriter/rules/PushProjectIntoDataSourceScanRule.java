@@ -53,7 +53,7 @@ public class PushProjectIntoDataSourceScanRule implements IAlgebraicRewriteRule 
             return false;
         DataSourceScanOperator scanOp = (DataSourceScanOperator) inputOp;
         ProjectOperator projectOp = (ProjectOperator) project;
-        scanOp.addProjectVariables(projectOp.getVariables());
+        scanOp.pushProjectionVariables(projectOp.getVariables());
         if (op.getOperatorTag() != LogicalOperatorTag.EXCHANGE) {
             op.getInputs().set(0, project.getInputs().get(0));
         } else {

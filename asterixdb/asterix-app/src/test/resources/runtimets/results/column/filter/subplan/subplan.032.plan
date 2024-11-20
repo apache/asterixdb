@@ -50,25 +50,23 @@ distribute result [$$70] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- AGGREGATE  |PARTITIONED|
                           select (eq($$ao.getField("text"), "1")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- STREAM_SELECT  |PARTITIONED|
-                            project ([$$ao]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- STREAM_PROJECT  |PARTITIONED|
-                              unnest $$ao <- scan-collection($$72) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- UNNEST  |PARTITIONED|
-                                assign [$$72] <- [$$b2.getField("arrayOrObject")] project: [$$72] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- ASSIGN  |PARTITIONED|
-                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- REPLICATE  |PARTITIONED|
-                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        project ([$$b2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- STREAM_PROJECT  |PARTITIONED|
-                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            data-scan []<-[$$68, $$b2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$b2.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$b2.getField("arrayOrObject")).getField("text"), "1")) range-filter on: or(eq($$b2.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$b2.getField("arrayOrObject")).getField("text"), "1")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                            -- DATASOURCE_SCAN  |PARTITIONED|
-                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            unnest $$ao <- scan-collection($$72) project: [$$ao] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- UNNEST  |PARTITIONED|
+                              assign [$$72] <- [$$b2.getField("arrayOrObject")] project: [$$72] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ASSIGN  |PARTITIONED|
+                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- REPLICATE  |PARTITIONED|
+                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$b2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          data-scan []<-[$$68, $$b2] <- test.ColumnDataset project ({arrayOrObject:<[{text:any}],{text:any}>}) filter on: or(eq($$b2.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$b2.getField("arrayOrObject")).getField("text"), "1")) range-filter on: or(eq($$b2.getField("arrayOrObject").getField("text"), "7"), eq(scan-collection($$b2.getField("arrayOrObject")).getField("text"), "1")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

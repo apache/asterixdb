@@ -25,7 +25,7 @@ import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 
-public abstract class AbstractScanOperator extends AbstractLogicalOperator {
+public abstract class AbstractScanOperator extends AbstractProjectingOperator {
     protected List<LogicalVariable> variables;
 
     public AbstractScanOperator(List<LogicalVariable> variables) {

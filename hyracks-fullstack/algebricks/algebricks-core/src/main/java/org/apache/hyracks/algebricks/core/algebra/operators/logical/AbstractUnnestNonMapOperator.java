@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
+import org.apache.hyracks.algebricks.core.algebra.properties.FilteredVariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 
 public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperator {
@@ -85,7 +86,25 @@ public abstract class AbstractUnnestNonMapOperator extends AbstractUnnestOperato
     }
 
     @Override
+    public void recomputeSchema() {
+        schema = new ArrayList<>();
+        if (isProjectPushed()) {
+            for (LogicalVariable v : getProjectVariables()) {
+                schema.add(v);
+            }
+            return;
+        }
+
+        schema.addAll(inputs.get(0).getValue().getSchema());
+        schema.addAll(variables);
+    }
+
+    @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
+
+        if (isProjectPushed()) {
+            return new FilteredVariablePropagationPolicy(getProjectVariables());
+        }
         return new VariablePropagationPolicy() {
 
             @Override

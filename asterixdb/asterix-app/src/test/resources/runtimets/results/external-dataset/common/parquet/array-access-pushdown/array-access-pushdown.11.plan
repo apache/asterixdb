@@ -12,17 +12,15 @@ distribute result [$$28] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              project ([$$urls, $$31]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-              -- STREAM_PROJECT  |PARTITIONED|
-                unnest $$urls <- scan-collection($$30) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- UNNEST  |PARTITIONED|
-                  assign [$$30, $$31] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")] project: [$$30, $$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- ASSIGN  |PARTITIONED|
-                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$p] <- test.ParquetDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              unnest $$urls <- scan-collection($$30) project: [$$urls, $$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- UNNEST  |PARTITIONED|
+                assign [$$30, $$31] <- [$$p.getField("entities").getField("urls"), $$p.getField("id")] project: [$$30, $$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- ASSIGN  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$p] <- test.ParquetDataset [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -357,6 +357,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
             buffer.append(" at " + op.getPositionalVariable());
         }
         buffer.append(" <- " + op.getExpressionRef().getValue().accept(exprVisitor, indent));
+        if (op.isProjectPushed()) {
+            buffer.append(" project: ").append(str(op.getProjectVariables()));
+        }
         return null;
     }
 

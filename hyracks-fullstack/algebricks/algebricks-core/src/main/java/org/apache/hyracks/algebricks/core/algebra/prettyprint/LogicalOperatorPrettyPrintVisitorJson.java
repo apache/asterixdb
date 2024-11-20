@@ -99,6 +99,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
     private static final DefaultIndenter OBJECT_INDENT = new DefaultIndenter("   ", DefaultIndenter.SYS_LF);
     private static final String OPERATOR_FIELD = "operator";
     private static final String VARIABLES_FIELD = "variables";
+    private static final String PROJECT_VARIABLES_FIELD = "project-variables";
     // printing using the "expressions" field has to be an array of strings of the form ["str1", "str2", ...]
     private static final String EXPRESSIONS_FIELD = "expressions";
     private static final String EXPRESSION_FIELD = "expression";
@@ -634,7 +635,7 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
             jsonGenerator.writeStringField(OPERATOR_FIELD, "assign");
             writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
             if (op.isProjectPushed()) {
-                writeArrayFieldOfVariables("project-variables", op.getProjectVariables());
+                writeArrayFieldOfVariables(PROJECT_VARIABLES_FIELD, op.getProjectVariables());
             }
             return null;
         } catch (IOException e) {
@@ -1093,6 +1094,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
                 jsonGenerator.writeStringField("position", String.valueOf(positionalVariable));
             }
             writeArrayFieldOfExpression(EXPRESSIONS_FIELD, op.getExpressionRef(), indent);
+            if (op.isProjectPushed()) {
+                writeArrayFieldOfVariables(PROJECT_VARIABLES_FIELD, op.getProjectVariables());
+            }
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));
         }

@@ -46,7 +46,8 @@ public class EmbedProjectRule implements IAlgebraicRewriteRule {
         Mutable<ILogicalOperator> opRef2 = op.getInputs().get(0);
         AbstractLogicalOperator op2 = (AbstractLogicalOperator) opRef2.getValue();
 
-        if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN) {
+        if (op2.getOperatorTag() != LogicalOperatorTag.ASSIGN && op2.getOperatorTag() != LogicalOperatorTag.UNNEST
+                && op2.getOperatorTag() != LogicalOperatorTag.LEFT_OUTER_UNNEST) {
             return false;
         }
 

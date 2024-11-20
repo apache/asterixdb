@@ -94,40 +94,38 @@ distribute result [$$223] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                               assign [$$259, $$267, $$266, $$256] <- [$$255.getField("ol_amount"), $$255.getField("ol_supply_w_id"), $$255.getField("ol_i_id"), $$255.getField("ol_delivery_d")] project: [$$259, $$267, $$266, $$256] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ASSIGN  |PARTITIONED|
-                                                                project ([$$255]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                -- STREAM_PROJECT  |PARTITIONED|
-                                                                  unnest $$255 <- scan-collection($$270) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                  -- UNNEST  |PARTITIONED|
-                                                                    assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                    -- ASSIGN  |PARTITIONED|
-                                                                      project ([$$254]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                          -- BTREE_SEARCH  |PARTITIONED|
-                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                              distinct ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                              -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-                                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  order (ASC, $$291) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                  -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
-                                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      project ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                          -- BTREE_SEARCH  |PARTITIONED|
-                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                              -- ASSIGN  |PARTITIONED|
-                                                                                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                unnest $$255 <- scan-collection($$270) project: [$$255] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- UNNEST  |PARTITIONED|
+                                                                  assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- ASSIGN  |PARTITIONED|
+                                                                    project ([$$254]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            distinct ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                order (ASC, $$291) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
+                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    project ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                            -- ASSIGN  |PARTITIONED|
+                                                                                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- HASH_PARTITION_EXCHANGE [$$268]  |PARTITIONED|
                             assign [$$268] <- [get-item($$213, 0)] project: [$$268] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -202,40 +200,38 @@ distribute result [$$223] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                                                       assign [$$259, $$267, $$266, $$256] <- [$$255.getField("ol_amount"), $$255.getField("ol_supply_w_id"), $$255.getField("ol_i_id"), $$255.getField("ol_delivery_d")] project: [$$259, $$267, $$266, $$256] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                       -- ASSIGN  |PARTITIONED|
-                                                                        project ([$$255]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                        -- STREAM_PROJECT  |PARTITIONED|
-                                                                          unnest $$255 <- scan-collection($$270) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                          -- UNNEST  |PARTITIONED|
-                                                                            assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                            -- ASSIGN  |PARTITIONED|
-                                                                              project ([$$254]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                  -- BTREE_SEARCH  |PARTITIONED|
-                                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                      distinct ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                      -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-                                                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                          order (ASC, $$291) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                          -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
-                                                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                              project ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                              -- STREAM_PROJECT  |PARTITIONED|
-                                                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                  -- BTREE_SEARCH  |PARTITIONED|
-                                                                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                      assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                      -- ASSIGN  |PARTITIONED|
-                                                                                                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                                        unnest $$255 <- scan-collection($$270) project: [$$255] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                        -- UNNEST  |PARTITIONED|
+                                                                          assign [$$270] <- [$$254.getField("o_orderline")] project: [$$270] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                          -- ASSIGN  |PARTITIONED|
+                                                                            project ([$$254]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                unnest-map [$$257, $$254] <- index-search("orders", 0, "Default", "test", "orders", false, false, 1, $$291, 1, $$291, true, true, true) project ({o_orderline:[{ol_delivery_d:any,ol_i_id:any,ol_supply_w_id:any,ol_amount:any}]}) range-filter on: and(ge(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-01-01 00:00:00.000000"), lt(scan-collection($$254.getField("o_orderline")).getField("ol_delivery_d"), "2018-04-01 00:00:00.000000")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                    distinct ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                    -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        order (ASC, $$291) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                        -- STABLE_SORT [$$291(ASC)]  |PARTITIONED|
+                                                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                            project ([$$291]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                            -- STREAM_PROJECT  |PARTITIONED|
+                                                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                unnest-map [$$290, $$291] <- index-search("orderline_delivery_d", 0, "Default", "test", "orders", false, false, 1, $$288, 1, $$289, true, false, false) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                                    assign [$$288, $$289] <- ["2018-01-01 00:00:00.000000", "2018-04-01 00:00:00.000000"] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                    -- ASSIGN  |PARTITIONED|
+                                                                                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$$230]  |PARTITIONED|
                     assign [$$274, $$273, $$272, $$230] <- [$$su.getField("su_phone"), $$su.getField("su_address"), $$su.getField("su_name"), $$su.getField("su_suppkey")] project: [$$230, $$272, $$273, $$274] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
