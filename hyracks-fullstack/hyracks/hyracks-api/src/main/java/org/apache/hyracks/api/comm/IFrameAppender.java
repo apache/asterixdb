@@ -63,7 +63,7 @@ public interface IFrameAppender {
      * @param writer the FrameWriter to write to and flush
      * @throws HyracksDataException
      */
-    public default void flush(IFrameWriter writer) throws HyracksDataException {
+    default void flush(IFrameWriter writer) throws HyracksDataException {
         write(writer, true);
         writer.flush();
     }

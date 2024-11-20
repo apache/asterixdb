@@ -172,13 +172,4 @@ public class MessagingFrameTupleAppender extends FrameTupleAppender {
         ++tupleCount;
         IntSerDeUtils.putInt(getBuffer().array(), FrameHelper.getTupleCountOffset(frame.getFrameSize()), tupleCount);
     }
-
-    /*
-     * Always write and then flush to send out the message if exists
-     */
-    @Override
-    public void flush(IFrameWriter writer) throws HyracksDataException {
-        write(writer, true);
-        writer.flush();
-    }
 }

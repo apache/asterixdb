@@ -28,14 +28,24 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 public interface IFrameOperationCallback extends Closeable {
     /**
      * Called once processing the frame is done before calling nextFrame on the next IFrameWriter in
-     * the pipeline
+     * the pipeline. In the event this frame completion will also exit the component, this will be
+     * called prior to {@link #beforeExit(boolean)}.
      *
      * @throws HyracksDataException
      */
     void frameCompleted() throws HyracksDataException;
 
     /**
-     * Called when the task has failed.
+     * Called just prior to exiting the component on batch completion: not all batches may result
+     * in a component exit, depending on the decision of the {@link IBatchController}.
+     *
+     * @throws HyracksDataException
+     */
+    void beforeExit(boolean success) throws HyracksDataException;
+
+    /**
+     * Called when the batch processing, {@link #frameCompleted()} or {@link #beforeExit(boolean)}
+     * invocation has failed.
      *
      * @param th
      */
