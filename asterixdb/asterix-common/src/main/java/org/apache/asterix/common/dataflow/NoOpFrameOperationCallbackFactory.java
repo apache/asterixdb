@@ -47,6 +47,11 @@ public class NoOpFrameOperationCallbackFactory implements IFrameOperationCallbac
         }
 
         @Override
+        public void beforeExit(boolean success) throws HyracksDataException {
+            // No Op
+        }
+
+        @Override
         public void close() throws IOException {
             // No Op
         }

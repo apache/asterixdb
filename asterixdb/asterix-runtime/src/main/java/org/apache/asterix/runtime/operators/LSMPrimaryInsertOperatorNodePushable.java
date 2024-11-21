@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.runtime.operators;
 
+import static org.apache.hyracks.storage.am.lsm.common.api.IBatchController.KEY_BATCH_CONTROLLER;
+
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +60,7 @@ import org.apache.hyracks.storage.am.common.impls.IndexAccessParameters;
 import org.apache.hyracks.storage.am.common.impls.NoOpOperationCallback;
 import org.apache.hyracks.storage.am.common.ophelpers.IndexOperation;
 import org.apache.hyracks.storage.am.common.util.ResourceReleaseUtils;
+import org.apache.hyracks.storage.am.lsm.common.api.IBatchController;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.IFrameTupleProcessor;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
@@ -95,12 +98,13 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
     private final LSMTreeIndexAccessor[] lsmAccessorForUniqunessChecks;
 
     private final IFrameOperationCallback[] frameOpCallbacks;
-    private boolean flushedPartialTuples;
     private final PermutingFrameTupleReference keyTuple;
     private final Int2ObjectMap<IntSet> partition2TuplesMap = new Int2ObjectOpenHashMap<>();
     private final IntSet processedTuples = new IntOpenHashSet();
     private final IntSet flushedTuples = new IntOpenHashSet();
     private final SourceLocation sourceLoc;
+    private boolean flushedPartialTuples;
+    private IBatchController batchController;
 
     public LSMPrimaryInsertOperatorNodePushable(IHyracksTaskContext ctx, int partition,
             IIndexDataflowHelperFactory indexHelperFactory, IIndexDataflowHelperFactory keyIndexHelperFactory,
@@ -284,6 +288,7 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             searchPred = new RangePredicate(frameTuple, frameTuple, true, true, keySearchCmp, keySearchCmp, null, null);
             appender = new FrameTupleAppender(new VSizeFrame(ctx), true);
             frameTuple = new FrameTupleReference();
+            batchController = TaskUtil.getOrDefault(KEY_BATCH_CONTROLLER, ctx, StandardBatchController.INSTANCE);
         } catch (Throwable e) { // NOSONAR: Re-thrown
             throw HyracksDataException.create(e);
         }
@@ -305,7 +310,8 @@ public class LSMPrimaryInsertOperatorNodePushable extends LSMIndexInsertUpdateDe
             LSMTreeIndexAccessor lsmAccessor = (LSMTreeIndexAccessor) indexAccessors[pIdx];
             IFrameOperationCallback frameOpCallback = frameOpCallbacks[pIdx];
             IFrameTupleProcessor processor = processors[pIdx];
-            lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback, p2tuplesMapEntry.getValue());
+            lsmAccessor.batchOperate(accessor, tuple, processor, frameOpCallback, batchController,
+                    p2tuplesMapEntry.getValue());
         }
 
         writeBuffer.ensureFrameSize(buffer.capacity());

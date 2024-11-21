@@ -227,10 +227,17 @@ public interface ILSMHarness {
      *            the callback at the end of the frame
      * @param tuples
      *            the indexes of tuples to process
+     * @param batchController
+     *            the controller of the batch lifecycle
      * @throws HyracksDataException
      */
     void batchOperate(ILSMIndexOperationContext ctx, FrameTupleAccessor accessor, FrameTupleReference tuple,
-            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, Set<Integer> tuples)
+            IFrameTupleProcessor processor, IFrameOperationCallback frameOpCallback, IBatchController batchController,
+            Set<Integer> tuples) throws HyracksDataException;
+
+    void enter(ILSMIndexOperationContext ctx, LSMOperationType opType) throws HyracksDataException;
+
+    void exit(ILSMIndexOperationContext ctx, IFrameOperationCallback callback, boolean success, LSMOperationType op)
             throws HyracksDataException;
 
     /**
