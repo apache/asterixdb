@@ -74,4 +74,18 @@ public class TaskUtil {
         Map<String, Object> sharedMap = TaskUtil.getSharedMap(ctx, false);
         return sharedMap == null ? null : (T) sharedMap.get(key);
     }
+
+    /**
+     * get a <T> object from the shared map of the task, or returns the default value
+     *
+     * @param key
+     * @param ctx
+     * @param defaultValue
+     * @return the value associated with the key casted as T
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T getOrDefault(String key, IHyracksTaskContext ctx, T defaultValue) {
+        Map<String, T> sharedMap = (Map<String, T>) TaskUtil.getSharedMap(ctx, false);
+        return sharedMap == null ? defaultValue : sharedMap.getOrDefault(key, defaultValue);
+    }
 }
