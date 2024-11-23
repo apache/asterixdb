@@ -92,6 +92,7 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
     protected void buildVarExprList(Collection<LogicalVariable> vars, IOptimizationContext context, GroupByOperator g,
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
         SourceLocation sourceLoc = g.getSourceLocation();
+        Set<ILogicalOperator> visited = new HashSet<>();
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
             VariableReferenceExpression varExpr = new VariableReferenceExpression(newVar);
@@ -101,7 +102,8 @@ public abstract class AbstractDecorrelationRule implements IAlgebraicRewriteRule
             for (ILogicalPlan p : g.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,
-                            context);
+                            context, visited);
+                    visited.clear();
                 }
             }
         }

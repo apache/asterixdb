@@ -398,14 +398,16 @@ public class PushAggregateIntoNestedSubplanRule implements IAlgebraicRewriteRule
         if (!pushableNestedSubplan) {
             return false;
         }
-
+        Set<ILogicalOperator> visited = new HashSet<>();
         for (int i = 0; i < nspOp.getNestedPlans().size(); i++) {
             Mutable<ILogicalOperator> nspAggRef = nspOp.getNestedPlans().get(i).getRoots().get(0);
             AggregateOperator nspAgg = (AggregateOperator) nspAggRef.getValue();
             Mutable<ILogicalOperator> nspAggChildRef = nspAgg.getInputs().get(0);
             LogicalVariable listifyVar = findListifiedVariable(nspAgg, varFromNestedAgg);
             if (listifyVar != null) {
-                OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar, listifyVar, true, context);
+                OperatorManipulationUtil.substituteVarRec(aggInSubplanOp, unnestVar, listifyVar, true, context,
+                        visited);
+                visited.clear();
                 nspAgg.getVariables().addAll(aggInSubplanOp.getVariables());
                 nspAgg.getExpressions().addAll(aggInSubplanOp.getExpressions());
                 for (LogicalVariable v : aggInSubplanOp.getVariables()) {
