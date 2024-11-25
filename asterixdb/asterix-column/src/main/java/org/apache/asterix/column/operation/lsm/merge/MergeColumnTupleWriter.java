@@ -95,7 +95,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public int getNumberOfColumns() {
+    public int getNumberOfColumns(boolean includeCurrentTupleColumns) {
         return columnMetadata.getNumberOfColumns();
     }
 
@@ -106,7 +106,7 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
 
     @Override
     public int getOccupiedSpace() {
-        int numberOfColumns = getNumberOfColumns();
+        int numberOfColumns = getNumberOfColumns(true);
         int filterSize = numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE;
         return primaryKeysEstimatedSize + filterSize;
     }
@@ -250,5 +250,8 @@ public class MergeColumnTupleWriter extends AbstractColumnTupleWriter {
         node.put("numberOFAntiMatters", numberOfAntiMatter);
         node.put("componentIndex", componentIndex);
         node.put("count", count);
+    }
+
+    public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
     }
 }

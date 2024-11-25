@@ -74,8 +74,8 @@ public final class ColumnManager implements IColumnManager {
         try {
             Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
             IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
-            return FlushColumnMetadata.create(datasetType, metaType, primaryKeys, keySourceIndicator, writerFactory,
-                    multiPageOpRef, metadata);
+            return FlushColumnMetadata.create(datasetType, metaType, primaryKeys.size(), keySourceIndicator,
+                    writerFactory, multiPageOpRef, metadata);
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }

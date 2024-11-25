@@ -18,13 +18,18 @@
  */
 package org.apache.asterix.column.operation.lsm.flush;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.apache.asterix.column.values.IColumnValuesWriter;
+import org.apache.asterix.column.values.IColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.ColumnBatchWriter;
+import org.apache.asterix.column.values.writer.ColumnValuesWriterFactory;
 import org.apache.asterix.column.values.writer.filters.AbstractColumnFilterWriter;
 import org.apache.asterix.om.lazy.RecordLazyVisitablePointable;
 import org.apache.asterix.om.lazy.TypedRecordLazyVisitablePointable;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.dataflow.common.data.accessors.ITupleReference;
 import org.apache.hyracks.storage.am.lsm.btree.column.api.AbstractColumnTupleWriter;
@@ -34,10 +39,13 @@ import org.apache.hyracks.storage.am.lsm.btree.tuples.LSMBTreeTupleReference;
 
 public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     protected final FlushColumnMetadata columnMetadata;
+    protected final NoWriteFlushColumnMetadata columnMetadataWithCurrentTuple;
+
     protected final BatchFinalizerVisitor finalizer;
     protected final ColumnBatchWriter writer;
 
     private final ColumnTransformer transformer;
+    private final NoWriteColumnTransformer transformerForCurrentTuple;
     private final RecordLazyVisitablePointable pointable;
     private final int maxNumberOfTuples;
     private final IColumnValuesWriter[] primaryKeyWriters;
@@ -60,6 +68,19 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         for (int i = 0; i < numberOfPrimaryKeys; i++) {
             primaryKeyWriters[i] = columnMetadata.getWriter(i);
         }
+
+        Mutable<IColumnWriteMultiPageOp> multiPageOpRef = new MutableObject<>();
+        IColumnValuesWriterFactory writerFactory = new ColumnValuesWriterFactory(multiPageOpRef);
+        try {
+            columnMetadataWithCurrentTuple = NoWriteFlushColumnMetadata.createMutableMetadata(
+                    columnMetadata.getDatasetType(), columnMetadata.getMetaType(),
+                    columnMetadata.getNumberOfPrimaryKeys(), columnMetadata.isMetaContainsKey(), writerFactory,
+                    multiPageOpRef, columnMetadata.serializeColumnsMetadata());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        transformerForCurrentTuple =
+                new NoWriteColumnTransformer(columnMetadataWithCurrentTuple, columnMetadataWithCurrentTuple.getRoot());
     }
 
     @Override
@@ -68,8 +89,12 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
     }
 
     @Override
-    public final int getNumberOfColumns() {
-        return columnMetadata.getNumberOfColumns();
+    public final int getNumberOfColumns(boolean includeCurrentTupleColumns) {
+        if (includeCurrentTupleColumns) {
+            return columnMetadataWithCurrentTuple.getNumberOfColumns();
+        } else {
+            return columnMetadata.getNumberOfColumns();
+        }
     }
 
     @Override
@@ -85,7 +110,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
 
     @Override
     public final int getOccupiedSpace() {
-        int numberOfColumns = getNumberOfColumns();
+        int numberOfColumns = getNumberOfColumns(true);
         int filterSize = numberOfColumns * AbstractColumnFilterWriter.FILTER_SIZE;
         return primaryKeysEstimatedSize + filterSize;
     }
@@ -109,6 +134,21 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
         writer.close();
     }
 
+    public void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException {
+        // Execution can reach here in case of Load statements
+        // and the type of tuple in that case is PermutingFrameTupleReference
+        if (tuple instanceof LSMBTreeTupleReference) {
+            LSMBTreeTupleReference btreeTuple = (LSMBTreeTupleReference) tuple;
+            if (btreeTuple.isAntimatter()) {
+                return;
+            }
+        }
+        int recordFieldId = columnMetadata.getRecordFieldIndex();
+        pointable.set(tuple.getFieldData(recordFieldId), tuple.getFieldStart(recordFieldId),
+                tuple.getFieldLength(recordFieldId));
+        transformerForCurrentTuple.transform(pointable);
+    }
+
     @Override
     public void writeTuple(ITupleReference tuple) throws HyracksDataException {
         //This from an in-memory component, hence the cast
@@ -124,7 +164,7 @@ public class FlushColumnTupleWriter extends AbstractColumnTupleWriter {
 
     @Override
     public final int flush(ByteBuffer pageZero) throws HyracksDataException {
-        writer.setPageZeroBuffer(pageZero, getNumberOfColumns(), columnMetadata.getNumberOfPrimaryKeys());
+        writer.setPageZeroBuffer(pageZero, getNumberOfColumns(false), columnMetadata.getNumberOfPrimaryKeys());
         transformer.resetStringLengths();
         return finalizer.finalizeBatch(writer, columnMetadata);
     }
