@@ -1,0 +1,5 @@
+{ "integer_type": 123, "string_type": "FirstPerson", "decimal_type": 1.25432, "double_type": 100.34, "timestamp_type": 1732010400, "date_type": 127 }
+{ "integer_type": 124, "string_type": "SecondPerson", "decimal_type": 2666.223, "double_type": 200.055, "timestamp_type": 1732010400, "date_type": 23 }
+{ "integer_type": 125, "string_type": "ThirdPerson", "decimal_type": 1245.2421, "double_type": 300.02, "timestamp_type": 1732010400, "date_type": 11 }
+{ "integer_type": 126, "string_type": "FourthPerson", "decimal_type": 23731.2, "double_type": 400.21014, "timestamp_type": 1732010403, "date_type": 456 }
+{ "integer_type": 127, "string_type": "FifthPerson", "decimal_type": 80911.22245, "double_type": 500.219, "timestamp_type": 1732010401, "date_type": 23 }

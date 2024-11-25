@@ -45,4 +45,16 @@ public class GCSConstants {
     public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
     public static final String HADOOP_MAX_REQUESTS_PER_BATCH = "fs.gs.max.requests.per.batch";
     public static final String HADOOP_BATCH_THREADS = "fs.gs.batch.threads";
+
+    public static class JSON_CREDENTIALS_FIELDS {
+        public static final String PRIVATE_KEY_ID = "private_key_id";
+        public static final String PRIVATE_KEY = "private_key";
+        public static final String CLIENT_EMAIL = "client_email";
+    }
+
+    public static class HADOOP_AUTH_SERVICE_ACCOUNT_JSON_FIELDS {
+        public static final String PRIVATE_KEY_ID = "fs.gs.auth.service.account.private.key.id";
+        public static final String PRIVATE_KEY = "fs.gs.auth.service.account.private.key";
+        public static final String CLIENT_EMAIL = "fs.gs.auth.service.account.email";
+    }
 }

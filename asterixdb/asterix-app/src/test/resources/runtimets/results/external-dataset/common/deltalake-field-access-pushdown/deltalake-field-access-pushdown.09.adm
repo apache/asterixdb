@@ -1,0 +1,5 @@
+{ "integer_type": 123, "date_type": date("1970-05-08"), "decimal_type": 1.25432 }
+{ "integer_type": 124, "date_type": date("1970-01-24"), "decimal_type": 2666.223 }
+{ "integer_type": 125, "date_type": date("1970-01-12"), "decimal_type": 1245.2421 }
+{ "integer_type": 126, "date_type": date("1971-04-02"), "decimal_type": 23731.2 }
+{ "integer_type": 127, "date_type": date("1970-01-24"), "decimal_type": 80911.22245 }
