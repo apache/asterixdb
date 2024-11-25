@@ -120,12 +120,14 @@ public class PushGroupByThroughProduct implements IAlgebraicRewriteRule {
         AbstractBinaryJoinOperator join = (AbstractBinaryJoinOperator) opRefJoin.getValue();
         gby.getDecorList().clear();
         gby.getDecorList().addAll(decorToPush);
+        Set<ILogicalOperator> visited = new HashSet<>();
         for (Pair<LogicalVariable, Mutable<ILogicalExpression>> p : decorNotToPush) {
             LogicalVariable v1 = p.first;
             if (v1 != null) {
                 VariableReferenceExpression varRef = (VariableReferenceExpression) p.second.getValue();
                 LogicalVariable v2 = varRef.getVariableReference();
-                OperatorManipulationUtil.substituteVarRec(join, v2, v1, true, context);
+                OperatorManipulationUtil.substituteVarRec(join, v2, v1, true, context, visited);
+                visited.clear();
             }
         }
         Mutable<ILogicalOperator> branchRef = join.getInputs().get(branch);

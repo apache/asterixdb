@@ -331,6 +331,7 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             List<Pair<LogicalVariable, Mutable<ILogicalExpression>>> outVeList) throws AlgebricksException {
         SourceLocation sourceLoc = g.getSourceLocation();
         Map<LogicalVariable, LogicalVariable> m = new HashMap<LogicalVariable, LogicalVariable>();
+        Set<ILogicalOperator> visited = new HashSet<>();
         for (LogicalVariable ov : vars) {
             LogicalVariable newVar = context.newVar();
             ILogicalExpression varExpr = new VariableReferenceExpression(newVar);
@@ -340,11 +341,13 @@ public class IntroduceGroupByForSubplanRule implements IAlgebraicRewriteRule {
             for (ILogicalPlan p : g.getNestedPlans()) {
                 for (Mutable<ILogicalOperator> r : p.getRoots()) {
                     OperatorManipulationUtil.substituteVarRec((AbstractLogicalOperator) r.getValue(), ov, newVar, true,
-                            context);
+                            context, visited);
+                    visited.clear();
                 }
             }
             AbstractLogicalOperator opUnder = (AbstractLogicalOperator) g.getInputs().get(0).getValue();
-            OperatorManipulationUtil.substituteVarRec(opUnder, ov, newVar, true, context);
+            OperatorManipulationUtil.substituteVarRec(opUnder, ov, newVar, true, context, visited);
+            visited.clear();
             m.put(ov, newVar);
         }
         return m;
