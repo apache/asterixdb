@@ -18,7 +18,6 @@
  */
 package org.apache.asterix.external.writer;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
 import java.io.IOException;
@@ -89,7 +88,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
         } catch (InterruptedException ex) {
             throw HyracksDataException.create(ex);
         } catch (IOException ex) {
-            throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -135,7 +134,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
                 doValidate(testFs);
             }
         } catch (IOException ex) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, ExceptionUtils.getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SINK_ERROR, ExceptionUtils.getMessageOrToString(ex));
         }
     }
 
@@ -171,7 +170,7 @@ public class HDFSExternalFileWriterFactory implements IExternalFileWriterFactory
                 outputStream.write(0);
             }
         } catch (IOException ex) {
-            throw CompilationException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
+            throw new CompilationException(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }
     }
 }

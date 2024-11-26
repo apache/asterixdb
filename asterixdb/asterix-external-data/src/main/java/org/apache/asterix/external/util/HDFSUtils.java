@@ -70,6 +70,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -262,6 +263,7 @@ public class HDFSUtils {
         if (useDatanodeHostname != null) {
             conf.set(ExternalDataConstants.KEY_HDFS_USE_DATANODE_HOSTNAME, useDatanodeHostname);
         }
+        conf.set(ExternalDataConstants.HDFS_IO_COMPRESSION_CODECS_KEY, AliasGzipCodec.class.getName());
         return conf;
     }
 
@@ -547,6 +549,9 @@ public class HDFSUtils {
 
     public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector) throws CompilationException {
+        if (configuration.get(ExternalDataConstants.KEY_HDFS_URL) == null) {
+            throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_HDFS_URL);
+        }
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc,
                     ExternalDataConstants.KEY_INPUT_FORMAT);
@@ -589,5 +594,12 @@ public class HDFSUtils {
     public static boolean isSourceTypeHdfs(Map<String, String> configuration) {
         return ExternalDataConstants.KEY_ADAPTER_NAME_HDFS
                 .equalsIgnoreCase(configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE));
+    }
+
+    public static class AliasGzipCodec extends GzipCodec {
+        @Override
+        public String getDefaultExtension() {
+            return "." + ExternalDataConstants.KEY_COMPRESSION_GZIP;
+        }
     }
 }

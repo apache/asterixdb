@@ -179,6 +179,7 @@ public class ExternalDataConstants {
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
     public static final String S3A_CHANGE_DETECTION_REQUIRED = "requireVersionChangeDetection";
     public static final String S3A_CHANGE_DETECTION_REQUIRED_CONFIG_KEY = "fs.s3a.change.detection.version.required";
+    public static final String HDFS_IO_COMPRESSION_CODECS_KEY = "io.compression.codecs";
     /**
      * input formats aliases
      */

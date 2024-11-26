@@ -1134,8 +1134,7 @@ public class ExternalDataUtils {
                 protocol = nodePathPair[0];
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
-                protocol = ExternalDataConstants.KEY_HDFS_URL;
-                break;
+                return configurations.get(ExternalDataConstants.KEY_HDFS_URL).replaceAll("/+$", "");
             default:
                 return "";
         }

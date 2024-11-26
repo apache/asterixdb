@@ -93,6 +93,16 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="copy-to">
+      <compilation-unit name="partition">
+        <placeholder name="adapter" value="HDFS" />
+        <placeholder name="pathprefix" value='"/playground", ' />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additionalProperties" value="" />
+        <placeholder name="additional_Properties" value='("input-format" = "text-input-format")' />
+        <output-dir compare="Text">partition</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="copy-to">
       <compilation-unit name="simple-write">
         <placeholder name="adapter" value="HDFS" />
         <placeholder name="pathprefix" value='"/playground", ' />

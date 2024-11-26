@@ -24,9 +24,12 @@ import java.util.Map;
 
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.external.api.AsterixInputStream;
+import org.apache.asterix.external.api.IExternalDataRuntimeContext;
+import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.hdfs.EmptyRecordReader;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -49,12 +52,14 @@ public class HDFSInputStream extends AsterixInputStream {
     private JobConf conf;
     private int pos = 0;
     private UserGroupInformation ugi;
+    private IExternalFilterValueEmbedder valueEmbedder;
 
     @SuppressWarnings("unchecked")
     public HDFSInputStream(boolean read[], InputSplit[] inputSplits, String[] readSchedule, String nodeName,
-            JobConf conf, Map<String, String> configuration, UserGroupInformation ugi)
-            throws IOException, AsterixException {
+            JobConf conf, Map<String, String> configuration, UserGroupInformation ugi,
+            IExternalDataRuntimeContext context) throws IOException, AsterixException {
         this.ugi = ugi;
+        this.valueEmbedder = context.getValueEmbedder();
         this.read = read;
         this.inputSplits = inputSplits;
         this.readSchedule = readSchedule;
@@ -169,6 +174,7 @@ public class HDFSInputStream extends AsterixInputStream {
     }
 
     private RecordReader<Object, Text> getRecordReader(int splitIndex) throws IOException {
+        valueEmbedder.setPath(getPath(inputSplits[splitIndex]));
         try {
             reader = ugi == null ? getReader(splitIndex)
                     : ugi.doAs((PrivilegedExceptionAction<RecordReader<Object, Text>>) () -> getReader(splitIndex));
@@ -186,5 +192,13 @@ public class HDFSInputStream extends AsterixInputStream {
     @SuppressWarnings("unchecked")
     private RecordReader<Object, Text> getReader(int splitIndex) throws IOException {
         return (RecordReader<Object, Text>) inputFormat.getRecordReader(inputSplits[splitIndex], conf, Reporter.NULL);
+    }
+
+    private String getPath(InputSplit split) {
+        if (split instanceof FileSplit) {
+            return ((FileSplit) split).getPath().toString();
+        } else {
+            return split.toString();
+        }
     }
 }

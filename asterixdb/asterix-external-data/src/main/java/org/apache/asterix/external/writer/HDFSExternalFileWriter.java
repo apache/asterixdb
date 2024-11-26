@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.external.writer;
 
+import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +81,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
                     }
                 }
             } catch (IOException ex) {
-                throw HyracksDataException.create(ex);
+                throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
             }
         }
     }
@@ -94,8 +96,8 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
             printer.newStream(outputStream);
         } catch (FileAlreadyExistsException e) {
             return false;
-        } catch (IOException e) {
-            throw HyracksDataException.create(e);
+        } catch (IOException ex) {
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }
         return true;
     }
@@ -113,7 +115,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
                 fs.delete(path, false);
             }
         } catch (IOException ex) {
-            throw HyracksDataException.create(ex);
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
@@ -125,7 +127,7 @@ public class HDFSExternalFileWriter implements IExternalFileWriter {
                 fs.rename(path, new Path(path.getParent(), path.getName().substring(1)));
             }
         } catch (IOException ex) {
-            throw HyracksDataException.create(ex);
+            throw RuntimeDataException.create(ErrorCode.EXTERNAL_SINK_ERROR, ex, getMessageOrToString(ex));
         }
     }
 }

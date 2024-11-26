@@ -73,6 +73,7 @@ import org.apache.hyracks.api.context.IHyracksTaskContext;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.Warning;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.hdfs.dataflow.ConfFactory;
 import org.apache.hyracks.hdfs.dataflow.InputSplitsFactory;
@@ -160,8 +161,10 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
             }
         } catch (FileNotFoundException ex) {
             throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
-        } catch (InterruptedException | IOException ex) {
+        } catch (InterruptedException ex) {
             throw HyracksDataException.create(ex);
+        } catch (IOException ex) {
+            throw CompilationException.create(ErrorCode.EXTERNAL_SOURCE_ERROR, ExceptionUtils.getMessageOrToString(ex));
         }
     }
 
@@ -229,10 +232,11 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
      * 1. when target files are not null, it generates a file aware input stream that validate
      * against the files
      * 2. if the data is binary, it returns a generic reader */
-    public AsterixInputStream createInputStream(IHyracksTaskContext ctx) throws HyracksDataException {
+    public AsterixInputStream createInputStream(IHyracksTaskContext ctx, IExternalDataRuntimeContext context)
+            throws HyracksDataException {
         try {
             restoreConfig(ctx);
-            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, ugi);
+            return new HDFSInputStream(read, inputSplits, readSchedule, nodeName, conf, configuration, ugi, context);
         } catch (Exception e) {
             throw HyracksDataException.create(e);
         }
@@ -307,7 +311,7 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         try {
             if (recordReaderClazz != null) {
                 StreamRecordReader streamReader = (StreamRecordReader) recordReaderClazz.getConstructor().newInstance();
-                streamReader.configure(ctx, createInputStream(ctx), configuration);
+                streamReader.configure(ctx, createInputStream(ctx, context), configuration);
                 return streamReader;
             }
             restoreConfig(ctx);
