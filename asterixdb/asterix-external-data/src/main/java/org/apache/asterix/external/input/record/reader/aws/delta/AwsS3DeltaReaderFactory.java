@@ -91,7 +91,7 @@ public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
             throws AlgebricksException, HyracksDataException {
         this.configuration = configuration;
         Configuration conf = new Configuration();
-        configurationBuilder(configuration, conf);
+        applyConfiguration(configuration, conf);
         String tableMetadataPath = S3Constants.HADOOP_S3_PROTOCOL + "://"
                 + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
                 + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
@@ -189,7 +189,7 @@ public class AwsS3DeltaReaderFactory implements IRecordReaderFactory<Object> {
         partitionWorkLoadsBasedOnSize.addAll(workloadQueue);
     }
 
-    public static void configurationBuilder(Map<String, String> configuration, Configuration conf) {
+    public static void applyConfiguration(Map<String, String> configuration, Configuration conf) {
         conf.set(S3Constants.HADOOP_ACCESS_KEY_ID, configuration.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME));
         conf.set(S3Constants.HADOOP_SECRET_ACCESS_KEY, configuration.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME));
         if (configuration.get(S3Constants.SESSION_TOKEN_FIELD_NAME) != null) {
