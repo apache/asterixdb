@@ -100,7 +100,7 @@
     <hadoop-awsjavasdk.version>1.12.637</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>
-    <azureidentity.version>1.13.1</azureidentity.version>
+    <azureidentity.version>1.13.3</azureidentity.version>
     <azuredatalakejavasdk.version>12.18.1</azuredatalakejavasdk.version>
     <gcsjavasdk.version>2.40.1</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
@@ -2055,7 +2055,7 @@
       <dependency>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro</artifactId>
-        <version>1.11.3</version>
+        <version>1.12.0</version>
       </dependency>
       <dependency>
         <groupId>org.apache.iceberg</groupId>

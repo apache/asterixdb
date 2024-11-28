@@ -520,11 +520,16 @@ public class ExternalDataUtils {
         String tableMetadataPath = null;
         if (configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE)
                 .equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
-            AwsS3DeltaReaderFactory.configurationBuilder(configuration, conf);
+            AwsS3DeltaReaderFactory.applyConfiguration(configuration, conf);
             tableMetadataPath = S3Constants.HADOOP_S3_PROTOCOL + "://"
                     + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
                     + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
+        } else {
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR,
+                    "Delta format is not supported for the external source type: "
+                            + configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE));
         }
+
         Engine engine = DefaultEngine.create(conf);
         io.delta.kernel.Table table = io.delta.kernel.Table.forPath(engine, tableMetadataPath);
         try {

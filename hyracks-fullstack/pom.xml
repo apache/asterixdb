@@ -499,6 +499,11 @@
         <artifactId>asm-util</artifactId>
         <version>${asm.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client-runtime</artifactId>
+        <version>3.4.1</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <build>
