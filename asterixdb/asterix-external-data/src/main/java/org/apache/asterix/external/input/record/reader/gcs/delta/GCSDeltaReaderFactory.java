@@ -16,31 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.asterix.external.input.record.reader.aws.delta;
-
-import static org.apache.asterix.external.util.aws.s3.S3AuthUtils.configureAwsS3HdfsJobConf;
+package org.apache.asterix.external.input.record.reader.gcs.delta;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.asterix.external.util.aws.s3.S3Utils;
+import org.apache.asterix.external.util.google.gcs.GCSUtils;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 
-public class AwsS3DeltaReaderFactory extends DeltaReaderFactory {
+public class GCSDeltaReaderFactory extends DeltaReaderFactory {
     private static final long serialVersionUID = 1L;
     private static final List<String> RECORD_READER_NAMES =
-            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3);
+            Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
 
     @Override
-    protected void configureJobConf(JobConf conf, Map<String, String> configuration) {
-        configureAwsS3HdfsJobConf(conf, configuration);
+    protected void configureJobConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
+        GCSUtils.configureHdfsJobConf(conf, configuration);
     }
 
     @Override
-    protected String getTablePath(Map<String, String> configuration) {
-        return S3Utils.getPath(configuration);
+    protected String getTablePath(Map<String, String> configuration) throws AlgebricksException {
+        return GCSUtils.getPath(configuration);
     }
 
     @Override

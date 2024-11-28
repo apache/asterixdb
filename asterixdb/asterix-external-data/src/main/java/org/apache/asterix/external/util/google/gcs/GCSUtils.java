@@ -22,6 +22,8 @@ import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERR
 import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
 import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
+import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
+import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
 import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
@@ -140,9 +142,11 @@ public class GCSUtils {
      */
     public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
             IWarningCollector collector) throws CompilationException {
-
+        if (isDeltaTable(configuration)) {
+            validateDeltaTableProperties(configuration);
+        }
         // check if the format property is present
-        if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
+        else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
         }
 
@@ -224,6 +228,11 @@ public class GCSUtils {
      * @param configuration      properties
      * @param numberOfPartitions number of partitions in the cluster
      */
+    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration)
+            throws AlgebricksException {
+        configureHdfsJobConf(conf, configuration, 0);
+    }
+
     public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration, int numberOfPartitions)
             throws AlgebricksException {
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
@@ -266,5 +275,11 @@ public class GCSUtils {
         if (endpoint != null) {
             conf.set(HADOOP_ENDPOINT, endpoint);
         }
+    }
+
+    public static String getPath(Map<String, String> configuration) {
+        return GCSConstants.HADOOP_GCS_PROTOCOL + "://"
+                + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
+                + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
     }
 }

@@ -333,6 +333,10 @@ public class S3AuthUtils {
      * @param configuration      properties
      * @param numberOfPartitions number of partitions in the cluster
      */
+    public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration) {
+        configureAwsS3HdfsJobConf(conf, configuration, 0);
+    }
+
     public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration,
             int numberOfPartitions) {
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
@@ -371,7 +375,9 @@ public class S3AuthUtils {
         /*
          * Set the size of S3 connection pool to be the number of partitions
          */
-        conf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
+        if (numberOfPartitions != 0) {
+            conf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
+        }
 
         if (serviceEndpoint != null) {
             // Validation of the URL should be done at hadoop-aws level
@@ -470,7 +476,11 @@ public class S3AuthUtils {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_CONTAINER_NOT_FOUND, container);
         }
         if (isDeltaTable(configuration)) {
-            validateDeltaTableExists(configuration);
+            try {
+                validateDeltaTableExists(configuration);
+            } catch (AlgebricksException e) {
+                throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e);
+            }
         }
     }
 }

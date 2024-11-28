@@ -292,4 +292,10 @@ public class S3Utils {
         allObjects.put("folders", folders);
         return allObjects;
     }
+
+    public static String getPath(Map<String, String> configuration) {
+        return S3Constants.HADOOP_S3_PROTOCOL + "://"
+                + configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME) + '/'
+                + configuration.get(ExternalDataConstants.DEFINITION_FIELD_NAME);
+    }
 }
