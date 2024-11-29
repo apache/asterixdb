@@ -34,7 +34,7 @@ import com.google.cloud.storage.StorageOptions;
 
 public class LSMGCSTest extends AbstractLSMTest {
     private static Storage client;
-    private static final int MOCK_SERVER_PORT = 4443;
+    private static final int MOCK_SERVER_PORT = 24443;
     private static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:" + MOCK_SERVER_PORT;
     private static final String MOCK_SERVER_REGION = "us-west2"; // does not matter the value
     private static final String MOCK_SERVER_PROJECT_ID = "asterixdb-gcs-test-project-id";

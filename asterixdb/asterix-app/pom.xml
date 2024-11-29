@@ -326,7 +326,7 @@
               <workingDirectory>${project.build.directory}/fake-gcs-server</workingDirectory>
               <arguments>
                 <argument>-port</argument>
-                <argument>4443</argument>
+                <argument>24443</argument>
                 <argument>-scheme</argument>
                 <argument>http</argument>
                 <argument>-host</argument>
@@ -447,7 +447,7 @@
               <goal>npm</goal>
             </goals>
             <configuration>
-              <arguments>install azurite</arguments>
+              <arguments>install azurite@3.31.0</arguments>
             </configuration>
           </execution>
         </executions>
