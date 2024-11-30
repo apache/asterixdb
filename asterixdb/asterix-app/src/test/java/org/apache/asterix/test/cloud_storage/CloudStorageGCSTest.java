@@ -68,7 +68,7 @@ public class CloudStorageGCSTest {
     private static final String CONFIG_FILE_NAME = "src/test/resources/cc-cloud-storage-gcs.conf";
     private static final String DELTA_RESULT_PATH = "results_cloud";
     private static final String EXCLUDED_TESTS = "MP";
-    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:4443";
+    public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:24443";
     private static final String MOCK_SERVER_PROJECT_ID = "asterixdb-gcs-test-project-id";
 
     public CloudStorageGCSTest(TestCaseContext tcCtx) {
