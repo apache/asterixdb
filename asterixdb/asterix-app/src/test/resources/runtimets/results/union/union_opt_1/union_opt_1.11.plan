@@ -14,11 +14,11 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- UNION_ALL  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                assign [$$223] <- [{"two": $$193}] project : [$$223] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$223] <- [{"two": $$193}] project: [$$223] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_LIMIT  |PARTITIONED|
-                    assign [$$193] <- [$$onek1.getField(2)] project : [$$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$193] <- [$$onek1.getField(2)] project: [$$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$onek1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -32,11 +32,11 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                assign [$$237] <- [{"two": $$194}] project : [$$237] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$237] <- [{"two": $$194}] project: [$$237] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_LIMIT  |PARTITIONED|
-                    assign [$$194] <- [$$onek2.getField(2)] project : [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$194] <- [$$onek2.getField(2)] project: [$$194] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$onek2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -54,11 +54,11 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- UNION_ALL  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                assign [$$355] <- [{"two": $$195}] project : [$$355] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$355] <- [{"two": $$195}] project: [$$355] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_LIMIT  |PARTITIONED|
-                    assign [$$195] <- [$$onek1.getField(2)] project : [$$195] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$195] <- [$$onek1.getField(2)] project: [$$195] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$onek1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -72,11 +72,11 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
-                assign [$$364] <- [{"two": $$196}] project : [$$364] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$364] <- [{"two": $$196}] project: [$$364] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_LIMIT  |PARTITIONED|
-                    assign [$$196] <- [$$onek2.getField(2)] project : [$$196] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$196] <- [$$onek2.getField(2)] project: [$$196] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$onek2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|

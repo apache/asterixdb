@@ -2,7 +2,7 @@ distribute result [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$31] <- [{"age": $$38, "name": $$39}] project : [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$31] <- [{"age": $$38, "name": $$39}] project: [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$38, $$39]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HYBRID_HASH_JOIN [$$33][$$34]  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
-                      assign [$$38] <- [$$p1.getField("age")] project : [$$38, $$33] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      assign [$$38] <- [$$p1.getField("age")] project: [$$38, $$33] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -32,7 +32,7 @@ distribute result [$$31] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
-                      assign [$$39] <- [$$p2.getField("name")] project : [$$39, $$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      assign [$$39] <- [$$p2.getField("name")] project: [$$39, $$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

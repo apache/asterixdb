@@ -4,7 +4,7 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$101] <- [{"uname": $$uname, "cnt": $$103}] project : [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$101] <- [{"uname": $$uname, "cnt": $$103}] project: [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_MERGE_EXCHANGE [$$103(DESC) ]  |PARTITIONED|
@@ -67,13 +67,13 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- HASH_PARTITION_EXCHANGE [$$104]  |PARTITIONED|
                                                   running-aggregate [$$110] <- [create-query-uid()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- RUNNING_AGGREGATE  |PARTITIONED|
-                                                    assign [$$104] <- [$$ht1.getField("text")] project : [$$102, $$104] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    assign [$$104] <- [$$ht1.getField("text")] project: [$$102, $$104] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ASSIGN  |PARTITIONED|
                                                       project ([$$102, $$ht1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                         unnest $$ht1 <- scan-collection($$105) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- UNNEST  |PARTITIONED|
-                                                          assign [$$105, $$102] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] project : [$$105, $$102] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          assign [$$105, $$102] <- [$$p1.getField("entities").getField("hashtags"), $$p1.getField("user").getField("name")] project: [$$105, $$102] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- ASSIGN  |PARTITIONED|
                                                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -85,13 +85,13 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
-                                                  assign [$$111, $$88] <- [true, $$ht2.getField("text")] project : [$$111, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$111, $$88] <- [true, $$ht2.getField("text")] project: [$$111, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     project ([$$ht2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                       unnest $$ht2 <- scan-collection($$106) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- UNNEST  |PARTITIONED|
-                                                        assign [$$106] <- [$$p2.getField("entities").getField("hashtags")] project : [$$106] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        assign [$$106] <- [$$p2.getField("entities").getField("hashtags")] project: [$$106] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- ASSIGN  |PARTITIONED|
                                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

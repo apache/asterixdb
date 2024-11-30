@@ -2,7 +2,7 @@ distribute result [$$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$88] <- [{"id": $$91, "review": $$95}] project : [$$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$88] <- [{"id": $$91, "review": $$95}] project: [$$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
                 limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_LIMIT  |PARTITIONED|
-                  assign [$$95] <- [$$d.getField(1)] project : [$$91, $$95] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$95] <- [$$d.getField(1)] project: [$$91, $$95] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -2,7 +2,7 @@ distribute result [$$66] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$66] <- [{"count": $$69}] project : [$$66] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$66] <- [{"count": $$69}] project: [$$66] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$69] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -33,7 +33,7 @@ distribute result [$$66] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
                                } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- SUBPLAN  |PARTITIONED|
-                          assign [$$64, $$70] <- [to-object-var-str($$t).getField(0), $$t.getField("a1")] project : [$$64, $$70] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          assign [$$64, $$70] <- [to-object-var-str($$t).getField(0), $$t.getField("a1")] project: [$$64, $$70] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
                             project ([$$t]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_PROJECT  |PARTITIONED|

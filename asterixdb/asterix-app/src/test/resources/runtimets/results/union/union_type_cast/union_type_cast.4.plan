@@ -18,7 +18,7 @@ distribute result [$#1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- UNION_ALL  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$139] <- [cast({"id": $$68, "no_in_response_to": object-remove($$s, "in-response-to")})] project : [$$139, $$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$139] <- [cast({"id": $$68, "no_in_response_to": object-remove($$s, "in-response-to")})] project: [$$139, $$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -34,7 +34,7 @@ distribute result [$#1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$141] <- [cast({"id": $$69, "user": $$t})] project : [$$141, $$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$141] <- [cast({"id": $$69, "user": $$t})] project: [$$141, $$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -46,9 +46,9 @@ distribute result [$#1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                assign [$$140] <- [cast({"id": $$70, "no_author_id": object-remove($$s, "author-id")})] project : [$$140, $$70] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$140] <- [cast({"id": $$70, "no_author_id": object-remove($$s, "author-id")})] project: [$$140, $$70] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  assign [$$70, $$s] <- [$$68, $$s] project : [$$70, $$s] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$70, $$s] <- [$$68, $$s] project: [$$70, $$s] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -4,7 +4,7 @@ distribute result [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 20 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$185] <- [{"$1": 10, "c_custkey": $$c_custkey, "c_name": $$c_name, "revenue": $$203, "c_acctbal": $$c_acctbal, "n_name": $$n_name, "c_address": $$c_address, "c_phone": $$c_phone, "c_comment": $$c_comment}] project : [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$185] <- [{"$1": 10, "c_custkey": $$c_custkey, "c_name": $$c_name, "revenue": $$203, "c_acctbal": $$c_acctbal, "n_name": $$n_name, "c_address": $$c_address, "c_phone": $$c_phone, "c_comment": $$c_comment}] project: [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_MERGE_EXCHANGE [$$203(DESC) ]  |PARTITIONED|
@@ -58,7 +58,7 @@ distribute result [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- HYBRID_HASH_JOIN [$$195][$$206]  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- HASH_PARTITION_EXCHANGE [$$195]  |PARTITIONED|
-                                                  assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project : [$$195, $$187, $$188, $$189, $$191, $$192, $$201] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project: [$$195, $$187, $$188, $$189, $$191, $$192, $$201] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -74,7 +74,7 @@ distribute result [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- STREAM_PROJECT  |PARTITIONED|
                                                     select (and(lt($$193, "1993-10-01"), ge($$193, "1993-07-01"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- STREAM_SELECT  |PARTITIONED|
-                                                      assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project : [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project: [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- ASSIGN  |PARTITIONED|
                                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -104,7 +104,7 @@ distribute result [$$185] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- HASH_PARTITION_EXCHANGE [$$199]  |PARTITIONED|
-                                  assign [$$190] <- [$$n.getField(1)] project : [$$190, $$199] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  assign [$$190] <- [$$n.getField(1)] project: [$$190, $$199] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ASSIGN  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

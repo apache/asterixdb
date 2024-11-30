@@ -16,7 +16,7 @@ distribute result [$$item] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 unnest $$item <- scan-collection($$28) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- UNNEST  |PARTITIONED|
-                  assign [$$28] <- [$$d.getField("array")] project : [$$27, $$28] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$28] <- [$$d.getField("array")] project: [$$27, $$28] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

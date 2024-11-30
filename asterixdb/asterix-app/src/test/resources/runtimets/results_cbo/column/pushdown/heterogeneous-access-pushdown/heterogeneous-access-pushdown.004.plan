@@ -2,9 +2,9 @@ distribute result [$$21] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] project : [$$21] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
+    assign [$$21] <- [switch-case(true, is-array($$23), array-star($$23).getField("text"), $$23.getField("text"))] project: [$$21] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
     -- ASSIGN  |PARTITIONED|
-      assign [$$23] <- [$$p.getField("arrayOrObject")] project : [$$23] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
+      assign [$$23] <- [$$p.getField("arrayOrObject")] project: [$$23] [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
       -- ASSIGN  |PARTITIONED|
         project ([$$p]) [cardinality: 6.0, op-cost: 0.0, total-cost: 21.51]
         -- STREAM_PROJECT  |PARTITIONED|

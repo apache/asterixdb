@@ -222,7 +222,7 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.append("assign ").append(str(op.getVariables())).append(" <- ");
         printExprList(op.getExpressions());
         if (op.isProjectPushed()) {
-            stringBuilder.append(" project : ").append(str(op.getProjectVariables()));
+            stringBuilder.append(" project: ").append(str(op.getProjectVariables()));
         }
 
         appendSchema(op, showDetails);

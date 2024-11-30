@@ -6,7 +6,7 @@ distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        assign [$$69] <- [{"id": int64-default-null($$d.getField("id")), "review": string-default-null($$d.getField("review"))}] project : [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$69] <- [{"id": int64-default-null($$d.getField("id")), "review": string-default-null($$d.getField("review"))}] project: [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
           limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_LIMIT  |PARTITIONED|

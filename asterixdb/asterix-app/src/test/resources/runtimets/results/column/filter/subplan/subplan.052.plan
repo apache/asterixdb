@@ -23,7 +23,7 @@ distribute result [$$67] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
                    } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- SUBPLAN  |PARTITIONED|
-              assign [$$68] <- [$$p.getField("arrayOrObject")] project : [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$68] <- [$$p.getField("arrayOrObject")] project: [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
                 project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_PROJECT  |PARTITIONED|

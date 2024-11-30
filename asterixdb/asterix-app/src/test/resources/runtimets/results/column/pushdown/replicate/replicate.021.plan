@@ -2,7 +2,7 @@ distribute result [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$68] <- [{"$1": $$71}] project : [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$68] <- [{"$1": $$71}] project: [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$71] <- [agg-sql-sum($$78)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -22,7 +22,7 @@ distribute result [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_SELECT  |PARTITIONED|
                       assign [$$72] <- [$$o1.getField("o_carrier_id")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
-                        assign [$$o1] <- [$$o2] project : [$$o1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        assign [$$o1] <- [$$o2] project: [$$o1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -61,7 +61,7 @@ distribute result [$$68] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
                                } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- SUBPLAN  |PARTITIONED|
-                          assign [$$73, $$75] <- [$$o2.getField("o_carrier_id"), $$o2.getField("o_orderline")] project : [$$73, $$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          assign [$$73, $$75] <- [$$o2.getField("o_carrier_id"), $$o2.getField("o_orderline")] project: [$$73, $$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
                             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

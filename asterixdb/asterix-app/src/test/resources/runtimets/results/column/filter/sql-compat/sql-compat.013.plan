@@ -2,7 +2,7 @@ distribute result [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$197] <- [{"str2": $$str2, "sum:num3:ok": $$201}] project : [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$197] <- [{"str2": $$str2, "sum:num3:ok": $$201}] project: [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$str2(ASC) ]  |PARTITIONED|
@@ -24,7 +24,7 @@ distribute result [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- SORT_GROUP_BY[$$231]  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                assign [$$195] <- [double-default-null($$206)] project : [$$195, $$231] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$195] <- [double-default-null($$206)] project: [$$195, $$231] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$206, $$231]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
@@ -43,7 +43,7 @@ distribute result [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- SUBPLAN  |PARTITIONED|
                           assign [$$231] <- [string-default-null($$210)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
-                            assign [$$210, $$206] <- [$#4.getField("str2"), $#4.getField("num3")] project : [$$210, $$206] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$210, $$206] <- [$#4.getField("str2"), $#4.getField("num3")] project: [$$210, $$206] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
                               project ([$#4]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_PROJECT  |PARTITIONED|

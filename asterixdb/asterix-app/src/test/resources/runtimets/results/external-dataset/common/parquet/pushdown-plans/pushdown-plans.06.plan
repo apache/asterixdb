@@ -6,11 +6,11 @@ distribute result [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        assign [$$22] <- [{"display_url": get-item($$23, 0).getField("display_url")}] project : [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$22] <- [{"display_url": get-item($$23, 0).getField("display_url")}] project: [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
           limit 10 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            assign [$$23] <- [$$p.getField("entities").getField("urls")] project : [$$23] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            assign [$$23] <- [$$p.getField("entities").getField("urls")] project: [$$23] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -25,7 +25,7 @@ distribute result [$$50] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                      } [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
               -- SUBPLAN  |PARTITIONED|
-                assign [$$51] <- [$$p.getField("entities").getField("urls")] project : [$$51] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                assign [$$51] <- [$$p.getField("entities").getField("urls")] project: [$$51] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$p]) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                   -- STREAM_PROJECT  |PARTITIONED|

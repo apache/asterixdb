@@ -2,7 +2,7 @@ distribute result [$$36] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$36] <- [{"o1_id": $$43, "o2_id": $$44}] project : [$$36] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$36] <- [{"o1_id": $$43, "o2_id": $$44}] project: [$$36] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$43, $$44]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$36] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 select (gt($$o1.getField("o_ol_cnt_1"), 4)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$o1, $$43, $$39] <- [$$o2, $$44, $$40] project : [$$o1, $$43, $$39] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$o1, $$43, $$39] <- [$$o2, $$44, $$40] project: [$$o1, $$43, $$39] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

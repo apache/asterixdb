@@ -4,7 +4,7 @@ distribute result [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$84] <- [{"name": $$93, "phone": $$94, "num_reviews": sql-count($$91), "overall_avg": $#2, "overall_reviews": $$83}] project : [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+      assign [$$84] <- [{"name": $$93, "phone": $$94, "num_reviews": sql-count($$91), "overall_avg": $#2, "overall_reviews": $$83}] project: [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
         -- SORT_MERGE_EXCHANGE [$#2(DESC) ]  |PARTITIONED|
@@ -29,7 +29,7 @@ distribute result [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
                          } [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
                   -- SUBPLAN  |PARTITIONED|
-                    assign [$#2] <- [get-item($$72, 0)] project : [$$93, $$94, $$91, $#2] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
+                    assign [$#2] <- [get-item($$72, 0)] project: [$$93, $$94, $$91, $#2] [cardinality: 0.0, op-cost: 0.0, total-cost: 2.0]
                     -- ASSIGN  |PARTITIONED|
                       subplan {
                                 aggregate [$$72] <- [listify($$86)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

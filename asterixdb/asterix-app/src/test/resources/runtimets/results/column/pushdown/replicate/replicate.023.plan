@@ -2,7 +2,7 @@ distribute result [$$54] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$54] <- [{"$1": $$59}] project : [$$54] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$54] <- [{"$1": $$59}] project: [$$54] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$59] <- [agg-sql-sum($$62)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$54] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- HYBRID_HASH_JOIN [$$57][$$58]  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$57] <- [$$58] project : [$$57] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$57] <- [$$58] project: [$$57] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

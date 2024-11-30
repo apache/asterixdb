@@ -2,7 +2,7 @@ distribute result [$$v] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$v] <- [{"SK0": $$14, "PK0": $$15}] project : [$$v] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$v] <- [{"SK0": $$14, "PK0": $$15}] project: [$$v] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$15(ASC) ]  |PARTITIONED|

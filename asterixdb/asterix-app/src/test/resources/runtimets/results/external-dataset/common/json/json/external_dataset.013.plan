@@ -2,7 +2,7 @@ distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$50] <- [{"cnt": $$53}] project : [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$50] <- [{"cnt": $$53}] project: [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -18,7 +18,7 @@ distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- HYBRID_HASH_JOIN [$$51][$$52]  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$51] <- [$$52] project : [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$51] <- [$$52] project: [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -26,7 +26,7 @@ distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- REPLICATE  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
-                            assign [$$52] <- [$$b.getField("quarter")] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -42,7 +42,7 @@ distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- REPLICATE  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
-                        assign [$$52] <- [$$b.getField("quarter")] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

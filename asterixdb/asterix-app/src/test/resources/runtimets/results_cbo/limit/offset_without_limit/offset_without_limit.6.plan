@@ -4,7 +4,7 @@ distribute result [$$16] [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit offset 98 [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$16] <- [{"id": $$18, "dblpid": $$paper.getField(1)}] project : [$$16] [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
+      assign [$$16] <- [{"id": $$18, "dblpid": $$paper.getField(1)}] project: [$$16] [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 764.39]
         -- SORT_MERGE_EXCHANGE [$$18(ASC) ]  |PARTITIONED|

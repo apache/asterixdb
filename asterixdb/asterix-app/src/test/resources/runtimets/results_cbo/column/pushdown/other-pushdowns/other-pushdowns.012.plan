@@ -2,7 +2,7 @@ distribute result [$$22] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$22] <- [{"display_url": $$27}] project : [$$22] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+    assign [$$22] <- [{"display_url": $$27}] project: [$$22] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$27]) [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -12,11 +12,11 @@ distribute result [$$22] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
           -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
             exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              assign [$$27] <- [get-item($$24, 0).getField("display_url")] project : [$$27, $$25] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+              assign [$$27] <- [get-item($$24, 0).getField("display_url")] project: [$$27, $$25] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
               -- ASSIGN  |PARTITIONED|
                 select (eq(sql-count($$24), 1)) [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$24] <- [$$p.getField("entities").getField("urls")] project : [$$25, $$24] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                  assign [$$24] <- [$$p.getField("entities").getField("urls")] project: [$$25, $$24] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

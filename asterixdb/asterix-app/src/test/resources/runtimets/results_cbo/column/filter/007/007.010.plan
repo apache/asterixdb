@@ -2,7 +2,7 @@ distribute result [$$37] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$37] <- [{"$1": $$39}] project : [$$37] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
+    assign [$$37] <- [{"$1": $$39}] project: [$$37] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$39] <- [agg-sql-sum($$42)] [cardinality: 1.0, op-cost: 0.0, total-cost: 30.0]
       -- AGGREGATE  |UNPARTITIONED|

@@ -2,7 +2,7 @@ distribute result [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$37] <- [{"c1": $$47, "c2": $$48}] project : [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
+    assign [$$37] <- [{"c1": $$47, "c2": $$48}] project: [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
       -- SORT_MERGE_EXCHANGE [$$47(ASC), $$48(ASC) ]  |PARTITIONED|
@@ -38,7 +38,7 @@ distribute result [$$37] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
                                     -- BTREE_SEARCH  |PARTITIONED|
                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                        assign [$$42] <- [to-string($$t1.getField("c_s"))] project : [$$47, $$42] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        assign [$$42] <- [to-string($$t1.getField("c_s"))] project: [$$47, $$42] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- ASSIGN  |PARTITIONED|
                                           select (eq($$t1.getField("c_i64"), 2)) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                           -- STREAM_SELECT  |PARTITIONED|

@@ -6,7 +6,7 @@ distribute result [$$20] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        assign [$$20] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$21, 0)}] project : [$$20] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
+        assign [$$20] <- [{"shipdate": substring($$c.getField(10), 0, 4), "suppkey": gt($$21, 0)}] project: [$$20] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
         -- ASSIGN  |PARTITIONED|
           limit 5 [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
           -- STREAM_LIMIT  |PARTITIONED|

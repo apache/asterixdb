@@ -4,7 +4,7 @@ distribute result [$$80] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 5 offset 5 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$80] <- [get-item($$78, 0)] project : [$$80] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$80] <- [get-item($$78, 0)] project: [$$80] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
         project ([$$78]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|

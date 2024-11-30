@@ -2,7 +2,7 @@ distribute result [$$28] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$28] <- [{"display_url": $$urls.getField("display_url")}] project : [$$28] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+    assign [$$28] <- [{"display_url": $$urls.getField("display_url")}] project: [$$28] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$urls]) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$28] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 unnest $$urls <- scan-collection($$31) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                 -- UNNEST  |PARTITIONED|
-                  assign [$$31] <- [$$p.getField("entities").getField("urls")] project : [$$30, $$31] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+                  assign [$$31] <- [$$p.getField("entities").getField("urls")] project: [$$30, $$31] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

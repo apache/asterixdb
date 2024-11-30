@@ -2,7 +2,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$52] <- [{"$1": $$57}] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$52] <- [{"$1": $$57}] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$57] <- [agg-sql-sum($$60)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
                     assign [$$50] <- [$$55.getField("y")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
-                      assign [$$55] <- [$$c.getField("x")] project : [$$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      assign [$$55] <- [$$c.getField("x")] project: [$$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$c]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|
@@ -34,7 +34,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
-                    assign [$$56] <- [$$r.getField("x")] project : [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$56] <- [$$r.getField("x")] project: [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$r]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|

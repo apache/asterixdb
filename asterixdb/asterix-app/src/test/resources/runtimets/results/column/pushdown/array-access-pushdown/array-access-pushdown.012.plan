@@ -2,7 +2,7 @@ distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$19] <- [get-item(get-item(get-item($$25.getField("coordinates"), 0), 0), 0)] project : [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$19] <- [get-item(get-item(get-item($$25.getField("coordinates"), 0), 0), 0)] project: [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$25]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -12,7 +12,7 @@ distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
             exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              assign [$$25] <- [$$p.getField("place").getField("bounding_box")] project : [$$25, $$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$25] <- [$$p.getField("place").getField("bounding_box")] project: [$$25, $$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

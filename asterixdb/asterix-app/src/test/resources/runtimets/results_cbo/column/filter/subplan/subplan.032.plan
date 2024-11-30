@@ -18,7 +18,7 @@ distribute result [$$70] [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
                 -- STREAM_PROJECT  |PARTITIONED|
                   select (eq($$p.getField("arrayOrObject").getField("text"), "7")) [cardinality: 1.0, op-cost: 0.0, total-cost: 6.0]
                   -- STREAM_SELECT  |PARTITIONED|
-                    assign [$$p] <- [$$b2] project : [$$p] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+                    assign [$$p] <- [$$b2] project: [$$p] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -54,7 +54,7 @@ distribute result [$$70] [cardinality: 2.1, op-cost: 0.0, total-cost: 15.41]
                             -- STREAM_PROJECT  |PARTITIONED|
                               unnest $$ao <- scan-collection($$72) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                               -- UNNEST  |PARTITIONED|
-                                assign [$$72] <- [$$b2.getField("arrayOrObject")] project : [$$72] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+                                assign [$$72] <- [$$b2.getField("arrayOrObject")] project: [$$72] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                 -- ASSIGN  |PARTITIONED|
                                   exchange [cardinality: 1.0, op-cost: 4.0, total-cost: 5.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

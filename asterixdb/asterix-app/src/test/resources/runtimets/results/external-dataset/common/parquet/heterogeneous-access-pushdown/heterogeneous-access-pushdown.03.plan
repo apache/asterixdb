@@ -2,7 +2,7 @@ distribute result [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$21] <- [switch-case(true, is-array($$23), $$25, $$26)] project : [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$21] <- [switch-case(true, is-array($$23), $$25, $$26)] project: [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$23, $$25, $$26]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -14,7 +14,7 @@ distribute result [$$21] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
               assign [$$25, $$26] <- [array-star($$23).getField("text"), $$23.getField("text")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
-                assign [$$23, $$24] <- [$$p.getField("arrayOrObject"), $$p.getField("id")] project : [$$23, $$24] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$23, $$24] <- [$$p.getField("arrayOrObject"), $$p.getField("id")] project: [$$23, $$24] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

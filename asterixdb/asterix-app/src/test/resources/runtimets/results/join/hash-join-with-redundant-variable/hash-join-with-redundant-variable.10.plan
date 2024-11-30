@@ -2,7 +2,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project : [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$58(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
@@ -30,7 +30,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$$56]  |PARTITIONED|
-                    assign [$$56] <- [$$s.getField(3)] project : [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$56] <- [$$s.getField(3)] project: [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       project ([$$s]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- STREAM_PROJECT  |PARTITIONED|
@@ -44,7 +44,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
-                assign [$$55] <- [$$c.getField(3)] project : [$$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$55] <- [$$c.getField(3)] project: [$$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$c]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|

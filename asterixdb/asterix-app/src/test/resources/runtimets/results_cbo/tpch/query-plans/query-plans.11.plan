@@ -4,7 +4,7 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 20 [cardinality: 4550.31, op-cost: 0.0, total-cost: 990713.46]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$185] <- [{"$1": 10, "c_custkey": $$c_custkey, "c_name": $$c_name, "revenue": $$203, "c_acctbal": $$c_acctbal, "n_name": $$n_name, "c_address": $$c_address, "c_phone": $$c_phone, "c_comment": $$c_comment}] project : [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 990713.46]
+      assign [$$185] <- [{"$1": 10, "c_custkey": $$c_custkey, "c_name": $$c_name, "revenue": $$203, "c_acctbal": $$c_acctbal, "n_name": $$n_name, "c_address": $$c_address, "c_phone": $$c_phone, "c_comment": $$c_comment}] project: [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 990713.46]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 4550.31, op-cost: 0.0, total-cost: 990713.46]
         -- SORT_MERGE_EXCHANGE [$$203(DESC) ]  |PARTITIONED|
@@ -68,7 +68,7 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                         exchange [cardinality: 15014.11, op-cost: 17515.08, total-cost: 32515.08]
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                          assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project : [$$195, $$187, $$188, $$189, $$191, $$192, $$201, $$196] [cardinality: 15014.11, op-cost: 0.0, total-cost: 15000.0]
+                                          assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project: [$$195, $$187, $$188, $$189, $$191, $$192, $$201, $$196] [cardinality: 15014.11, op-cost: 0.0, total-cost: 15000.0]
                                           -- ASSIGN  |PARTITIONED|
                                             project ([$$196, $$195, $$c]) [cardinality: 15014.11, op-cost: 0.0, total-cost: 15000.0]
                                             -- STREAM_PROJECT  |PARTITIONED|
@@ -86,7 +86,7 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                           select (and(lt($$193, "1993-10-01"), ge($$193, "1993-07-01"))) [cardinality: 4374.41, op-cost: 0.0, total-cost: 150000.0]
                                                           -- STREAM_SELECT  |PARTITIONED|
-                                                            assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project : [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project: [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                             -- ASSIGN  |PARTITIONED|
                                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -98,7 +98,7 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                  assign [$$190] <- [$$n.getField(1)] project : [$$190, $$199] [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
+                                  assign [$$190] <- [$$n.getField(1)] project: [$$190, $$199] [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]
                                   -- ASSIGN  |PARTITIONED|
                                     exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

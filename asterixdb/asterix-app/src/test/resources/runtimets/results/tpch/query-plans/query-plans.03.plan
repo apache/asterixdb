@@ -2,7 +2,7 @@ distribute result [$$134] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$134] <- [{"$1": 1, "l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$140, "sum_base_price": $$141, "sum_disc_price": $$142, "sum_charge": $$143, "avg_qty": $$144, "avg_price": $$145, "avg_disc": $$146, "count_order": $$147}] project : [$$134] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$134] <- [{"$1": 1, "l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$140, "sum_base_price": $$141, "sum_disc_price": $$142, "sum_charge": $$143, "avg_qty": $$144, "avg_price": $$145, "avg_disc": $$146, "count_order": $$147}] project: [$$134] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC) ]  |PARTITIONED|

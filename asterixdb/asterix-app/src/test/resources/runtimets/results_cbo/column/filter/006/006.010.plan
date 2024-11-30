@@ -2,7 +2,7 @@ distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$51] <- [{"$1": $$53}] project : [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
+    assign [$$51] <- [{"$1": $$53}] project: [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$53] <- [agg-sql-sum($$57)] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -27,7 +27,7 @@ distribute result [$$51] [cardinality: 1.0, op-cost: 0.0, total-cost: 8.0]
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                 -- SUBPLAN  |PARTITIONED|
-                  assign [$$54] <- [$$c.getField("geo").getField("coordinates")] project : [$$54] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
+                  assign [$$54] <- [$$c.getField("geo").getField("coordinates")] project: [$$54] [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                   -- ASSIGN  |PARTITIONED|
                     project ([$$c]) [cardinality: 8.0, op-cost: 0.0, total-cost: 8.0]
                     -- STREAM_PROJECT  |PARTITIONED|

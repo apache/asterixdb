@@ -2,7 +2,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$73(ASC), $$54(ASC) ]  |PARTITIONED|
@@ -48,7 +48,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- BTREE_SEARCH  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                  assign [$$55] <- [int32($$t1.getField(1))] project : [$$53, $$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$55] <- [int32($$t1.getField(1))] project: [$$53, $$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -76,7 +76,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- BTREE_SEARCH  |PARTITIONED|
                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                            assign [$$55] <- [int32($$t1.getField(1))] project : [$$53, $$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            assign [$$55] <- [int32($$t1.getField(1))] project: [$$53, $$55] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- ASSIGN  |PARTITIONED|
                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

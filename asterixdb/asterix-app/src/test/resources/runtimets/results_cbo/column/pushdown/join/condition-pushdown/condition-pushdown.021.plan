@@ -2,7 +2,7 @@ distribute result [$$32] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$32] <- [{"c1": $$40, "c2": $$41}] project : [$$32] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
+    assign [$$32] <- [{"c1": $$40, "c2": $$41}] project: [$$32] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
       -- SORT_MERGE_EXCHANGE [$$40(ASC), $$41(ASC) ]  |PARTITIONED|
@@ -36,7 +36,7 @@ distribute result [$$32] [cardinality: 2.1, op-cost: 0.0, total-cost: 13.35]
                                   -- BTREE_SEARCH  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                      assign [$$37, $$40] <- [to-string($$t1.getField("c_s")), $$t1.getField("c_x")] project : [$$37, $$40] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      assign [$$37, $$40] <- [to-string($$t1.getField("c_s")), $$t1.getField("c_x")] project: [$$37, $$40] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ASSIGN  |PARTITIONED|
                                         project ([$$t1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- STREAM_PROJECT  |PARTITIONED|

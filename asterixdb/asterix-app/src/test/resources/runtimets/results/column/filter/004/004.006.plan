@@ -2,7 +2,7 @@ distribute result [$$47] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$47] <- [{"$1": $$49}] project : [$$47] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$47] <- [{"$1": $$49}] project: [$$47] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$49] <- [agg-sql-sum($$51)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$47] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
                 unnest $$D <- scan-collection($$50) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- UNNEST  |PARTITIONED|
-                  assign [$$50] <- [$$C.getField("dates")] project : [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$50] <- [$$C.getField("dates")] project: [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     project ([$$C]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|

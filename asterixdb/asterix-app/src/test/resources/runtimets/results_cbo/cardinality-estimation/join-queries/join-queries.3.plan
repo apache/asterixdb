@@ -10,7 +10,7 @@ distribute result [$$35] [cardinality: 961.01, op-cost: 0.0, total-cost: 136513.
         -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
           exchange [cardinality: 4785.13, op-cost: 0.0, total-cost: 19523.81]
           -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
-            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project : [$$35] [cardinality: 4785.13, op-cost: 0.0, total-cost: 19523.81]
+            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project: [$$35] [cardinality: 4785.13, op-cost: 0.0, total-cost: 19523.81]
             -- ASSIGN  |PARTITIONED|
               select (gt($$l.getField(4), 10)) [cardinality: 4785.13, op-cost: 12018.16, total-cost: 19523.81]
               -- STREAM_SELECT  |PARTITIONED|

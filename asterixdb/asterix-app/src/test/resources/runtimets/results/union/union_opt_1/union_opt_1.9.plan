@@ -12,9 +12,9 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
             limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              assign [$$52] <- [{"two": $$107}] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$52] <- [{"two": $$107}] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
-                assign [$$107] <- [$$onek1.getField(2)] project : [$$107] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$107] <- [$$onek1.getField(2)] project: [$$107] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$onek1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|
@@ -30,9 +30,9 @@ distribute result [$$t] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
             limit 4 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_LIMIT  |PARTITIONED|
-              assign [$$58] <- [{"two": $$109}] project : [$$58] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              assign [$$58] <- [{"two": $$109}] project: [$$58] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ASSIGN  |PARTITIONED|
-                assign [$$109] <- [$$onek2.getField(2)] project : [$$109] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$109] <- [$$onek2.getField(2)] project: [$$109] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   project ([$$onek2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- STREAM_PROJECT  |PARTITIONED|

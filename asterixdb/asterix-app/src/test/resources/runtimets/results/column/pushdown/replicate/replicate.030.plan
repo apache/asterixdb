@@ -2,7 +2,7 @@ distribute result [$$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$34] <- [{"o1": $$o1}] project : [$$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$34] <- [{"o1": $$o1}] project: [$$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$o1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -14,7 +14,7 @@ distribute result [$$34] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
               select (gt($$o1.getField("o_ol_cnt"), 4)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_SELECT  |PARTITIONED|
-                assign [$$o1, $$37] <- [$$o2, $$38] project : [$$o1, $$37] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$o1, $$37] <- [$$o2, $$38] project: [$$o1, $$37] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

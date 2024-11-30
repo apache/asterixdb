@@ -2,7 +2,7 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$101] <- [{"uname": $$uname, "cnt": $$105}] project : [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
+    assign [$$101] <- [{"uname": $$uname, "cnt": $$105}] project: [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
       -- SORT_MERGE_EXCHANGE [$$105(DESC), $$uname(ASC) ]  |PARTITIONED|
@@ -61,13 +61,13 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
                                           -- HASH_PARTITION_EXCHANGE [$$106]  |PARTITIONED|
                                             running-aggregate [$$112] <- [create-query-uid()] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                             -- RUNNING_AGGREGATE  |PARTITIONED|
-                                              assign [$$106] <- [$$ht1.getField("display_url")] project : [$$102, $$106] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+                                              assign [$$106] <- [$$ht1.getField("display_url")] project: [$$102, $$106] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                               -- ASSIGN  |PARTITIONED|
                                                 project ([$$102, $$ht1]) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                   unnest $$ht1 <- scan-collection($$107) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                                   -- UNNEST  |PARTITIONED|
-                                                    assign [$$107, $$102] <- [$$p1.getField("entities").getField("urls"), $$p1.getField("user").getField("name")] project : [$$107, $$102] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
+                                                    assign [$$107, $$102] <- [$$p1.getField("entities").getField("urls"), $$p1.getField("user").getField("name")] project: [$$107, $$102] [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                                     -- ASSIGN  |PARTITIONED|
                                                       project ([$$p1]) [cardinality: 1.0, op-cost: 0.0, total-cost: 1.0]
                                                       -- STREAM_PROJECT  |PARTITIONED|
@@ -81,13 +81,13 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 5.5]
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                           -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
-                                            assign [$$113, $$88] <- [true, $$ht2.getField("display_url")] project : [$$113, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            assign [$$113, $$88] <- [true, $$ht2.getField("display_url")] project: [$$113, $$88] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                             -- ASSIGN  |PARTITIONED|
                                               project ([$$ht2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- STREAM_PROJECT  |PARTITIONED|
                                                 unnest $$ht2 <- scan-collection($$108) [cardinality: 1.0, op-cost: 1.0, total-cost: 1.0]
                                                 -- UNNEST  |PARTITIONED|
-                                                  assign [$$108] <- [$$p2.getField("entities").getField("urls")] project : [$$108] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$108] <- [$$p2.getField("entities").getField("urls")] project: [$$108] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     project ([$$p2]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- STREAM_PROJECT  |PARTITIONED|

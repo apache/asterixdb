@@ -6,11 +6,11 @@ distribute result [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        assign [$$19] <- [{"$1": substring($$20, 0, 21)}] project : [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$19] <- [{"$1": substring($$20, 0, 21)}] project: [$$19] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
           limit 1 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            assign [$$20] <- [$$DBLP1.getField(1)] project : [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            assign [$$20] <- [$$DBLP1.getField(1)] project: [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
               project ([$$DBLP1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|

@@ -262,7 +262,7 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
         addIndent(indent).append("assign ").append(str(op.getVariables())).append(" <- ");
         pprintExprList(op.getExpressions(), indent);
         if (op.isProjectPushed()) {
-            buffer.append(" project : ").append(str(op.getProjectVariables()));
+            buffer.append(" project: ").append(str(op.getProjectVariables()));
         }
         return null;
     }

@@ -2,7 +2,7 @@ distribute result [$$48] [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.3
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.31]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$48] <- [{"$1": $$51}] project : [$$48] [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.31]
+    assign [$$48] <- [{"$1": $$51}] project: [$$48] [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.31]
     -- ASSIGN  |PARTITIONED|
       project ([$$51]) [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.31]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -26,7 +26,7 @@ distribute result [$$48] [cardinality: 1495.77, op-cost: 0.0, total-cost: 4487.3
               -- EXTERNAL_GROUP_BY[$$49]  |PARTITIONED|
                 exchange [cardinality: 1495.77, op-cost: 0.0, total-cost: 1495.77]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$49] <- [$$o.getField(4)] project : [$$49] [cardinality: 1495.77, op-cost: 0.0, total-cost: 1495.77]
+                  assign [$$49] <- [$$o.getField(4)] project: [$$49] [cardinality: 1495.77, op-cost: 0.0, total-cost: 1495.77]
                   -- ASSIGN  |PARTITIONED|
                     project ([$$o]) [cardinality: 1495.77, op-cost: 0.0, total-cost: 1495.77]
                     -- STREAM_PROJECT  |PARTITIONED|

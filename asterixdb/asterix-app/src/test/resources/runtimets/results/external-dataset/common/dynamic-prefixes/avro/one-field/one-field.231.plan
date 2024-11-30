@@ -34,7 +34,7 @@ distribute result [$$d] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
-                        assign [$$41, $$43] <- [lowercase($$l.getField("name").getField("last")), $$l.getField("id")] project : [$$41, $$43] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        assign [$$41, $$43] <- [lowercase($$l.getField("name").getField("last")), $$l.getField("id")] project: [$$41, $$43] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
                           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -2,7 +2,7 @@ distribute result [$$51] [cardinality: 1298.0, op-cost: 0.0, total-cost: 15506.8
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1298.0, op-cost: 0.0, total-cost: 15506.8]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"$1": $$55}] project : [$$51] [cardinality: 1298.0, op-cost: 0.0, total-cost: 15506.8]
+    assign [$$51] <- [{"$1": $$55}] project: [$$51] [cardinality: 1298.0, op-cost: 0.0, total-cost: 15506.8]
     -- ASSIGN  |PARTITIONED|
       project ([$$55]) [cardinality: 1298.0, op-cost: 0.0, total-cost: 15506.8]
       -- STREAM_PROJECT  |PARTITIONED|

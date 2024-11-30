@@ -10,7 +10,7 @@ distribute result [$$35] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
           exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
-            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$43, "o_custkey": $$44}] project : [$$35] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$43, "o_custkey": $$44}] project: [$$35] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
               project ([$$37, $$43, $$44]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|
@@ -36,7 +36,7 @@ distribute result [$$35] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
-                      assign [$$44] <- [$$o.getField(1)] project : [$$44, $$38] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      assign [$$44] <- [$$o.getField(1)] project: [$$44, $$38] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

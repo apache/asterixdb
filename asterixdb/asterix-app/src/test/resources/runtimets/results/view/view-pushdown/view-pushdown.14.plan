@@ -4,7 +4,7 @@ distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 3 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$69] <- [{"id": $$71, "review": $$75}] project : [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$69] <- [{"id": $$71, "review": $$75}] project: [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- SORT_MERGE_EXCHANGE [$$71(ASC) ]  |PARTITIONED|
@@ -16,7 +16,7 @@ distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STABLE_SORT [topK: 3] [$$71(ASC)]  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$75] <- [$$d.getField(1)] project : [$$71, $$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$75] <- [$$d.getField(1)] project: [$$71, $$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

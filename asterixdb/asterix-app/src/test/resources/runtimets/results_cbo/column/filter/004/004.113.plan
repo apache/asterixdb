@@ -2,7 +2,7 @@ distribute result [$$54] [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$54] <- [{"$1": $$57}] project : [$$54] [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
+    assign [$$54] <- [{"$1": $$57}] project: [$$54] [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$57] <- [agg-sql-sum($$61)] [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -12,7 +12,7 @@ distribute result [$$54] [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
           -- AGGREGATE  |PARTITIONED|
             select (or(eq($$62, "2011"), eq($$62, "2016"))) [cardinality: 7.0, op-cost: 0.0, total-cost: 101.0]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$62] <- [substring($$D, 0, 4)] project : [$$62] [cardinality: 101.0, op-cost: 0.0, total-cost: 101.0]
+              assign [$$62] <- [substring($$D, 0, 4)] project: [$$62] [cardinality: 101.0, op-cost: 0.0, total-cost: 101.0]
               -- ASSIGN  |PARTITIONED|
                 project ([$$D]) [cardinality: 101.0, op-cost: 0.0, total-cost: 101.0]
                 -- STREAM_PROJECT  |PARTITIONED|

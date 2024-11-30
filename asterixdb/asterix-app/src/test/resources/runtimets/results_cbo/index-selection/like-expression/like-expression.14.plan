@@ -2,7 +2,7 @@ distribute result [$$16] [cardinality: 1.0, op-cost: 0.0, total-cost: 19.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 19.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$16] <- [{"ds1": $$ds1}] project : [$$16] [cardinality: 1.0, op-cost: 0.0, total-cost: 19.0]
+    assign [$$16] <- [{"ds1": $$ds1}] project: [$$16] [cardinality: 1.0, op-cost: 0.0, total-cost: 19.0]
     -- ASSIGN  |PARTITIONED|
       select (like($$ds1.getField(1), "sxvc_is")) [cardinality: 1.0, op-cost: 0.0, total-cost: 19.0]
       -- STREAM_SELECT  |PARTITIONED|

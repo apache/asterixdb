@@ -6,7 +6,7 @@ distribute result [$$62] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- STREAM_PROJECT  |PARTITIONED|
       select (and(eq($$62.getField("customerId"), 1), eq($$94, 2001), eq($$95, 1), eq($$96, 1), eq($$97, "ford"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_SELECT  |PARTITIONED|
-        assign [$$62] <- [{"customer_id": int64-default-null($$m.getField("customer_id")), "year": $$94, "month": $$95, "day": $$96, "company": $$97}] project : [$$97, $$96, $$95, $$94, $$62] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        assign [$$62] <- [{"customer_id": int64-default-null($$m.getField("customer_id")), "year": $$94, "month": $$95, "day": $$96, "company": $$97}] project: [$$97, $$96, $$95, $$94, $$62] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- ASSIGN  |PARTITIONED|
           assign [$$97, $$96, $$95, $$94] <- [string-default-null($$m.getField("company")), int64-default-null($$m.getField("day")), int64-default-null($$m.getField("month")), int64-default-null($$m.getField("year"))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|

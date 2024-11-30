@@ -2,7 +2,7 @@ distribute result [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$31] <- [{"a": $$34, "item": $$item}] project : [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
+    assign [$$31] <- [{"a": $$34, "item": $$item}] project: [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$34, $$item]) [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -20,7 +20,7 @@ distribute result [$$31] [cardinality: 2.0, op-cost: 0.0, total-cost: 20.0]
                   -- UNNEST  |PARTITIONED|
                     select (eq($$34, "1")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_SELECT  |PARTITIONED|
-                      assign [$$34, $$36] <- [$$d.getField("a"), $$d.getField("array")] project : [$$35, $$34, $$36] [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
+                      assign [$$34, $$36] <- [$$d.getField("a"), $$d.getField("array")] project: [$$35, $$34, $$36] [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                       -- ASSIGN  |PARTITIONED|
                         exchange [cardinality: 18.0, op-cost: 0.0, total-cost: 18.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

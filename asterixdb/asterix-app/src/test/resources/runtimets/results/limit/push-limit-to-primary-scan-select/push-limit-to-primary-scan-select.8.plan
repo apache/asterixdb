@@ -8,9 +8,9 @@ distribute result [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
         limit 2 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_LIMIT  |PARTITIONED|
-          assign [$$22] <- [$$26.getField("lang")] project : [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          assign [$$22] <- [$$26.getField("lang")] project: [$$22] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ASSIGN  |PARTITIONED|
-            assign [$$26] <- [$$t.getField("user")] project : [$$26] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            assign [$$26] <- [$$t.getField("user")] project: [$$26] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- ASSIGN  |PARTITIONED|
               project ([$$t]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- STREAM_PROJECT  |PARTITIONED|

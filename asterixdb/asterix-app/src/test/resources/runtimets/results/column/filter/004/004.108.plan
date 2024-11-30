@@ -2,7 +2,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$52] <- [{"$1": $$55}] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$52] <- [{"$1": $$55}] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
       aggregate [$$55] <- [agg-sql-sum($$58)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
@@ -27,7 +27,7 @@ distribute result [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- SUBPLAN  |PARTITIONED|
-                  assign [$$56] <- [$$C.getField("dates")] project : [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$56] <- [$$C.getField("dates")] project: [$$56] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     project ([$$C]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|

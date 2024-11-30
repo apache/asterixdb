@@ -2,7 +2,7 @@ distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$69] <- [{"text": $$text, "$1": $$73}] project : [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$69] <- [{"text": $$text, "$1": $$73}] project: [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$text(ASC) ]  |PARTITIONED|
@@ -26,11 +26,11 @@ distribute result [$$69] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 select (eq(lowercase($$71), "string")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$71] <- [$$ht.getField("display_url")] project : [$$75, $$71] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$71] <- [$$ht.getField("display_url")] project: [$$75, $$71] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     unnest $$ht <- scan-collection($$75) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- UNNEST  |PARTITIONED|
-                      assign [$$75] <- [$$p1.getField("entities").getField("urls")] project : [$$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      assign [$$75] <- [$$p1.getField("entities").getField("urls")] project: [$$75] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ASSIGN  |PARTITIONED|
                         project ([$$p1]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|

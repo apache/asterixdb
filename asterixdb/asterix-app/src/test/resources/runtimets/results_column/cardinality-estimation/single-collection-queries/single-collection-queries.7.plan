@@ -2,7 +2,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"$1": $$55}] project : [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$51] <- [{"$1": $$55}] project: [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       project ([$$55]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- STREAM_PROJECT  |PARTITIONED|
@@ -26,7 +26,7 @@ distribute result [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- SORT_GROUP_BY[$$52]  |PARTITIONED|
                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  assign [$$52] <- [$$l.getField(1)] project : [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  assign [$$52] <- [$$l.getField(1)] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ASSIGN  |PARTITIONED|
                     project ([$$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- STREAM_PROJECT  |PARTITIONED|

@@ -2,7 +2,7 @@ distribute result [$$30] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$30] <- [{"p1": $$p1, "id": $$32}] project : [$$30] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$30] <- [{"p1": $$p1, "id": $$32}] project: [$$30] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- SORT_MERGE_EXCHANGE [$$32(ASC) ]  |PARTITIONED|
@@ -30,7 +30,7 @@ distribute result [$$30] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
-                    assign [$$32] <- [$$p2.getField("id")] project : [$$32] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$32] <- [$$p2.getField("id")] project: [$$32] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

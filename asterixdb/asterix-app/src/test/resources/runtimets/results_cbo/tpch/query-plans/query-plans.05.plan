@@ -4,7 +4,7 @@ distribute result [$$122] [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
     limit 10 [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353253.2]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      assign [$$122] <- [{"$1": 3, "l_orderkey": $$l_orderkey, "revenue": $$134, "o_orderdate": $$o_orderdate, "o_shippriority": $$o_shippriority}] project : [$$122] [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353253.2]
+      assign [$$122] <- [{"$1": 3, "l_orderkey": $$l_orderkey, "revenue": $$134, "o_orderdate": $$o_orderdate, "o_shippriority": $$o_shippriority}] project: [$$122] [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353253.2]
       -- ASSIGN  |PARTITIONED|
         exchange [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353253.2]
         -- SORT_MERGE_EXCHANGE [$$134(DESC), $$o_orderdate(ASC) ]  |PARTITIONED|
@@ -70,7 +70,7 @@ distribute result [$$122] [cardinality: 30577.54, op-cost: 0.0, total-cost: 1353
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           select (lt($$127, "1995-03-22")) [cardinality: 73659.45, op-cost: 0.0, total-cost: 150000.0]
                                           -- STREAM_SELECT  |PARTITIONED|
-                                            assign [$$125, $$136, $$127] <- [$$o.getField(7), $$o.getField(1), $$o.getField(4)] project : [$$129, $$125, $$136, $$127] [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
+                                            assign [$$125, $$136, $$127] <- [$$o.getField(7), $$o.getField(1), $$o.getField(4)] project: [$$129, $$125, $$136, $$127] [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
                                             -- ASSIGN  |PARTITIONED|
                                               exchange [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

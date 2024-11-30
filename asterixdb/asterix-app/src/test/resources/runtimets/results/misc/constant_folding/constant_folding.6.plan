@@ -2,7 +2,7 @@ distribute result [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$15] <- [or(null, le($$x, 2))] project : [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
+    assign [$$15] <- [or(null, le($$x, 2))] project: [$$15] [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
     -- ASSIGN  |UNPARTITIONED|
       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 33.22]
       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|

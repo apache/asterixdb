@@ -2,9 +2,9 @@ distribute result [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$18] <- [{"id": $$20.getField("id"), "name": $$20.getField("name")}] project : [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$18] <- [{"id": $$20.getField("id"), "name": $$20.getField("name")}] project: [$$18] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
-      assign [$$20] <- [$$p.getField("user")] project : [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$20] <- [$$p.getField("user")] project: [$$20] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
         project ([$$p]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|

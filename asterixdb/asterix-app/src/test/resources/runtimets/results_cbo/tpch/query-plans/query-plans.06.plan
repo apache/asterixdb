@@ -2,7 +2,7 @@ distribute result [$$74] [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.3
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.36]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$74] <- [{"$1": 4, "o_orderpriority": $$o_orderpriority, "order_count": $$81}] project : [$$74] [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.36]
+    assign [$$74] <- [{"$1": 4, "o_orderpriority": $$o_orderpriority, "order_count": $$81}] project: [$$74] [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.36]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.36]
       -- SORT_MERGE_EXCHANGE [$$o_orderpriority(ASC) ]  |PARTITIONED|
@@ -68,7 +68,7 @@ distribute result [$$74] [cardinality: 997.0, op-cost: 0.0, total-cost: 610643.3
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               select (and(ge($$76, "1996-05-01"), lt($$76, "1996-08-01"))) [cardinality: 6349.95, op-cost: 0.0, total-cost: 150000.0]
                                               -- STREAM_SELECT  |PARTITIONED|
-                                                assign [$$75, $$76] <- [$$o.getField(5), $$o.getField(4)] project : [$$77, $$75, $$76] [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
+                                                assign [$$75, $$76] <- [$$o.getField(5), $$o.getField(4)] project: [$$77, $$75, $$76] [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
                                                 -- ASSIGN  |PARTITIONED|
                                                   exchange [cardinality: 150000.0, op-cost: 0.0, total-cost: 150000.0]
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

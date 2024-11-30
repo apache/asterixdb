@@ -25,7 +25,7 @@ distribute result [$$49] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
                      } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- SUBPLAN  |PARTITIONED|
-                assign [$$50] <- [$$p.getField("entities").getField("urls")] project : [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                assign [$$50] <- [$$p.getField("entities").getField("urls")] project: [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
                   exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

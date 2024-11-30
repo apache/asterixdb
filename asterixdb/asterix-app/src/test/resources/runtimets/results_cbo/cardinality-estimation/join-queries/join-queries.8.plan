@@ -2,7 +2,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project : [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
+    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project: [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
     -- ASSIGN  |PARTITIONED|
       exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -32,7 +32,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
                     -- HYBRID_HASH_JOIN [$$128, $$133][$$130, $$127]  |PARTITIONED|
                       exchange [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [$$140, $$139, $$133] <- [$$l.getField(6), $$l.getField(5), $$l.getField(2)] project : [$$139, $$140, $$120, $$128, $$133] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
+                        assign [$$140, $$139, $$133] <- [$$l.getField(6), $$l.getField(5), $$l.getField(2)] project: [$$139, $$140, $$120, $$128, $$133] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
                         -- ASSIGN  |PARTITIONED|
                           project ([$$120, $$128, $$l]) [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
                           -- STREAM_PROJECT  |PARTITIONED|
@@ -58,7 +58,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
                                               -- HYBRID_HASH_JOIN [$$131][$$128]  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- HASH_PARTITION_EXCHANGE [$$131]  |PARTITIONED|
-                                                  assign [$$131] <- [$$c.getField(3)] project : [$$123, $$131] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$131] <- [$$c.getField(3)] project: [$$123, $$131] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -70,7 +70,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- HASH_PARTITION_EXCHANGE [$$128]  |PARTITIONED|
-                                                  assign [$$120] <- [$$n.getField(1)] project : [$$120, $$128] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  assign [$$120] <- [$$n.getField(1)] project: [$$120, $$128] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                   -- ASSIGN  |PARTITIONED|
                                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -86,7 +86,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             select (and(lt($$121, "1994-01-01"), ge($$121, "1993-01-01"))) [cardinality: 248.35, op-cost: 0.0, total-cost: 1500.0]
                                             -- STREAM_SELECT  |PARTITIONED|
-                                              assign [$$136, $$121] <- [$$o.getField(1), $$o.getField(4)] project : [$$124, $$136, $$121] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                              assign [$$136, $$121] <- [$$o.getField(1), $$o.getField(4)] project: [$$124, $$136, $$121] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- ASSIGN  |PARTITIONED|
                                                 exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -98,7 +98,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7223.81]
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                       exchange [cardinality: 10.0, op-cost: 40.0, total-cost: 50.0]
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                        assign [$$130] <- [$$s.getField(3)] project : [$$130, $$127] [cardinality: 10.0, op-cost: 0.0, total-cost: 10.0]
+                        assign [$$130] <- [$$s.getField(3)] project: [$$130, $$127] [cardinality: 10.0, op-cost: 0.0, total-cost: 10.0]
                         -- ASSIGN  |PARTITIONED|
                           exchange [cardinality: 10.0, op-cost: 40.0, total-cost: 50.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
