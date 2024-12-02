@@ -17,34 +17,14 @@
  * under the License.
  */
 /*
-* Description  : Field access pushdown
-* Expected Res : Success
-* Date         : Feb 23rd 2024
-*/
-
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
+ * Description  : Request All fields
+ * Expected Res : Success
+ * Date         : Dec 2nd 2024
+ */
 
 USE test;
 
 
-CREATE TYPE AvroType as {
-};
-
-CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
-(
-  %template%,
-  ("container"="playground"),
-  ("definition"="avro-data/reviews"),
-  ("include"="*avro_type.avro"),
-  ("format" = "avro")
-);
-
-CREATE EXTERNAL DATASET AvroDataset2(AvroType) USING %adapter%
-(
-  %template%,
-  ("container"="playground"),
-  ("definition"="avro-data/reviews"),
-  ("include"="*partition_heterogeneous.avro"),
-  ("format" = "avro")
-);
+SELECT VALUE active
+FROM AvroDataset2
+ORDER BY AvroDataset2.id;
