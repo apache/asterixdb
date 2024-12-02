@@ -30,8 +30,8 @@ CREATE TYPE TestType AS {
 
 CREATE EXTERNAL DATASET Name(TestType) USING %adapter% (
     %template%,
-    ("container"="playground"),
-    ("definition"="avro-data/external-filter/embed/name/{name:string}"),
+    %additional_Properties%,
+    ("definition"="%path_prefix%avro-data/external-filter/embed/name/{name:string}"),
     ("embed-filter-values" = "true"),
     ("format"="avro")
 );

@@ -1139,6 +1139,7 @@ public class ExternalDataUtils {
                 protocol = nodePathPair[0];
                 break;
             case ExternalDataConstants.KEY_ADAPTER_NAME_HDFS:
+                // Remove trailing slashes as prefixes/paths in hdfs start with a slash (absolute paths)
                 return configurations.get(ExternalDataConstants.KEY_HDFS_URL).replaceAll("/+$", "");
             default:
                 return "";

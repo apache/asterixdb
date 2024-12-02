@@ -86,14 +86,11 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
             nextInputSplit();
         }
 
-        if (reader.next(key, value)) {
-            return true;
-        }
-        while (nextInputSplit()) {
-            if (reader.next(key, value)) {
+        do {
+            if (readerHasNext()) {
                 return true;
             }
-        }
+        } while (nextInputSplit());
         return false;
     }
 
@@ -101,6 +98,10 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
     public IRawRecord<V> next() throws IOException {
         record.set(value);
         return record;
+    }
+
+    protected boolean readerHasNext() throws IOException {
+        return reader.next(key, value);
     }
 
     private boolean nextInputSplit() throws IOException {
@@ -128,12 +129,16 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
                     continue;
                 }
 
-                reader.close();
-                reader = getRecordReader(currentSplitIndex);
+                closeRecordReader();
+                setRecordReader(currentSplitIndex);
                 return true;
             }
         }
         return false;
+    }
+
+    protected void closeRecordReader() throws IOException {
+        reader.close();
     }
 
     /**
@@ -143,7 +148,7 @@ public abstract class AbstractHDFSRecordReader<K, V> implements IRecordReader<V>
      */
     protected abstract boolean onNextInputSplit() throws IOException;
 
-    protected abstract RecordReader<K, V> getRecordReader(int splitIndex) throws IOException;
+    protected abstract void setRecordReader(int splitIndex) throws IOException;
 
     @Override
     public boolean stop() {

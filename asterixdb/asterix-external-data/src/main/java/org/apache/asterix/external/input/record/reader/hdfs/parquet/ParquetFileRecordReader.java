@@ -62,7 +62,7 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
 
     @SuppressWarnings("unchecked")
     @Override
-    protected RecordReader<Void, V> getRecordReader(int splitIndex) throws IOException {
+    protected void setRecordReader(int splitIndex) throws IOException {
         try {
             ParquetRecordReaderWrapper readerWrapper = ugi == null ? getReader(splitIndex)
                     : ugi.doAs((PrivilegedExceptionAction<ParquetRecordReaderWrapper>) () -> getReader(splitIndex));
@@ -75,7 +75,6 @@ public class ParquetFileRecordReader<V extends IValueReference> extends Abstract
         if (value == null) {
             value = reader.createValue();
         }
-        return reader;
     }
 
     private ParquetRecordReaderWrapper getReader(int splitIndex) throws IOException {

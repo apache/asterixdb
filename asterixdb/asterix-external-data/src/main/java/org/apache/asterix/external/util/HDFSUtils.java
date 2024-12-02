@@ -203,6 +203,8 @@ public class HDFSUtils {
                 return ExternalDataConstants.CLASS_NAME_SEQUENCE_INPUT_FORMAT;
             case ExternalDataConstants.INPUT_FORMAT_PARQUET:
                 return ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT;
+            case ExternalDataConstants.INPUT_FORMAT_AVRO:
+                return ExternalDataConstants.CLASS_NAME_AVRO_INPUT_FORMAT;
             default:
                 return inputFormatParameter;
         }
@@ -252,6 +254,9 @@ public class HDFSUtils {
 
         if (ExternalDataConstants.CLASS_NAME_PARQUET_INPUT_FORMAT.equals(formatClassName)) {
             configureParquet(configuration, conf);
+        } else if (ExternalDataConstants.CLASS_NAME_AVRO_INPUT_FORMAT.equals(formatClassName)) {
+            conf.set(ExternalDataConstants.HDFS_AVRO_IGNORE_INPUTS_WITHOUT_EXTENSION, ExternalDataConstants.FALSE);
+            disableHadoopFileSystemCache(conf, ExternalDataConstants.READER_HDFS);
         }
 
         if (configuration.containsKey(ExternalDataConstants.S3A_CHANGE_DETECTION_REQUIRED)) {

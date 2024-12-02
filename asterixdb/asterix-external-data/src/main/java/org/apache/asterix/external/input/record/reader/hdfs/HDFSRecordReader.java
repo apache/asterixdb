@@ -37,7 +37,7 @@ public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordR
     }
 
     @Override
-    protected RecordReader<K, V> getRecordReader(int splitIndex) throws IOException {
+    protected void setRecordReader(int splitIndex) throws IOException {
         try {
             reader = ugi == null ? getReader(splitIndex)
                     : ugi.doAs((PrivilegedExceptionAction<RecordReader<K, V>>) () -> getReader(splitIndex));
@@ -48,7 +48,6 @@ public class HDFSRecordReader<K, V extends Writable> extends AbstractHDFSRecordR
             key = reader.createKey();
             value = reader.createValue();
         }
-        return reader;
     }
 
     @SuppressWarnings("unchecked")

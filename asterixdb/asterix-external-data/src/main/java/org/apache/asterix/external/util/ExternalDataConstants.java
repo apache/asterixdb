@@ -24,6 +24,7 @@ import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
+import org.apache.asterix.external.input.record.reader.hdfs.avro.AvroFileInputFormat;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.hyracks.util.StorageUtil;
 
@@ -176,16 +177,21 @@ public class ExternalDataConstants {
     public static final String CLASS_NAME_SEQUENCE_INPUT_FORMAT = "org.apache.hadoop.mapred.SequenceFileInputFormat";
     public static final String CLASS_NAME_PARQUET_INPUT_FORMAT =
             "org.apache.asterix.external.input.record.reader.hdfs.parquet.MapredParquetInputFormat";
+    public static final String CLASS_NAME_AVRO_INPUT_FORMAT = AvroFileInputFormat.class.getName();
     public static final String CLASS_NAME_HDFS_FILESYSTEM = "org.apache.hadoop.hdfs.DistributedFileSystem";
     public static final String S3A_CHANGE_DETECTION_REQUIRED = "requireVersionChangeDetection";
     public static final String S3A_CHANGE_DETECTION_REQUIRED_CONFIG_KEY = "fs.s3a.change.detection.version.required";
     public static final String HDFS_IO_COMPRESSION_CODECS_KEY = "io.compression.codecs";
+    public static final String HDFS_AVRO_IGNORE_INPUTS_WITHOUT_EXTENSION =
+            "avro.mapred.ignore.inputs.without.extension";
+
     /**
      * input formats aliases
      */
     public static final String INPUT_FORMAT_TEXT = "text-input-format";
     public static final String INPUT_FORMAT_SEQUENCE = "sequence-input-format";
     public static final String INPUT_FORMAT_PARQUET = "parquet-input-format";
+    public static final String INPUT_FORMAT_AVRO = "avro-input-format";
 
     public static final String HDFS_BLOCKSIZE = "blocksize";
     public static final String HDFS_REPLICATION = "replication";

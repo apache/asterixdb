@@ -359,4 +359,212 @@
     <!--      </compilation-unit>-->
     <!--    </test-case>-->
   </test-group>
+  <test-group name="avro">
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-map">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/avro-types/avro-map</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-nested-records">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/avro-types/avro-nested-records</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-primitives">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/avro-types/avro-primitives</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-types/avro-union">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/avro-types/avro-union</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/type-mismatch">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/type-mismatch</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/string-standard-utf8">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/string-standard-utf8</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/select-all-fields">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/select-all-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/select-count-one-field">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/array-access">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/array-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/field-access">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/field-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/heterogeneous-access">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/heterogeneous-access</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/invalid-avro-files">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>External source error. org.apache.avro.InvalidAvroMagicException: Not an Avro data file</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/invalid-type">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">none</output-dir>
+        <expected-error>ASX3123: Type 'AvroType' contains declared fields, which is not supported for 'avro' format</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/missing-fields">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/missing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/multi-file-multi-schema">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/multi-file-multi-schema</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/no-files">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/no-files</output-dir>
+        <expected-error>ASX1114: The provided external dataset configuration returned no files from the external source</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/object-concat">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">common/avro/object-concat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="one-field">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="query">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">query</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-one-value">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">embed-one-value</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-multiple-values">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">embed-multiple-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-flat">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">embed-flat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="embed-with-nested-values">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">embed-with-nested-values</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="using-limit">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">using-limit</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset/common/dynamic-prefixes/avro">
+      <compilation-unit name="views">
+        <placeholder name="adapter" value="hdfs" />
+        <placeholder name="path_prefix" value="/playground/" />
+        <placeholder name="additional_Properties" value='("input-format" = "avro-input-format")' />
+        <output-dir compare="Text">views</output-dir>
+      </compilation-unit>
+    </test-case>
+  </test-group>
 </test-suite>

@@ -35,8 +35,8 @@ CREATE TYPE AvroType as {
 CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
 (
   %template%,
-  ("container"="playground"),
-  ("definition"="avro-data/reviews"),
+  %additional_Properties%,
+  ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*id_age.avro"),
   ("format" = "avro")
 );

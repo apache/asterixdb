@@ -45,6 +45,7 @@ import org.apache.asterix.external.api.IRecordReaderFactory;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
 import org.apache.asterix.external.input.record.reader.abstracts.AbstractExternalInputStreamFactory;
 import org.apache.asterix.external.input.record.reader.hdfs.HDFSRecordReader;
+import org.apache.asterix.external.input.record.reader.hdfs.avro.AvroFileRecordReader;
 import org.apache.asterix.external.input.record.reader.hdfs.parquet.ParquetFileRecordReader;
 import org.apache.asterix.external.input.record.reader.stream.StreamRecordReader;
 import org.apache.asterix.external.input.stream.HDFSInputStream;
@@ -54,6 +55,7 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.external.util.HDFSUtils;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
@@ -197,6 +199,8 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
                 reader.close();
             } else if (formatString.equals(ExternalDataConstants.FORMAT_PARQUET)) {
                 recordClass = IValueReference.class;
+            } else if (formatString.equals(ExternalDataConstants.FORMAT_AVRO)) {
+                recordClass = GenericRecord.class;
             } else {
                 recordReaderClazz = StreamRecordReaderProvider.getRecordReaderClazz(configuration);
                 this.recordClass = char[].class;
@@ -356,6 +360,9 @@ public class HDFSDataSourceFactory implements IRecordReaderFactory<Object>, IExt
         if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim()
                 .equals(ExternalDataConstants.INPUT_FORMAT_PARQUET)) {
             return new ParquetFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi);
+        } else if (configuration.get(ExternalDataConstants.KEY_INPUT_FORMAT).trim()
+                .equals(ExternalDataConstants.INPUT_FORMAT_AVRO)) {
+            return new AvroFileRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, context, ugi);
         } else {
             return new HDFSRecordReader<>(read, inputSplits, readSchedule, nodeName, conf, ugi);
         }

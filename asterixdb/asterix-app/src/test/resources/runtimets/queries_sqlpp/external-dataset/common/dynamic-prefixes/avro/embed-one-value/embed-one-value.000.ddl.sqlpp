@@ -27,16 +27,16 @@ CREATE TYPE TestType AS {
 
 CREATE EXTERNAL DATASET Department(TestType) USING %adapter% (
     %template%,
-    ("container"="playground"),
-    ("definition"="avro-data/external-filter/embed/department/{department:string}"),
+    %additional_Properties%,
+    ("definition"="%path_prefix%avro-data/external-filter/embed/department/{department:string}"),
     ("embed-filter-values" = "true"),
     ("format"="avro")
 );
 
 CREATE EXTERNAL DATASET LastName(TestType) USING %adapter% (
     %template%,
-    ("container"="playground"),
-    ("definition"="avro-data/external-filter/embed/last-name/{name.last:string}"),
+    %additional_Properties%,
+    ("definition"="%path_prefix%avro-data/external-filter/embed/last-name/{name.last:string}"),
     ("embed-filter-values" = "true"),
     ("format"="avro")
 );
