@@ -36,7 +36,6 @@
       <artifactId>slf4j-api</artifactId>
       <licenses>
         <license>
-          <name>an MIT-style license</name>
           <url>https://raw.githubusercontent.com/qos-ch/slf4j/v_1.7.25/slf4j-api/LICENSE.txt</url>
         </license>
       </licenses>
@@ -163,9 +162,9 @@
       <artifactId>netty-transport</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -175,9 +174,21 @@
       <artifactId>netty-transport-classes-epoll</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
+      </properties>
+    </project>
+  </supplement>
+  <supplement>
+    <project>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-transport-native-epoll</artifactId>
+      <properties>
+        <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -187,9 +198,9 @@
       <artifactId>netty-transport-native-unix-common</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -199,9 +210,9 @@
       <artifactId>netty-codec</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -211,9 +222,9 @@
       <artifactId>netty-codec-dns</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -223,9 +234,9 @@
       <artifactId>netty-codec-http2</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -235,9 +246,9 @@
       <artifactId>netty-codec-socks</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -247,9 +258,9 @@
       <artifactId>netty-handler</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -259,9 +270,9 @@
       <artifactId>netty-handler-proxy</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -271,9 +282,9 @@
       <artifactId>netty-buffer</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -283,9 +294,9 @@
       <artifactId>netty-common</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -295,9 +306,9 @@
       <artifactId>netty-codec-http</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -307,9 +318,9 @@
       <artifactId>netty-resolver</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -319,9 +330,9 @@
       <artifactId>netty-resolver-dns</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -331,9 +342,9 @@
       <artifactId>netty-transport-native-unix-common</artifactId>
       <properties>
         <!-- netty is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <license.ignoreMissingEmbeddedLicense>4.1.87.Final</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>4.1.87.Final</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreNoticeOverride>4.1.87.Final</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>4.1.115.Final</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>4.1.115.Final</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreNoticeOverride>4.1.115.Final</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -343,12 +354,8 @@
       <artifactId>guava</artifactId>
       <properties>
         <!-- guava is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
-        <!-- see https://github.com/google/guava/blob/v18.0/COPYING -->
-        <!-- see https://github.com/google/guava/tree/v28.[012]/COPYING -->
-        <!-- see https://github.com/google/guava/blob/v31.0.1/COPYING -->
-        <!-- see https://github.com/google/guava/blob/v32.1.2/LICENSE -->
-        <license.ignoreMissingEmbeddedNotice>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre,31.0.1-jre,31.1-jre,jre,32.1.2-jre</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreMissingEmbeddedLicense>18.0,28.0-jre,28.1-jre,28.2-jre,30.1-jre,31.0.1-jre,31.1-jre</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>33.3.1-jre</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>33.3.1-jre</license.ignoreMissingEmbeddedLicense>
       </properties>
     </project>
   </supplement>
@@ -359,8 +366,8 @@
       <properties>
         <!-- guava is ALv2, and does not contain any embedded LICENSE or NOTICE file -->
         <!-- see https://github.com/google/guava/tree/v28.0/ -->
-        <license.ignoreMissingEmbeddedLicense>1.0.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.0.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.0.2</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.0.2</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -371,8 +378,8 @@
       <!-- see https://github.com/google/error-prone/tree/v2.3.[24]/ -->
       <!-- see https://github.com/google/error-prone/blob/v2.7.1/COPYING -->
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.3.2,2.3.4,2.7.1,2.11.0,2.18.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.3.2,2.3.4,2.7.1,2.11.0,2.18.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.28.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.28.0</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -480,8 +487,8 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>third-party-jackson-core</artifactId>
       <properties>
-        <license.alternateNoticeFile>2.23.3:META-INF/NOTICE.txt</license.alternateNoticeFile>
-        <license.alternateLicenseFile>2.23.3:META-INF/LICENSE.txt</license.alternateLicenseFile>
+        <license.alternateNoticeFile>2.29.27:META-INF/NOTICE.txt</license.alternateNoticeFile>
+        <license.alternateLicenseFile>2.29.27:META-INF/LICENSE.txt</license.alternateLicenseFile>
       </properties>
     </project>
   </supplement>
@@ -511,8 +518,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-core</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.779</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.779</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -522,8 +529,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>jmespath-java</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.779</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.779</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -533,8 +540,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-s3</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.779</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.779</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -544,8 +551,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-kms</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.779</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.779</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -555,8 +562,8 @@
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk-dynamodb</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.12.402</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.12.402</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.12.779</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.12.779</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -675,6 +682,7 @@
         <license.ignoreMissingEmbeddedLicense>12.18.1</license.ignoreMissingEmbeddedLicense>
         <license.ignoreMissingEmbeddedNotice>12.18.1</license.ignoreMissingEmbeddedNotice>
         <license.ignoreLicenseOverride>12.18.1</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>12.18.1</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -736,10 +744,10 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-json</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.1.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.1.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.1.0</license.ignoreLicenseOverride>
-        <license.ignoreNoticeOverride>1.1.0</license.ignoreNoticeOverride>
+        <license.ignoreMissingEmbeddedLicense>1.3.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.3.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.3.0</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.3.0</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -749,9 +757,10 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.11.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.11.1</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.11.1</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.13.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.13.3</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.13.3</license.ignoreLicenseOverride>
+        <license.ignoreNoticeOverride>1.13.3</license.ignoreNoticeOverride>
       </properties>
     </project>
   </supplement>
@@ -762,8 +771,9 @@
       <groupId>com.microsoft.azure</groupId>
       <artifactId>msal4j</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.14.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.14.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>1.17.1</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.17.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.17.1</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -774,9 +784,9 @@
       <groupId>com.microsoft.azure</groupId>
       <artifactId>msal4j-persistence-extension</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>1.2.0</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>1.2.0</license.ignoreMissingEmbeddedNotice>
-        <license.ignoreLicenseOverride>1.2.0</license.ignoreLicenseOverride>
+        <license.ignoreMissingEmbeddedLicense>1.3.0</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>1.3.0</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreLicenseOverride>1.3.0</license.ignoreLicenseOverride>
       </properties>
     </project>
   </supplement>
@@ -888,8 +898,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>oauth2-oidc-sdk</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>10.7.1</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>10.7.1</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>11.18</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>11.18</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -900,8 +910,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>nimbus-jose-jwt</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>9.30.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>9.30.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>9.40</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>9.40</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>
@@ -924,8 +934,8 @@
       <groupId>com.nimbusds</groupId>
       <artifactId>content-type</artifactId>
       <properties>
-        <license.ignoreMissingEmbeddedLicense>2.2</license.ignoreMissingEmbeddedLicense>
-        <license.ignoreMissingEmbeddedNotice>2.2</license.ignoreMissingEmbeddedNotice>
+        <license.ignoreMissingEmbeddedLicense>2.3</license.ignoreMissingEmbeddedLicense>
+        <license.ignoreMissingEmbeddedNotice>2.3</license.ignoreMissingEmbeddedNotice>
       </properties>
     </project>
   </supplement>

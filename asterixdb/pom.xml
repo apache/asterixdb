@@ -84,12 +84,12 @@
     <!-- Versions under dependencymanagement or used in many projects via properties -->
     <algebricks.version>0.3.8-SNAPSHOT</algebricks.version>
     <hyracks.version>0.3.8-SNAPSHOT</hyracks.version>
-    <hadoop.version>3.3.6</hadoop.version>
+    <hadoop.version>3.4.1</hadoop.version>
     <jacoco.version>0.7.6.201602180812</jacoco.version>
     <log4j.version>2.19.0</log4j.version>
-    <awsjavasdk.version>2.23.3</awsjavasdk.version>
+    <awsjavasdk.version>2.29.27</awsjavasdk.version>
     <parquet.version>1.12.3</parquet.version>
-    <hadoop-awsjavasdk.version>1.12.402</hadoop-awsjavasdk.version>
+    <hadoop-awsjavasdk.version>1.12.779</hadoop-awsjavasdk.version>
     <azureblobjavasdk.version>12.25.1</azureblobjavasdk.version>
     <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>
     <azureidentity.version>1.13.3</azureidentity.version>
@@ -561,9 +561,6 @@
           <groupId>org.apache.hyracks</groupId>
           <artifactId>license-automation-plugin</artifactId>
           <version>${hyracks.version}</version>
-          <configuration>
-            <argLine>-Xmx2048m</argLine>
-          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -1158,6 +1155,10 @@
             <groupId>org.jline</groupId>
             <artifactId>jline</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -1233,7 +1234,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-compress</artifactId>
-        <version>1.24.0</version>
+        <version>1.27.1</version>
       </dependency>
       <dependency>
         <groupId>commons-logging</groupId>
@@ -1243,7 +1244,7 @@
       <dependency>
         <groupId>commons-logging</groupId>
         <artifactId>commons-logging</artifactId>
-        <version>1.2</version>
+        <version>1.3.4</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hyracks</groupId>
@@ -1483,7 +1484,7 @@
       <dependency>
         <groupId>commons-codec</groupId>
         <artifactId>commons-codec</artifactId>
-        <version>1.15</version>
+        <version>1.17.1</version>
       </dependency>
       <dependency>
         <groupId>it.unimi.dsi</groupId>
@@ -1604,6 +1605,11 @@
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>http-client-spi</artifactId>
+        <version>${awsjavasdk.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>software.amazon.awssdk</groupId>
+        <artifactId>s3-transfer-manager</artifactId>
         <version>${awsjavasdk.version}</version>
       </dependency>
       <!-- Mock for AWS S3 -->
@@ -1859,7 +1865,7 @@
       <dependency>
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-csv</artifactId>
-        <version>1.9.0</version>
+        <version>1.12.0</version>
       </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
@@ -1874,7 +1880,7 @@
       <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpmime</artifactId>
-        <version>4.5.11</version>
+        <version>4.5.14</version>
       </dependency>
       <dependency>
         <groupId>org.msgpack</groupId>
@@ -1938,8 +1944,8 @@
         <version>${hadoop.version}</version>
         <exclusions>
           <exclusion>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-bundle</artifactId>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>bundle</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
