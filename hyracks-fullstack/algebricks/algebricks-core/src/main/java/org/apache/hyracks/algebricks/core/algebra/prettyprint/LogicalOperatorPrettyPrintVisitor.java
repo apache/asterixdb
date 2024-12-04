@@ -187,6 +187,9 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
     public Void visitRunningAggregateOperator(RunningAggregateOperator op, Integer indent) throws AlgebricksException {
         addIndent(indent).append("running-aggregate ").append(str(op.getVariables())).append(" <- ");
         pprintExprList(op.getExpressions(), indent);
+        if (op.isProjectPushed()) {
+            buffer.append(" project: ").append(str(op.getProjectVariables()));
+        }
         return null;
     }
 

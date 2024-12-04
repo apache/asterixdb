@@ -525,6 +525,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "running-aggregate");
             writeVariablesAndExpressions(op.getVariables(), op.getExpressions(), indent);
+            if (op.isProjectPushed()) {
+                writeArrayFieldOfVariables(PROJECT_VARIABLES_FIELD, op.getProjectVariables());
+            }
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));

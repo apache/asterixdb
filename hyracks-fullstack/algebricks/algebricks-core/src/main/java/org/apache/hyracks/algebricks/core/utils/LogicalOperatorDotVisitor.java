@@ -112,6 +112,9 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
         stringBuilder.setLength(0);
         stringBuilder.append("running-aggregate ").append(str(op.getVariables())).append(" <- ");
         printExprList(op.getExpressions());
+        if (op.isProjectPushed()) {
+            stringBuilder.append(" project: ").append(str(op.getProjectVariables()));
+        }
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

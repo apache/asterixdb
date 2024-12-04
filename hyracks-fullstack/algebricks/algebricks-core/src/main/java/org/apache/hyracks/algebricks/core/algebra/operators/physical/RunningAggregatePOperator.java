@@ -73,10 +73,6 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
         RunningAggregateOperator ragg = (RunningAggregateOperator) op;
         List<LogicalVariable> variables = ragg.getVariables();
         List<Mutable<ILogicalExpression>> expressions = ragg.getExpressions();
-        int[] outColumns = new int[variables.size()];
-        for (int i = 0; i < outColumns.length; i++) {
-            outColumns[i] = opSchema.findVariable(variables.get(i));
-        }
         IRunningAggregateEvaluatorFactory[] runningAggFuns = new IRunningAggregateEvaluatorFactory[expressions.size()];
         IExpressionRuntimeProvider expressionRuntimeProvider = context.getExpressionRuntimeProvider();
         for (int i = 0; i < runningAggFuns.length; i++) {
@@ -85,8 +81,30 @@ public class RunningAggregatePOperator extends AbstractPhysicalOperator {
                     context.getTypeEnvironment(op.getInputs().get(0).getValue()), inputSchemas, context);
         }
 
-        // TODO push projections into the operator
-        int[] projectionList = JobGenHelper.projectAllVariables(opSchema);
+        int[] outColumns = new int[variables.size()];
+        int[] projectionList;
+
+        if (ragg.isProjectPushed()) {
+            for (int i = 0; i < outColumns.length; i++) {
+                outColumns[i] = inputSchemas[0].getSize() + i;
+            }
+            List<LogicalVariable> projectVars = ragg.getProjectVariables();
+
+            projectionList = new int[projectVars.size()];
+            int c = 0;
+            for (LogicalVariable projectVar : projectVars) {
+                if (variables.contains(projectVar)) {
+                    projectionList[c++] = inputSchemas[0].getSize() + variables.indexOf(projectVar);
+                } else {
+                    projectionList[c++] = inputSchemas[0].findVariable(projectVar);
+                }
+            }
+        } else {
+            for (int i = 0; i < outColumns.length; i++) {
+                outColumns[i] = opSchema.findVariable(variables.get(i));
+            }
+            projectionList = JobGenHelper.projectAllVariables(opSchema);
+        }
 
         RunningAggregateRuntimeFactory runtime =
                 new RunningAggregateRuntimeFactory(projectionList, outColumns, runningAggFuns);
