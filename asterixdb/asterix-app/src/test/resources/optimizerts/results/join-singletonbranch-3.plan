@@ -1,20 +1,19 @@
 -- DISTRIBUTE_RESULT  |PARTITIONED|
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     -- ASSIGN  |PARTITIONED|
-      -- STREAM_PROJECT  |PARTITIONED|
-        -- STREAM_SELECT  |PARTITIONED|
-          -- STREAM_PROJECT  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.Bar)  |PARTITIONED|
-                -- BROADCAST_EXCHANGE  |PARTITIONED|
+      -- STREAM_SELECT  |PARTITIONED|
+        -- STREAM_PROJECT  |PARTITIONED|
+          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            -- DATASOURCE_SCAN (test.Bar)  |PARTITIONED|
+              -- BROADCAST_EXCHANGE  |PARTITIONED|
+                -- ASSIGN  |UNPARTITIONED|
                   -- ASSIGN  |UNPARTITIONED|
-                    -- ASSIGN  |UNPARTITIONED|
-                      -- AGGREGATE  |UNPARTITIONED|
-                        -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-                          -- AGGREGATE  |PARTITIONED|
-                            -- ASSIGN  |PARTITIONED|
-                              -- STREAM_PROJECT  |PARTITIONED|
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.Foo)  |PARTITIONED|
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    -- AGGREGATE  |UNPARTITIONED|
+                      -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                        -- AGGREGATE  |PARTITIONED|
+                          -- ASSIGN  |PARTITIONED|
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                -- DATASOURCE_SCAN (test.Foo)  |PARTITIONED|
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

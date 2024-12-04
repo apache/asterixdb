@@ -35,16 +35,15 @@
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                         -- HYBRID_HASH_JOIN [$$291, $$293, $$295][$$305, $$306, $$307]  |PARTITIONED|
                                           -- HASH_PARTITION_EXCHANGE [$$291, $$293, $$295]  |PARTITIONED|
-                                            -- STREAM_PROJECT  |PARTITIONED|
-                                              -- STREAM_SELECT  |PARTITIONED|
-                                                -- ASSIGN  |PARTITIONED|
-                                                  -- UNNEST  |PARTITIONED|
-                                                    -- ASSIGN  |PARTITIONED|
-                                                      -- STREAM_PROJECT  |PARTITIONED|
-                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
-                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                            -- STREAM_SELECT  |PARTITIONED|
+                                              -- ASSIGN  |PARTITIONED|
+                                                -- UNNEST  |PARTITIONED|
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    -- STREAM_PROJECT  |PARTITIONED|
+                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                           -- HASH_PARTITION_EXCHANGE [$$305, $$306, $$307]  |PARTITIONED|
                                             -- STREAM_PROJECT  |PARTITIONED|
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -690,6 +690,9 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
         try {
             jsonGenerator.writeStringField(OPERATOR_FIELD, "select");
             writeStringFieldExpression(CONDITION_FIELD, op.getCondition(), indent);
+            if (op.isProjectPushed()) {
+                writeArrayFieldOfVariables(PROJECT_VARIABLES_FIELD, op.getProjectVariables());
+            }
             return null;
         } catch (IOException e) {
             throw AlgebricksException.create(ErrorCode.ERROR_PRINTING_PLAN, e, String.valueOf(e));

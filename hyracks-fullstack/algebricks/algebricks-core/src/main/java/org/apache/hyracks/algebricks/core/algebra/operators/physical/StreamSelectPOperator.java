@@ -72,9 +72,11 @@ public class StreamSelectPOperator extends AbstractPhysicalOperator {
         boolean retainMissing = retainMissingAsValue != null;
         IMissingWriterFactory missingWriterFactory =
                 retainMissing ? JobGenHelper.getMissingWriterFactory(context, retainMissingAsValue) : null;
-        StreamSelectRuntimeFactory runtime =
-                new StreamSelectRuntimeFactory(cond, null, context.getBinaryBooleanInspectorFactory(), retainMissing,
-                        inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()), missingWriterFactory);
+        StreamSelectRuntimeFactory runtime = new StreamSelectRuntimeFactory(cond,
+                select.isProjectPushed() ? JobGenHelper.projectVariables(inputSchemas[0], select.getProjectVariables())
+                        : null,
+                context.getBinaryBooleanInspectorFactory(), retainMissing,
+                inputSchemas[0].findVariable(select.getMissingPlaceholderVariable()), missingWriterFactory);
         runtime.setSourceLocation(select.getSourceLocation());
         // contribute one Asterix framewriter
         RecordDescriptor recDesc = JobGenHelper.mkRecordDescriptor(context.getTypeEnvironment(op), opSchema, context);

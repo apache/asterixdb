@@ -50,22 +50,20 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
                                       -- HYBRID_HASH_JOIN [$$198][$$196]  |PARTITIONED|
                                         exchange [cardinality: 151979.18, op-cost: 0.0, total-cost: 600572.0]
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          project ([$$208, $$209, $$198]) [cardinality: 151979.18, op-cost: 0.0, total-cost: 600572.0]
-                                          -- STREAM_PROJECT  |PARTITIONED|
-                                            select (eq($$l.getField(8), "R")) [cardinality: 151979.18, op-cost: 0.0, total-cost: 600572.0]
-                                            -- STREAM_SELECT  |PARTITIONED|
-                                              assign [$$209, $$208] <- [$$l.getField(6), $$l.getField(5)] [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
-                                              -- ASSIGN  |PARTITIONED|
-                                                project ([$$198, $$l]) [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
-                                                -- STREAM_PROJECT  |PARTITIONED|
-                                                  exchange [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
-                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    data-scan []<-[$$197, $$198, $$l] <- tpch.lineitem [cardinality: 600572.0, op-cost: 600572.0, total-cost: 600572.0]
-                                                    -- DATASOURCE_SCAN  |PARTITIONED|
-                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          select (eq($$l.getField(8), "R")) project: [$$208, $$209, $$198] [cardinality: 151979.18, op-cost: 0.0, total-cost: 600572.0]
+                                          -- STREAM_SELECT  |PARTITIONED|
+                                            assign [$$209, $$208] <- [$$l.getField(6), $$l.getField(5)] [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
+                                            -- ASSIGN  |PARTITIONED|
+                                              project ([$$198, $$l]) [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
+                                              -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange [cardinality: 600572.0, op-cost: 0.0, total-cost: 600572.0]
+                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  data-scan []<-[$$197, $$198, $$l] <- tpch.lineitem [cardinality: 600572.0, op-cost: 600572.0, total-cost: 600572.0]
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                         exchange [cardinality: 15014.11, op-cost: 17515.08, total-cost: 32515.08]
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
                                           assign [$$192, $$191, $$189, $$188, $$187, $$201] <- [$$c.getField(7), $$c.getField(2), $$c.getField(4), $$c.getField(5), $$c.getField(1), $$c.getField(3)] project: [$$195, $$187, $$188, $$189, $$191, $$192, $$201, $$196] [cardinality: 15014.11, op-cost: 0.0, total-cost: 15000.0]
@@ -82,20 +80,18 @@ distribute result [$$185] [cardinality: 4550.31, op-cost: 0.0, total-cost: 99071
                                                     -- STABLE_SORT [$$206(ASC)]  |PARTITIONED|
                                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                       -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
-                                                        project ([$$196, $$206]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- STREAM_PROJECT  |PARTITIONED|
-                                                          select (and(lt($$193, "1993-10-01"), ge($$193, "1993-07-01"))) [cardinality: 4374.41, op-cost: 0.0, total-cost: 150000.0]
-                                                          -- STREAM_SELECT  |PARTITIONED|
-                                                            assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project: [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- ASSIGN  |PARTITIONED|
-                                                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                data-scan []<-[$$196, $$o] <- tpch.orders [cardinality: 150000.0, op-cost: 150000.0, total-cost: 150000.0]
-                                                                -- DATASOURCE_SCAN  |PARTITIONED|
-                                                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                        select (and(lt($$193, "1993-10-01"), ge($$193, "1993-07-01"))) project: [$$196, $$206] [cardinality: 4374.41, op-cost: 0.0, total-cost: 150000.0]
+                                                        -- STREAM_SELECT  |PARTITIONED|
+                                                          assign [$$206, $$193] <- [$$o.getField(1), $$o.getField(4)] project: [$$196, $$206, $$193] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- ASSIGN  |PARTITIONED|
+                                                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              data-scan []<-[$$196, $$o] <- tpch.orders [cardinality: 150000.0, op-cost: 150000.0, total-cost: 150000.0]
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                 exchange [cardinality: 25.0, op-cost: 100.0, total-cost: 125.0]
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
                                   assign [$$190] <- [$$n.getField(1)] project: [$$190, $$199] [cardinality: 25.0, op-cost: 0.0, total-cost: 25.0]

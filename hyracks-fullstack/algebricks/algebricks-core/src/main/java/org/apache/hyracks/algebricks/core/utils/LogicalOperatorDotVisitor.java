@@ -275,6 +275,9 @@ public class LogicalOperatorDotVisitor implements ILogicalOperatorVisitor<String
     public String visitSelectOperator(SelectOperator op, Boolean showDetails) {
         stringBuilder.setLength(0);
         stringBuilder.append("select (").append(op.getCondition().getValue().toString()).append(")");
+        if (op.isProjectPushed()) {
+            stringBuilder.append(" project: ").append(str(op.getProjectVariables()));
+        }
         appendSchema(op, showDetails);
         appendAnnotations(op, showDetails);
         appendPhysicalOperatorInfo(op, showDetails);

@@ -34,6 +34,7 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.IVariableTypeEnvir
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
+import org.apache.hyracks.algebricks.core.algebra.properties.FilteredVariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.TypePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.properties.VariablePropagationPolicy;
 import org.apache.hyracks.algebricks.core.algebra.typing.ITypeEnvPointer;
@@ -43,7 +44,7 @@ import org.apache.hyracks.algebricks.core.algebra.typing.PropagatingTypeEnvironm
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalExpressionReferenceTransform;
 import org.apache.hyracks.algebricks.core.algebra.visitors.ILogicalOperatorVisitor;
 
-public class SelectOperator extends AbstractLogicalOperator {
+public class SelectOperator extends AbstractProjectingOperator {
     private final Mutable<ILogicalExpression> condition;
     private final IAlgebricksConstantValue retainMissingAsValue;
     private LogicalVariable missingPlaceholderVar;
@@ -96,11 +97,22 @@ public class SelectOperator extends AbstractLogicalOperator {
 
     @Override
     public void recomputeSchema() {
+        if (isProjectPushed()) {
+            schema = new ArrayList<>();
+            for (LogicalVariable v : getProjectVariables()) {
+                schema.add(v);
+            }
+            return;
+        }
+
         schema = new ArrayList<>(inputs.get(0).getValue().getSchema());
     }
 
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
+        if (isProjectPushed()) {
+            return new FilteredVariablePropagationPolicy(getProjectVariables());
+        }
         return VariablePropagationPolicy.ALL;
     }
 

@@ -24,19 +24,17 @@ distribute result [$$134] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- SORT_GROUP_BY[$$135, $$136]  |PARTITIONED|
               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$88, $$93, $$149, $$151, $$135, $$136]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                -- STREAM_PROJECT  |PARTITIONED|
-                  select (le($$l.getField(10), "1998-09-16")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- STREAM_SELECT  |PARTITIONED|
-                    assign [$$136, $$135, $$88, $$149, $$151, $$93] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- ASSIGN  |PARTITIONED|
-                      project ([$$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          data-scan []<-[$$138, $$139, $$l] <- tpch.lineitem project ({l_returnflag:any,l_tax:any,l_quantity:any,l_linestatus:any,l_extendedprice:any,l_shipdate:any,l_discount:any}) filter on: le($$l.getField(10), "1998-09-16") range-filter on: le($$l.getField(10), "1998-09-16") [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- DATASOURCE_SCAN  |PARTITIONED|
-                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                select (le($$l.getField(10), "1998-09-16")) project: [$$88, $$93, $$149, $$151, $$135, $$136] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$136, $$135, $$88, $$149, $$151, $$93] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ASSIGN  |PARTITIONED|
+                    project ([$$l]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        data-scan []<-[$$138, $$139, $$l] <- tpch.lineitem project ({l_returnflag:any,l_tax:any,l_quantity:any,l_linestatus:any,l_extendedprice:any,l_shipdate:any,l_discount:any}) filter on: le($$l.getField(10), "1998-09-16") range-filter on: le($$l.getField(10), "1998-09-16") [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

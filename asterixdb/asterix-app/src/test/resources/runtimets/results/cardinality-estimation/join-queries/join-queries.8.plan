@@ -68,20 +68,18 @@ distribute result [$$119] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                               exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                               -- HASH_PARTITION_EXCHANGE [$$136]  |PARTITIONED|
-                                                project ([$$124, $$136]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                -- STREAM_PROJECT  |PARTITIONED|
-                                                  select (and(lt($$121, "1994-01-01"), ge($$121, "1993-01-01"))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                  -- STREAM_SELECT  |PARTITIONED|
-                                                    assign [$$136, $$121] <- [$$o.getField(1), $$o.getField(4)] project: [$$124, $$136, $$121] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                    -- ASSIGN  |PARTITIONED|
-                                                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        data-scan []<-[$$124, $$o] <- tpch.Orders [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                        -- DATASOURCE_SCAN  |PARTITIONED|
-                                                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                                            -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                select (and(lt($$121, "1994-01-01"), ge($$121, "1993-01-01"))) project: [$$124, $$136] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                -- STREAM_SELECT  |PARTITIONED|
+                                                  assign [$$136, $$121] <- [$$o.getField(1), $$o.getField(4)] project: [$$124, $$136, $$121] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                  -- ASSIGN  |PARTITIONED|
+                                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      data-scan []<-[$$124, $$o] <- tpch.Orders [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                       exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- HASH_PARTITION_EXCHANGE [$$125]  |PARTITIONED|
                                         assign [$$140, $$139, $$133] <- [$$l.getField(6), $$l.getField(5), $$l.getField(2)] project: [$$139, $$140, $$133, $$125] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

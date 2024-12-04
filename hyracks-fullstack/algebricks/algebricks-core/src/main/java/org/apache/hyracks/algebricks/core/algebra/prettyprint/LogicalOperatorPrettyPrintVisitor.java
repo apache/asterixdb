@@ -304,7 +304,8 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
                 ? " retain-untrue (" + op.getMissingPlaceholderVariable() + " <- " + op.getRetainMissingAsValue() + ")"
                 : "";
         addIndent(indent).append("select (").append(op.getCondition().getValue().accept(exprVisitor, indent))
-                .append(")").append(retainMissing);
+                .append(")").append(retainMissing)
+                .append(op.isProjectPushed() ? " project: " + str(op.getProjectVariables()) : "");
         return null;
     }
 

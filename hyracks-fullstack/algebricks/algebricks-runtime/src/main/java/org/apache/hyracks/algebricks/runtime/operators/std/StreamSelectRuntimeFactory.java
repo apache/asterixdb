@@ -20,6 +20,7 @@ package org.apache.hyracks.algebricks.runtime.operators.std;
 
 import java.io.DataOutput;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspector;
 import org.apache.hyracks.algebricks.data.IBinaryBooleanInspectorFactory;
@@ -63,7 +64,7 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
 
     @Override
     public String toString() {
-        return "stream-select " + cond.toString();
+        return "stream-select " + cond.toString() + " project: " + Arrays.toString(projectionList);
     }
 
     @Override
@@ -158,11 +159,23 @@ public class StreamSelectRuntimeFactory extends AbstractOneInputOneOutputRuntime
         }
 
         protected void retainMissingTuple(int t) throws HyracksDataException {
-            for (int i = 0; i < tRef.getFieldCount(); i++) {
-                if (i == missingPlaceholderVariableIndex) {
+            if (projectionList == null) {
+                for (int i = 0; i < tRef.getFieldCount(); i++) {
+                    if (i == missingPlaceholderVariableIndex) {
+                        appendField(missingTupleBuilder.getByteArray(), 0, missingTupleBuilder.getSize());
+                    } else {
+                        appendField(tAccess, t, i);
+                    }
+                }
+                return;
+            }
+
+            for (int i = 0; i < projectionList.length; i++) {
+                int index = projectionList[i];
+                if (index == missingPlaceholderVariableIndex) {
                     appendField(missingTupleBuilder.getByteArray(), 0, missingTupleBuilder.getSize());
                 } else {
-                    appendField(tAccess, t, i);
+                    appendField(tAccess, t, index);
                 }
             }
         }

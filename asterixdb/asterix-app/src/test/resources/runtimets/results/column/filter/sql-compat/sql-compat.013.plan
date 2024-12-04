@@ -26,32 +26,30 @@ distribute result [$$197] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                 assign [$$195] <- [double-default-null($$206)] project: [$$195, $$231] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- ASSIGN  |PARTITIONED|
-                  project ([$$206, $$231]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                  -- STREAM_PROJECT  |PARTITIONED|
-                    select (or($$184, is-unknown($$231))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- STREAM_SELECT  |PARTITIONED|
-                      project ([$$206, $$231, $$184]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- STREAM_PROJECT  |PARTITIONED|
-                        subplan {
-                                  aggregate [$$184] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- AGGREGATE  |LOCAL|
-                                    select (eq(string-default-null($$210), "sixteen")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- STREAM_SELECT  |LOCAL|
-                                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                               } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- SUBPLAN  |PARTITIONED|
-                          assign [$$231] <- [string-default-null($$210)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  select (or($$184, is-unknown($$231))) project: [$$206, $$231] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$206, $$231, $$184]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- STREAM_PROJECT  |PARTITIONED|
+                      subplan {
+                                aggregate [$$184] <- [non-empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- AGGREGATE  |LOCAL|
+                                  select (eq(string-default-null($$210), "sixteen")) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- STREAM_SELECT  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                             } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- SUBPLAN  |PARTITIONED|
+                        assign [$$231] <- [string-default-null($$210)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- ASSIGN  |PARTITIONED|
+                          assign [$$210, $$206] <- [$#4.getField("str2"), $#4.getField("num3")] project: [$$210, $$206] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |PARTITIONED|
-                            assign [$$210, $$206] <- [$#4.getField("str2"), $#4.getField("num3")] project: [$$210, $$206] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                            -- ASSIGN  |PARTITIONED|
-                              project ([$#4]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- STREAM_PROJECT  |PARTITIONED|
-                                exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  data-scan []<-[$$200, $#4] <- test.ColumnDataset project ({str2:any,num3:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- DATASOURCE_SCAN  |PARTITIONED|
-                                    exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            project ([$#4]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- STREAM_PROJECT  |PARTITIONED|
+                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                data-scan []<-[$$200, $#4] <- test.ColumnDataset project ({str2:any,num3:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
