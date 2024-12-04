@@ -382,7 +382,7 @@ public class IOManager implements IIOManager {
     }
 
     private File getWorkspaceFolder(IODeviceHandle dev) {
-        return new File(dev.getMount(), dev.getWorkspace());
+        return Path.of(dev.getMount().getPath(), dev.getWorkspace()).normalize().toFile();
     }
 
     @Override
@@ -491,8 +491,12 @@ public class IOManager implements IIOManager {
 
             @Override
             public int write(ByteBuffer src) throws IOException {
+                int origPos = src.position();
                 int written = IOManager.this.syncWrite(fHandle, position, src);
                 position += written;
+                if (src.position() < origPos + written) {
+                    src.position(origPos + written);
+                }
                 return written;
             }
 

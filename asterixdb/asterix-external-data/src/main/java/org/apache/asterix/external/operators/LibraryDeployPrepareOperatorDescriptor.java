@@ -19,22 +19,26 @@
 
 package org.apache.asterix.external.operators;
 
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.apache.asterix.common.library.ILibraryManager.LIBRARY_ARCHIVE_NAME;
+import static org.apache.asterix.external.library.ExternalLibraryManager.CONTENTS_DIR_NAME;
 import static org.apache.asterix.external.library.ExternalLibraryManager.DESCRIPTOR_FILE_NAME;
+import static org.apache.asterix.external.library.ExternalLibraryManager.REV_1_DIR_NAME;
+import static org.apache.asterix.external.library.ExternalLibraryManager.writeDescriptor;
+import static org.apache.asterix.external.library.PythonLibraryTCPSocketEvaluator.ENTRYPOINT;
 import static org.apache.hyracks.control.common.controllers.NCConfig.Option.PYTHON_USE_BUNDLED_MSGPACK;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
+import java.util.Collections;
 
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.metadata.Namespace;
-import org.apache.asterix.external.library.ExternalLibraryManager;
 import org.apache.asterix.external.util.ExternalLibraryUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hyracks.api.context.IHyracksTaskContext;
@@ -48,7 +52,7 @@ import org.apache.logging.log4j.Logger;
 
 public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOperatorDescriptor {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final Logger LOGGER = LogManager.getLogger(LibraryDeployPrepareOperatorDescriptor.class);
 
@@ -71,13 +75,30 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
 
             private final byte[] copyBuf = new byte[4096];
 
+            private void cloudDeploy() throws IOException {
+                FileReference libDir = getLibraryDir();
+                libDir = new FileReference(libDir.getDeviceHandle(), FilenameUtils.normalize(libDir.getRelativePath()));
+                cloudIoManager.downloadLibrary(Collections.singletonList(libDir));
+                FileReference content = libDir.getChild(REV_1_DIR_NAME).getChild(CONTENTS_DIR_NAME);
+                libraryManager.unzip(libDir.getChild(LIBRARY_ARCHIVE_NAME), content);
+                libraryManager.writeShim(content.getChild(ENTRYPOINT), copyBuf);
+                Files.copy(libDir.getChild(DESCRIPTOR_FILE_NAME).getFile().toPath(),
+                        content.getParent().getChild(DESCRIPTOR_FILE_NAME).getFile().toPath(), REPLACE_EXISTING);
+            }
+
             @Override
             protected void execute() throws IOException {
                 if (LOGGER.isInfoEnabled()) {
                     LOGGER.info("Prepare deployment of library {}.{}", namespace, libraryName);
                 }
 
-                // #. create library dir if necessary, clean 'stage' dir
+                if (libLocation == null && cloudMode) {
+                    cloudDeploy();
+                    return;
+                }
+
+                //#. create library dir if necessary, clean 'stage' dir
+
                 FileReference libDir = getLibraryDir();
                 Path libDirPath = libDir.getFile().toPath();
 
@@ -121,7 +142,7 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                 }
                 MessageDigest digest = libraryManager.download(targetFile, authToken, libLocation);
                 // extract from the archive
-                FileReference contentsDir = stageDir.getChild(ExternalLibraryManager.CONTENTS_DIR_NAME);
+                FileReference contentsDir = stageDir.getChild(CONTENTS_DIR_NAME);
                 mkdir(contentsDir);
 
                 if (LOGGER.isDebugEnabled()) {
@@ -147,8 +168,9 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                 if (LOGGER.isTraceEnabled()) {
                     LOGGER.trace("Writing library descriptor into {}", targetDescFile);
                 }
-                writeDescriptor(targetDescFile,
-                        new LibraryDescriptor(language, ExternalLibraryUtils.digestToHexString(digest)));
+                writeDescriptor(libraryManager, targetDescFile,
+                        new LibraryDescriptor(language, ExternalLibraryUtils.digestToHexString(digest)), false,
+                        copyBuf);
 
                 flushDirectory(contentsDir);
                 flushDirectory(stageDir);
@@ -158,7 +180,7 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                     boolean writeMsgpack) throws IOException {
                 FileReference msgpack = stageDir.getChild("msgpack.pyz");
                 if (writeMsgpack) {
-                    writeShim(msgpack);
+                    libraryManager.writeShim(msgpack, copyBuf);
                     File msgPackFolder = new File(contentsDir.getRelativePath(), "ipc");
                     FileReference msgPackFolderRef =
                             new FileReference(contentsDir.getDeviceHandle(), msgPackFolder.getPath());
@@ -166,24 +188,7 @@ public class LibraryDeployPrepareOperatorDescriptor extends AbstractLibraryOpera
                     Files.delete(msgpack.getFile().toPath());
                 }
                 libraryManager.unzip(sourceFile, contentsDir);
-                writeShim(contentsDir.getChild("entrypoint.py"));
-            }
-
-            private void writeShim(FileReference outputFile) throws IOException {
-                InputStream is = getClass().getClassLoader().getResourceAsStream(outputFile.getFile().getName());
-                if (is == null) {
-                    throw new IOException("Classpath does not contain necessary Python resources!");
-                }
-                try {
-                    libraryManager.writeAndForce(outputFile, is, copyBuf);
-                } finally {
-                    is.close();
-                }
-            }
-
-            private void writeDescriptor(FileReference descFile, LibraryDescriptor desc) throws IOException {
-                byte[] bytes = libraryManager.serializeLibraryDescriptor(desc);
-                libraryManager.writeAndForce(descFile, new ByteArrayInputStream(bytes), copyBuf);
+                libraryManager.writeShim(contentsDir.getChild(ENTRYPOINT), copyBuf);
             }
 
         };

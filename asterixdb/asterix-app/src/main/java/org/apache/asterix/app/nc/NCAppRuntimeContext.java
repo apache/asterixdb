@@ -335,8 +335,8 @@ public class NCAppRuntimeContext implements INcApplicationContext {
 
         NodeControllerService ncs = (NodeControllerService) getServiceContext().getControllerService();
         FileReference appDir =
-                ioManager.resolveAbsolutePath(getServiceContext().getServerCtx().getAppDir().getAbsolutePath());
-        libraryManager = new ExternalLibraryManager(ncs, persistedResourceRegistry, appDir, ioManager);
+                persistenceIOManager.resolveAbsolutePath(getServiceContext().getServerCtx().getAppDir().getPath());
+        libraryManager = new ExternalLibraryManager(ncs, persistedResourceRegistry, appDir, persistenceIOManager);
         libraryManager.initialize(resetStorageData);
 
         /*

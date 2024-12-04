@@ -599,6 +599,11 @@
       <artifactId>avro-mapred</artifactId>
       <version>1.12.0</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hyracks</groupId>
+      <artifactId>hyracks-cloud</artifactId>
+      <version>0.3.10-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <!-- apply patch for HADOOP-17225 to workaround CVE-2019-10172 -->
   <repositories>

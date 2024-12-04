@@ -18,6 +18,8 @@
  */
 package org.apache.asterix.common.utils;
 
+import static org.apache.hyracks.control.common.context.ServerContext.APP_DIR_NAME;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -33,6 +35,7 @@ public class StorageConstants {
     public static final String METADATA_TXN_NOWAL_DIR_NAME = "mtd-txn-logs";
     public static final String GLOBAL_TXN_DIR_NAME = ".";
     public static final String STORAGE_ROOT_DIR_NAME = "storage";
+    public static final String APPLICATION_ROOT_DIR_NAME = APP_DIR_NAME;
     public static final String INGESTION_LOGS_DIR_NAME = "ingestion_logs";
     public static final String PARTITION_DIR_PREFIX = "partition_";
     /**

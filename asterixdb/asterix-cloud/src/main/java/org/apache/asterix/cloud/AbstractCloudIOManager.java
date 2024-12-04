@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.cloud;
 
+import static org.apache.asterix.common.utils.StorageConstants.APPLICATION_ROOT_DIR_NAME;
 import static org.apache.asterix.common.utils.StorageConstants.METADATA_PARTITION;
 import static org.apache.asterix.common.utils.StorageConstants.PARTITION_DIR_PREFIX;
 import static org.apache.asterix.common.utils.StorageConstants.STORAGE_ROOT_DIR_NAME;
@@ -28,6 +29,8 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.FileStore;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +43,7 @@ import org.apache.asterix.cloud.clients.CloudFile;
 import org.apache.asterix.cloud.clients.ICloudClient;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.ICloudWriter;
+import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.util.CloudFileUtil;
 import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
@@ -51,6 +55,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IFileHandle;
 import org.apache.hyracks.api.io.IIOBulkOperation;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.io.IODeviceHandle;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.cloud.filesystem.PhysicalDrive;
@@ -146,6 +151,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
 
         // Has different implementations depending on the caching policy
         downloadPartitions(metadataNode, metadataPartition);
+        downloadAllLibraries();
     }
 
     private void deleteUnkeptPartitionDirs(List<FileReference> currentOnDiskPartitions) throws HyracksDataException {
@@ -180,6 +186,23 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     protected abstract void downloadPartitions(boolean metadataNode, int metadataPartition) throws HyracksDataException;
 
     protected abstract Set<UncachedFileReference> getUncachedFiles();
+
+    @Override
+    public void downloadLibrary(Collection<FileReference> libPath) throws HyracksDataException {
+        IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager);
+        LOGGER.info("Downloading all files located in {}", libPath);
+        downloader.downloadDirectories(libPath);
+        LOGGER.info("Finished downloading {}", libPath);
+    }
+
+    public void downloadAllLibraries() throws HyracksDataException {
+        IParallelDownloader downloader = cloudClient.createParallelDownloader(bucket, localIoManager);
+        FileReference appDir = resolveAbsolutePath(
+                localIoManager.getWorkspacePath(0).getPath() + File.separator + APPLICATION_ROOT_DIR_NAME);
+        LOGGER.info("Downloading all libraries in + {}", appDir);
+        downloader.downloadDirectories(Collections.singletonList(appDir));
+        LOGGER.info("Finished downloading all libraries");
+    }
 
     /*
      * ******************************************************************
@@ -494,5 +517,10 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
     @Override
     public long getTotalDiskUsage() {
         return PhysicalDrive.getUsedSpace(drivePaths);
+    }
+
+    @Override
+    public IIOManager getLocalIOManager() {
+        return localIoManager;
     }
 }

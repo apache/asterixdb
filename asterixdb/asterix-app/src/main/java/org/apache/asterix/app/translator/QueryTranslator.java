@@ -3753,7 +3753,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // #. create library artifacts in NCs.
             runJob(hcc, prepareJobSpec, jobFlags);
             prepareJobSuccessful = true;
-            runJob(hcc, commitJobSpec, jobFlags);
+            if (!appCtx.isCloudDeployment()) {
+                runJob(hcc, commitJobSpec, jobFlags);
+            }
 
             // #. begin new metadataTxn
             mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();

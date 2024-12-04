@@ -37,6 +37,7 @@ import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.job.IOperatorDescriptorRegistry;
 import org.apache.hyracks.api.util.IoUtil;
+import org.apache.hyracks.cloud.io.ICloudIOManager;
 import org.apache.hyracks.dataflow.std.base.AbstractOperatorNodePushable;
 import org.apache.hyracks.dataflow.std.base.AbstractSingleActivityOperatorDescriptor;
 
@@ -61,9 +62,13 @@ abstract class AbstractLibraryOperatorDescriptor extends AbstractSingleActivityO
 
         protected IIOManager ioManager;
 
+        protected ICloudIOManager cloudIoManager;
+
         protected ILibraryManager libraryManager;
 
         private FileReference libraryDir;
+
+        protected boolean cloudMode = false;
 
         protected AbstractLibraryNodePushable(IHyracksTaskContext ctx) {
             this.ctx = ctx;
@@ -75,9 +80,13 @@ abstract class AbstractLibraryOperatorDescriptor extends AbstractSingleActivityO
         public final void initialize() throws HyracksDataException {
             INcApplicationContext runtimeCtx =
                     (INcApplicationContext) ctx.getJobletContext().getServiceContext().getApplicationContext();
-            ioManager = runtimeCtx.getIoManager();
+            ioManager = runtimeCtx.getPersistenceIoManager();
             libraryManager = runtimeCtx.getLibraryManager();
             libraryDir = libraryManager.getLibraryDir(namespace, libraryName);
+            if (runtimeCtx.isCloudDeployment()) {
+                cloudMode = true;
+                cloudIoManager = (ICloudIOManager) ioManager;
+            }
             try {
                 execute();
             } catch (IOException e) {

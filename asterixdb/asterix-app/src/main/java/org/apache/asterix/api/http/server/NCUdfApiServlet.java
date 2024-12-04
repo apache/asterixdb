@@ -20,6 +20,8 @@ package org.apache.asterix.api.http.server;
 
 import static org.apache.asterix.api.http.server.ServletConstants.SYS_AUTH_HEADER;
 import static org.apache.asterix.common.library.LibraryDescriptor.FIELD_HASH;
+import static org.apache.asterix.external.library.ExternalLibraryManager.DESCRIPTOR_FILE_NAME;
+import static org.apache.asterix.external.library.ExternalLibraryManager.writeDescriptor;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -28,6 +30,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.URI;
+import java.nio.channels.Channels;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,6 +54,7 @@ import org.apache.asterix.common.api.IReceptionist;
 import org.apache.asterix.common.api.IRequestReference;
 import org.apache.asterix.common.functions.ExternalFunctionLanguage;
 import org.apache.asterix.common.library.ILibraryManager;
+import org.apache.asterix.common.library.LibraryDescriptor;
 import org.apache.asterix.common.messaging.api.ICcAddressedMessage;
 import org.apache.asterix.common.messaging.api.INCMessageBroker;
 import org.apache.asterix.common.messaging.api.MessageFuture;
@@ -60,6 +65,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hyracks.algebricks.common.utils.Pair;
+import org.apache.hyracks.api.io.FileReference;
+import org.apache.hyracks.api.io.IFileHandle;
+import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.http.api.IServletRequest;
 import org.apache.hyracks.http.api.IServletResponse;
 import org.apache.hyracks.http.server.utils.HttpUtil;
@@ -223,6 +231,47 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         }
     }
 
+    private void writeLibToCloud(LibraryUploadData uploadData, Namespace libNamespace, String libName,
+            MessageDigest digest, ExternalFunctionLanguage language) throws IOException {
+        FileReference libDir = libraryManager.getLibraryDir(libNamespace, libName);
+        IIOManager cloudIoMgr = libraryManager.getCloudIOManager();
+        FileReference lib = libDir.getChild(ILibraryManager.LIBRARY_ARCHIVE_NAME);
+        if (!libDir.getFile().exists()) {
+            Files.createDirectories(lib.getFile().toPath().getParent());
+        }
+        Files.createFile(lib.getFile().toPath());
+        IFileHandle fh = cloudIoMgr.open(lib, IIOManager.FileReadWriteMode.READ_WRITE,
+                IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
+        WritableByteChannel outChannel = cloudIoMgr.newWritableChannel(fh);
+        byte[] writeBuf = new byte[4096];
+        FileReference targetDescFile = libDir.getChild(DESCRIPTOR_FILE_NAME);
+        try (OutputStream outputStream = new DigestOutputStream(Channels.newOutputStream(outChannel), digest);
+                InputStream ui = new ByteBufInputStream((uploadData.fileUpload).getByteBuf())) {
+            IOUtils.copyLarge(ui, outputStream, writeBuf);
+            outputStream.flush();
+            cloudIoMgr.sync(fh, true);
+            writeDescriptor(libraryManager, targetDescFile,
+                    new LibraryDescriptor(language, ExternalLibraryUtils.digestToHexString(digest)), true, writeBuf);
+        } finally {
+            cloudIoMgr.close(fh);
+        }
+    }
+
+    private URI cacheLibAndDistribute(LibraryUploadData uploadData, DataverseName libDv, String libName, String fileExt,
+            MessageDigest digest) throws Exception {
+        Path libraryTempFile = Files.createTempFile(workingDir, "lib_", '.' + fileExt);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Created temporary file " + libraryTempFile + " for library " + libDv.getCanonicalForm() + "."
+                    + libName);
+        }
+        FileOutputStream libTmpOut = new FileOutputStream(libraryTempFile.toFile());
+        try (OutputStream os = new DigestOutputStream(libTmpOut, digest);
+                InputStream ui = new ByteBufInputStream((uploadData.fileUpload).getByteBuf())) {
+            IOUtils.copyLarge(ui, os);
+        }
+        return createDownloadURI(libraryTempFile);
+    }
+
     private void handleModification(IServletRequest request, IServletResponse response, LibraryOperation op) {
         HttpRequest httpRequest = request.getHttpRequest();
         Path libraryTempFile = null;
@@ -240,20 +289,16 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
                 LibraryUploadData uploadData = decodeMultiPartLibraryOptions(requestDecoder);
                 ExternalFunctionLanguage language = uploadData.type;
                 String fileExt = FilenameUtils.getExtension(uploadData.fileUpload.getFilename());
-                libraryTempFile = Files.createTempFile(workingDir, "lib_", '.' + fileExt);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Created temporary file " + libraryTempFile + " for library "
-                            + libDv.getCanonicalForm() + "." + libName);
-                }
                 MessageDigest digest = MessageDigest.getInstance("MD5");
-                libTmpOut = new FileOutputStream(libraryTempFile.toFile());
-                try (OutputStream os = new DigestOutputStream(libTmpOut, digest);
-                        InputStream ui = new ByteBufInputStream((uploadData.fileUpload).getByteBuf())) {
-                    IOUtils.copyLarge(ui, os);
+                if (appCtx.isCloudDeployment()) {
+                    writeLibToCloud(uploadData, libNamespace, libName, digest, language);
+                    doCreate(libNamespace, libName, language, ExternalLibraryUtils.digestToHexString(digest), null,
+                            true, getSysAuthHeader(), requestReference, request);
+                } else {
+                    URI downloadURI = cacheLibAndDistribute(uploadData, libDv, libName, fileExt, digest);
+                    doCreate(libNamespace, libName, language, ExternalLibraryUtils.digestToHexString(digest),
+                            downloadURI, true, getSysAuthHeader(), requestReference, request);
                 }
-                URI downloadURI = createDownloadURI(libraryTempFile);
-                doCreate(libNamespace, libName, language, ExternalLibraryUtils.digestToHexString(digest), downloadURI,
-                        true, getSysAuthHeader(), requestReference, request);
             } else if (op == LibraryOperation.DELETE) {
                 //DELETE semantics imply ifExists
                 doDrop(libNamespace, libName, false, requestReference, request);
