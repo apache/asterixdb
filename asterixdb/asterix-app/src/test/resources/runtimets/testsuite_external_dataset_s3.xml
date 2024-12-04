@@ -582,6 +582,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
+      <compilation-unit name="common/avro/avro-logical-types">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/avro/avro-logical-types</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
       <compilation-unit name="common/avro/avro-types/avro-nested-records">
         <placeholder name="adapter" value="S3" />
         <placeholder name="path_prefix" value="" />

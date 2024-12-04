@@ -59,7 +59,7 @@ public class AvroDataParserFactory extends AbstractGenericDataParserFactory<Gene
     }
 
     private AvroDataParser createParser(IExternalDataRuntimeContext context) {
-        return new AvroDataParser(context);
+        return new AvroDataParser(context, configuration);
     }
 
 }

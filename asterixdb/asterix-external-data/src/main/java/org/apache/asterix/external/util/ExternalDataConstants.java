@@ -403,6 +403,23 @@ public class ExternalDataConstants {
         WRITER_SUPPORTED_QUOTES = List.of(DEFAULT_QUOTE, DEFAULT_SINGLE_QUOTE, NONE);
     }
 
+    public static class AvroOptions {
+        private AvroOptions() {
+        }
+
+        // - DECIMAL_TO_DOUBLE: Convert decimal to double (default: false)
+        // - UUID_AS_STRING: Convert UUID to string (default: true)
+        // - DATE_AS_INT: Convert date to integer (default: true)
+        // - TIME_AS_LONG: Convert time to long (default: true)
+        // - TIMESTAMP_AS_LONG: Convert timestamp to long (default: true)
+        public static final String DECIMAL_TO_DOUBLE = "decimal-to-double";
+        public static final String UUID_AS_STRING = "uuid-to-string";
+        public static final String DATE_AS_INT = "date-to-int";
+        public static final String TIMEZONE = "timezone";
+        public static final String TIME_AS_LONG = "time-to-long";
+        public static final String TIMESTAMP_AS_LONG = "timestamp-to-long";
+    }
+
     public static class DeltaOptions {
         private DeltaOptions() {
         }

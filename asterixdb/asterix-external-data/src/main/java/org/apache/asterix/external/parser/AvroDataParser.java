@@ -24,9 +24,11 @@ import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.IAsterixListBuilder;
@@ -36,26 +38,31 @@ import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRawRecord;
 import org.apache.asterix.external.api.IRecordDataParser;
 import org.apache.asterix.external.input.filter.embedder.IExternalFilterValueEmbedder;
-import org.apache.asterix.external.parser.jackson.ParserContext;
+import org.apache.asterix.external.input.record.reader.stream.AvroConverterContext;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.om.base.ABoolean;
 import org.apache.asterix.om.base.ANull;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.exceptions.Warning;
 import org.apache.hyracks.data.std.api.IMutableValueStorage;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public class AvroDataParser extends AbstractDataParser implements IRecordDataParser<GenericRecord> {
-    private final ParserContext parserContext;
+    private final AvroConverterContext parserContext;
     private final IExternalFilterValueEmbedder valueEmbedder;
 
-    public AvroDataParser(IExternalDataRuntimeContext context) {
-        parserContext = new ParserContext();
+    public AvroDataParser(IExternalDataRuntimeContext context, Map<String, String> conf) {
+        List<Warning> warnings = new ArrayList<>();
+        parserContext = new AvroConverterContext(conf, warnings);
         valueEmbedder = context.getValueEmbedder();
     }
 
@@ -192,6 +199,41 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
 
     private ATypeTag getTypeTag(Schema schema, Object value) throws HyracksDataException {
         Schema.Type schemaType = schema.getType();
+        LogicalType logicalType = schema.getLogicalType();
+        if (logicalType instanceof LogicalTypes.Uuid) {
+            if (parserContext.isUuidAsString()) {
+                return ATypeTag.STRING;
+            }
+            return ATypeTag.UUID;
+        }
+        if (logicalType instanceof LogicalTypes.Decimal) {
+            ensureDecimalToDoubleEnabled(logicalType, parserContext);
+            return ATypeTag.DOUBLE;
+        } else if (logicalType instanceof LogicalTypes.Date) {
+            if (parserContext.isDateAsInt()) {
+                return ATypeTag.INTEGER;
+            }
+            return ATypeTag.DATE;
+        } else if (logicalType instanceof LogicalTypes.TimeMicros) {
+            if (parserContext.isTimeAsLong()) {
+                return ATypeTag.BIGINT;
+            }
+            return ATypeTag.TIME;
+        } else if (logicalType instanceof LogicalTypes.TimeMillis) {
+            if (parserContext.isTimeAsLong()) {
+                return ATypeTag.BIGINT;
+            }
+            return ATypeTag.TIME;
+        } else if (logicalType instanceof LogicalTypes.TimestampMicros
+                || logicalType instanceof LogicalTypes.TimestampMillis
+                || logicalType instanceof LogicalTypes.LocalTimestampMicros
+                || logicalType instanceof LogicalTypes.LocalTimestampMillis) {
+            if (parserContext.isTimestampAsLong()) {
+                return ATypeTag.BIGINT;
+            }
+            return ATypeTag.DATETIME;
+        }
+
         if (value == null) {
             // The 'value' is missing
             return ATypeTag.MISSING;
@@ -228,8 +270,74 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         }
     }
 
+    private void parseLogicalValue(LogicalType logicalType, Object value, DataOutput out) throws IOException {
+        if (logicalType instanceof LogicalTypes.Uuid) {
+            if (parserContext.isUuidAsString()) {
+                serializeString(value, out);
+            } else {
+                parserContext.serializeUUID(value, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.Decimal) {
+            LogicalTypes.Decimal decimalType = (LogicalTypes.Decimal) logicalType;
+            int scale = decimalType.getScale();
+            parserContext.serializeDecimal(value, out, scale);
+        } else if (logicalType instanceof LogicalTypes.Date) {
+            if (parserContext.isDateAsInt()) {
+                serializeLong(value, out);
+            } else {
+                parserContext.serializeDate(value, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.TimeMicros) {
+            int timeInMillis = (int) TimeUnit.MICROSECONDS.toMillis(((Number) value).longValue());
+            int offset = parserContext.getTimeZoneOffset();
+            timeInMillis = timeInMillis + offset;
+            if (parserContext.isTimeAsLong()) {
+                serializeLong(timeInMillis, out);
+            } else {
+                parserContext.serializeTime(timeInMillis + offset, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.TimeMillis) {
+            int timeInMillis = ((Number) value).intValue();
+            int offset = parserContext.getTimeZoneOffset();
+            timeInMillis = timeInMillis + offset;
+            if (parserContext.isTimeAsLong()) {
+                serializeLong(timeInMillis, out);
+            } else {
+                parserContext.serializeTime(timeInMillis, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.TimestampMicros
+                || logicalType instanceof LogicalTypes.LocalTimestampMicros) {
+            long timeStampInMicros = ((Number) value).longValue();
+            int offset = parserContext.getTimeZoneOffset();
+            long timeStampInMillis = TimeUnit.MICROSECONDS.toMillis(timeStampInMicros);
+            timeStampInMillis = timeStampInMillis + offset;
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
+        } else if (logicalType instanceof LogicalTypes.TimestampMillis
+                || logicalType instanceof LogicalTypes.LocalTimestampMillis) {
+            long timeStampInMillis = ((Number) value).longValue();
+            int offset = parserContext.getTimeZoneOffset();
+            timeStampInMillis = timeStampInMillis + offset;
+            if (parserContext.isTimestampAsLong()) {
+                serializeLong(timeStampInMillis, out);
+            } else {
+                parserContext.serializeDateTime(timeStampInMillis, out);
+            }
+        } else {
+            throw createUnsupportedException(logicalType.getName());
+        }
+    }
+
     private void parseValue(Schema schema, Object value, DataOutput out) throws IOException {
         Schema.Type type = schema.getType();
+        LogicalType logicalType = schema.getLogicalType();
+        if (logicalType != null) {
+            parseLogicalValue(logicalType, value, out);
+            return;
+        }
         switch (type) {
             case RECORD:
                 parseObject((GenericRecord) value, out);
@@ -247,6 +355,8 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
                 nullSerde.serialize(ANull.NULL, out);
                 break;
             case INT:
+                serializeInt(value, out);
+                break;
             case LONG:
                 serializeLong(value, out);
                 break;
@@ -279,6 +389,12 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         int64Serde.serialize(aInt64, out);
     }
 
+    private void serializeInt(Object value, DataOutput out) throws HyracksDataException {
+        int intValue = ((Number) value).intValue();
+        aInt32.setValue(intValue);
+        int32Serde.serialize(aInt32, out);
+    }
+
     private void serializeDouble(Object value, DataOutput out) throws HyracksDataException {
         double doubleValue = ((Number) value).doubleValue();
         aDouble.setValue(doubleValue);
@@ -290,7 +406,20 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
         stringSerde.serialize(aString, out);
     }
 
+    private static void ensureDecimalToDoubleEnabled(LogicalType type, AvroConverterContext context)
+            throws RuntimeDataException {
+        if (!context.isDecimalToDoubleEnabled()) {
+            throw new RuntimeDataException(ErrorCode.AVRO_SUPPORTED_TYPE_WITH_OPTION, type.toString(),
+                    ExternalDataConstants.AvroOptions.DECIMAL_TO_DOUBLE);
+        }
+    }
+
     private static HyracksDataException createUnsupportedException(Schema schema) {
         return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Avro Parser", schema);
     }
+
+    private static HyracksDataException createUnsupportedException(String logicalType) {
+        return new RuntimeDataException(ErrorCode.TYPE_UNSUPPORTED, "Avro Parser, Invalid Logical Type: ", logicalType);
+    }
+
 }

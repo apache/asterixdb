@@ -107,5 +107,6 @@ public class AvroFileConverterUtil {
             writeAvroFile(jsonFile, outputPath);
         }
         AvroFileExampleGeneratorUtil.writeExample();
+        AvroLogicalTypesExampleGenerator.writeLogicalTypesExample();
     }
 }

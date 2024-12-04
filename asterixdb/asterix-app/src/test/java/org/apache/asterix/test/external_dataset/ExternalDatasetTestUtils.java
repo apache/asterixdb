@@ -421,6 +421,7 @@ public class ExternalDatasetTestUtils {
         loadData(generatedDataBasePath, "", "avro_type.avro", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "partition_heterogeneous.avro", definition, definitionSegment, false,
                 false);
+        loadData(generatedDataBasePath, "", "avro_logical_type.avro", definition, definitionSegment, false, false);
 
         Collection<File> files =
                 IoUtil.getMatchingFiles(Paths.get(generatedDataBasePath + "/external-filter"), AVRO_FILTER);
