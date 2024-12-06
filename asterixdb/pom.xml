@@ -94,7 +94,7 @@
     <azurecommonjavasdk.version>12.24.1</azurecommonjavasdk.version>
     <azureidentity.version>1.13.3</azureidentity.version>
     <azuredatalakejavasdk.version>12.18.1</azuredatalakejavasdk.version>
-    <gcsjavasdk.version>2.26.0</gcsjavasdk.version>
+    <gcsjavasdk.version>2.45.0</gcsjavasdk.version>
     <hadoop-azuresdk.version>8.6.6</hadoop-azuresdk.version>
 
     <implementation.title>Apache AsterixDB - ${project.name}</implementation.title>
@@ -1973,6 +1973,17 @@
         <groupId>org.codehaus.jettison</groupId>
         <artifactId>jettison</artifactId>
         <version>1.5.4</version>
+      </dependency>
+      <!-- CVE-2024-8184 -->
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util</artifactId>
+        <version>9.4.56.v20240826</version>
+      </dependency>
+      <dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-util-ajax</artifactId>
+        <version>9.4.56.v20240826</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
