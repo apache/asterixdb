@@ -408,7 +408,7 @@
                     -Dfile.encoding=UTF-8
                     -Xdebug
                     -Xrunjdwp:transport=dt_socket,server=y,address=8000,suspend=${debug.suspend.flag}
-                    -Xloggc:"${project.build.directory}/surefire-reports/SqlppExecutionTest-%p-gc.log" -XX:+PrintGC -XX:+PrintGCDateStamps -XX:GCLogFileSize=10M
+                    -Xloggc:"${project.build.directory}/surefire-reports/SqlppExecutionTest-%p-gc.log" -XX:+PrintGC
                     --add-opens=jdk.management/com.sun.management.internal=ALL-UNNAMED --add-opens=java.management/sun.management=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.nio=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED
                   </argLine>
                 </configuration>
