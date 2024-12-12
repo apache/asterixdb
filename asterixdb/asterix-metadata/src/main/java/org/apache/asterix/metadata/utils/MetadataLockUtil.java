@@ -152,6 +152,14 @@ public class MetadataLockUtil implements IMetadataLockUtil {
     }
 
     @Override
+    public void truncateDatasetBegin(IMetadataLockManager lockMgr, LockList locks, String database,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException {
+        lockMgr.acquireDatabaseReadLock(locks, database);
+        lockMgr.acquireDataverseReadLock(locks, database, dataverseName);
+        lockMgr.acquireDatasetWriteLock(locks, database, dataverseName, datasetName);
+    }
+
+    @Override
     public void dropTypeBegin(IMetadataLockManager lockMgr, LockList locks, String database,
             DataverseName dataverseName, String typeName) throws AlgebricksException {
         lockMgr.acquireDatabaseReadLock(locks, database);

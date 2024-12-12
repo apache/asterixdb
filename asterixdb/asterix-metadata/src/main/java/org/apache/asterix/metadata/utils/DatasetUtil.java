@@ -24,10 +24,12 @@ import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.EMPTY_TYP
 import java.io.DataOutput;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.asterix.builders.IARecordBuilder;
 import org.apache.asterix.builders.RecordBuilder;
@@ -35,9 +37,12 @@ import org.apache.asterix.common.cluster.PartitioningProperties;
 import org.apache.asterix.common.config.DatasetConfig;
 import org.apache.asterix.common.config.DatasetConfig.DatasetType;
 import org.apache.asterix.common.context.CorrelatedPrefixMergePolicyFactory;
+import org.apache.asterix.common.context.DatasetLifecycleManager;
+import org.apache.asterix.common.context.DatasetResource;
 import org.apache.asterix.common.context.IStorageComponentProvider;
 import org.apache.asterix.common.context.ITransactionSubsystemProvider;
 import org.apache.asterix.common.context.TransactionSubsystemProvider;
+import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.ACIDException;
 import org.apache.asterix.common.exceptions.AsterixException;
@@ -46,6 +51,7 @@ import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.metadata.MetadataUtil;
 import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.utils.JobUtils;
 import org.apache.asterix.external.util.ExternalDataUtils;
 import org.apache.asterix.formats.base.IDataFormat;
 import org.apache.asterix.formats.nontagged.SerializerDeserializerProvider;
@@ -71,11 +77,13 @@ import org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil;
 import org.apache.asterix.runtime.operators.LSMPrimaryUpsertOperatorDescriptor;
 import org.apache.asterix.runtime.utils.RuntimeUtils;
 import org.apache.asterix.transaction.management.opcallbacks.PrimaryIndexInstantSearchOperationCallbackFactory;
+import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraint;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksPartitionConstraintHelper;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.common.utils.Pair;
 import org.apache.hyracks.algebricks.data.IBinaryComparatorFactoryProvider;
+import org.apache.hyracks.api.client.IHyracksClientConnection;
 import org.apache.hyracks.api.dataflow.IOperatorDescriptor;
 import org.apache.hyracks.api.dataflow.value.IBinaryComparatorFactory;
 import org.apache.hyracks.api.dataflow.value.IBinaryHashFunctionFactory;
@@ -99,6 +107,7 @@ import org.apache.hyracks.storage.am.common.api.ISearchOperationCallbackFactory;
 import org.apache.hyracks.storage.am.common.build.IndexBuilderFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IIndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexCreateOperatorDescriptor;
+import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelper;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDataflowHelperFactory;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor;
 import org.apache.hyracks.storage.am.common.impls.DefaultTupleProjectorFactory;
@@ -107,6 +116,8 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMMergePolicyFactory;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMTupleFilterCallbackFactory;
 import org.apache.hyracks.storage.am.lsm.common.dataflow.LSMTreeIndexCompactOperatorDescriptor;
 import org.apache.hyracks.storage.common.IResourceFactory;
+import org.apache.hyracks.storage.common.IStorageManager;
+import org.apache.hyracks.storage.common.LocalResource;
 import org.apache.hyracks.storage.common.projection.ITupleProjectorFactory;
 import org.apache.hyracks.util.LogRedactionUtil;
 import org.apache.logging.log4j.LogManager;
@@ -743,6 +754,98 @@ public class DatasetUtil {
     public static boolean isRangeFilterPushdownSupported(Dataset dataset) {
         return dataset.getDatasetType() == DatasetType.INTERNAL
                 && dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
+    }
+
+    public static void truncate(MetadataProvider metadataProvider, Dataset ds) throws Exception {
+        if (ds.getDatasetType() == DatasetType.INTERNAL) {
+            IHyracksClientConnection hcc;
+            Map<String, List<DatasetPartitions>> nc2Resources = getNodeResources(metadataProvider, ds);
+            AlgebricksAbsolutePartitionConstraint nodeSet =
+                    new AlgebricksAbsolutePartitionConstraint(nc2Resources.keySet().toArray(new String[0]));
+            JobSpecification job = new JobSpecification();
+            IOperatorDescriptor truncateOp = new TruncateOperatorDescriptor(job, nc2Resources);
+            AlgebricksPartitionConstraintHelper.setPartitionConstraintInJobSpec(job, truncateOp, nodeSet);
+            hcc = metadataProvider.getApplicationContext().getHcc();
+            JobUtils.runJobIfActive(hcc, job, true);
+        } else {
+            throw new IllegalArgumentException("Cannot truncate a non-internal dataset.");
+        }
+    }
+
+    public static DatasetPartitions getPartitionsAndDataflowHelperFactory(Dataset dataset,
+            List<DatasetPartitions> ncResources, IIndexDataflowHelperFactory primary,
+            List<IIndexDataflowHelperFactory> secondaries) {
+        DatasetPartitions partitionsAndDataflowHelperFactory;
+        if (ncResources.isEmpty()) {
+            partitionsAndDataflowHelperFactory =
+                    new DatasetPartitions(dataset, new ArrayList<>(), primary, secondaries);
+            ncResources.add(partitionsAndDataflowHelperFactory);
+        } else {
+            DatasetPartitions last = ncResources.get(ncResources.size() - 1);
+            if (last.getPrimaryIndexDataflowHelperFactory() == primary) {
+                partitionsAndDataflowHelperFactory = last;
+            } else {
+                partitionsAndDataflowHelperFactory =
+                        new DatasetPartitions(dataset, new ArrayList<>(), primary, secondaries);
+                ncResources.add(partitionsAndDataflowHelperFactory);
+            }
+        }
+        return partitionsAndDataflowHelperFactory;
+    }
+
+    public static Map<String, List<DatasetPartitions>> getNodeResources(MetadataProvider metadataProvider,
+            Dataset dataset) throws AlgebricksException {
+        Map<String, List<DatasetPartitions>> nc2Resources = new HashMap<>();
+        IStorageManager storageManager = metadataProvider.getStorageComponentProvider().getStorageManager();
+
+        // get secondary indexes
+        List<Index> secondaryIndexes =
+                metadataProvider
+                        .getDatasetIndexes(dataset.getDatabaseName(), dataset.getDataverseName(),
+                                dataset.getDatasetName())
+                        .stream().filter(Index::isSecondaryIndex).collect(Collectors.toList());
+        PartitioningProperties partitioningProperties = metadataProvider.getPartitioningProperties(dataset);
+        IIndexDataflowHelperFactory primary =
+                new IndexDataflowHelperFactory(storageManager, partitioningProperties.getSplitsProvider());
+        List<IIndexDataflowHelperFactory> secondaries =
+                secondaryIndexes.isEmpty() ? Collections.emptyList() : new ArrayList<>();
+        for (Index index : secondaryIndexes) {
+            PartitioningProperties idxPartitioningProperties =
+                    metadataProvider.getPartitioningProperties(dataset, index.getIndexName());
+            secondaries
+                    .add(new IndexDataflowHelperFactory(storageManager, idxPartitioningProperties.getSplitsProvider()));
+        }
+        AlgebricksAbsolutePartitionConstraint computeLocations =
+                (AlgebricksAbsolutePartitionConstraint) partitioningProperties.getConstraints();
+        int[][] computeStorageMap = partitioningProperties.getComputeStorageMap();
+        for (int j = 0; j < computeLocations.getLocations().length; j++) {
+            String loc = computeLocations.getLocations()[j];
+            DatasetPartitions partitionsAndDataflowHelperFactories = getPartitionsAndDataflowHelperFactory(dataset,
+                    nc2Resources.computeIfAbsent(loc, key -> new ArrayList<>()), primary, secondaries);
+            List<Integer> dsPartitions = partitionsAndDataflowHelperFactories.getPartitions();
+            int[] computeStoragePartitions = computeStorageMap[j];
+            for (int storagePartition : computeStoragePartitions) {
+                dsPartitions.add(storagePartition);
+            }
+        }
+        return nc2Resources;
+    }
+
+    public static DatasetResource getDatasetResource(DatasetLifecycleManager dslMgr, Integer partition,
+            IndexDataflowHelper indexHelper) throws HyracksDataException {
+        LocalResource lr = indexHelper.getResource();
+        DatasetLocalResource dslr = (DatasetLocalResource) lr.getResource();
+        int datasetId = dslr.getDatasetId();
+        DatasetResource dsr = dslMgr.getDatasetLifecycle(datasetId);
+        // Ensure that no active operations exists
+        int numActiveOperations =
+                dslMgr.getOperationTracker(datasetId, partition, lr.getPath()).getNumActiveOperations();
+        if (numActiveOperations > 0) {
+            throw new IllegalStateException("Can't truncate the collection " + dsr.getDatasetInfo().getDatasetID()
+                    + " because the number of active operations = " + numActiveOperations + " in the partition "
+                    + partition);
+        }
+        return dsr;
     }
 
     public static boolean isDeltaTable(Dataset dataset) {

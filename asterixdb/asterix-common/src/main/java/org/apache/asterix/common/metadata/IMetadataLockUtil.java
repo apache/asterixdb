@@ -57,6 +57,9 @@ public interface IMetadataLockUtil {
     void dropDatasetBegin(IMetadataLockManager lockManager, LockList locks, String database,
             DataverseName dataverseName, String datasetName) throws AlgebricksException;
 
+    void truncateDatasetBegin(IMetadataLockManager lockManager, LockList locks, String database,
+            DataverseName dataverseName, String datasetName) throws AlgebricksException;
+
     void modifyDatasetBegin(IMetadataLockManager lockManager, LockList locks, String database,
             DataverseName dataverseName, String datasetName) throws AlgebricksException;
 
