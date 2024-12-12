@@ -34,13 +34,6 @@ import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
  */
 
 public class EmbedProjectRule implements IAlgebraicRewriteRule {
-    private static boolean isProjectable(LogicalOperatorTag op) {
-        return switch (op) {
-            case ASSIGN, UNNEST, LEFT_OUTER_UNNEST, RUNNINGAGGREGATE, SELECT -> true;
-            default -> false;
-        };
-    }
-
     @Override
     public boolean rewritePost(Mutable<ILogicalOperator> opRef, IOptimizationContext context) {
 
@@ -65,4 +58,10 @@ public class EmbedProjectRule implements IAlgebraicRewriteRule {
         return true;
     }
 
+    private static boolean isProjectable(LogicalOperatorTag op) {
+        return switch (op) {
+            case ASSIGN, UNNEST, LEFT_OUTER_UNNEST, RUNNINGAGGREGATE, SELECT -> true;
+            default -> false;
+        };
+    }
 }

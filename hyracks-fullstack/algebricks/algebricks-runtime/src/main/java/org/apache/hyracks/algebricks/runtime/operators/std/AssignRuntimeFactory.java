@@ -92,7 +92,9 @@ public class AssignRuntimeFactory extends AbstractOneInputOneOutputRuntimeFactor
             }
             sb.append(evalFactories[i].toString());
         }
-        sb.append("]");
+        sb.append("] ");
+        sb.append(" project: ");
+        sb.append(Arrays.toString(projectionList));
         return sb.toString();
     }
 
