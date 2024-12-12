@@ -114,6 +114,8 @@ import org.apache.hyracks.api.job.JobId;
 import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.resource.IClusterCapacity;
 import org.apache.hyracks.control.common.config.OptionTypes;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -124,6 +126,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * to Hyracks through the Hyracks client interface.
  */
 public class APIFramework {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ObjectWriter OBJECT_WRITER = new ObjectMapper().writerWithDefaultPrettyPrinter();
 
@@ -192,16 +196,21 @@ public class APIFramework {
     public Pair<IReturningStatement, Integer> reWriteQuery(LangRewritingContext langRewritingContext,
             IReturningStatement q, SessionOutput output, boolean allowNonStoredUdfCalls, boolean inlineUdfsAndViews,
             Collection<VarIdentifier> externalVars) throws CompilationException {
-        if (q == null) {
-            return null;
+        try {
+            if (q == null) {
+                return null;
+            }
+            SessionConfig conf = output.config();
+            if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
+                generateExpressionTree(q);
+            }
+            IQueryRewriter rw = rewriterFactory.createQueryRewriter();
+            rw.rewrite(langRewritingContext, q, allowNonStoredUdfCalls, inlineUdfsAndViews, externalVars);
+            return new Pair<>(q, q.getVarCounter());
+        } catch (StackOverflowError error) {
+            LOGGER.info("Stack Overflow", error);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");
         }
-        SessionConfig conf = output.config();
-        if (!conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS) && conf.is(SessionConfig.OOB_EXPR_TREE)) {
-            generateExpressionTree(q);
-        }
-        IQueryRewriter rw = rewriterFactory.createQueryRewriter();
-        rw.rewrite(langRewritingContext, q, allowNonStoredUdfCalls, inlineUdfsAndViews, externalVars);
-        return new Pair<>(q, q.getVarCounter());
     }
 
     public JobSpecification compileQuery(IClusterInfoCollector clusterInfoCollector, MetadataProvider metadataProvider,
@@ -210,172 +219,183 @@ public class APIFramework {
             IRequestParameters requestParameters, EnumSet<JobFlag> runtimeFlags)
             throws AlgebricksException, ACIDException {
 
-        // establish facts
-        final boolean isQuery = query != null;
-        final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
-        final boolean isCopy = statement != null && statement.getKind() == Statement.Kind.COPY_FROM;
-        final SourceLocation sourceLoc =
-                query != null ? query.getSourceLocation() : statement != null ? statement.getSourceLocation() : null;
-        final boolean isExplainOnly = isQuery && query.isExplain();
+        try {
+            // establish facts
+            final boolean isQuery = query != null;
+            final boolean isLoad = statement != null && statement.getKind() == Statement.Kind.LOAD;
+            final boolean isCopy = statement != null && statement.getKind() == Statement.Kind.COPY_FROM;
+            final SourceLocation sourceLoc = query != null ? query.getSourceLocation()
+                    : statement != null ? statement.getSourceLocation() : null;
+            final boolean isExplainOnly = isQuery && query.isExplain();
 
-        SessionConfig conf = output.config();
-        if (isQuery && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
-                && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
-            generateRewrittenExpressionTree(query);
-        }
+            SessionConfig conf = output.config();
+            if (isQuery && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
+                    && conf.is(SessionConfig.OOB_REWRITTEN_EXPR_TREE)) {
+                generateRewrittenExpressionTree(query);
+            }
 
-        final TxnId txnId = metadataProvider.getTxnIdFactory().create();
-        metadataProvider.setTxnId(txnId);
-        ILangExpressionToPlanTranslator t =
-                translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
-        ResultMetadata resultMetadata = new ResultMetadata(output.config().fmt());
-        ILogicalPlan plan = isLoad || isCopy ? t.translateCopyOrLoad((ICompiledDmlStatement) statement)
-                : t.translate(query, outputDatasetName, statement, resultMetadata);
+            final TxnId txnId = metadataProvider.getTxnIdFactory().create();
+            metadataProvider.setTxnId(txnId);
+            ILangExpressionToPlanTranslator t =
+                    translatorFactory.createExpressionToPlanTranslator(metadataProvider, varCounter, externalVars);
+            ResultMetadata resultMetadata = new ResultMetadata(output.config().fmt());
+            ILogicalPlan plan = isLoad || isCopy ? t.translateCopyOrLoad((ICompiledDmlStatement) statement)
+                    : t.translate(query, outputDatasetName, statement, resultMetadata);
 
-        ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
-        CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
-        Map<String, Object> config = metadataProvider.getConfig();
-        Map<String, Object> querySpecificConfig = validateConfig(config, sourceLoc);
-        final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.createPhysicalOptimizationConf(
-                compilerProperties, querySpecificConfig, configurableParameterNames, sourceLoc);
-        if (!config.containsKey(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY)) {
-            config.put(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY, Boolean.toString(physOptConf.isOrderField()));
-        }
+            ICcApplicationContext ccAppContext = metadataProvider.getApplicationContext();
+            CompilerProperties compilerProperties = ccAppContext.getCompilerProperties();
+            Map<String, Object> config = metadataProvider.getConfig();
+            Map<String, Object> querySpecificConfig = validateConfig(config, sourceLoc);
+            final PhysicalOptimizationConfig physOptConf = OptimizationConfUtil.createPhysicalOptimizationConf(
+                    compilerProperties, querySpecificConfig, configurableParameterNames, sourceLoc);
+            if (!config.containsKey(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY)) {
+                config.put(CompilerProperties.COMPILER_ORDERED_FIELDS_KEY,
+                        Boolean.toString(physOptConf.isOrderField()));
+            }
 
-        boolean cboMode = physOptConf.getCBOMode() || physOptConf.getCBOTestMode();
-        HeuristicCompilerFactoryBuilder builder =
-                new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
-        builder.setPhysicalOptimizationConfig(physOptConf);
-        builder.setLogicalRewrites(() -> ruleSetFactory.getLogicalRewrites(ccAppContext));
-        builder.setLogicalRewritesByKind(kind -> ruleSetFactory.getLogicalRewrites(kind, ccAppContext));
-        builder.setPhysicalRewrites(() -> ruleSetFactory.getPhysicalRewrites(ccAppContext));
-        IDataFormat format = metadataProvider.getDataFormat();
-        ICompilerFactory compilerFactory = builder.create();
-        builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
-        builder.setIMergeAggregationExpressionFactory(new MergeAggregationExpressionFactory());
-        builder.setPartialAggregationTypeComputer(new PartialAggregationTypeComputer());
-        builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
-        builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
-        builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
-        builder.setWarningCollector(warningCollector);
-        builder.setMaxWarnings(conf.getMaxWarnings());
+            boolean cboMode = physOptConf.getCBOMode() || physOptConf.getCBOTestMode();
+            HeuristicCompilerFactoryBuilder builder =
+                    new HeuristicCompilerFactoryBuilder(OptimizationContextFactory.INSTANCE);
+            builder.setPhysicalOptimizationConfig(physOptConf);
+            builder.setLogicalRewrites(() -> ruleSetFactory.getLogicalRewrites(ccAppContext));
+            builder.setLogicalRewritesByKind(kind -> ruleSetFactory.getLogicalRewrites(kind, ccAppContext));
+            builder.setPhysicalRewrites(() -> ruleSetFactory.getPhysicalRewrites(ccAppContext));
+            IDataFormat format = metadataProvider.getDataFormat();
+            ICompilerFactory compilerFactory = builder.create();
+            builder.setExpressionEvalSizeComputer(format.getExpressionEvalSizeComputer());
+            builder.setIMergeAggregationExpressionFactory(new MergeAggregationExpressionFactory());
+            builder.setPartialAggregationTypeComputer(new PartialAggregationTypeComputer());
+            builder.setExpressionTypeComputer(ExpressionTypeComputer.INSTANCE);
+            builder.setMissableTypeComputer(MissableTypeComputer.INSTANCE);
+            builder.setConflictingTypeResolver(ConflictingTypeResolver.INSTANCE);
+            builder.setWarningCollector(warningCollector);
+            builder.setMaxWarnings(conf.getMaxWarnings());
 
-        if ((isQuery || isLoad || isCopy) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
-                && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
-            generateLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
-        }
+            if ((isQuery || isLoad || isCopy) && !conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)
+                    && conf.is(SessionConfig.OOB_LOGICAL_PLAN)) {
+                generateLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+            }
 
-        int parallelism = getParallelism((String) querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
-                compilerProperties.getParallelism());
-        AlgebricksAbsolutePartitionConstraint computationLocations =
-                chooseLocations(clusterInfoCollector, parallelism, metadataProvider.getClusterLocations());
-        builder.setClusterLocations(computationLocations);
+            int parallelism =
+                    getParallelism((String) querySpecificConfig.get(CompilerProperties.COMPILER_PARALLELISM_KEY),
+                            compilerProperties.getParallelism());
+            AlgebricksAbsolutePartitionConstraint computationLocations =
+                    chooseLocations(clusterInfoCollector, parallelism, metadataProvider.getClusterLocations());
+            builder.setClusterLocations(computationLocations);
 
-        builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
-        builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
-        builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
-        builder.setExpressionRuntimeProvider(
-                new ExpressionRuntimeProvider(new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())));
-        builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
-        builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
-        builder.setMissingWriterFactory(format.getMissingWriterFactory());
-        builder.setNullWriterFactory(format.getNullWriterFactory());
-        builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
-        builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
-        builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));
-        builder.setWriterFactory(PrinterBasedWriterFactory.INSTANCE);
-        builder.setResultSerializerFactoryProvider(ResultSerializerFactoryProvider.INSTANCE);
-        builder.setSerializerDeserializerProvider(format.getSerdeProvider());
-        builder.setTypeTraitProvider(format.getTypeTraitProvider());
-        builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
+            builder.setBinaryBooleanInspectorFactory(format.getBinaryBooleanInspectorFactory());
+            builder.setBinaryIntegerInspectorFactory(format.getBinaryIntegerInspectorFactory());
+            builder.setComparatorFactoryProvider(format.getBinaryComparatorFactoryProvider());
+            builder.setExpressionRuntimeProvider(new ExpressionRuntimeProvider(
+                    new QueryLogicalExpressionJobGen(metadataProvider.getFunctionManager())));
+            builder.setHashFunctionFactoryProvider(format.getBinaryHashFunctionFactoryProvider());
+            builder.setHashFunctionFamilyProvider(format.getBinaryHashFunctionFamilyProvider());
+            builder.setMissingWriterFactory(format.getMissingWriterFactory());
+            builder.setNullWriterFactory(format.getNullWriterFactory());
+            builder.setUnnestingPositionWriterFactory(format.getUnnestingPositionWriterFactory());
+            builder.setPredicateEvaluatorFactoryProvider(format.getPredicateEvaluatorFactoryProvider());
+            builder.setPrinterProvider(getPrinterFactoryProvider(format, conf.fmt()));
+            builder.setWriterFactory(PrinterBasedWriterFactory.INSTANCE);
+            builder.setResultSerializerFactoryProvider(ResultSerializerFactoryProvider.INSTANCE);
+            builder.setSerializerDeserializerProvider(format.getSerdeProvider());
+            builder.setTypeTraitProvider(format.getTypeTraitProvider());
+            builder.setNormalizedKeyComputerFactoryProvider(format.getNormalizedKeyComputerFactoryProvider());
 
-        ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
-        if (conf.isOptimize()) {
-            compiler.optimize();
-            if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
-                if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
-                    // For Optimizer tests. Print physical operators in verbose mode.
-                    AlgebricksStringBuilderWriter buf = new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
-                    PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
-                    output.out().write(buf.toString());
-                } else {
-                    if (isQuery || isLoad || isCopy) {
-                        generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+            ICompiler compiler = compilerFactory.createCompiler(plan, metadataProvider, t.getVarCounter());
+            if (conf.isOptimize()) {
+                compiler.optimize();
+                if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
+                    if (conf.is(SessionConfig.FORMAT_ONLY_PHYSICAL_OPS)) {
+                        // For Optimizer tests. Print physical operators in verbose mode.
+                        AlgebricksStringBuilderWriter buf =
+                                new AlgebricksStringBuilderWriter(PlanPrettyPrinter.INIT_SIZE);
+                        PlanPrettyPrinter.printPhysicalOps(plan, buf, 0, true);
+                        output.out().write(buf.toString());
+                    } else {
+                        if (isQuery || isLoad || isCopy) {
+                            generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+                        }
                     }
                 }
             }
-        }
 
-        if (conf.getClientType() == SessionConfig.ClientType.JDBC) {
-            executionPlans.setStatementCategory(Statement.Category.toString(getStatementCategory(query, statement)));
-            if (!conf.isExecuteQuery()) {
-                String stmtParams = ResultUtil.ParseOnlyResult.printStatementParameters(externalVars.keySet(), v -> v);
-                executionPlans.setStatementParameters(stmtParams);
+            if (conf.getClientType() == SessionConfig.ClientType.JDBC) {
+                executionPlans
+                        .setStatementCategory(Statement.Category.toString(getStatementCategory(query, statement)));
+                if (!conf.isExecuteQuery()) {
+                    String stmtParams =
+                            ResultUtil.ParseOnlyResult.printStatementParameters(externalVars.keySet(), v -> v);
+                    executionPlans.setStatementParameters(stmtParams);
+                }
+                if (isExplainOnly) {
+                    executionPlans.setExplainOnly(true);
+                } else if (isQuery) {
+                    executionPlans.setSignature(SignaturePrinter.generateFlatSignature(resultMetadata));
+                }
             }
+
+            boolean printSignature = isQuery && requestParameters != null && requestParameters.isPrintSignature();
+
+            if (printSignature && !isExplainOnly) { //explainOnly adds the signature later
+                printer.addResultPrinter(SignaturePrinter.newInstance(executionPlans));
+            }
+
+            if (!conf.isGenerateJobSpec()) {
+                if (isQuery || isLoad || isCopy) {
+                    generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
+                }
+                return null;
+            }
+
+            JobEventListenerFactory jobEventListenerFactory =
+                    new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
+            JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory, runtimeFlags);
+
+            if (isQuery || isCopy) {
+                if (!compiler.skipJobCapacityAssignment()) {
+                    if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
+                        // Sets a required capacity, only for read-only queries.
+                        // DDLs and DMLs are considered not that frequent.
+                        // limit the computation locations to the locations that will be used in the query
+                        final INodeJobTracker nodeJobTracker = ccAppContext.getNodeJobTracker();
+                        final AlgebricksAbsolutePartitionConstraint jobLocations =
+                                getJobLocations(spec, nodeJobTracker, computationLocations);
+                        final IClusterCapacity jobRequiredCapacity =
+                                ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf, compilerProperties);
+                        addRuntimeMemoryOverhead(jobRequiredCapacity, compilerProperties);
+                        spec.setRequiredClusterCapacity(jobRequiredCapacity);
+                    }
+                }
+            }
+
+            if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
+                if (isQuery || isLoad || isCopy) {
+                    generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat(),
+                            cboMode);
+                    if (runtimeFlags.contains(JobFlag.PROFILE_RUNTIME)) {
+                        lastPlan = new PlanInfo(plan, spec.getLogical2PhysicalMap(), cboMode,
+                                output.config().getPlanFormat());
+                    }
+                }
+            }
+
             if (isExplainOnly) {
-                executionPlans.setExplainOnly(true);
-            } else if (isQuery) {
-                executionPlans.setSignature(SignaturePrinter.generateFlatSignature(resultMetadata));
-            }
-        }
-
-        boolean printSignature = isQuery && requestParameters != null && requestParameters.isPrintSignature();
-
-        if (printSignature && !isExplainOnly) { //explainOnly adds the signature later
-            printer.addResultPrinter(SignaturePrinter.newInstance(executionPlans));
-        }
-
-        if (!conf.isGenerateJobSpec()) {
-            if (isQuery || isLoad || isCopy) {
-                generateOptimizedLogicalPlan(plan, output.config().getPlanFormat(), cboMode);
-            }
-            return null;
-        }
-
-        JobEventListenerFactory jobEventListenerFactory =
-                new JobEventListenerFactory(txnId, metadataProvider.isWriteTransaction());
-        JobSpecification spec = compiler.createJob(ccAppContext, jobEventListenerFactory, runtimeFlags);
-
-        if (isQuery || isCopy) {
-            if (!compiler.skipJobCapacityAssignment()) {
-                if (requestParameters == null || !requestParameters.isSkipAdmissionPolicy()) {
-                    // Sets a required capacity, only for read-only queries.
-                    // DDLs and DMLs are considered not that frequent.
-                    // limit the computation locations to the locations that will be used in the query
-                    final INodeJobTracker nodeJobTracker = ccAppContext.getNodeJobTracker();
-                    final AlgebricksAbsolutePartitionConstraint jobLocations =
-                            getJobLocations(spec, nodeJobTracker, computationLocations);
-                    final IClusterCapacity jobRequiredCapacity =
-                            ResourceUtils.getRequiredCapacity(plan, jobLocations, physOptConf, compilerProperties);
-                    addRuntimeMemoryOverhead(jobRequiredCapacity, compilerProperties);
-                    spec.setRequiredClusterCapacity(jobRequiredCapacity);
+                printPlanAsResult(metadataProvider, output, printer, printSignature);
+                if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
+                    executionPlans.setOptimizedLogicalPlan(null);
                 }
+                return null;
             }
-        }
 
-        if (conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN) || isExplainOnly) {
-            if (isQuery || isLoad || isCopy) {
-                generateOptimizedLogicalPlan(plan, spec.getLogical2PhysicalMap(), output.config().getPlanFormat(),
-                        cboMode);
-                if (runtimeFlags.contains(JobFlag.PROFILE_RUNTIME)) {
-                    lastPlan =
-                            new PlanInfo(plan, spec.getLogical2PhysicalMap(), cboMode, output.config().getPlanFormat());
-                }
+            if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
+                generateJob(spec);
             }
-        }
+            return spec;
 
-        if (isExplainOnly) {
-            printPlanAsResult(metadataProvider, output, printer, printSignature);
-            if (!conf.is(SessionConfig.OOB_OPTIMIZED_LOGICAL_PLAN)) {
-                executionPlans.setOptimizedLogicalPlan(null);
-            }
-            return null;
+        } catch (StackOverflowError error) {
+            LOGGER.info("Stack Overflow", error);
+            throw new CompilationException(ErrorCode.COMPILATION_ERROR, "internal error");
         }
-
-        if (isQuery && conf.is(SessionConfig.OOB_HYRACKS_JOB)) {
-            generateJob(spec);
-        }
-        return spec;
     }
 
     private void printPlanAsResult(MetadataProvider metadataProvider, SessionOutput output, IResponsePrinter printer,
