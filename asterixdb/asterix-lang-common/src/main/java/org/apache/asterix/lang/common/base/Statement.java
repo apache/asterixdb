@@ -72,6 +72,7 @@ public interface Statement extends ILangExpression {
     }
 
     enum Kind {
+        TRUNCATE,
         DATASET_DECL,
         DATAVERSE_DECL,
         DATABASE_DROP,

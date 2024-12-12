@@ -166,6 +166,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
@@ -421,6 +422,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         break;
                     case DATAVERSE_DROP:
                         handleDataverseDropStatement(metadataProvider, stmt, hcc, requestParameters);
+                        break;
+                    case TRUNCATE:
+                        handleDatasetTruncateStatement(metadataProvider, stmt, requestParameters);
                         break;
                     case DATASET_DROP:
                         handleDatasetDropStatement(metadataProvider, stmt, hcc, requestParameters);
@@ -2379,6 +2383,28 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         // may be overridden by product extensions for additional checks after dropping a database/dataverse
     }
 
+    public void handleDatasetTruncateStatement(MetadataProvider metadataProvider, Statement stmt,
+            IRequestParameters requestParameters) throws Exception {
+        TruncateDatasetStatement truncateStmt = (TruncateDatasetStatement) stmt;
+        SourceLocation sourceLoc = truncateStmt.getSourceLocation();
+        String datasetName = truncateStmt.getDatasetName().getValue();
+        metadataProvider.validateDatabaseObjectName(truncateStmt.getNamespace(), datasetName, sourceLoc);
+        Namespace stmtActiveNamespace = getActiveNamespace(truncateStmt.getNamespace());
+        DataverseName dataverseName = stmtActiveNamespace.getDataverseName();
+        String databaseName = stmtActiveNamespace.getDatabaseName();
+        if (isCompileOnly()) {
+            return;
+        }
+        lockUtil.truncateDatasetBegin(lockManager, metadataProvider.getLocks(), databaseName, dataverseName,
+                datasetName);
+        try {
+            doTruncateDataset(databaseName, dataverseName, datasetName, metadataProvider, truncateStmt.getIfExists(),
+                    sourceLoc);
+        } finally {
+            metadataProvider.getLocks().unlock();
+        }
+    }
+
     public void handleDatasetDropStatement(MetadataProvider metadataProvider, Statement stmt,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
         DropDatasetStatement stmtDelete = (DropDatasetStatement) stmt;
@@ -2397,6 +2423,53 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     requestParameters, true, sourceLoc);
         } finally {
             metadataProvider.getLocks().unlock();
+        }
+    }
+
+    protected void doTruncateDataset(String databaseName, DataverseName dataverseName, String datasetName,
+            MetadataProvider metadataProvider, boolean ifExists, SourceLocation sourceLoc) throws Exception {
+        MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
+        metadataProvider.setMetadataTxnContext(mdTxnCtx);
+        Dataset ds = null;
+        try {
+            //TODO(DB): also check for database existence?
+
+            // Check if the dataverse exists
+            Dataverse dv = MetadataManager.INSTANCE.getDataverse(mdTxnCtx, databaseName, dataverseName);
+            if (dv == null) {
+                if (ifExists) {
+                    if (warningCollector.shouldWarn()) {
+                        warningCollector.warn(Warning.of(sourceLoc, ErrorCode.UNKNOWN_DATAVERSE, MetadataUtil
+                                .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase())));
+                    }
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATAVERSE, sourceLoc, MetadataUtil
+                            .dataverseName(databaseName, dataverseName, metadataProvider.isUsingDatabase()));
+                }
+            }
+            ds = metadataProvider.findDataset(databaseName, dataverseName, datasetName, true);
+            if (ds == null) {
+                if (ifExists) {
+                    MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+                    return;
+                } else {
+                    throw new CompilationException(ErrorCode.UNKNOWN_DATASET_IN_DATAVERSE, sourceLoc, datasetName,
+                            MetadataUtil.dataverseName(databaseName, dataverseName,
+                                    metadataProvider.isUsingDatabase()));
+                }
+            }
+            validateDatasetState(metadataProvider, ds, sourceLoc);
+
+            DatasetUtil.truncate(metadataProvider, ds);
+
+            MetadataManager.INSTANCE.commitTransaction(mdTxnCtx);
+        } catch (Exception e) {
+            LOGGER.error("failed to truncate collection {}",
+                    new DatasetFullyQualifiedName(databaseName, dataverseName, datasetName), e);
+            abort(e, e, mdTxnCtx);
+            throw e;
         }
     }
 

@@ -110,6 +110,7 @@ import org.apache.asterix.lang.common.statement.SetStatement;
 import org.apache.asterix.lang.common.statement.StartFeedStatement;
 import org.apache.asterix.lang.common.statement.StopFeedStatement;
 import org.apache.asterix.lang.common.statement.SynonymDropStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpdateStatement;
@@ -635,6 +636,14 @@ public abstract class FormatPrintVisitor implements ILangVisitor<Void, Integer> 
         out.println(
                 skip(step) + "drop " + datasetSymbol + generateFullName(del.getDataverseName(), del.getDatasetName())
                         + generateIfExists(del.getIfExists()) + SEMICOLON);
+        return null;
+    }
+
+    @Override
+    public Void visit(TruncateDatasetStatement del, Integer step) throws CompilationException {
+        out.println(skip(step) + "truncate " + datasetSymbol
+                + generateFullName(del.getDataverseName(), del.getDatasetName()) + generateIfExists(del.getIfExists())
+                + SEMICOLON);
         return null;
     }
 

@@ -155,6 +155,7 @@ import org.apache.asterix.lang.common.statement.DataverseDropStatement;
 import org.apache.asterix.lang.common.statement.DeleteStatement;
 import org.apache.asterix.lang.common.statement.DisconnectFeedStatement;
 import org.apache.asterix.lang.common.statement.DropDatasetStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.ExternalDetailsDecl;
 import org.apache.asterix.lang.common.statement.FeedDropStatement;
 import org.apache.asterix.lang.common.statement.FeedPolicyDropStatement;
@@ -1015,6 +1016,7 @@ Statement SingleStatement() throws ParseException:
     | stmt = LoadStatement()
     | stmt = CopyStatement()
     | stmt = DropStatement()
+    | stmt = TruncateStatement()
     | stmt = SetStatement()
     | stmt = InsertStatement()
     | stmt = DeleteStatement()
@@ -2366,6 +2368,43 @@ Pair<List<Integer>, List<List<String>>> PrimaryKeyFields() throws ParseException
     {
       return new Pair<List<Integer>, List<List<String>>> (keyFieldSourceIndicators, primaryKeyFields);
     }
+}
+Statement TruncateStatement() throws ParseException:
+{
+  Token startToken = null;
+  Statement stmt = null;
+}
+{
+  <TRUNCATE> { startToken = token; }
+  (
+    stmt = TruncateDatasetStatement(startToken)
+  )
+  {
+    return stmt;
+  }
+}
+TruncateDatasetStatement TruncateDatasetStatement(Token startStmtToken) throws ParseException:
+{
+  TruncateDatasetStatement stmt = null;
+}
+{
+  Dataset() stmt = TruncateDatasetSpecification(startStmtToken)
+  {
+    return stmt;
+  }
+}
+
+TruncateDatasetStatement TruncateDatasetSpecification(Token startStmtToken) throws ParseException:
+{
+  Pair<Namespace,Identifier> pairId = null;
+  boolean ifExists = false;
+}
+{
+  pairId = QualifiedName() ifExists = IfExists()
+  {
+    TruncateDatasetStatement stmt = new TruncateDatasetStatement(pairId.first, pairId.second, ifExists);
+    return addSourceLocation(stmt, startStmtToken);
+  }
 }
 
 Statement DropStatement() throws ParseException:
@@ -5969,6 +6008,7 @@ TOKEN [IGNORE_CASE]:
   | <DISTINCT : "distinct">
   | <DIV : "div">
   | <DROP : "drop">
+  | <TRUNCATE : "truncate">
   | <ELEMENT : "element">
   | <EXPLAIN : "explain">
   | <ELSE : "else">

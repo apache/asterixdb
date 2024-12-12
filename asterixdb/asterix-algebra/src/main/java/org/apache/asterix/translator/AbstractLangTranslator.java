@@ -63,6 +63,7 @@ import org.apache.asterix.lang.common.statement.FunctionDecl;
 import org.apache.asterix.lang.common.statement.IndexDropStatement;
 import org.apache.asterix.lang.common.statement.InsertStatement;
 import org.apache.asterix.lang.common.statement.LoadStatement;
+import org.apache.asterix.lang.common.statement.TruncateDatasetStatement;
 import org.apache.asterix.lang.common.statement.TypeDecl;
 import org.apache.asterix.lang.common.statement.TypeDropStatement;
 import org.apache.asterix.lang.common.statement.UpsertStatement;
@@ -263,6 +264,14 @@ public abstract class AbstractLangTranslator {
                             message = errorMsgBuffer.toString();
                         }
                     }
+                }
+                break;
+
+            case TRUNCATE:
+                namespace = getStatementNamespace(((TruncateDatasetStatement) stmt).getNamespace(), activeNamespace);
+                invalidOperation = isSystemNamespace(namespace);
+                if (invalidOperation) {
+                    message = formatObjectDdlMessage("truncate", dataset(), namespace, usingDb);
                 }
                 break;
 
