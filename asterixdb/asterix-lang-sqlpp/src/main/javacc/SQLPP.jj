@@ -4184,6 +4184,7 @@ Expression LikeExpr() throws ParseException:
   OperatorExpr op = null;
   Expression operand = null;
   IExpressionAnnotation annotation = null;
+  List<IExpressionAnnotation> annotationList = null;
 }
 {
     operand = ConcatExpr()
@@ -4191,9 +4192,17 @@ Expression LikeExpr() throws ParseException:
         LOOKAHEAD(2)
         (<NOT> { not = true; })? <LIKE>
         {
-          Token hintToken = fetchHint(token, SqlppHint.SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT);
-          if (hintToken != null) {
-               annotation = parseExpressionAnnotation(hintToken);
+          List<Token> hintTokens = fetchHints(token, SqlppHint.SINGLE_DATASET_PREDICATE_SELECTIVITY_HINT,
+            SqlppHint.SKIP_SECONDARY_INDEX_SEARCH_HINT, SqlppHint.USE_SECONDARY_INDEX_SEARCH_HINT);
+          if (hintTokens != null && !hintTokens.isEmpty()) {
+            annotationList = new ArrayList<IExpressionAnnotation>();
+          }
+          for (Token hintToken : hintTokens) {
+            annotation = parseExpressionAnnotation(hintToken);
+            if (annotation != null) {
+              // annotation may be null if hints are malformed
+              annotationList.add(annotation);
+            }
           }
           op = new OperatorExpr();
           op.addOperand(operand);
@@ -4209,8 +4218,8 @@ Expression LikeExpr() throws ParseException:
           } catch (CompilationException e){
             throw new SqlppParseException(getSourceLocation(token), e.getMessage());
           }
-          if (annotation != null) {
-             op.addHint(annotation);
+          if (annotationList != null && !annotationList.isEmpty()) {
+            op.addHints(annotationList);
           }
         }
 
