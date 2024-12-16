@@ -193,7 +193,7 @@ public abstract class AbstractBytesTest extends TestBase {
         pageZero.position(HEADER_SIZE);
         pageZero.putInt(MEGA_LEAF_NODE_LENGTH, writer.flush(pageZero));
         //Write page header
-        int numberOfColumn = writer.getNumberOfColumns();
+        int numberOfColumn = writer.getNumberOfColumns(false);
         pageZero.putInt(TUPLE_COUNT_OFFSET, tupleCount);
         pageZero.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumn);
 

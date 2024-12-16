@@ -43,6 +43,7 @@ import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
 import org.apache.asterix.om.types.ATypeTag;
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
@@ -180,6 +181,10 @@ public class AvroDataParser extends AbstractDataParser implements IRecordDataPar
                 return value instanceof ByteBuffer;
             case RECORD:
                 return value instanceof GenericData.Record;
+            case ARRAY:
+                return value instanceof GenericArray;
+            case MAP:
+                return value instanceof Map;
             default:
                 return false;
         }

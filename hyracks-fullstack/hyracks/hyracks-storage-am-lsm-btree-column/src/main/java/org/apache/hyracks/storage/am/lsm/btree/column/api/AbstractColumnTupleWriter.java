@@ -49,10 +49,12 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      */
     public abstract void init(IColumnWriteMultiPageOp multiPageOp) throws HyracksDataException;
 
+    public abstract void updateColumnMetadataForCurrentTuple(ITupleReference tuple) throws HyracksDataException;
+
     /**
-     * @return The current number of columns
+     * @return The current number of columns including the current tuple
      */
-    public abstract int getNumberOfColumns();
+    public abstract int getNumberOfColumns(boolean includeCurrentTupleColumns);
 
     /**
      * Currently, a column offset takes 4-byte (fixed). But in the future, we can reformat the offsets. For example,
@@ -61,7 +63,7 @@ public abstract class AbstractColumnTupleWriter extends AbstractTupleWriterDisab
      * @return the size needed to store columns' offsets
      */
     public final int getColumnOffsetsSize() {
-        return Integer.BYTES * getNumberOfColumns();
+        return Integer.BYTES * getNumberOfColumns(true);
     }
 
     /**

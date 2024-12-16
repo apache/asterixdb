@@ -600,6 +600,10 @@
               </gavs>
               <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             </override>
+            <override>
+              <gav>org.bouncycastle:bcprov-jdk18on:1.78.1</gav>
+              <url>https://raw.githubusercontent.com/bcgit/bc-java/refs/tags/r1rv78v1/LICENSE.html</url>
+            </override>
           </overrides>
           <licenses>
             <license>

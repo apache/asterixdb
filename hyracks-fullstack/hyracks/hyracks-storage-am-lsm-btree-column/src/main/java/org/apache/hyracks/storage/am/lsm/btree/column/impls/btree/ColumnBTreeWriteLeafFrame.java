@@ -60,7 +60,7 @@ public class ColumnBTreeWriteLeafFrame extends AbstractColumnBTreeLeafFrame {
         rowTupleWriter.writeTuple(maxKey, buf.array(), offset);
 
         // Write page information
-        int numberOfColumns = columnWriter.getNumberOfColumns();
+        int numberOfColumns = columnWriter.getNumberOfColumns(false);
         buf.putInt(TUPLE_COUNT_OFFSET, numberOfTuples);
         buf.putInt(NUMBER_OF_COLUMNS_OFFSET, numberOfColumns);
         buf.putInt(SIZE_OF_COLUMNS_OFFSETS_OFFSET, columnWriter.getColumnOffsetsSize());
