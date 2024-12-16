@@ -147,7 +147,7 @@ public class FrameDebugUtils {
             }
             sb.append("}");
         }
-        sb.append("\n");
+        sb.append("]\n");
     }
 
     /**

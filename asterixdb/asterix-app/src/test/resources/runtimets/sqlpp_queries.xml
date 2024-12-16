@@ -11544,6 +11544,11 @@
         <output-dir compare="Text">query-ASTERIXDB-3006</output-dir>
       </compilation-unit>
     </test-case>
+    <test-case FilePath="subquery">
+      <compilation-unit name="query-ASTERIXDB-3538">
+        <output-dir compare="Text">query-ASTERIXDB-3538</output-dir>
+      </compilation-unit>
+    </test-case>
   </test-group>
   <test-group name="subset-collection">
     <test-case FilePath="subset-collection">
