@@ -1,0 +1,100 @@
+[ true, false ]
+1
+{ "status": "active" }
+[ true, false ]
+"yes"
+true
+1
+{ "status": "active" }
+1
+true
+true
+false
+0
+[ true, false ]
+1
+"active"
+"active"
+[ true, false ]
+"active"
+"no"
+"yes"
+{ "status": "active" }
+1
+{ "status": "active" }
+0
+{ "status": "active" }
+false
+"no"
+"yes"
+"active"
+false
+[ true, false ]
+true
+true
+"active"
+0
+true
+"active"
+[ true, false ]
+"yes"
+{ "status": "active" }
+false
+"no"
+1
+true
+{ "status": "active" }
+0
+0
+"no"
+"no"
+0
+0
+true
+"no"
+false
+true
+{ "status": "active" }
+true
+0
+1
+"active"
+"no"
+{ "status": "active" }
+1
+[ true, false ]
+"no"
+false
+true
+0
+1
+1
+1
+{ "status": "active" }
+true
+true
+0
+{ "status": "active" }
+"no"
+"yes"
+"yes"
+"active"
+"no"
+false
+"no"
+0
+"yes"
+1
+[ true, false ]
+"yes"
+0
+true
+"active"
+true
+"no"
+0
+true
+"active"
+"yes"
+"active"
+"yes"

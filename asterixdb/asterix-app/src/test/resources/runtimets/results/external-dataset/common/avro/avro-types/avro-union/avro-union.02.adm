@@ -1,2 +1,4 @@
 42
 hex("0105")
+[ { "key": "key3", "value": 3 }, { "key": "key4", "value": 4 } ]
+[ "value1", "value2" ]

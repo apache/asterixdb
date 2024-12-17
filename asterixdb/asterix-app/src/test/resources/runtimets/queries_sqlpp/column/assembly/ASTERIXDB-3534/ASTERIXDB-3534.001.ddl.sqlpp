@@ -16,26 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
-* Description  : Heterogeneous access DDL
-* Expected Res : Success
-* Date         : Feb 23rd 2024
-*/
 
-DROP DATAVERSE test IF EXISTS;
-CREATE DATAVERSE test;
+ DROP DATAVERSE test IF EXISTS;
+ CREATE DATAVERSE test;
 
-USE test;
+ USE test;
 
-
-CREATE TYPE AvroType as {
-};
-
-CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
-(
-  %template%,
-  %additional_Properties%,
-  ("definition"="%path_prefix%avro-data/reviews"),
-  ("include"="*heterogeneous_*"),
-  ("format" = "avro")
-);
+ CREATE DATASET ColumnDataset
+ PRIMARY KEY (id: String) WITH {
+     "storage-format": {"format": "column"}
+ };

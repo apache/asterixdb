@@ -99,7 +99,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         return tupleWriter.createTupleReference();
     }
 
-    private boolean isFull(ITupleReference tuple) {
+    private boolean isFull(ITupleReference tuple) throws HyracksDataException {
         if (tupleCount == 0) {
             return false;
         } else if (tupleCount >= columnWriter.getMaxNumberOfTuples()) {
@@ -108,6 +108,7 @@ public final class ColumnBTreeBulkloader extends BTreeNSMBulkLoader implements I
         }
         int requiredFreeSpace = AbstractColumnBTreeLeafFrame.HEADER_SIZE;
         //Columns' Offsets
+        columnWriter.updateColumnMetadataForCurrentTuple(tuple);
         requiredFreeSpace += columnWriter.getColumnOffsetsSize();
         //Occupied space from previous writes
         requiredFreeSpace += columnWriter.getOccupiedSpace();

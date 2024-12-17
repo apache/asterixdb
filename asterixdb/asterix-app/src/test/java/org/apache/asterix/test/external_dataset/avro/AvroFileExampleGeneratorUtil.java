@@ -22,7 +22,9 @@ package org.apache.asterix.test.external_dataset.avro;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.avro.Schema;
@@ -36,12 +38,14 @@ import org.junit.Test;
 public class AvroFileExampleGeneratorUtil {
     private static final String SCHEMA_STRING = "{\n" + "  \"type\": \"record\",\n" + "  \"name\": \"SimpleRecord\",\n"
             + "  \"namespace\": \"com.example\",\n" + "  \"fields\": [\n" + "    {\n"
-            + "      \"name\": \"unionField\",\n" + "      \"type\": [\"int\", \"string\", \"bytes\"],\n"
-            + "      \"doc\": \"This field can be either an int or a string.\"\n" + "    },\n" + "    {\n"
-            + "      \"name\": \"mapField\",\n" + "      \"type\": {\n" + "        \"type\": \"map\",\n"
-            + "        \"values\": \"int\",\n" + "        \"doc\": \"This is a map of string keys to int values.\"\n"
-            + "      },\n" + "      \"doc\": \"This field represents a map with string keys and integer values.\"\n"
-            + "    },\n" + "    {\n" + "      \"name\": \"nestedRecord\",\n" + "      \"type\": {\n"
+            + "      \"name\": \"unionField\",\n" + "      \"type\": [\"int\", \"string\", \"bytes\", {\n"
+            + "        \"type\": \"map\",\n" + "        \"values\": \"int\"\n" + "      }, {\n"
+            + "        \"type\": \"array\",\n" + "        \"items\": \"string\"\n" + "      }],\n"
+            + "      \"doc\": \"This field can be an int, a map of int values, or an array of strings.\"\n" + "    },\n"
+            + "    {\n" + "      \"name\": \"mapField\",\n" + "      \"type\": {\n" + "        \"type\": \"map\",\n"
+            + "        \"values\": \"int\"\n" + "      },\n"
+            + "      \"doc\": \"This field represents a map with string keys and integer values.\"\n" + "    },\n"
+            + "    {\n" + "      \"name\": \"nestedRecord\",\n" + "      \"type\": {\n"
             + "        \"type\": \"record\",\n" + "        \"name\": \"NestedRecord\",\n" + "        \"fields\": [\n"
             + "          {\n" + "            \"name\": \"nestedInt\",\n" + "            \"type\": \"int\"\n"
             + "          },\n" + "          {\n" + "            \"name\": \"nestedString\",\n"
@@ -59,7 +63,7 @@ public class AvroFileExampleGeneratorUtil {
             + "      \"name\": \"bytesField\",\n" + "      \"type\": \"bytes\",\n"
             + "      \"doc\": \"This is a bytes field.\"\n" + "    },\n" + "    {\n"
             + "      \"name\": \"stringField\",\n" + "      \"type\": \"string\",\n"
-            + "      \"doc\": \"This is a string field.\"\n" + "    }\n" + "  ]\n" + "}\n";
+            + "      \"doc\": \"This is a string field.\"\n" + "    }\n" + "  ]\n" + "}";
 
     private static final String AVRO_GEN_BASEDIR = "target/generated_avro_files";
     private static final String FILE_NAME = "avro_type.avro";
@@ -111,6 +115,43 @@ public class AvroFileExampleGeneratorUtil {
             record2.put("bytesField", ByteBuffer.wrap(new byte[] { 0x06, 0x04 }));
             record2.put("stringField", "Sample Values");
             dataFileWriter.append(record2);
+
+            //Third record to be added
+            GenericRecord record3 = new GenericData.Record(schema);
+            record3.put("unionField", map2);
+            Map<String, Integer> map3 = new HashMap<>();
+            map3.put("key4", 121);
+            map3.put("key5", 45);
+            record3.put("mapField", map3);
+            record3.put("nestedRecord", nestedRecord);
+            record3.put("booleanField", false);
+            record3.put("intField", 53344);
+            record3.put("longField", 60L);
+            record3.put("floatField", 137.62f);
+            record3.put("doubleField", 5.77777);
+            record3.put("bytesField", ByteBuffer.wrap(new byte[] { 0x02, 0x02 }));
+            record3.put("stringField", "Third Example");
+            dataFileWriter.append(record3);
+
+            //Fourth record to be added
+            GenericRecord record4 = new GenericData.Record(schema);
+            List<String> arrayField = new ArrayList<>();
+            arrayField.add("value1");
+            arrayField.add("value2");
+            record4.put("unionField", arrayField);
+            Map<String, Integer> map4 = new HashMap<>();
+            map4.put("key6", 112);
+            map4.put("key7", 548);
+            record4.put("mapField", map4);
+            record4.put("nestedRecord", nestedRecord);
+            record4.put("booleanField", true);
+            record4.put("intField", 544);
+            record4.put("longField", 62L);
+            record4.put("floatField", 137.62f);
+            record4.put("doubleField", 51.7787);
+            record4.put("bytesField", ByteBuffer.wrap(new byte[] { 0x02, 0x02 }));
+            record4.put("stringField", "Fourth Example");
+            dataFileWriter.append(record4);
         } catch (IOException e) {
             System.err.println("Failed to write AVRO file: " + e.getMessage());
             e.printStackTrace();
