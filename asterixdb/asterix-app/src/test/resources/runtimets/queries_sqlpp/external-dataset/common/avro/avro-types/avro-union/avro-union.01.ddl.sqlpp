@@ -43,8 +43,9 @@ CREATE EXTERNAL DATASET AvroDataset(AvroType) USING %adapter%
 CREATE EXTERNAL DATASET AvroDataset2(AvroType) USING %adapter%
 (
   %template%,
+  %additional_Properties%,
   ("container"="playground"),
-  ("definition"="avro-data/reviews"),
+  ("definition"="%path_prefix%avro-data/reviews"),
   ("include"="*partition_heterogeneous.avro"),
   ("format" = "avro")
 );
