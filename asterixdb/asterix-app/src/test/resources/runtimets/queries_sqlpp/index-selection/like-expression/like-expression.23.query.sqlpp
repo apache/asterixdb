@@ -16,16 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
-select * from [{"x":"fvxb%"}] p where x like "fvxb\\%";
-select * from [{"x":"fv%%\\bn\\%"}] p where x like "fv\\%\\%\\\\bn\\\\%";
-select * from [{"x":"fvxbx"}] p where x like "fvxb\\%";
-select * from [{"x":"fv%xbx"}] p where x like "fv\\%xb%";
-select * from [{"x":"a\\%bcd"}] p where x like "a\\\\\\%bcd";
-select * from [{"x":"abc\n%"}] p where x like "abc\n\\%";
-select * from [{"x":"abc\n%"}] p where x like "abc\n%";
-select * from [{"x":"abc%cbz"},{"x":"abc%%x"},{"x":"abc"}] p where x like "abc\\%%";
-select * from [{"x":"vhjdbvsabc_fjdhf"},{"x":"abc%%x"},{"x":"abc"}] p where x like "%abc\\_%";
-select * from [{"x":"abc_fjdhf"},{"x":"abc%%x"},{"x":"abc"}] p where x like "abc\\_%";
-select * from [{"x":"abc_fjdhf"},{"x":"abc%x"},{"x":"abc%yz"}] p where x like "abc\\%_";
-select * from [{"x":"abc_fjdhf"},{"x":"abc%x"},{"x":"abc%yz"},{"x":"abc_"}] p where x like "abc\\_";
+{
+"t1": (select * from [{"x":"fvxb%"}] p where x like "fvxb\\%"),
+"t2": (select * from [{"x":"fv%%\\bn\\%"}] p where x like "fv\\%\\%\\\\bn\\\\%"),
+"t3": (select * from [{"x":"fvxbx"}] p where x like "fvxb\\%"),
+"t4": (select * from [{"x":"fv%xbx"}] p where x like "fv\\%xb%"),
+"t5": (select * from [{"x":"a\\%bcd"}] p where x like "a\\\\\\%bcd"),
+"t6": (select * from [{"x":"abc\n%"}] p where x like "abc\n\\%"),
+"t7": (select * from [{"x":"abc\n%"}] p where x like "abc\n%"),
+"t8": (select * from [{"x":"abc%cbz"},{"x":"abc%%x"},{"x":"abc"}] p where x like "abc\\%%"),
+"t9": (select * from [{"x":"vhjdbvsabc_fjdhf"},{"x":"abc%%x"},{"x":"abc"}] p where x like "%abc\\_%"),
+"t10": (select * from [{"x":"abc_fjdhf"},{"x":"abc%%x"},{"x":"abc"}] p where x like "abc\\_%"),
+"t11": (select * from [{"x":"abc_fjdhf"},{"x":"abc%x"},{"x":"abc%yz"}] p where x like "abc\\%_"),
+"t12": (select * from [{"x":"abc_fjdhf"},{"x":"abc%x"},{"x":"abc%yz"},{"x":"abc_"}] p where x like "abc\\_")
+}
