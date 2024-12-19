@@ -99,8 +99,8 @@ public class ParserTestExecutor extends TestExecutor {
                 try {
                     if (queryCount >= expectedResultFileCtxs.size()
                             && !cUnit.getOutputDir().getValue().equals("none")) {
-                        throw new ComparisonException("no result file for " + canonicalize(testFile) + "; queryCount: "
-                                + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
+                        throw ComparisonException.noResult("no result file for " + canonicalize(testFile)
+                                + "; queryCount: " + queryCount + ", filectxs.size: " + expectedResultFileCtxs.size());
                     }
 
                     // Runs the test query.

@@ -20,6 +20,7 @@
 package org.apache.asterix.test.common;
 
 import static org.apache.asterix.api.http.server.QueryServiceRequestParameters.Parameter.CLIENT_ID;
+import static org.apache.asterix.test.common.ComparisonException.Type.DIFFERENT_RESULT;
 
 import java.io.InputStream;
 import java.net.URI;
@@ -109,6 +110,10 @@ public class CancellationTestExecutor extends TestExecutor {
         if (errorMsg.startsWith("HYR0025") || errorMsg.startsWith("ASX0041")) {
             SqlppExecutionWithCancellationTest.numCancelledQueries++;
             queryCount.increment();
+            return false;
+        } else if (e instanceof ComparisonException
+                && ((ComparisonException) e).getExceptionType() == DIFFERENT_RESULT) {
+            // for this test, ignore ComparisonException for completed requests since the goal is not to compare results
             return false;
         } else {
             System.err.println(

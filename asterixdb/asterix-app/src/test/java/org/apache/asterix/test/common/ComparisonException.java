@@ -19,13 +19,40 @@
 package org.apache.asterix.test.common;
 
 public class ComparisonException extends Exception {
-    private static final long serialVersionUID = 1L;
 
-    public ComparisonException(String message) {
-        super(message);
+    enum Type {
+        DIFFERENT_RESULT,
+        MALFORMED_RESULT,
+        NO_RESULT
     }
 
-    public ComparisonException(String message, Throwable cause) {
+    private static final long serialVersionUID = 1L;
+
+    private final Type exceptionType;
+
+    private ComparisonException(String message, Type type) {
+        super(message);
+        exceptionType = type;
+    }
+
+    private ComparisonException(String message, Throwable cause, Type type) {
         super(message, cause);
+        exceptionType = type;
+    }
+
+    public static ComparisonException noResult(String message) {
+        return new ComparisonException(message, Type.NO_RESULT);
+    }
+
+    public static ComparisonException differentResult(String message) {
+        return new ComparisonException(message, Type.DIFFERENT_RESULT);
+    }
+
+    public static ComparisonException malformedResult(String message, Throwable cause) {
+        return new ComparisonException(message, cause, Type.MALFORMED_RESULT);
+    }
+
+    public Type getExceptionType() {
+        return exceptionType;
     }
 }
