@@ -6,23 +6,11 @@
           -- ASSIGN  |LOCAL|
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
               -- NESTED_LOOP  |LOCAL|
-                -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-                  -- UNNEST  |UNPARTITIONED|
-                    -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
                   -- NESTED_LOOP  |LOCAL|
-                    -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                      -- ASSIGN  |LOCAL|
-                        -- ASSIGN  |LOCAL|
-                          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                            -- REPLICATE  |LOCAL|
-                              -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                                -- AGGREGATE  |LOCAL|
-                                  -- ASSIGN  |LOCAL|
-                                    -- AGGREGATE  |LOCAL|
-                                      -- AGGREGATE  |LOCAL|
-                                        -- UNNEST  |UNPARTITIONED|
-                                          -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                      -- UNNEST  |UNPARTITIONED|
+                        -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
                       -- ASSIGN  |LOCAL|
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
@@ -34,3 +22,15 @@
                                     -- AGGREGATE  |LOCAL|
                                       -- UNNEST  |UNPARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  -- ASSIGN  |LOCAL|
+                    -- ASSIGN  |LOCAL|
+                      -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                        -- REPLICATE  |LOCAL|
+                          -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                            -- AGGREGATE  |LOCAL|
+                              -- ASSIGN  |LOCAL|
+                                -- AGGREGATE  |LOCAL|
+                                  -- AGGREGATE  |LOCAL|
+                                    -- UNNEST  |UNPARTITIONED|
+                                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

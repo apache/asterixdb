@@ -116,6 +116,9 @@ public class JoinNode {
     private double sizeVarsFromDisk = -1.0;
     private double sizeVarsAfterScan = -1.0;
     private boolean columnar = true; // default
+    private boolean fake = false; // default; Fake will be set to true when we introduce fake leafInputs for unnesting arrays.
+    private int leafInputNumber = -1; // this field and the next are used for Array Unnest ops.
+    private int arrayRef = -1;
 
     private JoinNode(int i) {
         this.jnArrayIndex = i;
@@ -249,11 +252,51 @@ public class JoinNode {
         return columnar;
     }
 
-    public void setCardsAndSizes(Index.SampleIndexDetails idxDetails, ILogicalOperator leafInput)
+    public void setFake() {
+        fake = true;
+    }
+
+    public boolean getFake() {
+        return fake;
+    }
+
+    public void setLeafInputNumber(int inputNumber) {
+        leafInputNumber = inputNumber;
+    }
+
+    public int getLeafInputNumber() {
+        return leafInputNumber;
+    }
+
+    public void setArrayRef(int arrayRef) {
+        this.arrayRef = arrayRef;
+    }
+
+    public int getArrayRef() {
+        return arrayRef;
+    }
+
+    protected void setCardsAndSizesForFakeJn(int leafInputNumber, int arrayRef, double unnestFactor) {
+        joinEnum.jnArray[leafInputNumber + arrayRef].setOrigCardinality(unnestFactor, false);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setCardinality(unnestFactor, false);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setSizeVarsFromDisk(4);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setSizeVarsAfterScan(4);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setAvgDocSize(4);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setLeafInputNumber(leafInputNumber);
+        joinEnum.jnArray[leafInputNumber + arrayRef].setArrayRef(arrayRef);
+    }
+
+    public void setCardsAndSizes(Index.SampleIndexDetails idxDetails, ILogicalOperator leafInput, int leafInputNumber)
             throws AlgebricksException {
 
+        //double origDatasetCard, finalDatasetCard, sampleCard1, sampleCard2;
         double origDatasetCard, finalDatasetCard, sampleCard;
         unnestFactor = 1.0;
+
+        int numArrayRefs = 0;
+        if (joinEnum.unnestOpsInfo.size() > 0) {
+            numArrayRefs = joinEnum.unnestOpsInfo.get(leafInputNumber - 1).size();
+        }
 
         DataSourceScanOperator scanOp = joinEnum.findDataSourceScanOperator(leafInput);
         if (scanOp == null) {
@@ -262,12 +305,15 @@ public class JoinNode {
 
         List<List<IAObject>> result;
         SelectOperator selOp = (SelectOperator) joinEnum.findASelectOp(leafInput);
-        if (selOp == null) { // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
+
+        if (selOp == null) { // this should not happen. So check later why this happening.
+            // add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
             selOp = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
             ILogicalOperator op = selOp;
             op.getInputs().add(new MutableObject<>(leafInput));
             leafInput = op;
         }
+
         ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(leafInput);
         Mutable<ILogicalOperator> ref = new MutableObject<>(leafInput);
 
@@ -300,14 +346,16 @@ public class JoinNode {
         parent.getInputs().get(0).setValue(deepCopyofScan);
         finalDatasetCard = origDatasetCard = idxDetails.getSourceCardinality();
         sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        boolean unnest = joinEnum.findUnnestOp(leafInput);
-        if (unnest) {
+        for (int i = 1; i <= numArrayRefs; i++) {
+            sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
             ILogicalExpression saveExpr = selOp.getCondition().getValue();
-            double unnestSampleCard = joinEnum.stats.computeUnnestedOriginalCardinality(leafInput);
+            double unnestSampleCard =
+                    joinEnum.stats.computeUnnestedOriginalCardinality(leafInput, leafInputNumber, numArrayRefs, i);
             selOp.getCondition().setValue(saveExpr); // restore the expression
             unnestFactor = unnestSampleCard / sampleCard;
-            sampleCard = unnestSampleCard;
-            finalDatasetCard = origDatasetCard = origDatasetCard * unnestFactor;
+            setCardsAndSizesForFakeJn(leafInputNumber, i, unnestFactor);
+            finalDatasetCard = origDatasetCard;
+            removeUnnestOp(leafInput); // remove the unnest op that was added in computeUnnestedOriginalCardinality
         }
         if (sampleCard == 0) { // should not happen unless the original dataset is empty
             sampleCard = 1; // we may have to make some adjustments to costs when the sample returns very rows.
@@ -371,6 +419,15 @@ public class JoinNode {
         setSizeVarsFromDisk(sizeVarsFromDisk);
         setSizeVarsAfterScan(sizeVarsAfterScan);
         setAvgDocSize(idxDetails.getSourceAvgItemSize());
+    }
+
+    private void removeUnnestOp(ILogicalOperator op) { // There will be only one UnnestOp for now at the top, so a while is strictly not necessary
+        ILogicalOperator parent = op;
+        op = op.getInputs().get(0).getValue(); // skip the select on the top
+        while (op.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+            op = op.getInputs().get(0).getValue();
+        }
+        parent.getInputs().get(0).setValue(op);
     }
 
     /** one is a subset of two */
@@ -955,13 +1012,13 @@ public class JoinNode {
             return false; // This should not happen. So debug to find out why this happened.
         }
 
-        if (innerLeafInput == joinLeafInput0) {
-            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput1);
+        if (innerLeafInput == joinLeafInput0) { // skip the Select Operator with condition(TRUE) on top
+            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput1.getInputs().get(0).getValue());
         } else {
-            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput0);
+            joinEnum.localJoinOp.getInputs().get(0).setValue(joinLeafInput0.getInputs().get(0).getValue());
         }
 
-        joinEnum.localJoinOp.getInputs().get(1).setValue(innerLeafInput);
+        joinEnum.localJoinOp.getInputs().get(1).setValue(innerLeafInput.getInputs().get(0).getValue());
 
         // We will always use the first join Op to provide the joinOp input for invoking rewritePre
         AbstractBinaryJoinOperator joinOp = (AbstractBinaryJoinOperator) joinEnum.localJoinOp;
@@ -978,6 +1035,10 @@ public class JoinNode {
     private boolean NLJoinApplicable(JoinNode leftJn, JoinNode rightJn, boolean outerJoin,
             ILogicalExpression nestedLoopJoinExpr, List<Pair<IAccessMethod, Index>> chosenIndexes,
             Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs) throws AlgebricksException {
+
+        if (leftJn.fake || rightJn.fake) {
+            return false;
+        }
         if (nullExtendingSide(leftJn.datasetBits, outerJoin)) {
             return false;
         }
@@ -996,6 +1057,11 @@ public class JoinNode {
     }
 
     private boolean CPJoinApplicable(JoinNode leftJn, boolean outerJoin) {
+
+        if (leftJn.fake || rightJn.fake) {
+            return false;
+        }
+
         if (!joinEnum.cboCPEnumMode) {
             return false;
         }
@@ -1057,6 +1123,10 @@ public class JoinNode {
         this.leftJn = leftJn;
         this.rightJn = rightJn;
 
+        //if (leftJn.fake || rightJn.fake) { // uncomment if broadcast hash joins are not applicable
+        //return PlanNode.NO_PLAN;
+        //}
+
         if (!hashJoinApplicable(leftJn, outerJoin, hashJoinExpr)) {
             return PlanNode.NO_PLAN;
         }
@@ -1099,6 +1169,10 @@ public class JoinNode {
 
         this.leftJn = leftJn;
         this.rightJn = rightJn;
+
+        if (leftJn.fake || rightJn.fake) {
+            return PlanNode.NO_PLAN;
+        }
 
         List<Pair<IAccessMethod, Index>> chosenIndexes = new ArrayList<>();
         Map<IAccessMethod, AccessMethodAnalysisContext> analyzedAMs = new TreeMap<>();
@@ -1156,6 +1230,10 @@ public class JoinNode {
             ILogicalExpression nestedLoopJoinExpr, boolean outerJoin) {
         JoinNode leftJn = leftPlan.getJoinNode();
         JoinNode rightJn = rightPlan.getJoinNode();
+
+        if (leftJn.fake || rightJn.fake) {
+            return PlanNode.NO_PLAN;
+        }
 
         // Now build a cartesian product nested loops plan
         List<PlanNode> allPlans = joinEnum.allPlans;
@@ -1218,6 +1296,7 @@ public class JoinNode {
             }
             leftPlan = joinEnum.allPlans.get(leftJn.cheapestPlanIndex);
             rightPlan = joinEnum.allPlans.get(rightJn.cheapestPlanIndex);
+
             addMultiDatasetPlans(leftPlan, rightPlan);
         } else {
             // FOR JOIN NODE LEVELS LESS THAN OR EQUAL TO THE LEVEL SPECIFIED FOR FULL ENUMERATION,
@@ -1516,6 +1595,7 @@ public class JoinNode {
         StringBuilder sb = new StringBuilder(128);
         if (IsBaseLevelJoinNode()) {
             sb.append("Printing Scan Node ");
+            sb.append("Fake " + getFake() + " ");
         } else {
             sb.append("Printing Join Node ");
         }
@@ -1629,7 +1709,7 @@ public class JoinNode {
                 lowestCostPlanIndex = planIndex;
             }
         }
-        sb.append("Cheapest Plan is ").append(lowestCostPlanIndex).append(", Cost is ")
+        sb.append("END Cheapest Plan is ").append(lowestCostPlanIndex).append(", Cost is ")
                 .append(dumpDouble(minCost.computeTotalCost()));
     }
 }

@@ -129,6 +129,12 @@ public class Stats {
         } else
             return 1.0;
 
+        if (joinEnum.jnArray[idx1].getFake()) {
+            return 1.0;
+        }
+        if (joinEnum.jnArray[idx2].getFake()) {
+            return 1.0;
+        }
         double card1 = joinEnum.getJnArray()[idx1].origCardinality;
         double card2 = joinEnum.getJnArray()[idx2].origCardinality;
         if (card1 == 0.0 || card2 == 0.0) // should not happen
@@ -513,12 +519,18 @@ public class Stats {
             // SELECT count(*) as revenue
             // FROM   orders o, o.o_orderline ol
             // WHERE  TRUE;
-            sampleCard = computeUnnestedOriginalCardinality(selOp);
+            sampleCard = computeUnnestedOriginalCardinality(selOp, 0, 0, 0);
         }
         // switch  the scanOp back
         parent.getInputs().get(0).setValue(scanOp);
 
-        double sel = (double) predicateCardinality / sampleCard;
+        double sel;
+
+        if (sampleCard >= 1.0) {
+            sel = (double) predicateCardinality / sampleCard;
+        } else {
+            sel = 0.0;
+        }
         return sel;
     }
 
@@ -538,12 +550,24 @@ public class Stats {
         return record.numberOfFields();
     }
 
-    public double computeUnnestedOriginalCardinality(ILogicalOperator op) throws AlgebricksException {
+    public double computeUnnestedOriginalCardinality(ILogicalOperator leafInput, int leafInputNumber, int numArrayRefs,
+            int arrayRef) throws AlgebricksException {
         // Replace ALL SELECTS with TRUE, restore them after running the sampling query.
-        List<ILogicalExpression> selExprs = storeSelectConditionsAndMakeThemTrue(op, null);
-        List<List<IAObject>> result = runSamplingQuery(optCtx, op);
-        restoreAllSelectConditions(op, selExprs, null);
+        // Add the corresponding UnnestOp just below the top; these will be removed later.
+        if (leafInputNumber > 0) {
+            ILogicalOperator saveInput = leafInput.getInputs().get(0).getValue();
+            int size = joinEnum.unnestOpsInfo.get(leafInputNumber - 1).get(arrayRef - 1).size();
+            ILogicalOperator unnestOp = joinEnum.unnestOpsInfo.get(leafInputNumber - 1).get(arrayRef - 1).get(size - 1);
+            leafInput.getInputs().get(0).setValue(unnestOp);
+            unnestOp.getInputs().get(0).setValue(saveInput);
+        }
+
+        // Add the corresponding UnnestOperator just below the top.
+        List<ILogicalExpression> selExprs = storeSelectConditionsAndMakeThemTrue(leafInput, null);
+        List<List<IAObject>> result = runSamplingQuery(optCtx, leafInput);
+        restoreAllSelectConditions(leafInput, selExprs, null);
         return findPredicateCardinality(result, false);
+
     }
 
     public double findSizeVarsFromDisk(List<List<IAObject>> result, int numDiskVars) {

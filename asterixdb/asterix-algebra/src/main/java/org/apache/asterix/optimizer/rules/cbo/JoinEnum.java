@@ -116,6 +116,7 @@ public class JoinEnum {
     protected List<AssignOperator> assignOps;
     List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
     HashMap<LogicalVariable, Integer> varLeafInputIds;
+    protected List<List<List<ILogicalOperator>>> unnestOpsInfo;
     protected List<JoinOperator> allJoinOps;
     protected ILogicalOperator localJoinOp; // used in nestedLoopsApplicable code.
     protected IOptimizationContext optCtx;
@@ -137,6 +138,7 @@ public class JoinEnum {
     protected ICost cost;
     protected ICostMethods costMethods;
     List<LogicalVariable> resultAndJoinVars;
+    Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap;
 
     public JoinEnum() {
     }
@@ -145,9 +147,11 @@ public class JoinEnum {
             List<ILogicalOperator> leafInputs, List<JoinOperator> allJoinOps, List<AssignOperator> assignOps,
             List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList,
             List<Triple<Integer, Integer, Boolean>> buildSets, HashMap<LogicalVariable, Integer> varLeafInputIds,
+            List<List<List<ILogicalOperator>>> unnestOpsInfo,
             HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps,
             ILogicalOperator grpByDistinctOp, ILogicalOperator orderByOp, List<LogicalVariable> resultAndJoinVars,
-            IOptimizationContext context) throws AsterixException {
+            Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap, IOptimizationContext context)
+            throws AsterixException {
         this.singleDatasetPreds = new ArrayList<>();
         this.joinConditions = new ArrayList<>();
         this.joinHints = new HashMap<>();
@@ -166,10 +170,12 @@ public class JoinEnum {
         this.allJoinOps = allJoinOps;
         this.buildSets = buildSets;
         this.varLeafInputIds = varLeafInputIds;
+        this.unnestOpsInfo = unnestOpsInfo;
         this.dataScanAndGroupByDistinctOps = dataScanAndGroupByDistinctOps;
         this.rootGroupByDistinctOp = grpByDistinctOp;
         this.rootOrderByOp = orderByOp;
         this.resultAndJoinVars = resultAndJoinVars;
+        this.fakeLeafInputsMap = fakeLeafInputsMap;
         this.op = op;
         this.forceJoinOrderMode = getForceJoinOrderMode(context);
         this.queryPlanShape = getQueryPlanShape(context);
@@ -919,6 +925,14 @@ public class JoinEnum {
             JoinNode jn = jnArray[i];
             Index.SampleIndexDetails idxDetails = jn.getIdxDetails();
             ILogicalOperator leafInput = this.leafInputs.get(i - 1);
+            DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
+            if (scanOp != null && fakeLeafInputsMap.get(scanOp) != null) {
+                jn.setFake();
+            }
+            int numArrayRefs = 0;
+            if (unnestOpsInfo.size() > 0) {
+                numArrayRefs = unnestOpsInfo.get(i - 1).size();
+            }
             if (!cboTestMode) {
                 if (idxDetails == null) {
                     dataScanPlan = jn.addSingleDatasetPlans();
@@ -927,10 +941,11 @@ public class JoinEnum {
                     }
                     continue;
                 }
-                jn.setCardsAndSizes(idxDetails, leafInput);
-
                 // Compute the distinct cardinalities for each base join node.
-                DataSourceScanOperator scanOp = findDataSourceScanOperator(leafInput);
+                if (!jn.getFake()) {
+                    jn.setCardsAndSizes(idxDetails, leafInput, i); // the fake case gets handled in this routine.
+                }
+
                 ILogicalOperator grpByDistinctOp = this.dataScanAndGroupByDistinctOps.get(scanOp);
                 if (grpByDistinctOp != null) {
                     long distinctCardinality = stats.findDistinctCardinality(grpByDistinctOp);
@@ -940,6 +955,11 @@ public class JoinEnum {
                     grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_INPUT_CARDINALITY, grpInputCard);
                     grpByDistinctOp.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY, grpOutputCard);
                 }
+            } else {
+                // cboTestMode. There are no samples here.
+                for (int j = 1; j <= numArrayRefs; j++) {
+                    jn.setCardsAndSizesForFakeJn(i, j, 10.0);
+                }
             }
 
             dataScanPlan = jn.addSingleDatasetPlans();
@@ -947,7 +967,7 @@ public class JoinEnum {
                 return PlanNode.NO_PLAN;
             }
             // We may not add any index plans, so need to check for NO_PLAN
-            jn.addIndexAccessPlans(leafInput);
+            jn.addIndexAccessPlans(EnumerateJoinsRule.removeTrue(leafInput));
         }
         return this.numberOfTerms;
     }

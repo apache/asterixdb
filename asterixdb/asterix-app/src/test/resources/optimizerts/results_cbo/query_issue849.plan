@@ -19,10 +19,14 @@
     -- ASSIGN  |PARTITIONED|
       -- STREAM_PROJECT  |PARTITIONED|
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.s.s)  |PARTITIONED|
-            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
-                -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
-                  -- ASSIGN  |UNPARTITIONED|
-                    -- UNNEST  |UNPARTITIONED|
-                      -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+          -- HYBRID_HASH_JOIN [$$48][$$47]  |PARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$48]  |PARTITIONED|
+              -- ASSIGN  |UNPARTITIONED|
+                -- UNNEST  |UNPARTITIONED|
+                  -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+            -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
+              -- STREAM_PROJECT  |PARTITIONED|
+                -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  -- DATASOURCE_SCAN (test.s)  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

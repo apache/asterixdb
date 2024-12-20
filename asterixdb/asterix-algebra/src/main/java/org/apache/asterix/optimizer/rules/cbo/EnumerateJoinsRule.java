@@ -28,7 +28,9 @@ import java.util.Map;
 
 import org.apache.asterix.common.annotations.IndexedNLJoinExpressionAnnotation;
 import org.apache.asterix.common.annotations.SkipSecondaryIndexSearchExpressionAnnotation;
+import org.apache.asterix.lang.common.util.FunctionUtil;
 import org.apache.asterix.metadata.entities.Index;
+import org.apache.asterix.translator.SqlppExpressionToPlanTranslator;
 import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -49,6 +51,8 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.BroadcastExpressio
 import org.apache.hyracks.algebricks.core.algebra.expressions.ConstantExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.HashJoinExpressionAnnotation;
 import org.apache.hyracks.algebricks.core.algebra.expressions.IExpressionAnnotation;
+import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
+import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
 import org.apache.hyracks.algebricks.core.algebra.functions.FunctionIdentifier;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractBinaryJoinOperator;
@@ -56,7 +60,9 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogi
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.EmptyTupleSourceOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.LeftOuterJoinOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.UnnestOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.algebra.plan.ALogicalPlanImpl;
 import org.apache.hyracks.algebricks.core.algebra.prettyprint.IPlanPrettyPrinter;
@@ -78,12 +84,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private List<JoinOperator> allJoinOps; // can be inner join or left outer join
     // Will be in the order of the from clause. Important for position ordering when assigning bits to join expressions.
     private List<ILogicalOperator> leafInputs;
+    private List<Pair<ILogicalOperator, Integer>> parentsOfLeafInputs;
     private HashMap<LogicalVariable, Integer> varLeafInputIds;
     private List<Triple<Integer, Integer, Boolean>> buildSets; // the first is the bits and the second is the number of tables.
     private List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList;
     private List<AssignOperator> assignOps;
     private List<ILogicalExpression> assignJoinExprs; // These are the join expressions below the assign operator.
 
+    // for the Array UNNEST optimization. The main list is for each leafInput.
+    private List<List<List<ILogicalOperator>>> unnestOpsInfo;
     // The Distinct operators for each DataSourceScan operator (if applicable)
     private HashMap<DataSourceScanOperator, ILogicalOperator> dataScanAndGroupByDistinctOps;
 
@@ -94,6 +103,12 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     private ILogicalOperator rootOrderByOp;
 
     private List<LogicalVariable> resultAndJoinVars = new ArrayList();
+    private final List<Boolean> realLeafInputs = new ArrayList();
+    private boolean arrayUnnestPossible = true;
+    private int numberOfFromTerms;
+
+    private List<Triple<ILogicalOperator, ILogicalOperator, List<ILogicalOperator>>> modifyUnnestInfo;
+    private final Map<DataSourceScanOperator, Boolean> fakeLeafInputsMap = new HashMap();
 
     public EnumerateJoinsRule(JoinEnum joinEnum) {
         this.joinEnum = joinEnum;
@@ -156,22 +171,62 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return false;
         }
 
-        //joinOps = new ArrayList<>();
-        allJoinOps = new ArrayList<>();
-        newJoinOps = new ArrayList<>();
-        leafInputs = new ArrayList<>();
-        varLeafInputIds = new HashMap<>();
-        outerJoinsDependencyList = new ArrayList<>();
-        assignOps = new ArrayList<>();
-        assignJoinExprs = new ArrayList<>();
-        buildSets = new ArrayList<>();
         IPlanPrettyPrinter pp = context.getPrettyPrinter();
+
+        String viewInPlan;
+        if (LOGGER.isTraceEnabled()) {
+            viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan1");
-        leafInputNumber = 0;
-        boolean canTransform = getJoinOpsAndLeafInputs(op);
+
+        int phase = 1;
+        init(phase);
+        boolean canTransform = getJoinOpsAndLeafInputs(null, op, -1, phase);
 
         if (!canTransform) {
-            return false;
+            return cleanUp();
+        }
+
+        if (everyLeafInputDoesNotHaveADataScanOperator(leafInputs)) {
+            return cleanUp();
+        }
+        if (LOGGER.isTraceEnabled()) {
+            viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
+        if (arrayUnnestPossible) {
+            joinEnum.stats = new Stats(context, joinEnum);
+            if (cboMode) {
+                if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
+                    return cleanUp();
+                }
+            }
+            // Here on, we expect that changes can be made to the incoming plan and that optimization will proceed
+            // without any hitch. Basically, we cannot go back now!!
+            // now that we know it is safe to proceed with unnesting array optimization, we will remove
+            // the unnestOps and related assign ops from the leafInputs and add them back later at the right places.
+            int i = -1;
+            int j = -1;
+            for (List<List<ILogicalOperator>> l : unnestOpsInfo) {
+                i++;
+                if (realLeafInputs.get(i)) {
+                    j++;
+                    removeUnnestOpsFromLeafInputLevel1(leafInputs.get(j), l);
+                }
+            }
+
+            // now the plan should have no unnestOps and no related assigns
+            if (LOGGER.isTraceEnabled()) {
+                String viewOldPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
+            introduceFakeOuterJoins(opRef, context);
+            if (LOGGER.isTraceEnabled()) {
+                String viewNewPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
+            phase = 2;
+            init(phase);
+            getJoinOpsAndLeafInputs(null, op, -1, phase);
+        } else {
+            unnestOpsInfo.clear();
         }
 
         collectJoinConditionsVariables(); // will be used for determining which variables will be projected from the base levels
@@ -179,10 +234,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         convertOuterJoinstoJoinsIfPossible(outerJoinsDependencyList);
 
         printPlan(pp, (AbstractLogicalOperator) op, "Original Whole plan2");
-        int numberOfFromTerms = leafInputs.size();
+        numberOfFromTerms = leafInputs.size();
 
         if (LOGGER.isTraceEnabled()) {
-            String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
             LOGGER.trace("viewInPlan");
             LOGGER.trace(viewInPlan);
         }
@@ -192,13 +247,17 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // we need to build the smaller sets first. So we need to find these first.
         }
         joinEnum.initEnum((AbstractLogicalOperator) op, cboMode, cboTestMode, numberOfFromTerms, leafInputs, allJoinOps,
-                assignOps, outerJoinsDependencyList, buildSets, varLeafInputIds, dataScanAndGroupByDistinctOps,
-                rootGroupByDistinctOp, rootOrderByOp, resultAndJoinVars, context);
+                assignOps, outerJoinsDependencyList, buildSets, varLeafInputIds, unnestOpsInfo,
+                dataScanAndGroupByDistinctOps, rootGroupByDistinctOp, rootOrderByOp, resultAndJoinVars,
+                fakeLeafInputsMap, context);
 
         if (cboMode) {
             if (!doAllDataSourcesHaveSamples(leafInputs, context)) {
-                return false;
+                return cleanUp();
             }
+        }
+        if (LOGGER.isTraceEnabled()) {
+            viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
         }
 
         printLeafPlans(pp, leafInputs, "Inputs1");
@@ -207,32 +266,59 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             pushAssignsIntoLeafInputs(pp, leafInputs, assignOps, assignJoinExprs);
         }
 
+        if (LOGGER.isTraceEnabled()) {
+            viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
         printLeafPlans(pp, leafInputs, "Inputs2");
-
+        if (LOGGER.isTraceEnabled()) {
+            String viewPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
         int cheapestPlan = joinEnum.enumerateJoins(); // MAIN CALL INTO CBO
         if (cheapestPlan == PlanNode.NO_PLAN) {
-            return false;
+            return cleanUp();
         }
 
         PlanNode cheapestPlanNode = joinEnum.allPlans.get(cheapestPlan);
 
         generateHintWarnings();
-
+        ILogicalOperator root = op;
         if (numberOfFromTerms > 1) {
             getNewJoinOps(cheapestPlanNode, allJoinOps);
             if (allJoinOps.size() != newJoinOps.size()) {
-                return false; // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
+                return cleanUp(); // there are some cases such as R OJ S on true. Here there is an OJ predicate but the code in findJoinConditions
                 // in JoinEnum does not capture this. Will fix later. Just bail for now.
             }
+            if (LOGGER.isTraceEnabled()) {
+                String viewInPlan2 = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
             buildNewTree(cheapestPlanNode, newJoinOps, new MutableInt(0), context);
-            opRef.setValue(newJoinOps.get(0));
+            root = newJoinOps.get(0);
+            if (LOGGER.isTraceEnabled()) {
+                String viewInPlan2 = new ALogicalPlanImpl(new MutableObject<>(root)).toString();
+            }
+            if (phase == 2) {
+                // Now remove the Fake outer joins and put in the original Unnest Ops along with the corresponding Assign Ops
+                modifyUnnestInfo = new ArrayList<>();
+                collectUnnestModificationInfo(null, root, cheapestPlanNode);
+                for (int k = 0; k < modifyUnnestInfo.size(); k++) {
+                    root = modifyTree(null, root, k);
+                }
+                Mutable<ILogicalOperator> rootRef = new MutableObject<>(root);
+                if (LOGGER.isTraceEnabled()) {
+                    String viewInPlan2 = new ALogicalPlanImpl(rootRef).toString(); //useful when debugging
+                }
+            }
+            opRef.setValue(root);
+            if (LOGGER.isTraceEnabled()) {
+                String viewInPlan2 = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
+            context.computeAndSetTypeEnvironmentForOperator(root);
 
             if (assignOps.size() > 0) {
                 for (int i = assignOps.size() - 1; i >= 0; i--) {
                     MutableBoolean removed = new MutableBoolean(false);
                     removed.setFalse();
-                    pushAssignsAboveJoins(newJoinOps.get(0), assignOps.get(i), assignJoinExprs.get(i), removed);
-                    context.computeAndSetTypeEnvironmentForOperator(newJoinOps.get(i));
+                    pushAssignsAboveJoins(root, assignOps.get(i), assignJoinExprs.get(i), removed);
                     context.computeAndSetTypeEnvironmentForOperator(assignOps.get(i));
                     if (removed.isTrue()) {
                         assignOps.remove(i);
@@ -240,9 +326,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 }
             }
 
-            printPlan(pp, (AbstractLogicalOperator) newJoinOps.get(0), "New Whole Plan after buildNewTree 1");
-            ILogicalOperator root = addRemainingAssignsAtTheTop(newJoinOps.get(0), assignOps);
-            printPlan(pp, (AbstractLogicalOperator) newJoinOps.get(0), "New Whole Plan after buildNewTree 2");
+            printPlan(pp, (AbstractLogicalOperator) root, "New Whole Plan after buildNewTree 1");
+            root = addRemainingAssignsAtTheTop(root, assignOps);
+            printPlan(pp, (AbstractLogicalOperator) root, "New Whole Plan after buildNewTree 2");
             printPlan(pp, (AbstractLogicalOperator) root, "New Whole Plan after buildNewTree");
 
             // this will be the new root
@@ -257,11 +343,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("---------------------------- Printing Leaf Inputs");
                 printLeafPlans(pp, leafInputs, "Inputs");
-                // print joins starting from the bottom
-                for (int i = newJoinOps.size() - 1; i >= 0; i--) {
-                    printPlan(pp, (AbstractLogicalOperator) newJoinOps.get(i), "join " + i);
-                }
-                printPlan(pp, (AbstractLogicalOperator) newJoinOps.get(0), "New Whole Plan");
                 printPlan(pp, (AbstractLogicalOperator) root, "New Whole Plan");
             }
             // turn of this rule for all joins in this set (subtree)
@@ -271,8 +352,311 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         } else {
             buildNewTree(cheapestPlanNode);
         }
-        context.computeAndSetTypeEnvironmentForOperator(op);
+        context.computeAndSetTypeEnvironmentForOperator(root);
+        String finalPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
         return true;
+    }
+
+    private boolean everyLeafInputDoesNotHaveADataScanOperator(List<ILogicalOperator> leafInputs) {
+        for (ILogicalOperator leafInput : leafInputs) {
+            DataSourceScanOperator scanOp = (DataSourceScanOperator) findDataSourceScanOperator(leafInput);
+            if (scanOp == null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean cleanUp() {
+        removeTrueFromAllLeafInputs();
+        return false;
+    }
+
+    private ILogicalOperator modifyTree(ILogicalOperator parent, ILogicalOperator op, int k) {
+
+        if (modifyUnnestInfo.get(k).second == op) { // found the one to get rid off; this should be an OJ
+            int size = modifyUnnestInfo.get(k).third.size();
+            modifyUnnestInfo.get(k).third.get(size - 1).getInputs().get(0).setValue(op.getInputs().get(0).getValue()); //The unnestOp is at the lowest position and points to the op below it.
+            if (parent == null) {
+                ILogicalOperator root = modifyUnnestInfo.get(k).third.get(0); // the first assign that belongs to this unnestOp. Or an only one UnnestOp with no assigns
+                ILogicalOperator q = root;
+                if (modifyUnnestInfo.get(k).third.size() > 1) {
+                    for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
+                        q.getInputs().get(0).setValue(p);
+                        q = p;
+                    }
+                }
+                return root;
+            } else {
+                ILogicalOperator q = parent;
+                for (ILogicalOperator p : modifyUnnestInfo.get(k).third) {
+                    q.getInputs().get(0).setValue(p);
+                    q = p;
+                }
+                return parent;
+            }
+
+        }
+        for (Mutable<ILogicalOperator> input : op.getInputs()) {
+            return modifyTree(op, input.getValue(), k);
+        }
+        return null;
+    }
+
+    // This is a complicated routine. Removes unnestOperations from leafInputs. They will be added back at the right places.
+    // Replaces fakeOuterJoins with Unnest Operations
+    // The idea is very simple. We replace an UnnestOp (input a) with a LOJ (inputs a, fake datasource Scan Op b).
+    // This goes to CBO.  When CBO returns, the LOJ's move around.
+    // We replace the LOJ (input x, input b) with the UnnestOp (x)
+    private void collectUnnestModificationInfo(ILogicalOperator parent, ILogicalOperator op, PlanNode plan) {
+        // We cant go by the old leafInputs and parent structures, since the leafInputs may be in different places now.
+
+        if (joinClause(op)) {
+            PlanNode left = plan.getLeftPlanNode();
+            PlanNode right = plan.getRightPlanNode();
+            int rightjnNum = plan.getRightJoinIndex();
+            JoinNode rightjn = joinEnum.jnArray[rightjnNum];
+            if (rightjn.getFake()) {
+                int leafInputNumber = rightjn.getLeafInputNumber();
+                int arrayRef = rightjn.getArrayRef();
+                modifyUnnestInfo
+                        .add(new Triple<>(parent, op, unnestOpsInfo.get(leafInputNumber - 1).get(arrayRef - 1)));
+            }
+            parent = op;
+            collectUnnestModificationInfo(parent, op.getInputs().get(0).getValue(), left);
+            collectUnnestModificationInfo(parent, op.getInputs().get(1).getValue(), right);
+        }
+    }
+
+    // create one fake outer join for each unnest operation;
+    private void introduceFakeOuterJoins(Mutable<ILogicalOperator> opRef, IOptimizationContext context)
+            throws AlgebricksException {
+        int i = -1;
+        int j = -1;
+
+        for (List<List<ILogicalOperator>> l1 : unnestOpsInfo) {// each loop here is for a particular leafInout
+            i++;
+            if (realLeafInputs.get(i)) {
+                j++;
+            }
+            if (l1.size() == 0) {
+                continue;
+            }
+
+            LeftOuterJoinOperator foj = null;
+            ILogicalOperator leftChild = leafInputs.get(j);
+            ILogicalOperator leafInput = leafInputs.get(j);
+            // We will add as many left outer joins as there are elements in l1
+            // We will not modify leafInput. We will do that before issuing sampling queries. REMOVE
+            ILogicalOperator parentOp = null; // The final left outerjoin operator is what we will attach the leafInput to
+
+            for (List<ILogicalOperator> l2 : l1) {
+                String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                DataSourceScanOperator fakeDs = (DataSourceScanOperator) truncateInput(leafInput);
+                fakeLeafInputsMap.put(fakeDs, true);
+                LogicalVariable var1 = fakeDs.getVariables().get(0);
+                MutableObject<ILogicalOperator> q = new MutableObject<>(fakeDs);
+                LogicalVariable var2 = modify(q.getValue(), context); // so as to make it fake, remove teh original variables
+                ILogicalExpression expr = makeNewexpr(var1, var2);
+                foj = new LeftOuterJoinOperator(new MutableObject<>(expr), new MutableObject<>(leftChild), q,
+                        ConstantExpression.MISSING.getValue());
+                viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                leftChild = foj;
+                viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
+            Pair<ILogicalOperator, Integer> parent = parentsOfLeafInputs.get(i);
+            parent.first.getInputs().get(parent.second).setValue(foj);
+            String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
+    }
+
+    private ILogicalExpression makeNewexpr(LogicalVariable var1, LogicalVariable var2) {
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        VariableReferenceExpression e1 = new VariableReferenceExpression(var1);
+        arguments.add(new MutableObject<>(e1));
+        VariableReferenceExpression e2 = new VariableReferenceExpression(var2);
+        arguments.add(new MutableObject<>(e2));
+        ScalarFunctionCallExpression expr = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(AlgebricksBuiltinFunctions.EQ), arguments);
+        return expr;
+    }
+
+    // remove the old variables and add a new variable.
+    private LogicalVariable modify(ILogicalOperator op, IOptimizationContext context) {
+        DataSourceScanOperator dsOp = (DataSourceScanOperator) op;
+        int s = dsOp.getVariables().size();
+        dsOp.getVariables().clear();
+        for (int i = 0; i < s; i++) {
+            LogicalVariable newVar = context.newVar(); // need all three for alias stuff
+            dsOp.getVariables().add(newVar);
+        }
+        return dsOp.getVariables().get(0);
+    }
+
+    private ILogicalOperator truncateInput(ILogicalOperator op) throws AlgebricksException {
+        ILogicalOperator dsOp = findDataSourceScanOperator(op);
+        ILogicalOperator ds = OperatorManipulationUtil.bottomUpCopyOperators(dsOp);
+        return ds;
+    }
+
+    private void init(int phase) {
+        allJoinOps = new ArrayList<>();
+        newJoinOps = new ArrayList<>();
+        leafInputs = new ArrayList<>();
+        varLeafInputIds = new HashMap<>();
+        if (phase == 1)
+            unnestOpsInfo = new ArrayList<>();
+        outerJoinsDependencyList = new ArrayList<>();
+        parentsOfLeafInputs = new ArrayList<>();
+        assignOps = new ArrayList<>();
+        assignJoinExprs = new ArrayList<>();
+        buildSets = new ArrayList<>();
+        leafInputNumber = 0;
+    }
+
+    private void findUnnestOps(ILogicalOperator leafInput) throws AlgebricksException {
+        ILogicalOperator p = leafInput;
+        List<ILogicalOperator> unnestOps = findAllUnnestOps(p); // how many and which ones
+        for (ILogicalOperator op : unnestOps) {
+            UnnestOperator unnestOp = (UnnestOperator) op;
+            if (anyVarIsAJoinVar(unnestOp.getVariables())) {
+                unnestOpsInfo.add(new ArrayList<>()); // each leafInput must have one entry
+                arrayUnnestPossible = false; // If these variables participate in join predicates, then unnestOps cannot be moved above joins
+            }
+        }
+        List<List<ILogicalOperator>> bigList = new ArrayList<>();
+        realLeafInputs.add(true);
+        for (int i = 0; i < unnestOps.size(); i++) {
+            List<ILogicalOperator> ops = new ArrayList<>(); //Gather all AssignsOps, if any, associated wth this unnestOp
+            UnnestOperator unnestOp = (UnnestOperator) unnestOps.get(i);
+
+            while (p != null && p.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+                if (p.getOperatorTag() == LogicalOperatorTag.ASSIGN) {
+                    AssignOperator aOp = (AssignOperator) p;
+
+                    ILogicalExpression a = aOp.getExpressions().get(0).getValue();
+                    if (a.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL) {
+                        AbstractFunctionCallExpression exp =
+                                (AbstractFunctionCallExpression) aOp.getExpressions().get(0).getValue();
+                        if (exp.getKind() == AbstractFunctionCallExpression.FunctionKind.SCALAR) {
+                            ILogicalExpression lexp = exp.getArguments().get(0).getValue();
+                            if (lexp.getExpressionTag() == LogicalExpressionTag.VARIABLE) {
+                                VariableReferenceExpression varRef = (VariableReferenceExpression) lexp;
+                                LogicalVariable var = varRef.getVariableReference();
+                                LogicalVariable unnestVar = unnestOp.getVariables().get(0);
+                                if (unnestVar == var) {
+                                    if ((anyVarIsAJoinVar(aOp.getVariables())
+                                            || assignVarPresentInLeafInput(aOp, leafInput))) {
+                                        unnestOpsInfo.add(new ArrayList<>());
+                                        arrayUnnestPossible = false;
+                                    } else {
+                                        ops.add(aOp);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                p = p.getInputs().get(0).getValue();
+            }
+            ops.add(unnestOp); // the unnestOp will be the last (and may be the only op)
+            bigList.add(ops);
+        }
+        unnestOpsInfo.add(bigList); // one for each LeafInput. If empty, means that there are no array references in this leafInout
+        // also need to add some dummy entries for the fake leafInputs. Add as many as unnestOps. This will make the code in setCardsAndSizes happy
+
+        for (ILogicalOperator q : unnestOps) {
+            bigList = new ArrayList<>();
+            unnestOpsInfo.add(bigList);
+            realLeafInputs.add(false);
+        }
+    }
+
+    private boolean assignVarPresentInLeafInput(AssignOperator aOp, ILogicalOperator leafInput)
+            throws AlgebricksException {
+        List<LogicalVariable> vars = new ArrayList<>();
+        for (LogicalVariable var : aOp.getVariables()) {
+            ILogicalOperator p = leafInput;
+            while (true) {
+                vars.clear();
+                VariableUtilities.getUsedVariables(p, vars);
+                if (vars.contains(var)) {
+                    return true;
+                }
+                if (p == aOp) { // No need to go below the assignOp
+                    break;
+                }
+                p = p.getInputs().get(0).getValue();
+            }
+        }
+        return false;
+    }
+
+    private boolean anyVarIsAJoinVar(List<LogicalVariable> vars) {
+        for (LogicalVariable var : vars) {
+            if (varIsAJoinVar(var)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean varIsAJoinVar(LogicalVariable var) {
+        for (JoinOperator j : allJoinOps) {
+            List<LogicalVariable> joinExprVars = new ArrayList<>();
+            AbstractBinaryJoinOperator jo = j.getAbstractJoinOp();
+            ILogicalExpression expr = jo.getCondition().getValue();
+            joinExprVars.clear();
+            expr.getUsedVariables(joinExprVars);
+            for (LogicalVariable lv : joinExprVars) {
+                if (lv.equals(var)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Guessing this is inefficient but do not expect leafInputs to be huge, so efficiency may not be a concern
+    private static void removeUnnestOpsFromLeafInputLevel1(ILogicalOperator leafInput,
+            List<List<ILogicalOperator>> bigList) {
+        for (List<ILogicalOperator> l : bigList) {
+            removeUnnestOpsFromLeafInputLevel2(leafInput, l);
+        }
+    }
+
+    private static void removeUnnestOpsFromLeafInputLevel2(ILogicalOperator leafInput, List<ILogicalOperator> list) {
+        for (ILogicalOperator op : list) {
+            removeUnnestOpFromLeafInputLevel3(leafInput, op);
+        }
+    }
+
+    private static void removeUnnestOpFromLeafInputLevel3(ILogicalOperator leafInput, ILogicalOperator op) {
+        ILogicalOperator parent = leafInput; // always a select Op with condition true
+        ILogicalOperator p = leafInput.getInputs().get(0).getValue();
+
+        while (p != null && p.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (p == op) {
+                parent.getInputs().get(0).setValue(op.getInputs().get(0).getValue());
+            }
+            parent = p;
+            p = p.getInputs().get(0).getValue();
+        }
+    }
+
+    private List<ILogicalOperator> findAllUnnestOps(ILogicalOperator p) {
+        List<ILogicalOperator> list = new ArrayList<>();
+        while (p != null && p.getOperatorTag() != LogicalOperatorTag.EMPTYTUPLESOURCE) {
+            if (p.getOperatorTag() == LogicalOperatorTag.UNNEST) {
+                UnnestOperator unnestOp = (UnnestOperator) p;
+                Object arrayAccess = unnestOp.getAnnotations().get(SqlppExpressionToPlanTranslator.ARRAY_ACCESS);
+                if (arrayAccess != null && (boolean) arrayAccess) {
+                    list.add(p);
+                }
+            }
+            p = p.getInputs().get(0).getValue();
+        }
+        return list;
     }
 
     private void collectJoinConditionsVariables() {
@@ -295,7 +679,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
     private void pushAssignsAboveJoins(ILogicalOperator op, AssignOperator aOp, ILogicalExpression jexpr,
             MutableBoolean removed) {
-        System.out.println("op " + op.toString());
         if (!op.getInputs().isEmpty()) {
             for (int i = 0; i < op.getInputs().size(); i++) {
                 ILogicalOperator oper = op.getInputs().get(i).getValue();
@@ -641,7 +1024,8 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
      * join operators but switch the leafInputs (see buildNewTree). The whole scheme is based on the assumption that the
      * leafInputs can be switched. The various data structures make the leafInputs accessible efficiently.
      */
-    private boolean getJoinOpsAndLeafInputs(ILogicalOperator op) throws AlgebricksException {
+    private boolean getJoinOpsAndLeafInputs(ILogicalOperator parent, ILogicalOperator op, int leftRight, int phase)
+            throws AlgebricksException {
         if (joinClause(op)) {
             JoinOperator jO = new JoinOperator((AbstractBinaryJoinOperator) op);
             allJoinOps.add(jO);
@@ -654,7 +1038,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             for (int i = 0; i < 2; i++) {
                 ILogicalOperator nextOp = op.getInputs().get(i).getValue();
                 firstLeafInputNumber = leafInputNumber + 1; // we are interested in the 2nd input only
-                boolean canTransform = getJoinOpsAndLeafInputs(nextOp);
+                boolean canTransform = getJoinOpsAndLeafInputs(op, nextOp, i, phase);
                 if (!canTransform) {
                     return false;
                 }
@@ -694,7 +1078,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                     }
                 } else {
                     leafInputNumber++;
-                    leafInputs.add(op);
+                    // always add a SelectOperator with TRUE condition. The code below becomes simpler with a select operator.
+                    // We will always have a parent op, so we can remove the operator below this selOp without affecting the leafInput
+                    if (phase == 1) { // dont want to add two of these
+                        SelectOperator selOp = new SelectOperator(new MutableObject<>(ConstantExpression.TRUE));
+                        parent.getInputs().get(leftRight).setValue(selOp);
+                        selOp.getInputs().add(new MutableObject<>(null)); //add an input
+                        selOp.getInputs().get(0).setValue(op);
+                        leafInputs.add(selOp);
+                        findUnnestOps(selOp);
+                    } else {
+                        leafInputs.add(op);
+                    }
+                    parentsOfLeafInputs.add(new Pair<>(parent, leftRight));
                     if (!addLeafInputNumbersToVars(op)) {
                         return false;
                     }
@@ -702,7 +1098,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             } else { // This must be an internal edge
                 if (onlyAssigns(op, assignOps)) {
                     ILogicalOperator skipAssisgnsOp = skipPastAssigns(op);
-                    boolean canTransform = getJoinOpsAndLeafInputs(skipAssisgnsOp);
+                    boolean canTransform = getJoinOpsAndLeafInputs(op, skipAssisgnsOp, leftRight, phase);
                     if (!canTransform) {
                         return false;
                     }
@@ -926,8 +1322,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
         List<PlanNode> allPlans = joinEnum.getAllPlans();
         int leftIndex = plan.getLeftPlanIndex();
         int rightIndex = plan.getRightPlanIndex();
-        //System.out.println("allPlansSize " + allPlans.size() + " leftIndex " + leftIndex + " rightIndex " + rightIndex); // put in trace statements
-        //System.out.println("allPlansSize " + allPlans.size());
         PlanNode leftPlan = allPlans.get(leftIndex);
         PlanNode rightPlan = allPlans.get(rightIndex);
 
@@ -939,14 +1333,15 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
         if (leftPlan.IsScanNode()) {
             // leaf
-            ILogicalOperator leftInput = leftPlan.getLeafInput();
+            ILogicalOperator leftInput = removeTrue(leftPlan.getLeafInput());
             skipAllIndexes(leftPlan, leftInput);
             ILogicalOperator selOp = findSelectOrUnnestOrDataScan(leftInput);
             if (selOp != null) {
                 addCardCostAnnotations(selOp, leftPlan);
             }
             joinOp.getInputs().get(0).setValue(leftInput);
-            context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(0).getValue());
+            ILogicalOperator op = joinOp.getInputs().get(0).getValue();
+            context.computeAndSetTypeEnvironmentForOperator(op);
             addCardCostAnnotations(findDataSourceScanOperator(leftInput), leftPlan);
         } else {
             // join
@@ -959,7 +1354,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
 
         if (rightPlan.IsScanNode()) {
             // leaf
-            ILogicalOperator rightInput = rightPlan.getLeafInput();
+            ILogicalOperator rightInput = removeTrue(rightPlan.getLeafInput());
             skipAllIndexes(rightPlan, rightInput);
             ILogicalOperator selOp = findSelectOrUnnestOrDataScan(rightInput);
             if (selOp != null) {
@@ -975,6 +1370,30 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             joinOp.getInputs().get(1).setValue(rightInput);
             context.computeAndSetTypeEnvironmentForOperator(joinOp.getInputs().get(1).getValue());
             buildNewTree(rightPlan, joinOps, totalNumberOfJoins, context);
+        }
+    }
+
+    static ILogicalOperator removeTrue(ILogicalOperator leafInput) {
+        if (leafInput.getOperatorTag() == LogicalOperatorTag.SELECT) {
+            SelectOperator selOp = (SelectOperator) leafInput;
+            if (selOp.getCondition().getValue() == ConstantExpression.TRUE) {
+                return leafInput.getInputs().get(0).getValue();
+            }
+        }
+        return leafInput;
+    }
+
+    // remove any selectops that may have been added in phase1
+    private void removeTrueFromAllLeafInputs() {
+        for (Pair<ILogicalOperator, Integer> parent : parentsOfLeafInputs) {
+            ILogicalOperator nextOp = parent.getFirst().getInputs().get(parent.getSecond()).getValue();
+            if (nextOp.getOperatorTag() == LogicalOperatorTag.SELECT) {
+                SelectOperator selOp = (SelectOperator) nextOp;
+                if (selOp.getCondition().getValue() == ConstantExpression.TRUE) {
+                    parent.getFirst().getInputs().get(parent.getSecond())
+                            .setValue(nextOp.getInputs().get(0).getValue());
+                }
+            }
         }
     }
 
@@ -1031,15 +1450,22 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     // check to see if every dataset has a sample. If not, CBO code cannot run. A warning message must be issued as well.
     private boolean doAllDataSourcesHaveSamples(List<ILogicalOperator> leafInputs, IOptimizationContext context)
             throws AlgebricksException {
+        int n = 0;
         for (ILogicalOperator li : leafInputs) {
             DataSourceScanOperator scanOp = (DataSourceScanOperator) findDataSourceScanOperator(li);
-            if (scanOp == null)
+            if (scanOp == null) {
                 continue;
-            Index index = joinEnum.getStatsHandle().findSampleIndex(scanOp, context);
+            }
+            Stats handle = joinEnum.getStatsHandle();
+            if (handle == null) {
+                continue;
+            }
+            Index index = handle.findSampleIndex(scanOp, context);
             if (index == null) {
                 return false;
             }
+            n++;
         }
-        return true;
+        return (leafInputs.size() == n);
     }
 }
