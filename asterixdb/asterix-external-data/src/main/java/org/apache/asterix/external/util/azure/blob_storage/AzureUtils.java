@@ -118,7 +118,11 @@ public class AzureUtils {
         if (endpoint == null) {
             throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
         }
-        builder.endpoint(endpoint);
+        try {
+            builder.endpoint(endpoint);
+        } catch (Exception ex) {
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+        }
 
         // Shared Key
         if (accountName != null || accountKey != null) {
@@ -271,7 +275,11 @@ public class AzureUtils {
         if (endpoint == null) {
             throw new CompilationException(PARAMETERS_REQUIRED, ENDPOINT_FIELD_NAME);
         }
-        builder.endpoint(endpoint);
+        try {
+            builder.endpoint(endpoint);
+        } catch (Exception ex) {
+            throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
+        }
 
         // Shared Key
         if (accountName != null || accountKey != null) {
