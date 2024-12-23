@@ -86,7 +86,9 @@ public class LSMColumnBTreeRangeSearchCursor extends LSMBTreeRangeSearchCursor {
         IColumnTupleIterator columnTuple = (IColumnTupleIterator) e.getTuple();
         if (!columnTuple.isAntimatter()) {
             // Skip non-key columns
-            columnTuple.skip(1);
+            int antiMatterGap = columnTuple.getAntimatterGap();
+            columnTuple.skip(antiMatterGap + 1);
+            columnTuple.resetAntimatterGap();
         }
     }
 

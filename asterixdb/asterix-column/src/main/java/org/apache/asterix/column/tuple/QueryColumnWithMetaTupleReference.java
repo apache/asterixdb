@@ -186,12 +186,15 @@ public final class QueryColumnWithMetaTupleReference extends AbstractAsterixColu
         // index == -1 if the normalized filter indicated that a mega leaf node is filtered
         if (index == tupleIndex) {
             // setAt in the assembler expect the value index (i.e., tupleCount - antiMatterCount)
+            antimatterGap = 0;
             int valueIndex = columnFilterEvaluator.getValueIndex();
             assembler.setAt(valueIndex);
             metaAssembler.setAt(valueIndex);
             // set the next tuple index that satisfies the filter
             columnFilterEvaluator.evaluate();
             return assembler.nextValue();
+        } else {
+            antimatterGap++;
         }
 
         return MissingValueGetter.MISSING;
