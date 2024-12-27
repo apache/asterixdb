@@ -16494,6 +16494,11 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="column">
+      <compilation-unit name="pushdown/ASTERIXDB-3540">
+        <output-dir compare="Text">pushdown/ASTERIXDB-3540</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="pushdown/field-access-pushdown">
         <output-dir compare="Text">pushdown/field-access-pushdown</output-dir>
       </compilation-unit>

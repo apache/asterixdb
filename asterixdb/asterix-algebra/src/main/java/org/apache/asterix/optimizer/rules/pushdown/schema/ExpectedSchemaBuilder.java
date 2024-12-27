@@ -56,6 +56,11 @@ public class ExpectedSchemaBuilder {
 
     public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar,
             IVariableTypeEnvironment typeEnv) throws AlgebricksException {
+        return buildExpectedSchemaNodes(expr, typeEnv, producedVar);
+    }
+
+    private boolean setSchemaFromCalculatedExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar,
+            IVariableTypeEnvironment typeEnv) throws AlgebricksException {
         //Parent always nested
         AbstractComplexExpectedSchemaNode parent = (AbstractComplexExpectedSchemaNode) buildNestedNode(expr, typeEnv);
         if (parent != null) {
@@ -102,6 +107,70 @@ public class ExpectedSchemaBuilder {
 
     public IExpectedSchemaNode getNode(LogicalVariable variable) {
         return varToNode.get(variable);
+    }
+
+    private boolean buildExpectedSchemaNodes(ILogicalExpression expr, IVariableTypeEnvironment typeEnv,
+            LogicalVariable producedVar) throws AlgebricksException {
+        return buildNestedNodes(expr, typeEnv, producedVar);
+    }
+
+    private boolean buildNestedNodes(ILogicalExpression expr, IVariableTypeEnvironment typeEnv,
+            LogicalVariable producedVar) throws AlgebricksException {
+        //The current node expression
+        boolean changed = false;
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+
+        AbstractFunctionCallExpression myExpr = (AbstractFunctionCallExpression) expr;
+        if (!SUPPORTED_FUNCTIONS.contains(myExpr.getFunctionIdentifier()) || noArgsOrFirstArgIsConstant(myExpr)) {
+            // Check if the function consists of the Supported Functions
+            for (Mutable<ILogicalExpression> arg : myExpr.getArguments()) {
+                changed |= buildNestedNodes(arg.getValue(), typeEnv, producedVar);
+            }
+
+            return changed;
+        }
+
+        // if the child is not a function expression, then just one node.
+        if (BuiltinFunctions.ARRAY_STAR.equals(myExpr.getFunctionIdentifier())
+                || BuiltinFunctions.SCAN_COLLECTION.equals(myExpr.getFunctionIdentifier())) {
+            // these supported function won't have second child
+            IExpectedSchemaNode expectedSchemaNode = buildNestedNode(expr, typeEnv);
+            if (expectedSchemaNode != null) {
+                changed |=
+                        setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) expr, producedVar, typeEnv);
+            }
+        } else {
+            ILogicalExpression childExpr = myExpr.getArguments().get(1).getValue();
+            if (childExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                // must be a variable or constant
+                IExpectedSchemaNode expectedSchemaNode = buildNestedNode(expr, typeEnv);
+                if (expectedSchemaNode != null) {
+                    changed |= setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) expr, producedVar,
+                            typeEnv);
+                }
+            } else {
+                // as the childExpr is a function.
+                // if the function had been evaluated at compile time, it would have been
+                // evaluated at this stage of compilation.
+                // eg: field-access(t.r.p, substring("name",2,4))
+                // this will be evaluated to field-access(t.r.p, "me") at compile time itself.
+
+                // since the execution reached this branch, this means the childExpr
+                // need to be evaluated at runtime, hence the childExpr should also be checked
+                // for possible pushdown.
+                // eg: field-access(t.r.p, substring(x.y.age_field, 0, 4))
+                ILogicalExpression parentExpr = myExpr.getArguments().get(0).getValue();
+                IExpectedSchemaNode parentExpectedNode = buildNestedNode(parentExpr, typeEnv);
+                if (parentExpectedNode != null) {
+                    changed |= setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) parentExpr,
+                            producedVar, typeEnv);
+                }
+                changed |= buildNestedNodes(childExpr, typeEnv, producedVar);
+            }
+        }
+        return changed;
     }
 
     private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr, IVariableTypeEnvironment typeEnv)
