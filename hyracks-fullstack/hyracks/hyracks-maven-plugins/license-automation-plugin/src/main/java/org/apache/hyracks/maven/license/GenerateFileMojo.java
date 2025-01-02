@@ -284,6 +284,9 @@ public class GenerateFileMojo extends LicenseMojo {
     }
 
     private void rebuildLicenseContentProjectMap() throws IOException {
+        if (skipLicenses) {
+            return;
+        }
         int counter = 0;
         Map<String, LicensedProjects> licenseMap2 = new TreeMap<>(WHITESPACE_NORMALIZED_COMPARATOR);
         for (LicensedProjects lps : licenseMap.values()) {
@@ -333,6 +336,9 @@ public class GenerateFileMojo extends LicenseMojo {
 
     private void buildNoticeProjectMap() throws IOException {
         noticeMap = new TreeMap<>(WHITESPACE_NORMALIZED_COMPARATOR);
+        if (skipNotices) {
+            return;
+        }
         for (Project p : getProjects()) {
             String noticeText = p.getNoticeText();
             if (noticeText == null && noticeOverrides.containsKey(p.gav())) {
@@ -374,11 +380,15 @@ public class GenerateFileMojo extends LicenseMojo {
     }
 
     private void resolveNoticeFiles() throws MojoExecutionException, IOException {
-        resolveArtifactFiles(NOTICE);
+        if (!skipNotices) {
+            resolveArtifactFiles(NOTICE);
+        }
     }
 
     private void resolveLicenseFiles() throws MojoExecutionException, IOException {
-        resolveArtifactFiles(LICENSE);
+        if (!skipLicenses) {
+            resolveArtifactFiles(LICENSE);
+        }
     }
 
     private void resolveArtifactFiles(final EmbeddedArtifact artifact) throws MojoExecutionException, IOException {
