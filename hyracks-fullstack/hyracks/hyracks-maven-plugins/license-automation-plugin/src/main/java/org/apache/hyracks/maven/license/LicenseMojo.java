@@ -131,6 +131,12 @@ public abstract class LicenseMojo extends AbstractMojo {
     @Parameter
     protected List<String> extraDependencies = new ArrayList<>();
 
+    @Parameter
+    protected boolean skipLicenses;
+
+    @Parameter
+    protected boolean skipNotices;
+
     private Map<String, MavenProject> projectCache = new HashMap<>();
 
     private Map<String, Model> supplementModels;
@@ -274,8 +280,18 @@ public abstract class LicenseMojo extends AbstractMojo {
 
     private void addDependencyToLicenseMap(MavenProject depProject, List<Pair<String, String>> depLicenses,
             String depLocation) {
+        LicenseSpec spec = extractLicenseSpec(depProject, depLicenses, depLocation);
+        addProject(new Project(depProject, depLocation, depProject.getArtifact().getFile(),
+                Boolean.parseBoolean(String.valueOf(depProject.getContextValue(SHADOWED_KEY)))), spec, true);
+    }
+
+    private LicenseSpec extractLicenseSpec(MavenProject depProject, List<Pair<String, String>> depLicenses,
+            String depLocation) {
         final String depGav = toGav(depProject);
         getLog().debug("adding " + depGav + ", location: " + depLocation);
+        if (skipLicenses) {
+            return new LicenseSpec("DUMMY LICENSE", "DUMMY LICENSE");
+        }
         final MutableBoolean usedMetric = new MutableBoolean(false);
         if (depLicenses.size() > 1) {
             Collections.sort(depLicenses, (o1, o2) -> {
@@ -311,10 +327,7 @@ public abstract class LicenseMojo extends AbstractMojo {
                 licenseUrl = fakeLicenseUrl;
             }
         }
-        addProject(
-                new Project(depProject, depLocation, depProject.getArtifact().getFile(),
-                        Boolean.parseBoolean(String.valueOf(depProject.getContextValue(SHADOWED_KEY)))),
-                new LicenseSpec(licenseUrl, displayName), true);
+        return new LicenseSpec(licenseUrl, displayName);
     }
 
     protected void addProject(Project project, LicenseSpec spec, boolean additive) {
