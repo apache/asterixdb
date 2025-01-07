@@ -272,6 +272,7 @@ public class ExternalDatasetTestUtils {
         loadData(generatedDataBasePath, "", "heterogeneous_1.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "heterogeneous_2.parquet", definition, definitionSegment, false, false);
         loadData(generatedDataBasePath, "", "parquetTypes.parquet", definition, definitionSegment, false, false);
+        loadData(generatedDataBasePath, "", "friends.parquet", definition, definitionSegment, false, false);
     }
 
     private static void loadData(String fileBasePath, String filePathSegment, String filename, String definition,

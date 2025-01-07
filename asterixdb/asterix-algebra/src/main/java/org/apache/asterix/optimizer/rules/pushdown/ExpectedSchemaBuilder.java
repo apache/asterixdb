@@ -22,6 +22,7 @@ import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessP
 import static org.apache.asterix.optimizer.rules.pushdown.ExpressionValueAccessPushdownVisitor.SUPPORTED_FUNCTIONS;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.asterix.om.functions.BuiltinFunctions;
@@ -37,6 +38,7 @@ import org.apache.asterix.optimizer.rules.pushdown.schema.RootExpectedSchemaNode
 import org.apache.asterix.optimizer.rules.pushdown.schema.UnionExpectedSchemaNode;
 import org.apache.asterix.runtime.projection.DataProjectionInfo;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
+import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalExpression;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalExpressionTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
@@ -72,6 +74,10 @@ class ExpectedSchemaBuilder {
     }
 
     public boolean setSchemaFromExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar) {
+        return buildExpectedSchemaNodes(expr, producedVar);
+    }
+
+    public boolean setSchemaFromCalculatedExpression(AbstractFunctionCallExpression expr, LogicalVariable producedVar) {
         //Parent always nested
         AbstractComplexExpectedSchemaNode parent = (AbstractComplexExpectedSchemaNode) buildNestedNode(expr);
         if (parent != null) {
@@ -109,6 +115,67 @@ class ExpectedSchemaBuilder {
 
     public boolean containsRegisteredDatasets() {
         return !varToNode.isEmpty();
+    }
+
+    private boolean buildExpectedSchemaNodes(ILogicalExpression expr, LogicalVariable producedVar) {
+        return buildNestedNodes(expr, producedVar);
+    }
+
+    private boolean buildNestedNodes(ILogicalExpression expr, LogicalVariable producedVar) {
+        //The current node expression
+        boolean changed = false;
+        if (expr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+            return false;
+        }
+        AbstractFunctionCallExpression myExpr = (AbstractFunctionCallExpression) expr;
+        if (!SUPPORTED_FUNCTIONS.contains(myExpr.getFunctionIdentifier()) || noArgsOrFirstArgIsConstant(myExpr)) {
+            // Check if the function consists of the Supported Functions
+            for (Mutable<ILogicalExpression> arg : myExpr.getArguments()) {
+                changed |= buildNestedNodes(arg.getValue(), producedVar);
+            }
+            return changed;
+        }
+        // if the child is not a function expression, then just one node.
+        if (BuiltinFunctions.ARRAY_STAR.equals(myExpr.getFunctionIdentifier())
+                || BuiltinFunctions.SCAN_COLLECTION.equals(myExpr.getFunctionIdentifier())) {
+            // these supported function won't have second child
+            IExpectedSchemaNode expectedSchemaNode = buildNestedNode(expr);
+            if (expectedSchemaNode != null) {
+                changed |= setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) expr, producedVar);
+            }
+        } else {
+            ILogicalExpression childExpr = myExpr.getArguments().get(1).getValue();
+            if (childExpr.getExpressionTag() != LogicalExpressionTag.FUNCTION_CALL) {
+                // must be a variable or constant
+                IExpectedSchemaNode expectedSchemaNode = buildNestedNode(expr);
+                if (expectedSchemaNode != null) {
+                    changed |= setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) expr, producedVar);
+                }
+            } else {
+                // as the childExpr is a function.
+                // if the function had been evaluated at compile time, it would have been
+                // evaluated at this stage of compilation.
+                // eg: field-access(t.r.p, substring("name",2,4))
+                // this will be evaluated to field-access(t.r.p, "me") at compile time itself.
+                // since the execution reached this branch, this means the childExpr
+                // need to be evaluated at runtime, hence the childExpr should also be checked
+                // for possible pushdown.
+                // eg: field-access(t.r.p, substring(x.y.age_field, 0, 4))
+                ILogicalExpression parentExpr = myExpr.getArguments().get(0).getValue();
+                IExpectedSchemaNode parentExpectedNode = buildNestedNode(parentExpr);
+                if (parentExpectedNode != null) {
+                    changed |=
+                            setSchemaFromCalculatedExpression((AbstractFunctionCallExpression) parentExpr, producedVar);
+                }
+                changed |= buildNestedNodes(childExpr, producedVar);
+            }
+        }
+        return changed;
+    }
+
+    private boolean noArgsOrFirstArgIsConstant(AbstractFunctionCallExpression myExpr) {
+        List<Mutable<ILogicalExpression>> args = myExpr.getArguments();
+        return args.isEmpty() || args.get(0).getValue().getExpressionTag() == LogicalExpressionTag.CONSTANT;
     }
 
     private IExpectedSchemaNode buildNestedNode(ILogicalExpression expr) {
