@@ -402,7 +402,7 @@
         <placeholder name="adapter" value="AZUREBLOB" />
         <placeholder name="endpoint" value="http://^invalid-endpoint^" />
         <output-dir compare="Text">common/invalid-endpoint</output-dir>
-        <expected-error>Illegal character in authority at index 7: http://^invalid-endpoint^</expected-error>
+        <expected-error>The Azure Storage endpoint url is malformed.</expected-error>
       </compilation-unit>
     </test-case>
     <!--
