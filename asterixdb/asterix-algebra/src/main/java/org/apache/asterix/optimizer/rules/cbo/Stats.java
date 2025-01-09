@@ -61,9 +61,11 @@ import org.apache.hyracks.algebricks.core.algebra.expressions.PredicateCardinali
 import org.apache.hyracks.algebricks.core.algebra.expressions.ScalarFunctionCallExpression;
 import org.apache.hyracks.algebricks.core.algebra.expressions.VariableReferenceExpression;
 import org.apache.hyracks.algebricks.core.algebra.functions.AlgebricksBuiltinFunctions;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AggregateOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AssignOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.DataSourceScanOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.DistinctOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SelectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.SubplanOperator;
@@ -192,7 +194,7 @@ public class Stats {
                 return 1.0;
             }
 
-            double estDistinctCardinalityFromSample = findPredicateCardinality(result, false);
+            double estDistinctCardinalityFromSample = findPredicateCardinality(result, true);
             double numDistincts = distinctEstimator2(estDistinctCardinalityFromSample, index);
             return 1.0 / numDistincts; // this is the expected selectivity for joins.
         }
@@ -653,6 +655,16 @@ public class Stats {
         }
         return index;
     }
+    // plan we need to generate in this routine.
+
+    //  project ([$$36])                                 add here
+    //    assign [$$36] <- [{"$1": $$39}]                add here
+    //      aggregate [$$39] <- [agg-sql-count($$34)]    add here
+    //        distinct ([$$34])                          add here
+    //          project ([$$34])                         add here
+    //            assign [$$34] <- [$$ar.getField("country")]      part of leaf input
+    //              data-scan []<-[$$37, $$ar, $$38] <- `travel-sample`.inventory.airport
+    //                empty-tuple-source
 
     protected List<List<IAObject>> runSamplingQueryDistinct(IOptimizationContext ctx, ILogicalOperator logOp,
             LogicalVariable var, Index index) throws AlgebricksException {
@@ -661,9 +673,10 @@ public class Stats {
         IOptimizationContext newCtx = ctx.getOptimizationContextFactory().cloneOptimizationContext(ctx);
 
         ILogicalOperator newLogOp = OperatorManipulationUtil.bottomUpCopyOperators(logOp);
-        storeSelectConditionsAndMakeThemTrue(newLogOp, null);
+
         // by passing in null, all select expression will become true.
         // no need to restore them either as this is dne on a copy of the logOp.
+        storeSelectConditionsAndMakeThemTrue(newLogOp, null);
 
         ILogicalOperator parent = joinEnum.findDataSourceScanOperatorParent(newLogOp);
         DataSourceScanOperator scanOp;
@@ -696,14 +709,25 @@ public class Stats {
             scanOp.setDataSource(sampledatasource);
         }
 
-        List<Mutable<ILogicalExpression>> aggFunArgs = new ArrayList<>(1);
-        aggFunArgs.add(new MutableObject<>(ConstantExpression.TRUE));
-
         AbstractLogicalExpression inputVarRef = new VariableReferenceExpression(var, newLogOp.getSourceLocation());
+        // add a project operator on top of newLogOp
+        ProjectOperator projOp = new ProjectOperator(var);
+        projOp.getInputs().add(new MutableObject<>(null)); //add an input
+        projOp.getInputs().get(0).setValue(newLogOp);
+        // add a distinct operator on top of the proj.
+        List<Mutable<ILogicalExpression>> arguments = new ArrayList<>();
+        VariableReferenceExpression e1 = new VariableReferenceExpression(var);
+        arguments.add(new MutableObject<>(e1));
+        DistinctOperator distOp = new DistinctOperator(arguments);
+        distOp.getInputs().add(new MutableObject<>(null)); //add an input
+        distOp.getInputs().get(0).setValue(projOp);
+        distOp.setExecutionMode(AbstractLogicalOperator.ExecutionMode.PARTITIONED);
+
+        // now add aggregate [$$39] <- [agg-sql-count($$34)] on top of distop
         List<Mutable<ILogicalExpression>> fields = new ArrayList<>(1);
         fields.add(new MutableObject<>(inputVarRef));
 
-        BuiltinFunctionInfo countFn = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SQL_COUNT_DISTINCT);
+        BuiltinFunctionInfo countFn = BuiltinFunctions.getBuiltinFunctionInfo(BuiltinFunctions.SQL_COUNT);
         AggregateFunctionCallExpression aggExpr = new AggregateFunctionCallExpression(countFn, false, fields);
 
         List<Mutable<ILogicalExpression>> aggExprList = new ArrayList<>(1);
@@ -714,17 +738,37 @@ public class Stats {
         aggVarList.add(aggVar);
 
         AggregateOperator newAggOp = new AggregateOperator(aggVarList, aggExprList);
-        newAggOp.getInputs().add(new MutableObject<>(newLogOp));
+        newAggOp.getInputs().add(new MutableObject<>(distOp));
 
+        // now add assign [$$36] <- [{"$1": $$39}]   on top of newAggOp
         Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
+        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx); // is this really needed??
 
-        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx);
+        List<MutableObject> arr = createMutableObjectArray(newAggOp.getVariables());
+        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
+        for (int i = 0; i < arr.size(); i++) {
+            f.getArguments().add(arr.get(i));
+        }
+
+        LogicalVariable newVar = newCtx.newVar();
+        AssignOperator assignOp = new AssignOperator(newVar, new MutableObject<>(f));
+        assignOp.getInputs().add(new MutableObject<>(newAggOp));
+        ProjectOperator pOp = new ProjectOperator(newVar);
+        pOp.getInputs().add(new MutableObject<>(assignOp));
+
+        Mutable<ILogicalOperator> newpOpRef = new MutableObject<>(pOp);
+
+        OperatorPropertiesUtil.typeOpRec(newpOpRef, newCtx);
+
         LOGGER.info("***returning from sample query***");
 
-        String viewInPlan = new ALogicalPlanImpl(newAggOpRef).toString(); //useful when debugging
-        LOGGER.trace("viewInPlan");
-        LOGGER.trace(viewInPlan);
-        return AnalysisUtil.runQuery(newAggOpRef, Arrays.asList(aggVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+        if (LOGGER.isTraceEnabled()) {
+            String viewInPlan = new ALogicalPlanImpl(newpOpRef).toString(); //useful when debugging
+            LOGGER.trace("viewInPlan");
+            LOGGER.trace(viewInPlan);
+        }
+        return AnalysisUtil.runQuery(newpOpRef, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
     }
 
     // This one gets the cardinality and also projection sizes
