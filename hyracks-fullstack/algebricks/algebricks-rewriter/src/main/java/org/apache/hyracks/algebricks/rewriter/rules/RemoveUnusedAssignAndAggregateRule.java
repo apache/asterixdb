@@ -269,6 +269,10 @@ public class RemoveUnusedAssignAndAggregateRule implements IAlgebraicRewriteRule
                     isTransformed = true;
                 }
                 return winOp.getVariables().size() + winOp.getNestedPlans().size();
+            case SUBPLAN:
+                ListSet<LogicalVariable> producedVars = new ListSet<>();
+                VariableUtilities.getProducedVariables(op, producedVars);
+                return producedVars.size();
             default:
                 break;
         }
