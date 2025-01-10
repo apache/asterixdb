@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-import org.apache.asterix.common.cluster.IClusterStateManager;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -44,7 +43,6 @@ import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.runtime.projection.FunctionCallInformation;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.constraints.AlgebricksAbsolutePartitionConstraint;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -76,6 +74,10 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
     private String scanState;
     protected final List<PartitionWorkLoadBasedOnSize> partitionWorkLoadsBasedOnSize = new ArrayList<>();
     protected ConfFactory confFactory;
+
+    public List<PartitionWorkLoadBasedOnSize> getPartitionWorkLoadsBasedOnSize() {
+        return partitionWorkLoadsBasedOnSize;
+    }
 
     @Override
     public AlgebricksAbsolutePartitionConstraint getPartitionConstraint() {
@@ -134,9 +136,9 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
                 scanFiles.add(row);
             }
         }
-        locationConstraints = configureLocationConstraints(appCtx, scanFiles);
+        locationConstraints = getPartitions(appCtx);
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
-        distributeFiles(scanFiles);
+        distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
         issueWarnings(warnings, warningCollector);
     }
 
@@ -151,26 +153,11 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         warnings.clear();
     }
 
-    private AlgebricksAbsolutePartitionConstraint configureLocationConstraints(ICcApplicationContext appCtx,
-            List<Row> scanFiles) {
-        IClusterStateManager csm = appCtx.getClusterStateManager();
-
-        String[] locations = csm.getClusterLocations().getLocations();
-        if (scanFiles.size() == 0) {
-            return AlgebricksAbsolutePartitionConstraint.randomLocation(locations);
-        } else if (locations.length > scanFiles.size()) {
-            LOGGER.debug(
-                    "configured partitions ({}) exceeds total partition count ({}); limiting configured partitions to total partition count",
-                    locations.length, scanFiles.size());
-            final String[] locationCopy = locations.clone();
-            ArrayUtils.shuffle(locationCopy);
-            locations = ArrayUtils.subarray(locationCopy, 0, scanFiles.size());
-        }
-        return new AlgebricksAbsolutePartitionConstraint(locations);
+    public AlgebricksAbsolutePartitionConstraint getPartitions(ICcApplicationContext appCtx) {
+        return appCtx.getDataPartitioningProvider().getClusterLocations();
     }
 
-    private void distributeFiles(List<Row> scanFiles) {
-        final int partitionsCount = getPartitionConstraint().getLocations().length;
+    public void distributeFiles(List<Row> scanFiles, int partitionsCount) {
         PriorityQueue<PartitionWorkLoadBasedOnSize> workloadQueue = new PriorityQueue<>(partitionsCount,
                 Comparator.comparingLong(PartitionWorkLoadBasedOnSize::getTotalSize));
 

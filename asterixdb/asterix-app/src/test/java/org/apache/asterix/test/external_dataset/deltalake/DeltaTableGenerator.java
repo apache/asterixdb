@@ -55,6 +55,10 @@ public class DeltaTableGenerator {
             "target" + File.separatorChar + "generated_delta_files" + File.separatorChar + "modified_delta_table";
     public static final String DELTA_MULTI_FILE_TABLE =
             "target" + File.separatorChar + "generated_delta_files" + File.separatorChar + "multiple_file_delta_table";
+    public static final String DELTA_FILE_SIZE_ONE =
+            "target" + File.separatorChar + "generated_delta_files" + File.separatorChar + "delta_file_size_one";
+    public static final String DELTA_FILE_SIZE_NINE =
+            "target" + File.separatorChar + "generated_delta_files" + File.separatorChar + "delta_file_size_nine";
 
     public static void prepareDeltaTableContainer(Configuration conf) {
         File basePath = new File(".");
@@ -62,6 +66,8 @@ public class DeltaTableGenerator {
         prepareMultipleFilesTable(conf);
         prepareModifiedTable(conf);
         prepareEmptyTable(conf);
+        prepareFileSizeOne(conf);
+        prepareFileSizeNine(conf);
     }
 
     public static void cleanBinaryDirectory(File localDataRoot, String binaryFilesPath) {
@@ -217,6 +223,131 @@ public class DeltaTableGenerator {
             OptimisticTransaction txn2 = log.startTransaction();
             txn2.commit(actions2, new Operation(Operation.Name.WRITE), "deltalake-table-create");
 
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void prepareFileSizeOne(Configuration conf) {
+        Schema schema = SchemaBuilder.record("MyRecord").fields().requiredInt("id").requiredString("name").endRecord();
+        try {
+            Path path = new Path(DELTA_FILE_SIZE_ONE, "firstFile.parquet");
+            ParquetWriter<GenericData.Record> writer =
+                    AvroParquetWriter.<GenericData.Record> builder(path).withConf(conf).withSchema(schema).build();
+
+            List<GenericData.Record> fileFirstSnapshotRecords = List.of(new GenericData.Record(schema));
+
+            fileFirstSnapshotRecords.get(0).put("id", 0);
+            fileFirstSnapshotRecords.get(0).put("name", "Cooper");
+
+            for (GenericData.Record record : fileFirstSnapshotRecords) {
+                writer.write(record);
+            }
+
+            long size = writer.getDataSize();
+            writer.close();
+
+            List<Action> actions = List.of(new AddFile("firstFile.parquet", new HashMap<>(), size,
+                    System.currentTimeMillis(), true, null, null));
+            DeltaLog log = DeltaLog.forTable(conf, DELTA_FILE_SIZE_ONE);
+            OptimisticTransaction txn = log.startTransaction();
+            Metadata metaData = txn.metadata().copyBuilder().partitionColumns(new ArrayList<>())
+                    .schema(new StructType().add(new StructField("id", new IntegerType(), true))
+                            .add(new StructField("name", new StringType(), true)))
+                    .build();
+            txn.updateMetadata(metaData);
+            txn.commit(actions, new Operation(Operation.Name.CREATE_TABLE), "deltalake-table-create");
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void prepareFileSizeNine(Configuration conf) {
+        Schema schema = SchemaBuilder.record("MyRecord").fields().requiredInt("id").requiredString("name").endRecord();
+        try {
+            Path path = new Path(DELTA_FILE_SIZE_NINE, "firstFile.parquet");
+            ParquetWriter<GenericData.Record> writer =
+                    AvroParquetWriter.<GenericData.Record> builder(path).withConf(conf).withSchema(schema).build();
+
+            List<GenericData.Record> fileFirstSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileSecondSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileThirdSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileFourthSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileFifthSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileSixthSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileSeventhSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileEightSnapshotRecords = List.of(new GenericData.Record(schema));
+            List<GenericData.Record> fileNineSnapshotRecords = List.of(new GenericData.Record(schema));
+
+            List<List<GenericData.Record>> allSnapshotRecords =
+                    List.of(fileFirstSnapshotRecords, fileSecondSnapshotRecords, fileThirdSnapshotRecords,
+                            fileFourthSnapshotRecords, fileFifthSnapshotRecords, fileSixthSnapshotRecords,
+                            fileSeventhSnapshotRecords, fileEightSnapshotRecords, fileNineSnapshotRecords);
+
+            fileFirstSnapshotRecords.get(0).put("id", 0);
+            fileFirstSnapshotRecords.get(0).put("name", "Cooper");
+
+            fileSecondSnapshotRecords.get(0).put("id", 1);
+            fileSecondSnapshotRecords.get(0).put("name", "Adam");
+
+            fileThirdSnapshotRecords.get(0).put("id", 2);
+            fileThirdSnapshotRecords.get(0).put("name", "Third");
+
+            fileFourthSnapshotRecords.get(0).put("id", 3);
+            fileFourthSnapshotRecords.get(0).put("name", "Fourth");
+
+            fileFifthSnapshotRecords.get(0).put("id", 4);
+            fileFifthSnapshotRecords.get(0).put("name", "Five");
+
+            fileSixthSnapshotRecords.get(0).put("id", 5);
+            fileSixthSnapshotRecords.get(0).put("name", "Six");
+
+            fileSeventhSnapshotRecords.get(0).put("id", 6);
+            fileSeventhSnapshotRecords.get(0).put("name", "Seven");
+
+            fileEightSnapshotRecords.get(0).put("id", 7);
+            fileEightSnapshotRecords.get(0).put("name", "Eight");
+
+            fileNineSnapshotRecords.get(0).put("id", 8);
+            fileNineSnapshotRecords.get(0).put("name", "Nine");
+
+            for (GenericData.Record record : fileFirstSnapshotRecords) {
+                writer.write(record);
+            }
+
+            long size = writer.getDataSize();
+            writer.close();
+
+            List<Action> actions = List.of(new AddFile("firstFile.parquet", new HashMap<>(), size,
+                    System.currentTimeMillis(), true, null, null));
+            DeltaLog log = DeltaLog.forTable(conf, DELTA_FILE_SIZE_NINE);
+            OptimisticTransaction txn = log.startTransaction();
+            Metadata metaData = txn.metadata().copyBuilder().partitionColumns(new ArrayList<>())
+                    .schema(new StructType().add(new StructField("id", new IntegerType(), true))
+                            .add(new StructField("name", new StringType(), true)))
+                    .build();
+            txn.updateMetadata(metaData);
+            txn.commit(actions, new Operation(Operation.Name.CREATE_TABLE), "deltalake-table-create");
+
+            for (int i = 2; i <= 9; i++) {
+                Path path2 = new Path(DELTA_FILE_SIZE_NINE, "File" + i + ".parquet");
+                ParquetWriter<GenericData.Record> writer2 =
+                        AvroParquetWriter.<GenericData.Record> builder(path2).withConf(conf).withSchema(schema).build();
+
+                for (GenericData.Record record : allSnapshotRecords.get(i - 1)) {
+                    writer2.write(record);
+                }
+
+                long size2 = writer2.getDataSize();
+                writer2.close();
+
+                List<Action> actions2 = List.of(new AddFile("File" + i + ".parquet", new HashMap<>(), size2,
+                        System.currentTimeMillis(), true, null, null));
+
+                OptimisticTransaction txn2 = log.startTransaction();
+                txn2.commit(actions2, new Operation(Operation.Name.WRITE), "deltalake-table-create");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

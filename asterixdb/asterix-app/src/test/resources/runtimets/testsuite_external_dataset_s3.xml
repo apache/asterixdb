@@ -556,6 +556,18 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-file-one">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-file-one</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
+      <compilation-unit name="common/deltalake-file-nine">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Text">common/deltalake-file-nine</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
       <compilation-unit name="common/avro/avro-types/avro-map">
         <placeholder name="adapter" value="S3" />
         <placeholder name="path_prefix" value="" />
