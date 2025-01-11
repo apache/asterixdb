@@ -1,0 +1,41 @@
+distribute result [$$303] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$303]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+    -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$303] <- [{"dat3": {"id": $$337, "a": string-default-null($$331), "d": int64-default-null($$304)}}] [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+      -- ASSIGN  |PARTITIONED|
+        project ([$$337, $$331, $$304]) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+        -- STREAM_PROJECT  |PARTITIONED|
+          select (le($$304, get-item($$281, 0))) [cardinality: 2.1, op-cost: 0.0, total-cost: 2.1]
+          -- STREAM_SELECT  |PARTITIONED|
+            project ([$$337, $$331, $$304, $$281]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+            -- STREAM_PROJECT  |PARTITIONED|
+              subplan {
+                        aggregate [$$281] <- [listify($$316)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- AGGREGATE  |LOCAL|
+                          aggregate [$$316] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- AGGREGATE  |LOCAL|
+                            unnest $$319 <- scan-collection($$329) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- UNNEST  |LOCAL|
+                              nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                     } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+              -- SUBPLAN  |PARTITIONED|
+                select (not(is-null($$337))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$337, $$331, $$304, $$329]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+                  -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$337, $$331, $$304, $$329] <- [string-default-null($$s.getField("id")), $$s.getField("a"), $$s.getField("d"), $$s.getField("e")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+                    -- ASSIGN  |PARTITIONED|
+                      project ([$$s]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+                      -- STREAM_PROJECT  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 2.1]
+                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          data-scan []<-[$$305, $$s] <- test.dat1 [cardinality: 1000000.0, op-cost: 2.1, total-cost: 2.1]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

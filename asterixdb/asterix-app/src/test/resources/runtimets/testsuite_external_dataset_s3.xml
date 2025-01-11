@@ -102,6 +102,12 @@
       </compilation-unit>
     </test-case>
     <test-case FilePath="external-dataset">
+      <compilation-unit name="common/parquet/ASTERIXDB-3540">
+        <placeholder name="adapter" value="S3" />
+        <output-dir compare="Clean-JSON">common/parquet/ASTERIXDB-3540</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="external-dataset">
       <compilation-unit name="common/parquet/array-access-pushdown">
         <placeholder name="adapter" value="S3" />
         <output-dir compare="Text">common/parquet/array-access-pushdown</output-dir>
