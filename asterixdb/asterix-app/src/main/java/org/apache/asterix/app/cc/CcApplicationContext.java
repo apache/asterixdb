@@ -183,7 +183,7 @@ public class CcApplicationContext implements ICcApplicationContext {
         this.globalTxManager = globalTxManager;
         this.ioManager = ioManager;
         dataPartitioningProvider = DataPartitioningProvider.create(this);
-        externalCredentialsCache = new ExternalCredentialsCache();
+        externalCredentialsCache = new ExternalCredentialsCache(this);
         externalCredentialsCacheUpdater = new ExternalCredentialsCacheUpdater(this);
     }
 

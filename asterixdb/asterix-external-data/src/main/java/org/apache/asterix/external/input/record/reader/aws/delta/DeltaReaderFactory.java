@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.common.exceptions.AsterixException;
 import org.apache.asterix.common.exceptions.ErrorCode;
@@ -84,8 +85,8 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         return locationConstraints;
     }
 
-    protected abstract void configureJobConf(JobConf conf, Map<String, String> configuration)
-            throws AlgebricksException;
+    protected abstract void configureJobConf(IApplicationContext appCtx, JobConf conf,
+            Map<String, String> configuration) throws AlgebricksException;
 
     protected abstract String getTablePath(Map<String, String> configuration) throws AlgebricksException;
 
@@ -95,7 +96,7 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
             throws AlgebricksException, HyracksDataException {
         JobConf conf = new JobConf();
         ICcApplicationContext appCtx = (ICcApplicationContext) serviceCtx.getApplicationContext();
-        configureJobConf(conf, configuration);
+        configureJobConf(appCtx, conf, configuration);
         confFactory = new ConfFactory(conf);
         String tableMetadataPath = getTablePath(configuration);
         Engine engine = DefaultEngine.create(conf);

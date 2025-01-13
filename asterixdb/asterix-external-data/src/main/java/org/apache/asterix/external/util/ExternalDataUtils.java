@@ -519,12 +519,13 @@ public class ExternalDataUtils {
         }
     }
 
-    public static void validateDeltaTableExists(Map<String, String> configuration) throws AlgebricksException {
+    public static void validateDeltaTableExists(IApplicationContext appCtx, Map<String, String> configuration)
+            throws AlgebricksException {
         String tableMetadataPath = null;
         JobConf conf = new JobConf();
         if (configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE)
                 .equals(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3)) {
-            configureAwsS3HdfsJobConf(conf, configuration);
+            configureAwsS3HdfsJobConf(appCtx, conf, configuration);
             tableMetadataPath = S3Utils.getPath(configuration);
         } else if (configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE)
                 .equals(ExternalDataConstants.KEY_ADAPTER_NAME_GCS)) {

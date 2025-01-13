@@ -2448,6 +2448,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     sourceLoc, EnumSet.of(DropOption.IF_EXISTS), requestParameters.isForceDropDataset());
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
+            appCtx.getExternalCredentialsCache()
+                    .deleteCredentials(String.join(".", databaseName, dataverseName.getCanonicalForm(), datasetName));
             return true;
         } catch (Exception e) {
             LOGGER.error("failed to drop dataset; executing compensating operations", e);

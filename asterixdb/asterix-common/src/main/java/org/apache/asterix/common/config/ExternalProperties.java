@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.common.config;
 
+import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
 import static org.apache.hyracks.control.common.config.OptionTypes.LEVEL;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
@@ -52,7 +53,16 @@ public class ExternalProperties extends AbstractProperties {
                 "The maximum accepted web request size in bytes"),
         REQUESTS_ARCHIVE_SIZE(NONNEGATIVE_INTEGER, 1000, "The maximum number of archived requests to maintain"),
         LIBRARY_DEPLOY_TIMEOUT(POSITIVE_INTEGER, 1800, "Timeout to upload a UDF in seconds"),
-        AZURE_REQUEST_TIMEOUT(POSITIVE_INTEGER, 120, "Timeout for Azure client requests in seconds");
+        AZURE_REQUEST_TIMEOUT(POSITIVE_INTEGER, 120, "Timeout for Azure client requests in seconds"),
+        AWS_ASSUME_ROLE_DURATION(
+                POSITIVE_INTEGER,
+                900,
+                "AWS assuming role duration in seconds. "
+                        + "Range from 900 seconds (15 mins) to 43200 seconds (12 hours)"),
+        AWS_REFRESH_ASSUME_ROLE_THRESHOLD(
+                DOUBLE,
+                .5,
+                "Percentage of left duration before assume role credentials " + "needs to be refreshed");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -80,6 +90,8 @@ public class ExternalProperties extends AbstractProperties {
                 case MAX_WEB_REQUEST_SIZE:
                 case LIBRARY_DEPLOY_TIMEOUT:
                 case AZURE_REQUEST_TIMEOUT:
+                case AWS_ASSUME_ROLE_DURATION:
+                case AWS_REFRESH_ASSUME_ROLE_THRESHOLD:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -159,5 +171,13 @@ public class ExternalProperties extends AbstractProperties {
 
     public int getAzureRequestTimeout() {
         return accessor.getInt(Option.AZURE_REQUEST_TIMEOUT);
+    }
+
+    public int getAwsAssumeRoleDuration() {
+        return accessor.getInt(Option.AWS_ASSUME_ROLE_DURATION);
+    }
+
+    public double getAwsRefreshAssumeRoleThreshold() {
+        return accessor.getDouble(Option.AWS_REFRESH_ASSUME_ROLE_THRESHOLD);
     }
 }

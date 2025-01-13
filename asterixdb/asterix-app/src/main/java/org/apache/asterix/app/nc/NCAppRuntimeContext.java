@@ -216,7 +216,7 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         cacheManager = new CacheManager();
         this.namespacePathResolver = namespacePathResolver;
         this.namespaceResolver = namespaceResolver;
-        this.externalCredentialsCache = new ExternalCredentialsCache();
+        this.externalCredentialsCache = new ExternalCredentialsCache(this);
         this.externalCredentialsCacheUpdater = new ExternalCredentialsCacheUpdater(this);
     }
 

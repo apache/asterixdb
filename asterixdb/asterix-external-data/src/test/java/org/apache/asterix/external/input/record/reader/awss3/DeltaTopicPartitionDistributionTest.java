@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -48,7 +49,7 @@ public class DeltaTopicPartitionDistributionTest {
         List<Row> scanFiles = createMockRows(rowCount);
         DeltaReaderFactory d = new DeltaReaderFactory() {
             @Override
-            protected void configureJobConf(JobConf conf, Map<String, String> configuration)
+            protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
                     throws AlgebricksException {
 
             }
@@ -75,7 +76,7 @@ public class DeltaTopicPartitionDistributionTest {
         List<Row> scanFiles = createMockRows(rowCount);
         DeltaReaderFactory d = new DeltaReaderFactory() {
             @Override
-            protected void configureJobConf(JobConf conf, Map<String, String> configuration)
+            protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
                     throws AlgebricksException {
 
             }
@@ -102,7 +103,7 @@ public class DeltaTopicPartitionDistributionTest {
         List<Row> scanFiles = createMockRows(rowCount);
         DeltaReaderFactory d = new DeltaReaderFactory() {
             @Override
-            protected void configureJobConf(JobConf conf, Map<String, String> configuration)
+            protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
                     throws AlgebricksException {
 
             }

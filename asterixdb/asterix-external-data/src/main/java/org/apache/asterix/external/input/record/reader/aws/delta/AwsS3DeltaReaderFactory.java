@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Utils;
 import org.apache.hadoop.mapred.JobConf;
@@ -34,8 +36,9 @@ public class AwsS3DeltaReaderFactory extends DeltaReaderFactory {
             Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3);
 
     @Override
-    protected void configureJobConf(JobConf conf, Map<String, String> configuration) {
-        configureAwsS3HdfsJobConf(conf, configuration);
+    protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
+            throws CompilationException {
+        configureAwsS3HdfsJobConf(appCtx, conf, configuration);
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
@@ -34,7 +35,8 @@ public class GCSDeltaReaderFactory extends DeltaReaderFactory {
             Collections.singletonList(ExternalDataConstants.KEY_ADAPTER_NAME_GCS);
 
     @Override
-    protected void configureJobConf(JobConf conf, Map<String, String> configuration) throws AlgebricksException {
+    protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
+            throws AlgebricksException {
         GCSUtils.configureHdfsJobConf(conf, configuration);
     }
 

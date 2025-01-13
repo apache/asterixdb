@@ -39,6 +39,13 @@ public interface IExternalCredentialsCache {
     void updateCache(Map<String, String> configuration, Map<String, String> credentials);
 
     /**
+     * Deletes the cache for the provided entity name
+     *
+     * @param name name of the entity for which the credentials are to be deleted
+     */
+    void deleteCredentials(String name);
+
+    /**
      * Returns the name of the entity which the cached credentials belong to
      *
      * @param configuration configuration containing external collection details

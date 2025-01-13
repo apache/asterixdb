@@ -28,20 +28,28 @@ import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTa
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ACCESS_KEY_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_EXPIRED_TOKEN;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_INTERNAL_ERROR;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_METHOD_NOT_IMPLEMENTED;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_SLOW_DOWN;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.EXTERNAL_ID_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ACCESS_KEY_ID;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ANONYMOUS_ACCESS;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ANONYMOUS;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUMED_ROLE;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_ARN;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_EXTERNAL_ID;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_DURATION;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_ASSUME_ROLE_SESSION_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_CREDENTIAL_PROVIDER_KEY;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_INSTANCE_PROFILE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_PATH_STYLE_ACCESS;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_REGION;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_S3_CONNECTION_POOL_SIZE;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_S3_PROTOCOL;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SECRET_ACCESS_KEY;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SERVICE_END_POINT;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SESSION_TOKEN;
-import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_TEMP_ACCESS;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.HADOOP_SIMPLE;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.INSTANCE_PROFILE_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ROLE_ARN_FIELD_NAME;
@@ -64,7 +72,6 @@ import org.apache.asterix.common.external.IExternalCredentialsCache;
 import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
-import org.apache.asterix.external.util.HDFSUtils;
 import org.apache.hadoop.fs.s3a.Constants;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -94,12 +101,24 @@ import software.amazon.awssdk.services.sts.model.AssumeRoleResponse;
 import software.amazon.awssdk.services.sts.model.Credentials;
 
 public class S3AuthUtils {
+    enum AuthenticationType {
+        ANONYMOUS,
+        ARN,
+        INSTANCE_PROFILE,
+        ACCESS_KEYS,
+        BAD_AUTHENTICATION
+    }
+
     private S3AuthUtils() {
         throw new AssertionError("do not instantiate");
     }
 
     public static boolean isRetryableError(String errorCode) {
         return errorCode.equals(ERROR_INTERNAL_ERROR) || errorCode.equals(ERROR_SLOW_DOWN);
+    }
+
+    public static boolean isArnAssumedRoleExpiredToken(Map<String, String> configuration, String errorCode) {
+        return ERROR_EXPIRED_TOKEN.equals(errorCode) && getAuthenticationType(configuration) == AuthenticationType.ARN;
     }
 
     /**
@@ -119,7 +138,6 @@ public class S3AuthUtils {
 
         S3ClientBuilder builder = S3Client.builder();
         builder.region(region);
-        builder.crossRegionAccessEnabled(true);
         builder.credentialsProvider(credentialsProvider);
 
         // Validate the service endpoint if present
@@ -142,28 +160,26 @@ public class S3AuthUtils {
 
     public static AwsCredentialsProvider buildCredentialsProvider(IApplicationContext appCtx,
             Map<String, String> configuration) throws CompilationException {
-        String arnRole = configuration.get(ROLE_ARN_FIELD_NAME);
-        String externalId = configuration.get(EXTERNAL_ID_FIELD_NAME);
-        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
-        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
-        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
-
-        if (noAuth(configuration)) {
-            return AnonymousCredentialsProvider.create();
-        } else if (arnRole != null) {
-            return getTrustAccountCredentials(appCtx, configuration);
-        } else if (instanceProfile != null) {
-            return getInstanceProfileCredentials(configuration);
-        } else if (accessKeyId != null || secretAccessKey != null) {
-            return getAccessKeyCredentials(configuration);
-        } else {
-            if (externalId != null) {
-                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ROLE_ARN_FIELD_NAME,
-                        EXTERNAL_ID_FIELD_NAME);
-            } else {
-                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
-                        SESSION_TOKEN_FIELD_NAME);
-            }
+        AuthenticationType authenticationType = getAuthenticationType(configuration);
+        switch (authenticationType) {
+            case ANONYMOUS:
+                return AnonymousCredentialsProvider.create();
+            case ARN:
+                return getTrustAccountCredentials(appCtx, configuration);
+            case INSTANCE_PROFILE:
+                return getInstanceProfileCredentials(configuration);
+            case ACCESS_KEYS:
+                return getAccessKeyCredentials(configuration);
+            default:
+                // missing required creds, report correct error message
+                String externalId = configuration.get(EXTERNAL_ID_FIELD_NAME);
+                if (externalId != null) {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ROLE_ARN_FIELD_NAME,
+                            EXTERNAL_ID_FIELD_NAME);
+                } else {
+                    throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
+                            SESSION_TOKEN_FIELD_NAME);
+                }
         }
     }
 
@@ -175,6 +191,25 @@ public class S3AuthUtils {
             throw new CompilationException(S3_REGION_NOT_SUPPORTED, regionId);
         }
         return selectedRegion.get();
+    }
+
+    private static AuthenticationType getAuthenticationType(Map<String, String> configuration) {
+        String roleArn = configuration.get(ROLE_ARN_FIELD_NAME);
+        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
+        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
+        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
+
+        if (noAuth(configuration)) {
+            return AuthenticationType.ANONYMOUS;
+        } else if (roleArn != null) {
+            return AuthenticationType.ARN;
+        } else if (instanceProfile != null) {
+            return AuthenticationType.INSTANCE_PROFILE;
+        } else if (accessKeyId != null || secretAccessKey != null) {
+            return AuthenticationType.ACCESS_KEYS;
+        } else {
+            return AuthenticationType.BAD_AUTHENTICATION;
+        }
     }
 
     private static boolean noAuth(Map<String, String> configuration) {
@@ -327,64 +362,83 @@ public class S3AuthUtils {
         return null;
     }
 
+    public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf conf,
+            Map<String, String> configuration) throws CompilationException {
+        configureAwsS3HdfsJobConf(appCtx, conf, configuration, 0);
+    }
+
     /**
      * Builds the S3 client using the provided configuration
      *
+     * @param appCtx application context
      * @param configuration      properties
      * @param numberOfPartitions number of partitions in the cluster
      */
-    public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration) {
-        configureAwsS3HdfsJobConf(conf, configuration, 0);
-    }
-
-    public static void configureAwsS3HdfsJobConf(JobConf conf, Map<String, String> configuration,
-            int numberOfPartitions) {
-        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
-        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
-        String sessionToken = configuration.get(SESSION_TOKEN_FIELD_NAME);
+    public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf jobConf,
+            Map<String, String> configuration, int numberOfPartitions) throws CompilationException {
+        setHadoopCredentials(jobConf, configuration);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
-
-        //Disable caching S3 FileSystem
-        HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_S3_PROTOCOL);
-
-        /*
-         * Authentication Methods:
-         * 1- Anonymous: no accessKeyId and no secretAccessKey
-         * 2- Temporary: has to provide accessKeyId, secretAccessKey and sessionToken
-         * 3- Private: has to provide accessKeyId and secretAccessKey
-         */
-        if (accessKeyId == null) {
-            //Tells hadoop-aws it is an anonymous access
-            conf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ANONYMOUS_ACCESS);
+        Region region = validateAndGetRegion(configuration.get(REGION_FIELD_NAME));
+        jobConf.set(HADOOP_REGION, region.toString());
+        if (serviceEndpoint != null) {
+            // Validation of the URL should be done at hadoop-aws level
+            jobConf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
         } else {
-            conf.set(HADOOP_ACCESS_KEY_ID, accessKeyId);
-            conf.set(HADOOP_SECRET_ACCESS_KEY, secretAccessKey);
-            if (sessionToken != null) {
-                conf.set(HADOOP_SESSION_TOKEN, sessionToken);
-                //Tells hadoop-aws it is a temporary access
-                conf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_TEMP_ACCESS);
-            }
+            //Region is ignored and buckets could be found by the central endpoint
+            jobConf.set(HADOOP_SERVICE_END_POINT, Constants.CENTRAL_ENDPOINT);
         }
 
         /*
          * This is to allow S3 definition to have path-style form. Should always be true to match the current
          * way we access files in S3
          */
-        conf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
+        jobConf.set(HADOOP_PATH_STYLE_ACCESS, ExternalDataConstants.TRUE);
 
         /*
          * Set the size of S3 connection pool to be the number of partitions
          */
         if (numberOfPartitions != 0) {
-            conf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
+            jobConf.set(HADOOP_S3_CONNECTION_POOL_SIZE, String.valueOf(numberOfPartitions));
         }
+    }
 
-        if (serviceEndpoint != null) {
-            // Validation of the URL should be done at hadoop-aws level
-            conf.set(HADOOP_SERVICE_END_POINT, serviceEndpoint);
-        } else {
-            //Region is ignored and buckets could be found by the central endpoint
-            conf.set(HADOOP_SERVICE_END_POINT, Constants.CENTRAL_ENDPOINT);
+    /**
+     * Sets the credentials provider type and the credentials to hadoop based on the provided configuration
+     *
+     * @param jobConf hadoop job config
+     * @param configuration external details configuration
+     */
+    private static void setHadoopCredentials(JobConf jobConf, Map<String, String> configuration) {
+        AuthenticationType authenticationType = getAuthenticationType(configuration);
+        switch (authenticationType) {
+            case ANONYMOUS:
+                jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ANONYMOUS);
+                break;
+            case ARN:
+                jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ASSUMED_ROLE);
+                jobConf.set(HADOOP_ASSUME_ROLE_ARN, configuration.get(ROLE_ARN_FIELD_NAME));
+                jobConf.set(HADOOP_ASSUME_ROLE_EXTERNAL_ID, configuration.get(EXTERNAL_ID_FIELD_NAME));
+                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_NAME, "parquet-" + UUID.randomUUID());
+                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_DURATION, "15m");
+
+                // TODO: this assumes basic keys always, also support if we use InstanceProfile to assume a role
+                jobConf.set(HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY, HADOOP_SIMPLE);
+                jobConf.set(HADOOP_ACCESS_KEY_ID, configuration.get(ACCESS_KEY_ID_FIELD_NAME));
+                jobConf.set(HADOOP_SECRET_ACCESS_KEY, configuration.get(SECRET_ACCESS_KEY_FIELD_NAME));
+                break;
+            case INSTANCE_PROFILE:
+                jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_INSTANCE_PROFILE);
+                break;
+            case ACCESS_KEYS:
+                jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_SIMPLE);
+                jobConf.set(HADOOP_ACCESS_KEY_ID, configuration.get(ACCESS_KEY_ID_FIELD_NAME));
+                jobConf.set(HADOOP_SECRET_ACCESS_KEY, configuration.get(SECRET_ACCESS_KEY_FIELD_NAME));
+                if (configuration.get(SESSION_TOKEN_FIELD_NAME) != null) {
+                    jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_SESSION_TOKEN);
+                    jobConf.set(HADOOP_SESSION_TOKEN, configuration.get(SESSION_TOKEN_FIELD_NAME));
+                }
+                break;
+            case BAD_AUTHENTICATION:
         }
     }
 
@@ -477,7 +531,7 @@ public class S3AuthUtils {
         }
         if (isDeltaTable(configuration)) {
             try {
-                validateDeltaTableExists(configuration);
+                validateDeltaTableExists(appCtx, configuration);
             } catch (AlgebricksException e) {
                 throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, e);
             }

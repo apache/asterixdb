@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalCredentialsCache;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.external.util.ExternalDataConstants;
@@ -38,8 +39,12 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConcurrentMap<String, Pair<Span, Object>> cache = new ConcurrentHashMap<>();
+    private final int awsAssumeRoleDuration;
+    private final double refreshAwsAssumeRoleThreshold;
 
-    public ExternalCredentialsCache() {
+    public ExternalCredentialsCache(IApplicationContext appCtx) {
+        this.awsAssumeRoleDuration = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
+        this.refreshAwsAssumeRoleThreshold = appCtx.getExternalProperties().getAwsRefreshAssumeRoleThreshold();
     }
 
     @Override
@@ -57,6 +62,11 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equalsIgnoreCase(type)) {
             updateAwsCache(configuration, credentials);
         }
+    }
+
+    @Override
+    public void deleteCredentials(String name) {
+        cache.remove(name);
     }
 
     @Override
@@ -78,20 +88,19 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
     }
 
     private void doUpdateAwsCache(Map<String, String> configuration, AwsSessionCredentials credentials) {
-        // TODO(htowaileb): Set default expiration value
         String name = getName(configuration);
-        cache.put(name, Pair.of(Span.start(15, TimeUnit.MINUTES), credentials));
+        cache.put(name, Pair.of(Span.start(awsAssumeRoleDuration, TimeUnit.SECONDS), credentials));
         LOGGER.info("Received and cached new credentials for {}", name);
     }
 
     /**
-     * Refresh if the remaining time is half or less than the total expiration time
+     * Refresh if the remaining time is less than the configured refresh percentage
      *
      * @param span expiration span
-     * @return true if the remaining time is half or less than the total expiration time, false otherwise
+     * @return true if the remaining time is less than the configured refresh percentage, false otherwise
      */
     private boolean needsRefresh(Span span) {
-        // TODO(htowaileb): At what % (and should be configurable?) do we decide it's better to refresh credentials
-        return (double) span.remaining(TimeUnit.MINUTES) / span.getSpan(TimeUnit.MINUTES) < 0.5;
+        return (double) span.remaining(TimeUnit.SECONDS)
+                / span.getSpan(TimeUnit.SECONDS) < refreshAwsAssumeRoleThreshold;
     }
 }

@@ -23,6 +23,7 @@ public class S3Constants {
         throw new AssertionError("do not instantiate");
     }
 
+    // Authentication specific parameters
     public static final String REGION_FIELD_NAME = "region";
     public static final String INSTANCE_PROFILE_FIELD_NAME = "instanceProfile";
     public static final String ACCESS_KEY_ID_FIELD_NAME = "accessKeyId";
@@ -36,11 +37,15 @@ public class S3Constants {
     public static final String ERROR_INTERNAL_ERROR = "InternalError";
     public static final String ERROR_SLOW_DOWN = "SlowDown";
     public static final String ERROR_METHOD_NOT_IMPLEMENTED = "NotImplemented";
+    public static final String ERROR_EXPIRED_TOKEN = "ExpiredToken";
 
     /*
      * Hadoop-AWS
-     * AWS connectors for s3 and s3n are deprecated.
      */
+    public static final String HADOOP_ASSUME_ROLE_ARN = "fs.s3a.assumed.role.arn";
+    public static final String HADOOP_ASSUME_ROLE_EXTERNAL_ID = "fs.s3a.assumed.role.external.id";
+    public static final String HADOOP_ASSUME_ROLE_SESSION_NAME = "fs.s3a.assumed.role.session.name";
+    public static final String HADOOP_ASSUME_ROLE_SESSION_DURATION = "fs.s3a.assumed.role.session.duration";
     public static final String HADOOP_ACCESS_KEY_ID = "fs.s3a.access.key";
     public static final String HADOOP_SECRET_ACCESS_KEY = "fs.s3a.secret.key";
     public static final String HADOOP_SESSION_TOKEN = "fs.s3a.session.token";
@@ -58,10 +63,14 @@ public class S3Constants {
     //S3 used protocol
     public static final String HADOOP_S3_PROTOCOL = "s3a";
 
-    //Hadoop credentials provider key
+    // hadoop credentials provider key
     public static final String HADOOP_CREDENTIAL_PROVIDER_KEY = "fs.s3a.aws.credentials.provider";
-    //Anonymous credential provider
-    public static final String HADOOP_ANONYMOUS_ACCESS = "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider";
-    //Temporary credential provider
-    public static final String HADOOP_TEMP_ACCESS = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
+    public static final String HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY = "fs.s3a.assumed.role.credentials.provider";
+
+    // credential providers
+    public static final String HADOOP_ANONYMOUS = "org.apache.hadoop.fs.s3a.AnonymousAWSCredentialsProvider";
+    public static final String HADOOP_ASSUMED_ROLE = "org.apache.hadoop.fs.s3a.auth.AssumedRoleCredentialProvider";
+    public static final String HADOOP_INSTANCE_PROFILE = "org.apache.hadoop.fs.s3a.auth.IAMInstanceCredentialsProvider";
+    public static final String HADOOP_SIMPLE = "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider";
+    public static final String HADOOP_TEMPORARY = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider";
 }

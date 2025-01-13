@@ -222,17 +222,17 @@ public class GCSUtils {
         }
     }
 
+    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration)
+            throws AlgebricksException {
+        configureHdfsJobConf(conf, configuration, 0);
+    }
+
     /**
      * Builds the client using the provided configuration
      *
      * @param configuration      properties
      * @param numberOfPartitions number of partitions in the cluster
      */
-    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration)
-            throws AlgebricksException {
-        configureHdfsJobConf(conf, configuration, 0);
-    }
-
     public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration, int numberOfPartitions)
             throws AlgebricksException {
         String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);

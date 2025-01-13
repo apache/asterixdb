@@ -87,7 +87,9 @@ public class AwsS3ParquetReaderFactory extends HDFSDataSourceFactory {
         try {
             JobConf conf = prepareHDFSConf(serviceCtx, configuration, filterEvaluatorFactory);
             int numberOfPartitions = getPartitionConstraint().getLocations().length;
-            configureAwsS3HdfsJobConf(conf, configuration, numberOfPartitions);
+
+            IApplicationContext appCtx = (IApplicationContext) serviceCtx.getApplicationContext();
+            configureAwsS3HdfsJobConf(appCtx, conf, configuration, numberOfPartitions);
             configureHdfsConf(conf, configuration);
         } catch (SdkException | SdkBaseException ex) {
             throw new RuntimeDataException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
