@@ -25,6 +25,8 @@ import org.apache.asterix.runtime.evaluators.base.AbstractScalarFunctionDynamicD
 import org.apache.asterix.runtime.exceptions.TypeMismatchException;
 
 public abstract class AbstractGetValDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = 5267623277804669828L;
+
     public double getVal(byte[] bytes, int offset) throws TypeMismatchException {
         if (bytes[offset] == ATypeTag.SERIALIZED_DOUBLE_TYPE_TAG) {
             return ADoubleSerializerDeserializer.getDouble(bytes, offset + 1);

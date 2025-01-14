@@ -87,6 +87,9 @@ import org.apache.asterix.om.functions.IFunctionCollection;
 import org.apache.asterix.om.functions.IFunctionRegistrant;
 
 public class GeoFunctionRegistrant implements IFunctionRegistrant {
+
+    private static final long serialVersionUID = 5815308952562578644L;
+
     @Override
     public void register(IFunctionCollection fc) {
         //Geo functions

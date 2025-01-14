@@ -42,6 +42,7 @@ import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 import org.locationtech.jts.geom.Geometry;
 
 public abstract class AbstractSTDoubleGeometryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -4181892424621765426L;
 
     abstract protected Object evaluateOGCGeometry(Geometry geometry0, Geometry geometry1) throws HyracksDataException;
 

@@ -46,6 +46,7 @@ import org.apache.hyracks.util.string.UTF8StringUtil;
 import org.locationtech.jts.geom.Geometry;
 
 public abstract class AbstractSTSingleGeometryDescriptor extends AbstractScalarFunctionDynamicDescriptor {
+    private static final long serialVersionUID = -6601497277041936500L;
 
     abstract protected Object evaluateOGCGeometry(Geometry geometry) throws HyracksDataException;
 
