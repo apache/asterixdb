@@ -70,6 +70,11 @@ public class NetworkSecurityConfig implements INetworkSecurityConfig {
     }
 
     @Override
+    public boolean useMutualAuth() {
+        return false;
+    }
+
+    @Override
     public ClientAuth getClientAuth() {
         return ClientAuth.NONE;
     }

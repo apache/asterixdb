@@ -36,6 +36,13 @@ public interface INetworkSecurityConfig extends Serializable {
     boolean isSslEnabled();
 
     /**
+     * Indicates if any authentication being performed should mutual (e.g. mTLS, SCRAM-SHA)
+     *
+     * @return true if mutual auth should be used. Otherwise false.
+     */
+    boolean useMutualAuth();
+
+    /**
      * Indicates how to handle client authentication when ssl is enabled
      */
     ClientAuth getClientAuth();
