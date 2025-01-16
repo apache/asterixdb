@@ -152,6 +152,13 @@ public class AppendOnlyLinkedMetadataPageManager implements IMetadataPageManager
         metadataPages.clear();
     }
 
+    @Override
+    public void returnAllPages() {
+        for (ICachedPage page : metadataPages) {
+            bufferCache.returnPage(page, false);
+        }
+    }
+
     /**
      * For storage on append-only media (such as HDFS), the meta data page has to be written last.
      * However, some implementations still write the meta data to the front. To deal with this as well

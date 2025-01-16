@@ -61,6 +61,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     protected final IIndexBulkLoader[] bulkLoaders;
     protected ITupleFilter tupleFilter;
     protected FrameTupleReference frameTuple;
+    private boolean failed = false;
 
     public IndexBulkLoadOperatorNodePushable(IIndexDataflowHelperFactory indexHelperFactory, IHyracksTaskContext ctx,
             int partition, int[] fieldPermutation, float fillFactor, boolean verifyInput, long numElementsHint,
@@ -151,6 +152,7 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
+        failed = true;
     }
 
     protected void initializeBulkLoader(IIndex index, int indexId) throws HyracksDataException {
@@ -159,11 +161,27 @@ public class IndexBulkLoadOperatorNodePushable extends AbstractUnaryInputUnaryOu
     }
 
     private void closeBulkLoaders() throws HyracksDataException {
+        HyracksDataException failure = null;
         for (IIndexBulkLoader bulkLoader : bulkLoaders) {
             // bulkloader can be null if an exception is thrown before it is initialized.
-            if (bulkLoader != null) {
-                bulkLoader.end();
+            try {
+                if (bulkLoader != null) {
+                    if (failure == null && !failed) {
+                        bulkLoader.end();
+                    } else {
+                        bulkLoader.abort();
+                    }
+                }
+            } catch (HyracksDataException e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
             }
+        }
+        if (failure != null) {
+            throw failure;
         }
     }
 

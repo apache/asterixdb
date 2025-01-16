@@ -158,8 +158,18 @@ public abstract class AbstractLSMDiskComponent extends AbstractLSMComponent impl
      */
     @Override
     public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
-        ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
-        LOGGER.debug("marked {} as valid component with id {}", getIndex(), getId());
+        try {
+            ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
+            LOGGER.debug("marked {} as valid component with id {}", getIndex(), getId());
+        } catch (Exception e) {
+            returnPages();
+            throw e;
+        }
+    }
+
+    @Override
+    public void returnPages() {
+        ComponentUtils.returnPages(getMetadataHolder());
     }
 
     @Override

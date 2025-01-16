@@ -15,7 +15,9 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
+import org.apache.hyracks.api.exceptions.HyracksDataException;
+
 @FunctionalInterface
 public interface IFIFOPageWriter {
-    void write(ICachedPage page);
+    void write(ICachedPage page) throws HyracksDataException;
 }

@@ -21,22 +21,31 @@ package org.apache.hyracks.util;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 public class ExponentialRetryPolicy implements IRetryPolicy {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
+    public static final String CLOUD_UNSTABLE_MODE = "cloud.unstable.mode";
     private static final int DEFAULT_MAX_RETRIES = 10;
     private static final long DEFAULT_INITIAL_DELAY_IN_MILLIS = 100;
     private static final long DEFAULT_MAX_DELAY_IN_MILLIS = Long.MAX_VALUE - 1;
+    private static final int UNSTABLE_NUMBER_OF_RETRIES = 100;
     private final int maxRetries;
     private final long maxDelay;
     private int attempt = 0;
     private long delay;
+    private boolean printDebugLines = true;
 
     /**
      * Default constructor for ExponentialRetryPolicy.
      * Initializes with default max retries, initial delay, and max delay.
      */
     public ExponentialRetryPolicy() {
-        this(DEFAULT_MAX_RETRIES, DEFAULT_INITIAL_DELAY_IN_MILLIS, DEFAULT_MAX_DELAY_IN_MILLIS);
+        this(isUnstable() ? UNSTABLE_NUMBER_OF_RETRIES : DEFAULT_MAX_RETRIES, DEFAULT_INITIAL_DELAY_IN_MILLIS,
+                isUnstable() ? 0 : DEFAULT_MAX_DELAY_IN_MILLIS);
     }
 
     /**
@@ -71,13 +80,18 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
      */
     public ExponentialRetryPolicy(int maxRetries, long maxDelay) {
         this(maxRetries, DEFAULT_INITIAL_DELAY_IN_MILLIS, maxDelay);
+        printDebugLines = false;
     }
 
     @Override
     public boolean retry(Throwable failure) {
         if (attempt < maxRetries) {
             try {
-                TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextLong(1 + delay));
+                long sleepTime = ThreadLocalRandom.current().nextLong(1 + delay);
+                if (printDebugLines) {
+                    LOGGER.info("Retrying after {}ms, attempt: {}/{}", sleepTime, attempt + 1, maxRetries);
+                }
+                TimeUnit.MILLISECONDS.sleep(sleepTime);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -86,5 +100,9 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
             return true;
         }
         return false;
+    }
+
+    private static boolean isUnstable() {
+        return Boolean.getBoolean(CLOUD_UNSTABLE_MODE);
     }
 }

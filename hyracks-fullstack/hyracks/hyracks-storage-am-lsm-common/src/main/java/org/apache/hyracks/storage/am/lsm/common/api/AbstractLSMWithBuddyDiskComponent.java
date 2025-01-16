@@ -40,8 +40,19 @@ public abstract class AbstractLSMWithBuddyDiskComponent extends AbstractLSMWithB
 
     @Override
     public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
-        super.markAsValid(persist, callback);
-        ComponentUtils.markAsValid(getBuddyIndex(), persist, callback);
+        try {
+            super.markAsValid(persist, callback);
+            ComponentUtils.markAsValid(getBuddyIndex(), persist, callback);
+        } catch (HyracksDataException ex) {
+            returnPages();
+            throw ex;
+        }
+    }
+
+    @Override
+    public void returnPages() {
+        getBuddyIndex().getPageManager().returnAllPages();
+        super.returnPages();
     }
 
     @Override

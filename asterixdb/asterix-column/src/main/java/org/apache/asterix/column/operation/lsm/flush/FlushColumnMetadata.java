@@ -271,7 +271,8 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
 
     @Override
     public void abort() throws HyracksDataException {
-        DataInputStream input = new DataInputStream(new ByteArrayInputStream(serializedMetadata.getByteArray()));
+        DataInputStream input = new DataInputStream(new ByteArrayInputStream(serializedMetadata.getByteArray(),
+                serializedMetadata.getStartOffset(), serializedMetadata.getLength()));
         try {
             abort(input);
         } catch (IOException e) {
@@ -280,6 +281,7 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
     }
 
     private void abort(DataInputStream input) throws IOException {
+        input.skipBytes(OFFSETS_SIZE);
         level = -1;
         repeated = 0;
         changed = false;
@@ -290,6 +292,9 @@ public class FlushColumnMetadata extends AbstractColumnMetadata {
         fieldNamesDictionary.abort(input);
         definitionLevels.clear();
         root.abort(input, definitionLevels);
+        if (metaRoot != null) {
+            metaRoot.abort(input, definitionLevels);
+        }
     }
 
     public static void deserializeWriters(DataInput input, List<IColumnValuesWriter> writers,

@@ -47,8 +47,13 @@ public abstract class AbstractLSMWithBloomFilterDiskComponent extends AbstractLS
     public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
         // The order of forcing the dirty page to be flushed is critical. The
         // bloom filter must be always done first.
-        ComponentUtils.markAsValid(getBloomFilterBufferCache(), getBloomFilter(), persist);
-        super.markAsValid(persist, callback);
+        try {
+            ComponentUtils.markAsValid(getBloomFilterBufferCache(), getBloomFilter(), persist);
+            super.markAsValid(persist, callback);
+        } catch (HyracksDataException ex) {
+            returnPages();
+            throw ex;
+        }
     }
 
     @Override

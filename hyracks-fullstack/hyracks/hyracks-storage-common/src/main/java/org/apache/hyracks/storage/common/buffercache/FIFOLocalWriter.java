@@ -15,6 +15,8 @@
 
 package org.apache.hyracks.storage.common.buffercache;
 
+import org.apache.hyracks.api.exceptions.ErrorCode;
+import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.storage.common.buffercache.context.IBufferCacheWriteContext;
 import org.apache.hyracks.util.ExitUtil;
 import org.apache.logging.log4j.LogManager;
@@ -38,18 +40,21 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
         this.context = context;
     }
 
-    @SuppressWarnings("squid:S1181") // System must halt on all IO errors
+    @SuppressWarnings("squid:S1181")
     @Override
-    public void write(ICachedPage page) {
+    public void write(ICachedPage page) throws HyracksDataException {
         CachedPage cPage = (CachedPage) page;
         try {
             callback.beforeWrite(cPage);
             bufferCache.write(cPage, context);
             callback.afterWrite(cPage);
+        } catch (HyracksDataException e) {
+            LOGGER.warn("Failed to write page {}", cPage, e);
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
         } catch (Throwable th) {
             // Halt
-            LOGGER.error("Failed to write page {}", cPage, th);
-            ExitUtil.halt(ExitUtil.EC_IO_OPERATION_FAILED);
+            LOGGER.error("FIFOLocalWriter has encountered a fatal error", th);
+            ExitUtil.halt(ExitUtil.EC_ABNORMAL_TERMINATION);
         } finally {
             bufferCache.returnPage(cPage);
             if (DEBUG) {
@@ -57,5 +62,4 @@ public class FIFOLocalWriter implements IFIFOPageWriter {
             }
         }
     }
-
 }

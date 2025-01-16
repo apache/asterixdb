@@ -25,11 +25,15 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.asterix.cloud.CloudResettableInputStream;
 import org.apache.asterix.cloud.IWriteBufferProvider;
 import org.apache.asterix.cloud.clients.aws.s3.S3CloudClient;
+import org.apache.asterix.cloud.clients.google.gcs.GCSCloudClient;
+import org.apache.asterix.cloud.clients.google.gcs.GCSWriter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -39,7 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class UnstableCloudClient implements ICloudClient {
     // 10% error rate
-    private static final double ERROR_RATE = 0.1d;
+    public static final AtomicReference<Double> ERROR_RATE = new AtomicReference<>(0.11d);
     private static final Random RANDOM = new Random(0);
     private final ICloudClient cloudClient;
 
@@ -61,6 +65,9 @@ public class UnstableCloudClient implements ICloudClient {
     public ICloudWriter createWriter(String bucket, String path, IWriteBufferProvider bufferProvider) {
         if (cloudClient instanceof S3CloudClient) {
             return createUnstableWriter((S3CloudClient) cloudClient, bucket, path, bufferProvider);
+        } else if (cloudClient instanceof GCSCloudClient) {
+            return new UnstableGCSCloudWriter(cloudClient.createWriter(bucket, path, bufferProvider),
+                    cloudClient.getWriteBufferSize());
         }
         return cloudClient.createWriter(bucket, path, bufferProvider);
     }
@@ -138,8 +145,8 @@ public class UnstableCloudClient implements ICloudClient {
 
     private static void fail() throws HyracksDataException {
         double prob = RANDOM.nextInt(100) / 100.0d;
-        if (prob <= ERROR_RATE) {
-            throw HyracksDataException.create(new IOException("Simulated error"));
+        if (prob < ERROR_RATE.get()) {
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, new IOException("Simulated error"));
         }
     }
 
@@ -148,6 +155,63 @@ public class UnstableCloudClient implements ICloudClient {
         ICloudBufferedWriter bufferedWriter =
                 new UnstableCloudBufferedWriter(cloudClient.createBufferedWriter(bucket, path));
         return new CloudResettableInputStream(bufferedWriter, bufferProvider);
+    }
+
+    /**
+     * An unstable cloud writer that mimics the functionality of {@link GCSWriter}
+     */
+    private static class UnstableGCSCloudWriter implements ICloudWriter {
+        private final ICloudWriter writer;
+        private final int writeBufferSize;
+
+        UnstableGCSCloudWriter(ICloudWriter writer, int writeBufferSize) {
+            this.writer = writer;
+            this.writeBufferSize = writeBufferSize;
+        }
+
+        @Override
+        public int write(ByteBuffer header, ByteBuffer page) throws HyracksDataException {
+            return write(header) + write(page);
+        }
+
+        @Override
+        public int write(ByteBuffer page) throws HyracksDataException {
+            if (position() == 0) {
+                fail();
+            }
+            long uploadsToBeTriggered =
+                    ((position() + page.remaining()) / writeBufferSize) - (position() / writeBufferSize);
+            while (uploadsToBeTriggered-- > 0) {
+                fail();
+            }
+            return writer.write(page);
+        }
+
+        @Override
+        public void write(int b) throws HyracksDataException {
+            write(ByteBuffer.wrap(new byte[] { (byte) b }));
+        }
+
+        @Override
+        public int write(byte[] b, int off, int len) throws HyracksDataException {
+            return write(ByteBuffer.wrap(b, off, len));
+        }
+
+        @Override
+        public long position() {
+            return writer.position();
+        }
+
+        @Override
+        public void finish() throws HyracksDataException {
+            fail();
+            writer.finish();
+        }
+
+        @Override
+        public void abort() throws HyracksDataException {
+            writer.abort();
+        }
     }
 
     private static class UnstableCloudBufferedWriter implements ICloudBufferedWriter {

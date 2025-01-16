@@ -137,4 +137,9 @@ public interface ILSMDiskComponent extends ILSMComponent {
     ILSMDiskComponentBulkLoader createBulkLoader(ILSMIOOperation operation, float fillFactor, boolean verifyInput,
             long numElementsHint, boolean checkIfEmptyIndex, boolean withFilter, boolean cleanupEmptyComponent,
             IPageWriteCallback callback) throws HyracksDataException;
+
+    /**
+     * Returns all pages of the component to the buffer cache
+     */
+    void returnPages();
 }

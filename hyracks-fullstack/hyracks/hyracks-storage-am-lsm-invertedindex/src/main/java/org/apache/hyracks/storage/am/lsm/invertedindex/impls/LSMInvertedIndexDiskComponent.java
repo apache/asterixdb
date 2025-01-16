@@ -105,17 +105,22 @@ public class LSMInvertedIndexDiskComponent extends AbstractLSMWithBuddyDiskCompo
 
     @Override
     public void markAsValid(boolean persist, IPageWriteFailureCallback callback) throws HyracksDataException {
-        ComponentUtils.markAsValid(getBloomFilterBufferCache(), getBloomFilter(), persist);
+        try {
+            ComponentUtils.markAsValid(getBloomFilterBufferCache(), getBloomFilter(), persist);
 
-        // Flush inverted index second.
-        invIndex.getBufferCache().force((invIndex).getInvListsFileId(), true);
-        ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
-        if (!callback.hasFailed()) {
-            // Flush deleted keys BTree.
-            ComponentUtils.markAsValid(getBuddyIndex(), persist, callback);
-        }
-        if (callback.hasFailed()) {
-            throw HyracksDataException.create(callback.getFailure());
+            // Flush inverted index second.
+            invIndex.getBufferCache().force((invIndex).getInvListsFileId(), true);
+            ComponentUtils.markAsValid(getMetadataHolder(), persist, callback);
+            if (!callback.hasFailed()) {
+                // Flush deleted keys BTree.
+                ComponentUtils.markAsValid(getBuddyIndex(), persist, callback);
+            }
+            if (callback.hasFailed()) {
+                throw HyracksDataException.create(callback.getFailure());
+            }
+        } catch (HyracksDataException ex) {
+            returnPages();
+            throw ex;
         }
     }
 

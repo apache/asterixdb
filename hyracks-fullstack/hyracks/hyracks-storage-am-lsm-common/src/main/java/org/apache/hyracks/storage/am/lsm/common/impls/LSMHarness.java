@@ -266,7 +266,7 @@ public class LSMHarness implements ILSMHarness {
             if (inactiveMemoryComponentsToBeCleanedUp != null) {
                 cleanupInactiveMemoryComponents(inactiveMemoryComponentsToBeCleanedUp);
             }
-            if (opType == LSMOperationType.FLUSH) {
+            if (opType == LSMOperationType.FLUSH && !failedOperation) {
                 ILSMMemoryComponent flushingComponent = (ILSMMemoryComponent) ctx.getComponentHolder().get(0);
                 // We must call flushed without synchronizing on opTracker to avoid deadlocks
                 flushingComponent.flushed();
@@ -575,6 +575,7 @@ public class LSMHarness implements ILSMHarness {
         // if the operation failed, we need to cleanup files
         if (operation.getStatus() == LSMIOOperationStatus.FAILURE) {
             operation.cleanup(lsmIndex.getBufferCache());
+            operation.getCallback().afterFailure(operation);
         }
     }
 

@@ -59,6 +59,12 @@ public interface ILSMIOOperationCallback {
     void afterFinalize(ILSMIOOperation operation) throws HyracksDataException;
 
     /**
+     * This method is called on an IO operation after the operation fails
+     */
+    default void afterFailure(ILSMIOOperation operation) {
+    }
+
+    /**
      * This method is called after the schduler is done with the IO operation
      * For operation that are not scheduled, this call is skipped
      *

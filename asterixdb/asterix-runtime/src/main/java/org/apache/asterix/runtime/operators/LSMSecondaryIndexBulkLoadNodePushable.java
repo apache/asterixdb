@@ -57,6 +57,7 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
 
     private LSMIndexDiskComponentBulkLoader componentBulkLoader;
     private int currentComponentPos = -1;
+    private boolean failed = false;
 
     public LSMSecondaryIndexBulkLoadNodePushable(IHyracksTaskContext ctx, int partition, RecordDescriptor inputRecDesc,
             IIndexDataflowHelperFactory primaryIndexHelperFactory,
@@ -98,7 +99,7 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
     public void close() throws HyracksDataException {
         HyracksDataException closeException = null;
         try {
-            endCurrentComponent();
+            endOrAbortCurrentComponent();
         } catch (HyracksDataException e) {
             closeException = e;
         }
@@ -151,6 +152,7 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
     @Override
     public void fail() throws HyracksDataException {
         writer.fail();
+        failed = true;
     }
 
     @Override
@@ -177,15 +179,22 @@ public class LSMSecondaryIndexBulkLoadNodePushable extends AbstractLSMSecondaryI
         }
     }
 
-    private void endCurrentComponent() throws HyracksDataException {
+    private void endOrAbortCurrentComponent() throws HyracksDataException {
         if (componentBulkLoader != null) {
-            componentBulkLoader.end();
-            componentBulkLoader = null;
+            try {
+                if (!failed) {
+                    componentBulkLoader.end();
+                } else {
+                    componentBulkLoader.abort();
+                }
+            } finally {
+                componentBulkLoader = null;
+            }
         }
     }
 
     private void loadNewComponent(int componentPos) throws HyracksDataException {
-        endCurrentComponent();
+        endOrAbortCurrentComponent(); // This should never call componentBulkLoader.abort()
         int numTuples = getNumDeletedTuples(componentPos);
         ILSMDiskComponent primaryComponent = primaryIndex.getDiskComponents().get(componentPos);
         Map<String, Object> parameters = new HashMap<>();

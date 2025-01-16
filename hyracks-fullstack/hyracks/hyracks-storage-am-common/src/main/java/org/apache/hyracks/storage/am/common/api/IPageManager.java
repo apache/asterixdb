@@ -49,6 +49,12 @@ public interface IPageManager {
     void close(IPageWriteFailureCallback failureCallback) throws HyracksDataException;
 
     /**
+     * Return all the pages from the page manager
+     */
+    default void returnAllPages() {
+    }
+
+    /**
      * Create a metadata frame to be used for reading and writing to metadata pages
      *
      * @return a new metadata frame

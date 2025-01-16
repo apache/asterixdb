@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.ICloudWriter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -71,15 +72,15 @@ public class GCSWriter implements ICloudWriter {
         while (uploadsToBeTriggered-- > 0) {
             profiler.objectMultipartUpload();
         }
-        setUploadId();
 
         int written = 0;
         try {
+            setUploadId();
             while (page.hasRemaining()) {
                 written += writer.write(page);
             }
         } catch (IOException | RuntimeException e) {
-            throw HyracksDataException.create(e);
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
         }
 
         writtenBytes += written;
@@ -104,13 +105,14 @@ public class GCSWriter implements ICloudWriter {
     @Override
     public void finish() throws HyracksDataException {
         guardian.checkWriteAccess(bucket, path);
-        setUploadId();
         profiler.objectMultipartUpload();
         try {
+            setUploadId();
+
             writer.close();
             writer = null;
         } catch (IOException | RuntimeException e) {
-            throw HyracksDataException.create(e);
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
         }
         log("FINISHED");
     }

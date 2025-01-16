@@ -499,11 +499,13 @@ public class BufferCache implements IBufferCacheInternal, ILifeCycleComponent, I
         synchronized (cachedPages) {
             for (ICachedPageInternal internalPage : cachedPages) {
                 CachedPage c = (CachedPage) internalPage;
-                if (c.confiscated() || c.latch.getReadLockCount() != 0 || c.latch.getWriteHoldCount() != 0) {
-                    return false;
-                }
-                if (c.valid) {
-                    reachableDpids.add(c.dpid);
+                if (c != null) {
+                    if (c.confiscated() || c.latch.getReadLockCount() != 0 || c.latch.getWriteHoldCount() != 0) {
+                        return false;
+                    }
+                    if (c.valid) {
+                        reachableDpids.add(c.dpid);
+                    }
                 }
             }
         }
