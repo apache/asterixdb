@@ -28,6 +28,7 @@ import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTa
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ACCESS_KEY_ID_FIELD_NAME;
+import static org.apache.asterix.external.util.aws.s3.S3Constants.CROSS_REGION_FIELD_NAME;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_EXPIRED_TOKEN;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_INTERNAL_ERROR;
 import static org.apache.asterix.external.util.aws.s3.S3Constants.ERROR_METHOD_NOT_IMPLEMENTED;
@@ -134,10 +135,12 @@ public class S3AuthUtils {
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
 
         Region region = validateAndGetRegion(regionId);
+        boolean crossRegion = validateAndGetCrossRegion(configuration.get(CROSS_REGION_FIELD_NAME));
         AwsCredentialsProvider credentialsProvider = buildCredentialsProvider(appCtx, configuration);
 
         S3ClientBuilder builder = S3Client.builder();
         builder.region(region);
+        builder.crossRegionAccessEnabled(crossRegion);
         builder.credentialsProvider(credentialsProvider);
 
         // Validate the service endpoint if present
@@ -210,6 +213,16 @@ public class S3AuthUtils {
         } else {
             return AuthenticationType.BAD_AUTHENTICATION;
         }
+    }
+
+    public static boolean validateAndGetCrossRegion(String crossRegion) throws CompilationException {
+        if (crossRegion == null) {
+            return false;
+        }
+        if (!"true".equalsIgnoreCase(crossRegion) && !"false".equalsIgnoreCase(crossRegion)) {
+            throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, CROSS_REGION_FIELD_NAME, "true, false");
+        }
+        return Boolean.parseBoolean(crossRegion);
     }
 
     private static boolean noAuth(Map<String, String> configuration) {
