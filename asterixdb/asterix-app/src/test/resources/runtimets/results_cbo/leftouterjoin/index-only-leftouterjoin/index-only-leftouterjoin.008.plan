@@ -1,16 +1,16 @@
-distribute result [$$52] [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
+distribute result [$$52] [cardinality: 6.0, op-cost: 0.0, total-cost: 39.51]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
+  exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 39.51]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] project: [$$52] [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
+    assign [$$52] <- [{"t1_id": $$73, "t2_id": $$54}] project: [$$52] [cardinality: 6.0, op-cost: 0.0, total-cost: 39.51]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 30.0]
+      exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 39.51]
       -- SORT_MERGE_EXCHANGE [$$73(ASC), $$54(ASC) ]  |PARTITIONED|
-        order (ASC, $$73) (ASC, $$54) [cardinality: 4.0, op-cost: 8.0, total-cost: 30.0]
+        order (ASC, $$73) (ASC, $$54) [cardinality: 6.0, op-cost: 15.51, total-cost: 39.51]
         -- STABLE_SORT [$$73(ASC), $$54(ASC)]  |PARTITIONED|
-          exchange [cardinality: 4.0, op-cost: 0.0, total-cost: 22.0]
+          exchange [cardinality: 6.0, op-cost: 0.0, total-cost: 24.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            select ($$74) project: [$$73, $$54] [cardinality: 4.0, op-cost: 12.0, total-cost: 22.0]
+            select ($$74) project: [$$73, $$54] [cardinality: 6.0, op-cost: 14.0, total-cost: 24.0]
             -- STREAM_SELECT  |PARTITIONED|
               window-aggregate [$$74] <- [win-mark-first-missing-impl($$54)] partition [$$73] order (DESC, $$54) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
               -- WINDOW_STREAM  |PARTITIONED|

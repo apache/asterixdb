@@ -1,20 +1,20 @@
-distribute result [$$37] [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+distribute result [$$37] [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+  exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    limit 2 [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+    limit 2 [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
     -- STREAM_LIMIT  |UNPARTITIONED|
-      exchange [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+      exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-        assign [$$37] <- [{"dblpid": $$38}] project: [$$37] [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+        assign [$$37] <- [{"dblpid": $$38}] project: [$$37] [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
         -- ASSIGN  |PARTITIONED|
-          limit 2 [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+          limit 2 [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
           -- STREAM_LIMIT  |PARTITIONED|
-            project ([$$38]) [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+            project ([$$38]) [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 63.37, op-cost: 0.0, total-cost: 308.0]
+              exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 308.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (eq($$38, $$41)) [cardinality: 63.37, op-cost: 104.0, total-cost: 308.0]
+                join (eq($$38, $$41)) [cardinality: 100.0, op-cost: 104.0, total-cost: 308.0]
                 -- HYBRID_HASH_JOIN [$$38][$$41]  |PARTITIONED|
                   exchange [cardinality: 100.0, op-cost: 0.0, total-cost: 100.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

@@ -1,16 +1,16 @@
-distribute result [$$51] [cardinality: 159.84, op-cost: 0.0, total-cost: 1777.06]
+distribute result [$$51] [cardinality: 166.67, op-cost: 0.0, total-cost: 1840.73]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 159.84, op-cost: 0.0, total-cost: 1777.06]
+  exchange [cardinality: 166.67, op-cost: 0.0, total-cost: 1840.73]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 159.84, op-cost: 0.0, total-cost: 1777.06]
+    assign [$$51] <- [{"n_nationkey": $$58, "s_nationkey": $$56, "c_nationkey": $$55}] project: [$$51] [cardinality: 166.67, op-cost: 0.0, total-cost: 1840.73]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 159.84, op-cost: 0.0, total-cost: 1777.06]
+      exchange [cardinality: 166.67, op-cost: 0.0, total-cost: 1840.73]
       -- SORT_MERGE_EXCHANGE [$$58(ASC), $$56(ASC), $$55(ASC) ]  |PARTITIONED|
-        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 159.84, op-cost: 1170.11, total-cost: 1777.06]
+        order (ASC, $$58) (ASC, $$56) (ASC, $$55) [cardinality: 166.67, op-cost: 1230.17, total-cost: 1840.73]
         -- STABLE_SORT [$$58(ASC), $$56(ASC), $$55(ASC)]  |PARTITIONED|
-          exchange [cardinality: 159.84, op-cost: 0.0, total-cost: 606.95]
+          exchange [cardinality: 166.67, op-cost: 0.0, total-cost: 610.56]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            join (eq($$55, $$58)) [cardinality: 159.84, op-cost: 175.97, total-cost: 606.95]
+            join (eq($$55, $$58)) [cardinality: 166.67, op-cost: 177.78, total-cost: 610.56]
             -- HYBRID_HASH_JOIN [$$55][$$58]  |PARTITIONED|
               exchange [cardinality: 150.0, op-cost: 150.0, total-cost: 300.0]
               -- HASH_PARTITION_EXCHANGE [$$55]  |PARTITIONED|
@@ -26,9 +26,9 @@ distribute result [$$51] [cardinality: 159.84, op-cost: 0.0, total-cost: 1777.06
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-              exchange [cardinality: 25.97, op-cost: 25.97, total-cost: 130.97]
+              exchange [cardinality: 27.78, op-cost: 27.78, total-cost: 132.78]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (eq($$56, $$58)) [cardinality: 25.97, op-cost: 35.0, total-cost: 105.0]
+                join (eq($$56, $$58)) [cardinality: 27.78, op-cost: 35.0, total-cost: 105.0]
                 -- HYBRID_HASH_JOIN [$$58][$$56]  |PARTITIONED|
                   exchange [cardinality: 25.0, op-cost: 25.0, total-cost: 50.0]
                   -- HASH_PARTITION_EXCHANGE [$$58]  |PARTITIONED|

@@ -195,8 +195,28 @@ public class Stats {
             }
 
             double estDistinctCardinalityFromSample = findPredicateCardinality(result, true);
-            double numDistincts = distinctEstimator2(estDistinctCardinalityFromSample, index);
-            return 1.0 / numDistincts; // this is the expected selectivity for joins.
+            if (estDistinctCardinalityFromSample == 0) {
+                estDistinctCardinalityFromSample = 1; // just in case
+            }
+            Index.SampleIndexDetails details = (Index.SampleIndexDetails) index.getIndexDetails();
+            double numDistincts;
+            // if the table is smaller than the sample size, there is no need to use the estimator
+            //                                            getSampleCardinalityTarget() equals 1063 or 4252 or 17008
+            if (details.getSourceCardinality() <= details.getSampleCardinalityTarget()) {
+                numDistincts = estDistinctCardinalityFromSample;
+            } else { // when the number of distincts is smaller than approx 25% of the sample size, then we do not
+                         // then we do not need to call the estimator. This is a good heuristic. This was obtained by looking at the graph
+                     // of d = D ( 1 - e^(-getSampleCardinalityTarget/D) ; d = estDistinctCardinalityFromSample; D = actual number of distincts
+                if (estDistinctCardinalityFromSample <= 0.25 * details.getSampleCardinalityTarget()) {
+                    numDistincts = estDistinctCardinalityFromSample;
+                } else {
+                    numDistincts = secondDistinctEstimator(estDistinctCardinalityFromSample, index);
+                }
+            }
+            if (numDistincts > details.getSourceCardinality()) {
+                numDistincts = details.getSourceCardinality(); // cannot exceed table cardinality
+            }
+            return 1.0 / numDistincts; // this is the expected selectivity for joins for Fk-PK and Fk-Fk joins
         }
     }
 
@@ -424,6 +444,17 @@ public class Stats {
         }
     }
 
+    protected void issueWarning(double sampleCard, DataSourceScanOperator scanOp) {
+        if (sampleCard == 0) {
+            sampleCard = 1;
+            IWarningCollector warningCollector = optCtx.getWarningCollector();
+            if (warningCollector.shouldWarn()) {
+                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
+                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
+            }
+        }
+    }
+
     protected double findSelectivityForThisPredicate(SelectOperator selOp, AbstractFunctionCallExpression exp,
             boolean arrayIndex) throws AlgebricksException {
         // replace the SelOp.condition with the new exp and replace it at the end
@@ -444,14 +475,7 @@ public class Stats {
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        if (sampleCard == 0) {
-            sampleCard = 1;
-            IWarningCollector warningCollector = optCtx.getWarningCollector();
-            if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
-                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-            }
-        }
+        issueWarning(sampleCard, scanOp);
 
         // replace the dataScanSourceOperator with the sampling source
         SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
@@ -655,8 +679,41 @@ public class Stats {
         }
         return index;
     }
-    // plan we need to generate in this routine.
 
+    // creates assign [$$79] <- [{"$1": $$73, "$2": $$74, "$3": $$75, "$4": $$76, "$5": $$77, "$6": $$78}] and calls sampling query
+    protected List<List<IAObject>> helperFunction(IOptimizationContext newCtx, AggregateOperator newAggOp)
+            throws AlgebricksException {
+
+        Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
+        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx); // is this really needed??
+
+        List<MutableObject> arr = createMutableObjectArray(newAggOp.getVariables());
+        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
+                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
+        for (int i = 0; i < arr.size(); i++) {
+            f.getArguments().add(arr.get(i));
+        }
+
+        LogicalVariable newVar = newCtx.newVar();
+        AssignOperator assignOp = new AssignOperator(newVar, new MutableObject<>(f));
+        assignOp.getInputs().add(new MutableObject<>(newAggOp));
+        ProjectOperator pOp = new ProjectOperator(newVar);
+        pOp.getInputs().add(new MutableObject<>(assignOp));
+
+        Mutable<ILogicalOperator> newpOpRef = new MutableObject<>(pOp);
+
+        OperatorPropertiesUtil.typeOpRec(newpOpRef, newCtx);
+
+        if (LOGGER.isTraceEnabled()) {
+            String viewInPlan = new ALogicalPlanImpl(newpOpRef).toString(); //useful when debugging
+            LOGGER.trace("viewInPlan");
+            LOGGER.trace(viewInPlan);
+        }
+        LOGGER.info("*** calling sample query***");
+        return AnalysisUtil.runQuery(newpOpRef, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+    }
+
+    // plan we need to generate in this routine.
     //  project ([$$36])                                 add here
     //    assign [$$36] <- [{"$1": $$39}]                add here
     //      aggregate [$$39] <- [agg-sql-count($$34)]    add here
@@ -688,14 +745,7 @@ public class Stats {
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCard = idxDetails.getSourceCardinality();
         double sampleCard = Math.min(idxDetails.getSampleCardinalityTarget(), origDatasetCard);
-        if (sampleCard == 0) {
-            sampleCard = 1;
-            IWarningCollector warningCollector = optCtx.getWarningCollector();
-            if (warningCollector.shouldWarn()) {
-                warningCollector.warn(Warning.of(scanOp.getSourceLocation(),
-                        org.apache.asterix.common.exceptions.ErrorCode.SAMPLE_HAS_ZERO_ROWS));
-            }
-        }
+        issueWarning(sampleCard, scanOp);
 
         // replace the dataScanSourceOperator with the sampling source
         SampleDataSource sampledatasource = joinEnum.getSampleDataSource(scanOp);
@@ -740,35 +790,8 @@ public class Stats {
         AggregateOperator newAggOp = new AggregateOperator(aggVarList, aggExprList);
         newAggOp.getInputs().add(new MutableObject<>(distOp));
 
-        // now add assign [$$36] <- [{"$1": $$39}]   on top of newAggOp
-        Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
-        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx); // is this really needed??
-
-        List<MutableObject> arr = createMutableObjectArray(newAggOp.getVariables());
-        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
-        for (int i = 0; i < arr.size(); i++) {
-            f.getArguments().add(arr.get(i));
-        }
-
-        LogicalVariable newVar = newCtx.newVar();
-        AssignOperator assignOp = new AssignOperator(newVar, new MutableObject<>(f));
-        assignOp.getInputs().add(new MutableObject<>(newAggOp));
-        ProjectOperator pOp = new ProjectOperator(newVar);
-        pOp.getInputs().add(new MutableObject<>(assignOp));
-
-        Mutable<ILogicalOperator> newpOpRef = new MutableObject<>(pOp);
-
-        OperatorPropertiesUtil.typeOpRec(newpOpRef, newCtx);
-
-        LOGGER.info("***returning from sample query***");
-
-        if (LOGGER.isTraceEnabled()) {
-            String viewInPlan = new ALogicalPlanImpl(newpOpRef).toString(); //useful when debugging
-            LOGGER.trace("viewInPlan");
-            LOGGER.trace(viewInPlan);
-        }
-        return AnalysisUtil.runQuery(newpOpRef, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+        // now add assign [$$36] <- [{"$1": $$39}]   on top of newAggOp; use the HelperFunction and call Sampling query
+        return helperFunction(newCtx, newAggOp);
     }
 
     // This one gets the cardinality and also projection sizes
@@ -857,32 +880,7 @@ public class Stats {
         // add assign [$$79] <- [{"$1": $$73, "$2": $$74, "$3": $$75, "$4": $$76, "$5": $$77, "$6": $$78}]
         AggregateOperator newAggOp = new AggregateOperator(newVars2, aggExprList);
         newAggOp.getInputs().add(new MutableObject<>(assignOp));
-        Mutable<ILogicalOperator> newAggOpRef = new MutableObject<>(newAggOp);
-        OperatorPropertiesUtil.typeOpRec(newAggOpRef, newCtx); // is this really needed??
-        List<MutableObject> arr = createMutableObjectArray(newAggOp.getVariables());
-        AbstractFunctionCallExpression f = new ScalarFunctionCallExpression(
-                FunctionUtil.getFunctionInfo(BuiltinFunctions.OPEN_RECORD_CONSTRUCTOR));
-        for (int i = 0; i < arr.size(); i++) {
-            f.getArguments().add(arr.get(i));
-        }
-
-        newVar = newCtx.newVar();
-        assignOp = new AssignOperator(newVar, new MutableObject<>(f));
-        assignOp.getInputs().add(new MutableObject<>(newAggOp));
-        ProjectOperator pOp = new ProjectOperator(newVar);
-        pOp.getInputs().add(new MutableObject<>(assignOp));
-
-        Mutable<ILogicalOperator> Ref = new MutableObject<>(pOp);
-
-        OperatorPropertiesUtil.typeOpRec(Ref, newCtx);
-        if (LOGGER.isTraceEnabled()) {
-            String viewInPlan = new ALogicalPlanImpl(Ref).toString(); //useful when debugging
-            LOGGER.trace("sampling query before calling runQuery");
-            LOGGER.trace(viewInPlan);
-        }
-
-        LOGGER.info("***returning from projection sample query***");
-        return AnalysisUtil.runQuery(Ref, Arrays.asList(newVar), newCtx, IRuleSetFactory.RuleSetKind.SAMPLING);
+        return helperFunction(newCtx, newAggOp);
     }
 
     private List<MutableObject> createMutableObjectArray(List<LogicalVariable> vars) {
@@ -984,7 +982,10 @@ public class Stats {
         return x;
     }
 
-    private double distinctEstimator2(double estDistinctCardinalityFromSample, Index index) throws AlgebricksException {
+    // This estimator use the fact that the equation d = D (1 - e^n/D) is a 1-1 functions. So given d, it can find D using a
+    // binary search, thus avoiding the Newton Raphson iteration which is more complex.
+    private double secondDistinctEstimator(double estDistinctCardinalityFromSample, Index index)
+            throws AlgebricksException {
 
         Index.SampleIndexDetails idxDetails = (Index.SampleIndexDetails) index.getIndexDetails();
         double origDatasetCardinality = idxDetails.getSourceCardinality();
@@ -1004,6 +1005,9 @@ public class Stats {
                 Dmin = D + 1;
             else
                 Dmax = D - 1;
+        }
+        if (D == 0.0) { // just in case!
+            D = 1.0;
         }
         return D;
     }
