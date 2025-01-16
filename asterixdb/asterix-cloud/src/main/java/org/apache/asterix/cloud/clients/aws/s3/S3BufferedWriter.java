@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.asterix.cloud.clients.ICloudBufferedWriter;
 import org.apache.asterix.cloud.clients.ICloudGuardian;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
+import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
 import org.apache.logging.log4j.LogManager;
@@ -131,7 +132,7 @@ public class S3BufferedWriter implements ICloudBufferedWriter {
         try {
             s3Client.completeMultipartUpload(request);
         } catch (Exception e) {
-            throw HyracksDataException.create(e);
+            throw HyracksDataException.create(ErrorCode.FAILED_IO_OPERATION, e);
         }
     }
 

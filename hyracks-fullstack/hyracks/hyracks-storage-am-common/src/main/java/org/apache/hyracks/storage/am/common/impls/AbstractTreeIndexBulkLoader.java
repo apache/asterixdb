@@ -130,6 +130,7 @@ public abstract class AbstractTreeIndexBulkLoader extends PageWriteFailureCallba
             }
         }
         releasedLatches = true;
+        freePageManager.returnAllPages();
     }
 
     @Override

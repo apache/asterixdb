@@ -21,7 +21,7 @@ package org.apache.hyracks.storage.am.lsm.common.impls;
 
 import org.apache.hyracks.api.io.FileReference;
 
-public final class LSMComponentFileReferences {
+public class LSMComponentFileReferences {
 
     // The FileReference for the index that is used for inserting records of the component. For instance, this will be the FileReference of the RTree in one component of the LSM-RTree.
     private final FileReference insertIndexFileReference;

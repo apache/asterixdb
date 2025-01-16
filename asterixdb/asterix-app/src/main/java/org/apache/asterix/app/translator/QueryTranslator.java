@@ -480,7 +480,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
                             this.jobFlags.add(JobFlag.PROFILE_RUNTIME);
                         }
-                        handleLoadStatement(metadataProvider, stmt, hcc);
+                        handleLoadStatement(metadataProvider, stmt, hcc, requestParameters);
                         break;
                     case COPY_FROM:
                         if (stats.getProfileType() == Stats.ProfileType.FULL) {
@@ -4022,8 +4022,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
         }
     }
 
-    protected void handleLoadStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc)
-            throws Exception {
+    protected void handleLoadStatement(MetadataProvider metadataProvider, Statement stmt, IHyracksClientConnection hcc,
+            IRequestParameters requestParameters) throws Exception {
         LoadStatement loadStmt = (LoadStatement) stmt;
         String datasetName = loadStmt.getDatasetName();
         metadataProvider.validateDatabaseObjectName(loadStmt.getNamespace(), datasetName, loadStmt.getSourceLocation());

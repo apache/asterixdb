@@ -494,7 +494,7 @@
           **/SqlppExecutionWithCancellationTest.java,**/DmlTest.java,**/RepeatedTest.java,**/SqlppExecutionTest.java,
           **/SqlppExecutionColumnTest.java,**/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/Podman*.java,
           **/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java,**/CloudPythonTest.java,
-          **/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,
+          **/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,**/GCSCloudStorageUnstableTest,
           **/AzureBlobStorageExternalDatasetOnePartitionTest.java,**/SqlppSinglePointLookupExecutionTest.java,
           **/Atomic*.java, **/AwsS3*.java, **/*SqlppHdfs*.java, **/*RQGTest.java, **/*RQJTest.java
         </test.excludes>
@@ -620,7 +620,7 @@
       <id>asterix-gerrit-cloud-nons3-tests</id>
       <properties>
         <test.includes>
-          **/CloudStorageGCSTest.java, **/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,
+          **/GCSCloudStorageUnstableTest.java,**/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,
           **/AzureBlobStorageExternalDatasetOnePartitionTest.java,**/CloudStorageUnstableTest.java, **/*SqlppHdfs*.java
         </test.includes>
         <failIfNoTests>false</failIfNoTests>

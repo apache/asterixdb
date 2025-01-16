@@ -583,7 +583,12 @@ public abstract class AbstractLSMIndex implements ILSMIndex {
             throws HyracksDataException {
         ILSMDiskComponent component = factory.createComponent(this,
                 new LSMComponentFileReferences(insertFileReference, deleteIndexFileReference, bloomFilterFileRef));
-        component.activate(createComponent);
+        try {
+            component.activate(createComponent);
+        } catch (HyracksDataException e) {
+            component.returnPages();
+            throw e;
+        }
         return component;
     }
 

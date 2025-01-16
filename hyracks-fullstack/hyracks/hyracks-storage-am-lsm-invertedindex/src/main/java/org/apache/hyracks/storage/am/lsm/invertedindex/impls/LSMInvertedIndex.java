@@ -18,6 +18,9 @@
  */
 package org.apache.hyracks.storage.am.lsm.invertedindex.impls;
 
+import static org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManager.DELIMITER;
+import static org.apache.hyracks.storage.am.lsm.invertedindex.impls.LSMInvertedIndexFileManager.INVLISTS_SUFFIX;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -286,46 +289,56 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         // Create a scan cursor on the deleted keys BTree underlying the in-memory inverted index.
         IIndexCursor deletedKeysScanCursor = deletedKeysBTreeAccessor.createSearchCursor(false);
         try {
-            deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
             try {
-                while (deletedKeysScanCursor.hasNext()) {
-                    deletedKeysScanCursor.next();
-                    componentBulkLoader.delete(deletedKeysScanCursor.getTuple());
+                deletedKeysBTreeAccessor.search(deletedKeysScanCursor, nullPred);
+                try {
+                    while (deletedKeysScanCursor.hasNext()) {
+                        deletedKeysScanCursor.next();
+                        componentBulkLoader.delete(deletedKeysScanCursor.getTuple());
+                    }
+                } finally {
+                    deletedKeysScanCursor.close();
                 }
             } finally {
-                deletedKeysScanCursor.close();
+                deletedKeysScanCursor.destroy();
             }
-        } finally {
-            deletedKeysScanCursor.destroy();
-        }
-        // Scan the in-memory inverted index
-        InMemoryInvertedIndexAccessor memInvIndexAccessor =
-                flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
-        BTreeAccessor memBTreeAccessor = memInvIndexAccessor.getBTreeAccessor();
-        IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor(false);
-        try {
-            memBTreeAccessor.search(scanCursor, nullPred);
-            // Bulk load the disk inverted index from the in-memory inverted index.
+            // Scan the in-memory inverted index
+            InMemoryInvertedIndexAccessor memInvIndexAccessor =
+                    flushingComponent.getIndex().createAccessor(NoOpIndexAccessParameters.INSTANCE);
+            BTreeAccessor memBTreeAccessor = memInvIndexAccessor.getBTreeAccessor();
+            IIndexCursor scanCursor = memBTreeAccessor.createSearchCursor(false);
             try {
-                while (scanCursor.hasNext()) {
-                    scanCursor.next();
-                    componentBulkLoader.add(scanCursor.getTuple());
+                memBTreeAccessor.search(scanCursor, nullPred);
+                // Bulk load the disk inverted index from the in-memory inverted index.
+                try {
+                    while (scanCursor.hasNext()) {
+                        scanCursor.next();
+                        componentBulkLoader.add(scanCursor.getTuple());
+                    }
+                } finally {
+                    scanCursor.close();
                 }
             } finally {
-                scanCursor.close();
+                scanCursor.destroy();
             }
-        } finally {
-            scanCursor.destroy();
+            if (component.getLSMComponentFilter() != null) {
+                List<ITupleReference> filterTuples = new ArrayList<>();
+                filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
+                filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
+                filterManager.updateFilter(component.getLSMComponentFilter(), filterTuples,
+                        NoOpOperationCallback.INSTANCE);
+                filterManager.writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
+            }
+            flushingComponent.getMetadata().copy(component.getMetadata());
+            componentBulkLoader.end();
+        } catch (Throwable e) {
+            try {
+                componentBulkLoader.abort();
+            } catch (Throwable th) {
+                e.addSuppressed(th);
+            }
+            throw e;
         }
-        if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<>();
-            filterTuples.add(flushingComponent.getLSMComponentFilter().getMinTuple());
-            filterTuples.add(flushingComponent.getLSMComponentFilter().getMaxTuple());
-            filterManager.updateFilter(component.getLSMComponentFilter(), filterTuples, NoOpOperationCallback.INSTANCE);
-            filterManager.writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
-        }
-        flushingComponent.getMetadata().copy(component.getMetadata());
-        componentBulkLoader.end();
         return component;
     }
 
@@ -339,60 +352,71 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         // Create an inverted index instance.
         ILSMDiskComponent component = createDiskComponent(componentFactory, mergeOp.getTarget(),
                 mergeOp.getDeletedKeysBTreeTarget(), mergeOp.getBloomFilterTarget(), true);
-        ILSMDiskComponentBulkLoader componentBulkLoader;
+        ILSMDiskComponentBulkLoader componentBulkLoader = null;
         // In case we must keep the deleted-keys BTrees, then they must be merged *before* merging the inverted
         // indexes so that lsmHarness.endSearch() is called once when the inverted indexes have been merged.
-        if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
-                .get(diskComponents.size() - 1)) {
-            // Keep the deleted tuples since the oldest disk component is not included in the merge operation
-            LSMInvertedIndexDeletedKeysBTreeMergeCursor btreeCursor =
-                    new LSMInvertedIndexDeletedKeysBTreeMergeCursor(opCtx, mergeOp.getCursorStats());
-            try {
-                long numElements = 0L;
-                for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
-                    numElements += ((LSMInvertedIndexDiskComponent) mergeOp.getMergingComponents().get(i))
-                            .getBloomFilter().getNumElements();
-                }
-                componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, numElements, false, false,
-                        false, pageWriteCallbackFactory.createPageWriteCallback());
-                loadDeleteTuples(opCtx, btreeCursor, mergePred, componentBulkLoader);
-            } finally {
-                btreeCursor.destroy();
-            }
-        } else {
-            componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false, false, false,
-                    pageWriteCallbackFactory.createPageWriteCallback());
-        }
-        search(opCtx, cursor, mergePred);
         try {
-            while (cursor.hasNext()) {
-                cursor.next();
-                componentBulkLoader.add(cursor.getTuple());
+            if (mergeOp.getMergingComponents().get(mergeOp.getMergingComponents().size() - 1) != diskComponents
+                    .get(diskComponents.size() - 1)) {
+                // Keep the deleted tuples since the oldest disk component is not included in the merge operation
+                LSMInvertedIndexDeletedKeysBTreeMergeCursor btreeCursor =
+                        new LSMInvertedIndexDeletedKeysBTreeMergeCursor(opCtx, mergeOp.getCursorStats());
+                try {
+                    long numElements = 0L;
+                    for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
+                        numElements += ((LSMInvertedIndexDiskComponent) mergeOp.getMergingComponents().get(i))
+                                .getBloomFilter().getNumElements();
+                    }
+                    componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, numElements, false, false,
+                            false, pageWriteCallbackFactory.createPageWriteCallback());
+                    loadDeleteTuples(opCtx, btreeCursor, mergePred, componentBulkLoader);
+                } finally {
+                    btreeCursor.destroy();
+                }
+            } else {
+                componentBulkLoader = component.createBulkLoader(operation, 1.0f, false, 0L, false, false, false,
+                        pageWriteCallbackFactory.createPageWriteCallback());
             }
-        } finally {
+            search(opCtx, cursor, mergePred);
             try {
-                cursor.close();
+                while (cursor.hasNext()) {
+                    cursor.next();
+                    componentBulkLoader.add(cursor.getTuple());
+                }
             } finally {
-                cursor.destroy();
-            }
-        }
-        if (component.getLSMComponentFilter() != null) {
-            List<ITupleReference> filterTuples = new ArrayList<>();
-            for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
-                ITupleReference min = mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple();
-                ITupleReference max = mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple();
-                if (min != null) {
-                    filterTuples.add(min);
-                }
-                if (max != null) {
-                    filterTuples.add(max);
+                try {
+                    cursor.close();
+                } finally {
+                    cursor.destroy();
                 }
             }
-            getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples,
-                    NoOpOperationCallback.INSTANCE);
-            getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
+            if (component.getLSMComponentFilter() != null) {
+                List<ITupleReference> filterTuples = new ArrayList<>();
+                for (int i = 0; i < mergeOp.getMergingComponents().size(); ++i) {
+                    ITupleReference min = mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMinTuple();
+                    ITupleReference max = mergeOp.getMergingComponents().get(i).getLSMComponentFilter().getMaxTuple();
+                    if (min != null) {
+                        filterTuples.add(min);
+                    }
+                    if (max != null) {
+                        filterTuples.add(max);
+                    }
+                }
+                getFilterManager().updateFilter(component.getLSMComponentFilter(), filterTuples,
+                        NoOpOperationCallback.INSTANCE);
+                getFilterManager().writeFilter(component.getLSMComponentFilter(), component.getMetadataHolder());
+            }
+            componentBulkLoader.end();
+        } catch (Throwable e) {
+            try {
+                if (componentBulkLoader != null) {
+                    componentBulkLoader.abort();
+                }
+            } catch (Throwable th) {
+                e.addSuppressed(th);
+            }
+            throw e;
         }
-        componentBulkLoader.end();
 
         return component;
     }
@@ -487,7 +511,10 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
             throws HyracksDataException {
         return new LSMInvertedIndexFlushOperation(new LSMInvertedIndexAccessor(getHarness(), opCtx),
                 componentFileRefs.getInsertIndexFileReference(), componentFileRefs.getDeleteIndexFileReference(),
-                componentFileRefs.getBloomFilterFileReference(), callback, getIndexIdentifier());
+                componentFileRefs.getBloomFilterFileReference(),
+                ioManager.resolve(
+                        getInvListsFilePath(componentFileRefs.getInsertIndexFileReference().getAbsolutePath())),
+                callback, getIndexIdentifier());
     }
 
     @Override
@@ -497,7 +524,14 @@ public class LSMInvertedIndex extends AbstractLSMIndex implements IInvertedIndex
         IIndexCursorStats stats = new IndexCursorStats();
         IIndexCursor cursor = new LSMInvertedIndexMergeCursor(opCtx, stats);
         return new LSMInvertedIndexMergeOperation(accessor, cursor, stats, mergeFileRefs.getInsertIndexFileReference(),
-                mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(), callback,
-                getIndexIdentifier());
+                mergeFileRefs.getDeleteIndexFileReference(), mergeFileRefs.getBloomFilterFileReference(),
+                ioManager.resolve(getInvListsFilePath(mergeFileRefs.getInsertIndexFileReference().getAbsolutePath())),
+                callback, getIndexIdentifier());
+    }
+
+    public String getInvListsFilePath(String dictBTreeFilePath) {
+        int index = dictBTreeFilePath.lastIndexOf(DELIMITER);
+        String file = dictBTreeFilePath.substring(0, index);
+        return file + DELIMITER + INVLISTS_SUFFIX;
     }
 }

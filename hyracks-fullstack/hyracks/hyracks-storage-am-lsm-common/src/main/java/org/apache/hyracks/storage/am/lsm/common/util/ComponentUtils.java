@@ -169,6 +169,22 @@ public class ComponentUtils {
         }
     }
 
+    public static void returnPages(ITreeIndex treeIndex) {
+        treeIndex.getPageManager().returnAllPages();
+        IBufferCache bufferCache = treeIndex.getBufferCache();
+        // We need to return all pages to the buffer cache in case of a failure
+        try {
+            bufferCache.getCompressedPageWriter(treeIndex.getFileId()).abort();
+        } catch (IllegalStateException | NullPointerException ignored) {
+            // Since we call this method in multiple places, it is possible that the writer
+            // is not in the State.WRITABLE, which would throw an IllegalStateException.
+            // This means the writer has already written all the pages.
+            //
+            // We also catch NullPointerException in case the writer is not initialized.
+            // Or if the compressed page writer is not applicable to this case
+        }
+    }
+
     public static void markAsValid(IBufferCache bufferCache, BloomFilter filter, boolean forceToDisk)
             throws HyracksDataException {
         if (forceToDisk) {

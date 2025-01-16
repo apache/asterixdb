@@ -34,6 +34,7 @@ import org.apache.hyracks.storage.am.lsm.common.impls.AbstractLSMIndexFileManage
 import org.apache.hyracks.storage.am.lsm.common.impls.BTreeFactory;
 import org.apache.hyracks.storage.am.lsm.common.impls.IndexComponentFileReference;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMInvertedComponentFileReferences;
 import org.apache.hyracks.storage.am.lsm.invertedindex.api.IInvertedIndexFileNameMapper;
 
 // TODO: Refactor for better code sharing with other file managers.
@@ -59,17 +60,19 @@ public class LSMInvertedIndexFileManager extends AbstractLSMIndexFileManager imp
     @Override
     public LSMComponentFileReferences getRelFlushFileReference() throws HyracksDataException {
         String baseName = getNextComponentSequence(deletedKeysBTreeFilter);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
+        return new LSMInvertedComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
-                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + INVLISTS_SUFFIX));
     }
 
     @Override
     public LSMComponentFileReferences getRelMergeFileReference(String firstFileName, String lastFileName) {
         final String baseName = IndexComponentFileReference.getMergeSequence(firstFileName, lastFileName);
-        return new LSMComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
+        return new LSMInvertedComponentFileReferences(baseDir.getChild(baseName + DELIMITER + DICT_BTREE_SUFFIX),
                 baseDir.getChild(baseName + DELIMITER + DELETED_KEYS_BTREE_SUFFIX),
-                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX));
+                baseDir.getChild(baseName + DELIMITER + BLOOM_FILTER_SUFFIX),
+                baseDir.getChild(baseName + DELIMITER + INVLISTS_SUFFIX));
     }
 
     @Override

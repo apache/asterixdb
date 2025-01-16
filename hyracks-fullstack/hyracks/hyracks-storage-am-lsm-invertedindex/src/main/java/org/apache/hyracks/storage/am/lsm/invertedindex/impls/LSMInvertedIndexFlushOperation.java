@@ -24,17 +24,20 @@ import org.apache.hyracks.storage.am.lsm.common.api.ILSMIOOperationCallback;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndexAccessor;
 import org.apache.hyracks.storage.am.lsm.common.impls.FlushOperation;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentFileReferences;
+import org.apache.hyracks.storage.am.lsm.common.impls.LSMInvertedComponentFileReferences;
 
 public class LSMInvertedIndexFlushOperation extends FlushOperation {
     private final FileReference deletedKeysBTreeFlushTarget;
     private final FileReference bloomFilterFlushTarget;
+    private final FileReference invListsFlushTarget;
 
     public LSMInvertedIndexFlushOperation(ILSMIndexAccessor accessor, FileReference flushTarget,
             FileReference deletedKeysBTreeFlushTarget, FileReference bloomFilterFlushTarget,
-            ILSMIOOperationCallback callback, String indexIdentifier) {
+            FileReference invListsFlushTarget, ILSMIOOperationCallback callback, String indexIdentifier) {
         super(accessor, flushTarget, callback, indexIdentifier);
         this.deletedKeysBTreeFlushTarget = deletedKeysBTreeFlushTarget;
         this.bloomFilterFlushTarget = bloomFilterFlushTarget;
+        this.invListsFlushTarget = invListsFlushTarget;
     }
 
     public FileReference getDeletedKeysBTreeTarget() {
@@ -47,6 +50,7 @@ public class LSMInvertedIndexFlushOperation extends FlushOperation {
 
     @Override
     public LSMComponentFileReferences getComponentFiles() {
-        return new LSMComponentFileReferences(target, deletedKeysBTreeFlushTarget, bloomFilterFlushTarget);
+        return new LSMInvertedComponentFileReferences(target, deletedKeysBTreeFlushTarget, bloomFilterFlushTarget,
+                invListsFlushTarget);
     }
 }

@@ -386,13 +386,15 @@ public class BloomFilter {
 
         @Override
         public void end() throws HyracksDataException {
-            allocateAndInitMetaDataPage();
-            pageWriter.write(metaDataPage);
-            for (ICachedPage p : pages) {
-                pageWriter.write(p);
-            }
-            if (hasFailed()) {
-                throw HyracksDataException.create(getFailure());
+            try {
+                allocateAndInitMetaDataPage();
+                pageWriter.write(metaDataPage);
+                for (ICachedPage p : pages) {
+                    pageWriter.write(p);
+                }
+            } catch (HyracksDataException e) {
+                handleException();
+                throw e;
             }
             BloomFilter.this.numBits = numBits;
             BloomFilter.this.numHashes = numHashes;
@@ -401,8 +403,7 @@ public class BloomFilter {
             BloomFilter.this.version = BLOCKED_BLOOM_FILTER_VERSION;
         }
 
-        @Override
-        public void abort() throws HyracksDataException {
+        private void handleException() {
             for (ICachedPage p : pages) {
                 if (p != null) {
                     bufferCache.returnPage(p, false);
@@ -411,6 +412,11 @@ public class BloomFilter {
             if (metaDataPage != null) {
                 bufferCache.returnPage(metaDataPage, false);
             }
+        }
+
+        @Override
+        public void abort() throws HyracksDataException {
+            handleException();
         }
 
         @Override

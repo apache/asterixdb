@@ -16,36 +16,41 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 package org.apache.asterix.test.cloud_storage;
 
 import static org.apache.asterix.api.common.LocalCloudUtil.CLOUD_STORAGE_BUCKET;
 import static org.apache.asterix.api.common.LocalCloudUtil.MOCK_SERVER_REGION;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
 
 import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
+import org.apache.asterix.common.api.IDatasetLifecycleManager;
+import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.config.GlobalConfig;
+import org.apache.asterix.common.storage.StorageIOStats;
 import org.apache.asterix.test.common.TestExecutor;
+import org.apache.asterix.test.runtime.ExecutionTestUtil;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
 import org.apache.asterix.testframework.context.TestCaseContext;
 import org.apache.asterix.testframework.xml.Description;
 import org.apache.asterix.testframework.xml.TestCase;
+import org.apache.hyracks.cloud.util.CloudRetryableRequestUtil;
+import org.apache.hyracks.control.nc.NodeControllerService;
+import org.apache.hyracks.storage.common.buffercache.BufferCache;
+import org.apache.hyracks.storage.common.buffercache.IBufferCache;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
 
 import com.google.cloud.NoCredentials;
 import com.google.cloud.storage.Blob;
@@ -58,9 +63,8 @@ import com.google.cloud.storage.StorageOptions;
  * Run tests in cloud deployment environment
  */
 @RunWith(Parameterized.class)
-@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class CloudStorageGCSTest {
+public class GCSCloudStorageUnstableTest {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -73,13 +77,14 @@ public class CloudStorageGCSTest {
     public static final String MOCK_SERVER_HOSTNAME = "http://127.0.0.1:24443";
     private static final String MOCK_SERVER_PROJECT_ID = "asterixdb-gcs-test-project-id";
 
-    public CloudStorageGCSTest(TestCaseContext tcCtx) {
+    public GCSCloudStorageUnstableTest(TestCaseContext tcCtx) {
         this.tcCtx = tcCtx;
     }
 
     @BeforeClass
     public static void setUp() throws Exception {
         LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
+        System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
         Storage storage = StorageOptions.newBuilder().setHost(MOCK_SERVER_HOSTNAME)
                 .setCredentials(NoCredentials.getInstance()).setProjectId(MOCK_SERVER_PROJECT_ID).build().getService();
         cleanup(storage);
@@ -94,27 +99,13 @@ public class CloudStorageGCSTest {
 
     @AfterClass
     public static void tearDown() throws Exception {
+        System.clearProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE);
         LangExecutionUtil.tearDown();
-        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
-    @Parameters(name = "CloudStorageGCSTest {index}: {0}")
+    @Parameterized.Parameters(name = "GCSCloudStorageUnstableTest {index}: {0}")
     public static Collection<Object[]> tests() throws Exception {
-        long seed = System.nanoTime();
-        Random random = new Random(seed);
-        LOGGER.info("CloudStorageGCSTest seed {}", seed);
-        Collection<Object[]> tests = LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
-        List<Object[]> selected = new ArrayList<>();
-        for (Object[] test : tests) {
-            if (!Objects.equals(((TestCaseContext) test[0]).getTestGroups()[0].getName(), "sqlpp_queries")) {
-                selected.add(test);
-            }
-            // Select 10% of the tests randomly
-            else if (random.nextInt(10) == 0) {
-                selected.add(test);
-            }
-        }
-        return selected;
+        return LangExecutionUtil.tests(ONLY_TESTS, SUITE_TESTS);
     }
 
     @Test
@@ -122,6 +113,19 @@ public class CloudStorageGCSTest {
         List<TestCase.CompilationUnit> cu = tcCtx.getTestCase().getCompilationUnit();
         Assume.assumeTrue(cu.size() > 1 || !EXCLUDED_TESTS.equals(getText(cu.get(0).getDescription())));
         LangExecutionUtil.test(tcCtx);
+        for (NodeControllerService nc : ExecutionTestUtil.integrationUtil.ncs) {
+            IDatasetLifecycleManager lifecycleManager =
+                    ((INcApplicationContext) nc.getApplicationContext()).getDatasetLifecycleManager();
+            StorageIOStats stats = lifecycleManager.getDatasetsIOStats();
+            while (stats.getPendingFlushes() != 0 || stats.getPendingMerges() != 0) {
+                stats = lifecycleManager.getDatasetsIOStats();
+            }
+        }
+        IBufferCache bufferCache;
+        for (NodeControllerService nc : ExecutionTestUtil.integrationUtil.ncs) {
+            bufferCache = ((INcApplicationContext) nc.getApplicationContext()).getBufferCache();
+            Assert.assertTrue(((BufferCache) bufferCache).isClean());
+        }
     }
 
     private static String getText(Description description) {

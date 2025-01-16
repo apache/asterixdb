@@ -141,6 +141,17 @@ public class LSMIOOperationCallback implements ILSMIOOperationCallback {
         }
     }
 
+    @Override
+    public void afterFailure(ILSMIOOperation operation) {
+        if (isMerge(operation)) {
+            try {
+                ioManager.delete(getOperationMaskFilePath(operation));
+            } catch (HyracksDataException e) {
+                operation.getFailure().addSuppressed(e);
+            }
+        }
+    }
+
     protected void addComponentToCheckpoint(ILSMIOOperation operation) throws HyracksDataException {
         // will always update the checkpoint file even if no new component was created
         FileReference target = operation.getTarget();

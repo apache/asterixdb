@@ -127,9 +127,20 @@ public class ChainedLSMDiskComponentBulkLoader implements ILSMDiskComponentBulkL
     @Override
     public void abort() throws HyracksDataException {
         operation.setStatus(LSMIOOperationStatus.FAILURE);
-        final int bulkloadersCount = bulkloaderChain.size();
-        for (int i = 0; i < bulkloadersCount; i++) {
-            bulkloaderChain.get(i).abort();
+        HyracksDataException failure = null;
+        for (IChainedComponentBulkLoader componentBulkLoader : bulkloaderChain) {
+            try {
+                componentBulkLoader.abort();
+            } catch (HyracksDataException e) {
+                if (failure == null) {
+                    failure = e;
+                } else {
+                    failure.addSuppressed(e);
+                }
+            }
+        }
+        if (failure != null) {
+            throw failure;
         }
     }
 

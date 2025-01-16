@@ -164,7 +164,10 @@ public final class ObjectSchemaNode extends AbstractSchemaNestedNode {
 
     public void abort(DataInputStream input, Map<AbstractSchemaNestedNode, RunLengthIntArray> definitionLevels)
             throws IOException {
-        definitionLevels.put(this, new RunLengthIntArray());
+        input.readByte(); // Skip the type tag, see ObjectSchemaNode#serialize
+        if (definitionLevels != null) {
+            definitionLevels.put(this, new RunLengthIntArray());
+        }
 
         int numberOfChildren = input.readInt();
 

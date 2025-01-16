@@ -397,6 +397,9 @@ public class OnDiskInvertedIndex implements IInPlaceInvertedIndex {
             if (btreeBulkloader != null) {
                 btreeBulkloader.abort();
             }
+            if (currentPage != null) {
+                bufferCache.returnPage(currentPage, false);
+            }
         }
 
         @Override

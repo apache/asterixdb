@@ -157,4 +157,9 @@ public class EmptyComponent implements ILSMDiskComponent {
     public String toString() {
         return "EmptyComponent";
     }
+
+    @Override
+    public void returnPages() {
+        // Do nothing
+    }
 }
