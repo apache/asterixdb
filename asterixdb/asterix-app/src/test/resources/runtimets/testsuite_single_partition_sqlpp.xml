@@ -20,6 +20,91 @@
 <test-suite xmlns="urn:xml.testframework.asterix.apache.org" ResultOffsetPath="results" QueryOffsetPath="queries_sqlpp" QueryFileExtension=".sqlpp">
   <test-group name="column">
     <test-case FilePath="column">
+      <compilation-unit name="assembly/001">
+        <output-dir compare="Text">assembly/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/002">
+        <output-dir compare="Text">assembly/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/003">
+        <output-dir compare="Text">assembly/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/004">
+        <output-dir compare="Text">assembly/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3504">
+        <output-dir compare="Text">assembly/ASTERIXDB-3504</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-2">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-3">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-4">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-5">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-5</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-6">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-6</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3491-7">
+        <output-dir compare="Text">assembly/ASTERIXDB-3491-7</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="assembly/ASTERIXDB-3539">
+        <output-dir compare="Text">assembly/ASTERIXDB-3539</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/ASTERIXDB-3499">
+        <output-dir compare="Text">filter/ASTERIXDB-3499</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/ASTERIXDB-3502">
+        <output-dir compare="Text">filter/ASTERIXDB-3502</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/001">
+        <output-dir compare="Text">delete/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="delete/002">
+        <output-dir compare="Text">delete/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
       <compilation-unit name="delete/003">
         <output-dir compare="Text">delete/003</output-dir>
       </compilation-unit>
@@ -32,6 +117,308 @@
     <test-case FilePath="column">
       <compilation-unit name="delete/005">
         <output-dir compare="Text">delete/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="nested-pk">
+        <output-dir compare="Text">nested-pk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="composite-pks">
+        <output-dir compare="Text">composite-pks</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_after_gby">
+        <output-dir compare="Text">meta/meta_after_gby</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/meta_in_with_clause">
+        <output-dir compare="Text">meta/meta_in_with_clause</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="meta/resolving_pk_with_meta">
+        <output-dir compare="Text">meta/resolving_pk_with_meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/001">
+        <output-dir compare="Text">missing-null-values/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/002">
+        <output-dir compare="Text">missing-null-values/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/003">
+        <output-dir compare="Text">missing-null-values/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/005">
+        <output-dir compare="Text">missing-null-values/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/006">
+        <output-dir compare="Text">missing-null-values/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/007">
+        <output-dir compare="Text">missing-null-values/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="missing-null-values/008">
+        <output-dir compare="Text">missing-null-values/008</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/001">
+        <output-dir compare="Text">empty-array/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/002">
+        <output-dir compare="Text">empty-array/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="empty-array/003">
+        <output-dir compare="Text">empty-array/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/array-access-pushdown">
+        <output-dir compare="Text">pushdown/array-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/field-access-pushdown">
+        <output-dir compare="Text">pushdown/field-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/ASTERIXDB-3540">
+        <output-dir compare="Text">pushdown/ASTERIXDB-3540</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/heterogeneous-access-pushdown">
+        <output-dir compare="Text">pushdown/heterogeneous-access-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/join/condition-pushdown">
+        <output-dir compare="Text">pushdown/join/condition-pushdown</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/join/left-outer">
+        <output-dir compare="Text">pushdown/join/left-outer</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/other-pushdowns">
+        <output-dir compare="Text">pushdown/other-pushdowns</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="pushdown/replicate">
+        <output-dir compare="Text">pushdown/replicate</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="select-count-one-field">
+        <output-dir compare="Text">select-count-one-field</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/001">
+        <output-dir compare="Text">upsert/001</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/002">
+        <output-dir compare="Text">upsert/002</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="upsert/003">
+        <output-dir compare="Text">upsert/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/001">
+        <output-dir compare="Text">filter/001</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 30, at column 23)</expected-warn>
+        <expected-warn>ASX0051: Incomparable input types: bigint and string (in line 29, at column 38)</expected-warn>
+        <expected-warn>ASX0051: Incomparable input types: array and bigint (in line 28, at column 15)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/002">
+        <output-dir compare="Text">filter/002</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: string and bigint (in line 29, at column 23)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/003">
+        <output-dir compare="Text">filter/003</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/004">
+        <output-dir compare="Text">filter/004</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/005">
+        <output-dir compare="Text">filter/005</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/006">
+        <output-dir compare="Text">filter/006</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/007">
+        <output-dir compare="Text">filter/007</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/008">
+        <output-dir compare="Text">filter/008</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/boolean">
+        <output-dir compare="Text">filter/boolean</output-dir>
+        <expected-warn>ASX0051: Incomparable input types: array and boolean (in line 27, at column 8)</expected-warn>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/delete">
+        <output-dir compare="Text">filter/delete</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/not-in_every">
+        <output-dir compare="Text">filter/not-in_every</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column" check-warnings="true">
+      <compilation-unit name="filter/non-existing-fields">
+        <output-dir compare="Text">filter/non-existing-fields</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/sql-compat">
+        <output-dir compare="Text">filter/sql-compat</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="filter/subplan">
+        <output-dir compare="Text">filter/subplan</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="big-object">
+        <output-dir compare="Text">big-object</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-1">
+        <output-dir compare="Text">secondary-index/array-index/use-case-1</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-2">
+        <output-dir compare="Text">secondary-index/array-index/use-case-2</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-3">
+        <output-dir compare="Text">secondary-index/array-index/use-case-3</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/use-case-4">
+        <output-dir compare="Text">secondary-index/array-index/use-case-4</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-additional-atomic-index">
+        <output-dir compare="Text">secondary-index/array-index/with-additional-atomic-index</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/array-index/with-composite-sk">
+        <output-dir compare="Text">secondary-index/array-index/with-composite-sk</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/index-with-meta">
+        <output-dir compare="Text">secondary-index/index-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-bulkload">
+        <output-dir compare="Text">secondary-index/create-index/after-bulkload</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-insert">
+        <output-dir compare="Text">secondary-index/create-index/after-insert</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/create-index/after-upsert-with-meta">
+        <output-dir compare="Text">secondary-index/create-index/after-upsert-with-meta</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="secondary-index/outer-join">
+        <output-dir compare="Text">secondary-index/outer-join</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="metadata">
+        <output-dir compare="Text">metadata</output-dir>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="supported-types">
+        <output-dir compare="Text">supported-types</output-dir>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime, date, time, duration]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
+        <expected-error>ASX0067: Type(s) '[datetime]' are not supported in columnar storage format. Supported types are [bigint, float, double, string, boolean, uuid]</expected-error>
+        <source-location>false</source-location>
+      </compilation-unit>
+    </test-case>
+    <test-case FilePath="column">
+      <compilation-unit name="validation">
+        <output-dir compare="Text">validation</output-dir>
+        <expected-error>ASX1191: Merge policy 'correlated-prefix' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1192: Filters are not supported with columnar storage format</expected-error>
+        <expected-error>ASX1193: Unknown storage format 'col'</expected-error>
+        <expected-error>ASX1194: Index type 'RTREE' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1194: Index type 'LENGTH_PARTITIONED_NGRAM_INVIX' is not supported with columnar storage format</expected-error>
+        <expected-error>ASX1194: Index type 'LENGTH_PARTITIONED_WORD_INVIX' is not supported with columnar storage format</expected-error>
+        <source-location>false</source-location>
       </compilation-unit>
     </test-case>
   </test-group>

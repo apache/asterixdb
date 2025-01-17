@@ -46,6 +46,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     private final int numberOfPrimaryKeys;
     private int endIndex;
     protected int tupleIndex;
+    protected int antimatterGap;
 
     // For logging
     private final LongSet pinnedPages;
@@ -102,6 +103,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     @Override
     public final void newPage() throws HyracksDataException {
         tupleIndex = 0;
+        antimatterGap = 0;
         ByteBuffer pageZero = frame.getBuffer();
         pageZero.clear();
         pageZero.position(HEADER_SIZE);
@@ -119,6 +121,7 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     @Override
     public final void reset(int startIndex, int endIndex) throws HyracksDataException {
         tupleIndex = startIndex;
+        antimatterGap = 0;
         this.endIndex = endIndex;
         ByteBuffer pageZero = frame.getBuffer();
         int numberOfTuples = frame.getTupleCount();
@@ -292,5 +295,15 @@ public abstract class AbstractColumnTupleReference implements IColumnTupleIterat
     @Override
     public final void resetByTupleIndex(ITreeIndexFrame frame, int tupleIndex) {
         throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
+    }
+
+    @Override
+    public int getAntimatterGap() {
+        return antimatterGap;
+    }
+
+    @Override
+    public void resetAntimatterGap() {
+        antimatterGap = 0;
     }
 }

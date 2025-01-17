@@ -108,4 +108,11 @@ public interface IColumnTupleIterator extends ILSMTreeTupleReference, Comparable
     void unpinColumnsPages() throws HyracksDataException;
 
     void close();
+
+    /**
+     * @return the gap between the lastAssembledTuple index and the current antimatter tuple index
+     */
+    int getAntimatterGap();
+
+    void resetAntimatterGap();
 }
