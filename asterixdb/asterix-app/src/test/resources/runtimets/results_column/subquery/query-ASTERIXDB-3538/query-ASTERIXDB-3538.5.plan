@@ -1,0 +1,35 @@
+distribute result [$$317] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+-- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$317] <- [{"dat3": {"id": $$351, "a": string-default-null($$345), "d": int64-default-null($$318)}}] project: [$$317] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    -- ASSIGN  |PARTITIONED|
+      select (le($$318, get-item($$295, 0))) project: [$$351, $$345, $$318] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      -- STREAM_SELECT  |PARTITIONED|
+        project ([$$351, $$345, $$318, $$295]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        -- STREAM_PROJECT  |PARTITIONED|
+          subplan {
+                    aggregate [$$295] <- [listify($$330)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- AGGREGATE  |LOCAL|
+                      aggregate [$$330] <- [agg-sql-count(1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- AGGREGATE  |LOCAL|
+                        unnest $$333 <- scan-collection($$343) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- UNNEST  |LOCAL|
+                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          -- SUBPLAN  |PARTITIONED|
+            select (not(is-null($$351))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            -- STREAM_SELECT  |PARTITIONED|
+              assign [$$351, $$345, $$318, $$343] <- [string-default-null($$s.getField("id")), $$s.getField("a"), $$s.getField("d"), $$s.getField("e")] project: [$$351, $$345, $$318, $$343] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              -- ASSIGN  |PARTITIONED|
+                project ([$$s]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    data-scan []<-[$$319, $$s] <- test.dat1 project ({a:any,d:any,e:[any],id:any}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
