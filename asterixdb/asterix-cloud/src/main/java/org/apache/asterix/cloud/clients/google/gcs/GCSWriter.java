@@ -64,14 +64,21 @@ public class GCSWriter implements ICloudWriter {
     @Override
     public int write(ByteBuffer page) throws HyracksDataException {
         guardian.checkIsolatedWriteAccess(bucket, path);
-        profiler.objectMultipartUpload();
+        // The GCS library triggers a new upload when its internal buffer is full, not on each call to writer.write().
+        // uploadsToBeTriggered estimates upload count, and we acquire matching tokens from the limiter.
+        int uploadsToBeTriggered =
+                (int) ((writtenBytes + page.remaining()) / writeBufferSize) - (int) (writtenBytes / writeBufferSize);
+        while (uploadsToBeTriggered-- > 0) {
+            profiler.objectMultipartUpload();
+        }
         setUploadId();
+
         int written = 0;
         try {
             while (page.hasRemaining()) {
                 written += writer.write(page);
             }
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw HyracksDataException.create(e);
         }
 
@@ -81,9 +88,7 @@ public class GCSWriter implements ICloudWriter {
 
     @Override
     public int write(byte[] b, int off, int len) throws HyracksDataException {
-        int written = write(ByteBuffer.wrap(b, off, len));
-        writtenBytes += written;
-        return written;
+        return write(ByteBuffer.wrap(b, off, len));
     }
 
     @Override
@@ -94,7 +99,6 @@ public class GCSWriter implements ICloudWriter {
     @Override
     public void write(int b) throws HyracksDataException {
         write(ByteBuffer.wrap(new byte[] { (byte) b }));
-        writtenBytes += 1;
     }
 
     @Override
@@ -105,7 +109,7 @@ public class GCSWriter implements ICloudWriter {
         try {
             writer.close();
             writer = null;
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             throw HyracksDataException.create(e);
         }
         log("FINISHED");
