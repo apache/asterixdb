@@ -21,7 +21,7 @@ package org.apache.asterix.common.metadata;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class DatasetFullyQualifiedName implements Serializable {
+public class DatasetFullyQualifiedName implements Serializable, IFullyQualifiedName {
 
     private static final long serialVersionUID = 2L;
     private final String databaseName;

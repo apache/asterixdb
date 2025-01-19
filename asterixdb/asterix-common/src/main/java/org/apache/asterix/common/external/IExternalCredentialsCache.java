@@ -20,6 +20,9 @@ package org.apache.asterix.common.external;
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.metadata.IFullyQualifiedName;
+
 public interface IExternalCredentialsCache {
 
     /**
@@ -28,7 +31,15 @@ public interface IExternalCredentialsCache {
      * @param configuration configuration containing external collection details
      * @return credentials if present, null otherwise
      */
-    Object getCredentials(Map<String, String> configuration);
+    Object getCredentials(Map<String, String> configuration) throws CompilationException;
+
+    /**
+     * Returns the cached credentials. Can be of any supported external credentials type
+     *
+     * @param fqn fully qualified name of the credentials entity
+     * @return credentials if present, null otherwise
+     */
+    Object getCredentials(IFullyQualifiedName fqn) throws CompilationException;
 
     /**
      * Updates the credentials cache with the provided credentials for the specified name
@@ -36,14 +47,23 @@ public interface IExternalCredentialsCache {
      * @param configuration configuration containing external collection details
      * @param credentials credentials to cache
      */
-    void updateCache(Map<String, String> configuration, Map<String, String> credentials);
+    void updateCache(Map<String, String> configuration, Map<String, String> credentials) throws CompilationException;
 
     /**
-     * Deletes the cache for the provided entity name
+     * Updates the credentials cache with the provided credentials for the specified name
      *
-     * @param name name of the entity for which the credentials are to be deleted
+     * @param fqn fully qualified name for the credentials entity
+     * @param type type of the entity
+     * @param credentials credentials to cache
      */
-    void deleteCredentials(String name);
+    void updateCache(IFullyQualifiedName fqn, String type, Map<String, String> credentials);
+
+    /**
+     * Deletes the cache for the provided enitty
+     *
+     * @param fqn fully qualified name of entity for which the credentials are to be deleted
+     */
+    void deleteCredentials(IFullyQualifiedName fqn);
 
     /**
      * Returns the name of the entity which the cached credentials belong to
@@ -51,5 +71,13 @@ public interface IExternalCredentialsCache {
      * @param configuration configuration containing external collection details
      * @return name of entity which credentials belong to
      */
-    String getName(Map<String, String> configuration);
+    String getName(Map<String, String> configuration) throws CompilationException;
+
+    /**
+     * Returns the name of the entity which the cached credentials belong to
+     *
+     * @param fqn fully qualified name for the credentials entity
+     * @return name of entity which credentials belong to
+     */
+    String getName(IFullyQualifiedName fqn) throws CompilationException;
 }

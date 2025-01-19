@@ -24,7 +24,13 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IApplicationContext;
+import org.apache.asterix.common.exceptions.AsterixException;
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalCredentialsCache;
+import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
+import org.apache.asterix.common.metadata.DataverseName;
+import org.apache.asterix.common.metadata.IFullyQualifiedName;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
@@ -48,8 +54,14 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
     }
 
     @Override
-    public synchronized Object getCredentials(Map<String, String> configuration) {
-        String name = getName(configuration);
+    public synchronized Object getCredentials(Map<String, String> configuration) throws CompilationException {
+        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
+        return getCredentials(fqn);
+    }
+
+    @Override
+    public synchronized Object getCredentials(IFullyQualifiedName fqn) {
+        String name = getName(fqn);
         if (cache.containsKey(name) && !needsRefresh(cache.get(name).getLeft())) {
             return cache.get(name).getRight();
         }
@@ -57,40 +69,53 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
     }
 
     @Override
-    public synchronized void updateCache(Map<String, String> configuration, Map<String, String> credentials) {
-        String type = configuration.get(ExternalDataConstants.KEY_READER);
+    public synchronized void updateCache(Map<String, String> configuration, Map<String, String> credentials)
+            throws CompilationException {
+        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
+        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+        updateCache(fqn, type, credentials);
+    }
+
+    @Override
+    public synchronized void updateCache(IFullyQualifiedName fqn, String type, Map<String, String> credentials) {
+        String name = getName(fqn);
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equalsIgnoreCase(type)) {
-            updateAwsCache(configuration, credentials);
+            updateAwsCache(name, credentials);
         }
     }
 
-    @Override
-    public void deleteCredentials(String name) {
-        cache.remove(name);
-    }
-
-    @Override
-    public String getName(Map<String, String> configuration) {
-        String database = configuration.get(ExternalDataConstants.KEY_DATASET_DATABASE);
-        if (database == null) {
-            database = MetadataConstants.DEFAULT_DATABASE;
-        }
-        String dataverse = configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE);
-        String dataset = configuration.get(ExternalDataConstants.KEY_DATASET);
-        return String.join(".", database, dataverse, dataset);
-    }
-
-    private void updateAwsCache(Map<String, String> configuration, Map<String, String> credentials) {
+    private void updateAwsCache(String name, Map<String, String> credentials) {
         String accessKeyId = credentials.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = credentials.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
         String sessionToken = credentials.get(S3Constants.SESSION_TOKEN_FIELD_NAME);
-        doUpdateAwsCache(configuration, AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken));
+        doUpdateAwsCache(name, AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken));
     }
 
-    private void doUpdateAwsCache(Map<String, String> configuration, AwsSessionCredentials credentials) {
-        String name = getName(configuration);
+    private void doUpdateAwsCache(String name, AwsSessionCredentials credentials) {
         cache.put(name, Pair.of(Span.start(awsAssumeRoleDuration, TimeUnit.SECONDS), credentials));
         LOGGER.info("Received and cached new credentials for {}", name);
+    }
+
+    @Override
+    public void deleteCredentials(IFullyQualifiedName fqn) {
+        String name = getName(fqn);
+        Object removed = cache.remove(name);
+        if (removed != null) {
+            LOGGER.info("Removed cached credentials for {}", name);
+        } else {
+            LOGGER.info("No cached credentials found for {}, nothing to remove", name);
+        }
+    }
+
+    @Override
+    public String getName(Map<String, String> configuration) throws CompilationException {
+        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
+        return getName(fqn);
+    }
+
+    @Override
+    public String getName(IFullyQualifiedName fqn) {
+        return fqn.toString();
     }
 
     /**
@@ -102,5 +127,25 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
     private boolean needsRefresh(Span span) {
         return (double) span.remaining(TimeUnit.SECONDS)
                 / span.getSpan(TimeUnit.SECONDS) < refreshAwsAssumeRoleThreshold;
+    }
+
+    protected IFullyQualifiedName getFullyQualifiedNameFromConfiguration(Map<String, String> configuration)
+            throws CompilationException {
+        String database = configuration.get(ExternalDataConstants.KEY_DATASET_DATABASE);
+        if (database == null) {
+            database = MetadataConstants.DEFAULT_DATABASE;
+        }
+        String stringDataverse = configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE);
+        DataverseName dataverse = getDataverseName(stringDataverse);
+        String dataset = configuration.get(ExternalDataConstants.KEY_DATASET);
+        return new DatasetFullyQualifiedName(database, dataverse, dataset);
+    }
+
+    protected DataverseName getDataverseName(String dataverse) throws CompilationException {
+        try {
+            return DataverseName.createSinglePartName(dataverse);
+        } catch (AsterixException ex) {
+            throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, dataverse);
+        }
     }
 }
