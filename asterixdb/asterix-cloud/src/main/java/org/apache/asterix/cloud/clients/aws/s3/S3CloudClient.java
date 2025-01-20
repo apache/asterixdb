@@ -46,11 +46,15 @@ import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
 import org.apache.hyracks.util.annotations.ThreadSafe;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,16 +69,19 @@ import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.Delete;
 import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Error;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
 @ThreadSafe
 public final class S3CloudClient implements ICloudClient {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final S3ClientConfig config;
     private final S3Client s3Client;
     private final ICloudGuardian guardian;
@@ -216,7 +223,7 @@ public final class S3CloudClient implements ICloudClient {
     }
 
     @Override
-    public void deleteObjects(String bucket, Collection<String> paths) {
+    public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         if (paths.isEmpty()) {
             return;
         }
@@ -234,7 +241,16 @@ public final class S3CloudClient implements ICloudClient {
 
             Delete delete = Delete.builder().objects(objectIdentifiers).build();
             DeleteObjectsRequest deleteReq = DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build();
-            s3Client.deleteObjects(deleteReq);
+            DeleteObjectsResponse deleteObjectsResponse = s3Client.deleteObjects(deleteReq);
+            if (deleteObjectsResponse.hasErrors()) {
+                List<S3Error> deleteErrors = deleteObjectsResponse.errors();
+                for (S3Error s3Error : deleteErrors) {
+                    LOGGER.warn("Failed to delete object: {}, code: {}, message: {}", s3Error.key(), s3Error.code(),
+                            s3Error.message());
+                }
+                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE", deleteErrors.get(0).key(),
+                        paths.toString());
+            }
             profiler.objectDelete();
         }
     }

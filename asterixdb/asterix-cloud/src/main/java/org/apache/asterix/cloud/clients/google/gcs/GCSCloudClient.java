@@ -41,17 +41,22 @@ import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.util.CleanupUtils;
 import org.apache.hyracks.api.util.IoUtil;
 import org.apache.hyracks.control.nc.io.IOManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.api.gax.paging.Page;
+import com.google.cloud.BaseServiceException;
 import com.google.cloud.ReadChannel;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobId;
@@ -60,10 +65,12 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.Storage.BlobListOption;
 import com.google.cloud.storage.Storage.CopyRequest;
 import com.google.cloud.storage.StorageBatch;
+import com.google.cloud.storage.StorageBatchResult;
 import com.google.cloud.storage.StorageException;
 import com.google.cloud.storage.StorageOptions;
 
 public class GCSCloudClient implements ICloudClient {
+    private static final Logger LOGGER = LogManager.getLogger();
     private final Storage gcsClient;
     private final GCSClientConfig config;
     private final ICloudGuardian guardian;
@@ -193,11 +200,12 @@ public class GCSCloudClient implements ICloudClient {
     }
 
     @Override
-    public void deleteObjects(String bucket, Collection<String> paths) {
+    public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         if (paths.isEmpty()) {
             return;
         }
 
+        List<StorageBatchResult<Boolean>> deleteResponses = new ArrayList<>();
         StorageBatch batchRequest;
         Iterator<String> pathIter = paths.iterator();
         while (pathIter.hasNext()) {
@@ -205,10 +213,24 @@ public class GCSCloudClient implements ICloudClient {
             for (int i = 0; pathIter.hasNext() && i < DELETE_BATCH_SIZE; i++) {
                 BlobId blobId = BlobId.of(bucket, config.getPrefix() + pathIter.next());
                 guardian.checkWriteAccess(bucket, blobId.getName());
-                batchRequest.delete(blobId);
+                deleteResponses.add(batchRequest.delete(blobId));
             }
 
             batchRequest.submit();
+            Iterator<String> deletePathIter = paths.iterator();
+            for (StorageBatchResult<Boolean> deleteResponse : deleteResponses) {
+                String deletedPath = deletePathIter.next();
+                try {
+                    boolean deleted = deleteResponse.get();
+                    if (!deleted) {
+                        LOGGER.warn("File {} already deleted while deleting {}", deletedPath, paths);
+                    }
+                } catch (BaseServiceException e) {
+                    LOGGER.warn("Failed to delete object {} while deleting {}", deletedPath, paths, e);
+                    throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath,
+                            paths.toString());
+                }
+            }
             profilerLimiter.objectDelete();
         }
     }

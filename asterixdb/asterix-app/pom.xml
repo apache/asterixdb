@@ -998,6 +998,17 @@
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>auth</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.adobe.testing</groupId>
+      <artifactId>s3mock</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
     <!-- Mock for AWS S3 -->
     <dependency>
       <groupId>io.findify</groupId>

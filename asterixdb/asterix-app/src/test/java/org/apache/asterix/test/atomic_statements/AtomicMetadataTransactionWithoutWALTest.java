@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Random;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.api.common.LocalCloudUtil;
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.TestDataUtil;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.common.TestExecutor;
@@ -55,7 +55,7 @@ public class AtomicMetadataTransactionWithoutWALTest {
     @Before
     public void setUp() throws Exception {
         boolean cleanStart = Boolean.getBoolean("cleanup.start");
-        LocalCloudUtil.startS3CloudEnvironment(cleanStart);
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
         integrationUtil.setGracefulShutdown(false);
         integrationUtil.init(true, CONFIG_FILE);
     }
@@ -63,6 +63,7 @@ public class AtomicMetadataTransactionWithoutWALTest {
     @After
     public void tearDown() throws Exception {
         integrationUtil.deinit(true);
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     private void createDatasets() throws Exception {

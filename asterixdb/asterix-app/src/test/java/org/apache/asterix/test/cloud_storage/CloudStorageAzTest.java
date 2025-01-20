@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -70,6 +71,7 @@ public class CloudStorageAzTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         String endpointString = "http://127.0.0.1:15055/devstoreaccount1/" + CLOUD_STORAGE_BUCKET;
         final String accKey =
                 "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
@@ -93,6 +95,7 @@ public class CloudStorageAzTest {
     @AfterClass
     public static void tearDown() throws Exception {
         LangExecutionUtil.tearDown();
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     @Parameters(name = "CloudStorageAzBlobTest {index}: {0}")

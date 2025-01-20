@@ -48,6 +48,8 @@ import org.apache.asterix.cloud.clients.IParallelDownloader;
 import org.apache.asterix.cloud.clients.profiler.CountRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
+import org.apache.asterix.common.exceptions.ErrorCode;
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -55,6 +57,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.azure.core.http.rest.PagedIterable;
+import com.azure.core.http.rest.Response;
 import com.azure.core.util.BinaryData;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
@@ -246,7 +249,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     }
 
     @Override
-    public void deleteObjects(String bucket, Collection<String> paths) {
+    public void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException {
         if (paths.isEmpty())
             return;
         Set<BlobItem> blobsToDelete = getBlobsMatchingThesePaths(paths);
@@ -255,7 +258,17 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             return;
         Collection<List<String>> batchedBlobURLs = getBatchedBlobURLs(blobURLs);
         for (List<String> batch : batchedBlobURLs) {
-            blobBatchClient.deleteBlobs(batch, null).stream().count();
+            PagedIterable<Response<Void>> responses = blobBatchClient.deleteBlobs(batch, null);
+            Iterator<String> deletePathIter = paths.iterator();
+            String deletedPath = null;
+            try {
+                for (Response<Void> response : responses) {
+                    deletedPath = deletePathIter.next();
+                    response.getStatusCode();
+                }
+            } catch (BlobStorageException e) {
+                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath, paths.toString());
+            }
         }
     }
 

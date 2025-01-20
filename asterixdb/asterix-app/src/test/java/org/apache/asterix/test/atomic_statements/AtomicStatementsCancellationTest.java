@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.asterix.api.common.AsterixHyracksIntegrationUtil;
-import org.apache.asterix.api.common.LocalCloudUtil;
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.TestDataUtil;
 import org.apache.asterix.common.utils.Servlets;
 import org.apache.asterix.test.common.TestExecutor;
@@ -67,7 +67,7 @@ public class AtomicStatementsCancellationTest {
     @Before
     public void setUp() throws Exception {
         boolean cleanStart = true;
-        LocalCloudUtil.startS3CloudEnvironment(cleanStart);
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
         integrationUtil.setGracefulShutdown(true);
         integrationUtil.init(true, TEST_CONFIG_FILE_PATH);
         createDatasets();
@@ -76,6 +76,7 @@ public class AtomicStatementsCancellationTest {
     @After
     public void tearDown() throws Exception {
         integrationUtil.deinit(true);
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     private void createDatasets() throws Exception {

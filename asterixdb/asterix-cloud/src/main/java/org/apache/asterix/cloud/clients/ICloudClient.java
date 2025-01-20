@@ -124,7 +124,7 @@ public interface ICloudClient {
      * @param bucket bucket
      * @param paths  paths of all objects to be deleted
      */
-    void deleteObjects(String bucket, Collection<String> paths);
+    void deleteObjects(String bucket, Collection<String> paths) throws HyracksDataException;
 
     /**
      * Returns the size of the object at the specified path

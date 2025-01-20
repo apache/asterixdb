@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.asterix.api.common.LocalCloudUtil;
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -74,7 +74,7 @@ public class CloudStorageTest {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        LocalCloudUtil.startS3CloudEnvironment(true);
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true);
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";
@@ -94,6 +94,7 @@ public class CloudStorageTest {
     @AfterClass
     public static void tearDown() throws Exception {
         LangExecutionUtil.tearDown();
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     @Parameters(name = "CloudStorageTest {index}: {0}")
