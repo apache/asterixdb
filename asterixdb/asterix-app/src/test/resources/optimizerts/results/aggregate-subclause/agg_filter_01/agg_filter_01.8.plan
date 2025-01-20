@@ -1,28 +1,50 @@
+distribute result [$$65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$65])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$65] <- [{"two": $$two, "sm": $$68}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$two(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$66]  |PARTITIONED|
-                  {
+          group by ([$$two := $$66]) decor ([]) {
+                    aggregate [$$68] <- [agg-sql-sum($$70)]
                     -- AGGREGATE  |LOCAL|
+                      select ($$60)
                       -- STREAM_SELECT  |LOCAL|
-                        -- SUBPLAN  |LOCAL|
-                                {
+                        subplan {
+                                  aggregate [$$60] <- [empty-stream()]
                                   -- AGGREGATE  |LOCAL|
+                                    select (not(if-missing-or-null(gt($$x, 0), false)))
                                     -- STREAM_SELECT  |LOCAL|
+                                      unnest $$x <- scan-collection(ordered-list-constructor($$70, numeric-add($$70, $$70)))
                                       -- UNNEST  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SUBPLAN  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$66]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$66)
               -- STABLE_SORT [$$66(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
+                  project ([$$70, $$66])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$70, $$66] <- [$$tenk.getField(3), $$tenk.getField(2)]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$tenk])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                          data-scan []<-[$$67, $$tenk] <- test.tenk
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

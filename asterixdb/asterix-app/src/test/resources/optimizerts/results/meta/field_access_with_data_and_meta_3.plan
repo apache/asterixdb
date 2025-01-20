@@ -1,11 +1,22 @@
+distribute result [$$34]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$34])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$34] <- [{"$1": $$37}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$37] <- [agg-sql-sum($$38)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$38] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.ds.primary_idx_ds)  |PARTITIONED|
+                unnest-map [$$35] <- index-search("primary_idx_ds", 0, "test", "ds", false, false, 0, 0, true, true, false)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

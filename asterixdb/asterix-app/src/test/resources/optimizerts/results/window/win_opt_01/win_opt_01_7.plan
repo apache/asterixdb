@@ -1,17 +1,31 @@
+distribute result [$$67]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$67])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$67] <- [{"m": $$m, "t": $$t, "sum": $$68, "avg": round-half-to-even($$69, 2)}]
       -- ASSIGN  |LOCAL|
+        project ([$$m, $$t, $$68, $$69])
         -- STREAM_PROJECT  |LOCAL|
-          -- WINDOW  |LOCAL|
-                  {
+          window-aggregate [] <- [] partition [$$m] order (ASC, $$t) frame on (ASC, $$46) start unbounded end [$$46] {
+                    aggregate [$$69, $$68] <- [agg-sql-avg($$t), agg-sql-sum($$t)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- WINDOW  |LOCAL|
+            window-aggregate [$$46] <- [row-number-impl()] partition [$$m] order (ASC, $$t)
             -- WINDOW_STREAM  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                order (ASC, $$m) (ASC, $$t)
                 -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                    assign [$$m] <- [numeric-mod($$t, 4)]
                     -- ASSIGN  |UNPARTITIONED|
+                      unnest $$t <- range(1, 20)
                       -- UNNEST  |UNPARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

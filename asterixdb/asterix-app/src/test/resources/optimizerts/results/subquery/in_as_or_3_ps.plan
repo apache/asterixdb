@@ -1,41 +1,82 @@
+distribute result [$$20]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    order (ASC, $$20)
     -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+      exchange
       -- RANGE_PARTITION_EXCHANGE [$$20(ASC)]  |PARTITIONED|
+        forward: shared-variable = $$25
         -- FORWARD  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            replicate
             -- REPLICATE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$20])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (eq($$21, $$15))
                     -- HYBRID_HASH_JOIN [$$15][$$21]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$20, $$15])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$15] <- [$$c.getField(1)]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
+                              data-scan []<-[$$20, $$c] <- tpch.Customer
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                        unnest $$21 <- scan-collection(array: [ "Customer#000000003", "Customer#000000002", "Customer#000000001" ])
                         -- UNNEST  |UNPARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+          exchange
           -- BROADCAST_EXCHANGE  |PARTITIONED|
+            aggregate [$$25] <- [agg-range-map($$23, $$24)]
             -- AGGREGATE  |UNPARTITIONED|
+              exchange
               -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                aggregate [$$23, $$24] <- [agg-local-sampling($$20), agg-null-writer($$20)]
                 -- AGGREGATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
                     -- REPLICATE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$20])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            join (eq($$21, $$15))
                             -- HYBRID_HASH_JOIN [$$15][$$21]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$20, $$15])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  assign [$$15] <- [$$c.getField(1)]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (tpch.Customer)  |PARTITIONED|
+                                      data-scan []<-[$$20, $$c] <- tpch.Customer
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                unnest $$21 <- scan-collection(array: [ "Customer#000000003", "Customer#000000002", "Customer#000000001" ])
                                 -- UNNEST  |UNPARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

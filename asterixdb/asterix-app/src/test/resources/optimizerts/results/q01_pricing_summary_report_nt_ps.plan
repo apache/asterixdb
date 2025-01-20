@@ -1,74 +1,110 @@
--- SINK  |PARTITIONED|
-  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BULKLOAD  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$2(ASC), $$3(ASC)]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$2, $$3]  |PARTITIONED|
-                -- ASSIGN  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+distribute result [$$180]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$180])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$180] <- [{"l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "sum_qty": $$186, "sum_base_price": $$187, "sum_disc_price": $$188, "sum_charge": $$189, "ave_qty": $$190, "ave_price": $$191, "ave_disc": $$192, "count_order": $$193}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$l_returnflag) (ASC, $$l_linestatus)
           -- STABLE_SORT [$$l_returnflag(ASC), $$l_linestatus(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$211
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
-                              {
+                      group by ([$$l_returnflag := $$206; $$l_linestatus := $$207]) decor ([]) {
+                                aggregate [$$186, $$187, $$188, $$189, $$190, $$191, $$192, $$193] <- [global-sum-serial($$198), global-sum-serial($$199), global-sum-serial($$200), global-sum-serial($$201), global-avg-serial($$202), global-avg-serial($$203), global-avg-serial($$204), sum-serial($$205)]
                                 -- AGGREGATE  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$206, $$207]  |PARTITIONED|
-                          -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
-                                  {
+                          group by ([$$206 := $$181; $$207 := $$182]) decor ([]) {
+                                    aggregate [$$198, $$199, $$200, $$201, $$202, $$203, $$204, $$205] <- [local-sum-serial($$136), local-sum-serial($$141), local-sum-serial(numeric-multiply($$141, numeric-subtract(1, $$195))), local-sum-serial(numeric-multiply(numeric-multiply($$141, numeric-subtract(1, $$195)), numeric-add(1, $$197))), local-avg-serial($$136), local-avg-serial($$141), local-avg-serial($$195), count-serial($$128)]
                                     -- AGGREGATE  |LOCAL|
+                                      nested tuple source
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                  }
+                                 }
+                          -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$136, $$141, $$195, $$197, $$128, $$181, $$182])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$128] <- [{"l": $$l}]
                                 -- ASSIGN  |PARTITIONED|
+                                  select (le($$l.getField(10), "1998-09-02"))
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    assign [$$182, $$181, $$136, $$195, $$197, $$141] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$l])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                          data-scan []<-[$$184, $$185, $$l] <- tpch.LineItem
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$211] <- [agg-range-map($$208, $$209, $$210)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$208, $$209, $$210] <- [agg-local-sampling($$l_returnflag, $$l_linestatus), agg-null-writer($$l_returnflag), agg-null-writer($$l_linestatus)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$l_returnflag, $$l_linestatus])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate
                             -- REPLICATE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
-                                        {
+                                group by ([$$l_returnflag := $$206; $$l_linestatus := $$207]) decor ([]) {
+                                          aggregate [$$186, $$187, $$188, $$189, $$190, $$191, $$192, $$193] <- [global-sum-serial($$198), global-sum-serial($$199), global-sum-serial($$200), global-sum-serial($$201), global-avg-serial($$202), global-avg-serial($$203), global-avg-serial($$204), sum-serial($$205)]
                                           -- AGGREGATE  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- EXTERNAL_GROUP_BY[$$206, $$207]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$206, $$207]  |PARTITIONED|
-                                    -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
-                                            {
+                                    group by ([$$206 := $$181; $$207 := $$182]) decor ([]) {
+                                              aggregate [$$198, $$199, $$200, $$201, $$202, $$203, $$204, $$205] <- [local-sum-serial($$136), local-sum-serial($$141), local-sum-serial(numeric-multiply($$141, numeric-subtract(1, $$195))), local-sum-serial(numeric-multiply(numeric-multiply($$141, numeric-subtract(1, $$195)), numeric-add(1, $$197))), local-avg-serial($$136), local-avg-serial($$141), local-avg-serial($$195), count-serial($$128)]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- EXTERNAL_GROUP_BY[$$181, $$182]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        project ([$$136, $$141, $$195, $$197, $$128, $$181, $$182])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$128] <- [{"l": $$l}]
                                           -- ASSIGN  |PARTITIONED|
+                                            select (le($$l.getField(10), "1998-09-02"))
                                             -- STREAM_SELECT  |PARTITIONED|
+                                              assign [$$182, $$181, $$136, $$195, $$197, $$141] <- [$$l.getField(9), $$l.getField(8), $$l.getField(4), $$l.getField(6), $$l.getField(7), $$l.getField(5)]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$l])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                                    data-scan []<-[$$184, $$185, $$l] <- tpch.LineItem
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

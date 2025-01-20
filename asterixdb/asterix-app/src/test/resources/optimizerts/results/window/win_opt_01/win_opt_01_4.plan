@@ -1,15 +1,27 @@
+distribute result [$$94]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$94])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$94] <- [{"m": $$m, "t": $$t, "row_nubmer": $$69, "sum": $$95, "avg": round-half-to-even($$96, 2)}]
       -- ASSIGN  |LOCAL|
-        -- WINDOW  |LOCAL|
-                {
+        window-aggregate [$$69] <- [row-number-impl()] partition [$$m] order (ASC, $$t) frame on (ASC, $$t) start unbounded end [$$t] {
+                  aggregate [$$96, $$95] <- [agg-sql-avg(numeric-subtract($$t, numeric-mod($$t, 4))), agg-sql-sum(numeric-add($$t, numeric-mod($$t, 4)))]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- WINDOW  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$m) (ASC, $$t)
             -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                assign [$$m] <- [numeric-mod($$t, 4)]
                 -- ASSIGN  |UNPARTITIONED|
+                  unnest $$t <- range(1, 20)
                   -- UNNEST  |UNPARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,36 +1,63 @@
+distribute result [$$68]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$68])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$68] <- [{"o_ol_cnt": $$o_ol_cnt, "order_COUNT": $$73}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$o_ol_cnt(ASC) ]  |PARTITIONED|
-          -- SORT_GROUP_BY[$$77]  |PARTITIONED|
-                  {
+          group by ([$$o_ol_cnt := $$78]) decor ([]) {
+                    aggregate [$$73] <- [agg-sql-sum($$77)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-            -- HASH_PARTITION_EXCHANGE [$$77]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$68]  |PARTITIONED|
-                      {
+                 }
+          -- SORT_GROUP_BY[$$78]  |PARTITIONED|
+            exchange
+            -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+              group by ([$$78 := $$69]) decor ([]) {
+                        aggregate [$$77] <- [agg-sql-count(1)]
                         -- AGGREGATE  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SORT_GROUP_BY[$$69]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$69])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    select (neq($$72, 0))
                     -- STREAM_SELECT  |PARTITIONED|
+                      project ([$$69, $$72])
                       -- STREAM_PROJECT  |PARTITIONED|
-                        -- SUBPLAN  |PARTITIONED|
-                                {
+                        subplan {
+                                  aggregate [$$72] <- [agg-count(1)]
                                   -- AGGREGATE  |LOCAL|
+                                    select (ge($$75, string(numeric-add(date($$76), duration: {P7D }))))
                                     -- STREAM_SELECT  |LOCAL|
+                                      assign [$$75] <- [$$ol.getField("ol_delivery_d")]
                                       -- ASSIGN  |LOCAL|
+                                        unnest $$ol <- scan-collection($$74)
                                         -- UNNEST  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SUBPLAN  |PARTITIONED|
+                          select (and(lt($$76, "2015-10-01 00:00:00.000000"), ge($$76, "2015-07-01 00:00:00.000000")))
                           -- STREAM_SELECT  |PARTITIONED|
+                            project ([$$69, $$76, $$74])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$69, $$76, $$74] <- [$$o.getField("o_ol_cnt"), $$o.getField("o_entry_d"), $$o.getField("o_orderline")]
                               -- ASSIGN  |PARTITIONED|
+                                project ([$$o])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                                    data-scan []<-[$$71, $$o] <- test.orders
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

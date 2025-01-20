@@ -1,36 +1,66 @@
+distribute result [$$25]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$25])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$25] <- [{"D1": $$D1}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$D1])
         -- STREAM_PROJECT  |PARTITIONED|
+          select ($$23)
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$D1, $$23])
             -- STREAM_PROJECT  |PARTITIONED|
-              -- SUBPLAN  |PARTITIONED|
-                      {
+              subplan {
+                        aggregate [$$23] <- [non-empty-stream()]
                         -- AGGREGATE  |LOCAL|
+                          select (eq(true, $#2))
                           -- STREAM_SELECT  |LOCAL|
+                            unnest $#2 <- scan-collection(ordered-list-constructor(eq($$28, "a"), $$21))
                             -- UNNEST  |LOCAL|
-                              -- SUBPLAN  |LOCAL|
-                                      {
+                              subplan {
+                                        aggregate [$$21] <- [non-empty-stream()]
                                         -- AGGREGATE  |LOCAL|
+                                          select (eq("b", $#1))
                                           -- STREAM_SELECT  |LOCAL|
+                                            unnest $#1 <- scan-collection($$27)
                                             -- UNNEST  |LOCAL|
+                                              nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
+                                     }
+                              -- SUBPLAN  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                assign [$$28, $$27] <- [$$D1.getField("val"), $$D1.getField("items")]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$D1])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (TestDataverse.Dataset1.Dataset1)  |PARTITIONED|
+                      unnest-map [$$26, $$D1] <- index-search("Dataset1", 0, "TestDataverse", "Dataset1", false, false, 1, $$32, 1, $$32, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          distinct ([$$32])
                           -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+                              order (ASC, $$32)
+                              -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$32])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (TestDataverse.Dataset1.d1Idx)  |PARTITIONED|
+                                      unnest-map [$$31, $$32] <- index-search("d1Idx", 0, "TestDataverse", "Dataset1", false, false, 1, $$29, 1, $$30, true, true, true)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$29, $$30] <- ["b", "b"]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

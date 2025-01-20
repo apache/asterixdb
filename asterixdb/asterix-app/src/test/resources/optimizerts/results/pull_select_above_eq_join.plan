@@ -1,23 +1,46 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$33])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$33] <- [{"uid": $$34, "vid": $$35}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$34, $$35])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (neq($$36, $$37))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$34, $$36, $$35, $$37])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$38, $$39))
                 -- HYBRID_HASH_JOIN [$$38][$$39]  |PARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
+                    project ([$$34, $$36, $$38])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$38, $$36] <- [$$user.getField(1), $$user.getField(2)]
                       -- ASSIGN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (`pull-select-above-eq-join`.Users)  |PARTITIONED|
+                          data-scan []<-[$$34, $$user] <- `pull-select-above-eq-join`.Users
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
+                    project ([$$35, $$37, $$39])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$39, $$37] <- [$$visitor.getField(1), $$visitor.getField(2)]
                       -- ASSIGN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (`pull-select-above-eq-join`.Visitors)  |PARTITIONED|
+                          data-scan []<-[$$35, $$visitor] <- `pull-select-above-eq-join`.Visitors
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

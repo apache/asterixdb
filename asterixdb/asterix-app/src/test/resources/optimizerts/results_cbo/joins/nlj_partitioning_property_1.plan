@@ -1,31 +1,62 @@
+distribute result [$$70]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$70])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$70] <- [{"count": $$77}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$77] <- [agg-sql-sum($$79)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$79] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (true)
                 -- NESTED_LOOP  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- HYBRID_HASH_JOIN [$$76][$$78]  |PARTITIONED|
+                        join (eq($$71, $$73))
+                        -- HYBRID_HASH_JOIN [$$71][$$73]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$71])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (tpch.Supplier)  |PARTITIONED|
+                                data-scan []<-[$$71, $$s] <- tpch.Supplier
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            project ([$$73])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (tpch.Partsupp)  |PARTITIONED|
+                                data-scan []<-[$$72, $$73, $$ps] <- tpch.Partsupp
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    project ([])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (tpch.Part)  |PARTITIONED|
+                        data-scan []<-[$$74, $$p] <- tpch.Part
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

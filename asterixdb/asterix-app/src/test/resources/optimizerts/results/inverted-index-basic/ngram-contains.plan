@@ -1,14 +1,28 @@
+distribute result [$$o]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$o])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$15(ASC) ]  |PARTITIONED|
+        select (contains($$o.getField(2), "Multimedia"))
         -- STREAM_SELECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+            unnest-map [$$15, $$o] <- index-search("DBLP", 0, "test", "DBLP", false, false, 1, $$19, 1, $$19, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$19)
                 -- STABLE_SORT [$$19(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                    unnest-map [$$19] <- index-search("ngram_index", 5, "test", "DBLP", false, false, 0, missing, 12, false, 1, $$18)
+                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$18] <- ["Multimedia"]
                         -- ASSIGN  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

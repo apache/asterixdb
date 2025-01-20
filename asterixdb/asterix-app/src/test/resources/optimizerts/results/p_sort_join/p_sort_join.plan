@@ -1,76 +1,146 @@
+distribute result [$$81]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$81])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$81] <- [{"id2": $$id2}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$id2)
           -- STABLE_SORT [$$id2(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$id2(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$95
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$87]  |PARTITIONED|
-                              {
+                      group by ([$$id2 := $$87]) decor ([]) {
+                                aggregate [] <- []
                                 -- AGGREGATE  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SORT_GROUP_BY[$$87]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$87])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              join (eq($$87, $$90))
                               -- HYBRID_HASH_JOIN [$$87][$$90]  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                                  order (ASC, $$87)
                                   -- STABLE_SORT [$$87(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- RANGE_PARTITION_EXCHANGE [$$87(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                      project ([$$87])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$87] <- [$$TestDS1.getField(1)]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$TestDS1])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.TestDS1)  |PARTITIONED|
+                                              data-scan []<-[$$84, $$TestDS1] <- test.TestDS1
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$90]  |PARTITIONED|
+                                  order (ASC, $$90)
                                   -- STABLE_SORT [$$90(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- RANGE_PARTITION_EXCHANGE [$$90(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                      project ([$$90])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$90] <- [$$TestDS2.getField(1)]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$TestDS2])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.TestDS2)  |PARTITIONED|
+                                              data-scan []<-[$$85, $$TestDS2] <- test.TestDS2
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$95] <- [agg-range-map($$93, $$94)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$93, $$94] <- [agg-local-sampling($$id2), agg-null-writer($$id2)]
                       -- AGGREGATE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- SORT_GROUP_BY[$$87]  |PARTITIONED|
-                                      {
+                              group by ([$$id2 := $$87]) decor ([]) {
+                                        aggregate [] <- []
                                         -- AGGREGATE  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
+                                     }
+                              -- SORT_GROUP_BY[$$87]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$87])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      join (eq($$87, $$90))
                                       -- HYBRID_HASH_JOIN [$$87][$$90]  |PARTITIONED|
+                                        exchange
                                         -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                                          order (ASC, $$87)
                                           -- STABLE_SORT [$$87(ASC)]  |PARTITIONED|
+                                            exchange
                                             -- RANGE_PARTITION_EXCHANGE [$$87(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                              project ([$$87])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$87] <- [$$TestDS1.getField(1)]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  project ([$$TestDS1])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (test.TestDS1)  |PARTITIONED|
+                                                      data-scan []<-[$$84, $$TestDS1] <- test.TestDS1
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                        exchange
                                         -- HASH_PARTITION_EXCHANGE [$$90]  |PARTITIONED|
+                                          order (ASC, $$90)
                                           -- STABLE_SORT [$$90(ASC)]  |PARTITIONED|
+                                            exchange
                                             -- RANGE_PARTITION_EXCHANGE [$$90(ASC)] RANGE_MAP:{SPLIT:1}  |PARTITIONED|
+                                              project ([$$90])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$90] <- [$$TestDS2.getField(1)]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  project ([$$TestDS2])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (test.TestDS2)  |PARTITIONED|
+                                                      data-scan []<-[$$85, $$TestDS2] <- test.TestDS2
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

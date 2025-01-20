@@ -1,10 +1,20 @@
+distribute result [$$16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$16])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$16] <- [{"DS1": $$DS1}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$DS1])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.DS1.DS1)  |PARTITIONED|
+            unnest-map [$$17, $$DS1, $$18] <- index-search("DS1", 0, "test", "DS1", false, false, 1, $$20, 1, $$21, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$20, $$21] <- ["5", "5"]
                 -- ASSIGN  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

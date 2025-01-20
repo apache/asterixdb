@@ -1,24 +1,45 @@
+distribute result [$$97]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$97])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$97] <- [{"x": $$x, "y": $$y, "cnt": $$100, "rnk": $$95}]
       -- ASSIGN  |LOCAL|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-          -- STABLE_SORT [$$x(ASC), $$93(ASC)]  |LOCAL|
+          order (ASC, $$x) (ASC, $$100)
+          -- STABLE_SORT [$$x(ASC), $$100(ASC)]  |LOCAL|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              project ([$$x, $$y, $$100, $$95])
               -- STREAM_PROJECT  |LOCAL|
+                window-aggregate [$$95] <- [rank-impl($$101)] partition [$$x] order (ASC, $$101)
                 -- WINDOW_STREAM  |LOCAL|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                    -- STABLE_SORT [$$x(ASC), $$94(ASC)]  |LOCAL|
+                    order (ASC, $$x) (ASC, $$101)
+                    -- STABLE_SORT [$$x(ASC), $$101(ASC)]  |LOCAL|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                        -- PRE_CLUSTERED_GROUP_BY[$$96, $$97]  |LOCAL|
-                                {
+                        group by ([$$x := $$103; $$y := $$104]) decor ([]) {
+                                  aggregate [$$100, $$101] <- [agg-sql-sum($$105), agg-sql-sum($$106)]
                                   -- AGGREGATE  |LOCAL|
+                                    aggregate [$$105, $$106] <- [agg-sql-count($$r), agg-sql-count($$r)]
                                     -- AGGREGATE  |LOCAL|
+                                      nested tuple source
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- PRE_CLUSTERED_GROUP_BY[$$103, $$104]  |LOCAL|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                            -- STABLE_SORT [$$96(ASC), $$97(ASC)]  |LOCAL|
+                            order (ASC, $$103) (ASC, $$104)
+                            -- STABLE_SORT [$$103(ASC), $$104(ASC)]  |LOCAL|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                assign [$$104, $$103] <- [numeric-mod($$r, 4), numeric-mod($$r, 2)]
                                 -- ASSIGN  |UNPARTITIONED|
+                                  unnest $$r <- range(1, 10)
                                   -- UNNEST  |UNPARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

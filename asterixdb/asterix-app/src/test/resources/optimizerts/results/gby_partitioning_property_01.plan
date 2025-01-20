@@ -1,36 +1,66 @@
+distribute result [$$58]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$58])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$58] <- [{"id": $$id, "count": $$64}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
-                  {
+          group by ([$$id := $$70]) decor ([]) {
+                    aggregate [$$64] <- [agg-sql-sum($$69)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- SORT_GROUP_BY[$$60]  |PARTITIONED|
-                      {
+              group by ([$$70 := $$60]) decor ([]) {
+                        aggregate [$$69] <- [agg-sql-count(1)]
                         -- AGGREGATE  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SORT_GROUP_BY[$$60]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$60])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (eq($$60, $$63))
                       -- HYBRID_HASH_JOIN [$$60][$$63]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$60]  |PARTITIONED|
+                          project ([$$60])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$60] <- [meta($$user).getField("id")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$user])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.GleambookUsers)  |PARTITIONED|
+                                  data-scan []<-[$$61, $$user] <- test.GleambookUsers
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
+                          project ([$$63])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$63] <- [$$message.getField("author_id")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$message])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.GleambookMessages)  |PARTITIONED|
+                                  data-scan []<-[$$62, $$message] <- test.GleambookMessages
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

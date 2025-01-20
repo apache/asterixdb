@@ -1,39 +1,73 @@
+distribute result [$$83]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$83])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$83] <- [{"g": $$g, "sum_x": $$86, "sum_distinct_x": $$87, "sum_distinct_y": $$88}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$g(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
-                  {
+          group by ([$$g := $$g]) decor ([]) {
+                    aggregate [$$86] <- [agg-sql-sum($$71)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-                  {
+                 }
+                 {
+                    aggregate [$$87, $$88] <- [agg-sql-sum($$71), agg-sql-sum($$71)]
                     -- AGGREGATE  |LOCAL|
+                      distinct ([$$71])
                       -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        order (ASC, $$71)
                         -- MICRO_STABLE_SORT [$$71(ASC)]  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$g)
               -- STABLE_SORT [$$g(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$g]  |PARTITIONED|
+                  join (true)
                   -- NESTED_LOOP  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (true)
                       -- NESTED_LOOP  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$71])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$71] <- [$$x.getField(1)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$x])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
+                                  data-scan []<-[$$84, $$x] <- test.d1
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          unnest $$g <- range(1, 3)
                           -- UNNEST  |UNPARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    exchange
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                      project ([])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
+                          data-scan []<-[$$85, $$y] <- test.d2
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

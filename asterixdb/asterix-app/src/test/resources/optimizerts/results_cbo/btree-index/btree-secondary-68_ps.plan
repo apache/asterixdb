@@ -1,33 +1,66 @@
+distribute result [$$24]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$24])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$24] <- [{"o_custkey": $$27, "o_orderkey": $$28, "o_orderstatus": $$33}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$27) (ASC, $$28)
           -- STABLE_SORT [$$27(ASC), $$28(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$27(ASC), $$28(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$37
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$27, $$28, $$33])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        select (and(eq($$Orders.getField(5), "1-URGENT"), le($$27, 43), ge($$27, 40)))
                         -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$33, $$27] <- [$$Orders.getField(2), $$Orders.getField(1)]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                              data-scan []<-[$$28, $$Orders] <- tpch.Orders
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$37] <- [agg-range-map($$34, $$35, $$36)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$34, $$35, $$36] <- [agg-local-sampling($$27, $$28), agg-null-writer($$27), agg-null-writer($$28)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$27, $$28])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate
                             -- REPLICATE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$27, $$28, $$33])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  select (and(eq($$Orders.getField(5), "1-URGENT"), le($$27, 43), ge($$27, 40)))
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    assign [$$33, $$27] <- [$$Orders.getField(2), $$Orders.getField(1)]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                                        data-scan []<-[$$28, $$Orders] <- tpch.Orders
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

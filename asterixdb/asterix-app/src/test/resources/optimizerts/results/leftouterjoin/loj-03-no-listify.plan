@@ -1,127 +1,230 @@
+distribute result [$$240]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$240])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$240] <- [{"taskId": $$taskId, "cnt_all": $$250, "cnt_x": $$267, "cnt_y": $$268, "cnt_z": $$227.getField(0)}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$taskId(ASC) ]  |PARTITIONED|
+          order (ASC, $$taskId)
           -- STABLE_SORT [$$taskId(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$taskId, $$250, $$267, $$268, $$227])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  left outer join (eq($$taskId, $$taskId))
                   -- HYBRID_HASH_JOIN [$$taskId][$$taskId]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$taskId, $$250, $$267, $$268])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          left outer join (eq($$taskId, $$taskId))
                           -- HYBRID_HASH_JOIN [$$taskId][$$taskId]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$taskId, $$250, $$267])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (eq($$taskId, $$taskId))
                                   -- HYBRID_HASH_JOIN [$$taskId][$$taskId]  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$taskId(ASC)] HASH:[$$taskId]  |PARTITIONED|
-                                      -- SORT_GROUP_BY[$$279]  |PARTITIONED|
-                                              {
+                                      group by ([$$taskId := $$279]) decor ([]) {
+                                                aggregate [$$250] <- [agg-sql-sum($$278)]
                                                 -- AGGREGATE  |LOCAL|
+                                                  nested tuple source
                                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                              }
+                                             }
+                                      -- SORT_GROUP_BY[$$279]  |PARTITIONED|
+                                        exchange
                                         -- HASH_PARTITION_EXCHANGE [$$279]  |PARTITIONED|
-                                          -- SORT_GROUP_BY[$$242]  |PARTITIONED|
-                                                  {
+                                          group by ([$$279 := $$242]) decor ([]) {
+                                                    aggregate [$$278] <- [agg-sql-count(1)]
                                                     -- AGGREGATE  |LOCAL|
+                                                      nested tuple source
                                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                  }
+                                                 }
+                                          -- SORT_GROUP_BY[$$242]  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              project ([$$242])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                assign [$$tasks, $$242] <- [$$tasks, $$243]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    replicate
                                                     -- REPLICATE  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$243] <- [$$tasks.getField("taskId")]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          project ([$$tasks])
                                                           -- STREAM_PROJECT  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- DATASOURCE_SCAN (test.tasks)  |PARTITIONED|
+                                                              data-scan []<-[$$247, $$tasks] <- test.tasks
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$267, $$taskId])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$267] <- [{"taskId": $$taskId, "cnt_x": $$258}.getField(0)]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- SORT_GROUP_BY[$$281]  |PARTITIONED|
-                                                    {
+                                            group by ([$$taskId := $$281]) decor ([]) {
+                                                      aggregate [$$258] <- [agg-sql-sum($$280)]
                                                       -- AGGREGATE  |LOCAL|
+                                                        nested tuple source
                                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                    }
+                                                   }
+                                            -- SORT_GROUP_BY[$$281]  |PARTITIONED|
+                                              exchange
                                               -- HASH_PARTITION_EXCHANGE [$$281]  |PARTITIONED|
-                                                -- SORT_GROUP_BY[$$243]  |PARTITIONED|
-                                                        {
+                                                group by ([$$281 := $$243]) decor ([]) {
+                                                          aggregate [$$280] <- [agg-sql-count(1)]
                                                           -- AGGREGATE  |LOCAL|
+                                                            nested tuple source
                                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                        }
+                                                       }
+                                                -- SORT_GROUP_BY[$$243]  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    project ([$$243])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      select (eq($$tasks.getField("status"), "x"))
                                                       -- STREAM_SELECT  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          replicate
                                                           -- REPLICATE  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              assign [$$243] <- [$$tasks.getField("taskId")]
                                                               -- ASSIGN  |PARTITIONED|
+                                                                project ([$$tasks])
                                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- DATASOURCE_SCAN (test.tasks)  |PARTITIONED|
+                                                                    data-scan []<-[$$247, $$tasks] <- test.tasks
+                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        empty-tuple-source
                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$268, $$taskId])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$268] <- [{"taskId": $$taskId, "cnt_y": $$259}.getField(0)]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- SORT_GROUP_BY[$$283]  |PARTITIONED|
-                                            {
+                                    group by ([$$taskId := $$283]) decor ([]) {
+                                              aggregate [$$259] <- [agg-sql-sum($$282)]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- SORT_GROUP_BY[$$283]  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$283]  |PARTITIONED|
-                                        -- SORT_GROUP_BY[$$244]  |PARTITIONED|
-                                                {
+                                        group by ([$$283 := $$244]) decor ([]) {
+                                                  aggregate [$$282] <- [agg-sql-count(1)]
                                                   -- AGGREGATE  |LOCAL|
+                                                    nested tuple source
                                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                }
+                                               }
+                                        -- SORT_GROUP_BY[$$244]  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$244])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              select (eq($$tasks.getField("status"), "y"))
                                               -- STREAM_SELECT  |PARTITIONED|
+                                                project ([$$tasks, $$244])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  assign [$$tasks, $$244] <- [$$tasks, $$243]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      replicate
                                                       -- REPLICATE  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          assign [$$243] <- [$$tasks.getField("taskId")]
                                                           -- ASSIGN  |PARTITIONED|
+                                                            project ([$$tasks])
                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                -- DATASOURCE_SCAN (test.tasks)  |PARTITIONED|
+                                                                data-scan []<-[$$247, $$tasks] <- test.tasks
+                                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    empty-tuple-source
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$227, $$taskId])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$227] <- [{"taskId": $$taskId, "cnt_z": $$260}]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- SORT_GROUP_BY[$$285]  |PARTITIONED|
-                                    {
+                            group by ([$$taskId := $$285]) decor ([]) {
+                                      aggregate [$$260] <- [agg-sql-sum($$284)]
                                       -- AGGREGATE  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                                   }
+                            -- SORT_GROUP_BY[$$285]  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$285]  |PARTITIONED|
-                                -- SORT_GROUP_BY[$$245]  |PARTITIONED|
-                                        {
+                                group by ([$$285 := $$245]) decor ([]) {
+                                          aggregate [$$284] <- [agg-sql-count(1)]
                                           -- AGGREGATE  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- SORT_GROUP_BY[$$245]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$245])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      select (eq($$tasks.getField("status"), "z"))
                                       -- STREAM_SELECT  |PARTITIONED|
+                                        project ([$$tasks, $$245])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$tasks, $$245] <- [$$tasks, $$243]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              replicate
                                               -- REPLICATE  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  assign [$$243] <- [$$tasks.getField("taskId")]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    project ([$$tasks])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- DATASOURCE_SCAN (test.tasks)  |PARTITIONED|
+                                                        data-scan []<-[$$247, $$tasks] <- test.tasks
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source
                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

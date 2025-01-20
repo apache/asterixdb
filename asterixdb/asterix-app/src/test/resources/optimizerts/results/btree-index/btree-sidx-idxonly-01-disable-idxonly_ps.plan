@@ -1,47 +1,94 @@
+distribute result [$$17]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$17])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$17] <- [{"pk": $$20, "sk": $$19}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$20)
           -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$20(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$28
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      select (lt($$19, 3))
                       -- STREAM_SELECT  |PARTITIONED|
+                        project ([$$20, $$19])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$19] <- [$$o.getField(1)]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
+                              unnest-map [$$20, $$o] <- index-search("MyData", 0, "test", "MyData", false, false, 1, $$25, 1, $$25, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$25)
                                   -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$25])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                          unnest-map [$$24, $$25] <- index-search("btree_index_docid", 0, "test", "MyData", false, false, 0, 1, $$23, true, false, false)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$23] <- [3]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$28] <- [agg-range-map($$26, $$27)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$26, $$27] <- [agg-local-sampling($$20), agg-null-writer($$20)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$20])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate
                             -- REPLICATE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                select (lt($$19, 3))
                                 -- STREAM_SELECT  |PARTITIONED|
+                                  project ([$$20, $$19])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$19] <- [$$o.getField(1)]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
+                                        unnest-map [$$20, $$o] <- index-search("MyData", 0, "test", "MyData", false, false, 1, $$25, 1, $$25, true, true, true)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            order (ASC, $$25)
                                             -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$25])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                                    unnest-map [$$24, $$25] <- index-search("btree_index_docid", 0, "test", "MyData", false, false, 0, 1, $$23, true, false, false)
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$23] <- [3]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

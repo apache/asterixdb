@@ -1,68 +1,124 @@
+distribute result [$#2]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$#2])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$189(ASC) ]  |PARTITIONED|
+        order (ASC, $$189)
         -- STABLE_SORT [$$189(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$240, $$241, $#2) ($$two, $$two, $$189)
             -- UNION_ALL  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$240, $$two])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$240] <- [cast({"two": $$two, "cnt": $$183, "sm": $$184})]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- SORT_GROUP_BY[$$236]  |PARTITIONED|
-                              {
+                      group by ([$$two := $$236]) decor ([]) {
+                                aggregate [$$183, $$184] <- [agg-sql-sum($$234), agg-global-sql-sum($$235)]
                                 -- AGGREGATE  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SORT_GROUP_BY[$$236]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$236]  |PARTITIONED|
-                          -- PRE_CLUSTERED_GROUP_BY[$$115]  |PARTITIONED|
-                                  {
+                          group by ([$$236 := $$115]) decor ([]) {
+                                    aggregate [$$234, $$235] <- [agg-sql-count(1), agg-local-sql-sum($$117)]
                                     -- AGGREGATE  |LOCAL|
+                                      select (gt($$117, 0))
                                       -- STREAM_SELECT  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                  }
+                                 }
+                          -- PRE_CLUSTERED_GROUP_BY[$$115]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$115)
                               -- STABLE_SORT [$$115(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$117, $$115])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    assign [$$117, $$115] <- [$$tenk.getField(3), $$tenk.getField(2)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$tenk])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$tenk] <- [$$tenk]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$tenk])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                                    data-scan []<-[$$120, $$tenk] <- test.tenk
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$241, $$two])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$241] <- [cast({"two": $$two, "cnt": $$185, "sm": $$186})]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$185, $$186, $$two])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- SORT_GROUP_BY[$$239]  |PARTITIONED|
-                                {
+                        group by ([$$91 := $$239]) decor ([$$two := $$114]) {
+                                  aggregate [$$185, $$186] <- [agg-sql-sum($$237), agg-global-sql-sum($$238)]
                                   -- AGGREGATE  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SORT_GROUP_BY[$$239]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$239]  |PARTITIONED|
-                            -- PRE_CLUSTERED_GROUP_BY[$$116]  |PARTITIONED|
-                                    {
+                            group by ([$$239 := $$116]) decor ([$$114]) {
+                                      aggregate [$$237, $$238] <- [agg-sql-count(1), agg-local-sql-sum($$118)]
                                       -- AGGREGATE  |LOCAL|
+                                        select (gt($$118, 0))
                                         -- STREAM_SELECT  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                                   }
+                            -- PRE_CLUSTERED_GROUP_BY[$$116]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$116)
                                 -- STABLE_SORT [$$116(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$116, $$114, $$118])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      assign [$$116, $$114, $$118] <- [true, null, $$tenk.getField(3)]
                                       -- ASSIGN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          replicate
                                           -- REPLICATE  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              project ([$$tenk])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                                  data-scan []<-[$$120, $$tenk] <- test.tenk
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

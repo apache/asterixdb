@@ -1,33 +1,34 @@
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$42])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$42] <- [{"x": $$x, "y": $$44}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$x, $$44])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$45, $$44))
             -- HYBRID_HASH_JOIN [$$45][$$44]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                assign [$$45] <- [$$x.getField(0)]
                 -- ASSIGN  |UNPARTITIONED|
+                  unnest $$x <- scan-collection(multiset: {{ { "a": 1 }, { "a": 2 } }})
                   -- UNNEST  |UNPARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$44])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (test.s)  |PARTITIONED|
+                    data-scan []<-[$$44, $$z] <- test.s
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

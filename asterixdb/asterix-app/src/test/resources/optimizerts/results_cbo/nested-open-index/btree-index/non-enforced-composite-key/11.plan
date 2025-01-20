@@ -1,18 +1,36 @@
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$22])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$22] <- [{"res": $$29}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$29(ASC) ]  |PARTITIONED|
+          order (ASC, $$29)
           -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$29])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (and(gt($$25, 499), lt($$25, 99999)))
                 -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$29, $$25])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$29, $$25] <- [$$31.getField("c_x"), $$31.getField("c_i8")]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$31])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$31] <- [$$t.getField("nested")]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$t])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.TestOpen)  |PARTITIONED|
+                              data-scan []<-[$$27, $$t] <- test.TestOpen
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

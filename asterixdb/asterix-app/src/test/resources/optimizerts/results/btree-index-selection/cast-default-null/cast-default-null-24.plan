@@ -1,19 +1,38 @@
+distribute result [$$17]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$17])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$17] <- [{"id": $$20, "s_f2": $$19}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+          select (lt($$19, "4"))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$20, $$19])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$19] <- [$$ds7.getField(2)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.ds7.ds7)  |PARTITIONED|
+                  unnest-map [$$20, $$ds7] <- index-search("ds7", 0, "test", "ds7", false, false, 1, $$25, 1, $$25, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$25)
                       -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$25])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.ds7.idx1)  |PARTITIONED|
+                              unnest-map [$$24, $$25] <- index-search("idx1", 0, "test", "ds7", false, false, 0, 1, $$23, true, false, false)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$23] <- ["4"]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

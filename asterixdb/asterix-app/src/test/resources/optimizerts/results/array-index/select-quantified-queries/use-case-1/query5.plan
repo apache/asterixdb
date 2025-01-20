@@ -1,24 +1,45 @@
+distribute result [$$54]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$54])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$54] <- [{"$1": $$56}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$56] <- [agg-sql-sum($$60)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$60] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select ($$46)
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$46])
                 -- STREAM_PROJECT  |PARTITIONED|
-                  -- SUBPLAN  |PARTITIONED|
-                          {
+                  subplan {
+                            aggregate [$$46] <- [empty-stream()]
                             -- AGGREGATE  |LOCAL|
+                              select (not(if-missing-or-null(and(gt($$D, "2016"), lt($$D, "2017")), false)))
                               -- STREAM_SELECT  |LOCAL|
+                                unnest $$D <- scan-collection($$59)
                                 -- UNNEST  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
+                         }
+                  -- SUBPLAN  |PARTITIONED|
+                    project ([$$59])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      select (and(lt(0, len($$C.getField("dates_notindexed"))), lt(0, len($$C.getField("dates_notindexed_2")))))
                       -- STREAM_SELECT  |PARTITIONED|
+                        assign [$$59] <- [$$C.getField(2)]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$C])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                              data-scan []<-[$$55, $$C] <- TestYelp.YelpCheckin
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

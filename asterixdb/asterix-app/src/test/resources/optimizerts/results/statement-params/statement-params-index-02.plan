@@ -1,30 +1,60 @@
+distribute result [$$26]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$26])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$26] <- [{"id": $$30, "fname": $$28, "lname": $$29, "age": $$33}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
+          select (and(eq($$29, "Isa"), eq($$28, "Julio")))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$30, $$33, $$28, $$29])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$33, $$28, $$29] <- [$$l.getField(3), $$l.getField(1), $$l.getField(2)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.employee.employee)  |PARTITIONED|
+                  unnest-map [$$30, $$l] <- index-search("employee", 0, "test", "employee", false, false, 1, $$42, 1, $$42, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      intersect [$$42] <- [[$$37], [$$41]]
                       -- INTERSECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$37)
                           -- STABLE_SORT [$$37(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$37])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.employee.idx_employee_fname)  |PARTITIONED|
+                                  unnest-map [$$36, $$37] <- index-search("idx_employee_fname", 0, "test", "employee", false, false, 1, $$34, 1, $$35, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$34, $$35] <- ["Julio", "Julio"]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$41)
                           -- STABLE_SORT [$$41(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$41])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.employee.idx_employee_lname)  |PARTITIONED|
+                                  unnest-map [$$40, $$41] <- index-search("idx_employee_lname", 0, "test", "employee", false, false, 1, $$38, 1, $$39, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$38, $$39] <- ["Isa", "Isa"]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

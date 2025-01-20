@@ -1,14 +1,28 @@
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$30])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$30] <- [{"business_id": $$C.getField(1)}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$C])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (and(eq("2016-04-26", $$D.getField(0)), eq($$D.getField(1), "19:49:16")))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$C, $$D])
             -- STREAM_PROJECT  |PARTITIONED|
+              unnest $$D <- scan-collection($$32)
               -- UNNEST  |PARTITIONED|
+                assign [$$32] <- [$$C.getField(2)]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$C])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                      data-scan []<-[$$31, $$C] <- TestYelp.YelpCheckin
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

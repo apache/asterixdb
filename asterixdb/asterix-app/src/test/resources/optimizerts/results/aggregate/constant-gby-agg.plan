@@ -1,24 +1,42 @@
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$42])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$42] <- [{"alias": $$alias, "count": $$45}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- SORT_GROUP_BY[$$47]  |PARTITIONED|
-                  {
+          group by ([$$alias := $$47]) decor ([]) {
+                    aggregate [$$45] <- [agg-sql-sum($$46)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SORT_GROUP_BY[$$47]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
-              -- SORT_GROUP_BY[$$43]  |PARTITIONED|
-                      {
+              group by ([$$47 := $$43]) decor ([]) {
+                        aggregate [$$46] <- [agg-sql-count(1)]
                         -- AGGREGATE  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SORT_GROUP_BY[$$43]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$43])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$43] <- [$$u.getField("alias")]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$u])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                          data-scan []<-[$$44, $$u] <- TinySocial.FacebookUsers
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

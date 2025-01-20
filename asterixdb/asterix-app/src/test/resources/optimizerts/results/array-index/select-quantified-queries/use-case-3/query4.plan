@@ -1,21 +1,39 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$33])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$33] <- [{"business_id": $$38}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$38])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (and($$28, eq($$29, 0)))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$38, $$28, $$29])
             -- STREAM_PROJECT  |PARTITIONED|
-              -- SUBPLAN  |PARTITIONED|
-                      {
+              subplan {
+                        aggregate [$$28, $$29] <- [non-empty-stream(), agg-sql-count(switch-case(and(ge($$36, "2016"), le($$36, "2017")), true, NULL, true))]
                         -- AGGREGATE  |LOCAL|
+                          assign [$$36] <- [$$D.getField("date_notindexed")]
                           -- ASSIGN  |LOCAL|
+                            unnest $$D <- scan-collection($$35)
                             -- UNNEST  |LOCAL|
+                              nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                project ([$$38, $$35])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$38, $$35] <- [$$C.getField(1), $$C.getField(2)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$C])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                        data-scan []<-[$$34, $$C] <- TestYelp.YelpCheckin
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

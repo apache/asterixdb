@@ -1,37 +1,74 @@
+distribute result [$$23]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- SORT_MERGE_EXCHANGE [$$23(ASC) ]  |PARTITIONED|
+    order (ASC, $$23)
     -- STABLE_SORT [$$23(ASC)]  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$23])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (and(eq($$tenk.getField(7), 0), eq($$tenk.getField(8), 0)))
           -- STREAM_SELECT  |PARTITIONED|
+            assign [$$23] <- [$$tenk.getField(0)]
             -- ASSIGN  |PARTITIONED|
+              project ([$$tenk])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                  unnest-map [$$20, $$tenk] <- index-search("tenk", 0, "test", "tenk", false, false, 1, $$32, 1, $$32, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      intersect [$$32] <- [[$$27], [$$31]]
                       -- INTERSECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$27)
                           -- STABLE_SORT [$$27(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$27])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.tenk.idx_1k)  |PARTITIONED|
+                                  unnest-map [$$26, $$27] <- index-search("idx_1k", 0, "test", "tenk", false, false, 1, $$24, 1, $$25, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$24, $$25])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$24, $$25] <- [$$28, $$29]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$28, $$29] <- [0, 0]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$31)
                           -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$31])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.tenk.idx_2k)  |PARTITIONED|
+                                  unnest-map [$$30, $$31] <- index-search("idx_2k", 0, "test", "tenk", false, false, 1, $$28, 1, $$29, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      replicate
                                       -- REPLICATE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$28, $$29] <- [0, 0]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

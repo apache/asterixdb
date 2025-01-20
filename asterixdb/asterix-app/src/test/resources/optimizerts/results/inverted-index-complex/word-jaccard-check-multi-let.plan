@@ -1,17 +1,34 @@
+distribute result [$$48]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$48])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$48] <- [{"Paper": $$55, "Query": array: [ "transactions", "for", "cooperative", "environments" ]}]
       -- ASSIGN  |PARTITIONED|
+        select (get-item(similarity-jaccard-check($$55, array: [ "transactions", "for", "cooperative", "environments" ], 0.8), 0))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$55])
           -- STREAM_PROJECT  |PARTITIONED|
+            assign [$$55] <- [word-tokens($$paper.getField(2))]
             -- ASSIGN  |PARTITIONED|
+              project ([$$paper])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                  unnest-map [$$49, $$paper] <- index-search("DBLP", 0, "test", "DBLP", false, false, 1, $$54, 1, $$54, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$54)
                       -- STABLE_SORT [$$54(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.keyword_index)  |PARTITIONED|
+                          unnest-map [$$54] <- index-search("keyword_index", 4, "test", "DBLP", false, false, 1, 0.8, 21, false, 1, $$53)
+                          -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              assign [$$53] <- [array: [ "transactions", "for", "cooperative", "environments" ]]
                               -- ASSIGN  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

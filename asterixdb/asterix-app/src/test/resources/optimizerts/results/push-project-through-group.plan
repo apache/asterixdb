@@ -1,32 +1,61 @@
+distribute result [$$41]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$41])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$41] <- [{"id": $$48, "matches": $$38}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$42]  |PARTITIONED|
-                  {
+          group by ([$$48 := $$42]) decor ([]) {
+                    aggregate [$$38] <- [listify($$37)]
                     -- AGGREGATE  |LOCAL|
+                      select (not(is-missing($$47)))
                       -- STREAM_SELECT  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$42]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$42)
               -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$42]  |PARTITIONED|
+                  project ([$$37, $$47, $$42])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      left outer join (eq($$44, $$45))
                       -- HYBRID_HASH_JOIN [$$45][$$44]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                          project ([$$42, $$45])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$45] <- [$$paperDBLP.getField(3)]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (fuzzyjoin_080.DBLP)  |PARTITIONED|
+                                data-scan []<-[$$42, $$paperDBLP] <- fuzzyjoin_080.DBLP
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$44]  |PARTITIONED|
+                          project ([$$37, $$47, $$44])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$47, $$37, $$44] <- [true, $$paper.getField(2), $$paper.getField(3)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$paper])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (fuzzyjoin_080.DBLP)  |PARTITIONED|
+                                  data-scan []<-[$$43, $$paper] <- fuzzyjoin_080.DBLP
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
