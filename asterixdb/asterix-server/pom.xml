@@ -264,6 +264,10 @@
               <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/master/LICENSE</url>
             </override>
             <override>
+              <gav>com.microsoft.azure:msal4j-persistence-extension:1.3.0</gav>
+              <url>https://raw.githubusercontent.com/AzureAD/microsoft-authentication-extensions-for-java/master/LICENSE</url>
+            </override>
+            <override>
               <gav>com.microsoft.azure:azure-keyvault-core:1.2.4</gav>
               <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/main/sdk/keyvault/LICENSE</url>
             </override>
@@ -540,6 +544,10 @@
               <gav>com.google.api:gax-grpc:2.7.1</gav>
               <url>https://raw.githubusercontent.com/googleapis/gax-java/v2.7.1/LICENSE</url>
             </override>
+            <override>
+              <gav>com.google.api:gax-grpc:2.7.1</gav>
+              <url>https://raw.githubusercontent.com/googleapis/gax-java/v2.7.1/LICENSE</url>
+            </override>
           </overrides>
           <licenses>
             <license>
@@ -628,6 +636,10 @@
               <displayName>The JSON License</displayName>
             </license>
             <license>
+              <url>https://www.bouncycastle.org/licence.html</url>
+              <displayName>Bouncy Castle Licence</displayName>
+            </license>
+            <license>
               <url>https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html</url>
               <!--<displayName>CDDL 1.1</displayName>-->
               <metric>10</metric>
@@ -702,6 +714,7 @@
               <url>https://raw.githubusercontent.com/Azure/azure-sdk-for-java/main/LICENSE.txt</url>
               <aliasUrls>
                 <aliasUrl>com.microsoft.azure--msal4j--1.14.0_MIT License</aliasUrl>
+                <aliasUrl>com.microsoft.azure--msal4j--1.17.1_MIT License</aliasUrl>
               </aliasUrls>
             </license>
           </licenses>
