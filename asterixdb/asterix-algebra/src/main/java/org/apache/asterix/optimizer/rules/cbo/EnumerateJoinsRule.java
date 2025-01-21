@@ -204,6 +204,14 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             // without any hitch. Basically, we cannot go back now!!
             // now that we know it is safe to proceed with unnesting array optimization, we will remove
             // the unnestOps and related assign ops from the leafInputs and add them back later at the right places.
+            //select count (*) from KS1 x, x.uarr_i, x.zarr_i, KS2 y, y. earr_i where x.rand_n = y.rand_n;
+            //realInput 0 = true      (KS1)
+            //realInput 1 = false
+            //realInput 2 = false
+            //realInput 3 = true (KS2)
+            //realInput 4 = false
+            //Note: The Unnesting code may move UNNEST Ops from the leafInputs higher up in the plan.
+            //The code is not designed to deal with UNNEST Ops that are not in the leafInputs.
             int i = -1;
             int j = -1;
             for (List<List<ILogicalOperator>> l : unnestOpsInfo) {
@@ -353,7 +361,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             buildNewTree(cheapestPlanNode);
         }
         context.computeAndSetTypeEnvironmentForOperator(root);
-        String finalPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        if (LOGGER.isTraceEnabled()) {
+            String finalPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+        }
         return true;
     }
 
@@ -451,7 +461,9 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             ILogicalOperator parentOp = null; // The final left outerjoin operator is what we will attach the leafInput to
 
             for (List<ILogicalOperator> l2 : l1) {
-                String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                if (LOGGER.isTraceEnabled()) {
+                    String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                }
                 DataSourceScanOperator fakeDs = (DataSourceScanOperator) truncateInput(leafInput);
                 fakeLeafInputsMap.put(fakeDs, true);
                 LogicalVariable var1 = fakeDs.getVariables().get(0);
@@ -460,13 +472,19 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 ILogicalExpression expr = makeNewexpr(var1, var2);
                 foj = new LeftOuterJoinOperator(new MutableObject<>(expr), new MutableObject<>(leftChild), q,
                         ConstantExpression.MISSING.getValue());
-                viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                if (LOGGER.isTraceEnabled()) {
+                    String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                }
                 leftChild = foj;
-                viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                if (LOGGER.isTraceEnabled()) {
+                    String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+                }
             }
-            Pair<ILogicalOperator, Integer> parent = parentsOfLeafInputs.get(i);
+            Pair<ILogicalOperator, Integer> parent = parentsOfLeafInputs.get(j);
             parent.first.getInputs().get(parent.second).setValue(foj);
-            String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            if (LOGGER.isTraceEnabled()) {
+                String viewInPlan = new ALogicalPlanImpl(opRef).toString(); //useful when debugging
+            }
         }
     }
 
