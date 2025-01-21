@@ -22,14 +22,14 @@
  * Primary index should used w/ INLJ.
  */
 
-DROP DATAVERSE Test IF EXISTS;
-CREATE DATAVERSE Test;
-USE Test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
 CREATE TYPE UsersType AS { user_id: bigint };
 CREATE DATASET Users (UsersType) PRIMARY KEY user_id;
 
-FROM   Test.Users U1, Test.Users U2
+FROM   test.Users U1, test.Users U2
 LET    augmentedUser1 = OBJECT_ADD(U1, "favoriteColor", "Green"),
        augmentedUser2 = OBJECT_ADD(U2, "favoriteFood", "Pizza"),
        augmentedUser3 = OBJECT_ADD(augmentedUser2, "favoriteColor", "Red"),

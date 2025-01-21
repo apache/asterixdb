@@ -22,23 +22,23 @@
  * Index should be used in both cases.
  */
 
-DROP DATAVERSE Test IF EXISTS;
-CREATE DATAVERSE Test;
-USE Test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
 CREATE TYPE UsersType AS { user_id: bigint, name: { first: string } };
 CREATE DATASET Users (UsersType) PRIMARY KEY user_id;
 CREATE INDEX firstUsersNameIdx ON Users ( name.first );
 CREATE INDEX lastUsersNameIdx ON Users ( name.last: string );
 
-FROM   Test.Users U1
+FROM   test.Users U1
 LET    augmentedUser1 = OBJECT_ADD(U1, "favoriteColor", "Green")
 WHERE  augmentedUser1.name.first = "Glenn"
 SELECT augmentedUser1.*
 
 UNION ALL
 
-FROM   Test.Users U2
+FROM   test.Users U2
 LET    augmentedUser2 = OBJECT_ADD(U2, "favoriteFood", "Pizza")
 WHERE  augmentedUser2.name.last = "John"
 SELECT augmentedUser2.*;

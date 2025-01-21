@@ -19,7 +19,7 @@
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- STREAM_PROJECT  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (Test.Users)  |PARTITIONED|
+                                          -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                     -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
@@ -31,7 +31,7 @@
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (Test.Users)  |PARTITIONED|
+                                      -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             -- BROADCAST_EXCHANGE  |PARTITIONED|

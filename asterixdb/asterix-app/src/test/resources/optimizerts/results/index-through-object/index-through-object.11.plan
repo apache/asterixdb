@@ -9,13 +9,13 @@
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (Test.Users.Users)  |PARTITIONED|
+                      -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STABLE_SORT [$$78(ASC)]  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (Test.Users.firstUsersNameIdx)  |PARTITIONED|
+                                  -- BTREE_SEARCH (test.Users.firstUsersNameIdx)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
@@ -27,13 +27,13 @@
                 -- ASSIGN  |PARTITIONED|
                   -- STREAM_PROJECT  |PARTITIONED|
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (Test.Users.Users)  |PARTITIONED|
+                      -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                           -- STABLE_SORT [$$82(ASC)]  |PARTITIONED|
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (Test.Users.lastUsersNameIdx)  |PARTITIONED|
+                                  -- BTREE_SEARCH (test.Users.lastUsersNameIdx)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- ASSIGN  |PARTITIONED|
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
