@@ -66,8 +66,8 @@ public class GCSWriter implements ICloudWriter {
         guardian.checkIsolatedWriteAccess(bucket, path);
         // The GCS library triggers a new upload when its internal buffer is full, not on each call to writer.write().
         // uploadsToBeTriggered estimates upload count, and we acquire matching tokens from the limiter.
-        int uploadsToBeTriggered =
-                (int) ((writtenBytes + page.remaining()) / writeBufferSize) - (int) (writtenBytes / writeBufferSize);
+        long uploadsToBeTriggered =
+                ((writtenBytes + page.remaining()) / writeBufferSize) - (writtenBytes / writeBufferSize);
         while (uploadsToBeTriggered-- > 0) {
             profiler.objectMultipartUpload();
         }
