@@ -25,7 +25,6 @@ import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.K
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.dataflow.data.nontagged.printers.PrintTools;
 import org.apache.hyracks.algebricks.data.IPrinter;
@@ -34,7 +33,6 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AStringPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
-    private static final ConcurrentHashMap<String, AStringPrinterFactory> instanceCache = new ConcurrentHashMap<>();
     private static final String NONE = "none";
     private String quote;
     private Boolean forceQuote;
@@ -51,8 +49,7 @@ public class AStringPrinterFactory implements IPrinterFactory {
     public static AStringPrinterFactory createInstance(String quote, String forceQuoteStr, String escape,
             String delimiter) {
         boolean forceQuote = forceQuoteStr == null || Boolean.parseBoolean(forceQuoteStr);
-        String key = CSVUtils.generateKey(quote, forceQuoteStr, escape, delimiter);
-        return instanceCache.computeIfAbsent(key, k -> new AStringPrinterFactory(quote, forceQuote, escape, delimiter));
+        return new AStringPrinterFactory(quote, forceQuote, escape, delimiter);
     }
 
     private final IPrinter PRINTER = (byte[] b, int s, int l, PrintStream ps) -> {

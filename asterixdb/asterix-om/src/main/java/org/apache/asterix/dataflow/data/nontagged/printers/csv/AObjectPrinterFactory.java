@@ -27,7 +27,6 @@ import static org.apache.asterix.dataflow.data.nontagged.printers.csv.CSVUtils.K
 
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.asterix.om.pointables.ARecordVisitablePointable;
 import org.apache.asterix.om.pointables.base.DefaultOpenFieldType;
@@ -43,7 +42,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 
 public class AObjectPrinterFactory implements IPrinterFactory {
     private static final long serialVersionUID = 1L;
-    private static final ConcurrentHashMap<String, AObjectPrinterFactory> instanceCache = new ConcurrentHashMap<>();
+    private final IPrinter nullPrinter;
+    private final IPrinter stringPrinter;
     private ARecordType itemType;
     private Map<String, String> configuration;
     private boolean emptyFieldAsNull;
@@ -53,12 +53,15 @@ public class AObjectPrinterFactory implements IPrinterFactory {
         this.configuration = configuration;
         String emptyFieldAsNullStr = configuration.get(KEY_EMPTY_FIELD_AS_NULL);
         this.emptyFieldAsNull = emptyFieldAsNullStr != null && Boolean.parseBoolean(emptyFieldAsNullStr);
+        this.nullPrinter = ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter();
+        this.stringPrinter =
+                AStringPrinterFactory.createInstance(configuration.get(KEY_QUOTE), configuration.get(KEY_FORCE_QUOTE),
+                        configuration.get(KEY_ESCAPE), configuration.get(KEY_DELIMITER)).createPrinter();
+
     }
 
     public static AObjectPrinterFactory createInstance(ARecordType itemType, Map<String, String> configuration) {
-        // generate a unique identifier based on the parameters and hash the instance corresponding to it.
-        String key = CSVUtils.generateKey(itemType, configuration);
-        return instanceCache.computeIfAbsent(key, k -> new AObjectPrinterFactory(itemType, configuration));
+        return new AObjectPrinterFactory(itemType, configuration);
     }
 
     public boolean printFlatValue(ATypeTag typeTag, byte[] b, int s, int l, PrintStream ps)
@@ -78,7 +81,7 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 return true;
             case MISSING:
             case NULL:
-                ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter().print(b, s, l, ps);
+                nullPrinter.print(b, s, l, ps);
                 return true;
             case BOOLEAN:
                 ABooleanPrinterFactory.PRINTER.print(b, s, l, ps);
@@ -130,12 +133,9 @@ public class AObjectPrinterFactory implements IPrinterFactory {
                 return true;
             case STRING:
                 if (emptyFieldAsNull && CSVUtils.isEmptyString(b, s, l)) {
-                    ANullPrinterFactory.createInstance(configuration.get(KEY_NULL)).createPrinter().print(b, s, l, ps);
+                    nullPrinter.print(b, s, l, ps);
                 } else {
-                    AStringPrinterFactory
-                            .createInstance(configuration.get(KEY_QUOTE), configuration.get(KEY_FORCE_QUOTE),
-                                    configuration.get(KEY_ESCAPE), configuration.get(KEY_DELIMITER))
-                            .createPrinter().print(b, s, l, ps);
+                    stringPrinter.print(b, s, l, ps);
                 }
                 return true;
             case BINARY:
