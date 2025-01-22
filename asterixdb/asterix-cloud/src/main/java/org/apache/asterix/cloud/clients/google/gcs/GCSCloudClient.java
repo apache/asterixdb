@@ -221,9 +221,13 @@ public class GCSCloudClient implements ICloudClient {
             for (StorageBatchResult<Boolean> deleteResponse : deleteResponses) {
                 String deletedPath = deletePathIter.next();
                 try {
+                    // The deleteResponse.get() method returns:
+                    // - true if the file was successfully deleted,
+                    // - false if the file could not be deleted,
+                    // - and throws an exception if an error occurred during the delete operation.
                     boolean deleted = deleteResponse.get();
                     if (!deleted) {
-                        LOGGER.warn("File {} already deleted while deleting {}", deletedPath, paths);
+                        LOGGER.warn("Failed to delete object {} while deleting {}", deletedPath, paths);
                     }
                 } catch (BaseServiceException e) {
                     LOGGER.warn("Failed to delete object {} while deleting {}", deletedPath, paths, e);

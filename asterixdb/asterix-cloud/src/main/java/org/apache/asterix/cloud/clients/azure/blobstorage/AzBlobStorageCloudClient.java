@@ -82,6 +82,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     private static final String AZURITE_ACCOUNT_NAME = "devstoreaccount1";
     private static final String AZURITE_ACCOUNT_KEY =
             "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+    private static final int SUCCESS_RESPONSE_CODE = 202;
     private final ICloudGuardian guardian;
     private BlobContainerClient blobContainerClient;
     private AzBlobStorageClientConfig config;
@@ -264,7 +265,14 @@ public class AzBlobStorageCloudClient implements ICloudClient {
             try {
                 for (Response<Void> response : responses) {
                     deletedPath = deletePathIter.next();
-                    response.getStatusCode();
+                    // The response.getStatusCode() method returns:
+                    // - 202 (Accepted) if the delete operation is successful
+                    // - exception if the delete operation fails
+                    int statusCode = response.getStatusCode();
+                    if (statusCode != SUCCESS_RESPONSE_CODE) {
+                        LOGGER.warn("Failed to delete blob: {} with status code: {} while deleting {}", deletedPath,
+                                statusCode, paths.toString());
+                    }
                 }
             } catch (BlobStorageException e) {
                 throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, e, "DELETE", deletedPath, paths.toString());

@@ -28,7 +28,7 @@ public class CloudStorageIntegrationUtil extends AsterixHyracksIntegrationUtil {
 
     public static void main(String[] args) throws Exception {
         boolean cleanStart = Boolean.getBoolean("cleanup.start");
-        LocalCloudUtil.startS3CloudEnvironment(cleanStart);
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(cleanStart);
         final AsterixHyracksIntegrationUtil integrationUtil = new AsterixHyracksIntegrationUtil();
         try {
             integrationUtil.run(cleanStart, Boolean.getBoolean("cleanup.shutdown"),

@@ -43,6 +43,7 @@ public class LocalCloudUtilAdobeMock {
     private static final int MOCK_SERVER_PORT = 8001;
     private static final int MOCK_SERVER_PORT_HTTPS = 8002;
     public static final String CLOUD_STORAGE_BUCKET = "cloud-storage-container";
+    public static final String PLAYGROUND_BUCKET = "playground";
     private static S3MockApplication s3Mock;
 
     private LocalCloudUtilAdobeMock() {
@@ -68,7 +69,7 @@ public class LocalCloudUtilAdobeMock {
         properties.put(S3MockApplication.PROP_HTTP_PORT, MOCK_SERVER_PORT);
         properties.put(S3MockApplication.PROP_HTTPS_PORT, MOCK_SERVER_PORT_HTTPS);
         properties.put(S3MockApplication.PROP_SILENT, false);
-        shutdownSilently();
+        LocalCloudUtil.stopS3MockServer();
         s3Mock = S3MockApplication.start(properties);
 
         LOGGER.info("S3 mock server started successfully");
@@ -82,8 +83,8 @@ public class LocalCloudUtilAdobeMock {
         LOGGER.info("Created bucket {} for cloud storage", CLOUD_STORAGE_BUCKET);
 
         if (createPlaygroundContainer) {
-            client.createBucket(CreateBucketRequest.builder().bucket("playground").build());
-            LOGGER.info("Created bucket {}", "playground");
+            client.createBucket(CreateBucketRequest.builder().bucket(PLAYGROUND_BUCKET).build());
+            LOGGER.info("Created bucket {}", PLAYGROUND_BUCKET);
         }
         client.close();
         return s3Mock;

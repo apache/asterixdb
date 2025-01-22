@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import org.apache.asterix.api.common.LocalCloudUtil;
+import org.apache.asterix.api.common.LocalCloudUtilAdobeMock;
 import org.apache.asterix.common.config.GlobalConfig;
 import org.apache.asterix.test.common.TestExecutor;
 import org.apache.asterix.test.runtime.LangExecutionUtil;
@@ -66,7 +66,7 @@ public class CloudStorageUnstableTest {
     @BeforeClass
     public static void setUp() throws Exception {
         System.setProperty(CloudRetryableRequestUtil.CLOUD_UNSTABLE_MODE, "true");
-        LocalCloudUtil.startS3CloudEnvironment(true, true);
+        LocalCloudUtilAdobeMock.startS3CloudEnvironment(true, true);
         TestExecutor testExecutor = new TestExecutor(DELTA_RESULT_PATH);
         testExecutor.executorId = "cloud";
         testExecutor.stripSubstring = "//DB:";

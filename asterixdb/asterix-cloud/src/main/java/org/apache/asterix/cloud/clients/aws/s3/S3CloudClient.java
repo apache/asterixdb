@@ -248,8 +248,8 @@ public final class S3CloudClient implements ICloudClient {
                     LOGGER.warn("Failed to delete object: {}, code: {}, message: {}", s3Error.key(), s3Error.code(),
                             s3Error.message());
                 }
-                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE", deleteErrors.get(0).key(),
-                        paths.toString());
+                throw new RuntimeDataException(ErrorCode.CLOUD_IO_FAILURE, "DELETE",
+                        !deleteErrors.isEmpty() ? deleteErrors.get(0).key() : "", paths.toString());
             }
             profiler.objectDelete();
         }

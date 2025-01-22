@@ -72,7 +72,7 @@ public class LocalCloudUtil {
         LOGGER.info("Starting S3 mock server");
         // Use file backend for debugging/inspection
         s3MockServer = new S3Mock.Builder().withPort(MOCK_SERVER_PORT).withFileBackend(MOCK_FILE_BACKEND).build();
-        shutdownSilently();
+        stopS3MockServer();
         try {
             s3MockServer.start();
         } catch (Exception ex) {
@@ -103,6 +103,12 @@ public class LocalCloudUtil {
         }
         client.close();
         return s3MockServer;
+    }
+
+    public static void stopS3MockServer() {
+        shutdownSilently();
+        // since they are running on same port, we need to shut down other mock server as well
+        LocalCloudUtilAdobeMock.shutdownSilently();
     }
 
     private static void shutdownSilently() {
