@@ -35,7 +35,6 @@ import org.apache.logging.log4j.Logger;
 public class EnsureAllCcTasksCompleted implements Runnable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long TIMEOUT = TimeUnit.MINUTES.toMillis(2);
     private final NodeControllerService ncs;
     private final CcId ccId;
     private final Deque<Task> runningTasks;
@@ -58,7 +57,8 @@ public class EnsureAllCcTasksCompleted implements Runnable {
     }
 
     private void waitForTaskCompletion() throws InterruptedException {
-        final Span maxWaitTime = Span.start(TIMEOUT, TimeUnit.MILLISECONDS);
+        long taskTimeout = ncs.getConfiguration().getAbortedTasksTimeout();
+        final Span maxWaitTime = Span.start(taskTimeout, TimeUnit.MILLISECONDS);
         while (!maxWaitTime.elapsed()) {
             removeCompleted();
             if (runningTasks.isEmpty()) {
@@ -81,7 +81,7 @@ public class EnsureAllCcTasksCompleted implements Runnable {
             }
         } else {
             LOGGER.error("{} tasks associated with CC {} failed to complete after {}ms. Giving up", runningTasks.size(),
-                    ccId, TIMEOUT);
+                    ccId, taskTimeout);
             logPendingTasks();
             ExitUtil.halt(ExitUtil.EC_NC_FAILED_TO_ABORT_ALL_PREVIOUS_TASKS);
         }

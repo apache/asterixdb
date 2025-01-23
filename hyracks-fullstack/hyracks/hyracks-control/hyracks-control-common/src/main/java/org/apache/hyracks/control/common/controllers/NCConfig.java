@@ -30,6 +30,7 @@ import static org.apache.hyracks.control.common.config.OptionTypes.STRING_ARRAY;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import org.apache.hyracks.api.config.IApplicationConfig;
@@ -72,6 +73,7 @@ public class NCConfig extends ControllerConfig {
         REPLICATION_PUBLIC_ADDRESS(STRING, PUBLIC_ADDRESS),
         REPLICATION_PUBLIC_PORT(NONNEGATIVE_INTEGER, REPLICATION_LISTEN_PORT),
         CLUSTER_CONNECT_RETRIES(NONNEGATIVE_INTEGER, 5),
+        ABORT_TASKS_TIMEOUT(POSITIVE_INTEGER, (int) TimeUnit.MINUTES.toMillis(10)),
         IODEVICES(
                 STRING_ARRAY,
                 appConfig -> new String[] {
@@ -253,6 +255,8 @@ public class NCConfig extends ControllerConfig {
                     return "Path to systemd socket for fenced Python UDFs. Requires JDK17+, *nix operating system, and ";
                 case CREDENTIAL_FILE:
                     return "Path to HTTP basic credentials";
+                case ABORT_TASKS_TIMEOUT:
+                    return "The maximum time to wait for the tasks to be aborted";
                 default:
                     throw new IllegalStateException("Not yet implemented: " + this);
             }
@@ -626,6 +630,10 @@ public class NCConfig extends ControllerConfig {
 
     public String getCredentialFilePath() {
         return getAppConfig().getString(Option.CREDENTIAL_FILE);
+    }
+
+    public int getAbortedTasksTimeout() {
+        return appConfig.getInt(Option.ABORT_TASKS_TIMEOUT);
     }
 
 }
