@@ -22,15 +22,15 @@
  * Index should NOT be used.
  */
 
-DROP DATAVERSE Test IF EXISTS;
-CREATE DATAVERSE Test;
-USE Test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
 CREATE TYPE UsersType AS { user_id: bigint };
 CREATE DATASET Users (UsersType) PRIMARY KEY user_id;
 CREATE INDEX usersNameIdx ON Users ( name : string );
 
-FROM   Test.Users U
+FROM   test.Users U
 LET    augmentedUser = OBJECT_ADD(OBJECT_REMOVE(U, "name"), "name", "Glenn")
 WHERE  augmentedUser.firstName = "Glenn"
 SELECT *;
