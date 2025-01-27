@@ -21,15 +21,30 @@
     <Console name="Console" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <File name="InfoLog" fileName="target/info.log">
+    <RollingFile name="InfoLog" fileName="target/info.log" filePattern="target/info-%d{yyyy-MM-dd}-%i.log.gz">
         <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-    </File>
-    <File name="DebugLog" fileName="target/debug.log">
+      <Policies>
+        <!-- Roll over every 10MB -->
+        <SizeBasedTriggeringPolicy size="10MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
+    <RollingFile name="DebugLog" fileName="target/debug.log" filePattern="target/debug-%d{yyyy-MM-dd}-%i.log.gz">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-    </File>
-    <File name="StorageDebug" fileName="target/storage_debug.log">
+      <Policies>
+        <!-- Roll over every 10MB -->
+        <SizeBasedTriggeringPolicy size="10MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
+    <RollingFile name="StorageDebug" fileName="target/storage_debug.log" filePattern="target/storage_debug-%d{yyyy-MM-dd}-%i.log.gz">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
-    </File>
+      <Policies>
+        <!-- Roll over every 10MB -->
+        <SizeBasedTriggeringPolicy size="10MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="10"/>
+    </RollingFile>
     <Console name="ConsoleTest" target="SYSTEM_OUT">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %c{1} - %msg%n"/>
     </Console>
