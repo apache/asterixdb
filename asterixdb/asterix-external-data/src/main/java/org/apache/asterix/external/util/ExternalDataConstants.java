@@ -105,6 +105,7 @@ public class ExternalDataConstants {
     public static final String KEY_WAIT_FOR_DATA = "wait-for-data";
     public static final String KEY_FEED_NAME = "feed";
     // a string representing external bucket name
+    public static final String KEY_ENTITY_ID = "entity-id";
     public static final String KEY_EXTERNAL_SOURCE_TYPE = "type";
     // a comma delimited list of nodes
     public static final String KEY_NODES = "nodes";

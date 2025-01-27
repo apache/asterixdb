@@ -274,6 +274,7 @@ import org.apache.hyracks.api.job.JobSpecification;
 import org.apache.hyracks.api.job.profiling.IOperatorStats;
 import org.apache.hyracks.api.result.IResultSet;
 import org.apache.hyracks.api.result.ResultSetId;
+import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.control.cc.ClusterControllerService;
 import org.apache.hyracks.control.common.controllers.CCConfig;
 import org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
@@ -578,9 +579,15 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // async queries are completed after their job completes
             if (ResultDelivery.ASYNC != resultDelivery) {
                 appCtx.getRequestTracker().complete(requestParameters.getRequestReference().getUuid());
+                postRequestCompleteCleanup(requestParameters);
             }
             Thread.currentThread().setName(threadName);
         }
+    }
+
+    protected void postRequestCompleteCleanup(IRequestParameters requestParameters) {
+        String uuid = requestParameters.getRequestReference().getUuid();
+        appCtx.getExternalCredentialsCache().delete(uuid);
     }
 
     protected void configureMetadataProvider(MetadataProvider metadataProvider, Map<String, String> config,
@@ -1031,8 +1038,12 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     ExternalDataUtils.normalize(properties);
                     ExternalDataUtils.validate(properties);
                     ExternalDataUtils.validateType(properties, (ARecordType) itemType);
-                    validateExternalDatasetProperties(externalDetails, properties, dd.getSourceLocation(), mdTxnCtx,
-                            appCtx, metadataProvider);
+                    Map<String, String> propertiesCopy = preparePropertiesCopyForValidation(externalDetails, properties,
+                            dd.getSourceLocation(), mdTxnCtx, appCtx, metadataProvider);
+                    // do any necessary validation on the copy to avoid changing the original and storing it in the metadata
+                    metadataProvider.setExternalEntityIdFromParts(propertiesCopy, databaseName, dataverseName,
+                            datasetName, false);
+                    validateAdapterSpecificProperties(propertiesCopy, dd.getSourceLocation(), appCtx);
                     datasetDetails = new ExternalDatasetDetails(externalDetails.getAdapter(), properties, new Date(),
                             TransactionState.COMMIT);
                     break;
@@ -2448,9 +2459,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     sourceLoc, EnumSet.of(DropOption.IF_EXISTS), requestParameters.isForceDropDataset());
 
             MetadataManager.INSTANCE.commitTransaction(mdTxnCtx.getValue());
-            if (ds.getDatasetType().equals(DatasetType.EXTERNAL)) {
-                appCtx.getExternalCredentialsCache().deleteCredentials(ds.getDatasetFullyQualifiedName());
-            }
+            deleteDatasetCachedCredentials(ds);
             return true;
         } catch (Exception e) {
             LOGGER.error("failed to drop dataset; executing compensating operations", e);
@@ -2496,6 +2505,10 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             }
             throw e;
         }
+    }
+
+    protected void deleteDatasetCachedCredentials(Dataset dataset) throws CompilationException {
+        appCtx.getExternalCredentialsCache().delete(dataset.getDatasetFullyQualifiedName().toString());
     }
 
     protected void handleIndexDropStatement(MetadataProvider metadataProvider, Statement stmt,
@@ -3637,7 +3650,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected CreateResult doCreateLibrary(MetadataProvider metadataProvider, String databaseName,
             DataverseName dataverseName, String libraryName, String libraryHash, CreateLibraryStatement cls,
             IHyracksClientConnection hcc, IRequestParameters requestParameters) throws Exception {
-        JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
+        ProgressState progress = ProgressState.NO_PROGRESS;
         boolean prepareJobSuccessful = false;
         JobSpecification abortJobSpec = null;
         Library existingLibrary = null;
@@ -3773,7 +3786,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
     protected boolean doDropLibrary(MetadataProvider metadataProvider, LibraryDropStatement stmtDropLibrary,
             String databaseName, DataverseName dataverseName, String libraryName, IHyracksClientConnection hcc,
             IRequestParameters requestParameters) throws Exception {
-        JobUtils.ProgressState progress = ProgressState.NO_PROGRESS;
+        ProgressState progress = ProgressState.NO_PROGRESS;
         MetadataTransactionContext mdTxnCtx = MetadataManager.INSTANCE.beginTransaction();
         boolean bActiveTxn = true;
         metadataProvider.setMetadataTxnContext(mdTxnCtx);
@@ -4044,8 +4057,11 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                     copyStmt, itemType, mdTxnCtx, metadataProvider);
             ExternalDataUtils.normalize(properties);
             ExternalDataUtils.validate(properties);
-            validateExternalDatasetProperties(externalDetails, properties, copyStmt.getSourceLocation(), mdTxnCtx,
-                    appCtx, metadataProvider);
+            Map<String, String> propertiesCopy = preparePropertiesCopyForValidation(externalDetails, properties,
+                    copyStmt.getSourceLocation(), mdTxnCtx, appCtx, metadataProvider);
+            // do any necessary validation on the copy to avoid changing the original and storing it in the metadata
+            metadataProvider.setExternalEntityId(propertiesCopy, dataset);
+            validateAdapterSpecificProperties(propertiesCopy, copyStmt.getSourceLocation(), appCtx);
             CompiledCopyFromFileStatement cls = new CompiledCopyFromFileStatement(databaseName, dataverseName,
                     copyStmt.getDatasetName(), itemType, externalDetails.getAdapter(), properties);
             cls.setSourceLocation(stmt.getSourceLocation());
@@ -4102,6 +4118,9 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             ResultMetadata outMetadata, IRequestParameters requestParameters, Map<String, IAObject> stmtParams,
             Stats stats) throws Exception {
         CopyToStatement copyTo = (CopyToStatement) stmt;
+        Namespace namespace = copyTo.getNamespace();
+        DataverseName dataverseName = namespace.getDataverseName();
+        String databaseName = namespace.getDatabaseName();
         final IRequestTracker requestTracker = appCtx.getRequestTracker();
         final ClientRequest clientRequest =
                 (ClientRequest) requestTracker.get(requestParameters.getRequestReference().getUuid());
@@ -4130,16 +4149,21 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             metadataProvider.setMetadataTxnContext(mdTxnCtx);
             try {
                 ExternalDetailsDecl edd = copyTo.getExternalDetailsDecl();
-                edd.setProperties(createAndValidateAdapterConfigurationForCopyToStmt(edd,
+                Map<String, String> properties = createAndValidateAdapterConfigurationForCopyToStmt(edd,
                         ExternalDataConstants.WRITER_SUPPORTED_ADAPTERS, copyTo.getSourceLocation(), mdTxnCtx,
-                        metadataProvider));
+                        metadataProvider);
+
+                // request id is used to cache credentials if needed, and clear them after request is done
+                String uuid = requestParameters.getRequestReference().getUuid();
+                metadataProvider.setExternalEntityIdFromParts(properties, databaseName, dataverseName, uuid, true);
+                edd.setProperties(properties);
 
                 if (ExternalDataConstants.FORMAT_PARQUET
                         .equalsIgnoreCase(edd.getProperties().get(ExternalDataConstants.KEY_FORMAT))) {
                     if (copyTo.getType() != null) {
-                        DataverseName dataverseName =
+                        DataverseName dummyDataverse =
                                 DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
-                        IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
+                        IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dummyDataverse,
                                 ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
                         edd.getProperties().put(ExternalDataConstants.PARQUET_SCHEMA_KEY,
                                 SchemaConverterVisitor.convertToParquetSchemaString((ARecordType) iaType));
@@ -4148,14 +4172,14 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
 
                 if (edd.getProperties().get(ExternalDataConstants.KEY_FORMAT)
                         .equalsIgnoreCase(ExternalDataConstants.FORMAT_CSV_LOWER_CASE)) {
-                    DataverseName dataverseName =
+                    DataverseName dummyDataverse =
                             DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
                     IAType iaType;
                     if (copyTo.getType() != null) {
-                        iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
+                        iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dummyDataverse,
                                 ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
                     } else if (copyTo.getTypeExpressionItemType() != null) {
-                        iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dataverseName,
+                        iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dummyDataverse,
                                 ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getTypeExpressionItemType(), mdTxnCtx);
                     } else {
                         throw new CompilationException(ErrorCode.COMPILATION_ERROR,
@@ -5552,7 +5576,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             if (atomic && jobId != null) {
                 globalTxManager.abortTransaction(jobId);
             }
-            if (org.apache.hyracks.api.util.ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
+            if (ExceptionUtils.getRootCause(e) instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
                 throw new RuntimeDataException(ErrorCode.REQUEST_CANCELLED, clientRequest.getId());
             }
@@ -5561,6 +5585,7 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
             // complete async jobs after their job completes
             if (ResultDelivery.ASYNC == resultDelivery) {
                 requestTracker.complete(clientRequest.getId());
+                postRequestCompleteCleanup(requestParameters);
             }
             locker.unlock();
         }
@@ -5777,33 +5802,39 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
      * @param details external details
      * @param sourceLoc source location
      */
-    private void normalizeAdapters(ExternalDetailsDecl details, SourceLocation sourceLoc) throws CompilationException {
+    protected void normalizeAdapters(ExternalDetailsDecl details, SourceLocation sourceLoc)
+            throws CompilationException {
         String adapter = details.getAdapter();
-        Optional<String> normalizedAdapter = ExternalDataConstants.EXTERNAL_READ_ADAPTERS.stream()
-                .filter(k -> k.equalsIgnoreCase(adapter)).findFirst();
+        Optional<String> normalizedAdapter =
+                getSupportedAdapters().stream().filter(k -> k.equalsIgnoreCase(adapter)).findFirst();
         if (normalizedAdapter.isEmpty()) {
             throw CompilationException.create(ErrorCode.UNKNOWN_ADAPTER, sourceLoc, adapter);
         }
         details.setAdapter(normalizedAdapter.get());
     }
 
-    protected void validateExternalDatasetProperties(ExternalDetailsDecl externalDetails,
+    protected Set<String> getSupportedAdapters() {
+        return ExternalDataConstants.EXTERNAL_READ_ADAPTERS;
+    }
+
+    protected Map<String, String> preparePropertiesCopyForValidation(ExternalDetailsDecl externalDetails,
             Map<String, String> properties, SourceLocation srcLoc, MetadataTransactionContext mdTxnCtx,
             IApplicationContext appCtx, MetadataProvider metadataProvider)
             throws AlgebricksException, HyracksDataException {
-        // Validate adapter specific properties
         normalizeAdapters(externalDetails, srcLoc);
         String adapter = externalDetails.getAdapter();
         Map<String, String> details = new HashMap<>(properties);
         details.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapter);
-        validateAdapterSpecificProperties(details, srcLoc, appCtx);
+        return details;
     }
 
     protected Map<String, String> createAndValidateAdapterConfigurationForCopyToStmt(
             ExternalDetailsDecl externalDetailsDecl, Set<String> supportedAdapters, SourceLocation sourceLocation,
             MetadataTransactionContext mdTxnCtx, MetadataProvider md) throws AlgebricksException {
+        normalizeAdapters(externalDetailsDecl, sourceLocation);
         String adapterName = externalDetailsDecl.getAdapter();
         Map<String, String> properties = externalDetailsDecl.getProperties();
+        properties.put(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapterName);
         WriterValidationUtil.validateWriterConfiguration(adapterName, supportedAdapters, properties, sourceLocation);
         return properties;
     }

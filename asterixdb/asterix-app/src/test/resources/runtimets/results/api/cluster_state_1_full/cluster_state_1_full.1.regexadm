@@ -9,7 +9,7 @@
     "active\.stop\.timeout" : 3600,
     "active\.suspend\.timeout" : 3600,
     "aws.assume.role.duration" : 900,
-    "aws.refresh.assume.role.threshold" : 0.5,
+    "aws.refresh.assume.role.threshold.percentage" : 75,
     "azure.request.timeout" : 120,
     "cloud.acquire.token.timeout" : 100,
     "cloud.deployment" : false,

@@ -40,6 +40,7 @@ import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.external.IExternalCredentialsCache;
 import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
 import org.apache.asterix.common.messaging.api.MessageFuture;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.messaging.CCMessageBroker;
@@ -65,7 +66,8 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
     public synchronized Object generateAndCacheCredentials(Map<String, String> configuration)
             throws HyracksDataException, CompilationException {
         IExternalCredentialsCache cache = appCtx.getExternalCredentialsCache();
-        Object credentials = cache.getCredentials(configuration);
+        String name = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
+        Object credentials = cache.get(name);
         if (credentials != null) {
             return credentials;
         }
@@ -74,9 +76,7 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
          * if we are the CC, generate new creds and ask all NCs to update their cache
          * if we are the NC, send a message to the CC to generate new creds and ask all NCs to update their cache
          */
-        String name = cache.getName(configuration);
-        if (appCtx instanceof ICcApplicationContext) {
-            ICcApplicationContext ccAppCtx = (ICcApplicationContext) appCtx;
+        if (appCtx instanceof ICcApplicationContext ccAppCtx) {
             IClusterManagementWork.ClusterState state = ccAppCtx.getClusterStateManager().getState();
             if (!(state == ACTIVE || state == REBALANCE_REQUIRED)) {
                 throw new RuntimeDataException(REJECT_BAD_CLUSTER_STATE, state);
@@ -106,7 +106,8 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
 
             // request all NCs to update their credentials cache with the latest creds
             updateNcsCredentialsCache(ccAppCtx, name, credentialsMap, configuration);
-            cache.updateCache(configuration, credentialsMap);
+            String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+            cache.put(name, type, credentialsMap);
             credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
         } else {
             NCMessageBroker broker = (NCMessageBroker) appCtx.getServiceContext().getMessageBroker();

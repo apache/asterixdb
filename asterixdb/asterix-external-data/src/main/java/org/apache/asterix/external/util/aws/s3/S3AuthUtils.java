@@ -241,7 +241,7 @@ public class S3AuthUtils {
     public static AwsCredentialsProvider getTrustAccountCredentials(IApplicationContext appCtx,
             Map<String, String> configuration) throws CompilationException {
         IExternalCredentialsCache cache = appCtx.getExternalCredentialsCache();
-        Object credentialsObject = cache.getCredentials(configuration);
+        Object credentialsObject = cache.get(configuration.get(ExternalDataConstants.KEY_ENTITY_ID));
         if (credentialsObject != null) {
             return () -> (AwsSessionCredentials) credentialsObject;
         }
@@ -389,7 +389,7 @@ public class S3AuthUtils {
      */
     public static void configureAwsS3HdfsJobConf(IApplicationContext appCtx, JobConf jobConf,
             Map<String, String> configuration, int numberOfPartitions) throws CompilationException {
-        setHadoopCredentials(jobConf, configuration);
+        setHadoopCredentials(appCtx, jobConf, configuration);
         String serviceEndpoint = configuration.get(SERVICE_END_POINT_FIELD_NAME);
         Region region = validateAndGetRegion(configuration.get(REGION_FIELD_NAME));
         jobConf.set(HADOOP_REGION, region.toString());
@@ -421,7 +421,8 @@ public class S3AuthUtils {
      * @param jobConf hadoop job config
      * @param configuration external details configuration
      */
-    private static void setHadoopCredentials(JobConf jobConf, Map<String, String> configuration) {
+    private static void setHadoopCredentials(IApplicationContext appCtx, JobConf jobConf,
+            Map<String, String> configuration) {
         AuthenticationType authenticationType = getAuthenticationType(configuration);
         switch (authenticationType) {
             case ANONYMOUS:
@@ -432,7 +433,11 @@ public class S3AuthUtils {
                 jobConf.set(HADOOP_ASSUME_ROLE_ARN, configuration.get(ROLE_ARN_FIELD_NAME));
                 jobConf.set(HADOOP_ASSUME_ROLE_EXTERNAL_ID, configuration.get(EXTERNAL_ID_FIELD_NAME));
                 jobConf.set(HADOOP_ASSUME_ROLE_SESSION_NAME, "parquet-" + UUID.randomUUID());
-                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_DURATION, "15m");
+
+                // hadoop accepts time 15m to 1h, we will base it on the provided configuration
+                int durationInSeconds = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
+                String hadoopDuration = getHadoopDuration(durationInSeconds);
+                jobConf.set(HADOOP_ASSUME_ROLE_SESSION_DURATION, hadoopDuration);
 
                 // TODO: this assumes basic keys always, also support if we use InstanceProfile to assume a role
                 jobConf.set(HADOOP_CREDENTIALS_TO_ASSUME_ROLE_KEY, HADOOP_SIMPLE);
@@ -456,6 +461,36 @@ public class S3AuthUtils {
     }
 
     /**
+     * Hadoop accepts duration values from 15m to 1h (in this format). We will base this on the configured
+     * duration in seconds. If the time exceeds 1 hour, we will return 1h
+     *
+     * @param seconds configured duration in seconds
+     * @return hadoop updated duration
+     */
+    private static String getHadoopDuration(int seconds) {
+        // constants for time thresholds
+        final int FIFTEEN_MINUTES_IN_SECONDS = 15 * 60;
+        final int ONE_HOUR_IN_SECONDS = 60 * 60;
+
+        // Adjust seconds to fit within bounds
+        if (seconds < FIFTEEN_MINUTES_IN_SECONDS) {
+            seconds = FIFTEEN_MINUTES_IN_SECONDS;
+        } else if (seconds > ONE_HOUR_IN_SECONDS) {
+            seconds = ONE_HOUR_IN_SECONDS;
+        }
+
+        // Convert seconds to minutes
+        int minutes = seconds / 60;
+
+        // Format the result
+        if (minutes == 60) {
+            return "1h";
+        } else {
+            return minutes + "m";
+        }
+    }
+
+    /**
      * Validate external dataset properties
      *
      * @param configuration properties
@@ -469,27 +504,6 @@ public class S3AuthUtils {
         // check if the format property is present
         else if (configuration.get(ExternalDataConstants.KEY_FORMAT) == null) {
             throw new CompilationException(ErrorCode.PARAMETERS_REQUIRED, srcLoc, ExternalDataConstants.KEY_FORMAT);
-        }
-
-        String arnRole = configuration.get(ROLE_ARN_FIELD_NAME);
-        String externalId = configuration.get(EXTERNAL_ID_FIELD_NAME);
-        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
-        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
-
-        if (arnRole != null) {
-            return;
-        } else if (externalId != null) {
-            throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ROLE_ARN_FIELD_NAME,
-                    EXTERNAL_ID_FIELD_NAME);
-        } else if (accessKeyId == null || secretAccessKey == null) {
-            // If one is passed, the other is required
-            if (accessKeyId != null) {
-                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, SECRET_ACCESS_KEY_FIELD_NAME,
-                        ACCESS_KEY_ID_FIELD_NAME);
-            } else if (secretAccessKey != null) {
-                throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, ACCESS_KEY_ID_FIELD_NAME,
-                        SECRET_ACCESS_KEY_FIELD_NAME);
-            }
         }
 
         validateIncludeExclude(configuration);

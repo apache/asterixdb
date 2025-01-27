@@ -18,12 +18,12 @@
  */
 package org.apache.asterix.common.config;
 
-import static org.apache.hyracks.control.common.config.OptionTypes.DOUBLE;
 import static org.apache.hyracks.control.common.config.OptionTypes.LEVEL;
 import static org.apache.hyracks.control.common.config.OptionTypes.NONNEGATIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER;
 import static org.apache.hyracks.control.common.config.OptionTypes.POSITIVE_INTEGER_BYTE_UNIT;
 import static org.apache.hyracks.control.common.config.OptionTypes.STRING;
+import static org.apache.hyracks.control.common.config.OptionTypes.getRangedIntegerType;
 
 import org.apache.hyracks.api.config.IOption;
 import org.apache.hyracks.api.config.IOptionType;
@@ -55,14 +55,16 @@ public class ExternalProperties extends AbstractProperties {
         LIBRARY_DEPLOY_TIMEOUT(POSITIVE_INTEGER, 1800, "Timeout to upload a UDF in seconds"),
         AZURE_REQUEST_TIMEOUT(POSITIVE_INTEGER, 120, "Timeout for Azure client requests in seconds"),
         AWS_ASSUME_ROLE_DURATION(
-                POSITIVE_INTEGER,
+                getRangedIntegerType(900, 43200),
                 900,
                 "AWS assuming role duration in seconds. "
                         + "Range from 900 seconds (15 mins) to 43200 seconds (12 hours)"),
-        AWS_REFRESH_ASSUME_ROLE_THRESHOLD(
-                DOUBLE,
-                .5,
-                "Percentage of left duration before assume role credentials " + "needs to be refreshed");
+        AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE(
+                getRangedIntegerType(25, 90),
+                75,
+                "Percentage of duration passed before assume role credentials need to be refreshed, the value ranges "
+                        + "from 25 to 90, default is 75. For example, if the value is set to 65, this means the "
+                        + "credentials need to be refreshed if 65% of the total expiration duration is already passed");
 
         private final IOptionType type;
         private final Object defaultValue;
@@ -91,7 +93,7 @@ public class ExternalProperties extends AbstractProperties {
                 case LIBRARY_DEPLOY_TIMEOUT:
                 case AZURE_REQUEST_TIMEOUT:
                 case AWS_ASSUME_ROLE_DURATION:
-                case AWS_REFRESH_ASSUME_ROLE_THRESHOLD:
+                case AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE:
                     return Section.COMMON;
                 case CC_JAVA_OPTS:
                 case NC_JAVA_OPTS:
@@ -177,7 +179,7 @@ public class ExternalProperties extends AbstractProperties {
         return accessor.getInt(Option.AWS_ASSUME_ROLE_DURATION);
     }
 
-    public double getAwsRefreshAssumeRoleThreshold() {
-        return accessor.getDouble(Option.AWS_REFRESH_ASSUME_ROLE_THRESHOLD);
+    public int getAwsRefreshAssumeRoleThresholdPercentage() {
+        return accessor.getInt(Option.AWS_REFRESH_ASSUME_ROLE_THRESHOLD_PERCENTAGE);
     }
 }

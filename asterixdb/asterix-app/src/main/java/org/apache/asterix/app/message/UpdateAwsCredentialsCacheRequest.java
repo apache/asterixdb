@@ -21,9 +21,8 @@ package org.apache.asterix.app.message;
 import java.util.Map;
 
 import org.apache.asterix.common.api.INcApplicationContext;
-import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
-import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,13 +39,10 @@ public class UpdateAwsCredentialsCacheRequest implements INcAddressedMessage {
     }
 
     @Override
-    public void handle(INcApplicationContext appCtx) throws HyracksDataException {
-        try {
-            appCtx.getExternalCredentialsCache().updateCache(configuration, credentials);
-        } catch (CompilationException ex) {
-            LOGGER.info("Failed to process request", ex);
-            throw HyracksDataException.create(ex);
-        }
+    public void handle(INcApplicationContext appCtx) {
+        String name = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
+        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+        appCtx.getExternalCredentialsCache().put(name, type, credentials);
     }
 
     @Override

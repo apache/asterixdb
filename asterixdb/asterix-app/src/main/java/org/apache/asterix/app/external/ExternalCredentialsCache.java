@@ -24,14 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.asterix.common.api.IApplicationContext;
-import org.apache.asterix.common.exceptions.AsterixException;
-import org.apache.asterix.common.exceptions.CompilationException;
-import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalCredentialsCache;
-import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
-import org.apache.asterix.common.metadata.DataverseName;
-import org.apache.asterix.common.metadata.IFullyQualifiedName;
-import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -46,41 +39,35 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConcurrentMap<String, Pair<Span, Object>> cache = new ConcurrentHashMap<>();
     private final int awsAssumeRoleDuration;
-    private final double refreshAwsAssumeRoleThreshold;
+    private final int refreshAwsAssumeRoleThresholdPercentage;
 
     public ExternalCredentialsCache(IApplicationContext appCtx) {
         this.awsAssumeRoleDuration = appCtx.getExternalProperties().getAwsAssumeRoleDuration();
-        this.refreshAwsAssumeRoleThreshold = appCtx.getExternalProperties().getAwsRefreshAssumeRoleThreshold();
+        this.refreshAwsAssumeRoleThresholdPercentage =
+                appCtx.getExternalProperties().getAwsRefreshAssumeRoleThresholdPercentage();
     }
 
     @Override
-    public synchronized Object getCredentials(Map<String, String> configuration) throws CompilationException {
-        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
-        return getCredentials(fqn);
-    }
-
-    @Override
-    public synchronized Object getCredentials(IFullyQualifiedName fqn) {
-        String name = getName(fqn);
-        if (cache.containsKey(name) && !needsRefresh(cache.get(name).getLeft())) {
-            return cache.get(name).getRight();
+    public synchronized Object get(String key) {
+        invalidateCache();
+        if (cache.containsKey(key)) {
+            return cache.get(key).getRight();
         }
         return null;
     }
 
     @Override
-    public synchronized void updateCache(Map<String, String> configuration, Map<String, String> credentials)
-            throws CompilationException {
-        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
-        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
-        updateCache(fqn, type, credentials);
+    public void delete(String key) {
+        Object removed = cache.remove(key);
+        if (removed != null) {
+            LOGGER.info("Removed cached credentials for {} because it got deleted", key);
+        }
     }
 
     @Override
-    public synchronized void updateCache(IFullyQualifiedName fqn, String type, Map<String, String> credentials) {
-        String name = getName(fqn);
+    public synchronized void put(String key, String type, Map<String, String> credentials) {
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equalsIgnoreCase(type)) {
-            updateAwsCache(name, credentials);
+            updateAwsCache(key, credentials);
         }
     }
 
@@ -88,34 +75,23 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
         String accessKeyId = credentials.get(S3Constants.ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = credentials.get(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME);
         String sessionToken = credentials.get(S3Constants.SESSION_TOKEN_FIELD_NAME);
-        doUpdateAwsCache(name, AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken));
-    }
 
-    private void doUpdateAwsCache(String name, AwsSessionCredentials credentials) {
-        cache.put(name, Pair.of(Span.start(awsAssumeRoleDuration, TimeUnit.SECONDS), credentials));
+        AwsSessionCredentials sessionCreds = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
+        cache.put(name, Pair.of(Span.start(awsAssumeRoleDuration, TimeUnit.SECONDS), sessionCreds));
         LOGGER.info("Received and cached new credentials for {}", name);
     }
 
-    @Override
-    public void deleteCredentials(IFullyQualifiedName fqn) {
-        String name = getName(fqn);
-        Object removed = cache.remove(name);
-        if (removed != null) {
-            LOGGER.info("Removed cached credentials for {}", name);
-        } else {
-            LOGGER.info("No cached credentials found for {}, nothing to remove", name);
-        }
-    }
-
-    @Override
-    public String getName(Map<String, String> configuration) throws CompilationException {
-        IFullyQualifiedName fqn = getFullyQualifiedNameFromConfiguration(configuration);
-        return getName(fqn);
-    }
-
-    @Override
-    public String getName(IFullyQualifiedName fqn) {
-        return fqn.toString();
+    /**
+     * Iterates the cache and removes the credentials that are considered expired
+     */
+    private void invalidateCache() {
+        cache.entrySet().removeIf(entry -> {
+            boolean shouldRemove = needsRefresh(entry.getValue().getLeft());
+            if (shouldRemove) {
+                LOGGER.info("Removing cached credentials for {} because it expired", entry.getKey());
+            }
+            return shouldRemove;
+        });
     }
 
     /**
@@ -125,27 +101,9 @@ public class ExternalCredentialsCache implements IExternalCredentialsCache {
      * @return true if the remaining time is less than the configured refresh percentage, false otherwise
      */
     private boolean needsRefresh(Span span) {
-        return (double) span.remaining(TimeUnit.SECONDS)
-                / span.getSpan(TimeUnit.SECONDS) < refreshAwsAssumeRoleThreshold;
-    }
-
-    protected IFullyQualifiedName getFullyQualifiedNameFromConfiguration(Map<String, String> configuration)
-            throws CompilationException {
-        String database = configuration.get(ExternalDataConstants.KEY_DATASET_DATABASE);
-        if (database == null) {
-            database = MetadataConstants.DEFAULT_DATABASE;
-        }
-        String stringDataverse = configuration.get(ExternalDataConstants.KEY_DATASET_DATAVERSE);
-        DataverseName dataverse = getDataverseName(stringDataverse);
-        String dataset = configuration.get(ExternalDataConstants.KEY_DATASET);
-        return new DatasetFullyQualifiedName(database, dataverse, dataset);
-    }
-
-    protected DataverseName getDataverseName(String dataverse) throws CompilationException {
-        try {
-            return DataverseName.createSinglePartName(dataverse);
-        } catch (AsterixException ex) {
-            throw new CompilationException(ErrorCode.INVALID_DATABASE_OBJECT_NAME, dataverse);
-        }
+        double remaining = (double) span.remaining(TimeUnit.SECONDS) / span.getSpan(TimeUnit.SECONDS);
+        double passed = 1 - remaining;
+        int passedPercentage = (int) (passed * 100);
+        return passedPercentage > refreshAwsAssumeRoleThresholdPercentage;
     }
 }
