@@ -36,6 +36,10 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 
+// With adobe mock, the s3 objects will be found in /tmp or /var folder
+// Search for line "Successfully created {} as root folder" in the info log file
+// or else just call the aws cli on localhost:8001
+// eg: aws s3 ls --endpoint http://localhost:8001
 public class LocalCloudUtilAdobeMock {
 
     private static final Logger LOGGER = LogManager.getLogger();
