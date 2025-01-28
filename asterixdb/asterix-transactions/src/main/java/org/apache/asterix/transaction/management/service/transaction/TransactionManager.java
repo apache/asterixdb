@@ -45,6 +45,7 @@ import org.apache.hyracks.api.io.IIOManager;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentId;
 import org.apache.hyracks.storage.am.lsm.common.impls.LSMComponentId;
+import org.apache.hyracks.util.ExitUtil;
 import org.apache.hyracks.util.annotations.ThreadSafe;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -61,6 +62,7 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
     private final ITransactionSubsystem txnSubsystem;
     private final Map<TxnId, ITransactionContext> txnCtxRepository = new ConcurrentHashMap<>();
     private final AtomicLong maxTxnId = new AtomicLong(0);
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public TransactionManager(ITransactionSubsystem provider) {
         this.txnSubsystem = provider;
@@ -209,20 +211,36 @@ public class TransactionManager implements ITransactionManager, ILifeCycleCompon
                             .get(StorageConstants.METADATA_TXN_NOWAL_DIR_NAME,
                                     StorageConstants.PARTITION_DIR_PREFIX + StorageConstants.METADATA_PARTITION)
                             .toString()));
-            ObjectMapper objectMapper = new ObjectMapper();
             for (FileReference txnLogFileRef : txnLogFileRefs) {
-                ObjectNode atomicTransactionLog =
-                        objectMapper.readValue(new String(ioManager.readAllBytes(txnLogFileRef)), ObjectNode.class);
-                TxnId txnId = new TxnId(atomicTransactionLog.get("txnId").asInt());
-                JsonNode jsonNode = atomicTransactionLog.get("resourceMap");
-                Map<String, ILSMComponentId> resourceMap = getResourceMapFromJson(jsonNode);
-                AtomicNoWALTransactionContext context =
-                        new AtomicNoWALTransactionContext(txnId, txnSubsystem.getApplicationContext());
-                context.rollback(resourceMap);
-                context.deleteLogFile();
+                try {
+                    ObjectNode atomicTransactionLog = OBJECT_MAPPER
+                            .readValue(new String(ioManager.readAllBytes(txnLogFileRef)), ObjectNode.class);
+                    TxnId txnId = new TxnId(atomicTransactionLog.get("txnId").asInt());
+                    JsonNode jsonNode = atomicTransactionLog.get("resourceMap");
+                    Map<String, ILSMComponentId> resourceMap = getResourceMapFromJson(jsonNode);
+                    AtomicNoWALTransactionContext context =
+                            new AtomicNoWALTransactionContext(txnId, txnSubsystem.getApplicationContext());
+                    context.rollback(resourceMap);
+                    context.deleteLogFile();
+                } catch (Exception e) {
+                    LOGGER.error("Error rolling back atomic statement for {}", txnLogFileRef, e);
+                    cleanup(txnLogFileRef);
+                }
             }
         } catch (Exception e) {
             throw new ACIDException(e);
+        }
+    }
+
+    private void cleanup(FileReference resourceFile) {
+        IIOManager ioManager = txnSubsystem.getApplicationContext().getPersistenceIoManager();
+        if (resourceFile.getFile().exists()) {
+            try {
+                ioManager.delete(resourceFile);
+            } catch (Throwable th) {
+                LOGGER.error("Error cleaning up corrupted resource {}", resourceFile, th);
+                ExitUtil.halt(ExitUtil.EC_FAILED_TO_DELETE_CORRUPTED_RESOURCES);
+            }
         }
     }
 
