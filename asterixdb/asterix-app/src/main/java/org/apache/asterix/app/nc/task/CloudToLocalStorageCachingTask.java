@@ -41,14 +41,12 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
     private final Set<Integer> storagePartitions;
     private final boolean metadataNode;
     private final int metadataPartitionId;
-    private final boolean cleanup;
 
-    public CloudToLocalStorageCachingTask(Set<Integer> storagePartitions, boolean metadataNode, int metadataPartitionId,
-            boolean cleanup) {
+    public CloudToLocalStorageCachingTask(Set<Integer> storagePartitions, boolean metadataNode,
+            int metadataPartitionId) {
         this.storagePartitions = storagePartitions;
         this.metadataNode = metadataNode;
         this.metadataPartitionId = metadataPartitionId;
-        this.cleanup = cleanup;
     }
 
     @Override
@@ -68,7 +66,7 @@ public class CloudToLocalStorageCachingTask implements INCLifecycleTask {
                     applicationContext.getTransactionSubsystem().getCheckpointManager().getLatest();
             IPartitionBootstrapper bootstrapper = applicationContext.getPartitionBootstrapper();
             bootstrapper.bootstrap(storagePartitions, lrs.getOnDiskPartitions(), metadataNode, metadataPartitionId,
-                    cleanup, latestCheckpoint == null);
+                    latestCheckpoint == null);
 
             // Report all local resources
             diskService.reportLocalResources(lrs.loadAndGetAllResources());

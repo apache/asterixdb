@@ -49,8 +49,7 @@ public class LocalPartitionBootstrapper implements IPartitionBootstrapper {
 
     @Override
     public void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions,
-            boolean metadataNode, int metadataPartition, boolean cleanup, boolean ensureCompleteBootstrap)
-            throws HyracksDataException {
+            boolean metadataNode, int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException {
         for (FileReference onDiskPartition : currentOnDiskPartitions) {
             int partitionNum = StoragePathUtil.getPartitionNumFromRelativePath(onDiskPartition.getAbsolutePath());
             if (!activePartitions.contains(partitionNum)) {

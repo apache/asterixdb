@@ -158,9 +158,13 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
     public void startLocalRecovery(Set<Integer> partitions) throws IOException, ACIDException {
         state = SystemState.RECOVERING;
         LOGGER.info("starting recovery for partitions {}", partitions);
+        Checkpoint systemCheckpoint = checkpointManager.getLatest();
+        if (systemCheckpoint == null) {
+            LOGGER.warn("no system checkpoint found; skipping txn log recovery");
+            return;
+        }
         long readableSmallestLSN = logMgr.getReadableSmallestLSN();
-        Checkpoint checkpointObject = checkpointManager.getLatest();
-        long lowWaterMarkLSN = checkpointObject.getMinMCTFirstLsn();
+        long lowWaterMarkLSN = systemCheckpoint.getMinMCTFirstLsn();
         if (lowWaterMarkLSN < readableSmallestLSN) {
             lowWaterMarkLSN = readableSmallestLSN;
         }

@@ -50,9 +50,8 @@ public interface IPartitionBootstrapper {
      * @param currentOnDiskPartitions paths to the current local partitions
      * @param metadataNode            whether the node is a metadata node as well
      * @param metadataPartition       metadata partition number
-     * @param cleanup                 performs cleanup by deleting all unkept partitions
      * @param ensureCompleteBootstrap ensures the metadata catalog was fully bootstrapped
      */
     void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions, boolean metadataNode,
-            int metadataPartition, boolean cleanup, boolean ensureCompleteBootstrap) throws HyracksDataException;
+            int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException;
 }

@@ -45,7 +45,7 @@ import org.apache.asterix.common.api.INamespacePathResolver;
 import org.apache.asterix.common.cloud.IPartitionBootstrapper;
 import org.apache.asterix.common.config.CloudProperties;
 import org.apache.asterix.common.metadata.MetadataConstants;
-import org.apache.asterix.common.transactions.IRecoveryManager;
+import org.apache.asterix.common.transactions.IRecoveryManager.SystemState;
 import org.apache.asterix.common.utils.StoragePathUtil;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
@@ -106,22 +106,23 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
      */
 
     @Override
-    public IRecoveryManager.SystemState getSystemStateOnMissingCheckpoint() {
+    public SystemState getSystemStateOnMissingCheckpoint() {
         Set<CloudFile> existingMetadataFiles = getCloudMetadataPartitionFiles();
         CloudFile bootstrapMarkerPath = CloudFile.of(StoragePathUtil.getBootstrapMarkerRelativePath(nsPathResolver));
         if (existingMetadataFiles.isEmpty() || existingMetadataFiles.contains(bootstrapMarkerPath)) {
             LOGGER.info("First time to initialize this cluster: systemState = PERMANENT_DATA_LOSS");
-            return IRecoveryManager.SystemState.PERMANENT_DATA_LOSS;
+            return SystemState.PERMANENT_DATA_LOSS;
         } else {
-            LOGGER.info("Resuming a previous initialized cluster: systemState = HEALTHY");
-            return IRecoveryManager.SystemState.HEALTHY;
+            LOGGER.info(
+                    "Resuming a previously initialized cluster; setting system state to {} to force local recovery if needed",
+                    SystemState.CORRUPTED);
+            return SystemState.CORRUPTED;
         }
     }
 
     @Override
     public final void bootstrap(Set<Integer> activePartitions, List<FileReference> currentOnDiskPartitions,
-            boolean metadataNode, int metadataPartition, boolean cleanup, boolean ensureCompleteBootstrap)
-            throws HyracksDataException {
+            boolean metadataNode, int metadataPartition, boolean ensureCompleteBootstrap) throws HyracksDataException {
         partitions.clear();
         partitions.addAll(activePartitions);
         if (metadataNode) {
@@ -138,8 +139,7 @@ public abstract class AbstractCloudIOManager extends IOManager implements IParti
         }
 
         LOGGER.info("Initializing cloud manager with ({}) storage partitions: {}", partitions.size(), partitions);
-
-        if (cleanup) {
+        if (!currentOnDiskPartitions.isEmpty()) {
             deleteUnkeptPartitionDirs(currentOnDiskPartitions);
             cleanupLocalFiles();
         }

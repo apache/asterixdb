@@ -42,7 +42,9 @@ public class LocalRecoveryTask implements INCLifecycleTask {
     public void perform(CcId ccId, IControllerService cs) throws HyracksDataException {
         INcApplicationContext appContext = (INcApplicationContext) cs.getApplicationContext();
         try {
-            appContext.getTransactionSubsystem().getRecoveryManager().startLocalRecovery(partitions);
+            if (!partitions.isEmpty()) {
+                appContext.getTransactionSubsystem().getRecoveryManager().startLocalRecovery(partitions);
+            }
         } catch (IOException | ACIDException e) {
             throw HyracksDataException.create(e);
         }
