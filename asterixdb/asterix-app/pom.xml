@@ -488,7 +488,7 @@
           **/*AnalyzedExecutionTest.java,**/SqlppProfiledExecutionTest.java,**/CloudPythonTest.java,
           **/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,
           **/AzureBlobStorageExternalDatasetOnePartitionTest.java,**/SqlppSinglePointLookupExecutionTest.java,
-          **/Atomic*.java, **/AwsS3*.java, **/*SqlppHdfs*.java, **/*RQG*.java, **/*RQJ*.java
+          **/Atomic*.java, **/AwsS3*.java, **/*SqlppHdfs*.java, **/*RQGTest.java, **/*RQJTest.java
         </test.excludes>
         <itest.excludes>**/*.java</itest.excludes>
       </properties>
@@ -497,7 +497,6 @@
       <id>asterix-gerrit-asterix-app-sql-execution</id>
       <properties>
         <test.includes>**/SqlppProfiledExecutionTest.java,**/SqlppExecutionTest.java</test.includes>
-        <test.excludes>**/*.java</test.excludes>
         <itest.includes>
           **/SqlppExecution*IT.java,**/ExternalPythonFunctionIT.java,**/CloudPythonTest.java
         </itest.includes>
@@ -507,8 +506,7 @@
     <profile>
       <id>asterix-gerrit-asterix-app-sql-rqg</id>
       <properties>
-        <test.excludes>**/*.java</test.excludes>
-        <test.includes>**/*RQG*.java, **/*RQJ*.java</test.includes>
+        <test.includes>**/*RQGTest.java, **/*RQJTest.java</test.includes>
         <itest.includes>**/SqlppRQG*IT.java</itest.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
@@ -517,8 +515,7 @@
       <id>asterix-gerrit-ssl-compression</id>
       <properties>
         <test.includes>
-          **/*StaticPartitioning*Test.java,**/*Ssl*Test.java,**/*AnalyzedExecutionTest.java,
-          **/SqlppExecutionColumnTest.java, **/Atomic*.java
+          **/SqlppExecutionColumnTest.java,**/*Ssl*Test.java
         </test.includes>
         <itest.excludes>**/*.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
@@ -527,8 +524,10 @@
     <profile>
       <id>asterix-gerrit-verify-asterix-app</id>
       <properties>
-        <test.excludes>**/*.java</test.excludes>
-        <itest.excludes>**/External*IT.java,**/SqlppExecution*IT.java,**/SqlppRQG*IT.java,**/RebalanceWithCancellationIT.java</itest.excludes>
+        <test.includes>
+          **/*StaticPartitioning*Test.java,**/*AnalyzedExecutionTest.java,**/Atomic*.java
+        </test.includes>
+        <itest.excludes>**/External*IT.java,**/SqlppExecution*IT.java,**/RebalanceWithCancellationIT.java,**/SqlppRQG*IT.java</itest.excludes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
     </profile>
@@ -536,7 +535,6 @@
       <id>asterix-gerrit-rebalance-cancellation</id>
       <properties>
         <test.excludes>**/*.java</test.excludes>
-        <test.includes>**/RebalanceWithCancellationIT.java</test.includes>
         <itest.includes>**/RebalanceWithCancellationIT.java</itest.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
@@ -544,9 +542,8 @@
     <profile>
       <id>asterix-gerrit-cloud-tests</id>
       <properties>
-        <test.excludes>**/*.java</test.excludes>
         <test.includes>
-          **/CloudStorageTest.java, **/CloudStorageUnstableTest.java,
+          **/CloudStorageTest.java,
           **/SqlppSinglePointLookupExecutionTest.java, **/AwsS3*.java
         </test.includes>
         <failIfNoTests>false</failIfNoTests>
@@ -555,10 +552,9 @@
     <profile>
       <id>asterix-gerrit-cloud-nons3-tests</id>
       <properties>
-        <test.excludes>**/*.java</test.excludes>
         <test.includes>
           **/CloudStorageGCSTest.java, **/CloudStorageAzTest.java,**/AzureBlobStorageExternalDatasetTest.java,
-          **/AzureBlobStorageExternalDatasetOnePartitionTest.java, **/*SqlppHdfs*.java
+          **/AzureBlobStorageExternalDatasetOnePartitionTest.java,**/CloudStorageUnstableTest.java, **/*SqlppHdfs*.java
         </test.includes>
         <failIfNoTests>false</failIfNoTests>
       </properties>
