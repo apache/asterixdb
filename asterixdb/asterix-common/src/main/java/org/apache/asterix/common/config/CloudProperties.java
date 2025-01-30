@@ -239,8 +239,8 @@ public class CloudProperties extends AbstractProperties {
     }
 
     public long getTokenAcquireTimeout() {
-        int time = accessor.getInt(Option.CLOUD_PROFILER_LOG_INTERVAL);
-        return Math.max(time, 5000);
+        int time = accessor.getInt(Option.CLOUD_ACQUIRE_TOKEN_TIMEOUT);
+        return Math.min(time, 1000);
     }
 
     public int getWriteMaxRequestsPerSecond() {

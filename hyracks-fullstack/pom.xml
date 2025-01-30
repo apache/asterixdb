@@ -77,6 +77,8 @@
     <jackson-databind.version>${jackson.version}</jackson-databind.version>
     <netty.version>4.1.115.Final</netty.version>
     <asm.version>9.3</asm.version>
+    <awsjavasdk.version>2.29.27</awsjavasdk.version>
+    <gcsjavasdk.version>2.45.0</gcsjavasdk.version>
 
     <implementation.title>Apache Hyracks and Algebricks - ${project.name}</implementation.title>
     <implementation.url>https://asterixdb.apache.org/</implementation.url>

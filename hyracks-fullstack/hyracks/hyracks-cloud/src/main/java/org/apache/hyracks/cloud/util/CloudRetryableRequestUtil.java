@@ -25,8 +25,14 @@ import org.apache.hyracks.api.util.ExceptionUtils;
 import org.apache.hyracks.cloud.io.request.ICloudBeforeRetryRequest;
 import org.apache.hyracks.cloud.io.request.ICloudRequest;
 import org.apache.hyracks.cloud.io.request.ICloudReturnableRequest;
+import org.apache.hyracks.util.ExponentialRetryPolicy;
+import org.apache.hyracks.util.IRetryPolicy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import com.google.cloud.BaseServiceException;
+
+import software.amazon.awssdk.core.exception.SdkException;
 
 /**
  * Run {@link ICloudRequest} and {@link ICloudReturnableRequest} with retries
@@ -39,10 +45,13 @@ public class CloudRetryableRequestUtil {
      * @see System#setProperty(String, String)
      */
     public static final String CLOUD_UNSTABLE_MODE = "cloud.unstable.mode";
-    private static final int STABLE_NUMBER_OF_RETRIES = 5;
+    private static final int STABLE_NUMBER_OF_RETRIES = 10;
+    private static final long STABLE_MAX_DELAY_BETWEEN_RETRIES_IN_MILLIS = 10_000;
     private static final int UNSTABLE_NUMBER_OF_RETRIES = 100;
+    private static final int UNSTABLE_MAX_DELAY_BETWEEN_RETRIES_IN_MILLIS = 0;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int NUMBER_OF_RETRIES = getNumberOfRetries();
+    private static final long MAX_DELAY_BETWEEN_RETRIES = getMaxDelayBetweenRetries();
 
     private static final ICloudBeforeRetryRequest NO_OP_RETRY = () -> {
     };
@@ -162,11 +171,15 @@ public class CloudRetryableRequestUtil {
     private static <T> T doRun(ICloudReturnableRequest<T> request, ICloudBeforeRetryRequest retry)
             throws HyracksDataException {
         int attempt = 1;
+        IRetryPolicy retryPolicy = null;
         while (true) {
             try {
                 return request.call();
-            } catch (IOException e) {
-                if (attempt > NUMBER_OF_RETRIES) {
+            } catch (IOException | BaseServiceException | SdkException e) {
+                if (retryPolicy == null) {
+                    retryPolicy = new ExponentialRetryPolicy(NUMBER_OF_RETRIES, MAX_DELAY_BETWEEN_RETRIES);
+                }
+                if (!retryPolicy.retry(e)) {
                     throw HyracksDataException.create(e);
                 }
                 attempt++;
@@ -179,12 +192,16 @@ public class CloudRetryableRequestUtil {
 
     private static void doRun(ICloudRequest request, ICloudBeforeRetryRequest retry) throws HyracksDataException {
         int attempt = 1;
+        IRetryPolicy retryPolicy = null;
         while (true) {
             try {
                 request.call();
                 break;
-            } catch (IOException e) {
-                if (attempt > NUMBER_OF_RETRIES) {
+            } catch (IOException | BaseServiceException | SdkException e) {
+                if (retryPolicy == null) {
+                    retryPolicy = new ExponentialRetryPolicy(NUMBER_OF_RETRIES, MAX_DELAY_BETWEEN_RETRIES);
+                }
+                if (!retryPolicy.retry(e)) {
                     throw HyracksDataException.create(e);
                 }
                 attempt++;
@@ -199,4 +216,8 @@ public class CloudRetryableRequestUtil {
         return unstable ? UNSTABLE_NUMBER_OF_RETRIES : STABLE_NUMBER_OF_RETRIES;
     }
 
+    private static long getMaxDelayBetweenRetries() {
+        boolean unstable = Boolean.getBoolean(CLOUD_UNSTABLE_MODE);
+        return unstable ? UNSTABLE_MAX_DELAY_BETWEEN_RETRIES_IN_MILLIS : STABLE_MAX_DELAY_BETWEEN_RETRIES_IN_MILLIS;
+    }
 }
