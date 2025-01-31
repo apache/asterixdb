@@ -25,11 +25,11 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
 
     private static final int DEFAULT_MAX_RETRIES = 10;
     private static final long DEFAULT_INITIAL_DELAY_IN_MILLIS = 100;
-    private static final long DEFAULT_MAX_DELAY_IN_MILLIS = Long.MAX_VALUE;
+    private static final long DEFAULT_MAX_DELAY_IN_MILLIS = Long.MAX_VALUE - 1;
     private final int maxRetries;
-    private final long initialDelay;
     private final long maxDelay;
     private int attempt = 0;
+    private long delay;
 
     /**
      * Default constructor for ExponentialRetryPolicy.
@@ -48,8 +48,8 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
      */
     public ExponentialRetryPolicy(int maxRetries, long initialDelay, long maxDelay) {
         this.maxRetries = maxRetries;
-        this.initialDelay = initialDelay;
-        this.maxDelay = maxDelay;
+        this.maxDelay = Long.min(maxDelay, DEFAULT_MAX_DELAY_IN_MILLIS);
+        this.delay = Long.min(initialDelay, this.maxDelay);
     }
 
     /**
@@ -77,12 +77,12 @@ public class ExponentialRetryPolicy implements IRetryPolicy {
     public boolean retry(Throwable failure) {
         if (attempt < maxRetries) {
             try {
-                long delay = initialDelay * (1L << attempt);
-                TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextLong(1 + Long.min(delay, maxDelay)));
+                TimeUnit.MILLISECONDS.sleep(ThreadLocalRandom.current().nextLong(1 + delay));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
             attempt++;
+            delay = delay > maxDelay / 2 ? maxDelay : delay * 2;
             return true;
         }
         return false;
