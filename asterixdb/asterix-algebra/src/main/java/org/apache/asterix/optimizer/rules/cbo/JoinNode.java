@@ -1333,7 +1333,8 @@ public class JoinNode {
         List<Integer> newJoinConditions = this.getNewJoinConditionsOnly(); // these will be a subset of applicable join conditions.
         if ((newJoinConditions.size() == 0) && joinEnum.connectedJoinGraph) {
             // at least one plan must be there at each level as the graph is fully connected.
-            if (leftJn.cardinality * rightJn.cardinality > 10000.0 && level > joinEnum.cboFullEnumLevel) {
+            if (leftJn.cardinality * rightJn.cardinality > 10000.0 && level > joinEnum.cboFullEnumLevel
+                    && !joinEnum.outerJoin) { // when outer joins are present, moving joins around is restricted
                 return;
             }
         }
