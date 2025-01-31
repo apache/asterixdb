@@ -117,7 +117,7 @@ public class PushLimitIntoPrimarySearchRule implements IAlgebraicRewriteRule {
             extractInlinableVariablesFromAssign(assignOp, selectedVariables, varAssignRhs);
             if (!varAssignRhs.isEmpty()) {
                 if (inlineVisitor == null) {
-                    inlineVisitor = new InlineVariablesRule.InlineVariablesVisitor(varAssignRhs);
+                    inlineVisitor = new InlineVariablesRule.InlineVariablesVisitor(varAssignRhs, null);
                     inlineVisitor.setContext(context);
                     inlineVisitor.setOperator(select);
                 }

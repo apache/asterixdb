@@ -19,13 +19,16 @@
 package org.apache.hyracks.algebricks.rewriter.rules;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
+import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 
@@ -50,15 +53,18 @@ import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.Var
 public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
 
     // Maps from variable to a list of operators using that variable.
-    protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap =
-            new LinkedHashMap<LogicalVariable, List<ILogicalOperator>>();
-    protected List<LogicalVariable> usedVars = new ArrayList<LogicalVariable>();
+    protected Map<LogicalVariable, List<ILogicalOperator>> usedVarsMap = new LinkedHashMap<>();
+    protected List<LogicalVariable> usedVars = new ArrayList<>();
+    protected Set<LogicalVariable> usedResultVars = new HashSet<>();
+    protected Set<LogicalVariable> docRefVars = new HashSet<>();
 
     @Override
     protected void prepare(IOptimizationContext context) {
         super.prepare(context);
         usedVarsMap.clear();
         usedVars.clear();
+        usedResultVars.clear();
+        docRefVars.clear();
     }
 
     @Override
@@ -71,6 +77,8 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
                 if (!op.requiresVariableReferenceExpressions()) {
                     inlineVisitor.setOperator(op);
                     inlineVisitor.setTargetVariable(entry.getKey());
+                    inlineVisitor.setUsedResultVars(usedResultVars);
+                    inlineVisitor.setDocRefVars(docRefVars);
                     if (op.accept(inlineVisitor, inlineVisitor)) {
                         modified = true;
                     }
@@ -83,6 +91,14 @@ public class InlineSingleReferenceVariablesRule extends InlineVariablesRule {
 
     @Override
     protected boolean performBottomUpAction(ILogicalOperator op) throws AlgebricksException {
+        if (op.getOperatorTag() == LogicalOperatorTag.DISTRIBUTE_RESULT) {
+            VariableUtilities.getUsedVariables(op, usedResultVars);
+        }
+        if (op.getOperatorTag() == LogicalOperatorTag.DATASOURCESCAN
+                || op.getOperatorTag() == LogicalOperatorTag.UNNEST_MAP) {
+            // TODO: We should find a way to exclude primary keys from the produced variables.
+            VariableUtilities.getProducedVariables(op, docRefVars);
+        }
         usedVars.clear();
         VariableUtilities.getUsedVariables(op, usedVars);
         for (LogicalVariable var : usedVars) {

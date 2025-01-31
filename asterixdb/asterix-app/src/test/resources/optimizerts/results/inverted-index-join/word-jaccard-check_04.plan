@@ -5,9 +5,11 @@
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
           -- HYBRID_HASH_JOIN [$$61][$$49]  |PARTITIONED|
             -- HASH_PARTITION_EXCHANGE [$$61]  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+              -- ASSIGN  |PARTITIONED|
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
             -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
               -- STREAM_SELECT  |PARTITIONED|
                 -- ASSIGN  |PARTITIONED|
