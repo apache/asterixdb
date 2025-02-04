@@ -970,7 +970,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
     }
 
     // Each outer join will create one set of dependencies. The right side depends on the left side.
-    private boolean buildDependencyList(ILogicalOperator op, JoinOperator jO,
+    private void buildDependencyList(ILogicalOperator op, JoinOperator jO,
             List<Quadruple<Integer, Integer, JoinOperator, Integer>> outerJoinsDependencyList, int rightSideBits)
             throws AlgebricksException {
         AbstractBinaryJoinOperator outerJoinOp = (AbstractBinaryJoinOperator) op;
@@ -1018,7 +1018,6 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                 outerJoinsDependencyList.add(new Quadruple(leftSideExprBits, rightSideBits, jO, 0));
             }
         }
-        return true;
     }
 
     private ILogicalExpression joinExprFound(ILogicalOperator op) {
@@ -1073,10 +1072,7 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
                             && (firstLeafInputNumber < lastLeafInputNumber)) { // if more is than one leafInput, only then buildSets make sense.
                         buildSets.add(new Triple<>(k, lastLeafInputNumber - firstLeafInputNumber + 1, true)); // convert the second to boolean later
                     }
-                    boolean ret = buildDependencyList(op, jO, outerJoinsDependencyList, k);
-                    if (!ret) {
-                        return false;
-                    }
+                    buildDependencyList(op, jO, outerJoinsDependencyList, k);
                 }
             }
         } else {
