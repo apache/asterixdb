@@ -61,6 +61,7 @@
     "compiler\.textsearchmemory" : 163840,
     "compiler\.windowmemory" : 196608,
     "default\.dir" : "target/io/dir/asterixdb",
+    "gcp.impersonate.service.account.duration" : 900,
     "library\.deploy\.timeout" : 1800,
     "log\.dir" : "logs/",
     "log\.level" : "DEBUG",

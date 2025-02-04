@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.AsterixInputStream;
@@ -47,7 +48,9 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
     public AsterixInputStream createInputStream(IExternalDataRuntimeContext context) throws HyracksDataException {
         IExternalFilterValueEmbedder valueEmbedder = context.getValueEmbedder();
         int partition = context.getPartition();
-        return new GCSInputStream(configuration, partitionWorkLoadsBasedOnSize.get(partition).getFilePaths(),
+        IApplicationContext ncAppCtx = (IApplicationContext) context.getTaskContext().getJobletContext()
+                .getServiceContext().getApplicationContext();
+        return new GCSInputStream(ncAppCtx, configuration, partitionWorkLoadsBasedOnSize.get(partition).getFilePaths(),
                 valueEmbedder);
     }
 
@@ -65,7 +68,8 @@ public class GCSInputStreamFactory extends AbstractExternalInputStreamFactory {
         configuration.put(ExternalDataPrefix.PREFIX_ROOT_FIELD_NAME, externalDataPrefix.getRoot());
 
         // get the items
-        List<Blob> filesOnly = GCSUtils.listItems(configuration, includeExcludeMatcher, warningCollector,
+        IApplicationContext appCtx = (IApplicationContext) ctx.getApplicationContext();
+        List<Blob> filesOnly = GCSUtils.listItems(appCtx, configuration, includeExcludeMatcher, warningCollector,
                 externalDataPrefix, evaluator);
 
         // Distribute work load amongst the partitions

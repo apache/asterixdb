@@ -18,32 +18,20 @@
  */
 package org.apache.asterix.external.util.google.gcs;
 
-import static org.apache.asterix.common.exceptions.ErrorCode.EXTERNAL_SOURCE_ERROR;
-import static org.apache.asterix.common.exceptions.ErrorCode.INVALID_PARAM_VALUE_ALLOWED_VALUE;
-import static org.apache.asterix.common.exceptions.ErrorCode.PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT;
 import static org.apache.asterix.external.util.ExternalDataUtils.getPrefix;
 import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateDeltaTableProperties;
 import static org.apache.asterix.external.util.ExternalDataUtils.validateIncludeExclude;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.ENDPOINT_FIELD_NAME;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_TYPE;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_AUTH_UNAUTHENTICATED;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_ENDPOINT;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.HADOOP_GCS_PROTOCOL;
-import static org.apache.asterix.external.util.google.gcs.GCSConstants.JSON_CREDENTIALS_FIELD_NAME;
+import static org.apache.asterix.external.util.google.gcs.GCSAuthUtils.buildClient;
 import static org.apache.hyracks.api.util.ExceptionUtils.getMessageOrToString;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.regex.Matcher;
 
+import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IExternalFilterEvaluator;
@@ -51,25 +39,15 @@ import org.apache.asterix.external.input.record.reader.abstracts.AbstractExterna
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.external.util.ExternalDataUtils;
-import org.apache.asterix.external.util.HDFSUtils;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.exceptions.IWarningCollector;
 import org.apache.hyracks.api.exceptions.SourceLocation;
 import org.apache.hyracks.api.exceptions.Warning;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.json.JsonReadFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.gax.paging.Page;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.BaseServiceException;
-import com.google.cloud.NoCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 
 public class GCSUtils {
     private GCSUtils() {
@@ -77,73 +55,17 @@ public class GCSUtils {
 
     }
 
-    private static final ObjectMapper JSON_CREDENTIALS_OBJECT_MAPPER = new ObjectMapper();
-    static {
-        JSON_CREDENTIALS_OBJECT_MAPPER.configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
-    }
-
-    /**
-     * Builds the client using the provided configuration
-     *
-     * @param configuration properties
-     * @return clientasterixdb/asterix-external-data/src/main/java/org/apache/asterix/external/util/ExternalDataUtils.java
-     * @throws CompilationException CompilationException
-     */
-    public static Storage buildClient(Map<String, String> configuration) throws CompilationException {
-        String applicationDefaultCredentials = configuration.get(APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
-        String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
-        String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
-
-        StorageOptions.Builder builder = StorageOptions.newBuilder();
-        builder.setStorageRetryStrategy(DEFAULT_NO_RETRY_ON_THREAD_INTERRUPT_STRATEGY);
-
-        // default credentials provider
-        if (applicationDefaultCredentials != null) {
-            // only "true" value is allowed
-            if (!applicationDefaultCredentials.equalsIgnoreCase("true")) {
-                throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE,
-                        APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME, "true");
-            }
-
-            // no other authentication parameters are allowed
-            if (jsonCredentials != null) {
-                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, JSON_CREDENTIALS_FIELD_NAME,
-                        APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME);
-            }
-
-            try {
-                builder.setCredentials(GoogleCredentials.getApplicationDefault());
-            } catch (Exception ex) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-            }
-        } else if (jsonCredentials != null) {
-            try (InputStream credentialsStream = new ByteArrayInputStream(jsonCredentials.getBytes())) {
-                builder.setCredentials(GoogleCredentials.fromStream(credentialsStream));
-            } catch (IOException ex) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
-            } catch (Exception ex) {
-                throw new CompilationException(EXTERNAL_SOURCE_ERROR,
-                        "Encountered an issue while processing the JSON credentials. Please ensure the provided credentials are valid.");
-            }
-        } else {
-            builder.setCredentials(NoCredentials.getInstance());
-        }
-
-        if (endpoint != null) {
-            builder.setHost(endpoint);
-        }
-
-        return builder.build().getService();
-    }
-
     /**
      * Validate external dataset properties
      *
+     * @param appCtx application context
      * @param configuration properties
+     * @param srcLoc source location
+     * @param collector warning collector
      * @throws CompilationException Compilation exception
      */
-    public static void validateProperties(Map<String, String> configuration, SourceLocation srcLoc,
-            IWarningCollector collector) throws CompilationException {
+    public static void validateProperties(IApplicationContext appCtx, Map<String, String> configuration,
+            SourceLocation srcLoc, IWarningCollector collector) throws CompilationException {
         if (isDeltaTable(configuration)) {
             validateDeltaTableProperties(configuration);
         }
@@ -154,7 +76,6 @@ public class GCSUtils {
 
         validateIncludeExclude(configuration);
         try {
-            // TODO(htowaileb): maybe something better, this will check to ensure type is supported before creation
             new ExternalDataPrefix(configuration);
         } catch (AlgebricksException ex) {
             throw new CompilationException(ErrorCode.FAILED_TO_CALCULATE_COMPUTED_FIELDS, ex);
@@ -162,36 +83,33 @@ public class GCSUtils {
 
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
 
-        try {
+        try (Storage storage = buildClient(appCtx, configuration)) {
             Storage.BlobListOption limitOption = Storage.BlobListOption.pageSize(1);
             Storage.BlobListOption prefixOption = Storage.BlobListOption.prefix(getPrefix(configuration));
-            Storage storage = buildClient(configuration);
             Page<Blob> items = storage.list(container, limitOption, prefixOption);
 
             if (!items.iterateAll().iterator().hasNext() && collector.shouldWarn()) {
                 Warning warning = Warning.of(srcLoc, ErrorCode.EXTERNAL_SOURCE_CONFIGURATION_RETURNED_NO_FILES);
                 collector.warn(warning);
             }
-        } catch (CompilationException ex) {
-            throw ex;
         } catch (Exception ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
     }
 
-    public static List<Blob> listItems(Map<String, String> configuration, IncludeExcludeMatcher includeExcludeMatcher,
-            IWarningCollector warningCollector, ExternalDataPrefix externalDataPrefix,
-            IExternalFilterEvaluator evaluator) throws CompilationException, HyracksDataException {
+    public static List<Blob> listItems(IApplicationContext appCtx, Map<String, String> configuration,
+            IncludeExcludeMatcher includeExcludeMatcher, IWarningCollector warningCollector,
+            ExternalDataPrefix externalDataPrefix, IExternalFilterEvaluator evaluator)
+            throws CompilationException, HyracksDataException {
         // Prepare to retrieve the objects
         List<Blob> filesOnly = new ArrayList<>();
         String container = configuration.get(ExternalDataConstants.CONTAINER_NAME_FIELD_NAME);
-        Storage gcs = buildClient(configuration);
         Storage.BlobListOption options = Storage.BlobListOption.prefix(ExternalDataUtils.getPrefix(configuration));
         Page<Blob> items;
 
-        try {
+        try (Storage gcs = buildClient(appCtx, configuration)) {
             items = gcs.list(container, options);
-        } catch (BaseServiceException ex) {
+        } catch (Exception ex) {
             throw new CompilationException(ErrorCode.EXTERNAL_SOURCE_ERROR, ex, getMessageOrToString(ex));
         }
 
@@ -221,61 +139,6 @@ public class GCSUtils {
                     warningCollector)) {
                 filesOnly.add(item);
             }
-        }
-    }
-
-    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration)
-            throws AlgebricksException {
-        configureHdfsJobConf(conf, configuration, 0);
-    }
-
-    /**
-     * Builds the client using the provided configuration
-     *
-     * @param configuration      properties
-     * @param numberOfPartitions number of partitions in the cluster
-     */
-    public static void configureHdfsJobConf(JobConf conf, Map<String, String> configuration, int numberOfPartitions)
-            throws AlgebricksException {
-        String jsonCredentials = configuration.get(JSON_CREDENTIALS_FIELD_NAME);
-        String endpoint = configuration.get(ENDPOINT_FIELD_NAME);
-
-        // disable caching FileSystem
-        HDFSUtils.disableHadoopFileSystemCache(conf, HADOOP_GCS_PROTOCOL);
-
-        // TODO(htowaileb): needs further testing, recommended to disable by gcs-hadoop team
-        conf.set(GCSConstants.HADOOP_SUPPORT_COMPRESSED, ExternalDataConstants.FALSE);
-
-        // TODO(htowaileb): needs further testing
-        // set number of threads
-        //        conf.set(GCSConstants.HADOOP_MAX_REQUESTS_PER_BATCH, String.valueOf(numberOfPartitions));
-        //        conf.set(GCSConstants.HADOOP_BATCH_THREADS, String.valueOf(numberOfPartitions));
-
-        // authentication method
-        if (jsonCredentials == null) {
-            // anonymous access
-            conf.set(HADOOP_AUTH_TYPE, HADOOP_AUTH_UNAUTHENTICATED);
-        } else {
-            try {
-                JsonNode jsonCreds = JSON_CREDENTIALS_OBJECT_MAPPER.readTree(jsonCredentials);
-                // Setting these values instead of HADOOP_AUTH_SERVICE_ACCOUNT_JSON_KEY_FILE_PATH is supported
-                // in com.google.cloud.bigdataoss:util-hadoop only up to version hadoop3-2.2.x and is removed in
-                // version 3.x.y, which also removed support for hadoop-2
-                conf.set(GCSConstants.HadoopAuthServiceAccount.PRIVATE_KEY_ID,
-                        jsonCreds.get(GCSConstants.JsonCredentials.PRIVATE_KEY_ID).asText());
-                conf.set(GCSConstants.HadoopAuthServiceAccount.PRIVATE_KEY,
-                        jsonCreds.get(GCSConstants.JsonCredentials.PRIVATE_KEY).asText());
-                conf.set(GCSConstants.HadoopAuthServiceAccount.CLIENT_EMAIL,
-                        jsonCreds.get(GCSConstants.JsonCredentials.CLIENT_EMAIL).asText());
-            } catch (JsonProcessingException e) {
-                throw CompilationException.create(EXTERNAL_SOURCE_ERROR, "Unable to parse Json Credentials",
-                        getMessageOrToString(e));
-            }
-        }
-
-        // set endpoint if provided, default is https://storage.googleapis.com/
-        if (endpoint != null) {
-            conf.set(HADOOP_ENDPOINT, endpoint);
         }
     }
 

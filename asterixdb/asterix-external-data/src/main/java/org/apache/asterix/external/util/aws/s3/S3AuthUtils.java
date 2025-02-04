@@ -105,7 +105,7 @@ import software.amazon.awssdk.services.sts.model.Credentials;
 public class S3AuthUtils {
     enum AuthenticationType {
         ANONYMOUS,
-        ARN,
+        ARN_ASSUME_ROLE,
         INSTANCE_PROFILE,
         ACCESS_KEYS,
         BAD_AUTHENTICATION
@@ -120,7 +120,8 @@ public class S3AuthUtils {
     }
 
     public static boolean isArnAssumedRoleExpiredToken(Map<String, String> configuration, String errorCode) {
-        return ERROR_EXPIRED_TOKEN.equals(errorCode) && getAuthenticationType(configuration) == AuthenticationType.ARN;
+        return ERROR_EXPIRED_TOKEN.equals(errorCode)
+                && getAuthenticationType(configuration) == AuthenticationType.ARN_ASSUME_ROLE;
     }
 
     /**
@@ -168,7 +169,7 @@ public class S3AuthUtils {
         switch (authenticationType) {
             case ANONYMOUS:
                 return AnonymousCredentialsProvider.create();
-            case ARN:
+            case ARN_ASSUME_ROLE:
                 return getTrustAccountCredentials(appCtx, configuration);
             case INSTANCE_PROFILE:
                 return getInstanceProfileCredentials(configuration);
@@ -206,7 +207,7 @@ public class S3AuthUtils {
         if (noAuth(configuration)) {
             return AuthenticationType.ANONYMOUS;
         } else if (roleArn != null) {
-            return AuthenticationType.ARN;
+            return AuthenticationType.ARN_ASSUME_ROLE;
         } else if (instanceProfile != null) {
             return AuthenticationType.INSTANCE_PROFILE;
         } else if (accessKeyId != null || secretAccessKey != null) {
@@ -232,11 +233,11 @@ public class S3AuthUtils {
     }
 
     /**
-     * Returns the cached credentials if valid, otherwise, generates new credentials by assume a role
+     * Returns the cached credentials if valid, otherwise, generates new credentials
      *
      * @param appCtx application context
      * @param configuration configuration
-     * @return returns the cached credentials if valid, otherwise, generates new credentials by assume a role
+     * @return returns the cached credentials if valid, otherwise, generates new credentials
      * @throws CompilationException CompilationException
      */
     public static AwsCredentialsProvider getTrustAccountCredentials(IApplicationContext appCtx,
@@ -278,20 +279,8 @@ public class S3AuthUtils {
         if (externalId != null) {
             builder.externalId(externalId);
         }
-
-        // credentials to be used to assume the role
-        AwsCredentialsProvider credentialsProvider;
         AssumeRoleRequest request = builder.build();
-        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
-        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
-        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
-        if ("true".equalsIgnoreCase(instanceProfile)) {
-            credentialsProvider = getInstanceProfileCredentials(configuration, true);
-        } else if (accessKeyId != null && secretAccessKey != null) {
-            credentialsProvider = getAccessKeyCredentials(configuration, true);
-        } else {
-            throw new CompilationException(ErrorCode.NO_AWS_VALID_PARAMS_FOUND_FOR_CROSS_ACCOUNT_TRUST_AUTHENTICATION);
-        }
+        AwsCredentialsProvider credentialsProvider = getCredentialsToAssumeRole(configuration);
 
         // assume the role from the provided arn
         try (StsClient stsClient =
@@ -305,13 +294,22 @@ public class S3AuthUtils {
         }
     }
 
-    private static AwsCredentialsProvider getInstanceProfileCredentials(Map<String, String> configuration)
+    private static AwsCredentialsProvider getCredentialsToAssumeRole(Map<String, String> configuration)
             throws CompilationException {
-        return getInstanceProfileCredentials(configuration, false);
+        String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
+        String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
+        String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
+        if (instanceProfile != null) {
+            return getInstanceProfileCredentials(configuration);
+        } else if (accessKeyId != null || secretAccessKey != null) {
+            return getAccessKeyCredentials(configuration);
+        } else {
+            throw new CompilationException(ErrorCode.NO_AWS_VALID_PARAMS_FOUND_FOR_CROSS_ACCOUNT_TRUST_AUTHENTICATION);
+        }
     }
 
-    private static AwsCredentialsProvider getInstanceProfileCredentials(Map<String, String> configuration,
-            boolean assumeRoleAuthentication) throws CompilationException {
+    private static AwsCredentialsProvider getInstanceProfileCredentials(Map<String, String> configuration)
+            throws CompilationException {
         String instanceProfile = configuration.get(INSTANCE_PROFILE_FIELD_NAME);
 
         // only "true" value is allowed
@@ -319,24 +317,17 @@ public class S3AuthUtils {
             throw new CompilationException(INVALID_PARAM_VALUE_ALLOWED_VALUE, INSTANCE_PROFILE_FIELD_NAME, "true");
         }
 
-        if (!assumeRoleAuthentication) {
-            String notAllowed = getNonNull(configuration, ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME,
-                    SESSION_TOKEN_FIELD_NAME);
-            if (notAllowed != null) {
-                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed,
-                        INSTANCE_PROFILE_FIELD_NAME);
-            }
+        String notAllowed = getNonNull(configuration, ACCESS_KEY_ID_FIELD_NAME, SECRET_ACCESS_KEY_FIELD_NAME,
+                SESSION_TOKEN_FIELD_NAME);
+        if (notAllowed != null) {
+            throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed,
+                    INSTANCE_PROFILE_FIELD_NAME);
         }
         return InstanceProfileCredentialsProvider.create();
     }
 
     private static AwsCredentialsProvider getAccessKeyCredentials(Map<String, String> configuration)
             throws CompilationException {
-        return getAccessKeyCredentials(configuration, false);
-    }
-
-    private static AwsCredentialsProvider getAccessKeyCredentials(Map<String, String> configuration,
-            boolean assumeRoleAuthentication) throws CompilationException {
         String accessKeyId = configuration.get(ACCESS_KEY_ID_FIELD_NAME);
         String secretAccessKey = configuration.get(SECRET_ACCESS_KEY_FIELD_NAME);
         String sessionToken = configuration.get(SESSION_TOKEN_FIELD_NAME);
@@ -348,14 +339,6 @@ public class S3AuthUtils {
         if (secretAccessKey == null) {
             throw new CompilationException(REQUIRED_PARAM_IF_PARAM_IS_PRESENT, SECRET_ACCESS_KEY_FIELD_NAME,
                     ACCESS_KEY_ID_FIELD_NAME);
-        }
-
-        if (!assumeRoleAuthentication) {
-            String notAllowed = getNonNull(configuration, INSTANCE_PROFILE_FIELD_NAME, EXTERNAL_ID_FIELD_NAME);
-            if (notAllowed != null) {
-                throw new CompilationException(PARAM_NOT_ALLOWED_IF_PARAM_IS_PRESENT, notAllowed,
-                        INSTANCE_PROFILE_FIELD_NAME);
-            }
         }
 
         // use session token if provided
@@ -423,13 +406,13 @@ public class S3AuthUtils {
      * @param configuration external details configuration
      */
     private static void setHadoopCredentials(IApplicationContext appCtx, JobConf jobConf,
-            Map<String, String> configuration) {
+            Map<String, String> configuration) throws CompilationException {
         AuthenticationType authenticationType = getAuthenticationType(configuration);
         switch (authenticationType) {
             case ANONYMOUS:
                 jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ANONYMOUS);
                 break;
-            case ARN:
+            case ARN_ASSUME_ROLE:
                 jobConf.set(HADOOP_CREDENTIAL_PROVIDER_KEY, HADOOP_ASSUMED_ROLE);
                 jobConf.set(HADOOP_ASSUME_ROLE_ARN, configuration.get(ROLE_ARN_FIELD_NAME));
                 jobConf.set(HADOOP_ASSUME_ROLE_EXTERNAL_ID, configuration.get(EXTERNAL_ID_FIELD_NAME));
@@ -458,6 +441,7 @@ public class S3AuthUtils {
                 }
                 break;
             case BAD_AUTHENTICATION:
+                throw new CompilationException(ErrorCode.NO_VALID_AUTHENTICATION_PARAMS_PROVIDED);
         }
     }
 

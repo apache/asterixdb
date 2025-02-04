@@ -40,22 +40,20 @@ public class GCSConstants {
     }
 
     public static final String APPLICATION_DEFAULT_CREDENTIALS_FIELD_NAME = "applicationDefaultCredentials";
+    public static final String IMPERSONATE_SERVICE_ACCOUNT_FIELD_NAME = "impersonateServiceAccount";
     public static final String JSON_CREDENTIALS_FIELD_NAME = "jsonCredentials";
     public static final String ENDPOINT_FIELD_NAME = "endpoint";
     public static final String STORAGE_PREFIX = "prefix";
 
-    /*
-     * Hadoop internal configuration
-     */
+    // hadoop internal configuration
     public static final String HADOOP_GCS_PROTOCOL = "gs";
+    public static final String MAX_BATCH_THREADS = "fs.gs.batch.threads";
+    public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
+    public static final String HADOOP_SUPPORT_COMPRESSED = "fs.gs.inputstream.support.gzip.encoding.enable";
 
     // hadoop credentials
     public static final String HADOOP_AUTH_TYPE = "fs.gs.auth.type";
     public static final String HADOOP_AUTH_UNAUTHENTICATED = "UNAUTHENTICATED";
-
-    // gs hadoop parameters
-    public static final String HADOOP_SUPPORT_COMPRESSED = "fs.gs.inputstream.support.gzip.encoding.enable";
-    public static final String HADOOP_ENDPOINT = "fs.gs.storage.root.url";
 
     public static class JsonCredentials {
         public static final String PRIVATE_KEY_ID = "private_key_id";
@@ -64,6 +62,7 @@ public class GCSConstants {
     }
 
     public static class HadoopAuthServiceAccount {
+        public static final String IMPERSONATE_SERVICE_ACCOUNT = "fs.gs.auth.impersonation.service.account";
         public static final String PRIVATE_KEY_ID = "fs.gs.auth.service.account.private.key.id";
         public static final String PRIVATE_KEY = "fs.gs.auth.service.account.private.key";
         public static final String CLIENT_EMAIL = "fs.gs.auth.service.account.email";

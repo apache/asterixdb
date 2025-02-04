@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.asterix.common.api.IApplicationContext;
 import org.apache.asterix.external.input.record.reader.aws.delta.DeltaReaderFactory;
 import org.apache.asterix.external.util.ExternalDataConstants;
+import org.apache.asterix.external.util.google.gcs.GCSAuthUtils;
 import org.apache.asterix.external.util.google.gcs.GCSUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
@@ -37,7 +38,8 @@ public class GCSDeltaReaderFactory extends DeltaReaderFactory {
     @Override
     protected void configureJobConf(IApplicationContext appCtx, JobConf conf, Map<String, String> configuration)
             throws AlgebricksException {
-        GCSUtils.configureHdfsJobConf(conf, configuration);
+        int numberOfPartitions = getPartitionConstraint().getLocations().length;
+        GCSAuthUtils.configureHdfsJobConf(conf, configuration, numberOfPartitions);
     }
 
     @Override

@@ -78,14 +78,15 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
 
         String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
         if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(type)) {
-            credentials = generateAwsCredentials(configuration);
+            return generateAwsCredentials(configuration);
+        } else {
+            // this should never happen
+            throw new IllegalArgumentException("Unsupported external source type: " + type);
         }
-
-        return credentials;
     }
 
     // TODO: this can probably be refactored out into something that is AWS-specific
-    private Object generateAwsCredentials(Map<String, String> configuration)
+    private AwsSessionCredentials generateAwsCredentials(Map<String, String> configuration)
             throws HyracksDataException, CompilationException {
         String key = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
         AwsSessionCredentials credentials;
