@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.asterix.common.api.INamespaceResolver;
@@ -48,7 +49,6 @@ import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.external.IDataSourceAdapter;
 import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.functions.FunctionSignature;
-import org.apache.asterix.common.metadata.DatasetFullyQualifiedName;
 import org.apache.asterix.common.metadata.DataverseName;
 import org.apache.asterix.common.metadata.LockList;
 import org.apache.asterix.common.metadata.MetadataConstants;
@@ -999,7 +999,8 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
             configuration.put(ExternalDataConstants.KEY_DATASET_DATABASE, dataset.getDatabaseName());
             configuration.put(ExternalDataConstants.KEY_DATASET_DATAVERSE,
                     dataset.getDataverseName().getCanonicalForm());
-            setExternalEntityId(configuration, dataset);
+            setExternalEntityId(configuration);
+            setSourceType(configuration, adapterName);
             return AdapterFactoryProvider.getAdapterFactory(getApplicationContext().getServiceContext(), adapterName,
                     configuration, itemType, null, warningCollector, filterEvaluatorFactory);
         } catch (Exception e) {
@@ -1007,18 +1008,12 @@ public class MetadataProvider implements IMetadataProvider<DataSourceId, String>
         }
     }
 
-    public void setExternalEntityId(Map<String, String> configuration, Dataset dataset) throws AlgebricksException {
-        configuration.put(ExternalDataConstants.KEY_ENTITY_ID, dataset.getDatasetFullyQualifiedName().toString());
+    protected void setSourceType(Map<String, String> configuration, String adapterName) {
+        configuration.putIfAbsent(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE, adapterName);
     }
 
-    public void setExternalEntityIdFromParts(Map<String, String> configuration, String database,
-            DataverseName dataverse, String dataset, boolean isUuid) throws AlgebricksException {
-        if (isUuid) {
-            configuration.put(ExternalDataConstants.KEY_ENTITY_ID, dataset);
-        } else {
-            DatasetFullyQualifiedName fqn = new DatasetFullyQualifiedName(database, dataverse, dataset);
-            configuration.put(ExternalDataConstants.KEY_ENTITY_ID, fqn.toString());
-        }
+    public void setExternalEntityId(Map<String, String> configuration) throws AlgebricksException {
+        configuration.put(ExternalDataConstants.KEY_ENTITY_ID, UUID.randomUUID().toString());
     }
 
     public TxnId getTxnId() {

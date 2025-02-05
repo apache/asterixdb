@@ -23,26 +23,31 @@ import java.util.Map;
 import org.apache.asterix.common.api.INcApplicationContext;
 import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.external.util.ExternalDataConstants;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 
 public class UpdateAwsCredentialsCacheRequest implements INcAddressedMessage {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final long serialVersionUID = 1L;
     private final Map<String, String> configuration;
-    private final Map<String, String> credentials;
+    private final String accessKeyId;
+    private final String secretAccessKey;
+    private final String sessionToken;
 
-    public UpdateAwsCredentialsCacheRequest(Map<String, String> configuration, Map<String, String> credentials) {
+    public UpdateAwsCredentialsCacheRequest(Map<String, String> configuration, String accessKeyId,
+            String secretAccessKey, String sessionToken) {
         this.configuration = configuration;
-        this.credentials = credentials;
+        this.accessKeyId = accessKeyId;
+        this.secretAccessKey = secretAccessKey;
+        this.sessionToken = sessionToken;
+
     }
 
     @Override
     public void handle(INcApplicationContext appCtx) {
         String name = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
-        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
-        appCtx.getExternalCredentialsCache().put(name, type, credentials);
+        AwsSessionCredentials credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
+        appCtx.getExternalCredentialsCache().put(name, credentials);
     }
 
     @Override

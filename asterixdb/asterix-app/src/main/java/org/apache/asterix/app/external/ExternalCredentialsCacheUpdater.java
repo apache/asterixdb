@@ -24,7 +24,6 @@ import static org.apache.asterix.common.api.IClusterManagementWork.ClusterState.
 import static org.apache.asterix.common.exceptions.ErrorCode.REJECT_BAD_CLUSTER_STATE;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -39,10 +38,10 @@ import org.apache.asterix.common.exceptions.CompilationException;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.common.external.IExternalCredentialsCache;
 import org.apache.asterix.common.external.IExternalCredentialsCacheUpdater;
+import org.apache.asterix.common.messaging.api.INcAddressedMessage;
 import org.apache.asterix.common.messaging.api.MessageFuture;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.aws.s3.S3AuthUtils;
-import org.apache.asterix.external.util.aws.s3.S3Constants;
 import org.apache.asterix.messaging.CCMessageBroker;
 import org.apache.asterix.messaging.NCMessageBroker;
 import org.apache.hyracks.api.application.INCServiceContext;
@@ -53,6 +52,11 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 
+/**
+ * The class is responsible for generating new credentials based on the adapter type. Given a request:
+ * - if we are the CC, generate new creds and ask all NCs to update their cache
+ * - if we are the NC, send a message to the CC to generate new creds
+ */
 public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCacheUpdater {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -66,49 +70,46 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
     public synchronized Object generateAndCacheCredentials(Map<String, String> configuration)
             throws HyracksDataException, CompilationException {
         IExternalCredentialsCache cache = appCtx.getExternalCredentialsCache();
-        String name = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
-        Object credentials = cache.get(name);
+        String key = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
+        Object credentials = cache.get(key);
         if (credentials != null) {
             return credentials;
         }
 
-        /*
-         * if we are the CC, generate new creds and ask all NCs to update their cache
-         * if we are the NC, send a message to the CC to generate new creds and ask all NCs to update their cache
-         */
-        if (appCtx instanceof ICcApplicationContext ccAppCtx) {
-            IClusterManagementWork.ClusterState state = ccAppCtx.getClusterStateManager().getState();
-            if (!(state == ACTIVE || state == REBALANCE_REQUIRED)) {
-                throw new RuntimeDataException(REJECT_BAD_CLUSTER_STATE, state);
-            }
+        String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
+        if (ExternalDataConstants.KEY_ADAPTER_NAME_AWS_S3.equals(type)) {
+            credentials = generateAwsCredentials(configuration);
+        }
 
-            String accessKeyId;
-            String secretAccessKey;
-            String sessionToken;
-            Map<String, String> credentialsMap = new HashMap<>();
+        return credentials;
+    }
+
+    // TODO: this can probably be refactored out into something that is AWS-specific
+    private Object generateAwsCredentials(Map<String, String> configuration)
+            throws HyracksDataException, CompilationException {
+        String key = configuration.get(ExternalDataConstants.KEY_ENTITY_ID);
+        AwsSessionCredentials credentials;
+        if (appCtx instanceof ICcApplicationContext) {
+            validateClusterState();
             try {
-                LOGGER.info("attempting to update credentials for {}", name);
+                LOGGER.info("attempting to update AWS credentials for {}", key);
                 AwsCredentialsProvider newCredentials = S3AuthUtils.assumeRoleAndGetCredentials(configuration);
-                LOGGER.info("updated credentials successfully for {}", name);
-                AwsSessionCredentials sessionCredentials = (AwsSessionCredentials) newCredentials.resolveCredentials();
-                accessKeyId = sessionCredentials.accessKeyId();
-                secretAccessKey = sessionCredentials.secretAccessKey();
-                sessionToken = sessionCredentials.sessionToken();
+                LOGGER.info("updated AWS credentials successfully for {}", key);
+                credentials = (AwsSessionCredentials) newCredentials.resolveCredentials();
+                appCtx.getExternalCredentialsCache().put(key, credentials);
             } catch (CompilationException ex) {
-                LOGGER.info("failed to refresh credentials for {}", name, ex);
+                LOGGER.info("failed to refresh AWS credentials for {}", key, ex);
                 throw ex;
             }
 
-            // credentials need refreshing
-            credentialsMap.put(S3Constants.ACCESS_KEY_ID_FIELD_NAME, accessKeyId);
-            credentialsMap.put(S3Constants.SECRET_ACCESS_KEY_FIELD_NAME, secretAccessKey);
-            credentialsMap.put(S3Constants.SESSION_TOKEN_FIELD_NAME, sessionToken);
+            String accessKeyId = credentials.accessKeyId();
+            String secretAccessKey = credentials.secretAccessKey();
+            String sessionToken = credentials.sessionToken();
+            UpdateAwsCredentialsCacheRequest request =
+                    new UpdateAwsCredentialsCacheRequest(configuration, accessKeyId, secretAccessKey, sessionToken);
 
             // request all NCs to update their credentials cache with the latest creds
-            updateNcsCredentialsCache(ccAppCtx, name, credentialsMap, configuration);
-            String type = configuration.get(ExternalDataConstants.KEY_EXTERNAL_SOURCE_TYPE);
-            cache.put(name, type, credentialsMap);
-            credentials = AwsSessionCredentials.create(accessKeyId, secretAccessKey, sessionToken);
+            updateNcsCredentialsCache(key, request);
         } else {
             NCMessageBroker broker = (NCMessageBroker) appCtx.getServiceContext().getMessageBroker();
             MessageFuture messageFuture = broker.registerMessageFuture();
@@ -116,7 +117,7 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
             long futureId = messageFuture.getFutureId();
             RefreshAwsCredentialsRequest request = new RefreshAwsCredentialsRequest(nodeId, futureId, configuration);
             try {
-                LOGGER.info("no valid credentials found for {}, requesting credentials from CC", name);
+                LOGGER.info("no valid AWS credentials found for {}, requesting AWS credentials from CC", key);
                 broker.sendMessageToPrimaryCC(request);
                 RefreshAwsCredentialsResponse response = (RefreshAwsCredentialsResponse) messageFuture
                         .get(DEFAULT_NC_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
@@ -126,7 +127,7 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
                 credentials = AwsSessionCredentials.create(response.getAccessKeyId(), response.getSecretAccessKey(),
                         response.getSessionToken());
             } catch (Exception ex) {
-                LOGGER.info("failed to refresh credentials for {}", name, ex);
+                LOGGER.info("failed to refresh AWS credentials for {}", key, ex);
                 throw HyracksDataException.create(ex);
             } finally {
                 broker.deregisterMessageFuture(futureId);
@@ -135,20 +136,26 @@ public class ExternalCredentialsCacheUpdater implements IExternalCredentialsCach
         return credentials;
     }
 
-    private void updateNcsCredentialsCache(ICcApplicationContext appCtx, String name, Map<String, String> credentials,
-            Map<String, String> configuration) throws HyracksDataException {
-        final List<String> ncs = new ArrayList<>(appCtx.getClusterStateManager().getParticipantNodes());
+    private void updateNcsCredentialsCache(String key, INcAddressedMessage request) throws HyracksDataException {
+        ICcApplicationContext ccAppCtx = (ICcApplicationContext) appCtx;
+        final List<String> ncs = new ArrayList<>(ccAppCtx.getClusterStateManager().getParticipantNodes());
         CCMessageBroker broker = (CCMessageBroker) appCtx.getServiceContext().getMessageBroker();
-        UpdateAwsCredentialsCacheRequest request = new UpdateAwsCredentialsCacheRequest(configuration, credentials);
-
         try {
-            LOGGER.info("requesting all NCs to update their credentials for {}", name);
+            LOGGER.info("requesting all NCs to update their credentials for {}", key);
             for (String nc : ncs) {
                 broker.sendApplicationMessageToNC(request, nc);
             }
         } catch (Exception e) {
             LOGGER.info("failed to send message to nc", e);
             throw HyracksDataException.create(e);
+        }
+    }
+
+    private void validateClusterState() throws HyracksDataException {
+        ICcApplicationContext ccAppCtx = (ICcApplicationContext) appCtx;
+        IClusterManagementWork.ClusterState state = ccAppCtx.getClusterStateManager().getState();
+        if (!(state == ACTIVE || state == REBALANCE_REQUIRED)) {
+            throw new RuntimeDataException(REJECT_BAD_CLUSTER_STATE, state);
         }
     }
 }

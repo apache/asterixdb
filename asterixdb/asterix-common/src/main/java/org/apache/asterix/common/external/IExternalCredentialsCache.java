@@ -18,8 +18,6 @@
  */
 package org.apache.asterix.common.external;
 
-import java.util.Map;
-
 public interface IExternalCredentialsCache {
 
     /**
@@ -41,8 +39,7 @@ public interface IExternalCredentialsCache {
      * Updates the credentials cache with the provided credentials for the specified name
      *
      * @param key credentials key
-     * @param type credentials type
      * @param credentials credentials to cache
      */
-    void put(String key, String type, Map<String, String> credentials);
+    void put(String key, Object credentials);
 }
