@@ -19,6 +19,7 @@
 package org.apache.asterix.external.writer.printer.parquet;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
@@ -186,6 +187,10 @@ public class ParquetValueWriter {
             case DATETIME:
                 long dateTimeValue = ADateTimeSerializerDeserializer.getChronon(b, s);
                 addIntegerType(dateTimeValue, primitiveTypeName, typeTag, recordConsumer);
+                break;
+            case UUID:
+                recordConsumer.addBinary(Binary.fromReusedByteArray(b, s, l));
+                break;
             case NULL:
             case MISSING:
                 break;

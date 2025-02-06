@@ -19,17 +19,22 @@
 
 USE test;
 
+
+
+
 COPY (
-   select c.* from TestCollection c
-) toWriter
+select id,name from TestCollection c
+    ) toWriter
 TO %adapter%
-PATH (%pathprefix% "copy-to-result", "parquet-cover-data-types")
-TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime , uuidType : uuid  } )
+PATH (%pathprefix% "copy-to-result", "parquet-error-checks16")
+TYPE ( { id:int, rect: rectangle })
 WITH {
     %template_colons%,
     %additionalProperties%
-    "format":"parquet"
-};
+    "format":"parquet",
+    "max-schemas" : "2"
+    }
+
 
 
 

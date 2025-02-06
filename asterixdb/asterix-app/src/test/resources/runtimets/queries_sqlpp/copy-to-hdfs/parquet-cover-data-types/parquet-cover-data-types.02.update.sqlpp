@@ -19,5 +19,5 @@
 
 use test;
 
-insert into TestCollection({"id":18, "name": "Virat" , "dateType":date("1988-11-05"), "timeType": time("03:10:00.493Z") , "boolType" : false , "doubleType" : 0.75, "datetimeType" : datetime("1900-02-01T00:00:00") });
+insert into TestCollection({"id":18, "name": "Virat" , "dateType":date("1988-11-05"), "timeType": time("03:10:00.493Z") , "boolType" : false , "doubleType" : 0.75, "datetimeType" : datetime("1900-02-01T00:00:00") ,  "uuidType" : uuid("95ca22dd-ef64-46f2-9c2a-a38005e23344")  });
 

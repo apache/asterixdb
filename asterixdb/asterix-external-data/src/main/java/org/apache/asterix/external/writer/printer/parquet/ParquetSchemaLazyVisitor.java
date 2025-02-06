@@ -18,10 +18,12 @@
  */
 package org.apache.asterix.external.writer.printer.parquet;
 
+import static org.apache.asterix.common.exceptions.ErrorCode.TYPE_UNSUPPORTED_PARQUET_WRITE;
 import static org.apache.asterix.external.writer.printer.parquet.ParquetSchemaTree.buildParquetSchema;
 
 import java.util.Map;
 
+import org.apache.asterix.common.exceptions.RuntimeDataException;
 import org.apache.asterix.om.lazy.AbstractLazyVisitablePointable;
 import org.apache.asterix.om.lazy.AbstractListLazyVisitablePointable;
 import org.apache.asterix.om.lazy.FlatLazyVisitablePointable;
@@ -104,6 +106,9 @@ public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<
     public Void visit(FlatLazyVisitablePointable pointable, ParquetSchemaTree.SchemaNode schemaNode)
             throws HyracksDataException {
         if (schemaNode.getType() == null) {
+            if (!AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.containsKey(pointable.getTypeTag())) {
+                throw RuntimeDataException.create(TYPE_UNSUPPORTED_PARQUET_WRITE, pointable.getTypeTag());
+            }
             schemaNode.setType(new ParquetSchemaTree.FlatType(
                     AsterixParquetTypeMap.PRIMITIVE_TYPE_NAME_MAP.get(pointable.getTypeTag()),
                     AsterixParquetTypeMap.LOGICAL_TYPE_ANNOTATION_MAP.get(pointable.getTypeTag())));

@@ -37,10 +37,12 @@ public class AsterixParquetTypeMap {
                     Map.entry(ATypeTag.DOUBLE, PrimitiveType.PrimitiveTypeName.DOUBLE),
                     Map.entry(ATypeTag.DATE, PrimitiveType.PrimitiveTypeName.INT32),
                     Map.entry(ATypeTag.TIME, PrimitiveType.PrimitiveTypeName.INT32),
-                    Map.entry(ATypeTag.DATETIME, PrimitiveType.PrimitiveTypeName.INT64));
+                    Map.entry(ATypeTag.DATETIME, PrimitiveType.PrimitiveTypeName.INT64),
+                    Map.entry(ATypeTag.UUID, PrimitiveType.PrimitiveTypeName.FIXED_LEN_BYTE_ARRAY));
 
     public static final Map<ATypeTag, LogicalTypeAnnotation> LOGICAL_TYPE_ANNOTATION_MAP =
             Map.ofEntries(Map.entry(ATypeTag.STRING, LogicalTypeAnnotation.stringType()),
+                    Map.entry(ATypeTag.UUID, LogicalTypeAnnotation.uuidType()),
                     Map.entry(ATypeTag.DATE, LogicalTypeAnnotation.dateType()),
                     Map.entry(ATypeTag.TIME,
                             LogicalTypeAnnotation.timeType(true, LogicalTypeAnnotation.TimeUnit.MILLIS)),

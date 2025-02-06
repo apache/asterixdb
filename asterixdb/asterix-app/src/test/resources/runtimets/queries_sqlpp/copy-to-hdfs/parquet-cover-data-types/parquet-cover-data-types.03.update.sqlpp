@@ -24,7 +24,7 @@ COPY (
 ) toWriter
 TO hdfs
 PATH ("copy-to-result", "parquet-cover-data-types")
-TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime   } )
+TYPE ( {   name : string,  id : int,  dateType : date,   timeType : time,  boolType : boolean,   doubleType : double,  datetimeType : datetime, uuidType: uuid   } )
 WITH {
     "hdfs":"hdfs://127.0.0.1:31888/",
     "format":"parquet"
