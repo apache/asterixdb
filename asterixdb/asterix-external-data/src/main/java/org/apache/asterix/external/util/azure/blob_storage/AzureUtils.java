@@ -115,6 +115,8 @@ public class AzureUtils {
 
         // Client builder
         BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+        builder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
+
         int timeout = appCtx.getExternalProperties().getAzureRequestTimeout();
         RequestRetryOptions requestRetryOptions = new RequestRetryOptions(null, null, timeout, null, null, null);
         builder.retryOptions(requestRetryOptions);

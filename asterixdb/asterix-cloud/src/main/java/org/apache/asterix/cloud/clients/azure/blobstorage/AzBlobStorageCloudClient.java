@@ -50,6 +50,7 @@ import org.apache.asterix.cloud.clients.profiler.IRequestProfilerLimiter;
 import org.apache.asterix.cloud.clients.profiler.RequestLimiterNoOpProfiler;
 import org.apache.asterix.common.exceptions.ErrorCode;
 import org.apache.asterix.common.exceptions.RuntimeDataException;
+import org.apache.asterix.external.util.azure.blob_storage.AzureConstants;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.control.nc.io.IOManager;
@@ -393,6 +394,7 @@ public class AzBlobStorageCloudClient implements ICloudClient {
     private static BlobContainerClient buildClient(AzBlobStorageClientConfig config) {
         BlobContainerClientBuilder blobContainerClientBuilder =
                 new BlobContainerClientBuilder().containerName(config.getBucket()).endpoint(getEndpoint(config));
+        blobContainerClientBuilder.httpLogOptions(AzureConstants.HTTP_LOG_OPTIONS);
         configCredentialsToAzClient(blobContainerClientBuilder, config);
         BlobContainerClient blobContainerClient = blobContainerClientBuilder.buildClient();
         blobContainerClient.createIfNotExists();

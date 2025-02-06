@@ -18,6 +18,9 @@
  */
 package org.apache.asterix.external.util.azure.blob_storage;
 
+import com.azure.core.http.policy.HttpLogDetailLevel;
+import com.azure.core.http.policy.HttpLogOptions;
+
 /*
  * Note: Azure Blob and Azure Datalake use identical authentication, so they are using the same properties.
  * If they end up diverging, then properties for AzureBlob and AzureDataLake need to be created.
@@ -27,6 +30,13 @@ public class AzureConstants {
         throw new AssertionError("do not instantiate");
     }
 
+    public static final HttpLogOptions HTTP_LOG_OPTIONS = new HttpLogOptions();
+    static {
+        HTTP_LOG_OPTIONS.setLogLevel(HttpLogDetailLevel.BASIC);
+        HTTP_LOG_OPTIONS.addAllowedQueryParamName("restype");
+        HTTP_LOG_OPTIONS.addAllowedQueryParamName("comp");
+        HTTP_LOG_OPTIONS.addAllowedQueryParamName("prefix");
+    }
     /*
      * Asterix Configuration Keys
      */
