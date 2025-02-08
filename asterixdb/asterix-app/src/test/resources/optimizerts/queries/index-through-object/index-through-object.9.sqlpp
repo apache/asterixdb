@@ -22,15 +22,15 @@
  * Index should be used twice (and not used for E1).
  */
 
-DROP DATAVERSE Test IF EXISTS;
-CREATE DATAVERSE Test;
-USE Test;
+DROP DATAVERSE test IF EXISTS;
+CREATE DATAVERSE test;
+USE test;
 
 CREATE TYPE UsersType AS { user_id: bigint };
 CREATE DATASET Users (UsersType) PRIMARY KEY user_id;
 CREATE INDEX usersNameIdx ON Users ( name : string );
 
-FROM   Test.Users U1, Test.Users U2, [{"name": "Glenn"}] E1
+FROM   test.Users U1, test.Users U2, [{"name": "Glenn"}] E1
 LET    augmentedUser1 = OBJECT_ADD(U1, "favoriteColor", "Green"),
        augmentedUser2 = OBJECT_ADD(U2, "favoriteFood", "Pizza"),
        augmentedUser3 = OBJECT_ADD(E1, "favoriteColor", "Blue")

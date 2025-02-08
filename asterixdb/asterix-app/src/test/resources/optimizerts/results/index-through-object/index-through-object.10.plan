@@ -6,7 +6,7 @@
           -- ASSIGN  |PARTITIONED|
             -- STREAM_PROJECT  |PARTITIONED|
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (Test.Users.Users)  |PARTITIONED|
+                -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                     -- STABLE_SORT [$$80(ASC)]  |PARTITIONED|
                       -- HASH_PARTITION_EXCHANGE [$$80]  |PARTITIONED|
@@ -15,6 +15,6 @@
                             -- ASSIGN  |PARTITIONED|
                               -- STREAM_PROJECT  |PARTITIONED|
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (Test.Users)  |PARTITIONED|
+                                  -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
