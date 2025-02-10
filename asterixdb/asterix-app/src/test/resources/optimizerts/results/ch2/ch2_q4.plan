@@ -33,12 +33,14 @@ distribute result [$$72]
                               -- AGGREGATE  |LOCAL|
                                 select (ge($$79, string(numeric-add(date($$80), duration: {P7D }))))
                                 -- STREAM_SELECT  |LOCAL|
-                                  assign [$$79] <- [$$ol.getField("ol_delivery_d")]
+                                  assign [$$79] <- [$$ol.getField("ol_delivery_d")] project: [$$80, $$79]
                                   -- ASSIGN  |LOCAL|
-                                    unnest $$ol <- scan-collection($$78)
+                                    unnest $$ol <- scan-collection($$78) project: [$$80, $$ol]
                                     -- UNNEST  |LOCAL|
-                                      nested tuple source
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$80, $$78])
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                            }
                     -- SUBPLAN  |PARTITIONED|
                       select (and(lt($$80, "2015-10-01 00:00:00.000000"), ge($$80, "2015-07-01 00:00:00.000000")))

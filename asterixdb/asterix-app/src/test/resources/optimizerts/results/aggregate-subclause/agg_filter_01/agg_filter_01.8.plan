@@ -16,14 +16,18 @@ distribute result [$$69]
                                 -- AGGREGATE  |LOCAL|
                                   select (not(if-missing-or-null(gt($$x, 0), false)))
                                   -- STREAM_SELECT  |LOCAL|
-                                    unnest $$x <- scan-collection(ordered-list-constructor($$74, numeric-add($$74, $$74)))
+                                    unnest $$x <- scan-collection(ordered-list-constructor($$74, numeric-add($$74, $$74))) project: [$$x]
                                     -- UNNEST  |LOCAL|
-                                      nested tuple source
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$74])
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
                       -- SUBPLAN  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$74])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
           exchange

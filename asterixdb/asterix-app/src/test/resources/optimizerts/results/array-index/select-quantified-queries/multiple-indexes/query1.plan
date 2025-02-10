@@ -13,12 +13,14 @@ distribute result [$$32]
                     -- AGGREGATE  |LOCAL|
                       select (and(eq($$36, 284), eq($$35, 263)))
                       -- STREAM_SELECT  |LOCAL|
-                        assign [$$36, $$35] <- [$$v.getField("a"), $$v.getField("b")]
+                        assign [$$36, $$35] <- [$$v.getField("a"), $$v.getField("b")] project: [$$36, $$35]
                         -- ASSIGN  |LOCAL|
-                          unnest $$v <- scan-collection($$34)
+                          unnest $$v <- scan-collection($$34) project: [$$v]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$34])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$34] <- [$$k.getField("uarr_i")]

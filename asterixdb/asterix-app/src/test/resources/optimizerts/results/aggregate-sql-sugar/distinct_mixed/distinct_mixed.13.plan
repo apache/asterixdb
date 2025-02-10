@@ -13,8 +13,10 @@ distribute result [$$100]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
                       order (ASC, $$88)
                       -- MICRO_STABLE_SORT [$$88(ASC)]  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$88])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
                {
                   aggregate [$$105] <- [agg-sql-sum($$93)]
@@ -29,8 +31,10 @@ distribute result [$$100]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
                       order (ASC, $$98)
                       -- MICRO_STABLE_SORT [$$98(ASC)]  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$98])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
           exchange

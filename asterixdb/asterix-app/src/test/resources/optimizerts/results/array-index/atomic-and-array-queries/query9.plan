@@ -13,27 +13,33 @@ distribute result [$$79]
                     -- AGGREGATE  |LOCAL|
                       select ($$70)
                       -- STREAM_SELECT  |LOCAL|
-                        subplan {
-                                  aggregate [$$70] <- [non-empty-stream()]
-                                  -- AGGREGATE  |LOCAL|
-                                    select (and(eq($$96, to-bigint($$97)), eq($$94, to-bigint($$95)), eq($$92, to-bigint($$93))))
-                                    -- STREAM_SELECT  |LOCAL|
-                                      assign [$$96, $$94, $$92] <- [$$DII.getField("field2"), $$DII.getField("field3"), $$DII.getField("field3_notindexed")]
-                                      -- ASSIGN  |LOCAL|
-                                        unnest $$DII <- scan-collection($$91)
-                                        -- UNNEST  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                               }
-                        -- SUBPLAN  |LOCAL|
-                          select (eq($$89, to-bigint($$90)))
-                          -- STREAM_SELECT  |LOCAL|
-                            assign [$$91, $$89] <- [$$DOI.getField("inner_items"), $$DOI.getField("field2_notindexed")]
-                            -- ASSIGN  |LOCAL|
-                              unnest $$DOI <- scan-collection($$88)
-                              -- UNNEST  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$70])
+                        -- STREAM_PROJECT  |LOCAL|
+                          subplan {
+                                    aggregate [$$70] <- [non-empty-stream()]
+                                    -- AGGREGATE  |LOCAL|
+                                      select (and(eq($$96, to-bigint($$97)), eq($$94, to-bigint($$95)), eq($$92, to-bigint($$93))))
+                                      -- STREAM_SELECT  |LOCAL|
+                                        assign [$$96, $$94, $$92] <- [$$DII.getField("field2"), $$DII.getField("field3"), $$DII.getField("field3_notindexed")] project: [$$97, $$95, $$93, $$96, $$94, $$92]
+                                        -- ASSIGN  |LOCAL|
+                                          unnest $$DII <- scan-collection($$91) project: [$$97, $$95, $$93, $$DII]
+                                          -- UNNEST  |LOCAL|
+                                            project ([$$97, $$95, $$93, $$91])
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              nested tuple source
+                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                 }
+                          -- SUBPLAN  |LOCAL|
+                            select (eq($$89, to-bigint($$90))) project: [$$97, $$95, $$93, $$91]
+                            -- STREAM_SELECT  |LOCAL|
+                              assign [$$91, $$89] <- [$$DOI.getField("inner_items"), $$DOI.getField("field2_notindexed")] project: [$$97, $$95, $$93, $$90, $$91, $$89]
+                              -- ASSIGN  |LOCAL|
+                                unnest $$DOI <- scan-collection($$88) project: [$$97, $$95, $$93, $$90, $$DOI]
+                                -- UNNEST  |LOCAL|
+                                  project ([$$97, $$95, $$93, $$90, $$88])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$88] <- [$$D1.getField("outer_items")]

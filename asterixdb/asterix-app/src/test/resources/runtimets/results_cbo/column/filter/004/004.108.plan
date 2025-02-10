@@ -19,12 +19,14 @@ distribute result [$$52] [cardinality: 11.0, doc-size: 0.0, op-cost: 0.0, total-
                           -- AGGREGATE  |LOCAL|
                             select (or(eq($$59, "2011"), eq($$59, "2016"))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_SELECT  |LOCAL|
-                              assign [$$59] <- [substring($$D, 0, 4)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              assign [$$59] <- [substring($$D, 0, 4)] project: [$$59] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ASSIGN  |LOCAL|
-                                unnest $$D <- scan-collection($$56) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                unnest $$D <- scan-collection($$56) project: [$$D] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- UNNEST  |LOCAL|
-                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$56]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 30.0, doc-size: 0.0, op-cost: 0.0, total-cost: 30.0]
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$56] <- [$$C.getField("dates")] project: [$$56] [cardinality: 30.0, doc-size: 0.0, op-cost: 0.0, total-cost: 30.0]

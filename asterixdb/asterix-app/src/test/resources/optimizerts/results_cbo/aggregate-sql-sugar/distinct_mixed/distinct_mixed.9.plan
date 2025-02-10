@@ -13,8 +13,10 @@ distribute result [$$70]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
                       order (ASC, $$68)
                       -- MICRO_STABLE_SORT [$$68(ASC)]  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$68])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
           exchange
@@ -25,31 +27,31 @@ distribute result [$$70]
               -- HASH_PARTITION_EXCHANGE [$$g]  |PARTITIONED|
                 join (true)
                 -- NESTED_LOOP  |PARTITIONED|
-                  exchange [cardinality: 1.0E12, op-cost: 0.0, total-cost: 1.000006E12]
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    join (true) [cardinality: 1.0E12, op-cost: 1.0E12, total-cost: 1.000006E12]
+                    join (true)
                     -- NESTED_LOOP  |PARTITIONED|
-                      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        assign [$$68] <- [$$x.getField(1)] project: [$$68] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                        assign [$$68] <- [$$x.getField(1)] project: [$$68]
                         -- ASSIGN  |PARTITIONED|
-                          project ([$$x]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                          project ([$$x])
                           -- STREAM_PROJECT  |PARTITIONED|
-                            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              data-scan []<-[$$71, $$x] <- test.d1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                              data-scan []<-[$$71, $$x] <- test.d1
                               -- DATASOURCE_SCAN  |PARTITIONED|
                                 exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                                   empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                      exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
+                      exchange
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                        project ([]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                        project ([])
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$72, $$y] <- test.d2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                            data-scan []<-[$$72, $$y] <- test.d2
                             -- DATASOURCE_SCAN  |PARTITIONED|
                               exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

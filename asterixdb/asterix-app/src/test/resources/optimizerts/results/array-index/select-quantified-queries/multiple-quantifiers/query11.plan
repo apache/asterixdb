@@ -13,32 +13,42 @@ distribute result [$$33]
                     -- AGGREGATE  |LOCAL|
                       select (eq(true, $#3))
                       -- STREAM_SELECT  |LOCAL|
-                        unnest $#3 <- scan-collection(ordered-list-constructor(eq($$37, "a"), $$29))
+                        unnest $#3 <- scan-collection(ordered-list-constructor(eq($$37, "a"), $$29)) project: [$#3]
                         -- UNNEST  |LOCAL|
-                          subplan {
-                                    aggregate [$$29] <- [non-empty-stream()]
-                                    -- AGGREGATE  |LOCAL|
-                                      select (eq(true, $#2))
-                                      -- STREAM_SELECT  |LOCAL|
-                                        unnest $#2 <- scan-collection(ordered-list-constructor(eq($$36, "c"), $$27))
-                                        -- UNNEST  |LOCAL|
-                                          subplan {
-                                                    aggregate [$$27] <- [non-empty-stream()]
-                                                    -- AGGREGATE  |LOCAL|
-                                                      select (eq("b", $#1))
-                                                      -- STREAM_SELECT  |LOCAL|
-                                                        unnest $#1 <- scan-collection($$35)
-                                                        -- UNNEST  |LOCAL|
-                                                          nested tuple source
-                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                 }
-                                          -- SUBPLAN  |LOCAL|
-                                            nested tuple source
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                 }
-                          -- SUBPLAN  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$37, $$29])
+                          -- STREAM_PROJECT  |LOCAL|
+                            subplan {
+                                      aggregate [$$29] <- [non-empty-stream()]
+                                      -- AGGREGATE  |LOCAL|
+                                        select (eq(true, $#2))
+                                        -- STREAM_SELECT  |LOCAL|
+                                          unnest $#2 <- scan-collection(ordered-list-constructor(eq($$36, "c"), $$27)) project: [$#2]
+                                          -- UNNEST  |LOCAL|
+                                            project ([$$36, $$27])
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              subplan {
+                                                        aggregate [$$27] <- [non-empty-stream()]
+                                                        -- AGGREGATE  |LOCAL|
+                                                          select (eq("b", $#1))
+                                                          -- STREAM_SELECT  |LOCAL|
+                                                            unnest $#1 <- scan-collection($$35) project: [$#1]
+                                                            -- UNNEST  |LOCAL|
+                                                              project ([$$35])
+                                                              -- STREAM_PROJECT  |LOCAL|
+                                                                nested tuple source
+                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                     }
+                                              -- SUBPLAN  |LOCAL|
+                                                project ([$$36, $$35])
+                                                -- STREAM_PROJECT  |LOCAL|
+                                                  nested tuple source
+                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                   }
+                            -- SUBPLAN  |LOCAL|
+                              project ([$$37, $$36, $$35])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$37, $$36, $$35] <- [$$D1.getField("val"), $$D1.getField("val2"), $$D1.getField("items")]

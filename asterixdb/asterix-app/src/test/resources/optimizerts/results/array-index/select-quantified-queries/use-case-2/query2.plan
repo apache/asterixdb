@@ -19,10 +19,12 @@ distribute result [$$51]
                           -- AGGREGATE  |LOCAL|
                             select (and(gt($$D, "2016"), lt($$D, "2017")))
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $$D <- scan-collection($$54)
+                              unnest $$D <- scan-collection($$54) project: [$$D]
                               -- UNNEST  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$54])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$54] <- [$$C.getField(2).getField(0)] project: [$$54]

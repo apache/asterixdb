@@ -18,23 +18,29 @@ distribute result [$$227]
                     -- MICRO_PRE_CLUSTERED_GROUP_BY[$$230]  |LOCAL|
                       order (ASC, $$230)
                       -- MICRO_STABLE_SORT [$$230(ASC)]  |LOCAL|
-                        assign [$$230] <- [$$sub.getField("BrokerEndpoint")]
+                        assign [$$230] <- [$$sub.getField("BrokerEndpoint")] project: [$$260, $$259, $$230]
                         -- ASSIGN  |LOCAL|
-                          unnest $$sub <- scan-collection($$219)
+                          unnest $$sub <- scan-collection($$219) project: [$$260, $$259, $$sub]
                           -- UNNEST  |LOCAL|
-                            subplan {
-                                      aggregate [$$219] <- [listify($$218)]
-                                      -- AGGREGATE  |LOCAL|
-                                        assign [$$218] <- [{"sub": $$sub}]
-                                        -- ASSIGN  |LOCAL|
-                                          unnest $$sub <- scan-collection($$256)
-                                          -- UNNEST  |LOCAL|
-                                            nested tuple source
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                   }
-                            -- SUBPLAN  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$260, $$259, $$219])
+                            -- STREAM_PROJECT  |LOCAL|
+                              subplan {
+                                        aggregate [$$219] <- [listify($$218)]
+                                        -- AGGREGATE  |LOCAL|
+                                          assign [$$218] <- [{"sub": $$sub}]
+                                          -- ASSIGN  |LOCAL|
+                                            unnest $$sub <- scan-collection($$256) project: [$$sub]
+                                            -- UNNEST  |LOCAL|
+                                              project ([$$256])
+                                              -- STREAM_PROJECT  |LOCAL|
+                                                nested tuple source
+                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                     }
+                              -- SUBPLAN  |LOCAL|
+                                project ([$$260, $$259, $$256])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
              }
       -- SUBPLAN  |PARTITIONED|
         project ([$$260, $$259, $$256])
@@ -64,8 +70,10 @@ distribute result [$$227]
                                         -- AGGREGATE  |LOCAL|
                                           select (not(is-missing($$268)))
                                           -- STREAM_SELECT  |LOCAL|
-                                            nested tuple source
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                            project ([$$253, $$238, $$268])
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              nested tuple source
+                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                      }
                               -- PRE_CLUSTERED_GROUP_BY[$$267]  |PARTITIONED|
                                 exchange
@@ -96,8 +104,10 @@ distribute result [$$227]
                                                                           -- AGGREGATE  |LOCAL|
                                                                             select (not(is-missing($$236)))
                                                                             -- STREAM_SELECT  |LOCAL|
-                                                                              nested tuple source
-                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                              project ([$$232, $$236])
+                                                                              -- STREAM_PROJECT  |LOCAL|
+                                                                                nested tuple source
+                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                        }
                                                                 -- MICRO_PRE_CLUSTERED_GROUP_BY[$$324, $$325]  |LOCAL|
                                                                   select (and(not(is-missing($$321)), not(is-missing($$323))))

@@ -19,12 +19,14 @@ distribute result [$$51] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                           -- AGGREGATE  |LOCAL|
                             select (eq($$55, array: [ 5.1 ])) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_SELECT  |LOCAL|
-                              assign [$$55] <- [$$point.getField("lon")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              assign [$$55] <- [$$point.getField("lon")] project: [$$55] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ASSIGN  |LOCAL|
-                                unnest $$point <- scan-collection($$54) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                unnest $$point <- scan-collection($$54) project: [$$point] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- UNNEST  |LOCAL|
-                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$54]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$54] <- [$$c.getField("geo").getField("coordinates")] project: [$$54] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

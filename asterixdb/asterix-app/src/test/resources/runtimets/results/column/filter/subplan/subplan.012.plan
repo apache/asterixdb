@@ -15,12 +15,14 @@ distribute result [$$53] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                       -- AGGREGATE  |LOCAL|
                         select (eq($$55, "1")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_SELECT  |LOCAL|
-                          assign [$$55] <- [$$ao.getField("text")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          assign [$$55] <- [$$ao.getField("text")] project: [$$55] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |LOCAL|
-                            unnest $$ao <- scan-collection($$57) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            unnest $$ao <- scan-collection($$57) project: [$$ao] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- UNNEST  |LOCAL|
-                              nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$57]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                    } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- SUBPLAN  |PARTITIONED|
               assign [$$57] <- [$$p.getField("arrayOrObject")] project: [$$57] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

@@ -19,10 +19,12 @@ distribute result [$$d] [cardinality: 0.0, doc-size: 106.0, op-cost: 0.0, total-
                           -- AGGREGATE  |LOCAL|
                             select (lt($$a, "100")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $$a <- scan-collection($$29) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              unnest $$a <- scan-collection($$29) project: [$$a] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- UNNEST  |LOCAL|
-                                nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$29]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 6.0, doc-size: 106.0, op-cost: 0.0, total-cost: 6.0]
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$29] <- [$$d.getField("array")] [cardinality: 6.0, doc-size: 106.0, op-cost: 0.0, total-cost: 6.0]

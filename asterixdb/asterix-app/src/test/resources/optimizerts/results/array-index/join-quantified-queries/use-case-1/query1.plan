@@ -19,10 +19,12 @@ distribute result [$$55]
                           -- AGGREGATE  |LOCAL|
                             select (eq($$61, $#4))
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $#4 <- scan-collection($$60)
+                              unnest $#4 <- scan-collection($$60) project: [$$61, $#4]
                               -- UNNEST  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$61, $$60])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   select (eq($$C.getField(1), "--Ni3oJ4VOqfOEu7Sj2Vzg")) project: [$$61, $$60]

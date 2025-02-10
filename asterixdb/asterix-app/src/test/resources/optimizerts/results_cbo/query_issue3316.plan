@@ -21,8 +21,10 @@ distribute result [$$192]
                             -- AGGREGATE  |LOCAL|
                               select (not(is-missing($$317)))
                               -- STREAM_SELECT  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$190, $$317])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                          }
                   -- PRE_CLUSTERED_GROUP_BY[$$227]  |PARTITIONED|
                     exchange
@@ -40,8 +42,10 @@ distribute result [$$192]
                                         -- AGGREGATE  |LOCAL|
                                           select (not(is-missing($$226)))
                                           -- STREAM_SELECT  |LOCAL|
-                                            nested tuple source
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                            project ([$$155, $$226])
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              nested tuple source
+                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                      }
                               -- PRE_CLUSTERED_GROUP_BY[$$193]  |PARTITIONED|
                                 exchange
@@ -91,8 +95,10 @@ distribute result [$$192]
                                                                         -- AGGREGATE  |LOCAL|
                                                                           select (not(is-missing($$239)))
                                                                           -- STREAM_SELECT  |LOCAL|
-                                                                            nested tuple source
-                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                            project ([$$239])
+                                                                            -- STREAM_PROJECT  |LOCAL|
+                                                                              nested tuple source
+                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                      }
                                                               -- PRE_CLUSTERED_GROUP_BY[$$225, $$194]  |PARTITIONED|
                                                                 exchange
@@ -113,7 +119,7 @@ distribute result [$$192]
                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                 exchange
                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                  join (eq($$207, $$223)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                  join (eq($$207, $$223))
                                                                                   -- HYBRID_HASH_JOIN [$$223][$$207]  |PARTITIONED|
                                                                                     exchange
                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -145,7 +151,7 @@ distribute result [$$192]
                                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                     exchange
                                                                                     -- HASH_PARTITION_EXCHANGE [$$207]  |PARTITIONED|
-                                                                                      select (eq($$H.getField("to_u"), "aaaaa")) project: [$$213, $$126, $$194, $$207] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                      select (eq($$H.getField("to_u"), "aaaaa")) project: [$$213, $$126, $$194, $$207]
                                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                                         assign [$$213, $$126, $$207] <- [$$H.getField("u"), $$H.getField("a"), $$H.getField("y_id")]
                                                                                         -- ASSIGN  |PARTITIONED|
@@ -157,7 +163,7 @@ distribute result [$$192]
                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                 exchange
                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                     exchange
                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -180,8 +186,10 @@ distribute result [$$192]
                                                                                                   -- AGGREGATE  |LOCAL|
                                                                                                     select (not(is-missing($$253)))
                                                                                                     -- STREAM_SELECT  |LOCAL|
-                                                                                                      nested tuple source
-                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                      project ([$$145, $$253])
+                                                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                                                        nested tuple source
+                                                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                              }
                                                                                       -- PRE_CLUSTERED_GROUP_BY[$$238, $$235]  |PARTITIONED|
                                                                                         exchange
@@ -210,7 +218,7 @@ distribute result [$$192]
                                                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                 exchange
                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                  join (eq($$427, $$428)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                  join (eq($$427, $$428))
                                                                                                                   -- HYBRID_HASH_JOIN [$$428][$$427]  |PARTITIONED|
                                                                                                                     exchange
                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -242,7 +250,7 @@ distribute result [$$192]
                                                                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                     exchange
                                                                                                                     -- HASH_PARTITION_EXCHANGE [$$427]  |PARTITIONED|
-                                                                                                                      select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                      select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427]
                                                                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                                                                         exchange
                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -260,7 +268,7 @@ distribute result [$$192]
                                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                                       exchange
                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                           exchange
                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -282,7 +290,7 @@ distribute result [$$192]
                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                   exchange
                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                    join (eq($$210, $$243)) [cardinality: 9.223372036854776E16, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                                                                                                                    join (eq($$210, $$243))
                                                                                                                     -- HYBRID_HASH_JOIN [$$243][$$210]  |PARTITIONED|
                                                                                                                       exchange
                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -298,7 +306,7 @@ distribute result [$$192]
                                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                   exchange
                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                    join (eq($$448, $$445)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                    join (eq($$448, $$445))
                                                                                                                                     -- HYBRID_HASH_JOIN [$$445][$$448]  |PARTITIONED|
                                                                                                                                       exchange
                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -330,7 +338,7 @@ distribute result [$$192]
                                                                                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                       exchange
                                                                                                                                       -- HASH_PARTITION_EXCHANGE [$$448]  |PARTITIONED|
-                                                                                                                                        select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                        select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448]
                                                                                                                                         -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                           exchange
                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -348,7 +356,7 @@ distribute result [$$192]
                                                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                                                         exchange
                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                             exchange
                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -356,7 +364,7 @@ distribute result [$$192]
                                                                                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                       exchange
                                                                                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                        select (eq($$L.getField("to_u"), "aaaaa")) project: [$$145, $$135, $$210] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                        select (eq($$L.getField("to_u"), "aaaaa")) project: [$$145, $$135, $$210]
                                                                                                                         -- STREAM_SELECT  |PARTITIONED|
                                                                                                                           assign [$$135, $$210, $$145] <- [$$L.getField("a"), $$L.getField("y_id"), $$L.getField("b")]
                                                                                                                           -- ASSIGN  |PARTITIONED|
@@ -376,7 +384,7 @@ distribute result [$$192]
                                                                                                                                         -- REPLICATE  |PARTITIONED|
                                                                                                                                           exchange
                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                            data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                            data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                               exchange
                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -425,8 +433,10 @@ distribute result [$$192]
                                                                 -- AGGREGATE  |LOCAL|
                                                                   select (not(is-missing($$387)))
                                                                   -- STREAM_SELECT  |LOCAL|
-                                                                    nested tuple source
-                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                    project ([$$387])
+                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                      nested tuple source
+                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                              }
                                                       -- PRE_CLUSTERED_GROUP_BY[$$256, $$196]  |PARTITIONED|
                                                         exchange
@@ -456,8 +466,10 @@ distribute result [$$192]
                                                                                         -- AGGREGATE  |LOCAL|
                                                                                           select (not(is-missing($$262)))
                                                                                           -- STREAM_SELECT  |LOCAL|
-                                                                                            nested tuple source
-                                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                            project ([$$262])
+                                                                                            -- STREAM_PROJECT  |LOCAL|
+                                                                                              nested tuple source
+                                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                      }
                                                                               -- PRE_CLUSTERED_GROUP_BY[$$257]  |PARTITIONED|
                                                                                 exchange
@@ -519,8 +531,10 @@ distribute result [$$192]
                                                                                                                         -- AGGREGATE  |LOCAL|
                                                                                                                           select (not(is-missing($$280)))
                                                                                                                           -- STREAM_SELECT  |LOCAL|
-                                                                                                                            nested tuple source
-                                                                                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                            project ([$$280])
+                                                                                                                            -- STREAM_PROJECT  |LOCAL|
+                                                                                                                              nested tuple source
+                                                                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                      }
                                                                                                               -- PRE_CLUSTERED_GROUP_BY[$$268, $$270]  |PARTITIONED|
                                                                                                                 exchange
@@ -549,7 +563,7 @@ distribute result [$$192]
                                                                                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                         exchange
                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                          join (eq($$418, $$417)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                          join (eq($$418, $$417))
                                                                                                                                           -- HYBRID_HASH_JOIN [$$417][$$418]  |PARTITIONED|
                                                                                                                                             exchange
                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -577,7 +591,7 @@ distribute result [$$192]
                                                                                                                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                             exchange
                                                                                                                                             -- HASH_PARTITION_EXCHANGE [$$418]  |PARTITIONED|
-                                                                                                                                              select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                              select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418]
                                                                                                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                 assign [$$418, $$407] <- [$$413.getField("y_id"), $$413.getField("a")]
                                                                                                                                                 -- ASSIGN  |PARTITIONED|
@@ -587,7 +601,7 @@ distribute result [$$192]
                                                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                                                       exchange
                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                           exchange
                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -610,8 +624,10 @@ distribute result [$$192]
                                                                                                                                                   -- AGGREGATE  |LOCAL|
                                                                                                                                                     select (not(is-missing($$296)))
                                                                                                                                                     -- STREAM_SELECT  |LOCAL|
-                                                                                                                                                      nested tuple source
-                                                                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                                      project ([$$297, $$296])
+                                                                                                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                                        nested tuple source
+                                                                                                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                              }
                                                                                                                                       -- PRE_CLUSTERED_GROUP_BY[$$284, $$285]  |PARTITIONED|
                                                                                                                                         exchange
@@ -640,7 +656,7 @@ distribute result [$$192]
                                                                                                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                 exchange
                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                  join (eq($$427, $$428)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                  join (eq($$427, $$428))
                                                                                                                                                                   -- HYBRID_HASH_JOIN [$$428][$$427]  |PARTITIONED|
                                                                                                                                                                     exchange
                                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -672,7 +688,7 @@ distribute result [$$192]
                                                                                                                                                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                     exchange
                                                                                                                                                                     -- HASH_PARTITION_EXCHANGE [$$427]  |PARTITIONED|
-                                                                                                                                                                      select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                      select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427]
                                                                                                                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                         exchange
                                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -690,7 +706,7 @@ distribute result [$$192]
                                                                                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                       exchange
                                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                           exchange
                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -712,7 +728,7 @@ distribute result [$$192]
                                                                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                   exchange
                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                    join (eq($$303, $$304)) [cardinality: 9.223372036854776E16, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                                                                                                                                                                    join (eq($$303, $$304))
                                                                                                                                                                     -- HYBRID_HASH_JOIN [$$304][$$303]  |PARTITIONED|
                                                                                                                                                                       exchange
                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -728,7 +744,7 @@ distribute result [$$192]
                                                                                                                                                                                 -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                   exchange
                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                    join (eq($$448, $$445)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                    join (eq($$448, $$445))
                                                                                                                                                                                     -- HYBRID_HASH_JOIN [$$445][$$448]  |PARTITIONED|
                                                                                                                                                                                       exchange
                                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -760,7 +776,7 @@ distribute result [$$192]
                                                                                                                                                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                       exchange
                                                                                                                                                                                       -- HASH_PARTITION_EXCHANGE [$$448]  |PARTITIONED|
-                                                                                                                                                                                        select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                        select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448]
                                                                                                                                                                                         -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                           exchange
                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -778,7 +794,7 @@ distribute result [$$192]
                                                                                                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                         exchange
                                                                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                             exchange
                                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -794,7 +810,7 @@ distribute result [$$192]
                                                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                                                               exchange
                                                                                                                                                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444]
                                                                                                                                                                                 -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                   assign [$$444, $$443, $$438] <- [$$441.getField("y_id"), $$441.getField("a"), $$441.getField("b")]
                                                                                                                                                                                   -- ASSIGN  |PARTITIONED|
@@ -812,7 +828,7 @@ distribute result [$$192]
                                                                                                                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                 exchange
                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                     exchange
                                                                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -842,7 +858,7 @@ distribute result [$$192]
                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                       exchange
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                           exchange
                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -865,8 +881,10 @@ distribute result [$$192]
                                                                                           -- AGGREGATE  |LOCAL|
                                                                                             select (not(is-missing($$458)))
                                                                                             -- STREAM_SELECT  |LOCAL|
-                                                                                              nested tuple source
-                                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                              project ([$$180, $$458])
+                                                                                              -- STREAM_PROJECT  |LOCAL|
+                                                                                                nested tuple source
+                                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                      }
                                                                               -- PRE_CLUSTERED_GROUP_BY[$$327, $$326]  |PARTITIONED|
                                                                                 exchange
@@ -896,8 +914,10 @@ distribute result [$$192]
                                                                                                                 -- AGGREGATE  |LOCAL|
                                                                                                                   select (not(is-missing($$332)))
                                                                                                                   -- STREAM_SELECT  |LOCAL|
-                                                                                                                    nested tuple source
-                                                                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                    project ([$$332])
+                                                                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                                                                      nested tuple source
+                                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                              }
                                                                                                       -- PRE_CLUSTERED_GROUP_BY[$$328]  |PARTITIONED|
                                                                                                         exchange
@@ -959,8 +979,10 @@ distribute result [$$192]
                                                                                                                                                 -- AGGREGATE  |LOCAL|
                                                                                                                                                   select (not(is-missing($$350)))
                                                                                                                                                   -- STREAM_SELECT  |LOCAL|
-                                                                                                                                                    nested tuple source
-                                                                                                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                                    project ([$$350])
+                                                                                                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                                      nested tuple source
+                                                                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                              }
                                                                                                                                       -- PRE_CLUSTERED_GROUP_BY[$$338, $$340]  |PARTITIONED|
                                                                                                                                         exchange
@@ -989,7 +1011,7 @@ distribute result [$$192]
                                                                                                                                                               -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                 exchange
                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                  join (eq($$418, $$417)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                  join (eq($$418, $$417))
                                                                                                                                                                   -- HYBRID_HASH_JOIN [$$417][$$418]  |PARTITIONED|
                                                                                                                                                                     exchange
                                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1017,7 +1039,7 @@ distribute result [$$192]
                                                                                                                                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                     exchange
                                                                                                                                                                     -- HASH_PARTITION_EXCHANGE [$$418]  |PARTITIONED|
-                                                                                                                                                                      select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                      select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418]
                                                                                                                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                         assign [$$418, $$407] <- [$$413.getField("y_id"), $$413.getField("a")]
                                                                                                                                                                         -- ASSIGN  |PARTITIONED|
@@ -1027,7 +1049,7 @@ distribute result [$$192]
                                                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                                                               exchange
                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                   exchange
                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1050,8 +1072,10 @@ distribute result [$$192]
                                                                                                                                                                           -- AGGREGATE  |LOCAL|
                                                                                                                                                                             select (not(is-missing($$366)))
                                                                                                                                                                             -- STREAM_SELECT  |LOCAL|
-                                                                                                                                                                              nested tuple source
-                                                                                                                                                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                                                              project ([$$367, $$366])
+                                                                                                                                                                              -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                                                                nested tuple source
+                                                                                                                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                                                      }
                                                                                                                                                               -- PRE_CLUSTERED_GROUP_BY[$$354, $$355]  |PARTITIONED|
                                                                                                                                                                 exchange
@@ -1080,7 +1104,7 @@ distribute result [$$192]
                                                                                                                                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                         exchange
                                                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                          join (eq($$427, $$428)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                          join (eq($$427, $$428))
                                                                                                                                                                                           -- HYBRID_HASH_JOIN [$$428][$$427]  |PARTITIONED|
                                                                                                                                                                                             exchange
                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1112,7 +1136,7 @@ distribute result [$$192]
                                                                                                                                                                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                             exchange
                                                                                                                                                                                             -- HASH_PARTITION_EXCHANGE [$$427]  |PARTITIONED|
-                                                                                                                                                                                              select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                              select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427]
                                                                                                                                                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                 exchange
                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1130,7 +1154,7 @@ distribute result [$$192]
                                                                                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                               exchange
                                                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                   exchange
                                                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1152,7 +1176,7 @@ distribute result [$$192]
                                                                                                                                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                           exchange
                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                            join (eq($$373, $$374)) [cardinality: 9.223372036854776E16, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                                                                                                                                                                                            join (eq($$373, $$374))
                                                                                                                                                                                             -- HYBRID_HASH_JOIN [$$374][$$373]  |PARTITIONED|
                                                                                                                                                                                               exchange
                                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1168,7 +1192,7 @@ distribute result [$$192]
                                                                                                                                                                                                         -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                                           exchange
                                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                            join (eq($$448, $$445)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                                            join (eq($$448, $$445))
                                                                                                                                                                                                             -- HYBRID_HASH_JOIN [$$445][$$448]  |PARTITIONED|
                                                                                                                                                                                                               exchange
                                                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1200,7 +1224,7 @@ distribute result [$$192]
                                                                                                                                                                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                                               exchange
                                                                                                                                                                                                               -- HASH_PARTITION_EXCHANGE [$$448]  |PARTITIONED|
-                                                                                                                                                                                                                select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448]
                                                                                                                                                                                                                 -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                                   exchange
                                                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1218,7 +1242,7 @@ distribute result [$$192]
                                                                                                                                                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                                 exchange
                                                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                                     exchange
                                                                                                                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1234,7 +1258,7 @@ distribute result [$$192]
                                                                                                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                       exchange
                                                                                                                                                                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                        select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                                        select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444]
                                                                                                                                                                                                         -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                           assign [$$444, $$443, $$438] <- [$$441.getField("y_id"), $$441.getField("a"), $$441.getField("b")]
                                                                                                                                                                                                           -- ASSIGN  |PARTITIONED|
@@ -1252,7 +1276,7 @@ distribute result [$$192]
                                                                                                                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                         exchange
                                                                                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                             exchange
                                                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1290,7 +1314,7 @@ distribute result [$$192]
                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                       exchange
                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                           exchange
                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1329,8 +1353,10 @@ distribute result [$$192]
                                                                                                                                   -- AGGREGATE  |LOCAL|
                                                                                                                                     select (not(is-missing($$403)))
                                                                                                                                     -- STREAM_SELECT  |LOCAL|
-                                                                                                                                      nested tuple source
-                                                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                      project ([$$403])
+                                                                                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                        nested tuple source
+                                                                                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                }
                                                                                                                         -- PRE_CLUSTERED_GROUP_BY[$$399]  |PARTITIONED|
                                                                                                                           exchange
@@ -1388,8 +1414,10 @@ distribute result [$$192]
                                                                                                                                                                   -- AGGREGATE  |LOCAL|
                                                                                                                                                                     select (not(is-missing($$421)))
                                                                                                                                                                     -- STREAM_SELECT  |LOCAL|
-                                                                                                                                                                      nested tuple source
-                                                                                                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                                                      project ([$$421])
+                                                                                                                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                                                        nested tuple source
+                                                                                                                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                                                }
                                                                                                                                                         -- PRE_CLUSTERED_GROUP_BY[$$409, $$411]  |PARTITIONED|
                                                                                                                                                           exchange
@@ -1414,7 +1442,7 @@ distribute result [$$192]
                                                                                                                                                                             -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                               exchange
                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                join (eq($$418, $$417)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                join (eq($$418, $$417))
                                                                                                                                                                                 -- HYBRID_HASH_JOIN [$$417][$$418]  |PARTITIONED|
                                                                                                                                                                                   exchange
                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1442,7 +1470,7 @@ distribute result [$$192]
                                                                                                                                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                   exchange
                                                                                                                                                                                   -- HASH_PARTITION_EXCHANGE [$$418]  |PARTITIONED|
-                                                                                                                                                                                    select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                    select (eq($$413.getField("to_u"), "aaaaa")) project: [$$407, $$411, $$418]
                                                                                                                                                                                     -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                       assign [$$418, $$407] <- [$$413.getField("y_id"), $$413.getField("a")]
                                                                                                                                                                                       -- ASSIGN  |PARTITIONED|
@@ -1452,7 +1480,7 @@ distribute result [$$192]
                                                                                                                                                                                           -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                             exchange
                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                              data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                              data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                               -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                 exchange
                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1475,8 +1503,10 @@ distribute result [$$192]
                                                                                                                                                                                             -- AGGREGATE  |LOCAL|
                                                                                                                                                                                               select (not(is-missing($$437)))
                                                                                                                                                                                               -- STREAM_SELECT  |LOCAL|
-                                                                                                                                                                                                nested tuple source
-                                                                                                                                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                                                                                                                                project ([$$438, $$437])
+                                                                                                                                                                                                -- STREAM_PROJECT  |LOCAL|
+                                                                                                                                                                                                  nested tuple source
+                                                                                                                                                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                                                                                                                                        }
                                                                                                                                                                                 -- PRE_CLUSTERED_GROUP_BY[$$425, $$426]  |PARTITIONED|
                                                                                                                                                                                   exchange
@@ -1501,7 +1531,7 @@ distribute result [$$192]
                                                                                                                                                                                                     -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                                       exchange
                                                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                        join (eq($$427, $$428)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                                        join (eq($$427, $$428))
                                                                                                                                                                                                         -- HYBRID_HASH_JOIN [$$428][$$427]  |PARTITIONED|
                                                                                                                                                                                                           exchange
                                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1533,7 +1563,7 @@ distribute result [$$192]
                                                                                                                                                                                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                                           exchange
                                                                                                                                                                                                           -- HASH_PARTITION_EXCHANGE [$$427]  |PARTITIONED|
-                                                                                                                                                                                                            select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                                            select (eq($$430.getField("to_u"), "aaaaa")) project: [$$422, $$426, $$427]
                                                                                                                                                                                                             -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                               exchange
                                                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1551,7 +1581,7 @@ distribute result [$$192]
                                                                                                                                                                                                                           -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                             exchange
                                                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                              data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                              data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                               -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                                 exchange
                                                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1573,7 +1603,7 @@ distribute result [$$192]
                                                                                                                                                                                                           -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                                             exchange
                                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                              join (eq($$444, $$445)) [cardinality: 9.223372036854776E16, op-cost: 5.00004E11, total-cost: 5.00015E11]
+                                                                                                                                                                                                              join (eq($$444, $$445))
                                                                                                                                                                                                               -- HYBRID_HASH_JOIN [$$445][$$444]  |PARTITIONED|
                                                                                                                                                                                                                 exchange
                                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1585,7 +1615,7 @@ distribute result [$$192]
                                                                                                                                                                                                                       -- STREAM_PROJECT  |PARTITIONED|
                                                                                                                                                                                                                         exchange
                                                                                                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                          join (eq($$448, $$445)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
+                                                                                                                                                                                                                          join (eq($$448, $$445))
                                                                                                                                                                                                                           -- HYBRID_HASH_JOIN [$$445][$$448]  |PARTITIONED|
                                                                                                                                                                                                                             exchange
                                                                                                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1617,7 +1647,7 @@ distribute result [$$192]
                                                                                                                                                                                                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
                                                                                                                                                                                                                             exchange
                                                                                                                                                                                                                             -- HASH_PARTITION_EXCHANGE [$$448]  |PARTITIONED|
-                                                                                                                                                                                                                              select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                              select (eq($$450.getField("to_u"), "aaaaa")) project: [$$436, $$448]
                                                                                                                                                                                                                               -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                                                 exchange
                                                                                                                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1635,7 +1665,7 @@ distribute result [$$192]
                                                                                                                                                                                                                                             -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                                               exchange
                                                                                                                                                                                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                                                data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                                                 -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                                                   exchange
                                                                                                                                                                                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1647,7 +1677,7 @@ distribute result [$$192]
                                                                                                                                                                                                                   -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                     exchange
                                                                                                                                                                                                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                      select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                      select (eq($$441.getField("to_u"), "aaaaa")) project: [$$438, $$443, $$444]
                                                                                                                                                                                                                       -- STREAM_SELECT  |PARTITIONED|
                                                                                                                                                                                                                         assign [$$444, $$443, $$438] <- [$$441.getField("y_id"), $$441.getField("a"), $$441.getField("b")]
                                                                                                                                                                                                                         -- ASSIGN  |PARTITIONED|
@@ -1665,7 +1695,7 @@ distribute result [$$192]
                                                                                                                                                                                                                                     -- REPLICATE  |PARTITIONED|
                                                                                                                                                                                                                                       exchange
                                                                                                                                                                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                                                                                                                        data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                                                                                                                         -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                                                                                                                           exchange
                                                                                                                                                                                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1703,7 +1733,7 @@ distribute result [$$192]
                                                                                                                                       -- REPLICATE  |PARTITIONED|
                                                                                                                                         exchange
                                                                                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                          data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                           -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                             exchange
                                                                                                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -1729,7 +1759,7 @@ distribute result [$$192]
                                                                                                                               -- REPLICATE  |PARTITIONED|
                                                                                                                                 exchange
                                                                                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                                                                                                  data-scan []<-[$$411, $$413] <- test.collection1
                                                                                                                                   -- DATASOURCE_SCAN  |PARTITIONED|
                                                                                                                                     exchange
                                                                                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

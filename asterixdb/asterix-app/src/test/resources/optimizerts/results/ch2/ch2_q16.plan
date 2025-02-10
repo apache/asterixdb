@@ -17,10 +17,12 @@ distribute result [$$128]
                         -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
                           order (ASC, $$150)
                           -- MICRO_STABLE_SORT [$$150(ASC)]  |LOCAL|
-                            assign [$$150] <- [numeric-mod(numeric-multiply($$143, $$144), 10000)]
+                            assign [$$150] <- [numeric-mod(numeric-multiply($$143, $$144), 10000)] project: [$$150]
                             -- ASSIGN  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$143, $$144])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
             -- PRE_CLUSTERED_GROUP_BY[$$129, $$130, $$131]  |PARTITIONED|
               exchange
@@ -42,8 +44,10 @@ distribute result [$$128]
                                       -- AGGREGATE  |LOCAL|
                                         select (not(is-missing($$145)))
                                         -- STREAM_SELECT  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$145])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                    }
                             -- PRE_CLUSTERED_GROUP_BY[$$133, $$134]  |PARTITIONED|
                               exchange

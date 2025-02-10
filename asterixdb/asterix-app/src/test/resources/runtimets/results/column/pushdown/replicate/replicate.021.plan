@@ -49,12 +49,14 @@ distribute result [$$68] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                 -- AGGREGATE  |LOCAL|
                                   select (eq($$76, "x")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |LOCAL|
-                                    assign [$$76] <- [$$ol.getField("ol_dist_info")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    assign [$$76] <- [$$ol.getField("ol_dist_info")] project: [$$76] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ASSIGN  |LOCAL|
-                                      unnest $$ol <- scan-collection($$75) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      unnest $$ol <- scan-collection($$75) project: [$$ol] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- UNNEST  |LOCAL|
-                                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                        project ([$$75]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_PROJECT  |LOCAL|
+                                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- SUBPLAN  |PARTITIONED|
                         assign [$$73, $$75] <- [$$o2.getField("o_carrier_id"), $$o2.getField("o_orderline")] project: [$$73, $$75] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

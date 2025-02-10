@@ -19,7 +19,7 @@ distribute result [$$54]
                           -- AGGREGATE  |LOCAL|
                             select (not(if-missing-or-null(and(gt($$D, "2016"), lt($$D, "2017")), false)))
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $$D <- scan-collection($$57)
+                              unnest $$D <- scan-collection($$57) project: [$$D]
                               -- UNNEST  |LOCAL|
                                 nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|

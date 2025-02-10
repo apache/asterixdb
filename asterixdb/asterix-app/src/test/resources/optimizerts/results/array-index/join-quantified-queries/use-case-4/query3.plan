@@ -22,16 +22,20 @@ distribute result [$$81]
                                       -- AGGREGATE  |LOCAL|
                                         unnest $$D <- scan-collection($$87)
                                         -- UNNEST  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$88, $$87])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                    }
                             -- SUBPLAN  |LOCAL|
-                              assign [$$87] <- [$$CT.getField(1)]
+                              assign [$$87] <- [$$CT.getField(1)] project: [$$88, $$87]
                               -- ASSIGN  |LOCAL|
-                                unnest $$CT <- scan-collection($$86)
+                                unnest $$CT <- scan-collection($$86) project: [$$88, $$CT]
                                 -- UNNEST  |LOCAL|
-                                  nested tuple source
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$88, $$86])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   select (eq($$C.getField(1), "--Ni3oJ4VOqfOEu7Sj2Vzg")) project: [$$88, $$86]

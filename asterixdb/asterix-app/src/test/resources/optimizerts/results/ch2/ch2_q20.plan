@@ -29,8 +29,10 @@ distribute result [$$170]
                                     -- AGGREGATE  |LOCAL|
                                       select (not(is-missing($$197)))
                                       -- STREAM_SELECT  |LOCAL|
-                                        nested tuple source
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                        project ([$$197])
+                                        -- STREAM_PROJECT  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                                  }
                           -- PRE_CLUSTERED_GROUP_BY[$$177]  |PARTITIONED|
                             exchange
@@ -102,8 +104,10 @@ distribute result [$$170]
                                                                                 -- AGGREGATE  |LOCAL|
                                                                                   select (not(is-missing($$195)))
                                                                                   -- STREAM_SELECT  |LOCAL|
-                                                                                    nested tuple source
-                                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                    project ([$$195])
+                                                                                    -- STREAM_PROJECT  |LOCAL|
+                                                                                      nested tuple source
+                                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                              }
                                                                       -- PRE_CLUSTERED_GROUP_BY[$$179]  |PARTITIONED|
                                                                         exchange

@@ -1,35 +1,37 @@
-distribute result [$$46] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$46] <- [{"D1": $$D1}] project: [$$46] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    assign [$$46] <- [{"D1": $$D1}] project: [$$46]
     -- ASSIGN  |PARTITIONED|
-      select (and($$42, eq($$43, 0))) project: [$$D1] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      select (and($$42, eq($$43, 0))) project: [$$D1]
       -- STREAM_SELECT  |PARTITIONED|
-        project ([$$D1, $$42, $$43]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$D1, $$42, $$43])
         -- STREAM_PROJECT  |PARTITIONED|
           subplan {
                     aggregate [$$42, $$43] <- [non-empty-stream(), agg-sql-count(switch-case(and(eq($$50, 1), eq($$51, 2)), true, null, true))]
                     -- AGGREGATE  |LOCAL|
                       assign [$$51] <- [$$J.getField("item")]
                       -- ASSIGN  |LOCAL|
-                        unnest $$J <- scan-collection($$49)
+                        unnest $$J <- scan-collection($$49) project: [$$50, $$J]
                         -- UNNEST  |LOCAL|
-                          assign [$$50] <- [$$I.getField(0)]
+                          assign [$$50] <- [$$I.getField(0)] project: [$$49, $$50]
                           -- ASSIGN  |LOCAL|
-                            unnest $$I <- scan-collection($$48)
+                            unnest $$I <- scan-collection($$48) project: [$$49, $$I]
                             -- UNNEST  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                              project ([$$49, $$48])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
           -- SUBPLAN  |PARTITIONED|
-            assign [$$49, $$48] <- [$$D1.getField("other_items"), $$D1.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            assign [$$49, $$48] <- [$$D1.getField("other_items"), $$D1.getField(1)]
             -- ASSIGN  |PARTITIONED|
-              project ([$$D1]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              project ([$$D1])
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$47, $$D1] <- TestDataverse.Dataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  data-scan []<-[$$47, $$D1] <- TestDataverse.Dataset1
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

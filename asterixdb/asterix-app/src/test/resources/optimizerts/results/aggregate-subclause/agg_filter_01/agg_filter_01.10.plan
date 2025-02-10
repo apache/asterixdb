@@ -20,8 +20,10 @@ distribute result [$$84]
                       -- AGGREGATE  |LOCAL|
                         select (gt($$93, 0))
                         -- STREAM_SELECT  |LOCAL|
-                          nested tuple source
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$66, $$82, $$93])
+                          -- STREAM_PROJECT  |LOCAL|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                    }
             -- PRE_CLUSTERED_GROUP_BY[$$85]  |PARTITIONED|
               exchange

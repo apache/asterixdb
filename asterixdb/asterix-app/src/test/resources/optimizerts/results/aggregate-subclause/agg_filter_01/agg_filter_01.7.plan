@@ -11,8 +11,10 @@ distribute result [$$182]
                   -- AGGREGATE  |UNPARTITIONED|
                     select (lt($$187, 3000))
                     -- STREAM_SELECT  |UNPARTITIONED|
-                      nested tuple source
-                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                      project ([$$188, $$187])
+                      -- STREAM_PROJECT  |UNPARTITIONED|
+                        nested tuple source
+                        -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
                }
         -- WINDOW  |UNPARTITIONED|
           project ([$$twenty, $$189, $$193, $$194, $$188, $$187])
@@ -22,8 +24,10 @@ distribute result [$$182]
                       -- AGGREGATE  |UNPARTITIONED|
                         select (lt($$twenty, 10))
                         -- STREAM_SELECT  |UNPARTITIONED|
-                          nested tuple source
-                          -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                          project ([$$twenty, $$186])
+                          -- STREAM_PROJECT  |UNPARTITIONED|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
                    }
             -- WINDOW  |UNPARTITIONED|
               project ([$$twenty, $$189, $$193, $$188, $$187, $$186])

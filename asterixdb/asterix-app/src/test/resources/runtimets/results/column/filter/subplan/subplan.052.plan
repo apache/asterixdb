@@ -15,9 +15,9 @@ distribute result [$$67] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                       -- AGGREGATE  |LOCAL|
                         select (and(ge($$65, "1"), le($$65, "2"))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_SELECT  |LOCAL|
-                          assign [$$65] <- [$$ao.getField("text")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          assign [$$65] <- [$$ao.getField("text")] project: [$$65] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ASSIGN  |LOCAL|
-                            unnest $$ao <- scan-collection($$68) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            unnest $$ao <- scan-collection($$68) project: [$$ao] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- UNNEST  |LOCAL|
                               nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- NESTED_TUPLE_SOURCE  |LOCAL|

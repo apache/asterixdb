@@ -16,18 +16,22 @@ distribute result [$$44]
                                 -- AGGREGATE  |LOCAL|
                                   select (eq("2019-06-07", $$D))
                                   -- STREAM_SELECT  |LOCAL|
-                                    unnest $$D <- scan-collection($$47)
+                                    unnest $$D <- scan-collection($$47) project: [$$D]
                                     -- UNNEST  |LOCAL|
-                                      nested tuple source
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$47])
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
                       -- SUBPLAN  |LOCAL|
-                        assign [$$47] <- [$$CT.getField(0)]
+                        assign [$$47] <- [$$CT.getField(0)] project: [$$47]
                         -- ASSIGN  |LOCAL|
-                          unnest $$CT <- scan-collection($$46)
+                          unnest $$CT <- scan-collection($$46) project: [$$CT]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$46])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$48, $$46] <- [$$C.getField(1), $$C.getField(2)] project: [$$48, $$46]

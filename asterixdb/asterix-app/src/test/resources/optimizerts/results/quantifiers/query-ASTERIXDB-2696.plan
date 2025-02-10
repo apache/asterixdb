@@ -16,14 +16,18 @@ distribute result [$$74]
                                 -- AGGREGATE  |LOCAL|
                                   select (ge($$x, 50))
                                   -- STREAM_SELECT  |LOCAL|
-                                    unnest $$x <- scan-collection($$78)
+                                    unnest $$x <- scan-collection($$78) project: [$$x]
                                     -- UNNEST  |LOCAL|
-                                      nested tuple source
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$78])
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
                       -- SUBPLAN  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$78])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$75]  |LOCAL|
           exchange

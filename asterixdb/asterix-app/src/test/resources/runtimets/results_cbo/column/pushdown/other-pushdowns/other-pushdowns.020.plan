@@ -25,10 +25,12 @@ distribute result [$$66] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-c
                                 -- AGGREGATE  |LOCAL|
                                   assign [$$52] <- [$$i.getField("count")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ASSIGN  |LOCAL|
-                                    unnest $$i <- scan-collection($$70) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    unnest $$i <- scan-collection($$70) project: [$$i] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- UNNEST  |LOCAL|
-                                      nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$70]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                       -- SUBPLAN  |PARTITIONED|
                         assign [$$64, $$70] <- [to-object-var-str($$t).getField(0), $$t.getField("a1")] project: [$$64, $$70] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]

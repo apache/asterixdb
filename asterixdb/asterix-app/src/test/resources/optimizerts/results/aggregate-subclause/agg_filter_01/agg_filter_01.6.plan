@@ -9,8 +9,10 @@ distribute result [$$123]
                 -- AGGREGATE  |UNPARTITIONED|
                   select (eq($$125, 0))
                   -- STREAM_SELECT  |UNPARTITIONED|
-                    nested tuple source
-                    -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
+                    project ([$$125, $$tenk.tenthous])
+                    -- STREAM_PROJECT  |UNPARTITIONED|
+                      nested tuple source
+                      -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
              }
       -- WINDOW  |UNPARTITIONED|
         window-aggregate [] <- [] order (ASC, $$tenk.tenthous) frame on (ASC, $$tenk.tenthous) start unbounded end [$$tenk.tenthous] {

@@ -19,10 +19,12 @@ distribute result [$$71]
                           -- AGGREGATE  |LOCAL|
                             select (eq($$77, $#5))
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $#5 <- scan-collection($$78)
+                              unnest $#5 <- scan-collection($$78) project: [$$77, $#5]
                               -- UNNEST  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$77, $$78])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$78] <- [$$B.getField(2)] project: [$$77, $$78]
@@ -66,10 +68,12 @@ distribute result [$$71]
                                                                 -- AGGREGATE  |LOCAL|
                                                                   select (eq($$77, $#4))
                                                                   -- STREAM_SELECT  |LOCAL|
-                                                                    unnest $#4 <- scan-collection($$76)
+                                                                    unnest $#4 <- scan-collection($$76) project: [$$77, $#4]
                                                                     -- UNNEST  |LOCAL|
-                                                                      nested tuple source
-                                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                      project ([$$77, $$76])
+                                                                      -- STREAM_PROJECT  |LOCAL|
+                                                                        nested tuple source
+                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                              }
                                                       -- SUBPLAN  |PARTITIONED|
                                                         assign [$$76] <- [$$A.getField(2)] project: [$$77, $$76]

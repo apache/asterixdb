@@ -11,8 +11,10 @@ distribute result [$$56]
                   -- AGGREGATE  |LOCAL|
                     select (eq($$57, 2))
                     -- STREAM_SELECT  |LOCAL|
-                      nested tuple source
-                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                      project ([$$57])
+                      -- STREAM_PROJECT  |LOCAL|
+                        nested tuple source
+                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- SUBPLAN  |PARTITIONED|
           subplan {
@@ -20,8 +22,10 @@ distribute result [$$56]
                     -- AGGREGATE  |LOCAL|
                       select (eq($$57, 1))
                       -- STREAM_SELECT  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$57])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             subplan {

@@ -23,8 +23,10 @@ commit
                               -- AGGREGATE  |LOCAL|
                                 select (not(is-missing($$44)))
                                 -- STREAM_SELECT  |LOCAL|
-                                  nested tuple source
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$33, $$44])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                            }
                     -- PRE_CLUSTERED_GROUP_BY[$$40]  |PARTITIONED|
                       exchange

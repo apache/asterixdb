@@ -16,8 +16,10 @@ distribute result [$$70]
                                 -- AGGREGATE  |LOCAL|
                                   select (not(is-missing($$79)))
                                   -- STREAM_SELECT  |LOCAL|
-                                    nested tuple source
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                    project ([$$l, $$79])
+                                    -- STREAM_PROJECT  |LOCAL|
+                                      nested tuple source
+                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
                       -- MICRO_PRE_CLUSTERED_GROUP_BY[$$72]  |LOCAL|
                         select (not(is-missing($$81)))

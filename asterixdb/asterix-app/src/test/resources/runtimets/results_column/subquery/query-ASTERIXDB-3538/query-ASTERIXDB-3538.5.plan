@@ -15,8 +15,10 @@ distribute result [$$317] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                       -- AGGREGATE  |LOCAL|
                         unnest $$333 <- scan-collection($$343) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- UNNEST  |LOCAL|
-                          nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$343]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          -- STREAM_PROJECT  |LOCAL|
+                            nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                  } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- SUBPLAN  |PARTITIONED|
             select (not(is-null($$351))) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]

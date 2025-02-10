@@ -35,8 +35,10 @@ distribute result [$$197] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-
                                 -- AGGREGATE  |LOCAL|
                                   select (eq(string-default-null($$210), "sixteen")) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- STREAM_SELECT  |LOCAL|
-                                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                    project ([$$210]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |LOCAL|
+                                      nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- SUBPLAN  |PARTITIONED|
                         assign [$$231] <- [string-default-null($$210)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
