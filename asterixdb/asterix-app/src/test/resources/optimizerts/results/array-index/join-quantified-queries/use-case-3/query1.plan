@@ -19,12 +19,14 @@ distribute result [$$65]
                           -- AGGREGATE  |LOCAL|
                             select (eq($$71, $$72))
                             -- STREAM_SELECT  |LOCAL|
-                              assign [$$71] <- [$$D.getField(0)]
+                              assign [$$71] <- [$$D.getField(0)] project: [$$72, $$71]
                               -- ASSIGN  |LOCAL|
-                                unnest $$D <- scan-collection($$70)
+                                unnest $$D <- scan-collection($$70) project: [$$72, $$D]
                                 -- UNNEST  |LOCAL|
-                                  nested tuple source
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$72, $$70])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   select (eq($$C.getField(1), "--Ni3oJ4VOqfOEu7Sj2Vzg")) project: [$$72, $$70]

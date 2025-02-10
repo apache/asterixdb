@@ -13,10 +13,12 @@ distribute result [$$20]
                     -- AGGREGATE  |LOCAL|
                       select (eq("2016-04-26 19:49:16", $#1))
                       -- STREAM_SELECT  |LOCAL|
-                        unnest $#1 <- scan-collection($$22)
+                        unnest $#1 <- scan-collection($$22) project: [$#1]
                         -- UNNEST  |LOCAL|
-                          nested tuple source
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$22])
+                          -- STREAM_PROJECT  |LOCAL|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$23, $$22] <- [$$C.getField(1), $$C.getField(2)] project: [$$23, $$22]

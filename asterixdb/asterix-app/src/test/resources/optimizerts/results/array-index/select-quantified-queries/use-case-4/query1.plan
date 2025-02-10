@@ -13,23 +13,29 @@ distribute result [$$33]
                     -- AGGREGATE  |LOCAL|
                       select ($$29)
                       -- STREAM_SELECT  |LOCAL|
-                        subplan {
-                                  aggregate [$$29] <- [non-empty-stream()]
-                                  -- AGGREGATE  |LOCAL|
-                                    select (eq("2016-04-26", $#1))
-                                    -- STREAM_SELECT  |LOCAL|
-                                      unnest $#1 <- scan-collection($$36)
-                                      -- UNNEST  |LOCAL|
-                                        nested tuple source
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
-                               }
-                        -- SUBPLAN  |LOCAL|
-                          assign [$$36] <- [$$D.getField(0)]
-                          -- ASSIGN  |LOCAL|
-                            unnest $$D <- scan-collection($$35)
-                            -- UNNEST  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$29])
+                        -- STREAM_PROJECT  |LOCAL|
+                          subplan {
+                                    aggregate [$$29] <- [non-empty-stream()]
+                                    -- AGGREGATE  |LOCAL|
+                                      select (eq("2016-04-26", $#1))
+                                      -- STREAM_SELECT  |LOCAL|
+                                        unnest $#1 <- scan-collection($$36) project: [$#1]
+                                        -- UNNEST  |LOCAL|
+                                          project ([$$36])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                 }
+                          -- SUBPLAN  |LOCAL|
+                            assign [$$36] <- [$$D.getField(0)] project: [$$36]
+                            -- ASSIGN  |LOCAL|
+                              unnest $$D <- scan-collection($$35) project: [$$D]
+                              -- UNNEST  |LOCAL|
+                                project ([$$35])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$37, $$35] <- [$$C.getField(1), $$C.getField(2)] project: [$$37, $$35]

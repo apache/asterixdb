@@ -21,12 +21,14 @@ distribute result [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- AGGREGATE  |LOCAL|
                               assign [$$82] <- [$$98.getField("Overall")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ASSIGN  |LOCAL|
-                                assign [$$98] <- [$$reviews.getField("ratings")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                assign [$$98] <- [$$reviews.getField("ratings")] project: [$$98] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- ASSIGN  |LOCAL|
-                                  unnest $$reviews <- scan-collection($$91) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  unnest $$reviews <- scan-collection($$91) project: [$$reviews] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- UNNEST  |LOCAL|
-                                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                    project ([$$91]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    -- STREAM_PROJECT  |LOCAL|
+                                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                          } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- SUBPLAN  |PARTITIONED|
                     assign [$#2] <- [get-item($$72, 0)] project: [$$93, $$94, $$91, $#2] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
@@ -38,12 +40,14 @@ distribute result [$$84] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- AGGREGATE  |LOCAL|
                                     assign [$$69] <- [$$97.getField("Overall")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ASSIGN  |LOCAL|
-                                      assign [$$97] <- [$$89.getField("ratings")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                      assign [$$97] <- [$$89.getField("ratings")] project: [$$97] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- ASSIGN  |LOCAL|
-                                        unnest $$89 <- scan-collection($$91) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        unnest $$89 <- scan-collection($$91) project: [$$89] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- UNNEST  |LOCAL|
-                                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$91]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                              } [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- SUBPLAN  |PARTITIONED|
                         select (eq($$ht.getField("city"), "Los Angeles")) project: [$$93, $$94, $$91] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]

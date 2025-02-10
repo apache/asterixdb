@@ -1,33 +1,35 @@
-distribute result [$$30] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$30] <- [{"business_id": $$34}] project: [$$30] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    assign [$$30] <- [{"business_id": $$34}] project: [$$30]
     -- ASSIGN  |PARTITIONED|
-      select ($$27) project: [$$34] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      select ($$27) project: [$$34]
       -- STREAM_SELECT  |PARTITIONED|
-        project ([$$34, $$27]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$34, $$27])
         -- STREAM_PROJECT  |PARTITIONED|
           subplan {
                     aggregate [$$27] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
                       select (eq("2016-04-26", $$33))
                       -- STREAM_SELECT  |LOCAL|
-                        assign [$$33] <- [$$D.getField(0)]
+                        assign [$$33] <- [$$D.getField(0)] project: [$$33]
                         -- ASSIGN  |LOCAL|
-                          unnest $$D <- scan-collection($$32)
+                          unnest $$D <- scan-collection($$32) project: [$$D]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                            project ([$$32])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
           -- SUBPLAN  |PARTITIONED|
-            assign [$$34, $$32] <- [$$C.getField(1), $$C.getField(2)] project: [$$34, $$32] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            assign [$$34, $$32] <- [$$C.getField(1), $$C.getField(2)] project: [$$34, $$32]
             -- ASSIGN  |PARTITIONED|
-              project ([$$C]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              project ([$$C])
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$31, $$C] <- TestYelp.YelpCheckin [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  data-scan []<-[$$31, $$C] <- TestYelp.YelpCheckin
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

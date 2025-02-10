@@ -22,10 +22,12 @@ distribute result [$$162]
                       -- MICRO_PRE_CLUSTERED_GROUP_BY[$$164]  |LOCAL|
                         order (ASC, $$164)
                         -- MICRO_STABLE_SORT [$$164(ASC)]  |LOCAL|
-                          assign [$$157] <- [$$143.getField(3)]
+                          assign [$$157] <- [$$143.getField(3)] project: [$$164, $$157]
                           -- ASSIGN  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$164, $$143])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$163]  |LOCAL|
           exchange

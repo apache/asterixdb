@@ -13,8 +13,10 @@ distribute result [$$70]
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
                       order (ASC, $$68)
                       -- MICRO_STABLE_SORT [$$68(ASC)]  |LOCAL|
-                        nested tuple source
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                        project ([$$68])
+                        -- STREAM_PROJECT  |LOCAL|
+                          nested tuple source
+                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                }
         -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
           exchange

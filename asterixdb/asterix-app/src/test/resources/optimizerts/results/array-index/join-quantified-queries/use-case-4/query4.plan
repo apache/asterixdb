@@ -22,16 +22,20 @@ distribute result [$$123]
                                       -- AGGREGATE  |LOCAL|
                                         unnest $$D <- scan-collection($$132)
                                         -- UNNEST  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$130, $$132])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                    }
                             -- SUBPLAN  |LOCAL|
-                              assign [$$132] <- [$$CT.getField(1)]
+                              assign [$$132] <- [$$CT.getField(1)] project: [$$130, $$132]
                               -- ASSIGN  |LOCAL|
-                                unnest $$CT <- scan-collection($$131)
+                                unnest $$CT <- scan-collection($$131) project: [$$130, $$CT]
                                 -- UNNEST  |LOCAL|
-                                  nested tuple source
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$130, $$131])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                        }
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$131] <- [$$B.getField(2)] project: [$$130, $$131]
@@ -78,16 +82,20 @@ distribute result [$$123]
                                                                             -- AGGREGATE  |LOCAL|
                                                                               unnest $$D <- scan-collection($$129)
                                                                               -- UNNEST  |LOCAL|
-                                                                                nested tuple source
-                                                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                project ([$$130, $$129])
+                                                                                -- STREAM_PROJECT  |LOCAL|
+                                                                                  nested tuple source
+                                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                          }
                                                                   -- SUBPLAN  |LOCAL|
-                                                                    assign [$$129] <- [$$CT.getField(1)]
+                                                                    assign [$$129] <- [$$CT.getField(1)] project: [$$130, $$129]
                                                                     -- ASSIGN  |LOCAL|
-                                                                      unnest $$CT <- scan-collection($$128)
+                                                                      unnest $$CT <- scan-collection($$128) project: [$$130, $$CT]
                                                                       -- UNNEST  |LOCAL|
-                                                                        nested tuple source
-                                                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                        project ([$$130, $$128])
+                                                                        -- STREAM_PROJECT  |LOCAL|
+                                                                          nested tuple source
+                                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                              }
                                                       -- SUBPLAN  |PARTITIONED|
                                                         assign [$$128] <- [$$A.getField(2)] project: [$$130, $$128]

@@ -19,8 +19,10 @@ distribute result [$$d] [cardinality: 5.0, op-cost: 0.0, total-cost: 17.61]
                           -- AGGREGATE  |LOCAL|
                             select (not(if-missing-or-null(neq($$21, "1"), false))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- STREAM_SELECT  |LOCAL|
-                              nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$21]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                        } [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]
                 -- SUBPLAN  |PARTITIONED|
                   assign [$$21] <- [$$d.getField("a")] [cardinality: 6.0, op-cost: 0.0, total-cost: 6.0]

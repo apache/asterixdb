@@ -13,14 +13,16 @@ distribute result [$$42]
                     -- AGGREGATE  |LOCAL|
                       select (eq($$J, 2))
                       -- STREAM_SELECT  |LOCAL|
-                        unnest $$J <- scan-collection($$45)
+                        unnest $$J <- scan-collection($$45) project: [$$J]
                         -- UNNEST  |LOCAL|
-                          select (eq($$I, 1))
+                          select (eq($$I, 1)) project: [$$45]
                           -- STREAM_SELECT  |LOCAL|
-                            unnest $$I <- scan-collection($$44)
+                            unnest $$I <- scan-collection($$44) project: [$$45, $$I]
                             -- UNNEST  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$45, $$44])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$45, $$44] <- [$$D1.getField("other_items"), $$D1.getField("items")]

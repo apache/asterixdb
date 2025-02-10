@@ -23,8 +23,10 @@ distribute result [$$41]
                               -- AGGREGATE  |LOCAL|
                                 select (not(is-missing($$45)))
                                 -- STREAM_SELECT  |LOCAL|
-                                  nested tuple source
-                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                  project ([$$45, $$46])
+                                  -- STREAM_PROJECT  |LOCAL|
+                                    nested tuple source
+                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                            }
                     -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
                       exchange
@@ -120,8 +122,10 @@ distribute result [$$41]
                                         -- AGGREGATE  |LOCAL|
                                           select (not(is-missing($$45)))
                                           -- STREAM_SELECT  |LOCAL|
-                                            nested tuple source
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                            project ([$$45, $$46])
+                                            -- STREAM_PROJECT  |LOCAL|
+                                              nested tuple source
+                                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                                      }
                               -- PRE_CLUSTERED_GROUP_BY[$$70]  |PARTITIONED|
                                 exchange

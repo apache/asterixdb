@@ -16,16 +16,20 @@ distribute result [$$46]
                                 -- AGGREGATE  |LOCAL|
                                   unnest $$D <- scan-collection($$49)
                                   -- UNNEST  |LOCAL|
-                                    nested tuple source
-                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                    project ([$$49])
+                                    -- STREAM_PROJECT  |LOCAL|
+                                      nested tuple source
+                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                              }
                       -- SUBPLAN  |LOCAL|
-                        assign [$$49] <- [$$CT.getField(0)]
+                        assign [$$49] <- [$$CT.getField(0)] project: [$$49]
                         -- ASSIGN  |LOCAL|
-                          unnest $$CT <- scan-collection($$48)
+                          unnest $$CT <- scan-collection($$48) project: [$$CT]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$48])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$50, $$48] <- [$$C.getField(1), $$C.getField(2)] project: [$$50, $$48]

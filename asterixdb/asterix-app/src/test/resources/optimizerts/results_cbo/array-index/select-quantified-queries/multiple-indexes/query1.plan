@@ -1,33 +1,35 @@
-distribute result [$$32] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+distribute result [$$32]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$32] <- [{"k": $$k}] project: [$$32] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+    assign [$$32] <- [{"k": $$k}] project: [$$32]
     -- ASSIGN  |PARTITIONED|
-      select ($$30) project: [$$k] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+      select ($$30) project: [$$k]
       -- STREAM_SELECT  |PARTITIONED|
-        project ([$$k, $$30]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+        project ([$$k, $$30])
         -- STREAM_PROJECT  |PARTITIONED|
           subplan {
                     aggregate [$$30] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
                       select (and(eq($$36, 284), eq($$35, 263)))
                       -- STREAM_SELECT  |LOCAL|
-                        assign [$$36, $$35] <- [$$v.getField("a"), $$v.getField("b")]
+                        assign [$$36, $$35] <- [$$v.getField("a"), $$v.getField("b")] project: [$$36, $$35]
                         -- ASSIGN  |LOCAL|
-                          unnest $$v <- scan-collection($$34)
+                          unnest $$v <- scan-collection($$34) project: [$$v]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                            project ([$$34])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                 }
           -- SUBPLAN  |PARTITIONED|
-            assign [$$34] <- [$$k.getField("uarr_i")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+            assign [$$34] <- [$$k.getField("uarr_i")]
             -- ASSIGN  |PARTITIONED|
-              project ([$$k]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+              project ([$$k])
               -- STREAM_PROJECT  |PARTITIONED|
-                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  data-scan []<-[$$33, $$k] <- test.KSI [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  data-scan []<-[$$33, $$k] <- test.KSI
                   -- DATASOURCE_SCAN  |PARTITIONED|
                     exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

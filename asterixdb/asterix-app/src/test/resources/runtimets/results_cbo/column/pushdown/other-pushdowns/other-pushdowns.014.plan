@@ -39,8 +39,10 @@ distribute result [$$101] [cardinality: 0.0, op-cost: 0.0, total-cost: 6.5]
                                     -- AGGREGATE  |LOCAL|
                                       select (not(is-missing($$113))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                       -- STREAM_SELECT  |LOCAL|
-                                        nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                        project ([$$113]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                        -- STREAM_PROJECT  |LOCAL|
+                                          nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                                  } [cardinality: 0.0, op-cost: 2.25, total-cost: 6.5]
                           -- PRE_CLUSTERED_GROUP_BY[$$112]  |PARTITIONED|
                             exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 4.25]

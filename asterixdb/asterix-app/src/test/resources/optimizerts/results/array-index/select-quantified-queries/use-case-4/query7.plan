@@ -18,18 +18,22 @@ distribute result [$$53]
                                   -- AGGREGATE  |LOCAL|
                                     select (not(if-missing-or-null(gt($$D, "2019-06-07"), false)))
                                     -- STREAM_SELECT  |LOCAL|
-                                      unnest $$D <- scan-collection($$57)
+                                      unnest $$D <- scan-collection($$57) project: [$$D]
                                       -- UNNEST  |LOCAL|
-                                        nested tuple source
-                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                        project ([$$57])
+                                        -- STREAM_PROJECT  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
                                }
                         -- SUBPLAN  |LOCAL|
-                          assign [$$58, $$57] <- [$$CT.getField("num"), $$CT.getField(0)]
+                          assign [$$58, $$57] <- [$$CT.getField("num"), $$CT.getField(0)] project: [$$58, $$57]
                           -- ASSIGN  |LOCAL|
-                            unnest $$CT <- scan-collection($$55)
+                            unnest $$CT <- scan-collection($$55) project: [$$CT]
                             -- UNNEST  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$55])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             select (lt(0, len($$55)))

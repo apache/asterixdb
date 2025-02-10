@@ -15,8 +15,10 @@ distribute result [$$75]
                       -- AGGREGATE  |LOCAL|
                         select (not(is-missing($$93)))
                         -- STREAM_SELECT  |LOCAL|
-                          nested tuple source
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$93])
+                          -- STREAM_PROJECT  |LOCAL|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- PRE_CLUSTERED_GROUP_BY[$$76]  |PARTITIONED|
             exchange
@@ -58,15 +60,17 @@ distribute result [$$75]
                                             -- STREAM_SELECT  |LOCAL|
                                               assign [$$88] <- [$$85.getField("b")]
                                               -- ASSIGN  |LOCAL|
-                                                unnest $$85 <- scan-collection($$90)
+                                                unnest $$85 <- scan-collection($$90) project: [$$87, $$85]
                                                 -- UNNEST  |LOCAL|
-                                                  nested tuple source
-                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                  project ([$$90, $$87])
+                                                  -- STREAM_PROJECT  |LOCAL|
+                                                    nested tuple source
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                                        }
                                 -- SUBPLAN  |PARTITIONED|
                                   exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    join (true) [cardinality: 1.0E12, op-cost: 1.0E12, total-cost: 1.000006E12]
+                                    join (true)
                                     -- NESTED_LOOP  |PARTITIONED|
                                       exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -74,7 +78,7 @@ distribute result [$$75]
                                         -- ASSIGN  |PARTITIONED|
                                           exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            data-scan []<-[$$92, $$91] <- test.t1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                            data-scan []<-[$$92, $$91] <- test.t1
                                             -- DATASOURCE_SCAN  |PARTITIONED|
                                               exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -88,7 +92,7 @@ distribute result [$$75]
                                           -- STREAM_PROJECT  |PARTITIONED|
                                             exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              data-scan []<-[$$84, $$81] <- test.t2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                              data-scan []<-[$$84, $$81] <- test.t2
                                               -- DATASOURCE_SCAN  |PARTITIONED|
                                                 exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|

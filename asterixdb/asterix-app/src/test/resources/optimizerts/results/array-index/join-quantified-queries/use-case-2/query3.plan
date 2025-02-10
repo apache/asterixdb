@@ -19,7 +19,7 @@ distribute result [$$65]
                           -- AGGREGATE  |LOCAL|
                             select (not(if-missing-or-null(eq($$71, $$D), false)))
                             -- STREAM_SELECT  |LOCAL|
-                              unnest $$D <- scan-collection($$70)
+                              unnest $$D <- scan-collection($$70) project: [$$71, $$D]
                               -- UNNEST  |LOCAL|
                                 nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|

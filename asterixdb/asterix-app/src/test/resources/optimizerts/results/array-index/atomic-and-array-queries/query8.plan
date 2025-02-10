@@ -13,12 +13,14 @@ distribute result [$$57]
                     -- AGGREGATE  |LOCAL|
                       select (and(eq($$69, to-bigint($$70)), eq($$67, to-bigint($$68))))
                       -- STREAM_SELECT  |LOCAL|
-                        assign [$$69, $$67] <- [$$D1I.getField("field2"), $$D1I.getField("field3")]
+                        assign [$$69, $$67] <- [$$D1I.getField("field2"), $$D1I.getField("field3")] project: [$$70, $$68, $$69, $$67]
                         -- ASSIGN  |LOCAL|
-                          unnest $$D1I <- scan-collection($$66)
+                          unnest $$D1I <- scan-collection($$66) project: [$$70, $$68, $$D1I]
                           -- UNNEST  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$70, $$68, $$66])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$66] <- [$$D1.getField("items")]

@@ -13,14 +13,16 @@ distribute result [$$46]
                     -- AGGREGATE  |LOCAL|
                       assign [$$51] <- [$$J.getField("item")]
                       -- ASSIGN  |LOCAL|
-                        unnest $$J <- scan-collection($$49)
+                        unnest $$J <- scan-collection($$49) project: [$$50, $$J]
                         -- UNNEST  |LOCAL|
-                          assign [$$50] <- [$$I.getField(0)]
+                          assign [$$50] <- [$$I.getField(0)] project: [$$49, $$50]
                           -- ASSIGN  |LOCAL|
-                            unnest $$I <- scan-collection($$48)
+                            unnest $$I <- scan-collection($$48) project: [$$49, $$I]
                             -- UNNEST  |LOCAL|
-                              nested tuple source
-                              -- NESTED_TUPLE_SOURCE  |LOCAL|
+                              project ([$$49, $$48])
+                              -- STREAM_PROJECT  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- SUBPLAN  |PARTITIONED|
             assign [$$49, $$48] <- [$$D1.getField("other_items"), $$D1.getField(1)]

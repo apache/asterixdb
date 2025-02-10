@@ -30,10 +30,12 @@ import org.apache.commons.lang3.mutable.Mutable;
 import org.apache.commons.lang3.mutable.MutableObject;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.algebricks.core.algebra.base.ILogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.base.ILogicalPlan;
 import org.apache.hyracks.algebricks.core.algebra.base.IOptimizationContext;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalOperatorTag;
 import org.apache.hyracks.algebricks.core.algebra.base.LogicalVariable;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractLogicalOperator;
+import org.apache.hyracks.algebricks.core.algebra.operators.logical.AbstractOperatorWithNestedPlans;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.ProjectOperator;
 import org.apache.hyracks.algebricks.core.algebra.operators.logical.visitors.VariableUtilities;
 import org.apache.hyracks.algebricks.core.rewriter.base.IAlgebraicRewriteRule;
@@ -131,6 +133,17 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             }
         }
 
+        if (op.hasNestedPlans()) {
+            AbstractOperatorWithNestedPlans nestedPlansOp = (AbstractOperatorWithNestedPlans) op;
+            for (ILogicalPlan nestedPlanOp : nestedPlansOp.getNestedPlans()) {
+                for (Mutable<ILogicalOperator> rootOpRef : nestedPlanOp.getRoots()) {
+                    if (introduceProjects(null, -1, rootOpRef, Collections.<LogicalVariable> emptySet(), context)) {
+                        modified = true;
+                    }
+                }
+            }
+        }
+
         if (modified) {
             context.computeAndSetTypeEnvironmentForOperator(op);
         }
@@ -175,7 +188,8 @@ public class IntroduceProjectsRule implements IAlgebraicRewriteRule {
             VariableUtilities.getLiveVariables(op.getInputs().get(0).getValue(), liveVars);
             ProjectOperator projectOp = (ProjectOperator) op;
             List<LogicalVariable> projectVarsTemp = projectOp.getVariables();
-            if (liveVars.size() == projectVarsTemp.size() && liveVars.containsAll(projectVarsTemp)) {
+            if (liveVars.size() == projectVarsTemp.size() && liveVars.containsAll(projectVarsTemp)
+                    && parentOp != null) {
                 // The existing project has become useless. Remove it.
                 parentOp.getInputs().get(parentInputIndex).setValue(op.getInputs().get(0).getValue());
                 modified = true;

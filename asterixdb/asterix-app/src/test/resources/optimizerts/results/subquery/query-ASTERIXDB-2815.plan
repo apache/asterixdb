@@ -21,8 +21,10 @@ distribute result [$$73]
                             -- AGGREGATE  |LOCAL|
                               select (not(is-missing($$88)))
                               -- STREAM_SELECT  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$67, $$88])
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                          }
                   -- PRE_CLUSTERED_GROUP_BY[$$75]  |PARTITIONED|
                     exchange

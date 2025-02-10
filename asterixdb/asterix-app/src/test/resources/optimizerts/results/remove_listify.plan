@@ -15,10 +15,12 @@ distribute result [$$137]
                       -- AGGREGATE  |LOCAL|
                         select (and(ge($$139, numeric-subtract($$147, 5)), le($$139, $$147), not(is-missing($$152))))
                         -- STREAM_SELECT  |LOCAL|
-                          assign [$$139] <- [$$113.getField("f2")]
+                          assign [$$139] <- [$$113.getField("f2")] project: [$$147, $$152, $$139]
                           -- ASSIGN  |LOCAL|
-                            nested tuple source
-                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                            project ([$$147, $$152, $$113])
+                            -- STREAM_PROJECT  |LOCAL|
+                              nested tuple source
+                              -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- PRE_CLUSTERED_GROUP_BY[$$141]  |PARTITIONED|
             exchange

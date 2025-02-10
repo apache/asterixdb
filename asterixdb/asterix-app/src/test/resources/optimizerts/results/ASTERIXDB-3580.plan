@@ -17,12 +17,14 @@ distribute result [$$55]
                 exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
                   group by ([$$61 := $$56]) decor ([]) {
-                            aggregate [$$47] <- [empty-stream()]
+                            aggregate [$$47] <- [empty-stream()] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- AGGREGATE  |LOCAL|
-                              select (not(is-missing($$60)))
+                              select (not(is-missing($$60))) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- STREAM_SELECT  |LOCAL|
-                                nested tuple source
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                project ([$$60]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                -- STREAM_PROJECT  |LOCAL|
+                                  nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
                          }
                   -- PRE_CLUSTERED_GROUP_BY[$$56]  |PARTITIONED|
                     exchange

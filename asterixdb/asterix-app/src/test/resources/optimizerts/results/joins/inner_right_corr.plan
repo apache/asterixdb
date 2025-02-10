@@ -15,8 +15,10 @@ distribute result [$$75]
                       -- AGGREGATE  |LOCAL|
                         select (not(is-missing($$93)))
                         -- STREAM_SELECT  |LOCAL|
-                          nested tuple source
-                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                          project ([$$93])
+                          -- STREAM_PROJECT  |LOCAL|
+                            nested tuple source
+                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                  }
           -- PRE_CLUSTERED_GROUP_BY[$$76]  |PARTITIONED|
             exchange
@@ -58,10 +60,12 @@ distribute result [$$75]
                                             -- STREAM_SELECT  |LOCAL|
                                               assign [$$88] <- [$$85.getField("b")]
                                               -- ASSIGN  |LOCAL|
-                                                unnest $$85 <- scan-collection($$90)
+                                                unnest $$85 <- scan-collection($$90) project: [$$87, $$85]
                                                 -- UNNEST  |LOCAL|
-                                                  nested tuple source
-                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                  project ([$$90, $$87])
+                                                  -- STREAM_PROJECT  |LOCAL|
+                                                    nested tuple source
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                                        }
                                 -- SUBPLAN  |PARTITIONED|
                                   exchange

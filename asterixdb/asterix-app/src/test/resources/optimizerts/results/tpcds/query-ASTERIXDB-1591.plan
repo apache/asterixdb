@@ -32,8 +32,10 @@ distribute result [$$148]
                                   -- AGGREGATE  |LOCAL|
                                     select (not(is-missing($$191)))
                                     -- STREAM_SELECT  |LOCAL|
-                                      nested tuple source
-                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                      project ([$$cs1, $$dd1, $$191])
+                                      -- STREAM_PROJECT  |LOCAL|
+                                        nested tuple source
+                                        -- NESTED_TUPLE_SOURCE  |LOCAL|
                                }
                         -- PRE_CLUSTERED_GROUP_BY[$$189, $$190]  |PARTITIONED|
                           exchange
@@ -64,8 +66,10 @@ distribute result [$$148]
                                                       -- AGGREGATE  |LOCAL|
                                                         select (not(is-missing($$188)))
                                                         -- STREAM_SELECT  |LOCAL|
-                                                          nested tuple source
-                                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                          project ([$$ws1, $$dd1, $$188])
+                                                          -- STREAM_PROJECT  |LOCAL|
+                                                            nested tuple source
+                                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                    }
                                             -- PRE_CLUSTERED_GROUP_BY[$$186, $$187]  |PARTITIONED|
                                               exchange
@@ -100,8 +104,10 @@ distribute result [$$148]
                                                                               -- AGGREGATE  |LOCAL|
                                                                                 select (not(is-missing($$185)))
                                                                                 -- STREAM_SELECT  |LOCAL|
-                                                                                  nested tuple source
-                                                                                  -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                                                  project ([$$ss1, $$dd1, $$185])
+                                                                                  -- STREAM_PROJECT  |LOCAL|
+                                                                                    nested tuple source
+                                                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
                                                                            }
                                                                     -- PRE_CLUSTERED_GROUP_BY[$$150, $$151]  |PARTITIONED|
                                                                       exchange

@@ -42,16 +42,20 @@ distribute result [$$125]
                                       -- AGGREGATE  |LOCAL|
                                         select (gt($$135, 0.05))
                                         -- STREAM_SELECT  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$l, $$135])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                    }
                                    {
                                       aggregate [$$138] <- [agg-count($$l)]
                                       -- AGGREGATE  |LOCAL|
                                         select (le($$135, 0.05))
                                         -- STREAM_SELECT  |LOCAL|
-                                          nested tuple source
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                          project ([$$l, $$135])
+                                          -- STREAM_PROJECT  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
                                    }
                             -- PRE_CLUSTERED_GROUP_BY[$$126, $$127]  |PARTITIONED|
                               exchange
@@ -112,16 +116,20 @@ distribute result [$$125]
                                                 -- AGGREGATE  |LOCAL|
                                                   select (gt($$135, 0.05))
                                                   -- STREAM_SELECT  |LOCAL|
-                                                    nested tuple source
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                    project ([$$l, $$135])
+                                                    -- STREAM_PROJECT  |LOCAL|
+                                                      nested tuple source
+                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                              }
                                              {
                                                 aggregate [$$138] <- [agg-count($$l)]
                                                 -- AGGREGATE  |LOCAL|
                                                   select (le($$135, 0.05))
                                                   -- STREAM_SELECT  |LOCAL|
-                                                    nested tuple source
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                                    project ([$$l, $$135])
+                                                    -- STREAM_PROJECT  |LOCAL|
+                                                      nested tuple source
+                                                      -- NESTED_TUPLE_SOURCE  |LOCAL|
                                              }
                                       -- PRE_CLUSTERED_GROUP_BY[$$126, $$127]  |PARTITIONED|
                                         exchange
