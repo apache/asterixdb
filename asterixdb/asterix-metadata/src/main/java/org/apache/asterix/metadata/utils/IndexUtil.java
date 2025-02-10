@@ -18,6 +18,7 @@
  */
 package org.apache.asterix.metadata.utils;
 
+import static org.apache.asterix.external.util.ExternalDataUtils.isDeltaTable;
 import static org.apache.asterix.om.utils.ProjectionFiltrationTypeUtil.ALL_FIELDS_TYPE;
 import static org.apache.hyracks.storage.am.common.dataflow.IndexDropOperatorDescriptor.DropOption;
 
@@ -40,6 +41,7 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.common.metadata.MetadataConstants;
 import org.apache.asterix.common.transactions.TxnId;
 import org.apache.asterix.external.indexing.ExternalFile;
+import org.apache.asterix.external.input.filter.NoOpDeltaTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.filter.NoOpExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.util.ExternalDataPrefix;
 import org.apache.asterix.metadata.dataset.DatasetFormatInfo;
@@ -49,6 +51,7 @@ import org.apache.asterix.metadata.entities.Index;
 import org.apache.asterix.metadata.entities.InternalDatasetDetails;
 import org.apache.asterix.metadata.utils.filter.ColumnFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ColumnRangeFilterBuilder;
+import org.apache.asterix.metadata.utils.filter.DeltaTableFilterBuilder;
 import org.apache.asterix.metadata.utils.filter.ExternalFilterBuilder;
 import org.apache.asterix.om.base.AString;
 import org.apache.asterix.om.base.IAObject;
@@ -335,16 +338,25 @@ public class IndexUtil {
     public static IExternalFilterEvaluatorFactory createExternalFilterEvaluatorFactory(JobGenContext context,
             IVariableTypeEnvironment typeEnv, IProjectionFiltrationInfo projectionFiltrationInfo,
             Map<String, String> properties) throws AlgebricksException {
-        if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
-            return NoOpExternalFilterEvaluatorFactory.INSTANCE;
+        if (isDeltaTable(properties)) {
+            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+                return NoOpDeltaTableFilterEvaluatorFactory.INSTANCE;
+            } else {
+                DeltaTableFilterBuilder builder = new DeltaTableFilterBuilder(
+                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo, context, typeEnv);
+                return builder.build();
+            }
+        } else {
+            if (projectionFiltrationInfo == DefaultProjectionFiltrationInfo.INSTANCE) {
+                return NoOpExternalFilterEvaluatorFactory.INSTANCE;
+            } else {
+                ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
+                ExternalDatasetProjectionFiltrationInfo pfi =
+                        (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
+                ExternalFilterBuilder build = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
+                return build.build();
+            }
         }
-
-        ExternalDataPrefix prefix = new ExternalDataPrefix(properties);
-        ExternalDatasetProjectionFiltrationInfo pfi =
-                (ExternalDatasetProjectionFiltrationInfo) projectionFiltrationInfo;
-        ExternalFilterBuilder build = new ExternalFilterBuilder(pfi, context, typeEnv, prefix);
-
-        return build.build();
     }
 
 }

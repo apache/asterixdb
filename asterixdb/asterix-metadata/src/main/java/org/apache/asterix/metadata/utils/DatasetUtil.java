@@ -744,4 +744,9 @@ public class DatasetUtil {
         return dataset.getDatasetType() == DatasetType.INTERNAL
                 && dataset.getDatasetFormatInfo().getFormat() == DatasetConfig.DatasetFormat.COLUMN;
     }
+
+    public static boolean isDeltaTable(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL && ExternalDataUtils
+                .isDeltaTable(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
+    }
 }

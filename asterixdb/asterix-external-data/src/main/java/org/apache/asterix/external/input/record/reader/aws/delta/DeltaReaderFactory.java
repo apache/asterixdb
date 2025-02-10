@@ -39,6 +39,7 @@ import org.apache.asterix.common.external.IExternalFilterEvaluatorFactory;
 import org.apache.asterix.external.api.IExternalDataRuntimeContext;
 import org.apache.asterix.external.api.IRecordReader;
 import org.apache.asterix.external.api.IRecordReaderFactory;
+import org.apache.asterix.external.input.filter.DeltaTableFilterEvaluatorFactory;
 import org.apache.asterix.external.input.record.reader.aws.delta.converter.DeltaConverterContext;
 import org.apache.asterix.external.util.ExternalDataConstants;
 import org.apache.asterix.external.util.HDFSUtils;
@@ -62,6 +63,8 @@ import io.delta.kernel.data.Row;
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
 import io.delta.kernel.exceptions.KernelException;
+import io.delta.kernel.expressions.Expression;
+import io.delta.kernel.expressions.Predicate;
 import io.delta.kernel.internal.InternalScanFileUtils;
 import io.delta.kernel.types.StructType;
 import io.delta.kernel.utils.CloseableIterator;
@@ -124,19 +127,35 @@ public abstract class DeltaReaderFactory implements IRecordReaderFactory<Object>
         } catch (AsterixDeltaRuntimeException e) {
             throw e.getHyracksDataException();
         }
-        Scan scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+        Expression filterExpression = ((DeltaTableFilterEvaluatorFactory) filterEvaluatorFactory).getFilterExpression();
+        Scan scan;
+        if (filterExpression != null) {
+            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema)
+                    .withFilter(engine, (Predicate) filterExpression).build();
+        } else {
+            scan = snapshot.getScanBuilder(engine).withReadSchema(engine, requiredSchema).build();
+        }
         scanState = RowSerDe.serializeRowToJson(scan.getScanState(engine));
         CloseableIterator<FilteredColumnarBatch> iter = scan.getScanFiles(engine);
 
         List<Row> scanFiles = new ArrayList<>();
         while (iter.hasNext()) {
-            FilteredColumnarBatch batch = iter.next();
+            FilteredColumnarBatch batch = null;
+            try {
+                batch = iter.next();
+            } catch (UnsupportedOperationException e) {
+                // Failed to apply expression due to type mismatch. We can skip the files where partitioned column
+                // type is different from the type of value provided in the predicate
+                LOGGER.info("Unsupported operation {}", e.getMessage());
+                continue;
+            }
             CloseableIterator<Row> rowIter = batch.getRows();
             while (rowIter.hasNext()) {
                 Row row = rowIter.next();
                 scanFiles.add(row);
             }
         }
+        LOGGER.info("Number of files to scan: {}", scanFiles.size());
         locationConstraints = getPartitions(appCtx);
         configuration.put(ExternalDataConstants.KEY_PARSER, ExternalDataConstants.FORMAT_DELTA);
         distributeFiles(scanFiles, getPartitionConstraint().getLocations().length);
