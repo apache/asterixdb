@@ -1,34 +1,34 @@
-distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7109.8]
+distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 6972.1]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 7109.8]
+  exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 6972.1]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project: [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7109.8]
+    assign [$$119] <- [{"n_name": $$n_name, "revenue": $$132}] project: [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 6972.1]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 7109.8]
+      exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 6972.1]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
         group by ([$$n_name := $$142]) decor ([]) {
                   aggregate [$$132] <- [global-sql-sum-serial($$141)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
                     nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 25.0, op-cost: 110.61, total-cost: 7109.8]
+               } [cardinality: 25.0, op-cost: 39.89, total-cost: 6972.1]
         -- EXTERNAL_GROUP_BY[$$142]  |PARTITIONED|
-          exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 6999.19]
+          exchange [cardinality: 25.0, op-cost: 0.0, total-cost: 6932.21]
           -- HASH_PARTITION_EXCHANGE [$$142]  |PARTITIONED|
             group by ([$$142 := $$120]) decor ([]) {
                       aggregate [$$141] <- [local-sql-sum-serial(numeric-multiply($$139, numeric-subtract(1, $$140)))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
                         nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 25.0, op-cost: 110.61, total-cost: 6999.19]
+                   } [cardinality: 25.0, op-cost: 39.89, total-cost: 6932.21]
             -- EXTERNAL_GROUP_BY[$$120]  |PARTITIONED|
-              exchange [cardinality: 110.61, op-cost: 0.0, total-cost: 6888.58]
+              exchange [cardinality: 39.89, op-cost: 0.0, total-cost: 6892.32]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                project ([$$139, $$140, $$120]) [cardinality: 110.61, op-cost: 0.0, total-cost: 6888.58]
+                project ([$$139, $$140, $$120]) [cardinality: 39.89, op-cost: 0.0, total-cost: 6892.32]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 110.61, op-cost: 0.0, total-cost: 6888.58]
+                  exchange [cardinality: 39.89, op-cost: 0.0, total-cost: 6892.32]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    join (and(eq($$130, $$128), eq($$133, $$127))) [cardinality: 110.61, op-cost: 1035.49, total-cost: 6888.58]
+                    join (and(eq($$130, $$128), eq($$133, $$127))) [cardinality: 39.89, op-cost: 1036.42, total-cost: 6892.32]
                     -- HYBRID_HASH_JOIN [$$128, $$133][$$130, $$127]  |PARTITIONED|
                       exchange [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
@@ -46,7 +46,7 @@ distribute result [$$119] [cardinality: 25.0, op-cost: 0.0, total-cost: 7109.8]
                                   -- STREAM_PROJECT  |PARTITIONED|
                                     exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      join (eq($$123, $$136)) [cardinality: 248.35, op-cost: 398.35, total-cost: 2821.71]
+                                      join (eq($$123, $$136)) [cardinality: 248.59, op-cost: 398.35, total-cost: 2821.71]
                                       -- HYBRID_HASH_JOIN [$$123][$$136]  |PARTITIONED|
                                         exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
                                         -- HASH_PARTITION_EXCHANGE [$$123]  |PARTITIONED|

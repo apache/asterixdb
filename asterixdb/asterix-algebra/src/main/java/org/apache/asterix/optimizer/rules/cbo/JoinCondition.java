@@ -39,6 +39,7 @@ public class JoinCondition {
     protected int rightSideBits;
     protected double selectivity;
     protected comparisonOp comparisonType;
+    protected JoinOperator joinOp;
 
     protected enum comparisonOp {
         OP_EQ,

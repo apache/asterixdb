@@ -445,7 +445,6 @@ public class JoinEnum {
     // This finds all the join Conditions in the whole query. This is a global list of all join predicates.
     // It also fills in the dataset Bits for each join predicate.
     private void findJoinConditionsAndAssignSels() throws AlgebricksException {
-
         List<Mutable<ILogicalExpression>> conjs = new ArrayList<>();
         for (JoinOperator jOp : allJoinOps) {
             AbstractBinaryJoinOperator joinOp = jOp.getAbstractJoinOp();
@@ -461,6 +460,7 @@ public class JoinEnum {
                     }
                     jc.joinCondition = conj.getValue().cloneExpression();
                     joinConditions.add(jc);
+                    jc.joinOp = jOp;
                 }
             } else {
                 if ((expr.getExpressionTag() == LogicalExpressionTag.FUNCTION_CALL)) {
@@ -472,6 +472,7 @@ public class JoinEnum {
                     // change to not a true condition
                     jc.joinCondition = expr.cloneExpression();
                     joinConditions.add(jc);
+                    jc.joinOp = jOp;
                 }
             }
         }
@@ -493,7 +494,7 @@ public class JoinEnum {
                     }
                 }
             }
-            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true, false);
+            jc.selectivity = stats.getSelectivityFromAnnotationMain(jc.joinCondition, true, false, jc.joinOp);
         }
         for (int i = erase.size() - 1; i >= 0; i--) {
             assignOps.remove(erase.get(i));
@@ -1093,7 +1094,7 @@ public class JoinEnum {
         if (this.singleDatasetPreds.size() > 0) { // We did not have selectivities for these before. Now we do.
             for (JoinCondition jc : joinConditions) {
                 // we may be repeating some work here, but that is ok. This will rarely happen (happens in q7 tpch)
-                double sel = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false, true);
+                double sel = stats.getSelectivityFromAnnotationMain(jc.getJoinCondition(), false, true, null);
                 if (sel != -1) {
                     jc.selectivity = sel;
                 }
