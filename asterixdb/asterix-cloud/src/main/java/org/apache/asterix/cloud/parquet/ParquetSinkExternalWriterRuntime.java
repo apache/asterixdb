@@ -76,6 +76,7 @@ public class ParquetSinkExternalWriterRuntime extends AbstractOneInputSinkPushRu
 
     }
 
+    // Schema Inference is done frame wise, i.e., we infer the schema for all the records in frame and write the values with schema inferred until now.
     @Override
     public void nextFrame(ByteBuffer buffer) throws HyracksDataException {
         tupleAccessor.reset(buffer);

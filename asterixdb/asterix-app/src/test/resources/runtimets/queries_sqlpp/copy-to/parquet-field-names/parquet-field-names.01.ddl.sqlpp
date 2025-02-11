@@ -17,16 +17,13 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.declared;
+DROP DATAVERSE test if exists;
+CREATE DATAVERSE test;
+USE test;
 
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public interface IExternalWriteDataSink extends IWriteDataSink {
-    ARecordType getItemType();
+CREATE TYPE ColumnType1 AS {
+    id: integer
+    };
 
-    ARecordType getParquetSchema();
-
-    SourceLocation getSourceLoc();
-}
+CREATE COLLECTION TestCollection(ColumnType1) PRIMARY KEY id;

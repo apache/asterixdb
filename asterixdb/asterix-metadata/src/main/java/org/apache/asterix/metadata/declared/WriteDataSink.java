@@ -28,14 +28,16 @@ import org.apache.hyracks.api.exceptions.SourceLocation;
 public class WriteDataSink implements IExternalWriteDataSink {
     private final String adapterName;
     private final Map<String, String> configuration;
-    private ARecordType itemType;
-    private SourceLocation sourceLoc;
+    private final ARecordType itemType;
+    private final ARecordType parquetSchema;
+    private final SourceLocation sourceLoc;
 
     public WriteDataSink(String adapterName, Map<String, String> configuration, ARecordType itemType,
-            SourceLocation sourceLoc) {
+            ARecordType parquetSchema, SourceLocation sourceLoc) {
         this.adapterName = adapterName;
         this.configuration = configuration;
         this.itemType = itemType;
+        this.parquetSchema = parquetSchema;
         this.sourceLoc = sourceLoc;
     }
 
@@ -43,12 +45,18 @@ public class WriteDataSink implements IExternalWriteDataSink {
         this.adapterName = writeDataSink.getAdapterName();
         this.configuration = new HashMap<>(writeDataSink.configuration);
         this.itemType = writeDataSink.itemType;
+        this.parquetSchema = writeDataSink.parquetSchema;
         this.sourceLoc = writeDataSink.sourceLoc;
     }
 
     @Override
     public ARecordType getItemType() {
         return itemType;
+    }
+
+    @Override
+    public ARecordType getParquetSchema() {
+        return parquetSchema;
     }
 
     @Override

@@ -44,6 +44,7 @@ import org.apache.parquet.io.api.Binary;
 import org.apache.parquet.io.api.RecordConsumer;
 import org.apache.parquet.schema.PrimitiveType;
 
+//This class reduces the number of Java objects created each time a column is written to a Parquet file by reusing the same VoidPointable for all columns within the file.
 public class ParquetValueWriter {
     public static final String LIST_FIELD = "list";
     public static final String ELEMENT_FIELD = "element";

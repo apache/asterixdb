@@ -44,6 +44,8 @@ public class ParquetRecordLazyVisitor implements ILazyVisitablePointableVisitor<
 
     private final MessageType schema;
     private final RecordLazyVisitablePointable rec;
+    //     The Record Consumer is responsible for traversing the record tree,
+    //     using recordConsumer.startField() to navigate into a child node and endField() to move back to the parent node.
     private RecordConsumer recordConsumer;
     private final FieldNamesDictionary fieldNamesDictionary;
 

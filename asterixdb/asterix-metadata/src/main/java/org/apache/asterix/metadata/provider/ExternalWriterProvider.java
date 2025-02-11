@@ -205,7 +205,7 @@ public class ExternalWriterProvider {
             case ExternalDataConstants.FORMAT_PARQUET:
 
                 CompressionCodecName compressionCodecName;
-                if (compression == null || compression.equals("") || compression.equals("none")) {
+                if (compression == null || compression.isEmpty() || compression.equals("none")) {
                     compressionCodecName = CompressionCodecName.UNCOMPRESSED;
                 } else {
                     compressionCodecName = CompressionCodecName.valueOf(compression.toUpperCase());
@@ -218,10 +218,11 @@ public class ExternalWriterProvider {
                 int pageSize = (int) StorageUtil.getByteValue(pageSizeString);
                 ParquetProperties.WriterVersion writerVersion = getParquetWriterVersion(configuration);
 
-                if (configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY) != null) {
-                    String parquetSchemaString = configuration.get(ExternalDataConstants.PARQUET_SCHEMA_KEY);
+                ARecordType parquetSchema = ((IExternalWriteDataSink) sink).getParquetSchema();
+
+                if (parquetSchema != null) {
                     ParquetExternalFilePrinterFactory parquetPrinterFactory =
-                            new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchemaString,
+                            new ParquetExternalFilePrinterFactory(compressionCodecName, parquetSchema,
                                     (IAType) sourceType, rowGroupSize, pageSize, writerVersion);
 
                     ExternalFileWriterFactory parquetWriterFactory = new ExternalFileWriterFactory(fileWriterFactory,
@@ -230,6 +231,7 @@ public class ExternalWriterProvider {
                             partitionComparatorFactories, inputDesc, parquetWriterFactory);
                 }
 
+                // Parquet Writing with Schema Inference
                 int maxSchemas = ExternalWriterProvider.getMaxParquetSchema(configuration);
                 ParquetExternalFilePrinterFactoryProvider printerFactoryProvider =
                         new ParquetExternalFilePrinterFactoryProvider(compressionCodecName, (IAType) sourceType,

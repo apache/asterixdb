@@ -18,25 +18,34 @@
  */
 package org.apache.asterix.external.writer.printer;
 
+import org.apache.asterix.common.exceptions.CompilationException;
+import org.apache.asterix.external.writer.printer.parquet.SchemaConverterVisitor;
+import org.apache.asterix.om.types.ARecordType;
 import org.apache.asterix.om.types.IAType;
 import org.apache.asterix.runtime.writer.IExternalPrinter;
 import org.apache.asterix.runtime.writer.IExternalPrinterFactory;
 import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
+import org.apache.parquet.schema.MessageType;
 
 public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 8971234908711235L;
-    private String parquetSchemaString;
+    // parquetInferSchema is for the case when the schema is inferred from the data, not provided by the user
+    // set During the runtime
+    private transient MessageType parquetInferSchema;
+    // parquetProvidedSchema is for the case when the schema is provided by the user
+    private ARecordType parquetProvidedSchema;
     private final IAType typeInfo;
     private final CompressionCodecName compressionCodecName;
     private final long rowGroupSize;
     private final int pageSize;
     private final ParquetProperties.WriterVersion writerVersion;
 
-    public ParquetExternalFilePrinterFactory(CompressionCodecName compressionCodecName, String parquetSchemaString,
-            IAType typeInfo, long rowGroupSize, int pageSize, ParquetProperties.WriterVersion writerVersion) {
+    public ParquetExternalFilePrinterFactory(CompressionCodecName compressionCodecName,
+            ARecordType parquetprovidedSchema, IAType typeInfo, long rowGroupSize, int pageSize,
+            ParquetProperties.WriterVersion writerVersion) {
         this.compressionCodecName = compressionCodecName;
-        this.parquetSchemaString = parquetSchemaString;
+        this.parquetProvidedSchema = parquetprovidedSchema;
         this.typeInfo = typeInfo;
         this.rowGroupSize = rowGroupSize;
         this.pageSize = pageSize;
@@ -52,13 +61,25 @@ public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactor
         this.writerVersion = writerVersion;
     }
 
-    public void setParquetSchemaString(String parquetSchemaString) {
-        this.parquetSchemaString = parquetSchemaString;
+    public void setParquetSchema(MessageType parquetInferSchema) {
+        this.parquetInferSchema = parquetInferSchema;
     }
 
     @Override
     public IExternalPrinter createPrinter() {
-        return new ParquetExternalFilePrinter(compressionCodecName, parquetSchemaString, typeInfo, rowGroupSize,
-                pageSize, writerVersion);
+        if (parquetInferSchema != null) {
+            return new ParquetExternalFilePrinter(compressionCodecName, parquetInferSchema, typeInfo, rowGroupSize,
+                    pageSize, writerVersion);
+        }
+
+        MessageType schema;
+        try {
+            schema = SchemaConverterVisitor.convertToParquetSchema(parquetProvidedSchema);
+        } catch (CompilationException e) {
+            // This should not happen, Compilation Exception should be caught at the query-compile time
+            throw new RuntimeException(e);
+        }
+        return new ParquetExternalFilePrinter(compressionCodecName, schema, typeInfo, rowGroupSize, pageSize,
+                writerVersion);
     }
 }

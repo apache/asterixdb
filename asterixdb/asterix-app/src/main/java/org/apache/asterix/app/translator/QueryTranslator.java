@@ -4212,8 +4212,8 @@ public class QueryTranslator extends AbstractLangTranslator implements IStatemen
                                 DataverseName.createFromCanonicalForm(ExternalDataConstants.DUMMY_DATAVERSE_NAME);
                         IAType iaType = translateType(ExternalDataConstants.DUMMY_DATABASE_NAME, dummyDataverse,
                                 ExternalDataConstants.DUMMY_TYPE_NAME, copyTo.getType(), mdTxnCtx);
-                        edd.getProperties().put(ExternalDataConstants.PARQUET_SCHEMA_KEY,
-                                SchemaConverterVisitor.convertToParquetSchemaString((ARecordType) iaType));
+                        edd.setParquetSchema((ARecordType) iaType);
+                        SchemaConverterVisitor.convertToParquetSchema((ARecordType) iaType);
                     }
                 }
 

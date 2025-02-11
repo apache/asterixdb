@@ -26,6 +26,7 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
     private Map<String, String> properties;
     private String adapter;
     private ARecordType itemType;
+    private ARecordType parquetSchema;
 
     public void setAdapter(String adapter) {
         this.adapter = adapter;
@@ -41,6 +42,14 @@ public class ExternalDetailsDecl implements IDatasetDetailsDecl {
 
     public ARecordType getItemType() {
         return itemType;
+    }
+
+    public void setParquetSchema(ARecordType parquetSchema) {
+        this.parquetSchema = parquetSchema;
+    }
+
+    public ARecordType getParquetSchema() {
+        return parquetSchema;
     }
 
     public String getAdapter() {

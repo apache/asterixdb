@@ -30,6 +30,7 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.dataflow.common.data.accessors.IFrameTupleReference;
 
+// Maintains a pool of Parquet writers holding a file, each with its own schema , and writes values to the appropriate writer based on schema.
 public class ParquetSchemaInferPoolWriter {
     private final ParquetExternalWriterFactory writerFactory;
 
@@ -57,6 +58,7 @@ public class ParquetSchemaInferPoolWriter {
             if (schemaComparisonType.equals(ISchemaChecker.SchemaComparisonType.EQUIVALENT)) {
                 return;
             } else if (schemaComparisonType.equals(ISchemaChecker.SchemaComparisonType.GROWING)) {
+                // If the schema is growing, close the existing writer and create a new one with the new schema.
                 schemaNodes.set(i, schemaLazyVisitor.inferSchema(value));
                 closeWriter(i);
                 return;

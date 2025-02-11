@@ -34,23 +34,22 @@ import org.apache.parquet.column.ParquetProperties;
 import org.apache.parquet.hadoop.ParquetWriter;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.apache.parquet.schema.MessageType;
-import org.apache.parquet.schema.MessageTypeParser;
 
 public class ParquetExternalFilePrinter implements IExternalPrinter {
     private final IAType typeInfo;
     private final CompressionCodecName compressionCodecName;
-    private MessageType schema;
+    private final MessageType schema;
     private ParquetOutputFile parquetOutputFile;
-    private String parquetSchemaString;
+    //    private String parquetSchemaString;
     private ParquetWriter<IValueReference> writer;
     private final long rowGroupSize;
     private final int pageSize;
     private final ParquetProperties.WriterVersion writerVersion;
 
-    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, String parquetSchemaString,
+    public ParquetExternalFilePrinter(CompressionCodecName compressionCodecName, MessageType parquetSchemaString,
             IAType typeInfo, long rowGroupSize, int pageSize, ParquetProperties.WriterVersion writerVersion) {
         this.compressionCodecName = compressionCodecName;
-        this.parquetSchemaString = parquetSchemaString;
+        this.schema = parquetSchemaString;
         this.typeInfo = typeInfo;
         this.rowGroupSize = rowGroupSize;
         this.pageSize = pageSize;
@@ -59,7 +58,6 @@ public class ParquetExternalFilePrinter implements IExternalPrinter {
 
     @Override
     public void open() throws HyracksDataException {
-        schema = MessageTypeParser.parseMessageType(parquetSchemaString);
     }
 
     @Override
