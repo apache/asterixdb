@@ -39,6 +39,7 @@ import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.Types;
 
+// This class is used to infer the schema of a record into SchemaNode, which is an internal tree representation of the schema.
 public class ParquetSchemaLazyVisitor implements ILazyVisitablePointableVisitor<Void, ParquetSchemaTree.SchemaNode> {
     private final RecordLazyVisitablePointable rec;
     private final FieldNamesDictionary fieldNamesDictionary;

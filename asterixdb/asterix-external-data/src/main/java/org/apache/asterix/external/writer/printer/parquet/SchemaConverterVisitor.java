@@ -36,6 +36,7 @@ import org.apache.parquet.schema.MessageType;
 import org.apache.parquet.schema.PrimitiveType;
 import org.apache.parquet.schema.Types;
 
+// Traverses the RecordType tree and converts it to a Parquet schema.
 public class SchemaConverterVisitor implements IATypeVisitor<Void, Pair<Types.Builder, String>> {
     public static String MESSAGE_NAME = "asterix_schema";
     private final ARecordType schemaType;
@@ -46,9 +47,9 @@ public class SchemaConverterVisitor implements IATypeVisitor<Void, Pair<Types.Bu
         this.unsupportedType = null;
     }
 
-    public static String convertToParquetSchemaString(ARecordType schemaType) throws CompilationException {
+    public static MessageType convertToParquetSchema(ARecordType schemaType) throws CompilationException {
         SchemaConverterVisitor schemaConverterVisitor = new SchemaConverterVisitor(schemaType);
-        return schemaConverterVisitor.getParquetSchema().toString();
+        return schemaConverterVisitor.getParquetSchema();
     }
 
     private MessageType getParquetSchema() throws CompilationException {

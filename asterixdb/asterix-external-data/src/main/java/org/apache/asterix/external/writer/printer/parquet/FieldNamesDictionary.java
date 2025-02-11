@@ -26,6 +26,8 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 import org.apache.hyracks.util.string.UTF8StringUtil;
 
+//    The Field Names Dictionary will cache the mapping between field name bytes and their corresponding string representations,
+//    minimizing the creation of new string objects during field name deserialization while writing to parquet files.
 public class FieldNamesDictionary {
     private final FieldNamesTrieDictionary trie;
     private final List<String> fieldNames;

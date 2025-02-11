@@ -17,16 +17,20 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.declared;
+USE test;
 
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public interface IExternalWriteDataSink extends IWriteDataSink {
-    ARecordType getItemType();
+CREATE TYPE ColumnType2 AS {
+};
 
-    ARecordType getParquetSchema();
 
-    SourceLocation getSourceLoc();
-}
+
+CREATE EXTERNAL DATASET TestDataset1(ColumnType2) USING %adapter%
+(
+  %template%,
+  %additional_Properties%,
+  ("definition"="%path_prefix%copy-to-result/parquet-field-names1/"),
+  ("include"="*.parquet"),
+  ("requireVersionChangeDetection"="false"),
+  ("format" = "parquet")
+);

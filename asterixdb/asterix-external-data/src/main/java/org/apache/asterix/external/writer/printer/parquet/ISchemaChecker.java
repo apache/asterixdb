@@ -22,6 +22,10 @@ import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
 public interface ISchemaChecker {
+
+    // EQUIVALENT: Example: { name: string, age: int } -> { name: string, age: int }
+    // GROWING: equivalent types but having extra fields, Example: { name: string, age: int } -> { name: string, age: int , address: string }
+    // CONFLICTING: conflict in types, Example: { name: string, age: int } -> { name: {first:string, last:string}, age: int }
     enum SchemaComparisonType {
         EQUIVALENT,
         GROWING,

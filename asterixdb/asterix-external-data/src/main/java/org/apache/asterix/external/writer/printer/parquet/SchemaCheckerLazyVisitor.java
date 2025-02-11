@@ -30,6 +30,8 @@ import org.apache.asterix.om.types.IAType;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
 import org.apache.hyracks.data.std.api.IValueReference;
 
+// This class is used to check the schema of a record against a schema that has been inferred so far.
+// By checking, we can determine if the record is equivalent to the schema, if the record is growing, or if there is a conflict.
 public class SchemaCheckerLazyVisitor implements ISchemaChecker,
         ILazyVisitablePointableVisitor<ISchemaChecker.SchemaComparisonType, ParquetSchemaTree.SchemaNode> {
     private final FieldNamesDictionary fieldNamesDictionary;

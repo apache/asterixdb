@@ -53,7 +53,7 @@ public class ParquetExternalWriterFactory implements Serializable {
 
     public IExternalWriter createWriter(ParquetSchemaTree.SchemaNode schemaNode) throws HyracksDataException {
         MessageType schema = generateSchema(schemaNode);
-        printerFactory.setParquetSchemaString(schema.toString());
+        printerFactory.setParquetSchema(schema);
         IExternalFileWriter writer = writerFactory.createWriter(ctx, printerFactory);
         return new ExternalFileWriter(resolver, writer, maxResult);
     }

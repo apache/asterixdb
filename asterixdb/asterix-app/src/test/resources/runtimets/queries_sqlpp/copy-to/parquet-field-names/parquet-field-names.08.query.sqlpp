@@ -17,16 +17,11 @@
  * under the License.
  */
 
-package org.apache.asterix.metadata.declared;
+USE test;
 
-import org.apache.asterix.om.types.ARecordType;
-import org.apache.hyracks.algebricks.core.algebra.metadata.IWriteDataSink;
-import org.apache.hyracks.api.exceptions.SourceLocation;
 
-public interface IExternalWriteDataSink extends IWriteDataSink {
-    ARecordType getItemType();
+SELECT c.*
+FROM TestDataset2 c
+ORDER BY c.id;
 
-    ARecordType getParquetSchema();
 
-    SourceLocation getSourceLoc();
-}
