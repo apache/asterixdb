@@ -1,10 +1,20 @@
+distribute result [$$x]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$x])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BTREE_SEARCH (test.TestSet.TestSet)  |PARTITIONED|
+        unnest-map [$$20, $$x] <- index-search("TestSet", 0, "test", "TestSet", true, true, 1, $$21, 1, $$21, true, true, true)
+        -- BTREE_SEARCH  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$21)
             -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$21]  |PARTITIONED|
+                unnest $$21 <- scan-collection(array: [ "one", "two" ])
                 -- UNNEST  |UNPARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,29 +1,58 @@
+distribute result [$$45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$45])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$45] <- [{"arec": $$a, "brec": $$b, "jacc": get-item(similarity-jaccard-check(word-tokens($$a.getField(2)), $$49, 0.5), 1)}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$a, $$b, $$49])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$58, $$46))
             -- HYBRID_HASH_JOIN [$$58][$$46]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                data-scan []<-[$$58, $$a] <- test.DBLP
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                project ([$$b, $$49, $$46])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  select (and(get-item(similarity-jaccard-check($$48, $$49, 0.5), 0), lt($$46, $$47)))
                   -- STREAM_SELECT  |PARTITIONED|
+                    assign [$$49] <- [word-tokens($$b.getField(2))]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$46, $$48, $$47, $$b])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                          unnest-map [$$47, $$b] <- index-search("DBLP", 0, "test", "DBLP", true, false, 1, $$61, 1, $$61, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$61)
                               -- STABLE_SORT [$$61(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.keyword_index)  |PARTITIONED|
+                                  unnest-map [$$61] <- index-search("keyword_index", 4, "test", "DBLP", true, true, 1, 0.5, 21, false, 1, $$48)
+                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                      project ([$$46, $$48])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$48] <- [word-tokens($$60.getField(2))]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                            data-scan []<-[$$46, $$60] <- test.DBLP
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

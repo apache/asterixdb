@@ -1,27 +1,54 @@
+distribute result [$$109]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$109])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$109] <- [{"v6f_dt": $$110, "v5f_dt_fmt": $$111}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$110(ASC), $$111(ASC) ]  |PARTITIONED|
+          order (ASC, $$110) (ASC, $$111)
           -- STABLE_SORT [$$110(ASC), $$111(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              select (eq($$110, $$111))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$110, $$111])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$111] <- [datetime-default-null($$ds5.getField("f_dt_fmt"), "MM/DD/YYYY hh:mm:ss.nnna")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$110, $$ds5])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.ds5.ds5)  |PARTITIONED|
+                        unnest-map [$$113, $$ds5] <- index-search("ds5", 0, "test", "ds5", true, false, 1, $$123, 1, $$123, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$123)
                             -- STABLE_SORT [$$123(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$110, $$123])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.ds5.idx5_dt_fmt)  |PARTITIONED|
+                                    unnest-map [$$122, $$123] <- index-search("idx5_dt_fmt", 0, "test", "ds5", true, true, 1, $$110, 1, $$110, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                        project ([$$110])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$110] <- [datetime-default-null($$ds6.getField("f_dt"))]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$ds6])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.ds6)  |PARTITIONED|
+                                                data-scan []<-[$$112, $$ds6] <- test.ds6
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

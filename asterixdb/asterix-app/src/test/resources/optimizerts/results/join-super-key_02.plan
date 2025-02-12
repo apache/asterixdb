@@ -1,22 +1,44 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$35])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$35] <- [{"l_partkey": $$39}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$39])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (and(eq($$39, $$37), eq($$42, $$43), eq($$44, $$38)))
             -- HYBRID_HASH_JOIN [$$37, $$43, $$38][$$39, $$42, $$44]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$37, $$43, $$38])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$43] <- [$$ps.getField(3)]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (`join-super-key_01`.PartSupp)  |PARTITIONED|
+                      data-scan []<-[$$37, $$38, $$ps] <- `join-super-key_01`.PartSupp
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$39, $$44]  |PARTITIONED|
+                project ([$$39, $$42, $$44])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$44, $$42] <- [$$li.getField(2), $$li.getField(5)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$39, $$li])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (`join-super-key_01`.LineItems)  |PARTITIONED|
+                        data-scan []<-[$$39, $$40, $$li] <- `join-super-key_01`.LineItems
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

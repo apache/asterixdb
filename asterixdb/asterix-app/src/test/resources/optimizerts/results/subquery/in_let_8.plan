@@ -1,72 +1,135 @@
+distribute result [$$90]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$90])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$90] <- [{"cid": $$101, "pid": $$108, "ts": $$109}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$101(ASC) ]  |PARTITIONED|
+          order (ASC, $$101)
           -- STABLE_SORT [$$101(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$101, $$108, $$109])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (and(ge($$109, 2000), $$84))
                 -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$84, $$108, $$109, $$101])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- PRE_CLUSTERED_GROUP_BY[$$94, $$i1, $$97, $$93, $$104]  |PARTITIONED|
-                              {
+                      group by ([$$106 := $$94; $$107 := $$i1; $$108 := $$97; $$109 := $$93; $$110 := $$104]) decor ([$$101]) {
+                                aggregate [$$84] <- [non-empty-stream()]
                                 -- AGGREGATE  |LOCAL|
+                                  select (not(is-missing($$105)))
                                   -- STREAM_SELECT  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- PRE_CLUSTERED_GROUP_BY[$$94, $$i1, $$97, $$93, $$104]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$94) (ASC, $$i1) (ASC, $$97) (ASC, $$93) (ASC, $$104)
                           -- STABLE_SORT [$$94(ASC), $$i1(ASC), $$97(ASC), $$93(ASC), $$104(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$101, $$105, $$94, $$i1, $$97, $$93, $$104])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (eq($$97, $$pid))
                                   -- HYBRID_HASH_JOIN [$$97][$$pid]  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$97]  |PARTITIONED|
+                                      window-aggregate [$$104] <- [row-number-impl()] partition [$$94, $$i1, $$97, $$93]
                                       -- WINDOW_STREAM  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$94) (ASC, $$i1) (ASC, $$97) (ASC, $$93)
                                           -- STABLE_SORT [$$94(ASC), $$i1(ASC), $$97(ASC), $$93(ASC)]  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$93, $$97] <- [$$i1.getField("ts"), $$i1.getField("pid")]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$94, $$101, $$i1])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  unnest $$i1 <- scan-collection($$98)
                                                   -- UNNEST  |PARTITIONED|
+                                                    project ([$$94, $$101, $$98])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      assign [$$101, $$98] <- [$$c1.getField("cid"), $$c1.getField("items")]
                                                       -- ASSIGN  |PARTITIONED|
+                                                        project ([$$94, $$c1])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          assign [$$94, $$c1] <- [$$95, $$c2]
                                                           -- ASSIGN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              replicate
                                                               -- REPLICATE  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                  -- DATASOURCE_SCAN (test.cart)  |PARTITIONED|
+                                                                  data-scan []<-[$$95, $$c2] <- test.cart
+                                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                    exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      empty-tuple-source
                                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$105] <- [true]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$pid])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          select (gt($$96, 1))
                                           -- STREAM_SELECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- SORT_GROUP_BY[$$112]  |PARTITIONED|
-                                                      {
+                                              group by ([$$pid := $$112]) decor ([]) {
+                                                        aggregate [$$96] <- [agg-sql-sum($$111)]
                                                         -- AGGREGATE  |LOCAL|
+                                                          nested tuple source
                                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                      }
+                                                     }
+                                              -- SORT_GROUP_BY[$$112]  |PARTITIONED|
+                                                exchange
                                                 -- HASH_PARTITION_EXCHANGE [$$112]  |PARTITIONED|
-                                                  -- SORT_GROUP_BY[$$92]  |PARTITIONED|
-                                                          {
+                                                  group by ([$$112 := $$92]) decor ([]) {
+                                                            aggregate [$$111] <- [agg-sql-count(1)]
                                                             -- AGGREGATE  |LOCAL|
+                                                              nested tuple source
                                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                          }
+                                                         }
+                                                  -- SORT_GROUP_BY[$$92]  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      project ([$$92])
                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                        select (ge($$i2.getField("ts"), 2000))
                                                         -- STREAM_SELECT  |PARTITIONED|
+                                                          assign [$$92] <- [$$i2.getField("pid")]
                                                           -- ASSIGN  |PARTITIONED|
+                                                            project ([$$i2])
                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                              unnest $$i2 <- scan-collection($$99)
                                                               -- UNNEST  |PARTITIONED|
+                                                                project ([$$99])
                                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                                  assign [$$99] <- [$$c2.getField("items")]
                                                                   -- ASSIGN  |PARTITIONED|
+                                                                    project ([$$c2])
                                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        replicate
                                                                         -- REPLICATE  |PARTITIONED|
+                                                                          exchange
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                            -- DATASOURCE_SCAN (test.cart)  |PARTITIONED|
+                                                                            data-scan []<-[$$95, $$c2] <- test.cart
+                                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                              exchange
                                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                empty-tuple-source
                                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

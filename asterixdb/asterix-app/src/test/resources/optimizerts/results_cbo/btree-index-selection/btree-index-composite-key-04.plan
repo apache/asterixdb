@@ -1,12 +1,24 @@
+distribute result [$$18]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$18])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$18] <- [{"id": $$21, "fname": $$20, "lname": $$24}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
+          select (eq($$20, "A"))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$21, $$24, $$20])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$24, $$20] <- [$$employee.getField(2), $$employee.getField(1)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.employee)  |PARTITIONED|
+                  data-scan []<-[$$21, $$employee] <- test.employee
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

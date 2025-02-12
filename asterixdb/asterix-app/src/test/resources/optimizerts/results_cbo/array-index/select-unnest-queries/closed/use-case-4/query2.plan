@@ -1,21 +1,42 @@
+distribute result [$$57]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$57])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$57] <- [{"$1": $$59}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$59] <- [agg-sql-sum($$62)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$62] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (and(gt($$D, "2016"), lt($$D, "2017")))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$D])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  unnest $$D <- scan-collection($$61)
                   -- UNNEST  |PARTITIONED|
+                    project ([$$61])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$61] <- [$$CT.getField(0)]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$CT])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          unnest $$CT <- scan-collection($$60)
                           -- UNNEST  |PARTITIONED|
+                            project ([$$60])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$60] <- [$$C.getField(2)]
                               -- ASSIGN  |PARTITIONED|
+                                project ([$$C])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                                    data-scan []<-[$$58, $$C] <- TestYelp.YelpCheckin
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

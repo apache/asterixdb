@@ -1,16 +1,32 @@
+distribute result [$$27]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$27])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$27] <- [{"customer": $$c, "order": $$o}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$o, $$c])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.Customers.Customers)  |PARTITIONED|
+            unnest-map [$$29, $$c] <- index-search("Customers", 0, "test", "Customers", true, true, 1, $$30, 1, $$30, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$30)
                 -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$30]  |PARTITIONED|
+                    assign [$$30] <- [$$o.getField(1)]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$o])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.Orders)  |PARTITIONED|
+                          data-scan []<-[$$28, $$o] <- test.Orders
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

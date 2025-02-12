@@ -1,29 +1,58 @@
+distribute result [$$234]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$234])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$234] <- [{"rank_min_delta": $$236, "rank_max_delta": $$237, "percent_rank_min_delta": $$238, "percent_rank_max_delta": $$239}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$236, $$237, $$238, $$239] <- [agg-global-sql-min($$244), agg-global-sql-max($$245), agg-global-sql-min($$246), agg-global-sql-max($$247)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$244, $$245, $$246, $$247] <- [agg-local-sql-min($$220), agg-local-sql-max($$220), agg-local-sql-min($$228), agg-local-sql-max($$228)]
             -- AGGREGATE  |PARTITIONED|
+              project ([$$220, $$228])
               -- STREAM_PROJECT  |PARTITIONED|
+                assign [$$228, $$220] <- [switch-case(true, lt($$248, 0.001), 0, $$248), numeric-subtract($$250, $$200)]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$200, $$250, $$248])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    assign [$$248] <- [numeric-subtract(numeric-divide(numeric-subtract($$250, 1), 3), $$210)]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$210, $$200, $$250])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        assign [$$250] <- [numeric-add(numeric-multiply(numeric-subtract(2, $$n), 2), 1)]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$n, $$210, $$200])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            window-aggregate [$$210, $$200] <- [percent-rank-impl($$n), rank-impl($$n)] partition [$$t1.c2, $$p] order (DESC, $$n)
                             -- WINDOW  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$t1.c2) (ASC, $$p) (DESC, $$n)
                                 -- STABLE_SORT [$$t1.c2(ASC), $$p(ASC), $$n(DESC)]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$t1.c2, $$p]  |PARTITIONED|
+                                    project ([$$n, $$t1.c2, $$p])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      unnest $$d <- range($$240, 2)
                                       -- UNNEST  |PARTITIONED|
+                                        unnest $$n <- range($$240, 2)
                                         -- UNNEST  |PARTITIONED|
+                                          unnest $$p <- range($$240, 2)
                                           -- UNNEST  |PARTITIONED|
+                                            project ([$$t1.c2, $$240])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$t1.c2, $$240] <- [$$t1.getField("c2"), $$t1.getField("one")]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$t1])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                                                    data-scan []<-[$$235, $$t1] <- test.t1
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

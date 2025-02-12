@@ -1,13 +1,26 @@
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$28])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$28] <- [{"D": $$D, "F": $$F}]
       -- ASSIGN  |PARTITIONED|
+        select (gt($$F.getField("open_field_3b").getField("open_field_4"), 0))
         -- STREAM_SELECT  |PARTITIONED|
+          project ([$$D, $$F])
           -- STREAM_PROJECT  |PARTITIONED|
+            unnest $$F <- scan-collection($$30)
             -- UNNEST  |PARTITIONED|
+              assign [$$30] <- [$$D.getField("open_field_1").getField("open_field_2")]
               -- ASSIGN  |PARTITIONED|
+                project ([$$D])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (TestDataverse.TestDataset)  |PARTITIONED|
+                    data-scan []<-[$$29, $$D] <- TestDataverse.TestDataset
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

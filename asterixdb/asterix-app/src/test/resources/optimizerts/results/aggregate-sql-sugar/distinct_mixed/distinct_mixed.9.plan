@@ -1,35 +1,67 @@
+distribute result [$$65]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$65])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$65] <- [{"g": $$g, "count_distinct_x": $$68}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$g(ASC) ]  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
-                  {
+          group by ([$$g := $$g]) decor ([]) {
+                    aggregate [$$68] <- [agg-sql-count($$63)]
                     -- AGGREGATE  |LOCAL|
+                      distinct ([$$63])
                       -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        order (ASC, $$63)
                         -- MICRO_STABLE_SORT [$$63(ASC)]  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$g]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$g)
               -- STABLE_SORT [$$g(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$g]  |PARTITIONED|
+                  join (true)
                   -- NESTED_LOOP  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (true)
                       -- NESTED_LOOP  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$63])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            assign [$$63] <- [$$x.getField(1)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$x])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.d1)  |PARTITIONED|
+                                  data-scan []<-[$$66, $$x] <- test.d1
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          project ([])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.d2)  |PARTITIONED|
+                              data-scan []<-[$$67, $$y] <- test.d2
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                      unnest $$g <- range(1, 3)
                       -- UNNEST  |UNPARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

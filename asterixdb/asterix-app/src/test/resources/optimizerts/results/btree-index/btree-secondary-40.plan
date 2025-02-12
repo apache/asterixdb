@@ -1,15 +1,30 @@
+distribute result [$$emp]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (and(eq($$emp.getField(1), "Young Seok"), eq($$emp.getField(2), "Kim")))
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$emp])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.testdst.testdst)  |PARTITIONED|
+          unnest-map [$$17, $$emp] <- index-search("testdst", 0, "test", "testdst", false, false, 1, $$26, 1, $$26, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$26)
               -- STABLE_SORT [$$26(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$26])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.testdst.sec_Idx)  |PARTITIONED|
+                      unnest-map [$$24, $$25, $$26] <- index-search("sec_Idx", 0, "test", "testdst", false, false, 2, $$20, $$21, 2, $$22, $$23, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$20, $$21, $$22, $$23] <- ["Young Seok", "Kim", "Young Seok", "Kim"]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

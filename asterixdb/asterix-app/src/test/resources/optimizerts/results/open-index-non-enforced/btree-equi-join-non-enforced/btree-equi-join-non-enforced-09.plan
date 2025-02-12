@@ -1,27 +1,54 @@
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$30])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$30] <- [{"c1": $$38, "c2": $$39}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$38(ASC), $$39(ASC) ]  |PARTITIONED|
+          order (ASC, $$38) (ASC, $$39)
           -- STABLE_SORT [$$38(ASC), $$39(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$38, $$39])
               -- STREAM_PROJECT  |PARTITIONED|
+                select (eq($$35, $$t2.getField("c_i64")))
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$39] <- [$$t2.getField("c_x")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$38, $$35, $$t2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.TestOpen2.TestOpen2)  |PARTITIONED|
+                        unnest-map [$$34, $$t2] <- index-search("TestOpen2", 0, "test", "TestOpen2", true, false, 1, $$43, 1, $$43, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$43)
                             -- STABLE_SORT [$$43(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$38, $$35, $$43])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.TestOpen2.idx_t2_i64)  |PARTITIONED|
+                                    unnest-map [$$42, $$43] <- index-search("idx_t2_i64", 0, "test", "TestOpen2", true, true, 1, $$35, 1, $$35, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                        project ([$$35, $$38])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$35, $$38] <- [to-bigint($$t1.getField("c_i64")), $$t1.getField("c_x")]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$t1])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.TestOpen1)  |PARTITIONED|
+                                                data-scan []<-[$$33, $$t1] <- test.TestOpen1
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

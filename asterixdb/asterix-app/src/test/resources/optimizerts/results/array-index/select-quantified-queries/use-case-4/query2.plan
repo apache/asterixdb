@@ -1,38 +1,70 @@
+distribute result [$$39]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$39])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$39] <- [{"business_id": $$43}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$43])
         -- STREAM_PROJECT  |PARTITIONED|
+          select ($$36)
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$43, $$36])
             -- STREAM_PROJECT  |PARTITIONED|
-              -- SUBPLAN  |PARTITIONED|
-                      {
+              subplan {
+                        aggregate [$$36] <- [non-empty-stream()]
                         -- AGGREGATE  |LOCAL|
+                          select ($$35)
                           -- STREAM_SELECT  |LOCAL|
-                            -- SUBPLAN  |LOCAL|
-                                    {
+                            subplan {
+                                      aggregate [$$35] <- [non-empty-stream()]
                                       -- AGGREGATE  |LOCAL|
+                                        select (eq($$D, "2016-04-26"))
                                         -- STREAM_SELECT  |LOCAL|
+                                          unnest $$D <- scan-collection($$42)
                                           -- UNNEST  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                                   }
+                            -- SUBPLAN  |LOCAL|
+                              assign [$$42] <- [$$CT.getField(0)]
                               -- ASSIGN  |LOCAL|
+                                unnest $$CT <- scan-collection($$41)
                                 -- UNNEST  |LOCAL|
+                                  nested tuple source
                                   -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- SUBPLAN  |PARTITIONED|
+                project ([$$43, $$41])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$43, $$41] <- [$$C.getField(1), $$C.getField(2)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$C])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (TestYelp.YelpCheckin.YelpCheckin)  |PARTITIONED|
+                        unnest-map [$$40, $$C] <- index-search("YelpCheckin", 0, "TestYelp", "YelpCheckin", false, false, 1, $$49, 1, $$49, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            distinct ([$$49])
                             -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$49)
                                 -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$49])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (TestYelp.YelpCheckin.IdxYelpCheckinDates)  |PARTITIONED|
+                                        unnest-map [$$48, $$49] <- index-search("IdxYelpCheckinDates", 0, "TestYelp", "YelpCheckin", false, false, 1, $$46, 1, $$47, true, true, true)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$46, $$47] <- ["2016-04-26", "2016-04-26"]
                                             -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

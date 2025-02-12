@@ -1,27 +1,54 @@
+distribute result [$$121]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$121])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$121] <- [{"v4x": $$122, "v2x": $$123}]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$122(ASC), $$123(ASC) ]  |PARTITIONED|
+          order (ASC, $$122) (ASC, $$123)
           -- STABLE_SORT [$$122(ASC), $$123(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              select (eq($$122, $$123))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$122, $$123])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$123] <- [int64-default-null($$ds2.getField("x"))]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$122, $$ds2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.ds2.ds2)  |PARTITIONED|
+                        unnest-map [$$125, $$ds2] <- index-search("ds2", 0, "test", "ds2", true, false, 1, $$139, 1, $$139, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$139)
                             -- STABLE_SORT [$$139(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$122, $$139])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.ds2.idx2)  |PARTITIONED|
+                                    unnest-map [$$138, $$139] <- index-search("idx2", 0, "test", "ds2", true, true, 1, $$122, 1, $$122, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                        project ([$$122])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          assign [$$122] <- [int64-default-null($$ds4.getField("x"))]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$ds4])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.ds4)  |PARTITIONED|
+                                                data-scan []<-[$$124, $$ds4] <- test.ds4
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

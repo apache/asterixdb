@@ -1,61 +1,119 @@
+distribute result [$$39]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5
     -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$39])
       -- STREAM_PROJECT  |PARTITIONED|
+        assign [$$39] <- [{"id1": $$45, "id2": $$46}]
         -- ASSIGN  |PARTITIONED|
+          exchange
           -- SORT_MERGE_EXCHANGE [$$45(DESC), $$46(DESC) ]  |PARTITIONED|
+            limit 5
             -- STREAM_LIMIT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (topK: 5) (DESC, $$45) (DESC, $$46)
                 -- STABLE_SORT [topK: 5] [$$45(DESC), $$46(DESC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$45, $$46])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        left outer join (eq($$45, $$54))
                         -- HYBRID_HASH_JOIN [$$45][$$54]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$45])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$45] <- [$$54]
                               -- ASSIGN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate
                                   -- REPLICATE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$54])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$54] <- [$$46]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$46])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                                                    data-scan []<-[$$46, $$fu2] <- TinySocial.FacebookUsers
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$46, $$54])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              select (and(lt($$47, 5), gt($$47, 2)))
                               -- STREAM_SELECT  |PARTITIONED|
-                                -- SUBPLAN  |PARTITIONED|
-                                        {
+                                subplan {
+                                          aggregate [$$47] <- [agg-count(1)]
                                           -- AGGREGATE  |LOCAL|
+                                            unnest $$43 <- range($$54, $$46)
                                             -- UNNEST  |LOCAL|
+                                              nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- SUBPLAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (true)
                                     -- NESTED_LOOP  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$54])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              assign [$$54] <- [$$46]
                                               -- ASSIGN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  replicate
                                                   -- REPLICATE  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      project ([$$46])
                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                                                          data-scan []<-[$$46, $$fu2] <- TinySocial.FacebookUsers
+                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$46])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                                                data-scan []<-[$$46, $$fu2] <- TinySocial.FacebookUsers
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

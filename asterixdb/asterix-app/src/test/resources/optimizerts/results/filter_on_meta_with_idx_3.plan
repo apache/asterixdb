@@ -1,25 +1,50 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$31])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$31] <- [{"t": $$t}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$t])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$35, $$36))
             -- HYBRID_HASH_JOIN [$$35][$$36]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+                project ([$$t, $$35])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  select (gt($$33.getField(2), 100))
                   -- STREAM_SELECT  |PARTITIONED|
+                    assign [$$35] <- [$$t.getField(2)]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$t, $$33])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.KVStore)  |PARTITIONED|
+                          data-scan []<-[$$32, $$t, $$33] <- test.KVStore with filter on min:[$$38] max:[]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                              assign [$$38] <- [100]
                               -- ASSIGN  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+                project ([$$36])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$36] <- [$$o.getField(2)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$o])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.OfficerLocations)  |PARTITIONED|
+                        data-scan []<-[$$34, $$o] <- test.OfficerLocations
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

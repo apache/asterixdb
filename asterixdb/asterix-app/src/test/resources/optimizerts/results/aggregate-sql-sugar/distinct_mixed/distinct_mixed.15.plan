@@ -1,175 +1,350 @@
+distribute result [$$118]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$118])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$118] <- [{"sum_distinct_x": $$119, "sum_y": $$120, "sum_distinct_z": $$121, "avg_distinct_x": $$122, "avg_distinct_y": $$123, "count_x": $$124, "count_distinct_y": $$125, "avg_z": $$126, "count_distinct_z": $$127}]
       -- ASSIGN  |LOCAL|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          join (true)
           -- NESTED_LOOP  |LOCAL|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              join (true)
               -- NESTED_LOOP  |LOCAL|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  join (true)
                   -- NESTED_LOOP  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      aggregate [$$119, $$122] <- [agg-sql-sum($$137), agg-sql-avg($$137)]
                       -- AGGREGATE  |LOCAL|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                          distinct ([$$137])
                           -- PRE_SORTED_DISTINCT_BY  |LOCAL|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                              -- STABLE_SORT [$$133(ASC)]  |LOCAL|
+                              order (ASC, $$137)
+                              -- STABLE_SORT [$$137(ASC)]  |LOCAL|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  join (true)
                                   -- NESTED_LOOP  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      join (true)
                                       -- NESTED_LOOP  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          replicate
                                           -- REPLICATE  |UNPARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                              replicate
                                               -- REPLICATE  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  unnest $$137 <- range(1, 5)
                                                   -- UNNEST  |UNPARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          replicate
                                           -- REPLICATE  |UNPARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                              project ([])
                                               -- STREAM_PROJECT  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  replicate
                                                   -- REPLICATE  |UNPARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                      unnest $$138 <- range(6, 10)
                                                       -- UNNEST  |UNPARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      replicate
                                       -- REPLICATE  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          project ([])
                                           -- STREAM_PROJECT  |UNPARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                              replicate
                                               -- REPLICATE  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  unnest $$139 <- range(11, 15)
                                                   -- UNNEST  |UNPARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      aggregate [$$120, $$124, $$126] <- [agg-global-sql-sum($$164), agg-sql-sum($$165), agg-global-sql-avg($$166)]
                       -- AGGREGATE  |LOCAL|
+                        aggregate [$$164, $$165, $$166] <- [agg-local-sql-sum($$150), agg-sql-count($$149), agg-local-sql-avg($$151)]
                         -- AGGREGATE  |LOCAL|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                            join (true)
                             -- NESTED_LOOP  |UNPARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                join (true)
                                 -- NESTED_LOOP  |UNPARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                    project ([$$149])
                                     -- STREAM_PROJECT  |UNPARTITIONED|
+                                      assign [$$149] <- [$$137]
                                       -- ASSIGN  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          replicate
                                           -- REPLICATE  |UNPARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                              replicate
                                               -- REPLICATE  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  unnest $$137 <- range(1, 5)
                                                   -- UNNEST  |UNPARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                    replicate
                                     -- REPLICATE  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        project ([$$150])
                                         -- STREAM_PROJECT  |UNPARTITIONED|
+                                          assign [$$150] <- [$$138]
                                           -- ASSIGN  |UNPARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                              replicate
                                               -- REPLICATE  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  unnest $$138 <- range(6, 10)
                                                   -- UNNEST  |UNPARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                project ([$$151])
                                 -- STREAM_PROJECT  |UNPARTITIONED|
+                                  assign [$$151] <- [$$163]
                                   -- ASSIGN  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      replicate
                                       -- REPLICATE  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          project ([$$163])
                                           -- STREAM_PROJECT  |UNPARTITIONED|
+                                            assign [$$163] <- [$$139]
                                             -- ASSIGN  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                replicate
                                                 -- REPLICATE  |UNPARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                    unnest $$139 <- range(11, 15)
                                                     -- UNNEST  |UNPARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  aggregate [$$121, $$127] <- [agg-sql-sum($$163), agg-sql-count($$163)]
                   -- AGGREGATE  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      distinct ([$$163])
                       -- PRE_SORTED_DISTINCT_BY  |LOCAL|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                          -- STABLE_SORT [$$159(ASC)]  |LOCAL|
+                          order (ASC, $$163)
+                          -- STABLE_SORT [$$163(ASC)]  |LOCAL|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              join (true)
                               -- NESTED_LOOP  |UNPARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  join (true)
                                   -- NESTED_LOOP  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      replicate
                                       -- REPLICATE  |UNPARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                          project ([])
                                           -- STREAM_PROJECT  |UNPARTITIONED|
+                                            assign [$$161] <- [$$137]
                                             -- ASSIGN  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                replicate
                                                 -- REPLICATE  |UNPARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                    unnest $$137 <- range(1, 5)
                                                     -- UNNEST  |UNPARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      project ([])
                                       -- STREAM_PROJECT  |UNPARTITIONED|
+                                        assign [] <- []
                                         -- ASSIGN  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            replicate
                                             -- REPLICATE  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                project ([])
                                                 -- STREAM_PROJECT  |UNPARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                    replicate
                                                     -- REPLICATE  |UNPARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                        unnest $$138 <- range(6, 10)
                                                         -- UNNEST  |UNPARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  replicate
                                   -- REPLICATE  |UNPARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                      project ([$$163])
                                       -- STREAM_PROJECT  |UNPARTITIONED|
+                                        assign [$$163] <- [$$139]
                                         -- ASSIGN  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            replicate
                                             -- REPLICATE  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                unnest $$139 <- range(11, 15)
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+              aggregate [$$123, $$125] <- [agg-sql-avg($$y), agg-sql-count($$y)]
               -- AGGREGATE  |LOCAL|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  distinct ([$$y])
                   -- PRE_SORTED_DISTINCT_BY  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      order (ASC, $$y)
                       -- STABLE_SORT [$$y(ASC)]  |LOCAL|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          join (true)
                           -- NESTED_LOOP  |UNPARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              join (true)
                               -- NESTED_LOOP  |UNPARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  project ([])
                                   -- STREAM_PROJECT  |UNPARTITIONED|
+                                    assign [] <- []
                                     -- ASSIGN  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        replicate
                                         -- REPLICATE  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            project ([])
                                             -- STREAM_PROJECT  |UNPARTITIONED|
+                                              assign [$$161] <- [$$137]
                                               -- ASSIGN  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  replicate
                                                   -- REPLICATE  |UNPARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                      unnest $$137 <- range(1, 5)
                                                       -- UNNEST  |UNPARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  project ([$$y])
                                   -- STREAM_PROJECT  |UNPARTITIONED|
+                                    assign [$$y] <- [$$150]
                                     -- ASSIGN  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        replicate
                                         -- REPLICATE  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            project ([$$150])
                                             -- STREAM_PROJECT  |UNPARTITIONED|
+                                              assign [$$150] <- [$$138]
                                               -- ASSIGN  |UNPARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                  replicate
                                                   -- REPLICATE  |UNPARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                      unnest $$138 <- range(6, 10)
                                                       -- UNNEST  |UNPARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              project ([])
                               -- STREAM_PROJECT  |UNPARTITIONED|
+                                assign [] <- []
                                 -- ASSIGN  |UNPARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                    replicate
                                     -- REPLICATE  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        project ([])
                                         -- STREAM_PROJECT  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            replicate
                                             -- REPLICATE  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                unnest $$139 <- range(11, 15)
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

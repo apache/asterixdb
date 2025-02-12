@@ -1,13 +1,26 @@
+distribute result [$$50]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$50])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$50] <- [{"$1": $$53}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$53] <- [agg-sql-sum($$54)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$54] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (spatial-intersect($$x.getField(8), polygon: [ point: { x: 0.0, y: 0.0 }, point: { x: 2.0, y: 2.0 }, point: { x: 0.0, y: 2.0 }, point: { x: 2.0, y: 0.0 } ]))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$x])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (test.Fragile_raw)  |PARTITIONED|
+                    data-scan []<-[$$52, $$x] <- test.Fragile_raw
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

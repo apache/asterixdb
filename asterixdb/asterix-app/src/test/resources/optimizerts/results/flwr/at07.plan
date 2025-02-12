@@ -1,40 +1,80 @@
+distribute result [$$95]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$95])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$95] <- [object-concat-strict(if-missing-or-null(to-object($$76), cast({  })), {"percentile": $#2, "i": $$i, "cnt": $$98})]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$#2(ASC) ]  |PARTITIONED|
+          order (ASC, $#2)
           -- STABLE_SORT [$#2(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              assign [$#2] <- [numeric-multiply(numeric-divide($$i, $$98), 100)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (true)
                   -- NESTED_LOOP  |PARTITIONED|
+                    exchange
                     -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                      project ([$$76, $$i])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        select (eq($$103, "NicholasStroh"))
                         -- STREAM_SELECT  |PARTITIONED|
+                          running-aggregate [$$i] <- [tid()]
                           -- RUNNING_AGGREGATE  |PARTITIONED|
+                            project ([$$76, $$103])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$76] <- [{"name": $$103, "alias": $$105}]
                               -- ASSIGN  |PARTITIONED|
-                                -- SORT_MERGE_EXCHANGE [$$99(ASC) ]  |PARTITIONED|
-                                  -- STABLE_SORT [$$99(ASC)]  |PARTITIONED|
+                                exchange
+                                -- SORT_MERGE_EXCHANGE [$$103(ASC) ]  |PARTITIONED|
+                                  order (ASC, $$103)
+                                  -- STABLE_SORT [$$103(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$103, $$105])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        assign [$$105, $$103] <- [$$FacebookUsers.getField(1), $$FacebookUsers.getField(2)]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$FacebookUsers])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              replicate
                                               -- REPLICATE  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (test.FacebookUsers)  |PARTITIONED|
+                                                  data-scan []<-[$$96, $$FacebookUsers] <- test.FacebookUsers
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                      aggregate [$$98] <- [agg-sql-sum($$107)]
                       -- AGGREGATE  |UNPARTITIONED|
+                        exchange
                         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                          aggregate [$$107] <- [agg-sql-count(1)]
                           -- AGGREGATE  |PARTITIONED|
+                            project ([$$102, $$101])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              assign [$$102, $$101] <- [$$96, $$FacebookUsers]
                               -- ASSIGN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate
                                   -- REPLICATE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (test.FacebookUsers)  |PARTITIONED|
+                                      data-scan []<-[$$96, $$FacebookUsers] <- test.FacebookUsers
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

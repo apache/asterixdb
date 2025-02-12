@@ -1,17 +1,34 @@
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$46])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$46] <- [{"$1": $$49}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$49] <- [agg-sql-sum($$51)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$51] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (and(gt($$D, "2016"), lt($$D, "2017")))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$D])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  unnest $$D <- scan-collection($$50)
                   -- UNNEST  |PARTITIONED|
+                    project ([$$50])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      assign [$$50] <- [$$C.getField(2)]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$C])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                            data-scan []<-[$$47, $$48, $$C] <- TestYelp.YelpCheckin
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

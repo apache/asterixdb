@@ -1,34 +1,68 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$47])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$47] <- [{"$1": $$51}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$51] <- [agg-sql-sum($$61)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$61] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (and(lt(st-distance($$54, $$55), 1), eq($$62, reference-tile($$56, $$57, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10, $$63))))
               -- STREAM_SELECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (spatial-intersect($$56, $$57))
                   -- SPATIAL_JOIN [$$62, $$56] [$$63, $$57]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$62) (ASC, $$56)
                       -- STABLE_SORT [$$62(ASC), $$56(ASC)]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$62]  |PARTITIONED|
+                          unnest $$62 <- spatial-tile($$56, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10)
                           -- UNNEST  |PARTITIONED|
+                            assign [$$56] <- [st-mbr-enlarge($$54, 1)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$54])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$54] <- [$$ps.getField(1)]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$ps])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (test.ParkSet)  |PARTITIONED|
+                                      data-scan []<-[$$48, $$ps] <- test.ParkSet
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$63) (ASC, $$57)
                       -- STABLE_SORT [$$63(ASC), $$57(ASC)]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$63]  |PARTITIONED|
+                          unnest $$63 <- spatial-tile($$57, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10)
                           -- UNNEST  |PARTITIONED|
+                            assign [$$57] <- [st-mbr($$55)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$55])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                assign [$$55] <- [$$ls.getField(1)]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$ls])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (test.LakeSet)  |PARTITIONED|
+                                      data-scan []<-[$$49, $$ls] <- test.LakeSet
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

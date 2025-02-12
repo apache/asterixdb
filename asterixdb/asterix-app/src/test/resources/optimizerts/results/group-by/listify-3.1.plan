@@ -1,43 +1,86 @@
+distribute result [$$136]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$136])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$136] <- [{"std": round-half-to-even(sqrt($$137), 2)}]
       -- ASSIGN  |LOCAL|
+        aggregate [$$137] <- [agg-global-sql-avg($$154)]
         -- AGGREGATE  |LOCAL|
+          aggregate [$$154] <- [agg-local-sql-avg($$134)]
           -- AGGREGATE  |LOCAL|
+            project ([$$134])
             -- STREAM_PROJECT  |LOCAL|
+              assign [$$134] <- [power(numeric-subtract(numeric-add(numeric-subtract($$144, $$t), $$145), 1), 2)]
               -- ASSIGN  |LOCAL|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  join (true)
                   -- NESTED_LOOP  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      join (true)
                       -- NESTED_LOOP  |LOCAL|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          unnest $$t <- range(1, 10)
                           -- UNNEST  |UNPARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                          project ([$$144])
                           -- STREAM_PROJECT  |LOCAL|
+                            assign [$$144] <- [get-item($$105, 0).getField(0)]
                             -- ASSIGN  |LOCAL|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                                replicate
                                 -- REPLICATE  |LOCAL|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                                    aggregate [$$105] <- [listify($$104)]
                                     -- AGGREGATE  |LOCAL|
+                                      project ([$$104])
                                       -- STREAM_PROJECT  |LOCAL|
+                                        assign [$$104] <- [{"mean": $$148, "min": $$149}]
                                         -- ASSIGN  |LOCAL|
+                                          aggregate [$$148, $$149] <- [agg-global-sql-avg($$152), agg-global-sql-min($$153)]
                                           -- AGGREGATE  |LOCAL|
+                                            aggregate [$$152, $$153] <- [agg-local-sql-avg($$143), agg-local-sql-min($$143)]
                                             -- AGGREGATE  |LOCAL|
+                                              unnest $$143 <- range(1, 10)
                                               -- UNNEST  |UNPARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                      project ([$$145])
                       -- STREAM_PROJECT  |LOCAL|
+                        assign [$$145] <- [get-item($$121, 0).getField(1)]
                         -- ASSIGN  |LOCAL|
+                          project ([$$121])
                           -- STREAM_PROJECT  |LOCAL|
+                            assign [$$121] <- [$$105]
                             -- ASSIGN  |LOCAL|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                                replicate
                                 -- REPLICATE  |LOCAL|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                                    aggregate [$$105] <- [listify($$104)]
                                     -- AGGREGATE  |LOCAL|
+                                      project ([$$104])
                                       -- STREAM_PROJECT  |LOCAL|
+                                        assign [$$104] <- [{"mean": $$148, "min": $$149}]
                                         -- ASSIGN  |LOCAL|
+                                          aggregate [$$148, $$149] <- [agg-global-sql-avg($$152), agg-global-sql-min($$153)]
                                           -- AGGREGATE  |LOCAL|
+                                            aggregate [$$152, $$153] <- [agg-local-sql-avg($$143), agg-local-sql-min($$143)]
                                             -- AGGREGATE  |LOCAL|
+                                              unnest $$143 <- range(1, 10)
                                               -- UNNEST  |UNPARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

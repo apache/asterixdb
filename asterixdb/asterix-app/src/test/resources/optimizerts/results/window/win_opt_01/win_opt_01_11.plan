@@ -1,15 +1,27 @@
+distribute result [$$96]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    project ([$$96])
     -- STREAM_PROJECT  |LOCAL|
+      assign [$$96] <- [{"m": $$m, "t": $$t, "w1_last": $$97, "w2_first": $$98, "w3_first": numeric-subtract($$99, 1)}]
       -- ASSIGN  |LOCAL|
-        -- WINDOW  |LOCAL|
-                {
+        window-aggregate [] <- [] partition [$$m] order (ASC, $$t) frame on  start unbounded end unbounded {
+                  aggregate [$$99, $$98, $$97] <- [agg-first-element(numeric-add($$t, 1)), agg-first-element($$t), agg-last-element($$t)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- WINDOW  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$m) (ASC, $$t)
             -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                assign [$$m] <- [numeric-mod($$t, 4)]
                 -- ASSIGN  |UNPARTITIONED|
+                  unnest $$t <- range(0, 11)
                   -- UNNEST  |UNPARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

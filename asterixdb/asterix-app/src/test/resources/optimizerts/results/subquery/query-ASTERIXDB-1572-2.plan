@@ -1,12 +1,24 @@
+distribute result [$$50]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$50])
     -- STREAM_PROJECT  |PARTITIONED|
+      assign [$$50] <- [{"st1": {"id": $$51}}]
       -- ASSIGN  |PARTITIONED|
+        project ([$$51])
         -- STREAM_PROJECT  |PARTITIONED|
+          select (or(and(eq($$51, 0), $$53), and($$53, eq($$51, 2))))
           -- STREAM_SELECT  |PARTITIONED|
+            assign [$$53] <- [eq($$51, 1)]
             -- ASSIGN  |PARTITIONED|
+              project ([$$51])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (sampdb.samptable)  |PARTITIONED|
+                  data-scan []<-[$$51, $$samptable] <- sampdb.samptable
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

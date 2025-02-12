@@ -1,12 +1,24 @@
+distribute result [$$x]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 2
     -- STREAM_LIMIT  |UNPARTITIONED|
+      project ([$$x])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+          limit 2
           -- STREAM_LIMIT  |PARTITIONED|
+            project ([$$20, $$x])
             -- STREAM_PROJECT  |PARTITIONED|
+              assign [$$19] <- [$$x.getField(1)]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.TestSet)  |PARTITIONED|
+                  data-scan []<-[$$20, $$x] <- test.TestSet condition (or(eq($$x.getField(1), "one"), eq($$x.getField(1), "two"), eq($$x.getField(1), "two"))) limit 2
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

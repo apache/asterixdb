@@ -1,28 +1,56 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    project ([$$47])
     -- STREAM_PROJECT  |UNPARTITIONED|
+      assign [$$47] <- [{"revenue": $$50}]
       -- ASSIGN  |UNPARTITIONED|
+        aggregate [$$50] <- [agg-sql-sum($$52)]
         -- AGGREGATE  |UNPARTITIONED|
+          exchange
           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+            aggregate [$$52] <- [agg-sql-count(1)]
             -- AGGREGATE  |PARTITIONED|
+              select (and(ge($$48, "2016-01-01 00:00:00.000000"), lt($$48, "2017-01-01 00:00:00.000000")))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$48])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$48] <- [$$ol.getField("ol_delivery_d")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$ol])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      unnest $$ol <- scan-collection($$51)
                       -- UNNEST  |PARTITIONED|
+                        project ([$$51])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          assign [$$51] <- [$$o.getField("o_orderline")]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$o])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.orders.orders)  |PARTITIONED|
+                                unnest-map [$$49, $$o] <- index-search("orders", 0, "test", "orders", false, false, 1, $$55, 1, $$55, true, true, true)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    distinct ([$$55])
                                     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        order (ASC, $$55)
                                         -- STABLE_SORT [$$55(ASC)]  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$55])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (test.orders.orderline_delivery_d)  |PARTITIONED|
+                                                unnest-map [$$54, $$55] <- index-search("orderline_delivery_d", 0, "test", "orders", false, false, 1, $$53, 0, true, true, false)
+                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    assign [$$53] <- ["2016-01-01 00:00:00.000000"]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

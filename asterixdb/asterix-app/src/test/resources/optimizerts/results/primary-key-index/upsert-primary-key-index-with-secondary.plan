@@ -1,16 +1,32 @@
+commit
 -- COMMIT  |PARTITIONED|
+  project ([$$3])
   -- STREAM_PROJECT  |PARTITIONED|
+    exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      upsert into titleIndex on test.DBLP from  replace:[$$7] with:[$$6]
       -- INDEX_INSERT_DELETE  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          upsert into pkIndex on test.DBLP from  replace:[] with:[]
           -- INDEX_INSERT_DELETE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$4, $$6, $$3, $$7])
               -- STREAM_PROJECT  |PARTITIONED|
+                assign [$$7] <- [$$5.getField(2)]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$4, $$5, $$6, $$3])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      upsert into test.DBLP from record: $$1 partitioned by [$$3] out: ([record-before-upsert:$$5]) 
                       -- INSERT_DELETE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
+                          assign [$$6, $$3] <- [$$1.getField(2), 1]
                           -- ASSIGN  |UNPARTITIONED|
+                            assign [$$1] <- [{ "id": 1, "dblpid": "books/acm/kim95/Blakeley95", "title": "OQL[C++]  Extending C++ with an Object Query Capability.", "authors": "José A. Blakeley", "misc": "2002-01-03 69-88 Modern Database Systems db/books/collections/kim95.html#Blakeley95 1995" }]
                             -- ASSIGN  |UNPARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

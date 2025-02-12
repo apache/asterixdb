@@ -1,22 +1,44 @@
+distribute result [$$42]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- SORT_MERGE_EXCHANGE [$$42(ASC) ]  |PARTITIONED|
+    order (ASC, $$42)
     -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$42])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$43, $$44))
             -- HYBRID_HASH_JOIN [$$43][$$44]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$43]  |PARTITIONED|
+                project ([$$43])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$43] <- [$$token1.getField(0)]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$token1])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (fuzzyjoin.TOKENSRANKEDADM)  |PARTITIONED|
+                        data-scan []<-[$$41, $$token1] <- fuzzyjoin.TOKENSRANKEDADM
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$42(ASC)] HASH:[$$44]  |PARTITIONED|
+                project ([$$42, $$44])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  assign [$$44] <- [$$tokenRanked.getField(0)]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (fuzzyjoin.TOKENSRANKEDADM)  |PARTITIONED|
+                      data-scan []<-[$$42, $$tokenRanked] <- fuzzyjoin.TOKENSRANKEDADM
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
