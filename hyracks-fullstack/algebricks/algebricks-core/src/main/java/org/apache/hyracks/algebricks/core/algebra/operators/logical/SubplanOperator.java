@@ -70,7 +70,7 @@ public class SubplanOperator extends AbstractOperatorWithNestedPlans {
 
     @Override
     public VariablePropagationPolicy getVariablePropagationPolicy() {
-        return VariablePropagationPolicy.ADDNEWVARIABLES;
+        return VariablePropagationPolicy.ALL;
     }
 
     @Override
