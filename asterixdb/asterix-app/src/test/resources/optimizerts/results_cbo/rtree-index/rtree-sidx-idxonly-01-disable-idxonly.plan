@@ -1,12 +1,24 @@
+distribute result [$$53] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$53] <- [{"$1": $$56}] project: [$$53] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$56] <- [agg-sql-sum($$57)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$57] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- AGGREGATE  |PARTITIONED|
+            select (spatial-intersect($$x.getField(8), polygon: [ point: { x: 0.0, y: 0.0 }, point: { x: 2.0, y: 2.0 }, point: { x: 0.0, y: 2.0 }, point: { x: 2.0, y: 0.0 } ])) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$x]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.Fragile_raw)  |PARTITIONED|
+                  data-scan []<-[$$55, $$x] <- test.Fragile_raw [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,26 +1,52 @@
+distribute result [$$97]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    union ($$89, $$94, $$97)
     -- UNION_ALL  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        assign [$$89] <- [{"sym": $$S.getField("sym")}] project: [$$89]
         -- ASSIGN  |PARTITIONED|
+          select (lt($$S.getField("date"), print-date(current-date(), "YYYY-MM-DD")))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$S])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (test.collection1)  |PARTITIONED|
+                data-scan []<-[$$108, $$S] <- test.collection1
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        assign [$$94] <- [{"sym": $$106.getField("sym")}] project: [$$94]
         -- ASSIGN  |PARTITIONED|
+          select (lt($$106.getField("date"), print-date(current-date(), "YYYY-MM-DD")))
           -- STREAM_SELECT  |PARTITIONED|
+            project ([$$106])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.collection2.collection2)  |PARTITIONED|
+                unnest-map [$$111, $$106] <- index-search("collection2", 0, "Default", "test", "collection2", false, false, 1, $$123, 1, $$123, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$123)
                     -- STABLE_SORT [$$123(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$123])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (test.collection2.idx1)  |PARTITIONED|
+                            unnest-map [$$119, $$120, $$121, $$122, $$123] <- index-search("idx1", 0, "Default", "test", "collection2", false, false, 0, 1, $$118, true, false, false)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                assign [$$118] <- [print-date(current-date(), "YYYY-MM-DD")]
                                 -- ASSIGN  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

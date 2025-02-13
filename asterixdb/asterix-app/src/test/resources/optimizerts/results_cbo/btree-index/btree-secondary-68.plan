@@ -1,12 +1,24 @@
+distribute result [$$25] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$25] <- [{"o_custkey": $$28, "o_orderkey": $$29, "o_orderstatus": $$34}] project: [$$25] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$28(ASC), $$29(ASC) ]  |PARTITIONED|
+        order (ASC, $$28) (ASC, $$29) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$28(ASC), $$29(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (and(eq($$Orders.getField(5), "1-URGENT"), le($$28, 43), ge($$28, 40))) project: [$$28, $$29, $$34] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$34, $$28] <- [$$Orders.getField(2), $$Orders.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                  data-scan []<-[$$29, $$Orders] <- tpch.Orders [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,92 +1,184 @@
+distribute result [$$397]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$397] <- [{"DataverseName": $$405, "SynonymName": $$406}] project: [$$397]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$405(ASC), $$406(ASC) ]  |PARTITIONED|
+        order (ASC, $$405) (ASC, $$406)
         -- STABLE_SORT [$$405(ASC), $$406(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$405, $$406])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                left outer join (eq($$414, $$410))
                 -- HYBRID_HASH_JOIN [$$414][$$410]  |PARTITIONED|
+                  exchange
                   -- HASH_PARTITION_MERGE_EXCHANGE MERGE:[$$405(ASC), $$406(ASC)] HASH:[$$414]  |PARTITIONED|
+                    order (ASC, $$405) (ASC, $$406)
                     -- STABLE_SORT [$$405(ASC), $$406(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$405, $$406, $$414])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            left outer join (eq($$408, $$414))
                             -- HYBRID_HASH_JOIN [$$414][$$408]  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$414]  |PARTITIONED|
+                                assign [$$414] <- [$$s.getField(3)] project: [$$405, $$406, $$414]
                                 -- ASSIGN  |PARTITIONED|
+                                  assign [$$405, $$406, $$s] <- [$$409, $$410, $$s] project: [$$405, $$406, $$s]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      replicate
                                       -- REPLICATE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (Metadata.Synonym)  |PARTITIONED|
+                                          data-scan []<-[$$409, $$410, $$s] <- Metadata.Synonym
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$408]  |PARTITIONED|
+                                project ([$$408])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (and(eq($$408, $$ds_name), eq($$407, $$dv_name)))
                                     -- HYBRID_HASH_JOIN [$$408, $$407][$$ds_name, $$dv_name]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- HASH_PARTITION_EXCHANGE [$$408, $$407]  |PARTITIONED|
+                                            project ([$$408, $$407])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                                data-scan []<-[$$407, $$408, $$d] <- Metadata.Dataset
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$ds_name, $$dv_name]  |PARTITIONED|
+                                        join (true)
                                         -- NESTED_LOOP  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            unnest $$dv_name <- scan-collection(array: [ "test2", "test1" ])
                                             -- UNNEST  |UNPARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            replicate
                                             -- REPLICATE  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                unnest $$ds_name <- scan-collection(array: [ "ds2", "ds1" ])
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$410]  |PARTITIONED|
+                    project ([$$410])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        left outer join (eq($$412, $$428))
                         -- HYBRID_HASH_JOIN [$$428][$$412]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$428]  |PARTITIONED|
+                            project ([$$410, $$428])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                join (eq($$410, $$syn_name))
                                 -- HYBRID_HASH_JOIN [$$410][$$syn_name]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$410]  |PARTITIONED|
+                                    assign [$$428] <- [$$s.getField(3)] project: [$$410, $$428]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$410, $$s])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          replicate
                                           -- REPLICATE  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (Metadata.Synonym)  |PARTITIONED|
+                                              data-scan []<-[$$409, $$410, $$s] <- Metadata.Synonym
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$syn_name]  |PARTITIONED|
+                                    unnest $$syn_name <- scan-collection(array: [ "syn2", "syn1" ])
                                     -- UNNEST  |UNPARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$412]  |PARTITIONED|
+                            project ([$$412])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                join (and(eq($$412, $$ds_name), eq($$411, $$dv_name)))
                                 -- HYBRID_HASH_JOIN [$$412, $$411][$$ds_name, $$dv_name]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$412, $$411] <- [$$408, $$407] project: [$$412, $$411]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- HASH_PARTITION_EXCHANGE [$$408, $$407]  |PARTITIONED|
+                                            project ([$$408, $$407])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (Metadata.Dataset)  |PARTITIONED|
+                                                data-scan []<-[$$407, $$408, $$d] <- Metadata.Dataset
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$ds_name, $$dv_name]  |PARTITIONED|
+                                    join (true)
                                     -- NESTED_LOOP  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        assign [$$ds_name] <- [$$ds_name] project: [$$ds_name]
                                         -- ASSIGN  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            replicate
                                             -- REPLICATE  |UNPARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                                unnest $$ds_name <- scan-collection(array: [ "ds2", "ds1" ])
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        unnest $$dv_name <- scan-collection(array: [ "test2", "test1" ])
                                         -- UNNEST  |UNPARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

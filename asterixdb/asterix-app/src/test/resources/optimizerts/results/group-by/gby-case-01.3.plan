@@ -1,22 +1,38 @@
+distribute result [$$86]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$86] <- [{"x": $$x, "res": switch-case(true, eq($$90, 0), 0, numeric-divide($$91, $$92))}] project: [$$86]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$x(ASC) ]  |PARTITIONED|
-        -- SORT_GROUP_BY[$$99]  |PARTITIONED|
-                {
+        group by ([$$x := $$99]) decor ([]) {
+                  aggregate [$$90, $$91, $$92] <- [agg-global-sql-sum($$96), agg-global-sql-sum($$97), agg-global-sql-sum($$98)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$99]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$99]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$87]  |PARTITIONED|
-                    {
+            group by ([$$99 := $$87]) decor ([]) {
+                      aggregate [$$96, $$97, $$98] <- [agg-local-sql-sum($$67), agg-local-sql-sum(numeric-multiply($$93, $$67)), agg-local-sql-sum($$67)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$87]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$67, $$93, $$87] <- [$$t1.getField("z"), $$t1.getField("y"), $$t1.getField("x")] project: [$$67, $$93, $$87]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$t1])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                      data-scan []<-[$$89, $$t1] <- test.t1
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

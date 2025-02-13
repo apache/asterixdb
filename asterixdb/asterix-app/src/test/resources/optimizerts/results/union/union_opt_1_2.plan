@@ -1,43 +1,86 @@
+distribute result [$$t]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$t])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$120(ASC) ]  |PARTITIONED|
+        order (ASC, $$120)
         -- STABLE_SORT [$$120(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$54, $$62, $$t) ($$70, $$71, $$120)
             -- UNION_ALL  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (ge($$112, 98)) project: [$$54, $$70]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$54] <- [{"unique1": $$112, "unique2": $$70, "unique3": $$onek1.getField(10)}] project: [$$70, $$112, $$54]
                   -- ASSIGN  |PARTITIONED|
+                    assign [$$112] <- [$$onek1.getField(0)]
                     -- ASSIGN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.onek1.onek1)  |PARTITIONED|
+                        unnest-map [$$70, $$onek1] <- index-search("onek1", 0, "Default", "test", "onek1", false, false, 1, $$145, 1, $$145, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$145)
                             -- STABLE_SORT [$$145(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$145])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.onek1.onek1_idx)  |PARTITIONED|
+                                    unnest-map [$$144, $$145] <- index-search("onek1_idx", 0, "Default", "test", "onek1", false, false, 1, $$143, 0, true, true, false)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$143] <- [$$146] project: [$$143]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$146] <- [98]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (ge($$116, 98)) project: [$$62, $$71]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$62] <- [{"unique1": $$116, "unique2": $$71, "unique3": $$onek2.getField(10)}] project: [$$71, $$116, $$62]
                   -- ASSIGN  |PARTITIONED|
+                    assign [$$116] <- [$$onek2.getField(1)]
                     -- ASSIGN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.onek2.onek2)  |PARTITIONED|
+                        unnest-map [$$71, $$onek2] <- index-search("onek2", 0, "Default", "test", "onek2", false, false, 1, $$148, 1, $$148, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$148)
                             -- STABLE_SORT [$$148(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$148])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.onek2.onek2_idx)  |PARTITIONED|
+                                    unnest-map [$$147, $$148] <- index-search("onek2_idx", 0, "Default", "test", "onek2", false, false, 1, $$146, 0, true, true, false)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$146] <- [98]
                                             -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

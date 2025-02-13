@@ -1,20 +1,40 @@
+distribute result [$$29]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"arec": $$a, "brec": $$b}] project: [$$29]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$32, $$b.getField(2))) project: [$$a, $$b]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$a, $$32, $$b])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.CSX.CSX)  |PARTITIONED|
+            unnest-map [$$31, $$b] <- index-search("CSX", 0, "Default", "test", "CSX", true, false, 1, $$35, 1, $$35, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$35)
                 -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$a, $$32, $$35])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.CSX.title_index)  |PARTITIONED|
+                        unnest-map [$$34, $$35] <- index-search("title_index", 0, "Default", "test", "CSX", true, true, 1, $$32, 1, $$32, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$32] <- [$$a.getField(2)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$a])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                  data-scan []<-[$$30, $$a] <- test.DBLP
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

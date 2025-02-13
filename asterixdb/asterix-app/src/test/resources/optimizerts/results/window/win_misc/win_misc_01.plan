@@ -1,23 +1,46 @@
+distribute result [$$246]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$246] <- [{"rank_min_delta": $$248, "rank_max_delta": $$249, "percent_rank_min_delta": $$250, "percent_rank_max_delta": $$251}] project: [$$246]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$248, $$249, $$250, $$251] <- [agg-global-sql-min($$256), agg-global-sql-max($$257), agg-global-sql-min($$258), agg-global-sql-max($$259)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$256, $$257, $$258, $$259] <- [agg-local-sql-min($$232), agg-local-sql-max($$232), agg-local-sql-min($$240), agg-local-sql-max($$240)]
           -- AGGREGATE  |PARTITIONED|
+            assign [$$240, $$232] <- [switch-case(true, lt($$260, 0.001), 0, $$260), numeric-subtract($$262, $$212)] project: [$$232, $$240]
             -- ASSIGN  |PARTITIONED|
+              assign [$$260] <- [numeric-subtract(numeric-divide(numeric-subtract($$262, 1), 3), $$222)] project: [$$212, $$262, $$260]
               -- ASSIGN  |PARTITIONED|
+                assign [$$262] <- [numeric-add(numeric-multiply(numeric-subtract(2, $$n), 2), 1)] project: [$$222, $$212, $$262]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$n, $$222, $$212])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    window-aggregate [$$222, $$212] <- [percent-rank-impl($$n), rank-impl($$n)] partition [$$t1.c2, $$p] order (DESC, $$n)
                     -- WINDOW  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$t1.c2) (ASC, $$p) (DESC, $$n)
                         -- STABLE_SORT [$$t1.c2(ASC), $$p(ASC), $$n(DESC)]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$t1.c2, $$p]  |PARTITIONED|
+                            unnest $$d <- range($$252, 2) project: [$$n, $$t1.c2, $$p]
                             -- UNNEST  |PARTITIONED|
+                              unnest $$n <- range($$252, 2)
                               -- UNNEST  |PARTITIONED|
+                                unnest $$p <- range($$252, 2)
                                 -- UNNEST  |PARTITIONED|
+                                  assign [$$t1.c2, $$252] <- [$$t1.getField("c2"), $$t1.getField("one")] project: [$$t1.c2, $$252]
                                   -- ASSIGN  |PARTITIONED|
+                                    project ([$$t1])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                                        data-scan []<-[$$247, $$t1] <- test.t1
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

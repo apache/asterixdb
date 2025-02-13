@@ -1,45 +1,84 @@
+distribute result [$$79]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$79] <- [{"D2": $$D2, "D1": $$D1}] project: [$$79]
     -- ASSIGN  |PARTITIONED|
+      select ($$72) project: [$$D2, $$D1]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D2, $$D1, $$72])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$72] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select ($$70)
                       -- STREAM_SELECT  |LOCAL|
-                        -- SUBPLAN  |LOCAL|
-                                {
+                        subplan {
+                                  aggregate [$$70] <- [non-empty-stream()]
                                   -- AGGREGATE  |LOCAL|
+                                    select (and(eq($$96, to-bigint($$97)), eq($$94, to-bigint($$95)), eq($$92, to-bigint($$93))))
                                     -- STREAM_SELECT  |LOCAL|
+                                      assign [$$96, $$94, $$92] <- [$$DII.getField("field2"), $$DII.getField("field3"), $$DII.getField("field3_notindexed")]
                                       -- ASSIGN  |LOCAL|
+                                        unnest $$DII <- scan-collection($$91)
                                         -- UNNEST  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SUBPLAN  |LOCAL|
+                          select (eq($$89, to-bigint($$90)))
                           -- STREAM_SELECT  |LOCAL|
+                            assign [$$91, $$89] <- [$$DOI.getField("inner_items"), $$DOI.getField("field2_notindexed")]
                             -- ASSIGN  |LOCAL|
+                              unnest $$DOI <- scan-collection($$88)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$88] <- [$$D1.getField("outer_items")]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D2, $$97, $$95, $$93, $$90, $$D1])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (TestDataverse.Dataset1.Dataset1)  |PARTITIONED|
+                  unnest-map [$$81, $$D1] <- index-search("Dataset1", 0, "Default", "TestDataverse", "Dataset1", true, false, 1, $$108, 1, $$108, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$108, $$D2, $$97, $$95, $$93, $$90])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          distinct ([$$108, $$109])
                           -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$108) (ASC, $$109)
                               -- STABLE_SORT [$$108(ASC), $$109(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$D2, $$97, $$95, $$93, $$90, $$108, $$109])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (TestDataverse.Dataset1.d1Idx)  |PARTITIONED|
+                                      unnest-map [$$104, $$105, $$106, $$107, $$108] <- index-search("d1Idx", 0, "Default", "TestDataverse", "Dataset1", true, true, 4, $$83, $$100, $$101, $$85, 4, $$83, $$100, $$101, $$85, true, true, true)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                          running-aggregate [$$109] <- [create-query-uid()]
                                           -- RUNNING_AGGREGATE  |PARTITIONED|
+                                            assign [$$101, $$100] <- [to-bigint($$95), to-bigint($$97)]
                                             -- ASSIGN  |PARTITIONED|
+                                              assign [$$85, $$83, $$97, $$95, $$93, $$90] <- [to-bigint($$D2.getField("field4")), to-bigint($$D2.getField("field1")), $$D2.getField("field2"), $$D2.getField("field3"), $$D2.getField("field3_notindexed"), $$D2.getField("field2_notindexed")]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$D2])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (TestDataverse.Dataset2)  |PARTITIONED|
+                                                    data-scan []<-[$$80, $$D2] <- TestDataverse.Dataset2
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

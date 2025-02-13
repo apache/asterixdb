@@ -1,14 +1,28 @@
+distribute result [$$50] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$50] <- [{"$1": $$52}] project: [$$50] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$52] <- [agg-sql-sum($$55)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$55] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- AGGREGATE  |PARTITIONED|
+            select (and(gt($$D, "2016"), lt($$D, "2017"))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              unnest $$D <- scan-collection($$53) project: [$$D] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- UNNEST  |PARTITIONED|
+                assign [$$53] <- [$$C.getField("checkin_times").getField("dates")] project: [$$53] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$C]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                      data-scan []<-[$$51, $$C] <- TestYelp.YelpCheckin [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

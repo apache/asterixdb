@@ -1,21 +1,42 @@
+distribute result [$$29]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"a": $$a, "b": $$b}] project: [$$29]
     -- ASSIGN  |PARTITIONED|
+      select (spatial-intersect($$32, $$b.getField(1))) project: [$$a, $$b]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$a, $$32, $$b])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.MyData2.MyData2)  |PARTITIONED|
+            unnest-map [$$31, $$b] <- index-search("MyData2", 0, "Default", "test", "MyData2", true, false, 1, $$42, 1, $$42, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$42)
                 -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$a, $$32, $$42])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- RTREE_SEARCH (test.MyData2.rtree_index)  |PARTITIONED|
+                        unnest-map [$$38, $$39, $$40, $$41, $$42] <- index-search("rtree_index", 1, "Default", "test", "MyData2", true, true, 4, $$34, $$35, $$36, $$37)
+                        -- RTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$34, $$35, $$36, $$37] <- [create-mbr($$32, 2, 0), create-mbr($$32, 2, 1), create-mbr($$32, 2, 2), create-mbr($$32, 2, 3)]
                             -- ASSIGN  |PARTITIONED|
+                              assign [$$32] <- [$$a.getField(1)]
                               -- ASSIGN  |PARTITIONED|
+                                project ([$$a])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (test.MyData1)  |PARTITIONED|
+                                    data-scan []<-[$$30, $$a] <- test.MyData1
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

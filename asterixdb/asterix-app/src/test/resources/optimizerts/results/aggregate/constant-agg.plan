@@ -1,10 +1,20 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$33] <- [{"count": $$35}] project: [$$33]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$35] <- [agg-sql-sum($$36)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$36] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+              data-scan []<-[$$34, $$u] <- TinySocial.FacebookUsers
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

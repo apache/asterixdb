@@ -1,34 +1,68 @@
+distribute result [$$133]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$133] <- [{"t0_unique1": $$145, "t1_unique1": $$146, "t2_unique1": $#3}] project: [$$133]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$145(ASC), $$146(ASC), $#3(ASC) ]  |PARTITIONED|
+        order (ASC, $$145) (ASC, $$146) (ASC, $#3)
         -- STABLE_SORT [$$145(ASC), $$146(ASC), $#3(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$145, $$146, $#3])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                left outer join (eq(numeric-add($$136, $$138), $$143))
                 -- NESTED_LOOP  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    assign [$$143] <- [numeric-multiply(2, $$137)] project: [$$145, $$146, $$136, $$143]
                     -- ASSIGN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (eq($$136, $$137))
                         -- HYBRID_HASH_JOIN [$$136][$$137]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$136]  |PARTITIONED|
+                            assign [$$145] <- [$$tenk.getField(0)] project: [$$145, $$136]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                                unnest-map [$$136, $$tenk] <- index-search("tenk", 0, "Default", "test", "tenk", false, false, 0, 1, $$159, true, false, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$159] <- [2]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$137]  |PARTITIONED|
+                            assign [$$146] <- [$$tenk.getField(0)] project: [$$146, $$137]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                                unnest-map [$$137, $$tenk] <- index-search("tenk", 0, "Default", "test", "tenk", false, false, 0, 1, $$162, true, false, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$162] <- [4]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    assign [$#3] <- [{"unique1": $$tenk.getField(0), "unique2": $$138}.getField(0)] project: [$#3, $$138]
                     -- ASSIGN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.tenk.tenk)  |PARTITIONED|
+                        unnest-map [$$138, $$tenk] <- index-search("tenk", 0, "Default", "test", "tenk", false, false, 0, 1, $$165, true, false, false)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$165] <- [6]
                             -- ASSIGN  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

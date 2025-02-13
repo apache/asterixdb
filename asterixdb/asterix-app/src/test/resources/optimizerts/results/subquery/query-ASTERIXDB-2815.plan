@@ -1,68 +1,133 @@
+distribute result [$$73]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$73] <- [{"id": $$80, "urls": $$68}] project: [$$73]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$80(ASC) ]  |PARTITIONED|
+        order (ASC, $$80)
         -- STABLE_SORT [$$80(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (gt($$79, 2)) project: [$$80, $$68]
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$68, $$79, $$80])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- PRE_CLUSTERED_GROUP_BY[$$75]  |PARTITIONED|
-                          {
+                  group by ([$$89 := $$75]) decor ([$$80]) {
+                            aggregate [$$68, $$79] <- [listify($$67), agg-sql-count($$67)]
                             -- AGGREGATE  |LOCAL|
+                              select (not(is-missing($$88)))
                               -- STREAM_SELECT  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                          }
+                         }
+                  -- PRE_CLUSTERED_GROUP_BY[$$75]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$75)
                       -- STABLE_SORT [$$75(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$80, $$67, $$88, $$75])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              left outer join (eq($$75, $$87))
                               -- HYBRID_HASH_JOIN [$$75][$$87]  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$75]  |PARTITIONED|
+                                  assign [$$75, $$80] <- [$$87, $$85] project: [$$75, $$80]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      replicate
                                       -- REPLICATE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$85] <- [$$86.getField("id")] project: [$$87, $$85]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.RawTweet)  |PARTITIONED|
+                                              data-scan []<-[$$87, $$86] <- test.RawTweet
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- HASH_PARTITION_EXCHANGE [$$87]  |PARTITIONED|
+                                  assign [$$88] <- [true]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      distinct ([$$67, $$87])
                                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$67) (ASC, $$87)
                                           -- STABLE_SORT [$$67(ASC), $$87(ASC)]  |PARTITIONED|
+                                            exchange
                                             -- HASH_PARTITION_EXCHANGE [$$67, $$87]  |PARTITIONED|
+                                              project ([$$67, $$87])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  join (eq($$ve, $$78))
                                                   -- HYBRID_HASH_JOIN [$$ve][$$78]  |PARTITIONED|
+                                                    exchange
                                                     -- HASH_PARTITION_EXCHANGE [$$ve]  |PARTITIONED|
+                                                      unnest $$ve <- scan-collection($$82) project: [$$87, $$ve]
                                                       -- UNNEST  |PARTITIONED|
+                                                        project ([$$87, $$82])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            join (eq($$85, $$81))
                                                             -- HYBRID_HASH_JOIN [$$85][$$81]  |PARTITIONED|
+                                                              exchange
                                                               -- HASH_PARTITION_EXCHANGE [$$85]  |PARTITIONED|
+                                                                replicate
                                                                 -- REPLICATE  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    assign [$$85] <- [$$86.getField("id")] project: [$$87, $$85]
                                                                     -- ASSIGN  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                        -- DATASOURCE_SCAN (test.RawTweet)  |PARTITIONED|
+                                                                        data-scan []<-[$$87, $$86] <- test.RawTweet
+                                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                          exchange
                                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                            empty-tuple-source
                                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                              exchange
                                                               -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
+                                                                assign [$$82, $$81] <- [$$v.getField("evidence"), $$v.getField("tweet_id")] project: [$$82, $$81]
                                                                 -- ASSIGN  |PARTITIONED|
+                                                                  project ([$$v])
                                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                                    exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                      -- DATASOURCE_SCAN (test.Verification)  |PARTITIONED|
+                                                                      data-scan []<-[$$76, $$v] <- test.Verification
+                                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                        exchange
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                          empty-tuple-source
                                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                    exchange
                                                     -- HASH_PARTITION_EXCHANGE [$$78]  |PARTITIONED|
+                                                      assign [$$67, $$78] <- [$$e.getField("url"), $$e.getField("ev_id")] project: [$$67, $$78]
                                                       -- ASSIGN  |PARTITIONED|
+                                                        project ([$$e])
                                                         -- STREAM_PROJECT  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                            -- DATASOURCE_SCAN (test.Evidence)  |PARTITIONED|
+                                                            data-scan []<-[$$77, $$e] <- test.Evidence
+                                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                empty-tuple-source
                                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

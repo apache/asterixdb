@@ -1,14 +1,28 @@
+distribute result [$$20]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$20] <- [{"id": $$22, "title": $$21}] project: [$$20]
     -- ASSIGN  |PARTITIONED|
+      select (get-item(edit-distance-check(substring($$21, 0, 8), "datbase", 1), 0))
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$21] <- [$$paper.getField(2)] project: [$$22, $$21]
         -- ASSIGN  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+            unnest-map [$$22, $$paper] <- index-search("DBLP", 0, "Default", "test", "DBLP", false, false, 1, $$25, 1, $$25, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$25)
                 -- STABLE_SORT [$$25(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                    unnest-map [$$25] <- index-search("ngram_index", 5, "Default", "test", "DBLP", false, false, 2, 1, 12, false, 1, $$24)
+                    -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$24] <- ["datbase"]
                         -- ASSIGN  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

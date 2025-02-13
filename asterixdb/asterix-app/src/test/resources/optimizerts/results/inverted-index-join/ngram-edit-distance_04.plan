@@ -1,53 +1,106 @@
+distribute result [$$45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$45] <- [{"arec": $$a, "brec": $$b, "ed": get-item($$63, 1)}] project: [$$45]
     -- ASSIGN  |PARTITIONED|
+      project ([$$a, $$b, $$63])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$57, $$46))
           -- HYBRID_HASH_JOIN [$$57][$$46]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+              data-scan []<-[$$57, $$a] <- test.DBLP
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+              union ($$b, $$60, $$b) ($$46, $$46, $$46) ($$82, $$73, $$63)
               -- UNION_ALL  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (and(get-item($$82, 0), lt($$46, $$47))) project: [$$b, $$46, $$82]
                   -- STREAM_SELECT  |PARTITIONED|
+                    assign [$$82] <- [edit-distance-check($$49, $$b.getField(3), 2)] project: [$$46, $$47, $$b, $$82]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$46, $$49, $$47, $$b])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                          unnest-map [$$47, $$b] <- index-search("DBLP", 0, "Default", "test", "DBLP", true, false, 1, $$62, 1, $$62, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$62)
                               -- STABLE_SORT [$$62(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                                  unnest-map [$$62] <- index-search("ngram_index", 5, "Default", "test", "DBLP", true, true, 2, 2, 12, false, 1, $$49)
+                                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                      select (edit-distance-string-is-filterable($$49, 2, 3, true))
                                       -- STREAM_SELECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          replicate
                                           -- REPLICATE  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$49] <- [$$58.getField(3)] project: [$$46, $$49]
                                               -- ASSIGN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                                  data-scan []<-[$$46, $$58] <- test.DBLP
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$73] <- [edit-distance-check($$49, $$59, 2)] project: [$$60, $$46, $$73]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$60, $$59, $$46, $$49])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (and(get-item(edit-distance-check($$49, $$59, 2), 0), lt($$46, $$61)))
                         -- NESTED_LOOP  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$59] <- [$$60.getField(3)]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                data-scan []<-[$$61, $$60] <- test.DBLP
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            select (not(edit-distance-string-is-filterable($$49, 2, 3, true)))
                             -- STREAM_SELECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                replicate
                                 -- REPLICATE  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$49] <- [$$58.getField(3)] project: [$$46, $$49]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                        data-scan []<-[$$46, $$58] <- test.DBLP
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,39 +1,75 @@
+distribute result [$$58]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$58] <- [{"tweet": $$68, "similar-tweets": $$57}] project: [$$58]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- PRE_CLUSTERED_GROUP_BY[$$60]  |PARTITIONED|
-                {
+        group by ([$$68 := $$60]) decor ([]) {
+                  aggregate [$$57] <- [listify($$61)]
                   -- AGGREGATE  |LOCAL|
+                    select (not(is-missing($$61)))
                     -- STREAM_SELECT  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- PRE_CLUSTERED_GROUP_BY[$$60]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$60)
             -- STABLE_SORT [$$60(ASC)]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$60]  |PARTITIONED|
+                project ([$$61, $$60])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (eq($$71, $$60))
                     -- HYBRID_HASH_JOIN [$$71][$$60]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
+                        select (and(ge($$59, datetime: { 2011-06-18T14:10:17.000 }), lt($$59, datetime: { 2011-06-18T15:10:17.000 }))) project: [$$71]
                         -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$59] <- [$$t.getField(3)] project: [$$71, $$59]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.TweetMessages)  |PARTITIONED|
+                              data-scan []<-[$$71, $$t] <- test.TweetMessages
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$60]  |PARTITIONED|
+                        select (and(neq($$61, $$60), get-item(similarity-jaccard-check($$64, $$t2.getField(4), 0.6), 0))) retain-untrue ($$61 <- missing) project: [$$61, $$60]
                         -- STREAM_SELECT  |PARTITIONED|
+                          project ([$$60, $$64, $$61, $$t2])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
+                              left-outer-unnest-map [$$61, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$74, 1, $$74, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$74)
                                   -- STABLE_SORT [$$74(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.TweetMessages.topicIIx)  |PARTITIONED|
+                                      left-outer-unnest-map [$$74] <- index-search("topicIIx", 4, "Default", "test", "TweetMessages", true, true, 1, 0.6, 22, false, 1, $$64)
+                                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                          select (and(ge($$72, datetime: { 2011-06-18T14:10:17.000 }), lt($$72, datetime: { 2011-06-18T15:10:17.000 }))) project: [$$60, $$64]
                                           -- STREAM_SELECT  |PARTITIONED|
+                                            assign [$$64, $$72] <- [$$73.getField(4), $$73.getField(3)] project: [$$60, $$64, $$72]
                                             -- ASSIGN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.TweetMessages)  |PARTITIONED|
+                                                data-scan []<-[$$60, $$73] <- test.TweetMessages
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

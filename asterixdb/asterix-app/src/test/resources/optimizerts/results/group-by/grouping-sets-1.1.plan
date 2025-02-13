@@ -1,112 +1,200 @@
+distribute result [$#3]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$#3])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$391(ASC), $$392(ASC), $$393(ASC) ]  |PARTITIONED|
+        order (ASC, $$391) (ASC, $$392) (ASC, $$393)
         -- STABLE_SORT [$$391(ASC), $$392(ASC), $$393(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$1093, $$1195, $#3) ($$398, $$ten, $$393) ($$492, $$four, $$392) ($$592, $$two, $$391)
             -- UNION_ALL  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$1093, $$398, $$492, $$592])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    union ($$698, $$ten, $$398) ($$768, $$four, $$492) ($$844, $$two, $$592) ($$1094, $$1144, $$1093)
                     -- UNION_ALL  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        union ($$ten, $$ten, $$698) ($$four, $$four, $$768) ($$two, $$two, $$844) ($$1196, $$1228, $$1094)
                         -- UNION_ALL  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$1196] <- [cast(cast({"two": $$two, "four": $$four, "ten": $$ten, "grp": 3, "agg_sum": $$387}))] project: [$$ten, $$four, $$two, $$1196]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                group by ([$$two := $$1083]) decor ([$$four := $$237; $$ten := $$238]) {
+                                          aggregate [$$387] <- [agg-global-sql-sum($$1082)]
+                                          -- AGGREGATE  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                       }
                                 -- SORT_GROUP_BY[$$1083]  |PARTITIONED|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$1083]  |PARTITIONED|
+                                    group by ([$$1083 := $$244]) decor ([$$237; $$238]) {
+                                              aggregate [$$1082] <- [agg-local-sql-sum($$185)]
+                                              -- AGGREGATE  |LOCAL|
+                                                nested tuple source
+                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                           }
                                     -- SORT_GROUP_BY[$$244]  |PARTITIONED|
-                                            {
-                                              -- AGGREGATE  |LOCAL|
-                                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$237, $$238, $$185, $$244] <- [null, null, $$tenk.getField(5), $$tenk.getField(2)] project: [$$237, $$238, $$185, $$244]
                                         -- ASSIGN  |PARTITIONED|
+                                          assign [$$tenk] <- [$$tenk] project: [$$tenk]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              replicate
                                               -- REPLICATE  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  project ([$$tenk])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                                      data-scan []<-[$$250, $$tenk] <- test.tenk
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$1228] <- [cast(cast({"two": $$two, "four": $$four, "ten": $$ten, "grp": 5, "agg_sum": $$388}))] project: [$$ten, $$four, $$two, $$1228]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                group by ([$$four := $$1085]) decor ([$$two := $$239; $$ten := $$240]) {
+                                          aggregate [$$388] <- [agg-global-sql-sum($$1084)]
+                                          -- AGGREGATE  |LOCAL|
+                                            nested tuple source
+                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                       }
                                 -- SORT_GROUP_BY[$$1085]  |PARTITIONED|
-                                        {
-                                          -- AGGREGATE  |LOCAL|
-                                            -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$1085]  |PARTITIONED|
-                                    -- SORT_GROUP_BY[$$245]  |PARTITIONED|
-                                            {
+                                    group by ([$$1085 := $$245]) decor ([$$239; $$240]) {
+                                              aggregate [$$1084] <- [agg-local-sql-sum($$198)]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- SORT_GROUP_BY[$$245]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$239, $$240, $$198, $$245] <- [null, null, $$tenk.getField(5), $$tenk.getField(3)] project: [$$239, $$240, $$198, $$245]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$tenk])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                                    data-scan []<-[$$250, $$tenk] <- test.tenk
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$1144] <- [cast(cast({"two": $$two, "four": $$four, "ten": $$ten, "grp": 1, "agg_sum": $$389}))] project: [$$ten, $$four, $$two, $$1144]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- SORT_GROUP_BY[$$1087, $$1088]  |PARTITIONED|
-                                    {
+                            group by ([$$two := $$1087; $$four := $$1088]) decor ([$$ten := $$241]) {
+                                      aggregate [$$389] <- [agg-global-sql-sum($$1086)]
                                       -- AGGREGATE  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                                   }
+                            -- SORT_GROUP_BY[$$1087, $$1088]  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$1087, $$1088]  |PARTITIONED|
-                                -- SORT_GROUP_BY[$$246, $$247]  |PARTITIONED|
-                                        {
+                                group by ([$$1087 := $$246; $$1088 := $$247]) decor ([$$241]) {
+                                          aggregate [$$1086] <- [agg-local-sql-sum($$212)]
                                           -- AGGREGATE  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- SORT_GROUP_BY[$$246, $$247]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$241, $$247, $$246, $$212] <- [null, $$tenk.getField(3), $$tenk.getField(2), $$tenk.getField(5)] project: [$$241, $$247, $$246, $$212]
                                     -- ASSIGN  |PARTITIONED|
+                                      assign [$$tenk] <- [$$tenk] project: [$$tenk]
                                       -- ASSIGN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          replicate
                                           -- REPLICATE  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              project ([$$tenk])
                                               -- STREAM_PROJECT  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                                  data-scan []<-[$$250, $$tenk] <- test.tenk
+                                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$1195] <- [cast({"two": $$two, "four": $$four, "ten": $$ten, "grp": 6, "agg_sum": $$390})] project: [$$1195, $$ten, $$four, $$two]
                 -- ASSIGN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- SORT_GROUP_BY[$$1090]  |PARTITIONED|
-                            {
+                    group by ([$$ten := $$1090]) decor ([$$two := $$242; $$four := $$243]) {
+                              aggregate [$$390] <- [agg-global-sql-sum($$1089)]
                               -- AGGREGATE  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                            }
+                           }
+                    -- SORT_GROUP_BY[$$1090]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$1090]  |PARTITIONED|
-                        -- SORT_GROUP_BY[$$248]  |PARTITIONED|
-                                {
+                        group by ([$$1090 := $$248]) decor ([$$242; $$243]) {
+                                  aggregate [$$1089] <- [agg-local-sql-sum($$225)]
                                   -- AGGREGATE  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SORT_GROUP_BY[$$248]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$242, $$243, $$225, $$248] <- [null, null, $$tenk.getField(5), $$tenk.getField(4)] project: [$$242, $$243, $$225, $$248]
                             -- ASSIGN  |PARTITIONED|
+                              assign [$$tenk] <- [$$tenk] project: [$$tenk]
                               -- ASSIGN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  replicate
                                   -- REPLICATE  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$tenk])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                          data-scan []<-[$$250, $$tenk] <- test.tenk
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

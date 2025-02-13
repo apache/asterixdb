@@ -1,12 +1,24 @@
+distribute result [$$44] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"id": $$50, "f_d_fmt": $$59}] project: [$$44] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$50(ASC) ]  |PARTITIONED|
+        order (ASC, $$50) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$50(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt($$59, date: { 2020-12-20 })) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$59] <- [date-default-null($$ds5.getField("f_d_fmt"), "MM/DD/YYYY")] project: [$$50, $$59] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds5)  |PARTITIONED|
+                  data-scan []<-[$$50, $$ds5] <- test.ds5 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

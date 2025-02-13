@@ -1,28 +1,56 @@
+distribute result [$$c]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([$$c])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$29)
         -- STABLE_SORT [$$29(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$29(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$35
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (get-item(edit-distance-check($$c.getField(0).getField(4), array: [ "computers", "wine", "walking" ], 3), 0))
                     -- STREAM_SELECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
+                        data-scan []<-[$$29, $$c] <- test.Customers
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$35] <- [agg-range-map($$33, $$34)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$33, $$34] <- [agg-local-sampling($$29), agg-null-writer($$29)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$29])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              select (get-item(edit-distance-check($$c.getField(0).getField(4), array: [ "computers", "wine", "walking" ], 3), 0))
                               -- STREAM_SELECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
+                                  data-scan []<-[$$29, $$c] <- test.Customers
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

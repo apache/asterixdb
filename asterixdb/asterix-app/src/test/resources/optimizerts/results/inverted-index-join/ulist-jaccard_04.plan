@@ -1,26 +1,52 @@
+distribute result [$$45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$45] <- [{"arec": $$a, "brec": $$b, "jacc": get-item($$61, 1)}] project: [$$45]
     -- ASSIGN  |PARTITIONED|
+      project ([$$a, $$b, $$61])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$57, $$46))
           -- HYBRID_HASH_JOIN [$$57][$$46]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
+              data-scan []<-[$$57, $$a] <- test.Customers
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+              select (and(get-item($$61, 0), lt($$46, $$47))) project: [$$b, $$61, $$46]
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$61] <- [similarity-jaccard-check($$49, $$b.getField(4), 0.7)] project: [$$46, $$47, $$b, $$61]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$46, $$49, $$47, $$b])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.Customers.Customers)  |PARTITIONED|
+                      unnest-map [$$47, $$b] <- index-search("Customers", 0, "Default", "test", "Customers", true, false, 1, $$59, 1, $$59, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$59)
                           -- STABLE_SORT [$$59(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.Customers.interests_index)  |PARTITIONED|
+                              unnest-map [$$59] <- index-search("interests_index", 4, "Default", "test", "Customers", true, true, 1, 0.7, 22, false, 1, $$49)
+                              -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                exchange
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  assign [$$49] <- [$$58.getField(4)] project: [$$46, $$49]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
+                                      data-scan []<-[$$46, $$58] <- test.Customers
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

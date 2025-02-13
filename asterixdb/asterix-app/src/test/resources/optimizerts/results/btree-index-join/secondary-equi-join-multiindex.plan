@@ -1,20 +1,40 @@
+distribute result [$$38]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$38] <- [{"fbu-ID": $$40, "fbm-auth-ID": $$message.getField(2), "uname": $$44, "message": $$message.getField(6)}] project: [$$38]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$40, $$message.getField(3)))
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$40, $$44, $$message])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.FacebookMessages.FacebookMessages)  |PARTITIONED|
+            unnest-map [$$41, $$message] <- index-search("FacebookMessages", 0, "Default", "test", "FacebookMessages", true, false, 1, $$51, 1, $$51, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$51)
                 -- STABLE_SORT [$$51(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$40, $$44, $$51])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.FacebookMessages.fbmIdxAutId)  |PARTITIONED|
+                        unnest-map [$$50, $$51] <- index-search("fbmIdxAutId", 0, "Default", "test", "FacebookMessages", true, true, 1, $$40, 1, $$40, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$44] <- [$$user.getField(3)] project: [$$40, $$44]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.FacebookUsers.FacebookUsers)  |PARTITIONED|
+                                unnest-map [$$40, $$user] <- index-search("FacebookUsers", 0, "Default", "test", "FacebookUsers", false, false, 1, $$46, 1, $$47, true, true, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$46, $$47] <- [11000, 12000]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

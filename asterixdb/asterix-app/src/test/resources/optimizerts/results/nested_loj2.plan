@@ -1,42 +1,78 @@
+distribute result [$$70]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$70] <- [{"cust": $$c, "orders": $$68}] project: [$$70]
     -- ASSIGN  |PARTITIONED|
+      project ([$$68, $$c])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$71]  |PARTITIONED|
-                  {
+          group by ([$$82 := $$71]) decor ([$$c]) {
+                    aggregate [$$68] <- [listify({"order": $$o, "items": $$62})]
                     -- AGGREGATE  |LOCAL|
-                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$72]  |LOCAL|
-                              {
+                      group by ([$$80 := $$72]) decor ([$$c; $$o; $$71; $$75]) {
+                                aggregate [$$62] <- [listify($$l)]
                                 -- AGGREGATE  |LOCAL|
+                                  select (not(is-missing($$79)))
                                   -- STREAM_SELECT  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$72]  |LOCAL|
+                        select (not(is-missing($$81)))
                         -- STREAM_SELECT  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$71]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$71) (ASC, $$72)
               -- STABLE_SORT [$$71(ASC), $$72(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
+                  project ([$$c, $$o, $$l, $$79, $$72, $$71, $$75, $$81])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      left outer join (eq($$73, $$72))
                       -- HYBRID_HASH_JOIN [$$72][$$73]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$72]  |PARTITIONED|
+                          left outer join (eq($$75, $$71))
                           -- HYBRID_HASH_JOIN [$$71][$$75]  |PARTITIONED|
+                            exchange
                             -- HASH_PARTITION_EXCHANGE [$$71]  |PARTITIONED|
-                              -- DATASOURCE_SCAN (tpch.Customers)  |PARTITIONED|
+                              data-scan []<-[$$71, $$c] <- tpch.Customers
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange
                             -- HASH_PARTITION_EXCHANGE [$$75]  |PARTITIONED|
+                              assign [$$81, $$75] <- [true, $$o.getField(1)]
                               -- ASSIGN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                                  data-scan []<-[$$72, $$o] <- tpch.Orders
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$73]  |PARTITIONED|
+                          assign [$$79] <- [true]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$73, $$l])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (tpch.LineItems)  |PARTITIONED|
+                                data-scan []<-[$$73, $$74, $$l] <- tpch.LineItems
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

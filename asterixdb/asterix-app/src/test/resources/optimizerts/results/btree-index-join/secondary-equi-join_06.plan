@@ -1,34 +1,62 @@
+distribute result [$$75]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$75] <- [{"bar": $$68, "testdst2": $$testdst2}] project: [$$75]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$val, $$testdst2.getField(1))) project: [$$68, $$testdst2]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$68, $$val, $$testdst2])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.testdst2.testdst2)  |PARTITIONED|
+            unnest-map [$$78, $$testdst2] <- index-search("testdst2", 0, "Default", "test", "testdst2", true, false, 1, $$85, 1, $$85, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$85)
                 -- STABLE_SORT [$$85(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$68, $$val, $$85])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.testdst2.sec_Idx)  |PARTITIONED|
+                        unnest-map [$$84, $$85] <- index-search("sec_Idx", 0, "Default", "test", "testdst2", true, true, 1, $$val, 1, $$val, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$68] <- [{"val": $$val, "$1": $$81}] project: [$$val, $$68]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- SORT_GROUP_BY[$$83]  |PARTITIONED|
-                                        {
+                                group by ([$$val := $$83]) decor ([]) {
+                                          aggregate [$$81] <- [agg-sql-sum($$82)]
                                           -- AGGREGATE  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- SORT_GROUP_BY[$$83]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$83]  |PARTITIONED|
-                                    -- SORT_GROUP_BY[$$76]  |PARTITIONED|
-                                            {
+                                    group by ([$$83 := $$76]) decor ([]) {
+                                              aggregate [$$82] <- [agg-sql-count(1)]
                                               -- AGGREGATE  |LOCAL|
+                                                nested tuple source
                                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                            }
+                                           }
+                                    -- SORT_GROUP_BY[$$76]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$76] <- [$$testdst.getField(1)] project: [$$76]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$testdst])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+                                              data-scan []<-[$$77, $$testdst] <- test.testdst
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

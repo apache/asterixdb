@@ -1,64 +1,128 @@
+distribute result [$$18]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$18] <- [{"pk": $$21, "sk": $$20}] project: [$$18]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$21)
         -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$21(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$36
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    union ($$31, $$26, $$21) ($$33, $$25, $$20)
                     -- UNION_ALL  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (lt($$33, 3))
                         -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$33] <- [$$32.getField(1)] project: [$$31, $$33]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
+                              unnest-map [$$31, $$32] <- index-search("MyData", 0, "Default", "test", "MyData", false, false, 1, $$26, 1, $$26, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  split ($$27)
                                   -- SPLIT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                      unnest-map [$$25, $$26, $$27] <- index-search("btree_index_docid", 0, "Default", "test", "MyData", false, false, 0, 1, $$24, true, false, false)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$24] <- [3]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (lt($$25, 3)) project: [$$26, $$25]
                         -- STREAM_SELECT  |PARTITIONED|
+                          project ([$$25, $$26])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              split ($$27)
                               -- SPLIT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                  unnest-map [$$25, $$26, $$27] <- index-search("btree_index_docid", 0, "Default", "test", "MyData", false, false, 0, 1, $$24, true, false, false)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$24] <- [3]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$36] <- [agg-range-map($$34, $$35)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$34, $$35] <- [agg-local-sampling($$21), agg-null-writer($$21)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$21])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              union ($$31, $$26, $$21) ($$33, $$25, $$20)
                               -- UNION_ALL  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  select (lt($$33, 3))
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    assign [$$33] <- [$$32.getField(1)] project: [$$31, $$33]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (test.MyData.MyData)  |PARTITIONED|
+                                        unnest-map [$$31, $$32] <- index-search("MyData", 0, "Default", "test", "MyData", false, false, 1, $$26, 1, $$26, true, true, true)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            split ($$27)
                                             -- SPLIT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                                unnest-map [$$25, $$26, $$27] <- index-search("btree_index_docid", 0, "Default", "test", "MyData", false, false, 0, 1, $$24, true, false, false)
+                                                -- BTREE_SEARCH  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    assign [$$24] <- [3]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      empty-tuple-source
                                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  select (lt($$25, 3)) project: [$$26, $$25]
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    project ([$$25, $$26])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        split ($$27)
                                         -- SPLIT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- BTREE_SEARCH (test.MyData.btree_index_docid)  |PARTITIONED|
+                                            unnest-map [$$25, $$26, $$27] <- index-search("btree_index_docid", 0, "Default", "test", "MyData", false, false, 0, 1, $$24, true, false, false)
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$24] <- [3]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,18 +1,33 @@
+distribute result [$$44]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"D": $$D}] project: [$$44]
     -- ASSIGN  |PARTITIONED|
+      select (and($$40, eq($$41, 0))) project: [$$D]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D, $$40, $$41])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$40, $$41] <- [non-empty-stream(), agg-sql-count(switch-case(and(eq($$I, 1), eq($$J, 2)), true, null, true))]
                     -- AGGREGATE  |LOCAL|
+                      unnest $$J <- scan-collection($$47)
                       -- UNNEST  |LOCAL|
+                        unnest $$I <- scan-collection($$46)
                         -- UNNEST  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$47, $$46] <- [$$D.getField("other_items"), $$D.getField("items")]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                  data-scan []<-[$$45, $$D] <- TestDataverse.Dataset1
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

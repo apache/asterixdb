@@ -1,30 +1,57 @@
+distribute result [$$48]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$48] <- [{"partsupp": $$ps, "li": $$46}] project: [$$48]
     -- ASSIGN  |PARTITIONED|
+      project ([$$46, $$ps])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- PRE_CLUSTERED_GROUP_BY[$$49, $$50]  |PARTITIONED|
-                  {
+          group by ([$$60 := $$49; $$61 := $$50]) decor ([$$ps]) {
+                    aggregate [$$46] <- [listify($$li)]
                     -- AGGREGATE  |LOCAL|
+                      select (not(is-missing($$59)))
                       -- STREAM_SELECT  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- PRE_CLUSTERED_GROUP_BY[$$49, $$50]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$49) (ASC, $$50)
               -- STABLE_SORT [$$49(ASC), $$50(ASC)]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$49, $$50]  |PARTITIONED|
+                  project ([$$ps, $$li, $$59, $$49, $$50])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      left outer join (and(eq($$53, $$54), eq($$51, $$49), eq($$57, $$50)))
                       -- HYBRID_HASH_JOIN [$$54, $$49, $$50][$$53, $$51, $$57]  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$54, $$49, $$50]  |PARTITIONED|
+                          assign [$$54] <- [$$ps.getField(3)]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (`loj-super-key_02`.PartSupp)  |PARTITIONED|
+                              data-scan []<-[$$49, $$50, $$ps] <- `loj-super-key_02`.PartSupp
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$53, $$51, $$57]  |PARTITIONED|
+                          assign [$$59, $$57, $$53] <- [true, $$li.getField(2), $$li.getField(5)]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$51, $$li])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (`loj-super-key_02`.LineItems)  |PARTITIONED|
+                                data-scan []<-[$$51, $$52, $$li] <- `loj-super-key_02`.LineItems
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

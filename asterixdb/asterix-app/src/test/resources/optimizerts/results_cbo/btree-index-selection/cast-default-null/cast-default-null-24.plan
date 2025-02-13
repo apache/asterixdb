@@ -1,12 +1,24 @@
+distribute result [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$18] <- [{"id": $$21, "s_f2": $$20}] project: [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$21(ASC) ]  |PARTITIONED|
+        order (ASC, $$21) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$21(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt($$20, "4")) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$20] <- [$$ds7.getField(2)] project: [$$21, $$20] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds7)  |PARTITIONED|
+                  data-scan []<-[$$21, $$ds7] <- test.ds7 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,13 +1,26 @@
+distribute result [$$c] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (get-item(similarity-jaccard-check($$c.getField(4), array: [ "databases", "computers", "wine" ], 0.7), 0)) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$c])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.Customers.Customers)  |PARTITIONED|
+          unnest-map [$$28, $$c] <- index-search("Customers", 0, "Default", "test", "Customers", false, false, 1, $$31, 1, $$31, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$31)
               -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.Customers.interests_index)  |PARTITIONED|
+                  unnest-map [$$31] <- index-search("interests_index", 4, "Default", "test", "Customers", false, false, 1, 0.7, 21, false, 1, $$30)
+                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      assign [$$30] <- [array: [ "databases", "computers", "wine" ]]
                       -- ASSIGN  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

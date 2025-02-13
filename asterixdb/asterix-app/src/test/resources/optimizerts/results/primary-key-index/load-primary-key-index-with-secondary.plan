@@ -1,66 +1,132 @@
+sink
 -- SINK  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        insert into kwds_index on test.MyData from [$$3] [bulkload]
         -- INDEX_BULKLOAD  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$3) (ASC, $$2)
             -- STABLE_SORT [$$3(ASC), $$2(ASC)]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$3, $$2])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
                     -- REPLICATE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$3, $$4, $$2])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            insert into test.MyData from record: $$1 partitioned by [$$2] [bulkload]
                             -- BULKLOAD  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$2)
                                 -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
+                                    assign [$$3, $$4, $$2] <- [$$1.getField(2), $$1.getField(1), $$1.getField(0)]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
+                                        data-scan []<-[$$1] <- loadable_dv.loadable_ds
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        insert into pkIndex on test.MyData from [] [bulkload]
         -- INDEX_BULKLOAD  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$2])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$3, $$4, $$2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        insert into test.MyData from record: $$1 partitioned by [$$2] [bulkload]
                         -- BULKLOAD  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$2)
                             -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
+                              exchange
                               -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
+                                assign [$$3, $$4, $$2] <- [$$1.getField(2), $$1.getField(1), $$1.getField(0)]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
+                                    data-scan []<-[$$1] <- loadable_dv.loadable_ds
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    project ([])
     -- STREAM_PROJECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        insert into rtree_index_point on test.MyData from [$$5, $$6, $$5, $$6] [bulkload]
         -- INDEX_BULKLOAD  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$5) (ASC, $$6) (ASC, $$2)
             -- STABLE_SORT [$$5(ASC), $$6(ASC), $$2(ASC)]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$5, $$6] <- [create-mbr($$4, 2, 0), create-mbr($$4, 2, 1)] project: [$$2, $$5, $$6]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$4, $$2])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      replicate
                       -- REPLICATE  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$3, $$4, $$2])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              insert into test.MyData from record: $$1 partitioned by [$$2] [bulkload]
                               -- BULKLOAD  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$2)
                                   -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
+                                      assign [$$3, $$4, $$2] <- [$$1.getField(2), $$1.getField(1), $$1.getField(0)]
                                       -- ASSIGN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
+                                          data-scan []<-[$$1] <- loadable_dv.loadable_ds
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

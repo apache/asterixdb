@@ -1,17 +1,34 @@
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$28] <- [{"U": $$U, "augmentedUser": $$34}] project: [$$28]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$34.getField("name"), "Glenn"))
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$34] <- [object-add($$U, "favoriteColor", "Green")]
         -- ASSIGN  |PARTITIONED|
+          project ([$$U])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
+              unnest-map [$$29, $$U] <- index-search("Users", 0, "Default", "test", "Users", false, false, 1, $$38, 1, $$38, true, true, true)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$38)
                   -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$38])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (test.Users.usersNameIdx)  |PARTITIONED|
+                          unnest-map [$$37, $$38] <- index-search("usersNameIdx", 0, "Default", "test", "Users", false, false, 1, $$35, 1, $$36, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              assign [$$35, $$36] <- ["Glenn", "Glenn"]
                               -- ASSIGN  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

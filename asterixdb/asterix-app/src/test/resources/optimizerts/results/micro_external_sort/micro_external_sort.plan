@@ -1,25 +1,44 @@
+distribute result [$$162]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$162] <- [{"group": $$group, "sum_per_group": $$161}] project: [$$162]
     -- ASSIGN  |LOCAL|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- PRE_CLUSTERED_GROUP_BY[$$163]  |LOCAL|
-                {
+        group by ([$$group := $$163]) decor ([]) {
+                  aggregate [$$161] <- [listify({"group_num": $$group_num, "sum": $$167})]
                   -- AGGREGATE  |LOCAL|
+                    order (ASC, $$167)
                     -- MICRO_STABLE_SORT [$$167(ASC)]  |LOCAL|
-                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$164]  |LOCAL|
-                              {
+                      group by ([$$group_num := $$164]) decor ([]) {
+                                aggregate [$$167] <- [agg-global-sql-sum($$174)]
                                 -- AGGREGATE  |LOCAL|
+                                  aggregate [$$174] <- [agg-local-sql-sum($$157)]
                                   -- AGGREGATE  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- MICRO_PRE_CLUSTERED_GROUP_BY[$$164]  |LOCAL|
+                        order (ASC, $$164)
                         -- MICRO_STABLE_SORT [$$164(ASC)]  |LOCAL|
+                          assign [$$157] <- [$$143.getField(3)]
                           -- ASSIGN  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- PRE_CLUSTERED_GROUP_BY[$$163]  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$163)
             -- STABLE_SORT [$$163(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                assign [$$163, $$164, $$143] <- [switch-case(true, eq(0, $$175), "one", eq(1, $$175), "two", eq(2, $$175), "three", null), switch-case(true, eq(0, $$176), "SUM_1s", eq(1, $$176), "SUM_2s", eq(2, $$176), "SUM_3s", null), {"id": $$i, "a": switch-case(true, eq(0, $$175), "one", eq(1, $$175), "two", eq(2, $$175), "three", null), "b": switch-case(true, eq(0, $$176), "SUM_1s", eq(1, $$176), "SUM_2s", eq(2, $$176), "SUM_3s", null), "c": switch-case(true, eq(0, $$176), 1, eq(1, $$176), 2, eq(2, $$176), 3, null)}] project: [$$164, $$143, $$163]
                 -- ASSIGN  |UNPARTITIONED|
+                  assign [$$176, $$175] <- [numeric-mod(numeric-div($$i, 3), 3), numeric-mod($$i, 3)]
                   -- ASSIGN  |UNPARTITIONED|
+                    unnest $$i <- range(0, 89999)
                     -- UNNEST  |UNPARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

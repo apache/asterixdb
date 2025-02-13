@@ -1,23 +1,46 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$31] <- [{"doc": $$38, "name": $$39}] project: [$$31]
     -- ASSIGN  |PARTITIONED|
+      project ([$$38, $$39])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$33(ASC) ]  |PARTITIONED|
+          order (ASC, $$33)
           -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$38, $$39, $$33])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  join (eq($$35, $$36))
                   -- HYBRID_HASH_JOIN [$$35][$$36]  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
+                      assign [$$38, $$35] <- [$$a.getField("doc"), $$a.getField("jn")] project: [$$38, $$33, $$35]
                       -- ASSIGN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                          data-scan []<-[$$33, $$a] <- test.t1
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+                      assign [$$39, $$36] <- [$$b.getField("name"), $$b.getField("jn")] project: [$$39, $$36]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$b])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.t2)  |PARTITIONED|
+                            data-scan []<-[$$34, $$b] <- test.t2
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,17 +1,34 @@
+distribute result [$$24]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- SORT_MERGE_EXCHANGE [$$24(ASC) ]  |PARTITIONED|
+    order (ASC, $$24)
     -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$24])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$23, $$21))
             -- HYBRID_HASH_JOIN [$$21][$$23]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$24, $$21] <- [$$tenk.getField(0), $$tenk.getField(7)] project: [$$24, $$21]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$tenk])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                      data-scan []<-[$$22, $$tenk] <- test.tenk
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                unnest $$23 <- scan-collection(array: [ 0, 1 ])
                 -- UNNEST  |UNPARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

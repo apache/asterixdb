@@ -1,12 +1,24 @@
+distribute result [$$44]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"id": $$50, "f_d": $$59}] project: [$$44]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$50(ASC) ]  |PARTITIONED|
+        order (ASC, $$50)
         -- STABLE_SORT [$$50(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt($$59, date: { 2020-12-20 }))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$59] <- [date-default-null($$ds6.getField("f_d"))] project: [$$50, $$59]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds6)  |PARTITIONED|
+                  data-scan []<-[$$50, $$ds6] <- test.ds6
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

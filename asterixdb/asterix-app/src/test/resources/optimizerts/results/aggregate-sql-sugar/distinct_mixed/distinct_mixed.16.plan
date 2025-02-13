@@ -1,48 +1,87 @@
+distribute result [$$145]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$145] <- [{"g": $$g, "sum_distinct_x": $$146, "sum_y": $$147, "sum_distinct_z": $$148, "avg_distinct_x": $$149, "avg_distinct_y": $$150, "count_x": $$151, "count_distinct_y": $$152, "avg_z": $$153, "count_distinct_z": $$154}] project: [$$145]
     -- ASSIGN  |LOCAL|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- PRE_CLUSTERED_GROUP_BY[$$g]  |LOCAL|
-                {
+        group by ([$$g := $$g]) decor ([]) {
+                  aggregate [$$146, $$149] <- [agg-sql-sum($$x), agg-sql-avg($$x)]
                   -- AGGREGATE  |LOCAL|
+                    distinct ([$$x])
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                      order (ASC, $$x)
                       -- MICRO_STABLE_SORT [$$x(ASC)]  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
-                {
+               }
+               {
+                  aggregate [$$147, $$151, $$153] <- [agg-global-sql-sum($$182), agg-sql-sum($$183), agg-global-sql-avg($$184)]
                   -- AGGREGATE  |LOCAL|
+                    aggregate [$$182, $$183, $$184] <- [agg-local-sql-sum($$y), agg-sql-count($$x), agg-local-sql-avg($$z)]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
-                {
+               }
+               {
+                  aggregate [$$148, $$154] <- [agg-sql-sum($$z), agg-sql-count($$z)]
                   -- AGGREGATE  |LOCAL|
+                    distinct ([$$z])
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                      order (ASC, $$z)
                       -- MICRO_STABLE_SORT [$$z(ASC)]  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
-                {
+               }
+               {
+                  aggregate [$$150, $$152] <- [agg-sql-avg($$y), agg-sql-count($$y)]
                   -- AGGREGATE  |LOCAL|
+                    distinct ([$$y])
                     -- MICRO_PRE_SORTED_DISTINCT_BY  |LOCAL|
+                      order (ASC, $$y)
                       -- MICRO_STABLE_SORT [$$y(ASC)]  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- PRE_CLUSTERED_GROUP_BY[$$g]  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$g)
             -- STABLE_SORT [$$g(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                join (true)
                 -- NESTED_LOOP  |UNPARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                    join (true)
                     -- NESTED_LOOP  |UNPARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                        join (true)
                         -- NESTED_LOOP  |UNPARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                            unnest $$x <- range(1, 5)
                             -- UNNEST  |UNPARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                            unnest $$y <- range(6, 10)
                             -- UNNEST  |UNPARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                        unnest $$z <- range(11, 15)
                         -- UNNEST  |UNPARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                    unnest $$g <- range(1, 3)
                     -- UNNEST  |UNPARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,12 +1,24 @@
+distribute result [$$19]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$19] <- [{"id": $$22, "x": $$21, "y": $$25}] project: [$$19]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$22(ASC) ]  |PARTITIONED|
+        order (ASC, $$22)
         -- STABLE_SORT [$$22(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (le($$21, 1))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$25, $$21] <- [$$ds3.getField("y"), $$ds3.getField("x")] project: [$$22, $$25, $$21]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds3)  |PARTITIONED|
+                  data-scan []<-[$$22, $$ds3] <- test.ds3
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

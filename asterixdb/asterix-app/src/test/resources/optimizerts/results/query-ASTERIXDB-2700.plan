@@ -1,32 +1,64 @@
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$46] <- [{"uname": $$55, "message": $$msg.getField("message")}] project: [$$46]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$msg.getField("author_id"), $$48)) project: [$$55, $$msg]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$55, $$48, $$msg])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (bigfun.GleambookMessagesComposite.GleambookMessagesComposite)  |PARTITIONED|
+            unnest-map [$$49, $$50, $$msg] <- index-search("GleambookMessagesComposite", 0, "Default", "bigfun", "GleambookMessagesComposite", true, false, 2, $$62, $$63, 2, $$62, $$63, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$62) (ASC, $$63)
                 -- STABLE_SORT [$$62(ASC), $$63(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$55, $$48, $$62, $$63])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (bigfun.GleambookMessagesComposite.authorIdIx)  |PARTITIONED|
+                        unnest-map [$$61, $$62, $$63] <- index-search("authorIdIx", 0, "Default", "bigfun", "GleambookMessagesComposite", true, true, 1, $$48, 1, $$48, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [] <- []
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- SORT_MERGE_EXCHANGE [$$48(ASC) ]  |PARTITIONED|
+                                order (ASC, $$48)
                                 -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    select (ge($$u.getField("user_since"), "2008-07-22T00:00:00")) project: [$$55, $$48]
                                     -- STREAM_SELECT  |PARTITIONED|
+                                      assign [$$55] <- [$$u.getField("name")]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$48, $$u])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- BTREE_SEARCH (bigfun.GleambookUsersComposite.GleambookUsersComposite)  |PARTITIONED|
+                                            unnest-map [$$47, $$48, $$u] <- index-search("GleambookUsersComposite", 0, "Default", "bigfun", "GleambookUsersComposite", false, false, 2, $$59, $$60, 2, $$59, $$60, true, true, true)
+                                            -- BTREE_SEARCH  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                order (ASC, $$59) (ASC, $$60)
                                                 -- STABLE_SORT [$$59(ASC), $$60(ASC)]  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    project ([$$59, $$60])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- BTREE_SEARCH (bigfun.GleambookUsersComposite.usrSinceIx)  |PARTITIONED|
+                                                        unnest-map [$$58, $$59, $$60] <- index-search("usrSinceIx", 0, "Default", "bigfun", "GleambookUsersComposite", false, false, 1, $$57, 0, true, true, false)
+                                                        -- BTREE_SEARCH  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            assign [$$57] <- ["2008-07-22T00:00:00"]
                                                             -- ASSIGN  |PARTITIONED|
+                                                              empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

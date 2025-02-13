@@ -1,82 +1,144 @@
+distribute result [$$113]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$113] <- [{"l_returnflag": $$l_returnflag, "l_linestatus": $$l_linestatus, "count_cheaps": $$120, "count_expensives": $$121}] project: [$$113]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$l_returnflag) (ASC, $$l_linestatus)
         -- STABLE_SORT [$$l_returnflag(ASC), $$l_linestatus(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$l_returnflag(ASC), $$l_linestatus(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$133
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    group by ([$$l_returnflag := $$128; $$l_linestatus := $$129]) decor ([]) {
+                              aggregate [$$120] <- [agg-sum($$126)]
+                              -- AGGREGATE  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                           }
+                           {
+                              aggregate [$$121] <- [agg-sum($$127)]
+                              -- AGGREGATE  |LOCAL|
+                                nested tuple source
+                                -- NESTED_TUPLE_SOURCE  |LOCAL|
+                           }
                     -- PRE_CLUSTERED_GROUP_BY[$$128, $$129]  |PARTITIONED|
-                            {
-                              -- AGGREGATE  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                            }
-                            {
-                              -- AGGREGATE  |LOCAL|
-                                -- NESTED_TUPLE_SOURCE  |LOCAL|
-                            }
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$128) (ASC, $$129)
                         -- STABLE_SORT [$$128(ASC), $$129(ASC)]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$128, $$129]  |PARTITIONED|
+                            group by ([$$128 := $$114; $$129 := $$115]) decor ([]) {
+                                      aggregate [$$126] <- [agg-count($$l)]
+                                      -- AGGREGATE  |LOCAL|
+                                        select (gt($$124, 0.05))
+                                        -- STREAM_SELECT  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                   }
+                                   {
+                                      aggregate [$$127] <- [agg-count($$l)]
+                                      -- AGGREGATE  |LOCAL|
+                                        select (le($$124, 0.05))
+                                        -- STREAM_SELECT  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                   }
                             -- PRE_CLUSTERED_GROUP_BY[$$114, $$115]  |PARTITIONED|
-                                    {
-                                      -- AGGREGATE  |LOCAL|
-                                        -- STREAM_SELECT  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
-                                    {
-                                      -- AGGREGATE  |LOCAL|
-                                        -- STREAM_SELECT  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$114) (ASC, $$115)
                                 -- STABLE_SORT [$$114(ASC), $$115(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$115, $$114, $$124] <- [$$l.getField(9), $$l.getField(8), $$l.getField(6)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$l])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                          data-scan []<-[$$118, $$119, $$l] <- tpch.LineItem
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$133] <- [agg-range-map($$130, $$131, $$132)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$130, $$131, $$132] <- [agg-local-sampling($$l_returnflag, $$l_linestatus), agg-null-writer($$l_returnflag), agg-null-writer($$l_linestatus)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$l_returnflag, $$l_linestatus])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              group by ([$$l_returnflag := $$128; $$l_linestatus := $$129]) decor ([]) {
+                                        aggregate [$$120] <- [agg-sum($$126)]
+                                        -- AGGREGATE  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                     }
+                                     {
+                                        aggregate [$$121] <- [agg-sum($$127)]
+                                        -- AGGREGATE  |LOCAL|
+                                          nested tuple source
+                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                     }
                               -- PRE_CLUSTERED_GROUP_BY[$$128, $$129]  |PARTITIONED|
-                                      {
-                                        -- AGGREGATE  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
-                                      {
-                                        -- AGGREGATE  |LOCAL|
-                                          -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                      }
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$128) (ASC, $$129)
                                   -- STABLE_SORT [$$128(ASC), $$129(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$128, $$129]  |PARTITIONED|
+                                      group by ([$$128 := $$114; $$129 := $$115]) decor ([]) {
+                                                aggregate [$$126] <- [agg-count($$l)]
+                                                -- AGGREGATE  |LOCAL|
+                                                  select (gt($$124, 0.05))
+                                                  -- STREAM_SELECT  |LOCAL|
+                                                    nested tuple source
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                             }
+                                             {
+                                                aggregate [$$127] <- [agg-count($$l)]
+                                                -- AGGREGATE  |LOCAL|
+                                                  select (le($$124, 0.05))
+                                                  -- STREAM_SELECT  |LOCAL|
+                                                    nested tuple source
+                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
+                                             }
                                       -- PRE_CLUSTERED_GROUP_BY[$$114, $$115]  |PARTITIONED|
-                                              {
-                                                -- AGGREGATE  |LOCAL|
-                                                  -- STREAM_SELECT  |LOCAL|
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                              }
-                                              {
-                                                -- AGGREGATE  |LOCAL|
-                                                  -- STREAM_SELECT  |LOCAL|
-                                                    -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                              }
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          order (ASC, $$114) (ASC, $$115)
                                           -- STABLE_SORT [$$114(ASC), $$115(ASC)]  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$115, $$114, $$124] <- [$$l.getField(9), $$l.getField(8), $$l.getField(6)]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$l])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                                                    data-scan []<-[$$118, $$119, $$l] <- tpch.LineItem
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

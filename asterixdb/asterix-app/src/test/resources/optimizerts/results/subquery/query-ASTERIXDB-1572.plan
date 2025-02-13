@@ -1,27 +1,45 @@
+distribute result [$$56]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$56] <- [{"st1": {"id": $$57}}] project: [$$56]
     -- ASSIGN  |PARTITIONED|
+      select (or(and($$35, $$39), and($$44, $$48))) project: [$$57]
       -- STREAM_SELECT  |PARTITIONED|
-        -- SUBPLAN  |PARTITIONED|
-                {
+        subplan {
+                  aggregate [$$48] <- [non-empty-stream()]
                   -- AGGREGATE  |LOCAL|
+                    select (eq($$57, 2))
                     -- STREAM_SELECT  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
-          -- SUBPLAN  |PARTITIONED|
-                  {
+               }
+        -- SUBPLAN  |PARTITIONED|
+          subplan {
+                    aggregate [$$39, $$44] <- [non-empty-stream(), non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select (eq($$57, 1))
                       -- STREAM_SELECT  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-            -- SUBPLAN  |PARTITIONED|
-                    {
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            subplan {
+                      aggregate [$$35] <- [non-empty-stream()]
                       -- AGGREGATE  |LOCAL|
+                        select (eq($$57, 0))
                         -- STREAM_SELECT  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SUBPLAN  |PARTITIONED|
+              project ([$$57])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (sampdb.samptable)  |PARTITIONED|
+                  data-scan []<-[$$57, $$samptable] <- sampdb.samptable
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

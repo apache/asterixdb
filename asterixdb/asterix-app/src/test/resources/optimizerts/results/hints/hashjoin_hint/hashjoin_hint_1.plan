@@ -1,31 +1,62 @@
+distribute result [$$78]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$78] <- [{"$1": $$82}] project: [$$78]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$82] <- [agg-sql-sum($$87)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$87] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              join (eq($$85, $$86))
               -- HYBRID_HASH_JOIN [$$85][$$86]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$85]  |PARTITIONED|
+                  assign [$$85] <- [{"c": $$c, "n": $$n}.getField("c_custkey")] project: [$$85]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$c, $$n])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (eq($$83, $$81))
                         -- HYBRID_HASH_JOIN [$$83][$$81]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$83]  |PARTITIONED|
+                            assign [$$83] <- [$$c.getField("c_nationkey")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$c])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (tpch.customer)  |PARTITIONED|
+                                  data-scan []<-[$$80, $$c] <- tpch.customer
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
-                            -- DATASOURCE_SCAN (tpch.nation)  |PARTITIONED|
+                            data-scan []<-[$$81, $$n] <- tpch.nation
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$86]  |PARTITIONED|
+                  assign [$$86] <- [$$o.getField("o_custkey")] project: [$$86]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$o])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (tpch.orders)  |PARTITIONED|
+                        data-scan []<-[$$79, $$o] <- tpch.orders
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,10 +1,20 @@
+distribute result [$$36]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$36] <- [{"$1": $$39}] project: [$$36]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$39] <- [agg-sql-sum($$41)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$41] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.ds.primary_idx_ds)  |PARTITIONED|
+              unnest-map [$$37] <- index-search("primary_idx_ds", 0, "Default", "test", "ds", false, false, 0, 0, true, true, false)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

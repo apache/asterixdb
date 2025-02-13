@@ -1,18 +1,36 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$31] <- [{"user_name": $$36, "visitor_name": $$37}] project: [$$31]
     -- ASSIGN  |PARTITIONED|
+      project ([$$36, $$37])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$32, $$33))
           -- HYBRID_HASH_JOIN [$$32][$$33]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$32]  |PARTITIONED|
+              assign [$$36] <- [$$user.getField(1)] project: [$$36, $$32]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (colocated.Users)  |PARTITIONED|
+                  data-scan []<-[$$32, $$user] <- colocated.Users
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$33]  |PARTITIONED|
+              assign [$$37] <- [$$visitor.getField(1)] project: [$$37, $$33]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (colocated.Visitors)  |PARTITIONED|
+                  data-scan []<-[$$33, $$visitor] <- colocated.Visitors
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

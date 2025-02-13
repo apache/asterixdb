@@ -1,20 +1,40 @@
+commit
 -- COMMIT  |PARTITIONED|
+  project ([$$16])
   -- STREAM_PROJECT  |PARTITIONED|
+    exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      delete from titleIndex on test.DBLP from [$$22]
       -- INDEX_INSERT_DELETE  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          delete from pkIndex on test.DBLP from []
           -- INDEX_INSERT_DELETE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              project ([$$22, $$16])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  delete from test.DBLP from record: $$DBLP partitioned by [$$16]
                   -- INSERT_DELETE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      materialize
                       -- MATERIALIZE  |PARTITIONED|
+                        exchange
                         -- HASH_PARTITION_EXCHANGE [$$16]  |PARTITIONED|
+                          assign [$$22, $$16] <- [$$DBLP.getField(2), $$DBLP.getField(0)]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$DBLP])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                                unnest-map [$$17, $$DBLP] <- index-search("DBLP", 0, "Default", "test", "DBLP", false, false, 1, $$19, 0, false, true, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$19] <- [10]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

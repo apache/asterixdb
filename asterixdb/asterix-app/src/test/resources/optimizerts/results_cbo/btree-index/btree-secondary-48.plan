@@ -1,9 +1,18 @@
+distribute result [$$emp] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (and(le($$22, "Tomes"), ge($$22, "Kevin"), ge($$23, "Craig"), le($$23, "Mary"))) project: [$$emp] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_SELECT  |PARTITIONED|
+      assign [$$23, $$22] <- [$$emp.getField(1), $$emp.getField(2)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
+        project ([$$emp]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+            data-scan []<-[$$24, $$emp] <- test.testdst [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

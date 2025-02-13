@@ -1,30 +1,28 @@
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
--- COMMIT  |PARTITIONED|
-  -- STREAM_PROJECT  |PARTITIONED|
-    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-      -- INSERT_DELETE  |PARTITIONED|
-        -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
-          -- ASSIGN  |UNPARTITIONED|
-            -- ASSIGN  |UNPARTITIONED|
-              -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$46] <- [{"x": $$x, "y": $$43}] project: [$$46]
     -- ASSIGN  |PARTITIONED|
+      project ([$$x, $$43])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$47, $$49))
           -- HYBRID_HASH_JOIN [$$47][$$49]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$47]  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.s)  |PARTITIONED|
+              data-scan []<-[$$47, $$x] <- test.s
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
+              assign [$$43, $$49] <- [$$z.getField("c"), $$z.getField("a")] project: [$$43, $$49]
               -- ASSIGN  |UNPARTITIONED|
+                unnest $$z <- scan-collection(unordered-list-constructor({"a": 1, "c": 1}, {"a": 2, "c": 2}, {"a": 1, "c": null}))
                 -- UNNEST  |UNPARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,9 +1,18 @@
+distribute result [$$19] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (and(eq($$t.getField("c_x"), "x2"), eq($$t.getField("c_z"), "z2"))) project: [$$19] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STREAM_SELECT  |PARTITIONED|
+      assign [$$19] <- [$$t.getField("c_value")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ASSIGN  |PARTITIONED|
+        project ([$$t]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- DATASOURCE_SCAN (test.TestOpen)  |PARTITIONED|
+            data-scan []<-[$$20, $$t] <- test.TestOpen [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

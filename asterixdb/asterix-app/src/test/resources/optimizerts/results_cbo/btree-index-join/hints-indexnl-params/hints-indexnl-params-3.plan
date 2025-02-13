@@ -1,23 +1,46 @@
+distribute result [$$39] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
   -- SORT_MERGE_EXCHANGE [$$39(ASC) ]  |PARTITIONED|
+    order (ASC, $$39) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
     -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
+      exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        select (eq($$36, $$tenk2.getField(7))) project: [$$39] [cardinality: 5.0E11, op-cost: 5.00004E11, total-cost: 5.00009E11]
         -- STREAM_SELECT  |PARTITIONED|
+          assign [$$39] <- [$$tenk2.getField(0)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ASSIGN  |PARTITIONED|
+            project ([$$36, $$tenk2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.tenk2.tenk2)  |PARTITIONED|
+                unnest-map [$$35, $$tenk2] <- index-search("tenk2", 0, "Default", "test", "tenk2", true, false, 1, $$45, 1, $$45, true, true, true) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$45)
                     -- STABLE_SORT [$$45(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$36, $$45])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (test.tenk2.idx_tenk2_1k_2k)  |PARTITIONED|
+                            unnest-map [$$43, $$44, $$45] <- index-search("idx_tenk2_1k_2k", 0, "Default", "test", "tenk2", true, true, 1, $$36, 1, $$36, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                assign [$$36] <- [$$tenk1.getField(7)] project: [$$36]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$tenk1])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.tenk1.tenk1)  |PARTITIONED|
+                                      unnest-map [$$34, $$tenk1] <- index-search("tenk1", 0, "Default", "test", "tenk1", false, false, 0, 1, $$40, true, false, false) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$40] <- [1]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

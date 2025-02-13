@@ -1,25 +1,44 @@
+distribute result [$$95]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$95] <- [{"ol_number": $$ol_number, "sum_qty": $$99, "sum_amount": $$100, "avg_qty": $$101, "avg_amount": $$102, "COUNT_order": $$103}] project: [$$95]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$ol_number(ASC) ]  |PARTITIONED|
-        -- SORT_GROUP_BY[$$111]  |PARTITIONED|
-                {
+        group by ([$$ol_number := $$111]) decor ([]) {
+                  aggregate [$$99, $$100, $$101, $$102, $$103] <- [agg-global-sql-sum($$106), agg-global-sql-sum($$107), agg-global-sql-avg($$108), agg-global-sql-avg($$109), agg-sql-sum($$110)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$111]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$111]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$96]  |PARTITIONED|
-                    {
+            group by ([$$111 := $$96]) decor ([]) {
+                      aggregate [$$106, $$107, $$108, $$109, $$110] <- [agg-local-sql-sum($$75), agg-local-sql-sum($$80), agg-local-sql-avg($$75), agg-local-sql-avg($$80), agg-sql-count(1)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$96]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (gt($$ol.getField("ol_delivery_d"), "2014-07-01 00:00:00")) project: [$$75, $$80, $$96]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$80, $$75, $$96] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_quantity"), $$ol.getField("ol_number")]
                   -- ASSIGN  |PARTITIONED|
+                    unnest $$ol <- scan-collection($$104) project: [$$ol]
                     -- UNNEST  |PARTITIONED|
+                      assign [$$104] <- [$$o.getField("o_orderline")] project: [$$104]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$o])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                            data-scan []<-[$$98, $$o] <- test.orders
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

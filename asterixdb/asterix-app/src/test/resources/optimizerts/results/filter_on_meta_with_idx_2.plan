@@ -1,22 +1,44 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$33] <- [{"t": $$t}] project: [$$33]
     -- ASSIGN  |PARTITIONED|
+      project ([$$t])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$37, $$38))
           -- HYBRID_HASH_JOIN [$$37][$$38]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+              select (gt($$35.getField(2), 100)) project: [$$t, $$37]
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$37] <- [$$t.getField(2)]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$t, $$35])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.KVStore)  |PARTITIONED|
+                      data-scan []<-[$$34, $$t, $$35] <- test.KVStore with filter on min:[$$40] max:[]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          assign [$$40] <- [100]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
+              assign [$$38] <- [$$o.getField(2)] project: [$$38]
               -- ASSIGN  |PARTITIONED|
+                project ([$$o])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (test.OfficerLocations)  |PARTITIONED|
+                    data-scan []<-[$$36, $$o] <- test.OfficerLocations
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

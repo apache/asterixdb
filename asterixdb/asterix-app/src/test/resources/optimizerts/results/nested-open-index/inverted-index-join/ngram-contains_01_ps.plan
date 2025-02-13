@@ -1,45 +1,90 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$35] <- [{"title1": $$38, "title2": $$39}] project: [$$35]
     -- ASSIGN  |PARTITIONED|
+      project ([$$38, $$39])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$40) (ASC, $$41)
           -- STABLE_SORT [$$40(ASC), $$41(ASC)]  |PARTITIONED|
+            exchange
             -- RANGE_PARTITION_EXCHANGE [$$40(ASC), $$41(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$49
               -- FORWARD  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate
                   -- REPLICATE  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (and(contains($$38, $$39), lt($$40, $$41)))
                       -- NESTED_LOOP  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$38] <- [$$o1.getField("title")] project: [$$38, $$40]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                              data-scan []<-[$$40, $$o1] <- test.DBLP
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          assign [$$39] <- [$$o2.getField(2)] project: [$$39, $$41]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                              data-scan []<-[$$41, $$o2] <- test.CSX
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$49] <- [agg-range-map($$46, $$47, $$48)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$46, $$47, $$48] <- [agg-local-sampling($$40, $$41), agg-null-writer($$40), agg-null-writer($$41)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$40, $$41])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate
                             -- REPLICATE  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                join (and(contains($$38, $$39), lt($$40, $$41)))
                                 -- NESTED_LOOP  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$38] <- [$$o1.getField("title")] project: [$$38, $$40]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                        data-scan []<-[$$40, $$o1] <- test.DBLP
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    assign [$$39] <- [$$o2.getField(2)] project: [$$39, $$41]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                                        data-scan []<-[$$41, $$o2] <- test.CSX
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

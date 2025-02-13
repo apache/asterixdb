@@ -1,32 +1,61 @@
+distribute result [$$65]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$65] <- [{"$1": $$68}] project: [$$65]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$68] <- [agg-sql-sum($$73)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$73] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            select ($$57)
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$57])
               -- STREAM_PROJECT  |PARTITIONED|
-                -- SUBPLAN  |PARTITIONED|
-                        {
+                subplan {
+                          aggregate [$$57] <- [empty-stream()]
                           -- AGGREGATE  |LOCAL|
+                            select (not(if-missing-or-null(eq($$71, $$D), false)))
                             -- STREAM_SELECT  |LOCAL|
+                              unnest $$D <- scan-collection($$70)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       }
+                -- SUBPLAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (true)
                     -- NESTED_LOOP  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$71] <- [$$M.getField(2)] project: [$$71]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$M])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (TestYelp.YelpCheckinDateMarkers)  |PARTITIONED|
+                              data-scan []<-[$$66, $$M] <- TestYelp.YelpCheckinDateMarkers
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                        assign [$$70] <- [$$C.getField(2).getField(0)] project: [$$70]
                         -- ASSIGN  |PARTITIONED|
+                          select (eq($$C.getField(1), "--Ni3oJ4VOqfOEu7Sj2Vzg"))
                           -- STREAM_SELECT  |PARTITIONED|
+                            project ([$$C])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                                data-scan []<-[$$67, $$C] <- TestYelp.YelpCheckin
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,14 +1,28 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$35] <- [{"first": $$first, "second": $$second}] project: [$$35]
     -- ASSIGN  |PARTITIONED|
+      project ([$$first, $$second])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$36, $$37))
           -- HYBRID_HASH_JOIN [$$36][$$37]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
-              -- DATASOURCE_SCAN (Facebook.Friendship)  |PARTITIONED|
+              data-scan []<-[$$36, $$first] <- Facebook.Friendship
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
-              -- DATASOURCE_SCAN (Facebook.Friendship)  |PARTITIONED|
+              data-scan []<-[$$37, $$second] <- Facebook.Friendship
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

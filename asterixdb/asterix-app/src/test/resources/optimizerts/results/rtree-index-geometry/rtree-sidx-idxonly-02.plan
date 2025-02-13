@@ -1,14 +1,28 @@
+distribute result [$$18]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (st-contains($$geo.getField(1), POLYGON ((1 1, 5 1, 5 5, 1 5, 1 1)))) project: [$$18]
     -- STREAM_SELECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BTREE_SEARCH (IndexGeoJSON.Geometries.Geometries)  |PARTITIONED|
+        unnest-map [$$18, $$geo] <- index-search("Geometries", 0, "Default", "IndexGeoJSON", "Geometries", false, false, 1, $$28, 1, $$28, true, true, true)
+        -- BTREE_SEARCH  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$28)
             -- STABLE_SORT [$$28(ASC)]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$28])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- RTREE_SEARCH (IndexGeoJSON.Geometries.geomIndex)  |PARTITIONED|
+                    unnest-map [$$24, $$25, $$26, $$27, $$28] <- index-search("geomIndex", 1, "Default", "IndexGeoJSON", "Geometries", false, false, 4, $$20, $$21, $$22, $$23)
+                    -- RTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$20, $$21, $$22, $$23] <- [1.0, 1.0, 5.0, 5.0]
                         -- ASSIGN  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,17 +1,31 @@
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$30] <- [{"D": $$D}] project: [$$30]
     -- ASSIGN  |PARTITIONED|
+      select (and($$26, eq($$27, 0))) project: [$$D]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D, $$26, $$27])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$26, $$27] <- [non-empty-stream(), agg-sql-count(switch-case(eq($$I, 1), true, null, true))]
                     -- AGGREGATE  |LOCAL|
+                      unnest $$I <- scan-collection($$32)
                       -- UNNEST  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$32] <- [$$D.getField("items")]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                  data-scan []<-[$$31, $$D] <- TestDataverse.Dataset1
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

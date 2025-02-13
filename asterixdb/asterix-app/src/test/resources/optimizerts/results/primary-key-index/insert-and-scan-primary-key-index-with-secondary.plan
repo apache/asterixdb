@@ -1,18 +1,36 @@
+commit
 -- COMMIT  |PARTITIONED|
+  project ([$$17])
   -- STREAM_PROJECT  |PARTITIONED|
+    exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      insert into nameIndex on test.myData from [$$21]
       -- INDEX_INSERT_DELETE  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          project ([$$21, $$17])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              insert into test.myData from record: $$18 partitioned by [$$17]
               -- INSERT_DELETE  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  materialize
                   -- MATERIALIZE  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$17]  |PARTITIONED|
+                      assign [$$21, $$17] <- [$$18.getField(1), $$18.getField(0)]
                       -- ASSIGN  |PARTITIONED|
+                        assign [$$18] <- [cast({"id": numeric-add($$19, 1)})] project: [$$18]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$19])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.myData)  |PARTITIONED|
+                              data-scan []<-[$$19, $$x] <- test.myData
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

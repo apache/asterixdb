@@ -1,12 +1,24 @@
+distribute result [$$27] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$27] <- [{"id": $$31, "fname": $$29, "lname": $$30, "age": $$34}] project: [$$27] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- SORT_MERGE_EXCHANGE [$$31(ASC) ]  |PARTITIONED|
+        order (ASC, $$31) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (and(eq($$30, "Isa"), eq($$29, "Julio"))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$34, $$29, $$30] <- [$$l.getField(3), $$l.getField(1), $$l.getField(2)] project: [$$31, $$34, $$29, $$30] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.employee)  |PARTITIONED|
+                  data-scan []<-[$$31, $$l] <- test.employee [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

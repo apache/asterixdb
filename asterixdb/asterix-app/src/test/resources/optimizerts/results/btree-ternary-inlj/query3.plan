@@ -1,45 +1,90 @@
+distribute result [$$80]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$80] <- [{"$1": $$87}] project: [$$80]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$87] <- [agg-sql-sum($$90)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$90] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            select (eq($$81, $$C.getField("k")))
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$81, $$C])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (TestDataverse.IndexDatasetC.IndexDatasetC)  |PARTITIONED|
+                  unnest-map [$$85, $$C] <- index-search("IndexDatasetC", 0, "Default", "TestDataverse", "IndexDatasetC", true, false, 1, $$96, 1, $$96, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$96)
                       -- STABLE_SORT [$$96(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$81, $$96])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (TestDataverse.IndexDatasetC.indexC)  |PARTITIONED|
+                              unnest-map [$$95, $$96] <- index-search("indexC", 0, "Default", "TestDataverse", "IndexDatasetC", true, true, 1, $$81, 1, $$81, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  select (eq($$81, $$B.getField("k"))) project: [$$81]
                                   -- STREAM_SELECT  |PARTITIONED|
+                                    project ([$$81, $$B])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (TestDataverse.IndexDatasetB.IndexDatasetB)  |PARTITIONED|
+                                        unnest-map [$$84, $$B] <- index-search("IndexDatasetB", 0, "Default", "TestDataverse", "IndexDatasetB", true, false, 1, $$94, 1, $$94, true, true, true)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            order (ASC, $$94)
                                             -- STABLE_SORT [$$94(ASC)]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$81, $$94])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- BTREE_SEARCH (TestDataverse.IndexDatasetB.indexB)  |PARTITIONED|
+                                                    unnest-map [$$93, $$94] <- index-search("indexB", 0, "Default", "TestDataverse", "IndexDatasetB", true, true, 1, $$81, 1, $$81, true, true, true)
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange
                                                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                        select (eq($$81, $$A.getField("k"))) project: [$$81]
                                                         -- STREAM_SELECT  |PARTITIONED|
+                                                          project ([$$81, $$A])
                                                           -- STREAM_PROJECT  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- BTREE_SEARCH (TestDataverse.IndexDatasetA.IndexDatasetA)  |PARTITIONED|
+                                                              unnest-map [$$83, $$A] <- index-search("IndexDatasetA", 0, "Default", "TestDataverse", "IndexDatasetA", true, false, 1, $$92, 1, $$92, true, true, true)
+                                                              -- BTREE_SEARCH  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  order (ASC, $$92)
                                                                   -- STABLE_SORT [$$92(ASC)]  |PARTITIONED|
+                                                                    exchange
                                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                      project ([$$81, $$92])
                                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                                        exchange
                                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                          -- BTREE_SEARCH (TestDataverse.IndexDatasetA.indexA)  |PARTITIONED|
+                                                                          unnest-map [$$91, $$92] <- index-search("indexA", 0, "Default", "TestDataverse", "IndexDatasetA", true, true, 1, $$81, 1, $$81, true, true, true)
+                                                                          -- BTREE_SEARCH  |PARTITIONED|
+                                                                            exchange
                                                                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                                              assign [$$81] <- [$$P.getField(1)] project: [$$81]
                                                                               -- ASSIGN  |PARTITIONED|
+                                                                                project ([$$P])
                                                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                                                  exchange
                                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                                    -- DATASOURCE_SCAN (TestDataverse.ProbeDataset)  |PARTITIONED|
+                                                                                    data-scan []<-[$$82, $$P] <- TestDataverse.ProbeDataset
+                                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                                      exchange
                                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                                        empty-tuple-source
                                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,9 +1,18 @@
+distribute result [$$4]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$4] <- [listify($$3)]
     -- AGGREGATE  |UNPARTITIONED|
+      exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        project ([$$3])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+            data-scan []<-[$$5, $$3] <- TinySocial.FacebookUsers
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                empty-tuple-source
                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

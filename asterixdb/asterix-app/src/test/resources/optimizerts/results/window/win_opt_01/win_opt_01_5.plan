@@ -1,10 +1,20 @@
+distribute result [$$70]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$70] <- [{"m": $$m, "t": $$t, "row_number": $$63, "ntile": $$67}] project: [$$70]
     -- ASSIGN  |LOCAL|
+      window-aggregate [$$67, $$63] <- [ntile-impl(2), row-number-impl()] partition [$$m] order (ASC, $$t)
       -- WINDOW  |LOCAL|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+          order (ASC, $$m) (ASC, $$t)
           -- STABLE_SORT [$$m(ASC), $$t(ASC)]  |LOCAL|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+              assign [$$m] <- [numeric-mod($$t, 4)]
               -- ASSIGN  |UNPARTITIONED|
+                unnest $$t <- range(1, 16)
                 -- UNNEST  |UNPARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

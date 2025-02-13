@@ -1,28 +1,56 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$31] <- [{"staff": $$32, "student": $$33}] project: [$$31]
     -- ASSIGN  |PARTITIONED|
+      project ([$$32, $$33])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (interval-before($$34, $$35))
           -- INTERVAL_MERGE_JOIN [$$34] [$$35]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$34)
               -- STABLE_SORT [$$34(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$32, $$34])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- PARTIAL_BROADCAST_RANGE_FOLLOWING_EXCHANGE [$$38(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
+                      assign [$$38] <- [get-interval-start($$34)]
                       -- ASSIGN  |PARTITIONED|
+                        assign [$$34] <- [$$f.getField(2)] project: [$$32, $$34]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (TinyCollege.Staff)  |PARTITIONED|
+                            data-scan []<-[$$32, $$f] <- TinyCollege.Staff
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (ASC, $$35)
               -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$33, $$35])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- RANGE_PARTITION_EXCHANGE [$$40(ASC)] RANGE_MAP:{SPLIT:3}  |PARTITIONED|
+                      assign [$$40] <- [get-interval-start($$35)]
                       -- ASSIGN  |PARTITIONED|
+                        assign [$$35] <- [$$d.getField(2)] project: [$$33, $$35]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (TinyCollege.Students)  |PARTITIONED|
+                            data-scan []<-[$$33, $$d] <- TinyCollege.Students
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

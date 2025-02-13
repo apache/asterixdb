@@ -1,14 +1,28 @@
+distribute result [$$48]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$48] <- [{"cnt": $$51, "sm": $$52}] project: [$$48]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$51, $$52] <- [agg-sql-sum($$54), agg-global-sql-sum($$55)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$54, $$55] <- [agg-sql-count($$38), agg-local-sql-sum($$49)]
           -- AGGREGATE  |PARTITIONED|
+            assign [$$38] <- [1]
             -- ASSIGN  |PARTITIONED|
+              select (gt($$49, 0))
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$49] <- [$$tenk.getField(3)] project: [$$49]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$tenk])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                      data-scan []<-[$$50, $$tenk] <- test.tenk
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

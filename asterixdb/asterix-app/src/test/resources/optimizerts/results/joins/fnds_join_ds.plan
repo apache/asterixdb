@@ -1,21 +1,42 @@
+distribute result [$$49]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$49] <- [{"$1": $$53}] project: [$$49]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$53] <- [agg-sql-sum($$54)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$54] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              join (eq($$51, $$52))
               -- HYBRID_HASH_JOIN [$$51][$$52]  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$51]  |PARTITIONED|
+                  assign [$$51] <- [$$tpcds.getField("ca_address_id")] project: [$$51]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (asterix.tpcds-datagen.customer_address.1.0)  |PARTITIONED|
+                      data-scan []<-[$$tpcds] <- asterix.tpcds-datagen.customer_address.1.0
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+                  assign [$$52] <- [$$t1.getField("aid")] project: [$$52]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$t1])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                        data-scan []<-[$$50, $$t1] <- test.t1
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

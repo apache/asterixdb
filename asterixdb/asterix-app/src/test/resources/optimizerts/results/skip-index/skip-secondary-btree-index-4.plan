@@ -1,10 +1,20 @@
+distribute result [$$19]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$19] <- [{"c": $$c}] project: [$$19]
     -- ASSIGN  |PARTITIONED|
+      select (and(ge($$20, "abc"), lt($$20, "abd"))) project: [$$c]
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$20] <- [$$c.getField("f")]
         -- ASSIGN  |PARTITIONED|
+          project ([$$c])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.c)  |PARTITIONED|
+              data-scan []<-[$$21, $$c] <- test.c
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

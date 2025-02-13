@@ -1,32 +1,64 @@
+distribute result [$$23]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$23] <- [{"res": $$30}] project: [$$23]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
+        order (ASC, $$30)
         -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (and(gt($$32.getField("c_i8"), 2), lt($$32.getField("c_i64"), 3))) project: [$$30]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$30] <- [$$32.getField("c_x")]
               -- ASSIGN  |PARTITIONED|
+                assign [$$32] <- [$$t.getField("nested")] project: [$$32]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$t])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.TestOpen.TestOpen)  |PARTITIONED|
+                      unnest-map [$$27, $$t] <- index-search("TestOpen", 0, "Default", "test", "TestOpen", false, false, 1, $$41, 1, $$41, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          intersect [$$41] <- [[$$36], [$$40]]
                           -- INTERSECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$36)
                               -- STABLE_SORT [$$36(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$36])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.TestOpen.idx_3)  |PARTITIONED|
+                                      unnest-map [$$34, $$35, $$36] <- index-search("idx_3", 0, "Default", "test", "TestOpen", false, false, 0, 1, $$33, true, true, false)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$33] <- [3]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              order (ASC, $$40)
                               -- STABLE_SORT [$$40(ASC)]  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  project ([$$40])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.TestOpen.idx_4)  |PARTITIONED|
+                                      unnest-map [$$38, $$39, $$40] <- index-search("idx_4", 0, "Default", "test", "TestOpen", false, false, 1, $$37, 0, true, true, false)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$37] <- [2]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

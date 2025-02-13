@@ -1,31 +1,62 @@
+distribute result [$$50]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$50] <- [{"$1": $$54}] project: [$$50]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$54] <- [agg-sql-sum($$64)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$64] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            select (and(lt(st-distance($$57, $$58), 1), eq($$65, reference-tile($$59, $$60, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10, $$66))))
             -- STREAM_SELECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (spatial-intersect($$59, $$60))
                 -- SPATIAL_JOIN [$$65, $$59] [$$66, $$60]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$65) (ASC, $$59)
                     -- STABLE_SORT [$$65(ASC), $$59(ASC)]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$65]  |PARTITIONED|
+                        unnest $$65 <- spatial-tile($$59, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10)
                         -- UNNEST  |PARTITIONED|
+                          assign [$$59] <- [st-mbr-enlarge($$57, 1)]
                           -- ASSIGN  |PARTITIONED|
+                            assign [$$57] <- [$$ps.getField(1)] project: [$$57]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$ps])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.ParkSet)  |PARTITIONED|
+                                  data-scan []<-[$$51, $$ps] <- test.ParkSet
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$66) (ASC, $$60)
                     -- STABLE_SORT [$$66(ASC), $$60(ASC)]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$66]  |PARTITIONED|
+                        unnest $$66 <- spatial-tile($$60, rectangle: { p1: point: { x: -180.0, y: -83.0 }, p2: point: { x: 180.0, y: 90.0 }}, 10, 10)
                         -- UNNEST  |PARTITIONED|
+                          assign [$$60] <- [st-mbr($$58)]
                           -- ASSIGN  |PARTITIONED|
+                            assign [$$58] <- [$$ls.getField(1)] project: [$$58]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$ls])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.LakeSet)  |PARTITIONED|
+                                  data-scan []<-[$$52, $$ls] <- test.LakeSet
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,11 +1,22 @@
+distribute result [$$20] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- SORT_MERGE_EXCHANGE [$$20(ASC) ]  |PARTITIONED|
+    order (ASC, $$20) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- STABLE_SORT [$$20(ASC)]  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        select (eq($$tenk.getField(8), 0)) project: [$$20] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_SELECT  |PARTITIONED|
+          assign [$$20] <- [$$tenk.getField(0)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ASSIGN  |PARTITIONED|
+            project ([$$tenk]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                data-scan []<-[$$18, $$tenk] <- test.tenk [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,39 +1,78 @@
+distribute result [$$35] [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$35] <- [{"title1": $$38, "title2": $$39}] project: [$$35] [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
     -- ASSIGN  |PARTITIONED|
+      project ([$$38, $$39]) [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$40) (ASC, $$41) [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
           -- STABLE_SORT [$$40(ASC), $$41(ASC)]  |PARTITIONED|
+            exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
             -- RANGE_PARTITION_EXCHANGE [$$40(ASC), $$41(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$51 [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
               -- FORWARD  |PARTITIONED|
+                exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
                   -- REPLICATE  |PARTITIONED|
+                    exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      select (contains($$38, $$39)) [cardinality: 2.5E11, op-cost: 2.50004E11, total-cost: 2.50009E11]
                       -- STREAM_SELECT  |PARTITIONED|
+                        assign [$$39] <- [$$o2.getField(2)] project: [$$40, $$38, $$41, $$39] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- ASSIGN  |PARTITIONED|
+                          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                            unnest-map [$$41, $$o2] <- index-search("DBLP", 0, "Default", "test", "DBLP", true, true, 1, $$40, 0, false, true, false) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                assign [$$38] <- [$$o1.getField("title")] project: [$$40, $$38]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                                    data-scan []<-[$$40, $$o1] <- test.CSX [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$51] <- [agg-range-map($$48, $$49, $$50)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$48, $$49, $$50] <- [agg-local-sampling($$40, $$41), agg-null-writer($$40), agg-null-writer($$41)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$40, $$41])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
                             -- REPLICATE  |PARTITIONED|
+                              exchange [cardinality: 2.5E11, op-cost: 0.0, total-cost: 2.50009E11]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                select (contains($$38, $$39)) [cardinality: 2.5E11, op-cost: 2.50004E11, total-cost: 2.50009E11]
                                 -- STREAM_SELECT  |PARTITIONED|
+                                  assign [$$39] <- [$$o2.getField(2)] project: [$$40, $$38, $$41, $$39] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                   -- ASSIGN  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                                      unnest-map [$$41, $$o2] <- index-search("DBLP", 0, "Default", "test", "DBLP", true, true, 1, $$40, 0, false, true, false) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                          assign [$$38] <- [$$o1.getField("title")] project: [$$40, $$38]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                                              data-scan []<-[$$40, $$o1] <- test.CSX [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

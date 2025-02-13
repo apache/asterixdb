@@ -1,8 +1,16 @@
+distribute result [$$80]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$80] <- [{"cnt": $$81}] project: [$$80]
     -- ASSIGN  |LOCAL|
+      aggregate [$$81] <- [agg-sql-sum($$82)]
       -- AGGREGATE  |LOCAL|
+        aggregate [$$82] <- [agg-sql-count(1)]
         -- AGGREGATE  |LOCAL|
+          unnest $$four <- range(1, 10)
           -- UNNEST  |UNPARTITIONED|
+            select (false)
             -- STREAM_SELECT  |UNPARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

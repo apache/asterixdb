@@ -1,19 +1,38 @@
+distribute result [$$37]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$37] <- [{"l_partkey": $$39}] project: [$$37]
     -- ASSIGN  |PARTITIONED|
+      project ([$$39])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (and(eq($$39, $$41), eq($$44, $$45), eq($$46, $$42)))
           -- HYBRID_HASH_JOIN [$$39, $$44, $$46][$$41, $$45, $$42]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$39, $$44, $$46]  |PARTITIONED|
+              assign [$$46, $$44] <- [$$li.getField(2), $$li.getField(5)] project: [$$39, $$44, $$46]
               -- ASSIGN  |PARTITIONED|
+                project ([$$39, $$li])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (`join-super-key_1`.LineItems)  |PARTITIONED|
+                    data-scan []<-[$$39, $$40, $$li] <- `join-super-key_1`.LineItems
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$41, $$45, $$42]  |PARTITIONED|
+              assign [$$45] <- [$$ps.getField(3)] project: [$$41, $$45, $$42]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (`join-super-key_1`.PartSupp)  |PARTITIONED|
+                  data-scan []<-[$$41, $$42, $$ps] <- `join-super-key_1`.PartSupp
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,21 +1,39 @@
+distribute result [$$51] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$51] <- [{"$1": $$53}] project: [$$51] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$53] <- [agg-sql-sum($$56)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$56] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- AGGREGATE  |PARTITIONED|
+            select ($$44) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$44]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
-                -- SUBPLAN  |PARTITIONED|
-                        {
+                subplan {
+                          aggregate [$$44] <- [non-empty-stream()]
                           -- AGGREGATE  |LOCAL|
+                            select (and(gt($$D, "2016"), lt($$D, "2017")))
                             -- STREAM_SELECT  |LOCAL|
+                              unnest $$D <- scan-collection($$54)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+                -- SUBPLAN  |PARTITIONED|
+                  assign [$$54] <- [$$C.getField(2).getField(0)] project: [$$54] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$C]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                        data-scan []<-[$$52, $$C] <- TestYelp.YelpCheckin [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

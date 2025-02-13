@@ -1,13 +1,26 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$47] <- [{"$1": $$49, "$2": $$50}] project: [$$47]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$49, $$50] <- [agg-sql-sum($$52), agg-global-sql-avg($$53)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$52, $$53] <- [agg-sql-count($$39), agg-local-sql-avg($$45)]
           -- AGGREGATE  |PARTITIONED|
+            assign [$$45] <- [count($$39)]
             -- ASSIGN  |PARTITIONED|
+              assign [$$39] <- [$$FacebookUsers.getField("friend-ids")] project: [$$39]
               -- ASSIGN  |PARTITIONED|
+                project ([$$FacebookUsers])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                    data-scan []<-[$$48, $$FacebookUsers] <- TinySocial.FacebookUsers
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,24 +1,48 @@
+distribute result [$$51]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$51] <- [{"$1": $$54}] project: [$$51]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$54] <- [agg-sql-sum($$56)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$56] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            select (and(gt($$52, "2016"), lt($$52, "2017")))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$52] <- [$$D.getField("date")] project: [$$52]
               -- ASSIGN  |PARTITIONED|
+                unnest $$D <- scan-collection($$55) project: [$$D]
                 -- UNNEST  |PARTITIONED|
+                  assign [$$55] <- [$$C.getField("checkin_times")] project: [$$55]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$C])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (TestYelp.YelpCheckin.YelpCheckin)  |PARTITIONED|
+                        unnest-map [$$53, $$C] <- index-search("YelpCheckin", 0, "Default", "TestYelp", "YelpCheckin", false, false, 1, $$60, 1, $$60, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            distinct ([$$60])
                             -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$60)
                                 -- STABLE_SORT [$$60(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$60])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (TestYelp.YelpCheckin.IdxYelpCheckinDates)  |PARTITIONED|
+                                        unnest-map [$$59, $$60] <- index-search("IdxYelpCheckinDates", 0, "Default", "TestYelp", "YelpCheckin", false, false, 1, $$57, 1, $$58, false, false, false)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$57, $$58] <- ["2016", "2017"]
                                             -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

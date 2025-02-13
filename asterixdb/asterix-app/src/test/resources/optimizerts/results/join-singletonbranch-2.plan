@@ -1,25 +1,50 @@
+distribute result [$$64]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$64] <- [{"f": $$57, "b": $$b}] project: [$$64]
     -- ASSIGN  |PARTITIONED|
+      project ([$$b, $$57])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (lt($$67, $$68))
           -- NESTED_LOOP  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              assign [$$67] <- [$$b.getField("fee")]
               -- ASSIGN  |PARTITIONED|
+                project ([$$b])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (test.Bar)  |PARTITIONED|
+                    data-scan []<-[$$66, $$b] <- test.Bar
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- BROADCAST_EXCHANGE  |PARTITIONED|
+              assign [$$68] <- [$$57.getField("avg")]
               -- ASSIGN  |UNPARTITIONED|
+                assign [$$57] <- [{"foo_avg": $$69}] project: [$$57]
                 -- ASSIGN  |UNPARTITIONED|
+                  aggregate [$$69] <- [agg-global-sql-avg($$71)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$71] <- [agg-local-sql-avg($$55)]
                       -- AGGREGATE  |PARTITIONED|
+                        assign [$$55] <- [$$f.getField("fee")] project: [$$55]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$f])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.Foo)  |PARTITIONED|
+                              data-scan []<-[$$65, $$f] <- test.Foo
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

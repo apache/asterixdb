@@ -1,27 +1,54 @@
+distribute result [$$92]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$92] <- [{"user1": {"id": $$97, "name": $$103}, "user2": {"id": $$98, "name": $$104}}] project: [$$92]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$97(ASC), $$98(ASC) ]  |PARTITIONED|
+        order (ASC, $$97) (ASC, $$98)
         -- STABLE_SORT [$$97(ASC), $$98(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (lt($$97, $$98))
             -- NESTED_LOOP  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$97, $$103] <- [$$98, $$104] project: [$$97, $$103]
                 -- ASSIGN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    replicate
                     -- REPLICATE  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        select (lt(count($$d.getField(4)), 2)) project: [$$98, $$104]
                         -- STREAM_SELECT  |PARTITIONED|
+                          assign [$$104] <- [$$d.getField(2)]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                              data-scan []<-[$$98, $$d] <- TinySocial.FacebookUsers
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (lt(count($$d.getField(4)), 2)) project: [$$98, $$104]
                     -- STREAM_SELECT  |PARTITIONED|
+                      assign [$$104] <- [$$d.getField(2)]
                       -- ASSIGN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                          data-scan []<-[$$98, $$d] <- TinySocial.FacebookUsers
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

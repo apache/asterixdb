@@ -1,38 +1,70 @@
+distribute result [$$76]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$76] <- [{"D1": $$D1}] project: [$$76]
     -- ASSIGN  |PARTITIONED|
+      select (and($$72, eq($$73, 0))) project: [$$D1]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D1, $$72, $$73])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$72, $$73] <- [non-empty-stream(), agg-sql-count(switch-case(and(eq($$84, 2), and($$68, eq($$69, 0))), true, null, true))]
                     -- AGGREGATE  |LOCAL|
-                      -- SUBPLAN  |LOCAL|
-                              {
+                      subplan {
+                                aggregate [$$68, $$69] <- [non-empty-stream(), agg-sql-count(switch-case(and(eq($$82, 1), eq($$83, 2)), true, null, true))]
                                 -- AGGREGATE  |LOCAL|
+                                  assign [$$83] <- [$$J2.getField("item")]
                                   -- ASSIGN  |LOCAL|
+                                    unnest $$J2 <- scan-collection($$81)
                                     -- UNNEST  |LOCAL|
+                                      assign [$$82] <- [$$I2.getField(0)]
                                       -- ASSIGN  |LOCAL|
+                                        unnest $$I2 <- scan-collection($$80)
                                         -- UNNEST  |LOCAL|
+                                          nested tuple source
                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SUBPLAN  |LOCAL|
+                        assign [$$84] <- [$$J.getField("item")]
                         -- ASSIGN  |LOCAL|
+                          unnest $$J <- scan-collection($$79)
                           -- UNNEST  |LOCAL|
+                            assign [$$81, $$80] <- [$$I1.getField("other_inner_items"), $$I1.getField(0)]
                             -- ASSIGN  |LOCAL|
+                              unnest $$I1 <- scan-collection($$78)
                               -- UNNEST  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$79, $$78] <- [$$D1.getField("other_items"), $$D1.getField(1)]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D1])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (TestDataverse.Dataset1.Dataset1)  |PARTITIONED|
+                  unnest-map [$$77, $$D1] <- index-search("Dataset1", 0, "Default", "TestDataverse", "Dataset1", false, false, 1, $$90, 1, $$90, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      distinct ([$$90])
                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$90)
                           -- STABLE_SORT [$$90(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$90])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (TestDataverse.Dataset1.d1Idx)  |PARTITIONED|
+                                  unnest-map [$$89, $$90] <- index-search("d1Idx", 0, "Default", "TestDataverse", "Dataset1", false, false, 1, $$87, 1, $$88, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$87, $$88] <- [1, 1]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

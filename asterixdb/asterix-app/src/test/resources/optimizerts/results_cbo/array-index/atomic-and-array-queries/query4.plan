@@ -1,20 +1,37 @@
+distribute result [$$37] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$37] <- [{"D": $$D}] project: [$$37] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select ($$32) project: [$$D] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D, $$32]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$32] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select (and(eq($$43, 2), eq($$42, 3)))
                       -- STREAM_SELECT  |LOCAL|
+                        assign [$$43, $$42] <- [$$DI.getField("field2"), $$DI.getField("field3")]
                         -- ASSIGN  |LOCAL|
+                          unnest $$DI <- scan-collection($$41)
                           -- UNNEST  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          -- SUBPLAN  |PARTITIONED|
+            select (and(eq($$D.getField("field1"), 1), eq($$D.getField("field4"), 4)))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$41] <- [$$D.getField("items")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                project ([$$D]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                    data-scan []<-[$$38, $$D] <- TestDataverse.Dataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

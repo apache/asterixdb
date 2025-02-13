@@ -1,50 +1,100 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$33] <- [{"aid": $$35, "bid": $$b.getField(0)}] project: [$$33]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$35)
         -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$35(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$46
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$35, $$b])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        left outer join (eq($$37, $$38))
                         -- HYBRID_HASH_JOIN [$$37][$$38]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+                            assign [$$37] <- [$$a.getField(3)] project: [$$35, $$37]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                data-scan []<-[$$35, $$a] <- test.DBLP
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
+                            assign [$$38] <- [$$b.getField(3)]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$b])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                                  data-scan []<-[$$36, $$b] <- test.CSX
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$46] <- [agg-range-map($$44, $$45)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$44, $$45] <- [agg-local-sampling($$35), agg-null-writer($$35)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$35])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$35, $$b])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (eq($$37, $$38))
                                   -- HYBRID_HASH_JOIN [$$37][$$38]  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+                                      assign [$$37] <- [$$a.getField(3)] project: [$$35, $$37]
                                       -- ASSIGN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                          data-scan []<-[$$35, $$a] <- test.DBLP
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
+                                      assign [$$38] <- [$$b.getField(3)]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$b])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                            -- DATASOURCE_SCAN (test.CSX)  |PARTITIONED|
+                                            data-scan []<-[$$36, $$b] <- test.CSX
+                                            -- DATASOURCE_SCAN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
