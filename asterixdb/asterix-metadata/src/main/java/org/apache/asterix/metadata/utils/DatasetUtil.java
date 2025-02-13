@@ -847,4 +847,9 @@ public class DatasetUtil {
         }
         return dsr;
     }
+
+    public static boolean isDeltaTable(Dataset dataset) {
+        return dataset.getDatasetType() == DatasetType.EXTERNAL && ExternalDataUtils
+                .isDeltaTable(((ExternalDatasetDetails) dataset.getDatasetDetails()).getProperties());
+    }
 }

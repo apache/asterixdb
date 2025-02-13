@@ -1,41 +1,73 @@
+distribute result [$$33]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$33] <- [{"D1": $$D1}] project: [$$33]
     -- ASSIGN  |PARTITIONED|
+      select ($$31) project: [$$D1]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D1, $$31])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$31] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select (eq(true, $#3))
                       -- STREAM_SELECT  |LOCAL|
+                        unnest $#3 <- scan-collection(ordered-list-constructor(eq($$37, "a"), $$29))
                         -- UNNEST  |LOCAL|
-                          -- SUBPLAN  |LOCAL|
-                                  {
+                          subplan {
+                                    aggregate [$$29] <- [non-empty-stream()]
                                     -- AGGREGATE  |LOCAL|
+                                      select (eq(true, $#2))
                                       -- STREAM_SELECT  |LOCAL|
+                                        unnest $#2 <- scan-collection(ordered-list-constructor(eq($$36, "c"), $$27))
                                         -- UNNEST  |LOCAL|
-                                          -- SUBPLAN  |LOCAL|
-                                                  {
+                                          subplan {
+                                                    aggregate [$$27] <- [non-empty-stream()]
                                                     -- AGGREGATE  |LOCAL|
+                                                      select (eq("b", $#1))
                                                       -- STREAM_SELECT  |LOCAL|
+                                                        unnest $#1 <- scan-collection($$35)
                                                         -- UNNEST  |LOCAL|
+                                                          nested tuple source
                                                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                                  }
+                                                 }
+                                          -- SUBPLAN  |LOCAL|
+                                            nested tuple source
                                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                  }
+                                 }
+                          -- SUBPLAN  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$37, $$36, $$35] <- [$$D1.getField("val"), $$D1.getField("val2"), $$D1.getField("items")]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D1])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (TestDataverse.Dataset1.Dataset1)  |PARTITIONED|
+                  unnest-map [$$34, $$D1] <- index-search("Dataset1", 0, "Default", "TestDataverse", "Dataset1", false, false, 1, $$41, 1, $$41, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      distinct ([$$41])
                       -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$41)
                           -- STABLE_SORT [$$41(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$41])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (TestDataverse.Dataset1.d1Idx)  |PARTITIONED|
+                                  unnest-map [$$40, $$41] <- index-search("d1Idx", 0, "Default", "TestDataverse", "Dataset1", false, false, 1, $$38, 1, $$39, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$38, $$39] <- ["b", "b"]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

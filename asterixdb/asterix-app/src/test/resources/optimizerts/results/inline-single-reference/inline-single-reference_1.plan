@@ -1,12 +1,24 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$35] <- [{"doc": $$40, "name": $$41, "uname": switch-case(true, not(is-unknown($$36)), $$36, null)}] project: [$$35]
     -- ASSIGN  |PARTITIONED|
+      select (ge($$h.getField("ts"), "1999-03-02T08:04:57.750006+00:00")) project: [$$41, $$40, $$36]
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$36] <- [$$h.getField("uname")]
         -- ASSIGN  |PARTITIONED|
+          unnest $$h <- scan-collection($$38) project: [$$41, $$40, $$h]
           -- UNNEST  |PARTITIONED|
+            assign [$$41, $$40, $$38] <- [$$a.getField("name"), $$a.getField("doc"), $$a.getField("history")] project: [$$41, $$40, $$38]
             -- ASSIGN  |PARTITIONED|
+              project ([$$a])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                  data-scan []<-[$$37, $$a] <- test.t1
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

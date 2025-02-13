@@ -1,24 +1,48 @@
+distribute result [$$115]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$115] <- [{"v6f_dt": $$116, "v5f_dt_fmt": $$117}] project: [$$115]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$116(ASC), $$117(ASC) ]  |PARTITIONED|
+        order (ASC, $$116) (ASC, $$117)
         -- STABLE_SORT [$$116(ASC), $$117(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (eq($$116, $$117))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$117] <- [datetime-default-null($$ds5.getField("f_dt_fmt"), "MM/DD/YYYY hh:mm:ss.nnna")] project: [$$116, $$117]
               -- ASSIGN  |PARTITIONED|
+                project ([$$116, $$ds5])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (test.ds5.ds5)  |PARTITIONED|
+                    unnest-map [$$119, $$ds5] <- index-search("ds5", 0, "Default", "test", "ds5", true, false, 1, $$129, 1, $$129, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$129)
                         -- STABLE_SORT [$$129(ASC)]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$116, $$129])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.ds5.idx5_dt_fmt)  |PARTITIONED|
+                                unnest-map [$$128, $$129] <- index-search("idx5_dt_fmt", 0, "Default", "test", "ds5", true, true, 1, $$116, 1, $$116, true, true, true)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    assign [$$116] <- [datetime-default-null($$ds6.getField("f_dt"))] project: [$$116]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$ds6])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.ds6)  |PARTITIONED|
+                                          data-scan []<-[$$118, $$ds6] <- test.ds6
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

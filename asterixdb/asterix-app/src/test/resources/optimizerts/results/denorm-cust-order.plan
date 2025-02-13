@@ -1,26 +1,49 @@
+distribute result [$$96]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$96] <- [{"cid": $$cid, "cust": $$87, "cnt-orders": $$102, "orders": $$95}] project: [$$96]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- PRE_CLUSTERED_GROUP_BY[$$99]  |PARTITIONED|
-                {
+        group by ([$$cid := $$99]) decor ([]) {
+                  aggregate [$$87, $$95, $$102] <- [listify({"c": $$c}), listify({"o": $$o}), agg-sql-count($$o)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- PRE_CLUSTERED_GROUP_BY[$$99]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            order (ASC, $$99)
             -- STABLE_SORT [$$99(ASC)]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$c, $$o, $$99])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (eq($$99, $$101))
                     -- HYBRID_HASH_JOIN [$$99][$$101]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$99]  |PARTITIONED|
-                        -- DATASOURCE_SCAN (custorder.Customers)  |PARTITIONED|
+                        data-scan []<-[$$99, $$c] <- custorder.Customers
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$101]  |PARTITIONED|
+                        assign [$$101] <- [$$o.getField(1)]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$o])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (custorder.Orders)  |PARTITIONED|
+                              data-scan []<-[$$100, $$o] <- custorder.Orders
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

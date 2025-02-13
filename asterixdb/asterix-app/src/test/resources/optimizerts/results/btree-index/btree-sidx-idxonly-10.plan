@@ -1,31 +1,62 @@
+distribute result [$$73]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$73] <- [agg-sql-sum($$80)]
     -- AGGREGATE  |UNPARTITIONED|
+      exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$80] <- [agg-sql-count(1)]
         -- AGGREGATE  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union
             -- UNION_ALL  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (and(ge($$95, 0), lt($$95, 1000000), lt($$96, date: { 2002-11-09 }), ge($$96, date: { 1997-05-19 }))) project: []
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$95, $$96] <- [$$72.getField(10), $$72.getField(6)] project: [$$95, $$96]
                   -- ASSIGN  |PARTITIONED|
+                    assign [$$72] <- [$$94.getField(12)] project: [$$72]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$94])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (twitter.ds_tweet.ds_tweet)  |PARTITIONED|
+                          unnest-map [$$93, $$94] <- index-search("ds_tweet", 0, "Default", "twitter", "ds_tweet", false, false, 1, $$87, 1, $$87, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              split ($$88)
                               -- SPLIT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (twitter.ds_tweet.create_at_status_count_idx)  |PARTITIONED|
+                                  unnest-map [$$85, $$86, $$87, $$88] <- index-search("create_at_status_count_idx", 0, "Default", "twitter", "ds_tweet", false, false, 2, $$81, $$82, 2, $$83, $$84, true, true, false)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      assign [$$81, $$82, $$83, $$84] <- [date: { 1997-05-19 }, 0, date: { 2002-11-09 }, 1000000]
                                       -- ASSIGN  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (and(ge($$86, 0), lt($$86, 1000000), lt($$85, date: { 2002-11-09 }), ge($$85, date: { 1997-05-19 }))) project: []
                 -- STREAM_SELECT  |PARTITIONED|
+                  project ([$$85, $$86])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      split ($$88)
                       -- SPLIT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (twitter.ds_tweet.create_at_status_count_idx)  |PARTITIONED|
+                          unnest-map [$$85, $$86, $$87, $$88] <- index-search("create_at_status_count_idx", 0, "Default", "twitter", "ds_tweet", false, false, 2, $$81, $$82, 2, $$83, $$84, true, true, false)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              assign [$$81, $$82, $$83, $$84] <- [date: { 1997-05-19 }, 0, date: { 2002-11-09 }, 1000000]
                               -- ASSIGN  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

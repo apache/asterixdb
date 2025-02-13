@@ -1,35 +1,70 @@
+distribute result [$$70]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$70] <- [{"$1": $$80}] project: [$$70]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$80] <- [agg-sql-sum($$89)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$89] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              join (eq($$78, numeric-add($$86, $$71)))
               -- NESTED_LOOP  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$78] <- [numeric-add($$o.getField("o_custkey"), $$71)] project: [$$71, $$78]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$o, $$71])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (eq($$81, $$82))
                         -- HYBRID_HASH_JOIN [$$82][$$81]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$82]  |PARTITIONED|
+                            assign [$$82] <- [$$o.getField("o_orderkey")]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$o])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test1.orders)  |PARTITIONED|
+                                  data-scan []<-[$$72, $$o, $$73] <- test1.orders
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
+                            assign [$$81] <- [to-bigint($$71)]
                             -- ASSIGN  |PARTITIONED|
+                              assign [$$71] <- [$$l.getField("l_orderkey")] project: [$$71]
                               -- ASSIGN  |PARTITIONED|
+                                project ([$$l])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (test1.lineitem)  |PARTITIONED|
+                                    data-scan []<-[$$74, $$l, $$75] <- test1.lineitem
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  assign [$$86] <- [$$c.getField("c_custkey")] project: [$$86]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$c])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test1.customer)  |PARTITIONED|
+                        data-scan []<-[$$76, $$c, $$77] <- test1.customer
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

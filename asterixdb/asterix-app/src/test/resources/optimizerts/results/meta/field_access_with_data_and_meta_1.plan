@@ -1,12 +1,24 @@
+distribute result [$$36]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$36] <- [{"$1": $$39}] project: [$$36]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$39] <- [agg-global-sql-max($$40)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$40] <- [agg-local-sql-max($$34)]
           -- AGGREGATE  |PARTITIONED|
+            assign [$$34] <- [$$38.getField(0)] project: [$$34]
             -- ASSIGN  |PARTITIONED|
+              project ([$$38])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.ds)  |PARTITIONED|
+                  data-scan []<-[$$37, $$ds, $$38] <- test.ds
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

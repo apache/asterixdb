@@ -1,19 +1,38 @@
+distribute result [$$44]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"id": $$50, "f_dt_fmt": $$62}] project: [$$44]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$50(ASC) ]  |PARTITIONED|
+        order (ASC, $$50)
         -- STABLE_SORT [$$50(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt($$62, datetime: { 2020-12-20T00:00:00.000 }))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$62] <- [datetime-default-null($$ds5.getField("f_dt_fmt"), "MM/DD/YYYY hh:mm:ss.nnna")] project: [$$50, $$62]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.ds5.ds5)  |PARTITIONED|
+                  unnest-map [$$50, $$ds5] <- index-search("ds5", 0, "Default", "test", "ds5", false, false, 1, $$61, 1, $$61, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$61)
                       -- STABLE_SORT [$$61(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$61])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.ds5.idx5_dt_fmt)  |PARTITIONED|
+                              unnest-map [$$60, $$61] <- index-search("idx5_dt_fmt", 0, "Default", "test", "ds5", false, false, 0, 1, $$59, true, false, false)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$59] <- [datetime: { 2020-12-20T00:00:00.000 }]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

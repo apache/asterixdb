@@ -1,57 +1,114 @@
+distribute result [$$50] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$50] <- [{"cs1": $$cs1, "cr1": $$cr1, "i1": $$i1}] project: [$$50] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
     -- ASSIGN  |PARTITIONED|
+      project ([$$cs1, $$cr1, $$i1]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          order (ASC, $$53) (ASC, $$54) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
           -- STABLE_SORT [$$53(ASC), $$54(ASC)]  |PARTITIONED|
+            exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
             -- RANGE_PARTITION_EXCHANGE [$$53(ASC), $$54(ASC)]  |PARTITIONED|
+              forward: shared-variable = $$72 [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
               -- FORWARD  |PARTITIONED|
+                exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  replicate [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                   -- REPLICATE  |PARTITIONED|
+                    exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      project ([$$cs1, $$cr1, $$i1, $$53, $$54]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          join (eq($$57, $$53)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 1.1E7]
                           -- HYBRID_HASH_JOIN [$$53][$$57]  |PARTITIONED|
+                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                             -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                              project ([$$cs1, $$cr1, $$53, $$54]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  left outer join (and(eq($$54, $$56), eq($$53, $$55))) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                                   -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
+                                    exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                     -- HASH_PARTITION_EXCHANGE [$$54, $$53]  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
+                                      data-scan []<-[$$53, $$54, $$cs1] <- tpcds.catalog_sales [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                    exchange
                                     -- HASH_PARTITION_EXCHANGE [$$56, $$55]  |PARTITIONED|
-                                      -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
+                                      data-scan []<-[$$55, $$56, $$cr1] <- tpcds.catalog_returns [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                             -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-                              -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
+                              data-scan []<-[$$57, $$i1] <- tpcds.item [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                  aggregate [$$72] <- [agg-range-map($$69, $$70, $$71)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    exchange
                     -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                      aggregate [$$69, $$70, $$71] <- [agg-local-sampling($$53, $$54), agg-null-writer($$53), agg-null-writer($$54)]
                       -- AGGREGATE  |PARTITIONED|
+                        project ([$$53, $$54])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            replicate [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                             -- REPLICATE  |PARTITIONED|
+                              exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$cs1, $$cr1, $$i1, $$53, $$54]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (eq($$57, $$53)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 1.1E7]
                                     -- HYBRID_HASH_JOIN [$$53][$$57]  |PARTITIONED|
+                                      exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                       -- HASH_PARTITION_EXCHANGE [$$53]  |PARTITIONED|
+                                        project ([$$cs1, $$cr1, $$53, $$54]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            left outer join (and(eq($$54, $$56), eq($$53, $$55))) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                                             -- HYBRID_HASH_JOIN [$$54, $$53][$$56, $$55]  |PARTITIONED|
+                                              exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                               -- HASH_PARTITION_EXCHANGE [$$54, $$53]  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (tpcds.catalog_sales)  |PARTITIONED|
+                                                data-scan []<-[$$53, $$54, $$cs1] <- tpcds.catalog_sales [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                              exchange
                                               -- HASH_PARTITION_EXCHANGE [$$56, $$55]  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (tpcds.catalog_returns)  |PARTITIONED|
+                                                data-scan []<-[$$55, $$56, $$cr1] <- tpcds.catalog_returns [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                       -- HASH_PARTITION_EXCHANGE [$$57]  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (tpcds.item)  |PARTITIONED|
+                                        data-scan []<-[$$57, $$i1] <- tpcds.item [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

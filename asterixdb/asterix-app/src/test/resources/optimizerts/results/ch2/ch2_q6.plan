@@ -1,15 +1,30 @@
+distribute result [$$54]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$54] <- [{"revenue": $$57}] project: [$$54]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$57] <- [agg-global-sql-sum($$61)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$61] <- [agg-local-sql-sum($$59)]
           -- AGGREGATE  |PARTITIONED|
+            select (and(gt($$59, 600), lt($$55, "2017-01-01 00:00:00.000000"), ge($$55, "2016-01-01 00:00:00.000000"))) project: [$$59]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$55, $$59] <- [$$ol.getField("ol_delivery_d"), $$ol.getField("ol_amount")] project: [$$55, $$59]
               -- ASSIGN  |PARTITIONED|
+                unnest $$ol <- scan-collection($$58) project: [$$ol]
                 -- UNNEST  |PARTITIONED|
+                  assign [$$58] <- [$$o.getField("o_orderline")] project: [$$58]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$o])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                        data-scan []<-[$$56, $$o] <- test.orders
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

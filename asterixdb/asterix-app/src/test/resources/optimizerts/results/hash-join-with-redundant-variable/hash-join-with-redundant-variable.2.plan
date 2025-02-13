@@ -1,32 +1,64 @@
+distribute result [$$73]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$73] <- [agg-sql-sum($$74)]
     -- AGGREGATE  |UNPARTITIONED|
+      exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$74] <- [agg-sql-count(1)]
         -- AGGREGATE  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$69, $$67))
             -- HYBRID_HASH_JOIN [$$69][$$67]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$69])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (eq($$68, $$69))
                     -- HYBRID_HASH_JOIN [$$69][$$68]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$69]  |PARTITIONED|
+                        assign [$$69] <- [$$r.getField("x")] project: [$$69]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$r])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.region)  |PARTITIONED|
+                              data-scan []<-[$$70, $$r] <- test.region
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$68]  |PARTITIONED|
+                        assign [$$68] <- [$$o.getField("x")] project: [$$68]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$o])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                              data-scan []<-[$$71, $$o] <- test.orders
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$67]  |PARTITIONED|
+                assign [$$67] <- [$$n.getField("x")] project: [$$67]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$n])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.nation)  |PARTITIONED|
+                      data-scan []<-[$$72, $$n] <- test.nation
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

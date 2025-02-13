@@ -1,23 +1,46 @@
+distribute result [$$39]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- SORT_MERGE_EXCHANGE [$$39(ASC) ]  |PARTITIONED|
+    order (ASC, $$39)
     -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        select (eq($$36, $$tenk2.getField(7))) project: [$$39]
         -- STREAM_SELECT  |PARTITIONED|
+          assign [$$39] <- [$$tenk2.getField(0)]
           -- ASSIGN  |PARTITIONED|
+            project ([$$36, $$tenk2])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.tenk2.tenk2)  |PARTITIONED|
+                unnest-map [$$35, $$tenk2] <- index-search("tenk2", 0, "Default", "test", "tenk2", true, false, 1, $$44, 1, $$44, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$44)
                     -- STABLE_SORT [$$44(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$36, $$44])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (test.tenk2.idx_tenk2_1k)  |PARTITIONED|
+                            unnest-map [$$43, $$44] <- index-search("idx_tenk2_1k", 0, "Default", "test", "tenk2", true, true, 1, $$36, 1, $$36, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                assign [$$36] <- [$$tenk1.getField(7)] project: [$$36]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$tenk1])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                      -- BTREE_SEARCH (test.tenk1.tenk1)  |PARTITIONED|
+                                      unnest-map [$$34, $$tenk1] <- index-search("tenk1", 0, "Default", "test", "tenk1", false, false, 0, 1, $$40, true, false, false)
+                                      -- BTREE_SEARCH  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                          assign [$$40] <- [1]
                                           -- ASSIGN  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

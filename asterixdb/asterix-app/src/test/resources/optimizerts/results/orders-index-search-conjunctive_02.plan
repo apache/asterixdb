@@ -1,32 +1,38 @@
--- SINK  |PARTITIONED|
-  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BULKLOAD  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
-                -- ASSIGN  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$22] <- [{"o_orderkey": $$26, "o_custkey": $$24, "o_totalprice": $$25}] project: [$$22]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$26(ASC) ]  |PARTITIONED|
+        order (ASC, $$26)
         -- STABLE_SORT [$$26(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (and(gt($$25, 150000.0), eq($$24, 40)))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$24, $$25] <- [$$o.getField(1), $$o.getField(3)] project: [$$26, $$24, $$25]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (tpch.Orders.Orders)  |PARTITIONED|
+                  unnest-map [$$26, $$o] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$32, 1, $$32, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$32)
                       -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$32])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (tpch.Orders.idx_Orders_Custkey)  |PARTITIONED|
+                              unnest-map [$$31, $$32] <- index-search("idx_Orders_Custkey", 0, "Default", "tpch", "Orders", false, false, 1, $$29, 1, $$30, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$29, $$30] <- [40, 40]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

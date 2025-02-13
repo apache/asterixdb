@@ -1,23 +1,43 @@
+distribute result [$$103]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$103] <- [{"x": $$x, "y": $$y, "cnt": $$106, "rnk": $$101}] project: [$$103]
     -- ASSIGN  |LOCAL|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+        order (ASC, $$x) (ASC, $$106)
         -- STABLE_SORT [$$x(ASC), $$106(ASC)]  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            project ([$$x, $$y, $$106, $$101])
             -- STREAM_PROJECT  |LOCAL|
+              window-aggregate [$$101] <- [rank-impl($$107)] partition [$$x] order (ASC, $$107)
               -- WINDOW_STREAM  |LOCAL|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  order (ASC, $$x) (ASC, $$107)
                   -- STABLE_SORT [$$x(ASC), $$107(ASC)]  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-                      -- PRE_CLUSTERED_GROUP_BY[$$109, $$110]  |LOCAL|
-                              {
+                      group by ([$$x := $$109; $$y := $$110]) decor ([]) {
+                                aggregate [$$106, $$107] <- [agg-sql-sum($$111), agg-sql-sum($$112)]
                                 -- AGGREGATE  |LOCAL|
+                                  aggregate [$$111, $$112] <- [agg-sql-count($$r), agg-sql-count($$r)]
                                   -- AGGREGATE  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- PRE_CLUSTERED_GROUP_BY[$$109, $$110]  |LOCAL|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                          order (ASC, $$109) (ASC, $$110)
                           -- STABLE_SORT [$$109(ASC), $$110(ASC)]  |LOCAL|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              assign [$$110, $$109] <- [numeric-mod($$r, 4), numeric-mod($$r, 2)]
                               -- ASSIGN  |UNPARTITIONED|
+                                unnest $$r <- range(1, 10)
                                 -- UNNEST  |UNPARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

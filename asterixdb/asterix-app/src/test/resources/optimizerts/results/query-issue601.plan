@@ -1,21 +1,36 @@
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$46] <- [{"l_linenumber": $$l_linenumber, "count_order": $$50}] project: [$$46]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- SORT_GROUP_BY[$$52]  |PARTITIONED|
-                {
+        group by ([$$l_linenumber := $$52]) decor ([]) {
+                  aggregate [$$50] <- [agg-sql-sum($$51)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$52]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$49]  |PARTITIONED|
-                    {
+            group by ([$$52 := $$49]) decor ([]) {
+                      aggregate [$$51] <- [agg-sql-count(1)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$49]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                project ([$$49])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                    data-scan []<-[$$48, $$49, $$l] <- tpch.LineItem
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,35 +1,70 @@
+distribute result [$$100]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$100] <- [object-concat-strict(to-object-var-str($$83), {"percentile": $#2, "i": $$i, "cnt": $$103})] project: [$$100]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$#2(ASC) ]  |PARTITIONED|
+        order (ASC, $#2)
         -- STABLE_SORT [$#2(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            assign [$#2] <- [numeric-multiply(numeric-divide($$i, $$103), 100)]
             -- ASSIGN  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (true)
                 -- NESTED_LOOP  |PARTITIONED|
+                  exchange
                   -- RANDOM_PARTITION_EXCHANGE  |PARTITIONED|
+                    select (eq($$108, "NicholasStroh")) project: [$$83, $$i]
                     -- STREAM_SELECT  |PARTITIONED|
+                      running-aggregate [$$i] <- [tid()]
                       -- RUNNING_AGGREGATE  |PARTITIONED|
+                        assign [$$83] <- [{"name": $$108, "alias": $$110}] project: [$$83, $$108]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- SORT_MERGE_EXCHANGE [$$108(ASC) ]  |PARTITIONED|
+                            order (ASC, $$108)
                             -- STABLE_SORT [$$108(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                assign [$$110, $$108] <- [$$FacebookUsers.getField(1), $$FacebookUsers.getField(2)] project: [$$108, $$110]
                                 -- ASSIGN  |PARTITIONED|
+                                  project ([$$FacebookUsers])
                                   -- STREAM_PROJECT  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      replicate
                                       -- REPLICATE  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.FacebookUsers)  |PARTITIONED|
+                                          data-scan []<-[$$101, $$FacebookUsers] <- test.FacebookUsers
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    aggregate [$$103] <- [agg-sql-sum($$112)]
                     -- AGGREGATE  |UNPARTITIONED|
+                      exchange
                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                        aggregate [$$112] <- [agg-sql-count(1)]
                         -- AGGREGATE  |PARTITIONED|
+                          assign [$$107, $$106] <- [$$101, $$FacebookUsers] project: [$$107, $$106]
                           -- ASSIGN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              replicate
                               -- REPLICATE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.FacebookUsers)  |PARTITIONED|
+                                  data-scan []<-[$$101, $$FacebookUsers] <- test.FacebookUsers
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,22 +1,38 @@
+distribute result [$$45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$45] <- [{"alias": $$alias, "count": $$48}] project: [$$45]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- SORT_GROUP_BY[$$50]  |PARTITIONED|
-                {
+        group by ([$$alias := $$50]) decor ([]) {
+                  aggregate [$$48] <- [agg-sql-sum($$49)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$50]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$50]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$46]  |PARTITIONED|
-                    {
+            group by ([$$50 := $$46]) decor ([]) {
+                      aggregate [$$49] <- [agg-sql-count(1)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$46]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$46] <- [$$u.getField("alias")] project: [$$46]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$u])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                      data-scan []<-[$$47, $$u] <- TinySocial.FacebookUsers
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,25 +1,44 @@
+distribute result [$$88]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$88] <- [{"o_ol_cnt": $$o_ol_cnt, "high_line_COUNT": $$93, "low_line_COUNT": $$94}] project: [$$88]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$o_ol_cnt(ASC) ]  |PARTITIONED|
-        -- SORT_GROUP_BY[$$100]  |PARTITIONED|
-                {
+        group by ([$$o_ol_cnt := $$100]) decor ([]) {
+                  aggregate [$$93, $$94] <- [agg-global-sql-sum($$98), agg-global-sql-sum($$99)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$100]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$100]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$89]  |PARTITIONED|
-                    {
+            group by ([$$100 := $$89]) decor ([]) {
+                      aggregate [$$98, $$99] <- [agg-local-sql-sum(switch-case(true, or(eq($$92, 1), eq($$92, 2)), 1, 0)), agg-local-sql-sum(switch-case(true, and(neq($$92, 1), neq($$92, 2)), 1, 0))]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$89]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (and(le($$o.getField("o_entry_d"), $$90), ge($$90, "2016-01-01 00:00:00.000000"), lt($$90, "2017-01-01 00:00:00.000000"))) project: [$$92, $$89]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$90] <- [$$ol.getField("ol_delivery_d")] project: [$$o, $$89, $$92, $$90]
                   -- ASSIGN  |PARTITIONED|
+                    unnest $$ol <- scan-collection($$95) project: [$$o, $$89, $$92, $$ol]
                     -- UNNEST  |PARTITIONED|
+                      assign [$$89, $$95, $$92] <- [$$o.getField("o_ol_cnt"), $$o.getField("o_orderline"), $$o.getField("o_carrier_id")]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$o])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                            data-scan []<-[$$91, $$o] <- test.orders
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

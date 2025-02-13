@@ -1,38 +1,76 @@
+distribute result [$$85]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$85] <- [{"U1": $$U1, "U2": $$U2, "E1": { "name": "Glenn" }, "augmentedUser1": $$105, "augmentedUser2": $$107, "augmentedUser3": { "name": "Glenn", "favoriteColor": "Blue" }}] project: [$$85]
     -- ASSIGN  |PARTITIONED|
+      project ([$$U1, $$105, $$U2, $$107])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$88, $$89))
           -- HYBRID_HASH_JOIN [$$88][$$89]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
+              assign [$$88] <- [$$105.getField("bestFriend")]
               -- ASSIGN  |PARTITIONED|
+                select (eq($$105.getField("name"), "John"))
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$105] <- [object-add($$U1, "favoriteColor", "Green")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$U1])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
+                        unnest-map [$$86, $$U1] <- index-search("Users", 0, "Default", "test", "Users", false, false, 1, $$111, 1, $$111, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$111)
                             -- STABLE_SORT [$$111(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$111])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.Users.usersNameIdx)  |PARTITIONED|
+                                    unnest-map [$$110, $$111] <- index-search("usersNameIdx", 0, "Default", "test", "Users", false, false, 1, $$108, 1, $$109, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$108, $$109] <- ["John", "John"]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
+              select (eq($$107.getField("name"), "Sally"))
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$89] <- [$$107.getField(0)]
                 -- ASSIGN  |PARTITIONED|
+                  assign [$$107] <- [object-add($$U2, "favoriteFood", "Pizza")]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$U2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.Users.Users)  |PARTITIONED|
+                        unnest-map [$$87, $$U2] <- index-search("Users", 0, "Default", "test", "Users", false, false, 1, $$115, 1, $$115, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$115)
                             -- STABLE_SORT [$$115(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$115])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.Users.usersNameIdx)  |PARTITIONED|
+                                    unnest-map [$$114, $$115] <- index-search("usersNameIdx", 0, "Default", "test", "Users", false, false, 1, $$112, 1, $$113, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$112, $$113] <- ["Sally", "Sally"]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

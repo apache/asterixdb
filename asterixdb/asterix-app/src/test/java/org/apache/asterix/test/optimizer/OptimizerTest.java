@@ -34,6 +34,8 @@ import org.apache.asterix.common.dataflow.ICcApplicationContext;
 import org.apache.asterix.compiler.provider.ILangCompilationProvider;
 import org.apache.asterix.om.base.IAObject;
 import org.apache.asterix.test.common.TestHelper;
+import org.apache.asterix.translator.ExecutionPlans;
+import org.apache.asterix.translator.SessionConfig;
 import org.apache.commons.io.FileUtils;
 import org.apache.hyracks.algebricks.common.exceptions.AlgebricksException;
 import org.apache.hyracks.api.client.IHyracksClientConnection;
@@ -83,14 +85,17 @@ public class OptimizerTest extends AbstractOptimizerTest {
                     (ICcApplicationContext) integrationUtil.cc.getApplicationContext(), hcc, new StringReader(query),
                     plan, provider, statementExecutorFactory, storageComponentProvider);
             asterix.setStatementParameters(queryParams);
-            asterix.compile(true, false, false, true, true, false, false);
+            asterix.compile(true, false, true, true, false, false, false, SessionConfig.PlanFormat.STRING);
+            ExecutionPlans executionPlans = asterix.getExecutionPlans();
+            String planStr = executionPlans.getOptimizedLogicalPlan();
+            plan.write(planStr);
         } catch (AlgebricksException e) {
             throw new Exception("Compile ERROR for " + queryFile + ": " + e.getMessage(), e);
         }
 
         List<String> linesActual = Files.readAllLines(actualFile.toPath(), StandardCharsets.UTF_8);
         List<String> linesExpected = getExpectedLines();
-        TestHelper.comparePlans(linesExpected, linesActual, queryFile);
+        TestHelper.comparePlansWithoutCost(linesExpected, linesActual, queryFile);
     }
 
     protected List<String> getExpectedLines() throws IOException {

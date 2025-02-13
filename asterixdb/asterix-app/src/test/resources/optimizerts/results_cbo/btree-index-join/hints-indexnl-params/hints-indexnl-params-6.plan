@@ -1,22 +1,44 @@
+distribute result [$$39] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
   -- SORT_MERGE_EXCHANGE [$$39(ASC) ]  |PARTITIONED|
+    order (ASC, $$39) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
     -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
+      exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        project ([$$39]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$36, $$37)) [cardinality: 5.0E11, op-cost: 5.00004E11, total-cost: 5.00009E11]
             -- HYBRID_HASH_JOIN [$$37][$$36]  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
               -- HASH_PARTITION_EXCHANGE [$$37]  |PARTITIONED|
+                assign [$$39, $$37] <- [$$tenk2.getField(0), $$tenk2.getField(7)] project: [$$39, $$37] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$tenk2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (test.tenk2)  |PARTITIONED|
+                      data-scan []<-[$$35, $$tenk2] <- test.tenk2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+                assign [$$36] <- [$$tenk1.getField(7)] project: [$$36] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$tenk1]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.tenk1.tenk1)  |PARTITIONED|
+                      unnest-map [$$34, $$tenk1] <- index-search("tenk1", 0, "Default", "test", "tenk1", false, false, 0, 1, $$40, true, false, false) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$40] <- [1]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

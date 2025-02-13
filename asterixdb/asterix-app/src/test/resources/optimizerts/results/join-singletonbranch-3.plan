@@ -1,19 +1,38 @@
+distribute result [$$64]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$64] <- [{"f": $$57, "b": $$b}] project: [$$64]
     -- ASSIGN  |PARTITIONED|
+      select (lt($$b.getField("fee"), $$69)) project: [$$57, $$b]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$57, $$69, $$b])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- DATASOURCE_SCAN (test.Bar)  |PARTITIONED|
+            data-scan []<-[$$66, $$b] <- test.Bar
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                assign [$$69] <- [$$57.getField("avg")]
                 -- ASSIGN  |UNPARTITIONED|
+                  assign [$$57] <- [{"foo_avg": $$67}] project: [$$57]
                   -- ASSIGN  |UNPARTITIONED|
+                    aggregate [$$67] <- [agg-global-sql-avg($$71)]
                     -- AGGREGATE  |UNPARTITIONED|
+                      exchange
                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                        aggregate [$$71] <- [agg-local-sql-avg($$55)]
                         -- AGGREGATE  |PARTITIONED|
+                          assign [$$55] <- [$$f.getField("fee")] project: [$$55]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$f])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.Foo)  |PARTITIONED|
+                                data-scan []<-[$$65, $$f] <- test.Foo
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

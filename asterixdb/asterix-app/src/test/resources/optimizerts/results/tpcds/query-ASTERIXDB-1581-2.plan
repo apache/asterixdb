@@ -1,121 +1,242 @@
+distribute result [$$149]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$149] <- [{"bucket1": $$147}] project: [$$149]
     -- ASSIGN  |PARTITIONED|
+      unnest $$147 <- scan-collection($$146) project: [$$147]
       -- UNNEST  |PARTITIONED|
+        assign [$$146] <- [switch-case(true, lt(get-item($$109, 0), 25437), cast($$128), cast($$145))] project: [$$146]
         -- ASSIGN  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (true)
             -- NESTED_LOOP  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (true)
                 -- NESTED_LOOP  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (true)
                     -- NESTED_LOOP  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- BTREE_SEARCH (tpcds.item.item)  |PARTITIONED|
+                            unnest-map [$$153, $$item] <- index-search("item", 0, "Default", "tpcds", "item", false, false, 1, $$212, 1, $$213, true, true, true)
+                            -- BTREE_SEARCH  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                assign [$$212, $$213] <- [1, 1]
                                 -- ASSIGN  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                      exchange
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                        aggregate [$$145] <- [listify($$144)]
                         -- AGGREGATE  |UNPARTITIONED|
+                          aggregate [$$144] <- [listify($$143)]
                           -- AGGREGATE  |UNPARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              join (true)
                               -- NESTED_LOOP  |UNPARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  select (not(or(and($$216, not(is-unknown($$216)))))) project: []
                                   -- STREAM_SELECT  |UNPARTITIONED|
+                                    assign [$$216] <- [lt(get-item($$192, 0), 25437)] project: [$$216]
                                     -- ASSIGN  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        replicate
                                         -- REPLICATE  |UNPARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                            aggregate [$$192] <- [listify($$194)]
                                             -- AGGREGATE  |UNPARTITIONED|
+                                              aggregate [$$194] <- [agg-sql-sum($$207)]
                                               -- AGGREGATE  |UNPARTITIONED|
+                                                exchange
                                                 -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                                                  aggregate [$$207] <- [agg-sql-count(1)]
                                                   -- AGGREGATE  |PARTITIONED|
+                                                    select (and(le($$200, 20), ge($$200, 1)))
                                                     -- STREAM_SELECT  |PARTITIONED|
+                                                      assign [$$200] <- [$$199.getField(10)] project: [$$200]
                                                       -- ASSIGN  |PARTITIONED|
+                                                        assign [$$199] <- [$$165] project: [$$199]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            replicate
                                                             -- REPLICATE  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                project ([$$165])
                                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                    -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                    data-scan []<-[$$167, $$168, $$165] <- tpcds.store_sales
+                                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                      exchange
                                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                        empty-tuple-source
                                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                  assign [$$143] <- [{"$2": $$162}] project: [$$143]
                                   -- ASSIGN  |UNPARTITIONED|
+                                    aggregate [$$162] <- [agg-global-sql-avg($$208)]
                                     -- AGGREGATE  |UNPARTITIONED|
+                                      exchange
                                       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                                        aggregate [$$208] <- [agg-local-sql-avg($$141)]
                                         -- AGGREGATE  |PARTITIONED|
+                                          select (and(le($$166, 20), ge($$166, 1))) project: [$$141]
                                           -- STREAM_SELECT  |PARTITIONED|
+                                            assign [$$141, $$166] <- [$$165.getField(22), $$165.getField(10)] project: [$$141, $$166]
                                             -- ASSIGN  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                replicate
                                                 -- REPLICATE  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    project ([$$165])
                                                     -- STREAM_PROJECT  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                        -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                        data-scan []<-[$$167, $$168, $$165] <- tpcds.store_sales
+                                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            empty-tuple-source
                                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange
                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                    aggregate [$$128] <- [listify($$127)]
                     -- AGGREGATE  |UNPARTITIONED|
+                      aggregate [$$127] <- [listify($$126)]
                       -- AGGREGATE  |UNPARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                          join (true)
                           -- NESTED_LOOP  |UNPARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              select (lt(get-item($$181, 0), 25437)) project: []
                               -- STREAM_SELECT  |UNPARTITIONED|
+                                assign [$$181] <- [$$192] project: [$$181]
                                 -- ASSIGN  |UNPARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                    replicate
                                     -- REPLICATE  |UNPARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                                        aggregate [$$192] <- [listify($$194)]
                                         -- AGGREGATE  |UNPARTITIONED|
+                                          aggregate [$$194] <- [agg-sql-sum($$207)]
                                           -- AGGREGATE  |UNPARTITIONED|
+                                            exchange
                                             -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                                              aggregate [$$207] <- [agg-sql-count(1)]
                                               -- AGGREGATE  |PARTITIONED|
+                                                select (and(le($$200, 20), ge($$200, 1)))
                                                 -- STREAM_SELECT  |PARTITIONED|
+                                                  assign [$$200] <- [$$199.getField(10)] project: [$$200]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    assign [$$199] <- [$$165] project: [$$199]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        replicate
                                                         -- REPLICATE  |PARTITIONED|
+                                                          exchange
                                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                            project ([$$165])
                                                             -- STREAM_PROJECT  |PARTITIONED|
+                                                              exchange
                                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                                -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                                data-scan []<-[$$167, $$168, $$165] <- tpcds.store_sales
+                                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                  exchange
                                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                    empty-tuple-source
                                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                              assign [$$126] <- [{"$1": $$161}] project: [$$126]
                               -- ASSIGN  |UNPARTITIONED|
+                                aggregate [$$161] <- [agg-global-sql-avg($$210)]
                                 -- AGGREGATE  |UNPARTITIONED|
+                                  exchange
                                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                                    aggregate [$$210] <- [agg-local-sql-avg($$124)]
                                     -- AGGREGATE  |PARTITIONED|
+                                      select (and(le($$172, 20), ge($$172, 1))) project: [$$124]
                                       -- STREAM_SELECT  |PARTITIONED|
+                                        assign [$$124, $$172] <- [$$171.getField(14), $$171.getField(10)] project: [$$124, $$172]
                                         -- ASSIGN  |PARTITIONED|
+                                          assign [$$171] <- [$$165] project: [$$171]
                                           -- ASSIGN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              replicate
                                               -- REPLICATE  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  project ([$$165])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                      data-scan []<-[$$167, $$168, $$165] <- tpcds.store_sales
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                assign [$$109] <- [$$192] project: [$$109]
                 -- ASSIGN  |UNPARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                    replicate
                     -- REPLICATE  |UNPARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                        aggregate [$$192] <- [listify($$194)]
                         -- AGGREGATE  |UNPARTITIONED|
+                          aggregate [$$194] <- [agg-sql-sum($$207)]
                           -- AGGREGATE  |UNPARTITIONED|
+                            exchange
                             -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                              aggregate [$$207] <- [agg-sql-count(1)]
                               -- AGGREGATE  |PARTITIONED|
+                                select (and(le($$200, 20), ge($$200, 1)))
                                 -- STREAM_SELECT  |PARTITIONED|
+                                  assign [$$200] <- [$$199.getField(10)] project: [$$200]
                                   -- ASSIGN  |PARTITIONED|
+                                    assign [$$199] <- [$$165] project: [$$199]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            project ([$$165])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (tpcds.store_sales)  |PARTITIONED|
+                                                data-scan []<-[$$167, $$168, $$165] <- tpcds.store_sales
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

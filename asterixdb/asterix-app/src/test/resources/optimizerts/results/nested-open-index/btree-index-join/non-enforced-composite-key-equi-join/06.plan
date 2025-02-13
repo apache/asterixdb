@@ -1,26 +1,52 @@
+distribute result [$$36]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$36] <- [{"c1": $$48, "c2": $$49}] project: [$$36]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$48(ASC), $$49(ASC) ]  |PARTITIONED|
+        order (ASC, $$48) (ASC, $$49)
         -- STABLE_SORT [$$48(ASC), $$49(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (eq($$45, $$53.getField("c_s"))) project: [$$48, $$49]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$49] <- [$$53.getField("c_x")]
               -- ASSIGN  |PARTITIONED|
+                assign [$$53] <- [$$t2.getField("nested")] project: [$$48, $$45, $$53]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$48, $$45, $$t2])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- BTREE_SEARCH (test.TestOpen2.TestOpen2)  |PARTITIONED|
+                      unnest-map [$$44, $$t2] <- index-search("TestOpen2", 0, "Default", "test", "TestOpen2", true, false, 1, $$56, 1, $$56, true, true, true)
+                      -- BTREE_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          order (ASC, $$56)
                           -- STABLE_SORT [$$56(ASC)]  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              project ([$$48, $$45, $$56])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- BTREE_SEARCH (test.TestOpen2.idx_t2_s)  |PARTITIONED|
+                                  unnest-map [$$54, $$55, $$56] <- index-search("idx_t2_s", 0, "Default", "test", "TestOpen2", true, true, 1, $$45, 1, $$45, true, true, true)
+                                  -- BTREE_SEARCH  |PARTITIONED|
+                                    exchange
                                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                      assign [$$45, $$48] <- [to-string($$52.getField("c_s")), $$52.getField("c_x")] project: [$$45, $$48]
                                       -- ASSIGN  |PARTITIONED|
+                                        assign [$$52] <- [$$t1.getField("nested")] project: [$$52]
                                         -- ASSIGN  |PARTITIONED|
+                                          project ([$$t1])
                                           -- STREAM_PROJECT  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                              -- DATASOURCE_SCAN (test.TestOpen1)  |PARTITIONED|
+                                              data-scan []<-[$$43, $$t1] <- test.TestOpen1
+                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

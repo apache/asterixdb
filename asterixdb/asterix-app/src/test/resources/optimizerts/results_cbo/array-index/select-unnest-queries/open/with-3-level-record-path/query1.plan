@@ -1,11 +1,22 @@
+distribute result [$$31] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$31] <- [{"business_id": $$34}] project: [$$31] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (eq("2016-04-26", $$D)) project: [$$34] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$D <- scan-collection($$33) project: [$$34, $$D] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- UNNEST  |PARTITIONED|
+          assign [$$33, $$34] <- [$$C.getField("checkin_data").getField("checkin_temporal").getField("checkin_times").getField("dates"), $$C.getField("business_id")] project: [$$33, $$34] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ASSIGN  |PARTITIONED|
+            project ([$$C]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                data-scan []<-[$$32, $$C] <- TestYelp.YelpCheckin [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

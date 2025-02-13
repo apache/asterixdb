@@ -1,10 +1,20 @@
+distribute result [$$29] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"U": $$U, "augmentedUser": $$36}] project: [$$29] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$36.getField("name").getField("first"), "Glenn")) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$36] <- [object-add($$U, "favoriteColor", "Green")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- ASSIGN  |PARTITIONED|
+          project ([$$U]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
+              data-scan []<-[$$30, $$U] <- test.Users [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

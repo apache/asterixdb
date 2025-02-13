@@ -1,66 +1,132 @@
+distribute result [$$25]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$25] <- [{"o_custkey": $$28, "o_orderkey": $$29, "o_orderstatus": $$34}] project: [$$25]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$28) (ASC, $$29)
         -- STABLE_SORT [$$28(ASC), $$29(ASC)]  |PARTITIONED|
+          exchange
           -- RANGE_PARTITION_EXCHANGE [$$28(ASC), $$29(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$47
             -- FORWARD  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate
                 -- REPLICATE  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (and(eq($$Orders.getField(5), "1-URGENT"), le($$28, 43), ge($$28, 40))) project: [$$28, $$29, $$34]
                     -- STREAM_SELECT  |PARTITIONED|
+                      assign [$$34, $$28] <- [$$Orders.getField(2), $$Orders.getField(1)]
                       -- ASSIGN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- BTREE_SEARCH (tpch.Orders.Orders)  |PARTITIONED|
+                          unnest-map [$$29, $$Orders] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$43, 1, $$43, true, true, true)
+                          -- BTREE_SEARCH  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              intersect [$$43] <- [[$$38], [$$42]]
                               -- INTERSECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$38)
                                   -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$38])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (tpch.Orders.idx_custkey)  |PARTITIONED|
+                                          unnest-map [$$37, $$38] <- index-search("idx_custkey", 0, "Default", "tpch", "Orders", false, false, 1, $$35, 1, $$36, true, true, false)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$35, $$36] <- [40, 43]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$42)
                                   -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$42])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (tpch.Orders.idx_orderpriority)  |PARTITIONED|
+                                          unnest-map [$$41, $$42] <- index-search("idx_orderpriority", 0, "Default", "tpch", "Orders", false, false, 1, $$39, 1, $$40, true, true, true)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              assign [$$39, $$40] <- ["1-URGENT", "1-URGENT"]
                                               -- ASSIGN  |PARTITIONED|
+                                                empty-tuple-source
                                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$47] <- [agg-range-map($$44, $$45, $$46)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$44, $$45, $$46] <- [agg-local-sampling($$28, $$29), agg-null-writer($$28), agg-null-writer($$29)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$28, $$29])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate
                           -- REPLICATE  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              select (and(eq($$Orders.getField(5), "1-URGENT"), le($$28, 43), ge($$28, 40))) project: [$$28, $$29, $$34]
                               -- STREAM_SELECT  |PARTITIONED|
+                                assign [$$34, $$28] <- [$$Orders.getField(2), $$Orders.getField(1)]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (tpch.Orders.Orders)  |PARTITIONED|
+                                    unnest-map [$$29, $$Orders] <- index-search("Orders", 0, "Default", "tpch", "Orders", false, false, 1, $$43, 1, $$43, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        intersect [$$43] <- [[$$38], [$$42]]
                                         -- INTERSECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            order (ASC, $$38)
                                             -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$38])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- BTREE_SEARCH (tpch.Orders.idx_custkey)  |PARTITIONED|
+                                                    unnest-map [$$37, $$38] <- index-search("idx_custkey", 0, "Default", "tpch", "Orders", false, false, 1, $$35, 1, $$36, true, true, false)
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$35, $$36] <- [40, 43]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            order (ASC, $$42)
                                             -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                project ([$$42])
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- BTREE_SEARCH (tpch.Orders.idx_orderpriority)  |PARTITIONED|
+                                                    unnest-map [$$41, $$42] <- index-search("idx_orderpriority", 0, "Default", "tpch", "Orders", false, false, 1, $$39, 1, $$40, true, true, true)
+                                                    -- BTREE_SEARCH  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        assign [$$39, $$40] <- ["1-URGENT", "1-URGENT"]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

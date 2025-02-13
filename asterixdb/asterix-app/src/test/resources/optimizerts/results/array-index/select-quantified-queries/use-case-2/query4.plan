@@ -1,20 +1,37 @@
+distribute result [$$53]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$53] <- [{"$1": $$55}] project: [$$53]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$55] <- [agg-sql-sum($$58)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$58] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            select (and($$44, eq($$45, 0)))
             -- STREAM_SELECT  |PARTITIONED|
+              project ([$$44, $$45])
               -- STREAM_PROJECT  |PARTITIONED|
-                -- SUBPLAN  |PARTITIONED|
-                        {
+                subplan {
+                          aggregate [$$44, $$45] <- [non-empty-stream(), agg-sql-count(switch-case(and(gt($$D, "2016"), lt($$D, "2017")), true, null, true))]
                           -- AGGREGATE  |LOCAL|
+                            unnest $$D <- scan-collection($$56)
                             -- UNNEST  |LOCAL|
+                              nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       }
+                -- SUBPLAN  |PARTITIONED|
+                  assign [$$56] <- [$$C.getField(2).getField("dates_notindexed")] project: [$$56]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$C])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                        data-scan []<-[$$54, $$C] <- TestYelp.YelpCheckin
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

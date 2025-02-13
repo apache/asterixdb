@@ -1,29 +1,58 @@
+distribute result [$$56]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$56] <- [{"marker": $$57}] project: [$$56]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$D, $$59)) project: [$$57]
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$D <- scan-collection($$62) project: [$$57, $$59, $$D]
         -- UNNEST  |PARTITIONED|
+          assign [$$62] <- [$$CT.getField(1)] project: [$$57, $$59, $$62]
           -- ASSIGN  |PARTITIONED|
+            unnest $$CT <- scan-collection($$61) project: [$$57, $$59, $$CT]
             -- UNNEST  |PARTITIONED|
+              assign [$$61] <- [$$C.getField(2)] project: [$$57, $$59, $$61]
               -- ASSIGN  |PARTITIONED|
+                project ([$$57, $$59, $$C])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (TestYelp.YelpCheckin.YelpCheckin)  |PARTITIONED|
+                    unnest-map [$$58, $$C] <- index-search("YelpCheckin", 0, "Default", "TestYelp", "YelpCheckin", true, false, 1, $$65, 1, $$65, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        project ([$$65, $$57, $$59])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            distinct ([$$65, $$66])
                             -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$65) (ASC, $$66)
                                 -- STABLE_SORT [$$65(ASC), $$66(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    project ([$$57, $$59, $$66, $$65])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- BTREE_SEARCH (TestYelp.YelpCheckin.IdxYelpCheckinDates)  |PARTITIONED|
+                                        unnest-map [$$64, $$65] <- index-search("IdxYelpCheckinDates", 0, "Default", "TestYelp", "YelpCheckin", true, true, 1, $$59, 1, $$59, true, true, true)
+                                        -- BTREE_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                            running-aggregate [$$66] <- [create-query-uid()]
                                             -- RUNNING_AGGREGATE  |PARTITIONED|
+                                              select (eq($$M.getField(3), "19:49:16")) project: [$$57, $$59]
                                               -- STREAM_SELECT  |PARTITIONED|
+                                                assign [$$59] <- [$$M.getField(2)]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (TestYelp.YelpCheckinDateMarkers)  |PARTITIONED|
+                                                    data-scan []<-[$$57, $$M] <- TestYelp.YelpCheckinDateMarkers
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

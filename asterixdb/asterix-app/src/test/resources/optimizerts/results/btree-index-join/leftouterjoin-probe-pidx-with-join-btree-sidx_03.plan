@@ -1,29 +1,58 @@
+distribute result [$$37]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$37] <- [{"tweetid1": $$41, "count1": $$43, "tweetid2": $$42, "count2": $$44}] project: [$$37]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$41(ASC), $$42(ASC) ]  |PARTITIONED|
+        order (ASC, $$41) (ASC, $$42)
         -- STABLE_SORT [$$41(ASC), $$42(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select ($$57) project: [$$41, $$43, $$42, $$44]
             -- STREAM_SELECT  |PARTITIONED|
+              window-aggregate [$$57] <- [win-mark-first-missing-impl($$42)] partition [$$41] order (DESC, $$42)
               -- WINDOW_STREAM  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$41) (DESC, $$42)
                   -- STABLE_SORT [$$41(ASC), $$42(DESC)]  |PARTITIONED|
+                    exchange
                     -- HASH_PARTITION_EXCHANGE [$$41]  |PARTITIONED|
+                      select (eq($$43, $$44)) retain-untrue ($$42 <- missing)
                       -- STREAM_SELECT  |PARTITIONED|
+                        assign [$$44] <- [$$t2.getField(7)] project: [$$41, $$43, $$42, $$44]
                         -- ASSIGN  |PARTITIONED|
+                          project ([$$41, $$43, $$42, $$t2])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
+                              left-outer-unnest-map [$$42, $$t2] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", true, false, 1, $$56, 1, $$56, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  order (ASC, $$56)
                                   -- STABLE_SORT [$$56(ASC)]  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      project ([$$41, $$43, $$56])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- BTREE_SEARCH (test.TweetMessages.msgCountBIx)  |PARTITIONED|
+                                          left-outer-unnest-map [$$55, $$56] <- index-search("msgCountBIx", 0, "Default", "test", "TweetMessages", true, true, 1, $$43, 1, $$43, true, true, true)
+                                          -- BTREE_SEARCH  |PARTITIONED|
+                                            exchange
                                             -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                              assign [$$43] <- [$$t1.getField(6)] project: [$$41, $$43]
                                               -- ASSIGN  |PARTITIONED|
+                                                exchange
                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                  -- BTREE_SEARCH (test.TweetMessages.TweetMessages)  |PARTITIONED|
+                                                  unnest-map [$$41, $$t1] <- index-search("TweetMessages", 0, "Default", "test", "TweetMessages", false, false, 0, 1, $$52, true, false, false)
+                                                  -- BTREE_SEARCH  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      assign [$$52] <- [10]
                                                       -- ASSIGN  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

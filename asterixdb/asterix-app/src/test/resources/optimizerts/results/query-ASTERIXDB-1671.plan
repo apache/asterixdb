@@ -1,16 +1,32 @@
+distribute result [$$14]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 0
     -- STREAM_LIMIT  |UNPARTITIONED|
+      assign [$$14] <- [{"l": $$l}] project: [$$14]
       -- ASSIGN  |PARTITIONED|
+        project ([$$l])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- SORT_MERGE_EXCHANGE [$$20(ASC), $$21(ASC) ]  |PARTITIONED|
+            limit 0
             -- STREAM_LIMIT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (topK: 0) (ASC, $$20) (ASC, $$21)
                 -- STABLE_SORT [topK: 0] [$$20(ASC), $$21(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    assign [$$21, $$20] <- [$$l.getField("l_linestatus"), $$l.getField("l_returnflag")]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$l])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (tpch.LineItem)  |PARTITIONED|
+                          data-scan []<-[$$18, $$19, $$l] <- tpch.LineItem
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

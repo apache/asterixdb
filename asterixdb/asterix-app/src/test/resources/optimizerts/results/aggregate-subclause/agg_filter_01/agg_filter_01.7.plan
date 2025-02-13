@@ -1,42 +1,69 @@
+distribute result [$$182]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$182] <- [{"twenty": $$twenty, "sm": $$189, "sm_sm": $$193, "sm_sm_where_twenty_lt_10": $$194, "sm_sm_where_sm_lt_3k": $$195}] project: [$$182]
     -- ASSIGN  |UNPARTITIONED|
+      project ([$$twenty, $$189, $$193, $$194, $$195])
       -- STREAM_PROJECT  |UNPARTITIONED|
-        -- WINDOW  |UNPARTITIONED|
-                {
+        window-aggregate [] <- [] order (ASC, $$twenty) frame on (ASC, $$twenty) start unbounded end [$$twenty] {
+                  aggregate [$$195] <- [agg-sql-sum($$188)]
                   -- AGGREGATE  |UNPARTITIONED|
+                    select (lt($$187, 3000))
                     -- STREAM_SELECT  |UNPARTITIONED|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                }
+               }
+        -- WINDOW  |UNPARTITIONED|
+          project ([$$twenty, $$189, $$193, $$194, $$188, $$187])
           -- STREAM_PROJECT  |UNPARTITIONED|
-            -- WINDOW  |UNPARTITIONED|
-                    {
+            window-aggregate [] <- [] order (ASC, $$twenty) frame on (ASC, $$twenty) start unbounded end [$$twenty] {
+                      aggregate [$$194] <- [agg-sql-sum($$186)]
                       -- AGGREGATE  |UNPARTITIONED|
+                        select (lt($$twenty, 10))
                         -- STREAM_SELECT  |UNPARTITIONED|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |UNPARTITIONED|
-                    }
+                   }
+            -- WINDOW  |UNPARTITIONED|
+              project ([$$twenty, $$189, $$193, $$188, $$187, $$186])
               -- STREAM_PROJECT  |UNPARTITIONED|
-                -- WINDOW  |UNPARTITIONED|
-                        {
+                window-aggregate [] <- [] order (ASC, $$twenty) frame on (ASC, $$twenty) start unbounded end [$$twenty] {
+                          aggregate [$$193] <- [agg-sql-sum($$185)]
                           -- AGGREGATE  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       }
+                -- WINDOW  |UNPARTITIONED|
+                  exchange
                   -- SORT_MERGE_EXCHANGE [$$twenty(ASC) ]  |PARTITIONED|
-                    -- SORT_GROUP_BY[$$201]  |PARTITIONED|
-                            {
+                    group by ([$$twenty := $$201]) decor ([]) {
+                              aggregate [$$185, $$186, $$187, $$188, $$189] <- [agg-global-sql-sum($$196), agg-global-sql-sum($$197), agg-global-sql-sum($$198), agg-global-sql-sum($$199), agg-global-sql-sum($$200)]
                               -- AGGREGATE  |LOCAL|
+                                nested tuple source
                                 -- NESTED_TUPLE_SOURCE  |LOCAL|
-                            }
+                           }
+                    -- SORT_GROUP_BY[$$201]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$201]  |PARTITIONED|
-                        -- SORT_GROUP_BY[$$183]  |PARTITIONED|
-                                {
+                        group by ([$$201 := $$183]) decor ([]) {
+                                  aggregate [$$196, $$197, $$198, $$199, $$200] <- [agg-local-sql-sum($$125), agg-local-sql-sum($$125), agg-local-sql-sum($$125), agg-local-sql-sum($$125), agg-local-sql-sum($$125)]
                                   -- AGGREGATE  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SORT_GROUP_BY[$$183]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            assign [$$125, $$183] <- [$$tenk.getField(4), $$tenk.getField(5)] project: [$$125, $$183]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$tenk])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.tenk)  |PARTITIONED|
+                                  data-scan []<-[$$184, $$tenk] <- test.tenk
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,15 +1,30 @@
+distribute result [$$51] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$51] <- [{"D": $$D, "DOI": $$DOI, "DII": $$DII}] project: [$$51] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (and(eq($$DII.getField("field2"), 2), eq($$DII.getField("field3"), 3), eq($$DII.getField("field3_notindexed"), 3))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$DII <- scan-collection($$57) project: [$$D, $$DOI, $$DII] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- UNNEST  |PARTITIONED|
+          select (eq($$DOI.getField("field2_notindexed"), 2))
           -- STREAM_SELECT  |PARTITIONED|
+            assign [$$57] <- [$$DOI.getField("inner_items")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ASSIGN  |PARTITIONED|
+              unnest $$DOI <- scan-collection($$55) project: [$$D, $$DOI] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- UNNEST  |PARTITIONED|
+                select (and(eq($$D.getField("field1"), 1), eq($$D.getField("field4"), 4)))
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$55] <- [$$D.getField("outer_items")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$D]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                        data-scan []<-[$$52, $$D] <- TestDataverse.Dataset1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                        -- DATASOURCE_SCAN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

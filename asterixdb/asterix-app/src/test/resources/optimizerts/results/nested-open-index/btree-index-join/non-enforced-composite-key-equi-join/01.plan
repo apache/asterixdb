@@ -1,20 +1,40 @@
+distribute result [$$32]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$32] <- [{"a": $$a, "b": $$b}] project: [$$32]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$35, $$b.getField("nested").getField("fname"))) project: [$$a, $$b]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$a, $$35, $$b])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.ds2.ds2)  |PARTITIONED|
+            unnest-map [$$34, $$b] <- index-search("ds2", 0, "Default", "test", "ds2", true, false, 1, $$42, 1, $$42, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$42)
                 -- STABLE_SORT [$$42(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$a, $$35, $$42])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.ds2.idx)  |PARTITIONED|
+                        unnest-map [$$40, $$41, $$42] <- index-search("idx", 0, "Default", "test", "ds2", true, true, 1, $$35, 1, $$35, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$35] <- [to-string($$a.getField("nested").getField("fname"))]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$a])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
+                                  data-scan []<-[$$33, $$a] <- test.ds1
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

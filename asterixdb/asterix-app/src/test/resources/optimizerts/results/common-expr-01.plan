@@ -1,61 +1,113 @@
+distribute result [$$176]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$176] <- [{"c11": $$c11, "c3": $$c3, "$1": $$184}] project: [$$176]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- SORT_GROUP_BY[$$194, $$195]  |PARTITIONED|
-                {
+        group by ([$$c3 := $$194; $$c11 := $$195]) decor ([]) {
+                  aggregate [$$184] <- [agg-global-sql-sum($$193)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- SORT_GROUP_BY[$$194, $$195]  |PARTITIONED|
+          exchange
           -- HASH_PARTITION_EXCHANGE [$$194, $$195]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$177, $$178]  |PARTITIONED|
-                    {
+            group by ([$$194 := $$177; $$195 := $$178]) decor ([]) {
+                      aggregate [$$193] <- [agg-local-sql-sum($$174)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$177, $$178]  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$178] <- [get-hour(duration-from-interval(interval(parse-datetime(print-datetime(current-datetime(), "YYYY-MM-DDThh:mm:ss"), "YYYY-MM-DDThh:mm:ss"), parse-datetime($$183, "YYYY-MM-DDThh:mm:ss"))))] project: [$$174, $$177, $$178]
                 -- ASSIGN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    join (true)
                     -- NESTED_LOOP  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        assign [$$177, $$174] <- [get-month(print-datetime(parse-datetime($$179, "YYYY-MM-DDThh:mm:ss"), "YYYY-MM-DDThh:mm:ss")), switch-case(true, contains($$180, "x"), 1, 0)] project: [$$174, $$177]
                         -- ASSIGN  |PARTITIONED|
+                          select ($$164) project: [$$179, $$180]
                           -- STREAM_SELECT  |PARTITIONED|
+                            project ([$$164, $$179, $$180])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- PRE_CLUSTERED_GROUP_BY[$$181]  |PARTITIONED|
-                                        {
+                                group by ([$$191 := $$181]) decor ([$$179; $$180]) {
+                                          aggregate [$$164] <- [empty-stream()]
                                           -- AGGREGATE  |LOCAL|
+                                            select (not(is-missing($$190)))
                                             -- STREAM_SELECT  |LOCAL|
+                                              nested tuple source
                                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                        }
+                                       }
+                                -- PRE_CLUSTERED_GROUP_BY[$$181]  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    order (ASC, $$181)
                                     -- STABLE_SORT [$$181(ASC)]  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$181]  |PARTITIONED|
+                                        project ([$$179, $$180, $$190, $$181])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            left outer join (not(if-missing-or-null(neq($$180, $#6), false)))
                                             -- NESTED_LOOP  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                select (le(get-day(duration-from-interval(interval(parse-datetime(print-datetime(current-datetime(), "YYYY-MM-DDThh:mm:ss"), "YYYY-MM-DDThh:mm:ss"), parse-datetime($$179, "YYYY-MM-DDThh:mm:ss")))), 30))
                                                 -- STREAM_SELECT  |PARTITIONED|
+                                                  assign [$$180, $$179] <- [$$t1.getField("c2"), $$t1.getField("c1")] project: [$$181, $$180, $$179]
                                                   -- ASSIGN  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                      replicate
                                                       -- REPLICATE  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                                                          data-scan []<-[$$181, $$t1] <- test.t1
+                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                              exchange
                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                assign [$$190] <- [true]
                                                 -- ASSIGN  |UNPARTITIONED|
+                                                  unnest $#6 <- scan-collection(array: [ "a", "b", "c", "d" ])
                                                   -- UNNEST  |UNPARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                      exchange
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
+                        aggregate [$$183] <- [agg-global-sql-max($$196)]
                         -- AGGREGATE  |UNPARTITIONED|
+                          exchange
                           -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                            aggregate [$$196] <- [agg-local-sql-max($$148)]
                             -- AGGREGATE  |PARTITIONED|
+                              assign [$$148] <- [print-datetime(parse-datetime($$t1.getField("c5"), "YYYY-MM-DDThh:mm:ss"), "YYYY-MM-DDThh:mm:ss")] project: [$$148]
                               -- ASSIGN  |PARTITIONED|
+                                assign [$$182, $$t1] <- [$$181, $$t1] project: [$$t1]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    replicate
                                     -- REPLICATE  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                                        data-scan []<-[$$181, $$t1] <- test.t1
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

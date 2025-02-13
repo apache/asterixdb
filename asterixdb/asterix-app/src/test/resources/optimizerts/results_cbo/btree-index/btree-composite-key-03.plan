@@ -1,8 +1,16 @@
+distribute result [$$l]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (and(eq($$l.getField(1), "Julio"), eq($$l.getField(2), "Isa")))
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$l])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- DATASOURCE_SCAN (test.employee)  |PARTITIONED|
+          data-scan []<-[$$17, $$l] <- test.employee
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

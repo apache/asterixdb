@@ -1,25 +1,50 @@
+distribute result [$$35]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$35] <- [{"arec": $$a, "brec": $$b}] project: [$$35]
     -- ASSIGN  |PARTITIONED|
+      project ([$$a, $$b])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$46, $$36))
           -- HYBRID_HASH_JOIN [$$46][$$36]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
-              -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+              data-scan []<-[$$46, $$a] <- test.DBLP
+              -- DATASOURCE_SCAN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$36]  |PARTITIONED|
+              select (and(lt($$36, $$37), get-item(similarity-jaccard-check($$40, word-tokens($$b.getField(2)), 0.5), 0))) project: [$$b, $$36]
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$36, $$40, $$37, $$b])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (test.CSX.CSX)  |PARTITIONED|
+                    unnest-map [$$37, $$b] <- index-search("CSX", 0, "Default", "test", "CSX", true, false, 1, $$49, 1, $$49, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$49)
                         -- STABLE_SORT [$$49(ASC)]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.CSX.keyword_index)  |PARTITIONED|
+                            unnest-map [$$49] <- index-search("keyword_index", 4, "Default", "test", "CSX", true, true, 1, 0.5, 21, false, 1, $$40)
+                            -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                              exchange
                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                assign [$$40] <- [word-tokens($$48.getField(2))] project: [$$36, $$40]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                    data-scan []<-[$$36, $$48] <- test.DBLP
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

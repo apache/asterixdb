@@ -1,10 +1,20 @@
+distribute result [$$22]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$22] <- [{"x": $$26, "y": $$27, "z": $$Points.getField(2)}] project: [$$22]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$26(ASC), $$27(ASC) ]  |PARTITIONED|
+        order (ASC, $$26) (ASC, $$27)
         -- STABLE_SORT [$$26(ASC), $$27(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.Points.Points)  |PARTITIONED|
+            unnest-map [$$26, $$27, $$Points] <- index-search("Points", 0, "Default", "test", "Points", false, false, 1, $$32, 1, $$33, true, true, false)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$32, $$33] <- [2, 3]
                 -- ASSIGN  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,34 +1,68 @@
+distribute result [$$53]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    assign [$$53] <- [{"$1": $$56}] project: [$$53]
     -- ASSIGN  |UNPARTITIONED|
+      aggregate [$$56] <- [agg-sql-sum($$57)]
       -- AGGREGATE  |UNPARTITIONED|
+        exchange
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+          aggregate [$$57] <- [agg-sql-count(1)]
           -- AGGREGATE  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              union
               -- UNION_ALL  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (spatial-intersect($$76.getField(8), polygon: [ point: { x: 0.0, y: 0.0 }, point: { x: 2.0, y: 2.0 }, point: { x: 0.0, y: 2.0 }, point: { x: 2.0, y: 0.0 } ])) project: []
                   -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$76])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.Fragile_raw.Fragile_raw)  |PARTITIONED|
+                        unnest-map [$$75, $$76] <- index-search("Fragile_raw", 0, "Default", "test", "Fragile_raw", false, false, 1, $$66, 1, $$66, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            split ($$67)
                             -- SPLIT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$62, $$63, $$66, $$67])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- RTREE_SEARCH (test.Fragile_raw.cfLocation)  |PARTITIONED|
+                                    unnest-map [$$62, $$63, $$64, $$65, $$66, $$67] <- index-search("cfLocation", 1, "Default", "test", "Fragile_raw", false, false, 4, $$58, $$59, $$60, $$61)
+                                    -- RTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$58, $$59, $$60, $$61] <- [0.0, 0.0, 2.0, 2.0]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  select (spatial-intersect(create-point($$62, $$63), polygon: [ point: { x: 0.0, y: 0.0 }, point: { x: 2.0, y: 2.0 }, point: { x: 0.0, y: 2.0 }, point: { x: 2.0, y: 0.0 } ])) project: []
                   -- STREAM_SELECT  |PARTITIONED|
+                    project ([$$62, $$63])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        split ($$67)
                         -- SPLIT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$62, $$63, $$66, $$67])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- RTREE_SEARCH (test.Fragile_raw.cfLocation)  |PARTITIONED|
+                                unnest-map [$$62, $$63, $$64, $$65, $$66, $$67] <- index-search("cfLocation", 1, "Default", "test", "Fragile_raw", false, false, 4, $$58, $$59, $$60, $$61)
+                                -- RTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$58, $$59, $$60, $$61] <- [0.0, 0.0, 2.0, 2.0]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

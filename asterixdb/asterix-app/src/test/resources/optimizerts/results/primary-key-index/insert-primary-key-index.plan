@@ -1,8 +1,16 @@
+commit
 -- COMMIT  |PARTITIONED|
+  project ([$$3])
   -- STREAM_PROJECT  |PARTITIONED|
+    exchange
     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+      insert into test.DBLP from record: $$1 partitioned by [$$3]
       -- INSERT_DELETE  |PARTITIONED|
+        exchange
         -- HASH_PARTITION_EXCHANGE [$$3]  |PARTITIONED|
+          assign [$$3] <- [1]
           -- ASSIGN  |UNPARTITIONED|
+            assign [$$1] <- [{ "id": 1, "dblpid": "books/acm/kim95/Blakeley95", "title": "OQL[C++]  Extending C++ with an Object Query Capability.", "authors": "José A. Blakeley", "misc": "2002-01-03 69-88 Modern Database Systems db/books/collections/kim95.html#Blakeley95 1995" }]
             -- ASSIGN  |UNPARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

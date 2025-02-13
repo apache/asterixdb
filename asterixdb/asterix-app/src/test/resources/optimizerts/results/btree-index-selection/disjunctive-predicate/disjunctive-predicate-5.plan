@@ -1,11 +1,22 @@
+distribute result [$$x]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 2
     -- STREAM_LIMIT  |UNPARTITIONED|
+      exchange
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        limit 2
         -- STREAM_LIMIT  |PARTITIONED|
+          assign [$$20] <- [$$x.getField(1)] project: [$$x]
           -- ASSIGN  |PARTITIONED|
+            project ([$$x])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (test.TestSet)  |PARTITIONED|
+                data-scan []<-[$$21, $$x] <- test.TestSet condition (or(eq($$x.getField(1), "one"), eq($$x.getField(1), "two"), eq($$x.getField(1), "two"))) limit 2
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,13 +1,26 @@
+distribute result [$$o]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (get-item(similarity-jaccard-check(gram-tokens($$o.getField(2), 3, false), array: [ "tra", "ran", "ans", "nsa", "sac", "act", "cti", "tio", "ion", "ons", "ns ", "s f", " fo", "for", "or ", "r c", " co", "coo", "oop", "ope", "per", "era", "rat", "ati", "tiv", "ive", "ve ", "e e", " en", "env", "nvi", "vir", "iro", "ron", "onm", "nme", "men", "ent", "nts" ], 0.5), 0))
     -- STREAM_SELECT  |PARTITIONED|
+      project ([$$o])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+          unnest-map [$$29, $$o] <- index-search("DBLP", 0, "Default", "test", "DBLP", false, false, 1, $$32, 1, $$32, true, true, true)
+          -- BTREE_SEARCH  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+              order (ASC, $$32)
+              -- STABLE_SORT [$$32(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                  unnest-map [$$32] <- index-search("ngram_index", 5, "Default", "test", "DBLP", false, false, 1, 0.5, 21, false, 1, $$31)
+                  -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      assign [$$31] <- [array: [ "tra", "ran", "ans", "nsa", "sac", "act", "cti", "tio", "ion", "ons", "ns ", "s f", " fo", "for", "or ", "r c", " co", "coo", "oop", "ope", "per", "era", "rat", "ati", "tiv", "ive", "ve ", "e e", " en", "env", "nvi", "vir", "iro", "ron", "onm", "nme", "men", "ent", "nts" ]]
                       -- ASSIGN  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,31 +1,62 @@
+distribute result [$$85] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$85] <- [{"U1": $$U1, "U2": $$U2, "E1": { "name": "Glenn" }, "augmentedUser1": $$105, "augmentedUser2": $$107, "augmentedUser3": { "name": "Glenn", "favoriteColor": "Blue" }}] project: [$$85] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
     -- ASSIGN  |PARTITIONED|
+      project ([$$U1, $$105, $$U2, $$107]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$88, $$89)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
           -- HYBRID_HASH_JOIN [$$88][$$89]  |PARTITIONED|
+            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
             -- HASH_PARTITION_EXCHANGE [$$88]  |PARTITIONED|
+              assign [$$88] <- [$$105.getField("bestFriend")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                select (eq($$105.getField("name"), "John")) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$105] <- [object-add($$U1, "favoriteColor", "Green")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
+                    assign [$$U1] <- [$$U2] project: [$$U1] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ASSIGN  |PARTITIONED|
+                      exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        replicate [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- REPLICATE  |PARTITIONED|
+                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$U2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
+                                data-scan []<-[$$87, $$U2] <- test.Users [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
             -- HASH_PARTITION_EXCHANGE [$$89]  |PARTITIONED|
+              select (eq($$107.getField("name"), "Sally")) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$89] <- [$$107.getField(0)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ASSIGN  |PARTITIONED|
+                  assign [$$107] <- [object-add($$U2, "favoriteFood", "Pizza")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ASSIGN  |PARTITIONED|
+                    exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      replicate [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- REPLICATE  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$U2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- DATASOURCE_SCAN (test.Users)  |PARTITIONED|
+                              data-scan []<-[$$87, $$U2] <- test.Users [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  empty-tuple-source
                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

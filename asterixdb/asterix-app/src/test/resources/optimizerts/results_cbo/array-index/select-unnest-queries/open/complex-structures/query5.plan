@@ -1,11 +1,22 @@
+distribute result [$$29] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"D": $$D, "F": $$F}] project: [$$29] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (gt($$F.getField("open_field_3a"), 0)) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$F <- scan-collection($$31) project: [$$D, $$F] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- UNNEST  |PARTITIONED|
+          assign [$$31] <- [$$D.getField(1).getField("open_field_2")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- ASSIGN  |PARTITIONED|
+            project ([$$D]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- DATASOURCE_SCAN (TestDataverse.TestDataset)  |PARTITIONED|
+                data-scan []<-[$$30, $$D] <- TestDataverse.TestDataset [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

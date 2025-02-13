@@ -1,6 +1,12 @@
+distribute result [$$r]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    order (ASC, $$r)
     -- STABLE_SORT [$$r(ASC)]  |UNPARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+        unnest $$r <- range(1, 2)
         -- UNNEST  |UNPARTITIONED|
+          empty-tuple-source
           -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

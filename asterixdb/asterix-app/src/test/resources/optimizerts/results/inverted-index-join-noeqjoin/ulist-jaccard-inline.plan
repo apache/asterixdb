@@ -1,19 +1,38 @@
+distribute result [$$47]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$47] <- [{"ainterests": $$48, "binterests": $$49, "jacc": get-item($$60, 1)}] project: [$$47]
     -- ASSIGN  |PARTITIONED|
+      select (and(get-item($$60, 0), lt($$50, $$51))) project: [$$48, $$49, $$60]
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$60] <- [similarity-jaccard-check($$48, $$49, 0.7)]
         -- ASSIGN  |PARTITIONED|
+          assign [$$49] <- [$$b.getField(4)] project: [$$50, $$48, $$51, $$49]
           -- ASSIGN  |PARTITIONED|
+            project ([$$50, $$48, $$51, $$b])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (test.Customers.Customers)  |PARTITIONED|
+                unnest-map [$$51, $$b] <- index-search("Customers", 0, "Default", "test", "Customers", true, false, 1, $$59, 1, $$59, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$59)
                     -- STABLE_SORT [$$59(ASC)]  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.Customers.interests_index)  |PARTITIONED|
+                        unnest-map [$$59] <- index-search("interests_index", 4, "Default", "test", "Customers", true, true, 1, 0.7, 22, false, 1, $$48)
+                        -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$48] <- [$$58.getField(4)] project: [$$50, $$48]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.Customers)  |PARTITIONED|
+                                data-scan []<-[$$50, $$58] <- test.Customers
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,27 +1,54 @@
+distribute result [$$38]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 2147483647 offset 0
     -- STREAM_LIMIT  |UNPARTITIONED|
+      assign [$$38] <- [{"place.bounding_box": $$45, "user.id": $$46, "id": $$41, "coordinate": $$48, "create_at": $$40}] project: [$$38]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$40(DESC) ]  |PARTITIONED|
+          limit 2147483647
           -- STREAM_LIMIT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 2147483647) (DESC, $$40)
               -- STABLE_SORT [topK: 2147483647] [$$40(DESC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  project ([$$45, $$46, $$41, $$48, $$40])
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (eq($$42, $$27))
                       -- HYBRID_HASH_JOIN [$$27][$$42]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          select (and(ftcontains($$t.getField(2), array: [ "francisco" ], "mode", "all"), ge($$40, datetime: { 2018-02-22T10:53:07.888 }), lt($$40, datetime: { 2018-02-22T18:50:39.301 }))) project: [$$45, $$46, $$41, $$48, $$40, $$27]
                           -- STREAM_SELECT  |PARTITIONED|
+                            assign [$$27, $$45, $$46, $$48, $$40] <- [$$t.getField(14).getField(0), $$t.getField(13).getField(6), $$t.getField(12).getField(0), $$t.getField(6), $$t.getField(0)]
                             -- ASSIGN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (twitter.ds_tweet.ds_tweet)  |PARTITIONED|
+                                unnest-map [$$41, $$t] <- index-search("ds_tweet", 0, "Default", "twitter", "ds_tweet", false, false, 1, $$53, 1, $$53, true, true, true) with filter on min:[$$54] max:[$$55]
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    order (ASC, $$53)
                                     -- STABLE_SORT [$$53(ASC)]  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- SINGLE_PARTITION_INVERTED_INDEX_SEARCH (twitter.ds_tweet.text_idx)  |PARTITIONED|
+                                        unnest-map [$$53, $$54, $$55] <- index-search("text_idx", 2, "Default", "twitter", "ds_tweet", false, false, 0, null, 21, true, 1, $$52)
+                                        -- SINGLE_PARTITION_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$52] <- [array: [ "francisco" ]]
                                             -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          unnest $$42 <- scan-collection(array: [ 51, 37, 24, 11 ])
                           -- UNNEST  |UNPARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

@@ -1,8 +1,16 @@
+distribute result [$$17] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$17] <- [{"c_id": $$18}] project: [$$17] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$t.getField("c_s"), "hello")) project: [$$18] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- DATASOURCE_SCAN (test.TestOpen)  |PARTITIONED|
+          data-scan []<-[$$18, $$t] <- test.TestOpen [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

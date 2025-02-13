@@ -1,23 +1,46 @@
+distribute result [$$29]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$29] <- [{"ds2": $$ds2, "ds1": $$ds1}] project: [$$29]
     -- ASSIGN  |PARTITIONED|
+      project ([$$ds2, $$ds1])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$$31(ASC) ]  |PARTITIONED|
+          order (ASC, $$31)
           -- STABLE_SORT [$$31(ASC)]  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              select (eq($$31, $$ds1.getField(0)))
               -- STREAM_SELECT  |PARTITIONED|
+                project ([$$ds2, $$31, $$ds1])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (test.DS1.DS1)  |PARTITIONED|
+                    unnest-map [$$33, $$ds1, $$34] <- index-search("DS1", 0, "Default", "test", "DS1", true, false, 1, $$39, 1, $$39, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$39)
                         -- STABLE_SORT [$$39(ASC)]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$ds2, $$31, $$39])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (test.DS1.id_sec_idx)  |PARTITIONED|
+                                unnest-map [$$38, $$39] <- index-search("id_sec_idx", 0, "Default", "test", "DS1", true, true, 1, $$31, 1, $$31, true, true, true)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    project ([$$31, $$ds2])
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.DS2)  |PARTITIONED|
+                                        data-scan []<-[$$31, $$ds2, $$32] <- test.DS2
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

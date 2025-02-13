@@ -1,18 +1,33 @@
+distribute result [$$20] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$20] <- [{"business_id": $$23}] project: [$$20] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select ($$17) project: [$$23] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$23, $$17]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$17] <- [non-empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select (eq("2016-04-26 19:49:16", $#1))
                       -- STREAM_SELECT  |LOCAL|
+                        unnest $#1 <- scan-collection($$22)
                         -- UNNEST  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 } [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$23, $$22] <- [$$C.getField(1), $$C.getField(2)] project: [$$23, $$22] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ASSIGN  |PARTITIONED|
+              project ([$$C]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                  data-scan []<-[$$21, $$C] <- TestYelp.YelpCheckin [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,50 +1,94 @@
+distribute result [$$198]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$198] <- [{"o_id": $$o_id, "o_w_id": $$o_w_id, "o_d_id": $$o_d_id, "revenue": $$220, "o_entry_d": $$o_entry_d}] project: [$$198]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$220(DESC), $$o_entry_d(ASC) ]  |PARTITIONED|
+        order (DESC, $$220) (ASC, $$o_entry_d)
         -- STABLE_SORT [$$220(DESC), $$o_entry_d(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- SORT_GROUP_BY[$$226, $$227, $$228, $$229]  |PARTITIONED|
-                    {
+            group by ([$$o_id := $$226; $$o_w_id := $$227; $$o_d_id := $$228; $$o_entry_d := $$229]) decor ([]) {
+                      aggregate [$$220] <- [agg-global-sql-sum($$225)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- SORT_GROUP_BY[$$226, $$227, $$228, $$229]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$226, $$227, $$228, $$229]  |PARTITIONED|
-                -- SORT_GROUP_BY[$$221, $$204, $$205, $$206]  |PARTITIONED|
-                        {
+                group by ([$$226 := $$221; $$227 := $$204; $$228 := $$205; $$229 := $$206]) decor ([]) {
+                          aggregate [$$225] <- [agg-local-sql-sum($$195)]
                           -- AGGREGATE  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                        }
+                       }
+                -- SORT_GROUP_BY[$$221, $$204, $$205, $$206]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$195, $$221, $$204, $$205, $$206])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        join (and(eq($$217, $$204), eq($$218, $$205), eq($$219, $$221)))
                         -- HYBRID_HASH_JOIN [$$204, $$205, $$221][$$217, $$218, $$219]  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$204, $$205, $$221]  |PARTITIONED|
+                            assign [$$195] <- [$$ol.getField("ol_amount")] project: [$$195, $$221, $$204, $$205, $$206]
                             -- ASSIGN  |PARTITIONED|
+                              unnest $$ol <- scan-collection($$222) project: [$$221, $$206, $$205, $$204, $$ol]
                               -- UNNEST  |PARTITIONED|
+                                project ([$$222, $$221, $$206, $$205, $$204])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    join (and(eq($$213, $$214), eq($$215, $$204), eq($$216, $$205)))
                                     -- HYBRID_HASH_JOIN [$$214, $$204, $$205][$$213, $$215, $$216]  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$214, $$204, $$205]  |PARTITIONED|
+                                        select (lt($$206, "2017-03-15 00:00:00.000000"))
                                         -- STREAM_SELECT  |PARTITIONED|
+                                          assign [$$222, $$221, $$214, $$206, $$205, $$204] <- [$$o.getField("o_orderline"), $$o.getField("o_id"), $$o.getField("o_c_id"), $$o.getField("o_entry_d"), $$o.getField("o_d_id"), $$o.getField("o_w_id")] project: [$$222, $$221, $$214, $$206, $$205, $$204]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$o])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                                                data-scan []<-[$$210, $$o] <- test.orders
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                      exchange
                                       -- HASH_PARTITION_EXCHANGE [$$213, $$215, $$216]  |PARTITIONED|
+                                        select (and(lt($$203, "B"), ge($$203, "A"))) project: [$$213, $$215, $$216]
                                         -- STREAM_SELECT  |PARTITIONED|
+                                          assign [$$216, $$215, $$213, $$203] <- [$$c.getField("c_d_id"), $$c.getField("c_w_id"), $$c.getField("c_id"), $$c.getField("c_state")] project: [$$216, $$215, $$213, $$203]
                                           -- ASSIGN  |PARTITIONED|
+                                            project ([$$c])
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                -- DATASOURCE_SCAN (test.customer)  |PARTITIONED|
+                                                data-scan []<-[$$211, $$c] <- test.customer
+                                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                                  exchange
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                    empty-tuple-source
                                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                          exchange
                           -- HASH_PARTITION_EXCHANGE [$$217, $$218, $$219]  |PARTITIONED|
+                            assign [$$219, $$218, $$217] <- [$$no.getField("no_o_id"), $$no.getField("no_d_id"), $$no.getField("no_w_id")] project: [$$217, $$218, $$219]
                             -- ASSIGN  |PARTITIONED|
+                              project ([$$no])
                               -- STREAM_PROJECT  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                  -- DATASOURCE_SCAN (test.neworder)  |PARTITIONED|
+                                  data-scan []<-[$$212, $$no] <- test.neworder
+                                  -- DATASOURCE_SCAN  |PARTITIONED|
+                                    exchange
                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

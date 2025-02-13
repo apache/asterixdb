@@ -100,7 +100,7 @@ abstract class AbstractFilterBuilder {
         return argsEvalFactories;
     }
 
-    private IFunctionDescriptor resolveFunction(AbstractFunctionCallExpression funcExpr) throws AlgebricksException {
+    protected IFunctionDescriptor resolveFunction(AbstractFunctionCallExpression funcExpr) throws AlgebricksException {
         MetadataProvider metadataProvider = (MetadataProvider) context.getMetadataProvider();
         IFunctionManager functionManager = metadataProvider.getFunctionManager();
         FunctionIdentifier fnId = funcExpr.getFunctionIdentifier();

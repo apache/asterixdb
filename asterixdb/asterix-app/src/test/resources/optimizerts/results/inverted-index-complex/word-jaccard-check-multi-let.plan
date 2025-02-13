@@ -1,15 +1,30 @@
+distribute result [$$52]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$52] <- [{"Paper": $$59, "Query": array: [ "transactions", "for", "cooperative", "environments" ]}] project: [$$52]
     -- ASSIGN  |PARTITIONED|
+      select (get-item(similarity-jaccard-check($$59, array: [ "transactions", "for", "cooperative", "environments" ], 0.8), 0))
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$59] <- [word-tokens($$paper.getField(2))] project: [$$59]
         -- ASSIGN  |PARTITIONED|
+          project ([$$paper])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+              unnest-map [$$53, $$paper] <- index-search("DBLP", 0, "Default", "test", "DBLP", false, false, 1, $$58, 1, $$58, true, true, true)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$58)
                   -- STABLE_SORT [$$58(ASC)]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.keyword_index)  |PARTITIONED|
+                      unnest-map [$$58] <- index-search("keyword_index", 4, "Default", "test", "DBLP", false, false, 1, 0.8, 21, false, 1, $$57)
+                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$57] <- [array: [ "transactions", "for", "cooperative", "environments" ]]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

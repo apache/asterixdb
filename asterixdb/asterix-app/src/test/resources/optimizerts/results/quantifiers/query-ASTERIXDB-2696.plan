@@ -1,23 +1,40 @@
+distribute result [$$74]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$74] <- [{"a": $$a, "s": $$76}] project: [$$74]
     -- ASSIGN  |LOCAL|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |LOCAL|
-        -- PRE_CLUSTERED_GROUP_BY[$$75]  |LOCAL|
-                {
+        group by ([$$a := $$75]) decor ([]) {
+                  aggregate [$$76] <- [agg-global-sql-sum($$80)]
                   -- AGGREGATE  |LOCAL|
+                    aggregate [$$80] <- [agg-local-sql-sum(switch-case(true, $$71, 1, 0))]
                     -- AGGREGATE  |LOCAL|
-                      -- SUBPLAN  |LOCAL|
-                              {
+                      subplan {
+                                aggregate [$$71] <- [non-empty-stream()]
                                 -- AGGREGATE  |LOCAL|
+                                  select (ge($$x, 50))
                                   -- STREAM_SELECT  |LOCAL|
+                                    unnest $$x <- scan-collection($$78)
                                     -- UNNEST  |LOCAL|
+                                      nested tuple source
                                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SUBPLAN  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               }
+        -- PRE_CLUSTERED_GROUP_BY[$$75]  |LOCAL|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+            order (ASC, $$75)
             -- STABLE_SORT [$$75(ASC)]  |LOCAL|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                assign [$$78, $$75] <- [$$t.getField(1), $$t.getField(0)] project: [$$78, $$75]
                 -- ASSIGN  |UNPARTITIONED|
+                  unnest $$t <- scan-collection(array: [ { "a": 1, "b": array: [ 10, 20, 30 ] }, { "a": 1, "b": array: [ 40, 50, 60 ] }, { "a": 1, "b": array: [ 70, 80, 90 ] }, { "a": 2, "b": array: [ 100, 200, 300 ] }, { "a": 2, "b": array: [ 400, 500, 600 ] }, { "a": 2, "b": array: [ 700, 800, 900 ] } ])
                   -- UNNEST  |UNPARTITIONED|
+                    empty-tuple-source
                     -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

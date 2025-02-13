@@ -1,43 +1,86 @@
+distribute result [$$62]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$62] <- [{"alias": $$64, "name": $$126}] project: [$$62]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$64(ASC) ]  |PARTITIONED|
+        order (ASC, $$64)
         -- STABLE_SORT [$$64(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            union ($$81, $$91, $$64) ($$127, $$135, $$126)
             -- UNION_ALL  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (ge($$81, "Von")) project: [$$81, $$127]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$127, $$81] <- [$$t1.getField("name"), $$t1.getField("alias")] project: [$$127, $$81]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$t1])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.fbu1.fbu1)  |PARTITIONED|
+                        unnest-map [$$65, $$t1] <- index-search("fbu1", 0, "Default", "test", "fbu1", false, false, 1, $$167, 1, $$167, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$167)
                             -- STABLE_SORT [$$167(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$167])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.fbu1.fbu1_idx)  |PARTITIONED|
+                                    unnest-map [$$166, $$167] <- index-search("fbu1_idx", 0, "Default", "test", "fbu1", false, false, 1, $$165, 0, true, true, false)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$165] <- [$$168] project: [$$165]
                                         -- ASSIGN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            replicate
                                             -- REPLICATE  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$168] <- ["Von"]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                select (ge($$91, "Von")) project: [$$91, $$135]
                 -- STREAM_SELECT  |PARTITIONED|
+                  assign [$$135, $$91] <- [$$t2.getField("name"), $$t2.getField("alias")] project: [$$135, $$91]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$t2])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.fbu2.fbu2)  |PARTITIONED|
+                        unnest-map [$$66, $$t2] <- index-search("fbu2", 0, "Default", "test", "fbu2", false, false, 1, $$170, 1, $$170, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$170)
                             -- STABLE_SORT [$$170(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$170])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (test.fbu2.fbu2_idx)  |PARTITIONED|
+                                    unnest-map [$$169, $$170] <- index-search("fbu2_idx", 0, "Default", "test", "fbu2", false, false, 1, $$168, 0, true, true, false)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        replicate
                                         -- REPLICATE  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            assign [$$168] <- ["Von"]
                                             -- ASSIGN  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

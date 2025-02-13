@@ -1,29 +1,58 @@
+distribute result [$$49]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$49] <- [{"atitle": $$50, "btitle": $$51, "jacc": get-item(similarity-jaccard-check(gram-tokens($$50, 3, false), $$56, 0.5), 1)}] project: [$$49]
     -- ASSIGN  |PARTITIONED|
+      project ([$$50, $$51, $$56])
       -- STREAM_PROJECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+          join (eq($$61, $$52))
           -- HYBRID_HASH_JOIN [$$61][$$52]  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$61]  |PARTITIONED|
+              assign [$$50] <- [$$a.getField(2)] project: [$$50, $$61]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                  data-scan []<-[$$61, $$a] <- test.DBLP
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+            exchange
             -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
+              select (and(get-item(similarity-jaccard-check($$55, $$56, 0.5), 0), lt($$52, $$53))) project: [$$51, $$56, $$52]
               -- STREAM_SELECT  |PARTITIONED|
+                assign [$$56] <- [gram-tokens($$51, 3, false)]
                 -- ASSIGN  |PARTITIONED|
+                  assign [$$51] <- [$$b.getField(2)] project: [$$52, $$55, $$53, $$51]
                   -- ASSIGN  |PARTITIONED|
+                    project ([$$52, $$55, $$53, $$b])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+                        unnest-map [$$53, $$b] <- index-search("DBLP", 0, "Default", "test", "DBLP", true, false, 1, $$64, 1, $$64, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$64)
                             -- STABLE_SORT [$$64(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                                unnest-map [$$64] <- index-search("ngram_index", 5, "Default", "test", "DBLP", true, true, 1, 0.5, 21, false, 1, $$55)
+                                -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                    assign [$$55] <- [gram-tokens($$63.getField(2), 3, false)] project: [$$52, $$55]
                                     -- ASSIGN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.DBLP)  |PARTITIONED|
+                                        data-scan []<-[$$52, $$63] <- test.DBLP
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

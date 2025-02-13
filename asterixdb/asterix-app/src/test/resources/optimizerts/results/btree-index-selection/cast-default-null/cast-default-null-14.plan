@@ -1,19 +1,38 @@
+distribute result [$$44]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"id": $$50, "f_d": $$62}] project: [$$44]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$50(ASC) ]  |PARTITIONED|
+        order (ASC, $$50)
         -- STABLE_SORT [$$50(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt($$62, date: { 2020-12-20 }))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$62] <- [date-default-null($$ds6.getField("f_d"))] project: [$$50, $$62]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.ds6.ds6)  |PARTITIONED|
+                  unnest-map [$$50, $$ds6] <- index-search("ds6", 0, "Default", "test", "ds6", false, false, 1, $$61, 1, $$61, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$61)
                       -- STABLE_SORT [$$61(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$61])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.ds6.idx6_d)  |PARTITIONED|
+                              unnest-map [$$60, $$61] <- index-search("idx6_d", 0, "Default", "test", "ds6", false, false, 0, 1, $$59, true, false, false)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$59] <- [date: { 2020-12-20 }]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

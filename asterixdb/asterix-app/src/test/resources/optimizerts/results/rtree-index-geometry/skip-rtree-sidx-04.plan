@@ -1,7 +1,14 @@
+distribute result [$$18]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    select (st-overlaps($$geo.getField(1), POLYGON ((1 1, 5 1, 5 5, 1 5, 1 1)))) project: [$$18]
     -- STREAM_SELECT  |PARTITIONED|
+      exchange
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- DATASOURCE_SCAN (IndexGeoJSON.Geometries)  |PARTITIONED|
+        data-scan []<-[$$18, $$geo] <- IndexGeoJSON.Geometries
+        -- DATASOURCE_SCAN  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            empty-tuple-source
             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

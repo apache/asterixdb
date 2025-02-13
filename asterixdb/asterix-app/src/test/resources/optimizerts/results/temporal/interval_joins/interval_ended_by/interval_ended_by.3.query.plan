@@ -1,21 +1,42 @@
+distribute result [$$31]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$31] <- [{"staff": $$34, "student": $$35}] project: [$$31]
     -- ASSIGN  |PARTITIONED|
+      select (le($$36, $$37)) project: [$$34, $$35]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$34, $$37, $$35, $$36])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            join (eq($$38, $$39))
             -- HYBRID_HASH_JOIN [$$38][$$39]  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$38]  |PARTITIONED|
+                assign [$$38, $$37] <- [get-interval-end($$33), get-interval-start($$33)] project: [$$34, $$37, $$38]
                 -- ASSIGN  |PARTITIONED|
+                  assign [$$33] <- [$$f.getField(2)] project: [$$34, $$33]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (TinyCollege.Staff)  |PARTITIONED|
+                      data-scan []<-[$$34, $$f] <- TinyCollege.Staff
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- HASH_PARTITION_EXCHANGE [$$39]  |PARTITIONED|
+                assign [$$39, $$36] <- [get-interval-end($$32), get-interval-start($$32)] project: [$$35, $$36, $$39]
                 -- ASSIGN  |PARTITIONED|
+                  assign [$$32] <- [$$d.getField(2)] project: [$$35, $$32]
                   -- ASSIGN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- DATASOURCE_SCAN (TinyCollege.Students)  |PARTITIONED|
+                      data-scan []<-[$$35, $$d] <- TinyCollege.Students
+                      -- DATASOURCE_SCAN  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          empty-tuple-source
                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,19 +1,38 @@
+distribute result [$$27]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$27] <- [{"id": $$30, "fname": $$29, "lname": $$33, "age": $$34}] project: [$$27]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$30(ASC) ]  |PARTITIONED|
+        order (ASC, $$30)
         -- STABLE_SORT [$$30(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (eq($$29, "Julio"))
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$34, $$33, $$29] <- [$$l.getField(3), $$l.getField(2), $$l.getField(1)] project: [$$30, $$34, $$33, $$29]
               -- ASSIGN  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (test.employee.employee)  |PARTITIONED|
+                  unnest-map [$$30, $$l] <- index-search("employee", 0, "Default", "test", "employee", false, false, 1, $$38, 1, $$38, true, true, true)
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      order (ASC, $$38)
                       -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$38])
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                              -- BTREE_SEARCH (test.employee.idx_employee_fname)  |PARTITIONED|
+                              unnest-map [$$37, $$38] <- index-search("idx_employee_fname", 0, "Default", "test", "employee", false, false, 1, $$35, 1, $$36, true, true, true)
+                              -- BTREE_SEARCH  |PARTITIONED|
+                                exchange
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$35, $$36] <- ["Julio", "Julio"]
                                   -- ASSIGN  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

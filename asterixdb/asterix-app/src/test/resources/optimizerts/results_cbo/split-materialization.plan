@@ -1,17 +1,34 @@
+distribute result [$$92] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$92] <- [{"user1": {"id": $$97, "name": $$103}, "user2": {"id": $$98, "name": $$104}}] project: [$$92] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
       -- SORT_MERGE_EXCHANGE [$$97(ASC), $$98(ASC) ]  |PARTITIONED|
+        order (ASC, $$97) (ASC, $$98) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
         -- STABLE_SORT [$$97(ASC), $$98(ASC)]  |PARTITIONED|
+          exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 5.00009E11]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            select (lt(count($$d.getField(4)), 2)) project: [$$97, $$103, $$98, $$104] [cardinality: 5.0E11, op-cost: 5.00004E11, total-cost: 5.00009E11]
             -- STREAM_SELECT  |PARTITIONED|
+              assign [$$104] <- [$$d.getField(2)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- BTREE_SEARCH (TinySocial.FacebookUsers.FacebookUsers)  |PARTITIONED|
+                  unnest-map [$$98, $$d] <- index-search("FacebookUsers", 0, "Default", "TinySocial", "FacebookUsers", true, true, 1, $$97, 0, false, true, false) [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                  -- BTREE_SEARCH  |PARTITIONED|
+                    exchange
                     -- BROADCAST_EXCHANGE  |PARTITIONED|
+                      select (lt(count($$d.getField(4)), 2)) project: [$$97, $$103] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- STREAM_SELECT  |PARTITIONED|
+                        assign [$$103] <- [$$d.getField(2)]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (TinySocial.FacebookUsers)  |PARTITIONED|
+                            data-scan []<-[$$97, $$d] <- TinySocial.FacebookUsers [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

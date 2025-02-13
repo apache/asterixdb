@@ -1,24 +1,42 @@
+distribute result [$$45]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$45] <- [{"D": $$D}] project: [$$45]
     -- ASSIGN  |PARTITIONED|
+      select (and($$41, eq($$42, 0))) project: [$$D]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$D, $$41, $$42])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$41, $$42] <- [non-empty-stream(), agg-sql-count(switch-case(and($$38, eq($$39, 0)), true, null, true))]
                     -- AGGREGATE  |LOCAL|
-                      -- SUBPLAN  |LOCAL|
-                              {
+                      subplan {
+                                aggregate [$$38, $$39] <- [non-empty-stream(), agg-sql-count(switch-case(eq($$J, 1), true, null, true))]
                                 -- AGGREGATE  |LOCAL|
+                                  unnest $$J <- scan-collection($$48)
                                   -- UNNEST  |LOCAL|
+                                    nested tuple source
                                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                              }
+                             }
+                      -- SUBPLAN  |LOCAL|
+                        assign [$$48] <- [$$I.getField("items")]
                         -- ASSIGN  |LOCAL|
+                          unnest $$I <- scan-collection($$47)
                           -- UNNEST  |LOCAL|
+                            nested tuple source
                             -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$47] <- [$$D.getField("items")]
             -- ASSIGN  |PARTITIONED|
+              project ([$$D])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (TestDataverse.Dataset1)  |PARTITIONED|
+                  data-scan []<-[$$46, $$D] <- TestDataverse.Dataset1
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

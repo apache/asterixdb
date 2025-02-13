@@ -1,21 +1,39 @@
+distribute result [$$52]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$52] <- [{"c1": $$54, "sum": $$55}] project: [$$52]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$54(ASC) ]  |PARTITIONED|
+        order (ASC, $$54)
         -- STABLE_SORT [$$54(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$54, $$55])
             -- STREAM_PROJECT  |PARTITIONED|
-              -- WINDOW  |PARTITIONED|
-                      {
+              window-aggregate [] <- [] partition [$$40] order (ASC, $$54) frame on (ASC, $$42) start unbounded end [$$42] exclude [$$42] {
+                        aggregate [$$55] <- [agg-sql-sum($$54)]
                         -- AGGREGATE  |LOCAL|
+                          nested tuple source
                           -- NESTED_TUPLE_SOURCE  |LOCAL|
-                      }
+                     }
+              -- WINDOW  |PARTITIONED|
+                window-aggregate [$$42] <- [row-number-impl()] partition [$$40] order (ASC, $$54)
                 -- WINDOW_STREAM  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    order (ASC, $$40) (ASC, $$54)
                     -- STABLE_SORT [$$40(ASC), $$54(ASC)]  |PARTITIONED|
+                      exchange
                       -- HASH_PARTITION_EXCHANGE [$$40]  |PARTITIONED|
+                        assign [$$40] <- [numeric-mod($$t1.getField("c2"), 2)] project: [$$54, $$40]
                         -- ASSIGN  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.t1)  |PARTITIONED|
+                            data-scan []<-[$$54, $$t1] <- test.t1
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

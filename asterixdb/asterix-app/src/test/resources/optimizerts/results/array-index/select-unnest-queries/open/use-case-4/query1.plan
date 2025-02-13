@@ -1,22 +1,44 @@
+distribute result [$$40]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$40] <- [{"business_id": $$44}] project: [$$40]
     -- ASSIGN  |PARTITIONED|
+      select (eq("2016-04-26", $$D)) project: [$$44]
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$D <- scan-collection($$43) project: [$$44, $$D]
         -- UNNEST  |PARTITIONED|
+          assign [$$43] <- [$$CT.getField("dates")] project: [$$44, $$43]
           -- ASSIGN  |PARTITIONED|
+            unnest $$CT <- scan-collection($$42) project: [$$44, $$CT]
             -- UNNEST  |PARTITIONED|
+              assign [$$44, $$42] <- [$$C.getField("business_id"), $$C.getField("checkin_times")] project: [$$44, $$42]
               -- ASSIGN  |PARTITIONED|
+                project ([$$C])
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- BTREE_SEARCH (TestYelp.YelpCheckin.YelpCheckin)  |PARTITIONED|
+                    unnest-map [$$41, $$C] <- index-search("YelpCheckin", 0, "Default", "TestYelp", "YelpCheckin", false, false, 1, $$48, 1, $$48, true, true, true)
+                    -- BTREE_SEARCH  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        distinct ([$$48])
                         -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            order (ASC, $$48)
                             -- STABLE_SORT [$$48(ASC)]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                project ([$$48])
                                 -- STREAM_PROJECT  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- BTREE_SEARCH (TestYelp.YelpCheckin.IdxYelpCheckinDates)  |PARTITIONED|
+                                    unnest-map [$$47, $$48] <- index-search("IdxYelpCheckinDates", 0, "Default", "TestYelp", "YelpCheckin", false, false, 1, $$45, 1, $$46, true, true, true)
+                                    -- BTREE_SEARCH  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        assign [$$45, $$46] <- ["2016-04-26", "2016-04-26"]
                                         -- ASSIGN  |PARTITIONED|
+                                          empty-tuple-source
                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

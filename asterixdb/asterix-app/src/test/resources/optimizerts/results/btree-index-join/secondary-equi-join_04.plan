@@ -1,31 +1,62 @@
+distribute result [$$44]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$44] <- [{"a": $$a, "b": $$b, "c": $$c}] project: [$$44]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$45, $$c.getField(1))) project: [$$a, $$b, $$c]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$a, $$b, $$45, $$c])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.testdst3.testdst3)  |PARTITIONED|
+            unnest-map [$$48, $$c] <- index-search("testdst3", 0, "Default", "test", "testdst3", true, false, 1, $$52, 1, $$52, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$52)
                 -- STABLE_SORT [$$52(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$a, $$b, $$45, $$52])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.testdst3.sec3_Idx)  |PARTITIONED|
+                        unnest-map [$$51, $$52] <- index-search("sec3_Idx", 0, "Default", "test", "testdst3", true, true, 1, $$45, 1, $$45, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            project ([$$a, $$b, $$45])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                join (eq($$49, $$45))
                                 -- HYBRID_HASH_JOIN [$$49][$$45]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$49]  |PARTITIONED|
+                                    assign [$$49] <- [$$a.getField(1)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$a])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.testdst)  |PARTITIONED|
+                                          data-scan []<-[$$46, $$a] <- test.testdst
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                                    assign [$$45] <- [$$b.getField(1)]
                                     -- ASSIGN  |PARTITIONED|
+                                      project ([$$b])
                                       -- STREAM_PROJECT  |PARTITIONED|
+                                        exchange
                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                          -- DATASOURCE_SCAN (test.testdst2)  |PARTITIONED|
+                                          data-scan []<-[$$47, $$b] <- test.testdst2
+                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                            exchange
                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                              empty-tuple-source
                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

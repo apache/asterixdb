@@ -1,71 +1,136 @@
+distribute result [$$196] [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$196] <- [{"n_name": $$n_name, "l_year": $#1, "SUM_profit": round($$212, 2)}] project: [$$196] [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
       -- SORT_MERGE_EXCHANGE [$$n_name(ASC), $#1(DESC) ]  |PARTITIONED|
-        -- SORT_GROUP_BY[$$231, $$232]  |PARTITIONED|
-                {
+        group by ([$$n_name := $$231; $#1 := $$232]) decor ([]) {
+                  aggregate [$$212] <- [agg-global-sql-sum($$230)]
                   -- AGGREGATE  |LOCAL|
+                    nested tuple source
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-                }
+               } [cardinality: 0.0, op-cost: 0.0, total-cost: 9.223372036854776E16]
+        -- SORT_GROUP_BY[$$231, $$232]  |PARTITIONED|
+          exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
           -- HASH_PARTITION_EXCHANGE [$$231, $$232]  |PARTITIONED|
-            -- SORT_GROUP_BY[$$225, $$198]  |PARTITIONED|
-                    {
+            group by ([$$231 := $$225; $$232 := $$198]) decor ([]) {
+                      aggregate [$$230] <- [agg-local-sql-sum($$218)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   } [cardinality: 0.0, op-cost: 0.0, total-cost: 9.223372036854776E16]
+            -- SORT_GROUP_BY[$$225, $$198]  |PARTITIONED|
+              exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                assign [$$198] <- [get-year(date($$219))] project: [$$218, $$225, $$198] [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
                 -- ASSIGN  |PARTITIONED|
+                  project ([$$218, $$219, $$225]) [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
                   -- STREAM_PROJECT  |PARTITIONED|
+                    exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 9.223372036854776E16]
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      join (eq($$213, $$214)) [cardinality: 9.223372036854776E16, op-cost: 9.223372036854776E16, total-cost: 9.223372036854776E16]
                       -- HYBRID_HASH_JOIN [$$213][$$214]  |PARTITIONED|
+                        exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 5.0002E11]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          project ([$$218, $$219, $$213]) [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 5.0002E11]
                           -- STREAM_PROJECT  |PARTITIONED|
+                            exchange [cardinality: 9.223372036854776E16, op-cost: 0.0, total-cost: 5.0002E11]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              join (eq($$229, $$224)) [cardinality: 9.223372036854776E16, op-cost: 5.00004E11, total-cost: 5.0002E11]
                               -- HYBRID_HASH_JOIN [$$229][$$224]  |PARTITIONED|
+                                exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                  assign [$$229] <- [numeric-mod(numeric-multiply($$199, $$200), 10000)] project: [$$218, $$219, $$229] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                   -- ASSIGN  |PARTITIONED|
+                                    project ([$$218, $$219, $$199, $$200]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 1.1E7]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        join (eq($$206, $$207)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 1.1E7]
                                         -- HYBRID_HASH_JOIN [$$206][$$207]  |PARTITIONED|
+                                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 7000000.0]
                                           -- HASH_PARTITION_EXCHANGE [$$206]  |PARTITIONED|
+                                            project ([$$218, $$219, $$199, $$200, $$206]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 6000000.0]
                                             -- STREAM_PROJECT  |PARTITIONED|
+                                              exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 7000000.0]
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                join (and(eq($$206, $$200), eq($$217, $$199))) [cardinality: 1000000.0, op-cost: 2000000.0, total-cost: 6000000.0]
                                                 -- HYBRID_HASH_JOIN [$$200, $$199][$$206, $$217]  |PARTITIONED|
+                                                  exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                                   -- HASH_PARTITION_EXCHANGE [$$200, $$199]  |PARTITIONED|
+                                                    assign [$$200, $$199] <- [$$s.getField("s_i_id"), $$s.getField("s_w_id")] project: [$$199, $$200] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      project ([$$s]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                       -- STREAM_PROJECT  |PARTITIONED|
+                                                        exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                          -- DATASOURCE_SCAN (test.stock)  |PARTITIONED|
+                                                          data-scan []<-[$$201, $$s] <- test.stock [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                          -- DATASOURCE_SCAN  |PARTITIONED|
+                                                            exchange
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                              empty-tuple-source
                                                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                                  exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                                   -- HASH_PARTITION_EXCHANGE [$$206, $$217]  |PARTITIONED|
+                                                    assign [$$218, $$217, $$206] <- [$$ol.getField("ol_amount"), $$ol.getField("ol_supply_w_id"), $$ol.getField("ol_i_id")] project: [$$218, $$219, $$206, $$217] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                     -- ASSIGN  |PARTITIONED|
+                                                      unnest $$ol <- scan-collection($$215) project: [$$219, $$ol] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                       -- UNNEST  |PARTITIONED|
+                                                        assign [$$219, $$215] <- [$$o.getField("o_entry_d"), $$o.getField("o_orderline")] project: [$$219, $$215] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                         -- ASSIGN  |PARTITIONED|
+                                                          project ([$$o]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                           -- STREAM_PROJECT  |PARTITIONED|
+                                                            exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                              -- DATASOURCE_SCAN (test.orders)  |PARTITIONED|
+                                                              data-scan []<-[$$202, $$o] <- test.orders [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                              -- DATASOURCE_SCAN  |PARTITIONED|
+                                                                exchange
                                                                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                                  empty-tuple-source
                                                                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                           -- HASH_PARTITION_EXCHANGE [$$207]  |PARTITIONED|
+                                            select (like($$i.getField("i_data"), "%bb")) project: [$$207] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                             -- STREAM_SELECT  |PARTITIONED|
+                                              assign [$$207] <- [$$i.getField("i_id")] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                               -- ASSIGN  |PARTITIONED|
+                                                project ([$$i]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                                 -- STREAM_PROJECT  |PARTITIONED|
+                                                  exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                    -- DATASOURCE_SCAN (test.item)  |PARTITIONED|
+                                                    data-scan []<-[$$203, $$i] <- test.item [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                                      exchange
                                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                        empty-tuple-source
                                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
                                 -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                  assign [$$224, $$213] <- [$$su.getField("su_suppkey"), $$su.getField("su_nationkey")] project: [$$213, $$224] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                   -- ASSIGN  |PARTITIONED|
+                                    project ([$$su]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                     -- STREAM_PROJECT  |PARTITIONED|
+                                      exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                        -- DATASOURCE_SCAN (test.supplier)  |PARTITIONED|
+                                        data-scan []<-[$$204, $$su] <- test.supplier [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                        -- DATASOURCE_SCAN  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            empty-tuple-source
                                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
                         -- BROADCAST_EXCHANGE  |PARTITIONED|
+                          assign [$$225, $$214] <- [$$n.getField("n_name"), $$n.getField("n_nationkey")] project: [$$225, $$214] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- ASSIGN  |PARTITIONED|
+                            project ([$$n]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange [cardinality: 1000000.0, op-cost: 4000000.0, total-cost: 5000000.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- DATASOURCE_SCAN (test.nation)  |PARTITIONED|
+                                data-scan []<-[$$205, $$n] <- test.nation [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                -- DATASOURCE_SCAN  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    empty-tuple-source
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

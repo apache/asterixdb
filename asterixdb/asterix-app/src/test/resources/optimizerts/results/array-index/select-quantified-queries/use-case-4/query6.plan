@@ -1,26 +1,46 @@
+distribute result [$$46]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$46] <- [{"business_id": $$51}] project: [$$46]
     -- ASSIGN  |PARTITIONED|
+      select ($$43) project: [$$51]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$51, $$43])
         -- STREAM_PROJECT  |PARTITIONED|
-          -- SUBPLAN  |PARTITIONED|
-                  {
+          subplan {
+                    aggregate [$$43] <- [empty-stream()]
                     -- AGGREGATE  |LOCAL|
+                      select (not(if-missing-or-null(and(gt(len($$49), 0), $$41), false)))
                       -- STREAM_SELECT  |LOCAL|
-                        -- SUBPLAN  |LOCAL|
-                                {
+                        subplan {
+                                  aggregate [$$41] <- [empty-stream()]
                                   -- AGGREGATE  |LOCAL|
+                                    select (not(if-missing-or-null(gt($$D, "2019-06-07"), false)))
                                     -- STREAM_SELECT  |LOCAL|
+                                      unnest $$D <- scan-collection($$49)
                                       -- UNNEST  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                }
+                               }
+                        -- SUBPLAN  |LOCAL|
+                          assign [$$49] <- [$$CT.getField(0)]
                           -- ASSIGN  |LOCAL|
+                            unnest $$CT <- scan-collection($$48)
                             -- UNNEST  |LOCAL|
+                              nested tuple source
                               -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
+                 }
+          -- SUBPLAN  |PARTITIONED|
+            assign [$$51, $$48] <- [$$C.getField(1), $$C.getField(2)] project: [$$51, $$48]
             -- ASSIGN  |PARTITIONED|
+              project ([$$C])
               -- STREAM_PROJECT  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                  -- DATASOURCE_SCAN (TestYelp.YelpCheckin)  |PARTITIONED|
+                  data-scan []<-[$$47, $$C] <- TestYelp.YelpCheckin
+                  -- DATASOURCE_SCAN  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

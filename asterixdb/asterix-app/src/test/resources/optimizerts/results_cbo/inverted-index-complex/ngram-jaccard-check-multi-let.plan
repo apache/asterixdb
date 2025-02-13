@@ -1,15 +1,30 @@
+distribute result [$$52] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$52] <- [{"Paper": $$59, "Query": array: [ "tra", "ran", "ans", "nsa", "sac", "act", "cti", "tio", "ion", "ons", "ns ", "s f", " fo", "for", "or ", "r c", " co", "coo", "oop", "ope", "per", "era", "rat", "ati", "tiv", "ive", "ve ", "e e", " en", "env", "nvi", "vir", "iro", "ron", "onm", "nme", "men", "ent", "nts" ]}] project: [$$52] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      select (get-item(similarity-jaccard-check($$59, array: [ "tra", "ran", "ans", "nsa", "sac", "act", "cti", "tio", "ion", "ons", "ns ", "s f", " fo", "for", "or ", "r c", " co", "coo", "oop", "ope", "per", "era", "rat", "ati", "tiv", "ive", "ve ", "e e", " en", "env", "nvi", "vir", "iro", "ron", "onm", "nme", "men", "ent", "nts" ], 0.5), 0)) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- STREAM_SELECT  |PARTITIONED|
+        assign [$$59] <- [gram-tokens($$paper.getField(2), 3, false)] project: [$$59]
         -- ASSIGN  |PARTITIONED|
+          project ([$$paper])
           -- STREAM_PROJECT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-              -- BTREE_SEARCH (test.DBLP.DBLP)  |PARTITIONED|
+              unnest-map [$$53, $$paper] <- index-search("DBLP", 0, "Default", "test", "DBLP", false, false, 1, $$58, 1, $$58, true, true, true)
+              -- BTREE_SEARCH  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  order (ASC, $$58)
                   -- STABLE_SORT [$$58(ASC)]  |PARTITIONED|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH (test.DBLP.ngram_index)  |PARTITIONED|
+                      unnest-map [$$58] <- index-search("ngram_index", 5, "Default", "test", "DBLP", false, false, 1, 0.5, 21, false, 1, $$57)
+                      -- LENGTH_PARTITIONED_INVERTED_INDEX_SEARCH  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          assign [$$57] <- [array: [ "tra", "ran", "ans", "nsa", "sac", "act", "cti", "tio", "ion", "ons", "ns ", "s f", " fo", "for", "or ", "r c", " co", "coo", "oop", "ope", "per", "era", "rat", "ati", "tiv", "ive", "ve ", "e e", " en", "env", "nvi", "vir", "iro", "ron", "onm", "nme", "men", "ent", "nts" ]]
                           -- ASSIGN  |PARTITIONED|
+                            empty-tuple-source
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

@@ -1,8 +1,16 @@
+distribute result [$$19]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$19] <- [{"a": $$ds1.getField(1), "b": $$ds1.getField(2)}] project: [$$19]
     -- ASSIGN  |PARTITIONED|
+      select (eq(3, numeric-add($$20, 1))) project: [$$ds1]
       -- STREAM_SELECT  |PARTITIONED|
+        exchange
         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-          -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
+          data-scan []<-[$$20, $$ds1] <- test.ds1
+          -- DATASOURCE_SCAN  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              empty-tuple-source
               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

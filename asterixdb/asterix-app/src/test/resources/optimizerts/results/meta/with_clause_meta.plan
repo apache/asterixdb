@@ -1,37 +1,71 @@
+distribute result [$$118]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    limit 5
     -- STREAM_LIMIT  |UNPARTITIONED|
+      assign [$$118] <- [{"age": $$127, "aid": $#1, "total": $$124}] project: [$$118]
       -- ASSIGN  |PARTITIONED|
+        exchange
         -- SORT_MERGE_EXCHANGE [$#1(ASC) ]  |PARTITIONED|
+          limit 5
           -- STREAM_LIMIT  |PARTITIONED|
+            exchange
             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+              order (topK: 5) (ASC, $#1)
               -- STABLE_SORT [topK: 5] [$#1(ASC)]  |PARTITIONED|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                  assign [$$127, $#1] <- [$$120.getField("age"), $$120.getField(0)] project: [$$127, $#1, $$124]
                   -- ASSIGN  |PARTITIONED|
+                    assign [$$120] <- [$$t2.getField(0)] project: [$$124, $$120]
                     -- ASSIGN  |PARTITIONED|
+                      unnest $$t2 <- scan-collection($$110) project: [$$124, $$t2]
                       -- UNNEST  |PARTITIONED|
+                        project ([$$110, $$124])
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- PRE_CLUSTERED_GROUP_BY[$$119]  |PARTITIONED|
-                                    {
+                            group by ([$$series := $$119]) decor ([]) {
+                                      aggregate [$$110, $$124] <- [listify($$108), agg-sql-count($$108)]
                                       -- AGGREGATE  |LOCAL|
+                                        nested tuple source
                                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                                    }
+                                   }
+                            -- PRE_CLUSTERED_GROUP_BY[$$119]  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                order (ASC, $$119)
                                 -- STABLE_SORT [$$119(ASC)]  |PARTITIONED|
+                                  exchange
                                   -- HASH_PARTITION_EXCHANGE [$$119]  |PARTITIONED|
+                                    assign [$$108, $$119] <- [{"raw_data": $$106}, $$106.getField("series")] project: [$$108, $$119]
                                     -- ASSIGN  |PARTITIONED|
+                                      assign [$$106] <- [{"aid": $$125, "age": $$126}] project: [$$106]
                                       -- ASSIGN  |PARTITIONED|
+                                        project ([$$125, $$126])
                                         -- STREAM_PROJECT  |PARTITIONED|
+                                          exchange
                                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                            join (eq($$123, $$100))
                                             -- HYBRID_HASH_JOIN [$$100][$$123]  |PARTITIONED|
+                                              exchange
                                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                assign [$$126, $$125, $$100] <- [$$a.getField("age"), $$122.getField(0), $$a.getField("hobby")] project: [$$125, $$126, $$100]
                                                 -- ASSIGN  |PARTITIONED|
+                                                  project ([$$a, $$122])
                                                   -- STREAM_PROJECT  |PARTITIONED|
+                                                    exchange
                                                     -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                                      -- DATASOURCE_SCAN (test.ds)  |PARTITIONED|
+                                                      data-scan []<-[$$121, $$a, $$122] <- test.ds
+                                                      -- DATASOURCE_SCAN  |PARTITIONED|
+                                                        exchange
                                                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                                          empty-tuple-source
                                                           -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                                              exchange
                                               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                                                unnest $$123 <- scan-collection(array: [ "soccer", "reading", "hiking", "tennis" ])
                                                 -- UNNEST  |UNPARTITIONED|
+                                                  empty-tuple-source
                                                   -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

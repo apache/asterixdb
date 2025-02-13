@@ -1,13 +1,26 @@
+distribute result [$$73] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+    aggregate [$$73] <- [agg-sql-sum($$80)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- AGGREGATE  |UNPARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+        aggregate [$$80] <- [agg-sql-count(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- AGGREGATE  |PARTITIONED|
+          select (and(ge($$69, 0), lt($$69, 1000000), lt($$74, date: { 2002-11-09 }), ge($$74, date: { 1997-05-19 }))) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- STREAM_SELECT  |PARTITIONED|
+            assign [$$69, $$74] <- [$$72.getField(10), $$72.getField(6)] project: [$$69, $$74] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- ASSIGN  |PARTITIONED|
+              assign [$$72] <- [$$t.getField(12)] project: [$$72] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ASSIGN  |PARTITIONED|
+                project ([$$t]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- STREAM_PROJECT  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (twitter.ds_tweet)  |PARTITIONED|
+                    data-scan []<-[$$71, $$t] <- twitter.ds_tweet [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                    -- DATASOURCE_SCAN  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

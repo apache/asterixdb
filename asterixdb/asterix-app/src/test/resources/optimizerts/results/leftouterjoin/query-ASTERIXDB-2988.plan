@@ -1,19 +1,38 @@
+distribute result [$$32]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$32] <- [{"r1": $$r1, "x": $$ds1.getField(0), "y": $$ds1.getField(1)}] project: [$$32]
     -- ASSIGN  |PARTITIONED|
+      exchange
       -- SORT_MERGE_EXCHANGE [$$r1(ASC) ]  |PARTITIONED|
+        order (ASC, $$r1)
         -- STABLE_SORT [$$r1(ASC)]  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$r1, $$ds1])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                left outer join (eq($$r1, $$34))
                 -- HYBRID_HASH_JOIN [$$r1][$$34]  |PARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$r1]  |PARTITIONED|
+                    unnest $$r1 <- range(0, 4)
                     -- UNNEST  |UNPARTITIONED|
+                      empty-tuple-source
                       -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|
+                  exchange
                   -- HASH_PARTITION_EXCHANGE [$$34]  |PARTITIONED|
+                    assign [$$34] <- [$$ds1.getField(1)]
                     -- ASSIGN  |PARTITIONED|
+                      project ([$$ds1])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (test.ds1)  |PARTITIONED|
+                          data-scan []<-[$$33, $$ds1] <- test.ds1
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

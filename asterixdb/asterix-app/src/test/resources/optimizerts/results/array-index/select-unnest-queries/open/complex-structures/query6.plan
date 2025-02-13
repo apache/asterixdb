@@ -1,20 +1,40 @@
+distribute result [$$30]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$30] <- [{"D": $$D, "F": $$F}] project: [$$30]
     -- ASSIGN  |PARTITIONED|
+      select (gt($$F.getField("open_field_3b").getField("open_field_4"), 0))
       -- STREAM_SELECT  |PARTITIONED|
+        unnest $$F <- scan-collection($$32) project: [$$D, $$F]
         -- UNNEST  |PARTITIONED|
+          assign [$$32] <- [$$D.getField(1).getField(0)]
           -- ASSIGN  |PARTITIONED|
+            project ([$$D])
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                -- BTREE_SEARCH (TestDataverse.TestDataset.TestDataset)  |PARTITIONED|
+                unnest-map [$$31, $$D] <- index-search("TestDataset", 0, "Default", "TestDataverse", "TestDataset", false, false, 1, $$38, 1, $$38, true, true, true)
+                -- BTREE_SEARCH  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    distinct ([$$38])
                     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                        order (ASC, $$38)
                         -- STABLE_SORT [$$38(ASC)]  |PARTITIONED|
+                          exchange
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                            project ([$$38])
                             -- STREAM_PROJECT  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                -- BTREE_SEARCH (TestDataverse.TestDataset.testIndex2c)  |PARTITIONED|
+                                unnest-map [$$37, $$38] <- index-search("testIndex2c", 0, "Default", "TestDataverse", "TestDataset", false, false, 1, $$36, 0, true, true, false)
+                                -- BTREE_SEARCH  |PARTITIONED|
+                                  exchange
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                    assign [$$36] <- [0]
                                     -- ASSIGN  |PARTITIONED|
+                                      empty-tuple-source
                                       -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

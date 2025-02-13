@@ -1,25 +1,50 @@
+distribute result [$$36] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$36] <- [{"c1": $$48, "c2": $$49}] project: [$$36] [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
       -- SORT_MERGE_EXCHANGE [$$48(ASC), $$49(ASC) ]  |PARTITIONED|
+        order (ASC, $$48) (ASC, $$49) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
         -- STABLE_SORT [$$48(ASC), $$49(ASC)]  |PARTITIONED|
+          exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+            project ([$$48, $$49]) [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
             -- STREAM_PROJECT  |PARTITIONED|
+              exchange [cardinality: 5.0E11, op-cost: 0.0, total-cost: 6000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                join (eq($$45, $$46)) [cardinality: 5.0E11, op-cost: 2000000.0, total-cost: 6000000.0]
                 -- HYBRID_HASH_JOIN [$$45][$$46]  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                   -- HASH_PARTITION_EXCHANGE [$$45]  |PARTITIONED|
+                    assign [$$45, $$48] <- [to-string($$52.getField("c_s")), $$52.getField("c_x")] project: [$$48, $$45] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ASSIGN  |PARTITIONED|
+                      assign [$$52] <- [$$t1.getField("nested")] project: [$$52] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$t1]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.TestOpen1)  |PARTITIONED|
+                            data-scan []<-[$$43, $$t1] <- test.TestOpen1 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                   -- HASH_PARTITION_EXCHANGE [$$46]  |PARTITIONED|
+                    assign [$$49, $$46] <- [$$53.getField("c_x"), $$53.getField("c_s")] project: [$$49, $$46] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- ASSIGN  |PARTITIONED|
+                      assign [$$53] <- [$$t2.getField("nested")] project: [$$53] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ASSIGN  |PARTITIONED|
+                        project ([$$t2]) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- STREAM_PROJECT  |PARTITIONED|
+                          exchange [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 2000000.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            -- DATASOURCE_SCAN (test.TestOpen2)  |PARTITIONED|
+                            data-scan []<-[$$44, $$t2] <- test.TestOpen2 [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                            -- DATASOURCE_SCAN  |PARTITIONED|
+                              exchange
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

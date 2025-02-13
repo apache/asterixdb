@@ -1,43 +1,60 @@
--- SINK  |PARTITIONED|
-  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    -- STREAM_PROJECT  |PARTITIONED|
-      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        -- BULKLOAD  |PARTITIONED|
-          -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- STABLE_SORT [$$2(ASC)]  |PARTITIONED|
-              -- HASH_PARTITION_EXCHANGE [$$2]  |PARTITIONED|
-                -- ASSIGN  |PARTITIONED|
-                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    -- DATASOURCE_SCAN (loadable_dv.loadable_ds)  |PARTITIONED|
-                      -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+distribute result [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$21] <- [{"o_orderkey": $$24, "o_custkey": $$23}] project: [$$21] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
     -- ASSIGN  |PARTITIONED|
+      exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+        order (ASC, $$24) [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
         -- STABLE_SORT [$$24(ASC)]  |PARTITIONED|
+          exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
           -- RANGE_PARTITION_EXCHANGE [$$24(ASC)]  |PARTITIONED|
+            forward: shared-variable = $$30 [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
             -- FORWARD  |PARTITIONED|
+              exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                replicate [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                 -- REPLICATE  |PARTITIONED|
+                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    select (and(gt($$o.getField(3), 150000.0), eq($$23, 40))) project: [$$24, $$23] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                     -- STREAM_SELECT  |PARTITIONED|
+                      assign [$$23] <- [$$o.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                       -- ASSIGN  |PARTITIONED|
+                        exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                          data-scan []<-[$$24, $$o] <- tpch.Orders [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                          -- DATASOURCE_SCAN  |PARTITIONED|
+                            exchange
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              empty-tuple-source
                               -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                aggregate [$$30] <- [agg-range-map($$28, $$29)]
                 -- AGGREGATE  |UNPARTITIONED|
+                  exchange
                   -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
+                    aggregate [$$28, $$29] <- [agg-local-sampling($$24), agg-null-writer($$24)]
                     -- AGGREGATE  |PARTITIONED|
+                      project ([$$24])
                       -- STREAM_PROJECT  |PARTITIONED|
+                        exchange
                         -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                          replicate [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                           -- REPLICATE  |PARTITIONED|
+                            exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                             -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                              select (and(gt($$o.getField(3), 150000.0), eq($$23, 40))) project: [$$24, $$23] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                               -- STREAM_SELECT  |PARTITIONED|
+                                assign [$$23] <- [$$o.getField(1)] [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                 -- ASSIGN  |PARTITIONED|
+                                  exchange [cardinality: 1000000.0, op-cost: 0.0, total-cost: 1000000.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    -- DATASOURCE_SCAN (tpch.Orders)  |PARTITIONED|
+                                    data-scan []<-[$$24, $$o] <- tpch.Orders [cardinality: 1000000.0, op-cost: 1000000.0, total-cost: 1000000.0]
+                                    -- DATASOURCE_SCAN  |PARTITIONED|
+                                      exchange
                                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                                        empty-tuple-source
                                         -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

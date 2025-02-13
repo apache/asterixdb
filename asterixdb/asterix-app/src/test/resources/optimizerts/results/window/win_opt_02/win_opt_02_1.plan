@@ -1,21 +1,36 @@
+distribute result [$$174]
 -- DISTRIBUTE_RESULT  |LOCAL|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+    assign [$$174] <- [{"t": $$r, "x": $$185, "dt": $$186, "dx": numeric-subtract($$185, $$178), "v": int64(numeric-divide(numeric-subtract($$185, $$178), $$186)), "a": int64(numeric-subtract(numeric-divide(numeric-subtract($$185, $$178), $$186), $$179))}] project: [$$174]
     -- ASSIGN  |LOCAL|
+      assign [$$186, $$185] <- [numeric-subtract($$r, $$177), numeric-multiply($$r, $$r)] project: [$$r, $$178, $$179, $$186, $$185]
       -- ASSIGN  |LOCAL|
+        project ([$$r, $$178, $$179, $$177])
         -- STREAM_PROJECT  |LOCAL|
-          -- WINDOW  |LOCAL|
-                  {
+          window-aggregate [] <- [] order (ASC, $$r) frame on (ASC, $$127) start [numeric-subtract($$127, 1)] if [is-numeric-add-compatible($$127)] end [numeric-subtract($$127, 1)] if [is-numeric-add-compatible($$127)] maxObjects 1 {
+                    aggregate [$$179] <- [agg-first-element(numeric-divide(numeric-subtract(numeric-multiply($$r, $$r), $$178), numeric-subtract($$r, $$177)))]
                     -- AGGREGATE  |LOCAL|
+                      nested tuple source
                       -- NESTED_TUPLE_SOURCE  |LOCAL|
-                  }
-            -- WINDOW  |LOCAL|
-                    {
+                 }
+          -- WINDOW  |LOCAL|
+            window-aggregate [] <- [] order (ASC, $$r) frame on (ASC, $$127) start [numeric-subtract($$127, 1)] if [is-numeric-add-compatible($$127)] end [numeric-subtract($$127, 1)] if [is-numeric-add-compatible($$127)] maxObjects 1 {
+                      aggregate [$$178, $$177] <- [agg-first-element(numeric-multiply($$r, $$r)), agg-first-element($$r)]
                       -- AGGREGATE  |LOCAL|
+                        nested tuple source
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                    }
+                   }
+            -- WINDOW  |LOCAL|
+              window-aggregate [$$127] <- [row-number-impl()] order (ASC, $$r)
               -- WINDOW_STREAM  |LOCAL|
+                exchange
                 -- ONE_TO_ONE_EXCHANGE  |LOCAL|
+                  order (ASC, $$r)
                   -- STABLE_SORT [$$r(ASC)]  |LOCAL|
+                    exchange
                     -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
+                      unnest $$r <- range(1, 10)
                       -- UNNEST  |UNPARTITIONED|
+                        empty-tuple-source
                         -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

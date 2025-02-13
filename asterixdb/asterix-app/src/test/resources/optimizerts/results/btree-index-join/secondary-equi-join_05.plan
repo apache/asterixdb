@@ -1,17 +1,34 @@
+distribute result [$$28]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$28] <- [{"bar": $$bar, "testdst": $$testdst}] project: [$$28]
     -- ASSIGN  |PARTITIONED|
+      select (eq($$bar, $$testdst.getField(1)))
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$bar, $$testdst])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- BTREE_SEARCH (test.testdst.testdst)  |PARTITIONED|
+            unnest-map [$$29, $$testdst] <- index-search("testdst", 0, "Default", "test", "testdst", true, false, 1, $$33, 1, $$33, true, true, true)
+            -- BTREE_SEARCH  |PARTITIONED|
+              exchange
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                order (ASC, $$33)
                 -- STABLE_SORT [$$33(ASC)]  |PARTITIONED|
+                  exchange
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    project ([$$bar, $$33])
                     -- STREAM_PROJECT  |PARTITIONED|
+                      exchange
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        -- BTREE_SEARCH (test.testdst.sec_Idx)  |PARTITIONED|
+                        unnest-map [$$32, $$33] <- index-search("sec_Idx", 0, "Default", "test", "testdst", true, true, 1, $$34, 1, $$34, true, true, true)
+                        -- BTREE_SEARCH  |PARTITIONED|
+                          exchange
                           -- BROADCAST_EXCHANGE  |PARTITIONED|
+                            assign [$$34] <- [cast-lax($$bar)]
                             -- ASSIGN  |UNPARTITIONED|
+                              unnest $$bar <- scan-collection(array: [ 1, 2, 3 ])
                               -- UNNEST  |UNPARTITIONED|
+                                empty-tuple-source
                                 -- EMPTY_TUPLE_SOURCE  |UNPARTITIONED|

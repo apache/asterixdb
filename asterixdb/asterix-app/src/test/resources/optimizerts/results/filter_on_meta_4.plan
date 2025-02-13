@@ -1,10 +1,20 @@
+distribute result [$$17]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
+  exchange
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+    assign [$$17] <- [{"KVStore": $$KVStore}] project: [$$17]
     -- ASSIGN  |PARTITIONED|
+      select (gt($$19.getField(8), 10)) project: [$$KVStore]
       -- STREAM_SELECT  |PARTITIONED|
+        project ([$$KVStore, $$19])
         -- STREAM_PROJECT  |PARTITIONED|
+          exchange
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            -- DATASOURCE_SCAN (KeyVerse.KVStore)  |PARTITIONED|
+            data-scan []<-[$$18, $$KVStore, $$19] <- KeyVerse.KVStore with filter on min:[$$21] max:[]
+            -- DATASOURCE_SCAN  |PARTITIONED|
+              exchange
               -- BROADCAST_EXCHANGE  |PARTITIONED|
+                assign [$$21] <- [10]
                 -- ASSIGN  |PARTITIONED|
+                  empty-tuple-source
                   -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
