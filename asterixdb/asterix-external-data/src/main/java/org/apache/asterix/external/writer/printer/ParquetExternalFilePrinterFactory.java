@@ -30,9 +30,9 @@ import org.apache.parquet.schema.MessageType;
 
 public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactory {
     private static final long serialVersionUID = 8971234908711235L;
-    // parquetInferSchema is for the case when the schema is inferred from the data, not provided by the user
+    // parquetInferredSchema is for the case when the schema is inferred from the data, not provided by the user
     // set During the runtime
-    private transient MessageType parquetInferSchema;
+    private transient MessageType parquetInferredSchema;
     // parquetProvidedSchema is for the case when the schema is provided by the user
     private ARecordType parquetProvidedSchema;
     private final IAType typeInfo;
@@ -61,14 +61,14 @@ public class ParquetExternalFilePrinterFactory implements IExternalPrinterFactor
         this.writerVersion = writerVersion;
     }
 
-    public void setParquetSchema(MessageType parquetInferSchema) {
-        this.parquetInferSchema = parquetInferSchema;
+    public void setParquetSchema(MessageType parquetInferredSchema) {
+        this.parquetInferredSchema = parquetInferredSchema;
     }
 
     @Override
     public IExternalPrinter createPrinter() {
-        if (parquetInferSchema != null) {
-            return new ParquetExternalFilePrinter(compressionCodecName, parquetInferSchema, typeInfo, rowGroupSize,
+        if (parquetInferredSchema != null) {
+            return new ParquetExternalFilePrinter(compressionCodecName, parquetInferredSchema, typeInfo, rowGroupSize,
                     pageSize, writerVersion);
         }
 
