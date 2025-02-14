@@ -901,6 +901,16 @@ public class RecoveryManager implements IRecoveryManager, ILifeCycleComponent {
         return maxDiskLastLsn;
     }
 
+    @Override
+    public boolean isLazyRecoveryEnabled() {
+        return false;
+    }
+
+    @Override
+    public void recoverIndexes(List<ILSMIndex> datasetPartitionIndexes) throws HyracksDataException {
+        // do-nothing
+    }
+
     private class JobEntityCommits {
         private static final String PARTITION_FILE_NAME_SEPARATOR = "_";
         private final long txnId;

@@ -36,6 +36,7 @@ import org.apache.asterix.common.config.StorageProperties;
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.dataflow.LSMIndexUtil;
 import org.apache.asterix.common.ioopcallbacks.LSMIOOperationCallback;
+import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
 import org.apache.asterix.common.replication.IReplicationStrategy;
 import org.apache.asterix.common.storage.DatasetResourceReference;
 import org.apache.asterix.common.storage.IIndexCheckpointManager;
@@ -43,12 +44,16 @@ import org.apache.asterix.common.storage.IIndexCheckpointManagerProvider;
 import org.apache.asterix.common.storage.ResourceReference;
 import org.apache.asterix.common.storage.StorageIOStats;
 import org.apache.asterix.common.transactions.ILogManager;
+import org.apache.asterix.common.transactions.IRecoveryManager;
 import org.apache.asterix.common.transactions.LogRecord;
 import org.apache.asterix.common.transactions.LogType;
 import org.apache.asterix.common.utils.StoragePathUtil;
+import org.apache.hyracks.api.application.INCServiceContext;
 import org.apache.hyracks.api.exceptions.ErrorCode;
 import org.apache.hyracks.api.exceptions.HyracksDataException;
+import org.apache.hyracks.api.io.FileReference;
 import org.apache.hyracks.api.lifecycle.ILifeCycleComponent;
+import org.apache.hyracks.storage.am.lsm.btree.dataflow.LSMBTreeLocalResource;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMComponentIdGenerator;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMIndex;
 import org.apache.hyracks.storage.am.lsm.common.api.ILSMOperationTracker;
@@ -67,22 +72,26 @@ import org.apache.logging.log4j.Logger;
 public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeCycleComponent {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
+    protected final Map<Integer, DatasetResource> datasets = new ConcurrentHashMap<>();
     private final StorageProperties storageProperties;
-    private final ILocalResourceRepository resourceRepository;
+    protected final ILocalResourceRepository resourceRepository;
     private final IVirtualBufferCache vbc;
+    protected final INCServiceContext serviceCtx;
+    protected final IRecoveryManager recoveryMgr;
     private final ILogManager logManager;
     private final LogRecord waitLog;
-    private final IDiskResourceCacheLockNotifier lockNotifier;
+    protected final IDiskResourceCacheLockNotifier lockNotifier;
     private volatile boolean stopped = false;
     private final IIndexCheckpointManagerProvider indexCheckpointManagerProvider;
     // all LSM-trees share the same virtual buffer cache list
     private final List<IVirtualBufferCache> vbcs;
 
-    public DatasetLifecycleManager(StorageProperties storageProperties, ILocalResourceRepository resourceRepository,
-            ILogManager logManager, IVirtualBufferCache vbc,
-            IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
+    public DatasetLifecycleManager(INCServiceContext serviceCtx, StorageProperties storageProperties,
+            ILocalResourceRepository resourceRepository, IRecoveryManager recoveryMgr, ILogManager logManager,
+            IVirtualBufferCache vbc, IIndexCheckpointManagerProvider indexCheckpointManagerProvider,
             IDiskResourceCacheLockNotifier lockNotifier) {
+        this.serviceCtx = serviceCtx;
+        this.recoveryMgr = recoveryMgr;
         this.logManager = logManager;
         this.storageProperties = storageProperties;
         this.resourceRepository = resourceRepository;
@@ -130,7 +139,7 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         datasetResource.register(resource, (ILSMIndex) index);
     }
 
-    private int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
+    protected int getDIDfromResourcePath(String resourcePath) throws HyracksDataException {
         LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
@@ -138,12 +147,20 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
         return ((DatasetLocalResource) lr.getResource()).getDatasetId();
     }
 
-    private long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
+    protected long getResourceIDfromResourcePath(String resourcePath) throws HyracksDataException {
         LocalResource lr = resourceRepository.get(resourcePath);
         if (lr == null) {
             return -1;
         }
         return lr.getId();
+    }
+
+    private DatasetLocalResource getDatasetLocalResource(String resourcePath) throws HyracksDataException {
+        LocalResource lr = resourceRepository.get(resourcePath);
+        if (lr == null) {
+            return null;
+        }
+        return (DatasetLocalResource) lr.getResource();
     }
 
     @Override
@@ -193,6 +210,72 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
     @Override
     public synchronized void open(String resourcePath) throws HyracksDataException {
         validateDatasetLifecycleManagerState();
+        DatasetLocalResource localResource = getDatasetLocalResource(resourcePath);
+        if (localResource == null) {
+            throw HyracksDataException.create(ErrorCode.INDEX_DOES_NOT_EXIST, resourcePath);
+        }
+        int did = getDIDfromResourcePath(resourcePath);
+        long resourceID = getResourceIDfromResourcePath(resourcePath);
+
+        lockNotifier.onOpen(resourceID);
+        try {
+            DatasetResource datasetResource = datasets.get(did);
+            int partition = localResource.getPartition();
+            if (shouldRecoverLazily(datasetResource, partition)) {
+                performLocalRecovery(resourcePath, datasetResource, partition);
+            } else {
+                openResource(resourcePath, false);
+            }
+        } finally {
+            lockNotifier.onClose(resourceID);
+        }
+    }
+
+    private void performLocalRecovery(String resourcePath, DatasetResource datasetResource, int partition)
+            throws HyracksDataException {
+        LOGGER.debug("performing local recovery for dataset {} partition {}", datasetResource.getDatasetInfo(),
+                partition);
+        FileReference indexRootRef = StoragePathUtil.getIndexRootPath(serviceCtx.getIoManager(), resourcePath);
+        Map<Long, LocalResource> resources = resourceRepository.getResources(r -> true, List.of(indexRootRef));
+
+        List<ILSMIndex> indexes = new ArrayList<>();
+        for (LocalResource resource : resources.values()) {
+            if (shouldSkipResource(resource)) {
+                continue;
+            }
+
+            ILSMIndex index = getOrCreateIndex(resource);
+            boolean undoTouch = !resourcePath.equals(resource.getPath());
+            openResource(resource.getPath(), undoTouch);
+            indexes.add(index);
+        }
+
+        if (!indexes.isEmpty()) {
+            recoveryMgr.recoverIndexes(indexes);
+        }
+
+        datasetResource.markRecovered(partition);
+    }
+
+    private boolean shouldSkipResource(LocalResource resource) {
+        DatasetLocalResource lr = (DatasetLocalResource) resource.getResource();
+        return MetadataIndexImmutableProperties.isMetadataDataset(lr.getDatasetId())
+                || (lr.getResource() instanceof LSMBTreeLocalResource
+                        && ((LSMBTreeLocalResource) lr.getResource()).isSecondaryNoIncrementalMaintenance());
+    }
+
+    private ILSMIndex getOrCreateIndex(LocalResource resource) throws HyracksDataException {
+        ILSMIndex index = get(resource.getPath());
+        if (index == null) {
+            DatasetLocalResource lr = (DatasetLocalResource) resource.getResource();
+            index = (ILSMIndex) lr.createInstance(serviceCtx);
+            register(resource.getPath(), index);
+        }
+        return index;
+    }
+
+    private void openResource(String resourcePath, boolean undoTouch) throws HyracksDataException {
+        validateDatasetLifecycleManagerState();
         int did = getDIDfromResourcePath(resourcePath);
         long resourceID = getResourceIDfromResourcePath(resourcePath);
 
@@ -214,15 +297,36 @@ public class DatasetLifecycleManager implements IDatasetLifecycleManager, ILifeC
 
         dsr.open(true);
         dsr.touch();
-
-        if (!iInfo.isOpen()) {
-            ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
-            synchronized (opTracker) {
-                iInfo.getIndex().activate();
+        boolean indexTouched = false;
+        try {
+            if (!iInfo.isOpen()) {
+                ILSMOperationTracker opTracker = iInfo.getIndex().getOperationTracker();
+                synchronized (opTracker) {
+                    iInfo.getIndex().activate();
+                }
+                iInfo.setOpen(true);
             }
-            iInfo.setOpen(true);
+            iInfo.touch();
+            indexTouched = true;
+        } finally {
+            if (undoTouch) {
+                dsr.untouch();
+                if (indexTouched) {
+                    iInfo.untouch();
+                }
+                lockNotifier.onClose(resourceID);
+            }
         }
-        iInfo.touch();
+    }
+
+    private boolean shouldRecoverLazily(DatasetResource resource, int partition) {
+        // Perform lazy recovery only if the following conditions are met:
+        // 1. Lazy recovery is enabled.
+        // 2. The resource does not belong to the Metadata dataverse.
+        // 3. The partition is being accessed for the first time.
+        return recoveryMgr.isLazyRecoveryEnabled()
+                && !MetadataIndexImmutableProperties.isMetadataDataset(resource.getDatasetID())
+                && !resource.isRecovered(partition);
     }
 
     public DatasetResource getDatasetLifecycle(int did) {

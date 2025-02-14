@@ -20,7 +20,9 @@ package org.apache.asterix.common.context;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.asterix.common.dataflow.DatasetLocalResource;
 import org.apache.asterix.common.metadata.MetadataIndexImmutableProperties;
@@ -48,12 +50,14 @@ public class DatasetResource implements Comparable<DatasetResource> {
     private final Map<Integer, PrimaryIndexOperationTracker> datasetPrimaryOpTrackers;
     private final Map<Integer, ILSMComponentIdGenerator> datasetComponentIdGenerators;
     private final Map<Integer, IRateLimiter> datasetRateLimiters;
+    private final Set<Integer> recoveredPartitions;
 
     public DatasetResource(DatasetInfo datasetInfo) {
         this.datasetInfo = datasetInfo;
         this.datasetPrimaryOpTrackers = new HashMap<>();
         this.datasetComponentIdGenerators = new HashMap<>();
         this.datasetRateLimiters = new HashMap<>();
+        this.recoveredPartitions = new HashSet<>();
     }
 
     public boolean isRegistered() {
@@ -127,6 +131,10 @@ public class DatasetResource implements Comparable<DatasetResource> {
         return datasetComponentIdGenerators.get(partition);
     }
 
+    public boolean isRecovered(int partitionId) {
+        return recoveredPartitions.contains(partitionId);
+    }
+
     public IRateLimiter getRateLimiter(int partition) {
         return datasetRateLimiters.get(partition);
     }
@@ -137,6 +145,14 @@ public class DatasetResource implements Comparable<DatasetResource> {
                     "PrimaryIndexOperationTracker has already been set for partition " + partition);
         }
         datasetPrimaryOpTrackers.put(partition, opTracker);
+    }
+
+    public void markRecovered(int partition) {
+        if (recoveredPartitions.contains(partition)) {
+            throw new IllegalStateException(
+                    "Index has already been recovered for dataset" + getDatasetID() + "partition " + partition);
+        }
+        recoveredPartitions.add(partition);
     }
 
     public void setIdGenerator(int partition, ILSMComponentIdGenerator idGenerator) {
@@ -187,5 +203,6 @@ public class DatasetResource implements Comparable<DatasetResource> {
         datasetPrimaryOpTrackers.remove(partitionId);
         datasetComponentIdGenerators.remove(partitionId);
         datasetRateLimiters.remove(partitionId);
+        recoveredPartitions.remove(partitionId);
     }
 }

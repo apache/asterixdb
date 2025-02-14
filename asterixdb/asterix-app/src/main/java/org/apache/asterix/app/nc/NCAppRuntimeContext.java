@@ -286,8 +286,9 @@ public class NCAppRuntimeContext implements INcApplicationContext {
         // Must start vbc now instead of by life cycle component manager (lccm) because lccm happens after
         // the metadata bootstrap task
         ((ILifeCycleComponent) virtualBufferCache).start();
-        datasetLifecycleManager = new DatasetLifecycleManager(storageProperties, localResourceRepository,
-                txnSubsystem.getLogManager(), virtualBufferCache, indexCheckpointManagerProvider, lockNotifier);
+        datasetLifecycleManager =
+                new DatasetLifecycleManager(ncServiceContext, storageProperties, localResourceRepository, recoveryMgr,
+                        txnSubsystem.getLogManager(), virtualBufferCache, indexCheckpointManagerProvider, lockNotifier);
         localResourceRepository.setDatasetLifecycleManager(datasetLifecycleManager);
         final String nodeId = getServiceContext().getNodeId();
         final Set<Integer> nodePartitions = metadataProperties.getNodePartitions(nodeId);

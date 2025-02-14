@@ -251,6 +251,7 @@ public class PersistentLocalResourceRepository implements ILocalResourceReposito
         return ioManager.resolve(fileName);
     }
 
+    @Override
     public Map<Long, LocalResource> getResources(Predicate<LocalResource> filter, List<FileReference> roots)
             throws HyracksDataException {
         beforeReadAccess();
