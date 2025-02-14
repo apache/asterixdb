@@ -131,17 +131,22 @@ public class LogicalOperatorPrettyPrintVisitor extends AbstractLogicalOperatorPr
 
     private void printOperatorImpl(AbstractLogicalOperator op, int indent, boolean printInputs,
             boolean printOptimizerEstimates) throws AlgebricksException {
-        double opCard, opLocalCost, opTotalCost;
+        double opCard, opDocSize, opLocalCost, opTotalCost;
 
         op.accept(this, indent);
         if (printOptimizerEstimates) {
             opCard = getOpCardinality(op);
+            opDocSize = getOpDocSize(op);
             opLocalCost = getOpLocalCost(op);
             opTotalCost = getOpTotalCost(op);
             buffer.append(" [");
             buffer.append(CARDINALITY);
             buffer.append(": ");
             buffer.append(Double.toString(opCard));
+            buffer.append(", ");
+            buffer.append(DOCSIZE);
+            buffer.append(": ");
+            buffer.append(Double.toString(opDocSize));
             buffer.append(", ");
             buffer.append(OP_COST_LOCAL);
             buffer.append(": ");

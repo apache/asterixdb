@@ -1,18 +1,18 @@
-distribute result [$$26] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$26] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$26] <- [{"g": $$27.getField("g"), "$1": $$27.getField("p").getField("substring($$ColumnDataset.getField("x").getField("y").getField("age_field"), 0, 4)")}] project: [$$26] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$26] <- [{"g": $$27.getField("g"), "$1": $$27.getField("p").getField("substring($$ColumnDataset.getField("x").getField("y").getField("age_field"), 0, 4)")}] project: [$$26] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |PARTITIONED|
-      assign [$$27] <- [$$ColumnDataset.getField("t").getField("r")] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      assign [$$27] <- [$$ColumnDataset.getField("t").getField("r")] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- ASSIGN  |PARTITIONED|
-        project ([$$ColumnDataset]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        project ([$$ColumnDataset]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- STREAM_PROJECT  |PARTITIONED|
-          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            data-scan []<-[$$28, $$ColumnDataset] <- test.ColumnDataset project ({t:{r:{p:any,g:any}},x:{y:{age_field:any}}}) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            data-scan []<-[$$28, $$ColumnDataset] <- test.ColumnDataset project ({t:{r:{p:any,g:any}},x:{y:{age_field:any}}}) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- DATASOURCE_SCAN  |PARTITIONED|
-              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

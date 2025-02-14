@@ -1129,6 +1129,10 @@ public class EnumerateJoinsRule implements IAlgebraicRewriteRule {
             return;
         op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_CARDINALITY,
                 (double) Math.round(plan.getJoinNode().getCardinality() * 100) / 100);
+        op.getAnnotations().put(OperatorAnnotations.OP_INPUT_DOCSIZE,
+                (double) Math.round(plan.getJoinNode().getInputSize() * 100) / 100);
+        op.getAnnotations().put(OperatorAnnotations.OP_OUTPUT_DOCSIZE,
+                (double) Math.round(plan.getJoinNode().getOutputSize() * 100) / 100);
         op.getAnnotations().put(OperatorAnnotations.OP_COST_TOTAL,
                 (double) Math.round(plan.computeTotalCost() * 100) / 100);
         if (plan.IsScanNode()) {

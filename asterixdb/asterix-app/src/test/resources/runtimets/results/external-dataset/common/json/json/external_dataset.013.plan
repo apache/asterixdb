@@ -1,54 +1,54 @@
-distribute result [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+distribute result [$$50] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
 -- DISTRIBUTE_RESULT  |UNPARTITIONED|
-  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
   -- ONE_TO_ONE_EXCHANGE  |UNPARTITIONED|
-    assign [$$50] <- [{"cnt": $$53}] project: [$$50] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+    assign [$$50] <- [{"cnt": $$53}] project: [$$50] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
     -- ASSIGN  |UNPARTITIONED|
-      aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+      aggregate [$$53] <- [agg-sql-sum($$55)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
       -- AGGREGATE  |UNPARTITIONED|
-        exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+        exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
         -- RANDOM_MERGE_EXCHANGE  |PARTITIONED|
-          aggregate [$$55] <- [agg-sql-count($$51)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+          aggregate [$$55] <- [agg-sql-count($$51)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
           -- AGGREGATE  |PARTITIONED|
-            project ([$$51]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+            project ([$$51]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
             -- STREAM_PROJECT  |PARTITIONED|
-              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                join (eq($$51, $$52)) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                join (eq($$51, $$52)) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                 -- HYBRID_HASH_JOIN [$$51][$$52]  |PARTITIONED|
-                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    assign [$$51] <- [$$52] project: [$$51] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    assign [$$51] <- [$$52] project: [$$51] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- ASSIGN  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                        replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- REPLICATE  |PARTITIONED|
-                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
-                            assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- ASSIGN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- DATASOURCE_SCAN  |PARTITIONED|
-                                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                    empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                    empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                     -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
-                  exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    replicate [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    replicate [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- REPLICATE  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- HASH_PARTITION_EXCHANGE [$$52]  |PARTITIONED|
-                        assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        assign [$$52] <- [$$b.getField("quarter")] project: [$$52] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- ASSIGN  |PARTITIONED|
-                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            data-scan []<-[$$b] <- test.test6 [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

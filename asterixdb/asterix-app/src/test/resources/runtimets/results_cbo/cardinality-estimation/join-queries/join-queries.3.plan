@@ -1,30 +1,30 @@
-distribute result [$$35] [cardinality: 961.01, op-cost: 0.0, total-cost: 136513.95]
+distribute result [$$35] [cardinality: 961.01, doc-size: 15.0, op-cost: 0.0, total-cost: 136513.95]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 961.01, op-cost: 0.0, total-cost: 136513.95]
+  exchange [cardinality: 961.01, doc-size: 15.0, op-cost: 0.0, total-cost: 136513.95]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    distinct ([$$35]) [cardinality: 961.01, op-cost: 58495.07, total-cost: 136513.95]
+    distinct ([$$35]) [cardinality: 961.01, doc-size: 15.0, op-cost: 0.0, total-cost: 136513.95]
     -- PRE_SORTED_DISTINCT_BY  |PARTITIONED|
-      exchange [cardinality: 4785.13, op-cost: 0.0, total-cost: 78018.88]
+      exchange [cardinality: 4785.13, doc-size: 15.0, op-cost: 0.0, total-cost: 78018.88]
       -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-        order (ASC, $$35) [cardinality: 4785.13, op-cost: 58495.07, total-cost: 78018.88]
+        order (ASC, $$35) [cardinality: 4785.13, doc-size: 15.0, op-cost: 0.0, total-cost: 78018.88]
         -- STABLE_SORT [$$35(ASC)]  |PARTITIONED|
-          exchange [cardinality: 4785.13, op-cost: 0.0, total-cost: 19523.81]
+          exchange [cardinality: 4785.13, doc-size: 15.0, op-cost: 0.0, total-cost: 19523.81]
           -- HASH_PARTITION_EXCHANGE [$$35]  |PARTITIONED|
-            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project: [$$35] [cardinality: 4785.13, op-cost: 0.0, total-cost: 19523.81]
+            assign [$$35] <- [{"l_linenumber": $$37, "l_partkey": $$l.getField(1), "o_custkey": $$o.getField(1)}] project: [$$35] [cardinality: 4785.13, doc-size: 15.0, op-cost: 0.0, total-cost: 19523.81]
             -- ASSIGN  |PARTITIONED|
-              select (gt($$l.getField(4), 10)) [cardinality: 4785.13, op-cost: 12018.16, total-cost: 19523.81]
+              select (gt($$l.getField(4), 10)) [cardinality: 4785.13, doc-size: 15.0, op-cost: 0.0, total-cost: 19523.81]
               -- STREAM_SELECT  |PARTITIONED|
-                project ([$$o, $$37, $$l]) [cardinality: 4779.14, op-cost: 0.0, total-cost: 6005.0]
+                project ([$$o, $$37, $$l]) [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 4779.14, op-cost: 0.0, total-cost: 6005.0]
+                  exchange [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$36, $$37, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$38, 1, $$38, true, true, true) [cardinality: 4779.14, op-cost: 6005.0, total-cost: 6005.0]
+                    unnest-map [$$36, $$37, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$38, 1, $$38, true, true, true) [cardinality: 4779.14, doc-size: 15.0, op-cost: 0.0, total-cost: 6005.0]
                     -- BTREE_SEARCH  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                        data-scan []<-[$$38, $$o] <- tpch.Orders [cardinality: 1500.0, op-cost: 1500.0, total-cost: 1500.0]
+                        data-scan []<-[$$38, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 10.0, op-cost: 1500.0, total-cost: 1500.0]
                         -- DATASOURCE_SCAN  |PARTITIONED|
-                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                            empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                             -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

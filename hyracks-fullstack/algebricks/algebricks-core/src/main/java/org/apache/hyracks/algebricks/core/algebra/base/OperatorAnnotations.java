@@ -31,6 +31,8 @@ public interface OperatorAnnotations {
     // Integer
     String OP_INPUT_CARDINALITY = "INPUT_CARDINALITY";
     String OP_OUTPUT_CARDINALITY = "OUTPUT_CARDINALITY";
+    String OP_INPUT_DOCSIZE = "INPUT_DOCSIZE";
+    String OP_OUTPUT_DOCSIZE = "OUTPUT_DOCSIZE";
     String OP_COST_TOTAL = "TOTAL_COST";
     String OP_COST_LOCAL = "OP_COST";
     String OP_LEFT_EXCHANGE_COST = "LEFT_EXCHANGE_COST";

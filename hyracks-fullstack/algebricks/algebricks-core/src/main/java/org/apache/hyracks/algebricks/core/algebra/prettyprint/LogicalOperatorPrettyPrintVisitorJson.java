@@ -482,14 +482,16 @@ public class LogicalOperatorPrettyPrintVisitorJson extends AbstractLogicalOperat
 
     private void generateCardCostFields(AbstractLogicalOperator op, boolean printOptimizerEstimates)
             throws AlgebricksException {
-        double opCard, opLocalCost, opTotalCost;
+        double opCard, opDocSize, opLocalCost, opTotalCost;
         if (printOptimizerEstimates) {
             opCard = getOpCardinality(op);
+            opDocSize = getOpDocSize(op);
             opLocalCost = getOpLocalCost(op);
             opTotalCost = getOpTotalCost(op);
             try {
                 jsonGenerator.writeObjectFieldStart(OPTIMIZER_ESTIMATES);
                 jsonGenerator.writeNumberField(CARDINALITY, opCard);
+                jsonGenerator.writeNumberField(DOCSIZE, opDocSize);
                 jsonGenerator.writeNumberField(OP_COST_LOCAL, opLocalCost);
                 jsonGenerator.writeNumberField(OP_COST_TOTAL, opTotalCost);
                 jsonGenerator.writeEndObject();

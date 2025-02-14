@@ -1,44 +1,44 @@
-distribute result [$$69] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+distribute result [$$69] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+  exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$69] <- [{"text": $$text, "$1": $$73}] project: [$$69] [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+    assign [$$69] <- [{"text": $$text, "$1": $$73}] project: [$$69] [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+      exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
       -- SORT_MERGE_EXCHANGE [$$text(ASC) ]  |PARTITIONED|
         group by ([$$text := $$81]) decor ([]) {
-                  aggregate [$$73] <- [agg-global-sql-sum($$80)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                  aggregate [$$73] <- [agg-global-sql-sum($$80)] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                   -- AGGREGATE  |LOCAL|
-                    nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                    nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                     -- NESTED_TUPLE_SOURCE  |LOCAL|
-               } [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+               } [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
         -- SORT_GROUP_BY[$$81]  |PARTITIONED|
-          exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+          exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
           -- HASH_PARTITION_EXCHANGE [$$81]  |PARTITIONED|
             group by ([$$81 := $$71]) decor ([]) {
-                      aggregate [$$80] <- [agg-local-sql-sum(sql-count($$75))] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      aggregate [$$80] <- [agg-local-sql-sum(sql-count($$75))] [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- AGGREGATE  |LOCAL|
-                        nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        nested tuple source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   } [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+                   } [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
             -- SORT_GROUP_BY[$$71]  |PARTITIONED|
-              exchange [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+              exchange [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                select (eq(lowercase($$71), "string")) [cardinality: 1.0, op-cost: 0.0, total-cost: 2.0]
+                select (eq(lowercase($$71), "string")) [cardinality: 1.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                 -- STREAM_SELECT  |PARTITIONED|
-                  assign [$$71] <- [$$ht.getField("display_url")] project: [$$75, $$71] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                  assign [$$71] <- [$$ht.getField("display_url")] project: [$$75, $$71] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                   -- ASSIGN  |PARTITIONED|
-                    unnest $$ht <- scan-collection($$75) [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                    unnest $$ht <- scan-collection($$75) [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                     -- UNNEST  |PARTITIONED|
-                      assign [$$75] <- [$$p1.getField("entities").getField("urls")] project: [$$75] [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                      assign [$$75] <- [$$p1.getField("entities").getField("urls")] project: [$$75] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                       -- ASSIGN  |PARTITIONED|
-                        select (neq($$72, "0")) project: [$$p1] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        select (neq($$72, "0")) project: [$$p1] [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                         -- STREAM_SELECT  |PARTITIONED|
-                          exchange [cardinality: 2.0, op-cost: 0.0, total-cost: 2.0]
+                          exchange [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$72, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any}]}}) filter on: eq(lowercase(scan-collection($$p1.getField("entities").getField("urls")).getField("display_url")), "string") [cardinality: 2.0, op-cost: 2.0, total-cost: 2.0]
+                            data-scan []<-[$$72, $$p1] <- test.ColumnDataset project ({entities:{urls:[{display_url:any}]}}) filter on: eq(lowercase(scan-collection($$p1.getField("entities").getField("urls")).getField("display_url")), "string") [cardinality: 2.0, doc-size: 0.0, op-cost: 0.0, total-cost: 2.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

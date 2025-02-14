@@ -1,34 +1,34 @@
-distribute result [$$36] [cardinality: 6016.3, op-cost: 0.0, total-cost: 95054.55]
+distribute result [$$36] [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
 -- DISTRIBUTE_RESULT  |PARTITIONED|
-  exchange [cardinality: 6016.3, op-cost: 0.0, total-cost: 95054.55]
+  exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 6016.3, op-cost: 0.0, total-cost: 95054.55]
+    assign [$$36] <- [{"o_orderkey": $$43, "l_orderkey": $$44, "l_suppkey": $$42}] project: [$$36] [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
     -- ASSIGN  |PARTITIONED|
-      exchange [cardinality: 6016.3, op-cost: 0.0, total-cost: 95054.55]
+      exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
       -- SORT_MERGE_EXCHANGE [$$43(ASC), $$44(ASC), $$42(ASC) ]  |PARTITIONED|
-        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6016.3, op-cost: 75532.61, total-cost: 95054.55]
+        order (ASC, $$43) (ASC, $$44) (ASC, $$42) [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 95054.55]
         -- STABLE_SORT [$$43(ASC), $$44(ASC), $$42(ASC)]  |PARTITIONED|
-          exchange [cardinality: 6016.3, op-cost: 0.0, total-cost: 19521.94]
+          exchange [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 19521.94]
           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-            select (eq($$43, $$42)) [cardinality: 6016.3, op-cost: 12016.29, total-cost: 19521.94]
+            select (eq($$43, $$42)) [cardinality: 6016.3, doc-size: 10.0, op-cost: 0.0, total-cost: 19521.94]
             -- STREAM_SELECT  |PARTITIONED|
-              assign [$$42] <- [$$l.getField(2)] project: [$$43, $$44, $$42] [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
+              assign [$$42] <- [$$l.getField(2)] project: [$$43, $$44, $$42] [cardinality: 6010.65, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
               -- ASSIGN  |PARTITIONED|
-                project ([$$43, $$44, $$l]) [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
+                project ([$$43, $$44, $$l]) [cardinality: 6010.65, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
                 -- STREAM_PROJECT  |PARTITIONED|
-                  exchange [cardinality: 6010.65, op-cost: 0.0, total-cost: 6005.0]
+                  exchange [cardinality: 6010.65, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
                   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                    unnest-map [$$44, $$45, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$43, 1, $$43, true, true, true) [cardinality: 6010.65, op-cost: 6005.0, total-cost: 6005.0]
+                    unnest-map [$$44, $$45, $$l] <- index-search("LineItem", 0, "Default", "tpch", "LineItem", true, true, 1, $$43, 1, $$43, true, true, true) [cardinality: 6010.65, doc-size: 10.0, op-cost: 0.0, total-cost: 6005.0]
                     -- BTREE_SEARCH  |PARTITIONED|
-                      exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                      exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                       -- BROADCAST_EXCHANGE  |PARTITIONED|
-                        project ([$$43]) [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                        project ([$$43]) [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                         -- STREAM_PROJECT  |PARTITIONED|
-                          exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                          exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                           -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                            data-scan []<-[$$43, $$o] <- tpch.Orders [cardinality: 1500.0, op-cost: 1500.0, total-cost: 1500.0]
+                            data-scan []<-[$$43, $$o] <- tpch.Orders [cardinality: 1500.0, doc-size: 5.0, op-cost: 1500.0, total-cost: 1500.0]
                             -- DATASOURCE_SCAN  |PARTITIONED|
-                              exchange [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                              exchange [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                               -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                                empty-tuple-source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
+                                empty-tuple-source [cardinality: 0.0, doc-size: 0.0, op-cost: 0.0, total-cost: 0.0]
                                 -- EMPTY_TUPLE_SOURCE  |PARTITIONED|

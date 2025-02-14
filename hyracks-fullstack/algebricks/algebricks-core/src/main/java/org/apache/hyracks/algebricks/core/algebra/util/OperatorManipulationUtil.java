@@ -554,6 +554,8 @@ public class OperatorManipulationUtil {
                     case OperatorAnnotations.OP_COST_TOTAL:
                     case OperatorAnnotations.OP_INPUT_CARDINALITY:
                     case OperatorAnnotations.OP_OUTPUT_CARDINALITY:
+                    case OperatorAnnotations.OP_INPUT_DOCSIZE:
+                    case OperatorAnnotations.OP_OUTPUT_DOCSIZE:
                     case OperatorAnnotations.OP_LEFT_EXCHANGE_COST:
                     case OperatorAnnotations.OP_RIGHT_EXCHANGE_COST:
                         destOp.getAnnotations().put(annotation, annotationVal);
