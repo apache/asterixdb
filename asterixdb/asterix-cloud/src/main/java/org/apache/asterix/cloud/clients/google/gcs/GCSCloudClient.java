@@ -265,7 +265,7 @@ public class GCSCloudClient implements ICloudClient {
         guardian.checkReadAccess(bucket, path);
         profilerLimiter.objectsList();
         Page<Blob> blobs = gcsClient.list(bucket, BlobListOption.prefix(config.getPrefix() + path));
-        return !blobs.hasNextPage();
+        return !blobs.iterateAll().iterator().hasNext();
     }
 
     @Override
