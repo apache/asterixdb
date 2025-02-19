@@ -239,7 +239,9 @@ public class NCUdfApiServlet extends AbstractNCUdfServlet {
         if (!libDir.getFile().exists()) {
             Files.createDirectories(lib.getFile().toPath().getParent());
         }
-        Files.createFile(lib.getFile().toPath());
+        if (!lib.getFile().exists()) {
+            Files.createFile(lib.getFile().toPath());
+        }
         IFileHandle fh = cloudIoMgr.open(lib, IIOManager.FileReadWriteMode.READ_WRITE,
                 IIOManager.FileSyncMode.METADATA_ASYNC_DATA_ASYNC);
         WritableByteChannel outChannel = cloudIoMgr.newWritableChannel(fh);

@@ -516,14 +516,13 @@ public class ExternalLibraryManager implements ILibraryManager, ILifeCycleCompon
             if (ncs.getConfiguration().isCloudDeployment()) {
                 ioManager.delete(fileRef.getChild(LIBRARY_ARCHIVE_NAME));
                 ioManager.delete(fileRef.getChild(DESCRIPTOR_FILE_NAME));
-            } else {
-                Path trashPath = Files.createTempDirectory(trashDirPath, null);
-                if (LOGGER.isDebugEnabled()) {
-                    LOGGER.debug("Drop (move) {} into {}", path, trashPath);
-                }
-                Files.move(path, trashPath, StandardCopyOption.ATOMIC_MOVE);
-                ncs.getWorkQueue().schedule(new DeleteDirectoryWork(trashPath));
             }
+            Path trashPath = Files.createTempDirectory(trashDirPath, null);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Drop (move) {} into {}", path, trashPath);
+            }
+            Files.move(path, trashPath, StandardCopyOption.ATOMIC_MOVE);
+            ncs.getWorkQueue().schedule(new DeleteDirectoryWork(trashPath));
         } catch (IOException e) {
             throw HyracksDataException.create(e);
         }
