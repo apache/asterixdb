@@ -4,35 +4,19 @@ distribute result [$$17]
   -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
     project ([$$17])
     -- STREAM_PROJECT  |PARTITIONED|
-      assign [$$17] <- [{"f_1": $$14, "f_2": $$16}]
+      assign [$$17] <- [{"f_1": array-slice($$18, 0, 1), "f_2": array-slice($$18, 0, 2)}]
       -- ASSIGN  |PARTITIONED|
-        project ([$$14, $$16])
+        project ([$$18])
         -- STREAM_PROJECT  |PARTITIONED|
-          subplan {
-                    assign [$$16] <- [array-slice($$19, 0, 2)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                    -- ASSIGN  |LOCAL|
-                      nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- NESTED_TUPLE_SOURCE  |LOCAL|
-                 }
-          -- SUBPLAN  |PARTITIONED|
-            subplan {
-                      assign [$$14] <- [array-slice($$19, 0, 1)] [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                      -- ASSIGN  |LOCAL|
-                        nested tuple source [cardinality: 0.0, op-cost: 0.0, total-cost: 0.0]
-                        -- NESTED_TUPLE_SOURCE  |LOCAL|
-                   }
-            -- SUBPLAN  |PARTITIONED|
-              project ([$$19])
-              -- STREAM_PROJECT  |PARTITIONED|
-                assign [$$19] <- [$$collection1.getField("array1")]
-                -- ASSIGN  |PARTITIONED|
-                  project ([$$collection1])
-                  -- STREAM_PROJECT  |PARTITIONED|
-                    exchange
-                    -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                      data-scan []<-[$$18, $$collection1] <- test.collection1
-                      -- DATASOURCE_SCAN  |PARTITIONED|
-                        exchange
-                        -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
-                          empty-tuple-source
-                          -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
+          assign [$$18] <- [$$collection1.getField("array1")]
+          -- ASSIGN  |PARTITIONED|
+            project ([$$collection1])
+            -- STREAM_PROJECT  |PARTITIONED|
+              exchange
+              -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                data-scan []<-[$$19, $$collection1] <- test.collection1
+                -- DATASOURCE_SCAN  |PARTITIONED|
+                  exchange
+                  -- ONE_TO_ONE_EXCHANGE  |PARTITIONED|
+                    empty-tuple-source
+                    -- EMPTY_TUPLE_SOURCE  |PARTITIONED|
